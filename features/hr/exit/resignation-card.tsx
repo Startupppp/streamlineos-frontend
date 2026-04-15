@@ -172,7 +172,7 @@ export function ResignationCard({
               size="sm"
               variant="outline"
               className="h-7 text-xs"
-              onClick={() => onWithdraw(r.id)}
+              onClick={handleWithdraw}
             >
               <Undo2 className="h-3 w-3 mr-1" />
               Withdraw

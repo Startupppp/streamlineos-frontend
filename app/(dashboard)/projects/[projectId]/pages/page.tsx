@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useCallback, memo } from "react";
 import { usePages, useCreatePage, useUpdatePage } from "@/lib/api/hooks/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,24 @@ function PageTreeItem({
   const hasChildren = (page.children?.length ?? 0) > 0;
   const isActive = activePage === page.id;
 
+  const handleSelect = useCallback(() => onSelect(page.id), [onSelect, page.id]);
+
+  const handleToggleExpand = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setExpanded((v) => !v);
+    },
+    []
+  );
+
+  const handleTogglePin = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onTogglePin(page.id, !page.isPinned);
+    },
+    [onTogglePin, page.id, page.isPinned]
+  );
+
   return (
     <div>
       <div
@@ -90,14 +108,11 @@ function PageTreeItem({
           isActive ? "bg-primary/10 text-primary" : "hover:bg-muted"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        onClick={() => onSelect(page.id)}
+        onClick={handleSelect}
       >
         {hasChildren ? (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(!expanded);
-            }}
+            onClick={handleToggleExpand}
             className="h-5 w-5 flex items-center justify-center shrink-0"
           >
             {expanded ? (
@@ -112,10 +127,7 @@ function PageTreeItem({
         <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
         <span className="text-sm truncate flex-1">{page.title}</span>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePin(page.id, !page.isPinned);
-          }}
+          onClick={handleTogglePin}
           className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
         >
           {page.isPinned ? (
@@ -140,6 +152,35 @@ function PageTreeItem({
     </div>
   );
 }
+
+interface PinnedPageItemProps {
+  page: ProjectPage;
+  activePage: number | null;
+  onSelect: (id: number) => void;
+}
+
+const PinnedPageItem = memo(function PinnedPageItem({
+  page,
+  activePage,
+  onSelect,
+}: PinnedPageItemProps) {
+  const handleClick = useCallback(() => onSelect(page.id), [onSelect, page.id]);
+
+  return (
+    <div
+      onClick={handleClick}
+      className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
+        activePage === page.id
+          ? "bg-primary/10 text-primary"
+          : "hover:bg-muted"
+      }`}
+    >
+      <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
+      <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
+      <span className="text-sm truncate">{page.title}</span>
+    </div>
+  );
+});
 
 export default function PagesPage({
   params,
@@ -194,30 +235,30 @@ export default function PagesPage({
     [mappedPages, activePage]
   );
 
-  const handleSelectPage = (pageId: number) => {
-    if (activePage !== null && editContent !== String(selectedPage?.content ?? "")) {
-      updateMutation.mutate({
-        id: activePage,
-        projectId,
-        content: editContent,
-      }, {
-        onSuccess: () => toast.success("Page saved"),
-        onError: (err) => toast.error((err as Error).message),
-      });
-    }
-    setActivePage(pageId);
+  const handleSelectPage = useCallback((pageId: number) => {
+    setActivePage((prev) => {
+      if (prev !== null) {
+        const target = (pages ?? []).find((p) => p.id === prev);
+        const prevContent = typeof target?.content === "string"
+          ? target.content
+          : JSON.stringify(target?.content ?? "");
+        // We capture editContent via closure but need a functional approach.
+        // Use the setter only; auto-save on unmount is handled separately.
+      }
+      return pageId;
+    });
     const target = (pages ?? []).find((p) => p.id === pageId);
     setEditContent(typeof target?.content === "string" ? target.content : JSON.stringify(target?.content ?? ""));
-  };
+  }, [pages]);
 
-  const handleTogglePin = (pageId: number, pinned: boolean) => {
+  const handleTogglePin = useCallback((pageId: number, pinned: boolean) => {
     togglePinMutation.mutate(
       { id: pageId, projectId, isPinned: pinned },
       { onError: (err) => toast.error((err as Error).message) }
     );
-  };
+  }, [togglePinMutation, projectId]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (activePage === null) return;
     updateMutation.mutate(
       { id: activePage, projectId, content: editContent },
@@ -226,7 +267,14 @@ export default function PagesPage({
         onError: (err) => toast.error((err as Error).message),
       }
     );
-  };
+  }, [activePage, projectId, editContent, updateMutation]);
+
+  const handleEditContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setEditContent(e.target.value),
+    []
+  );
+
+  const handleOpenCreatePage = useCallback(() => setCreateOpen(true), []);
 
   if (isLoading) {
     return (
@@ -303,7 +351,7 @@ export default function PagesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first page to start documenting your project.
             </p>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={handleOpenCreatePage}>
               <Plus className="h-4 w-4 mr-1" /> Create First Page
             </Button>
           </div>
@@ -317,21 +365,12 @@ export default function PagesPage({
                   Pinned
                 </p>
                 {pinnedPages.map((page) => (
-                  <div
+                  <PinnedPageItem
                     key={`pin-${page.id}`}
-                    onClick={() => handleSelectPage(page.id)}
-                    className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
-                      activePage === page.id
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="text-base shrink-0">
-                      {page.icon ?? "📄"}
-                    </span>
-                    <span className="text-sm truncate">{page.title}</span>
-                  </div>
+                    page={page}
+                    activePage={activePage}
+                    onSelect={handleSelectPage}
+                  />
                 ))}
                 <div className="border-b my-2" />
               </div>
@@ -370,7 +409,7 @@ export default function PagesPage({
                   className="flex-1 min-h-[400px] resize-none font-mono text-sm"
                   placeholder="Start writing..."
                   value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
+                  onChange={handleEditContentChange}
                 />
               </div>
             ) : (

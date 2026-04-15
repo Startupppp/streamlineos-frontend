@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback, memo } from "react";
 import {
   useViews,
   useCreateView,
@@ -61,6 +61,88 @@ const layoutIcons: Record<string, React.ReactNode> = {
   gantt: <LayoutGrid className="h-4 w-4" />,
 };
 
+interface ViewItem {
+  id: number;
+  name: string;
+  layoutType: string;
+  isPinned: boolean;
+  filters?: Record<string, unknown> | null;
+}
+
+interface ViewCardProps {
+  view: ViewItem;
+  isPinned: boolean;
+  onNavigate: (view: ViewItem) => void;
+  onTogglePin: (viewId: number, isPinned: boolean) => void;
+  onDelete: (viewId: number) => void;
+}
+
+const ViewCard = memo(function ViewCard({
+  view,
+  isPinned,
+  onNavigate,
+  onTogglePin,
+  onDelete,
+}: ViewCardProps) {
+  const handleNavigate = useCallback(() => onNavigate(view), [onNavigate, view]);
+  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+  const handleTogglePin = useCallback(
+    () => onTogglePin(view.id, !isPinned),
+    [onTogglePin, view.id, isPinned]
+  );
+  const handleDelete = useCallback(() => onDelete(view.id), [onDelete, view.id]);
+
+  const filterCount = view.filters ? Object.keys(view.filters).length : 0;
+
+  return (
+    <Card
+      className="hover:border-primary/50 transition-colors cursor-pointer"
+      onClick={handleNavigate}
+    >
+      <CardContent className="py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="shrink-0 text-muted-foreground">
+            {layoutIcons[view.layoutType] ?? layoutIcons.board}
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{view.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {view.layoutType.charAt(0).toUpperCase() +
+                view.layoutType.slice(1)}{" "}
+              {filterCount > 0 &&
+                `with ${filterCount} filter${filterCount > 1 ? "s" : ""}`}
+            </p>
+          </div>
+        </div>
+        <div
+          className="flex items-center gap-1 shrink-0"
+          onClick={handleStopPropagation}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleTogglePin}
+          >
+            {isPinned ? (
+              <PinOff className="h-3.5 w-3.5" />
+            ) : (
+              <Pin className="h-3.5 w-3.5" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
 export default function ViewsPage({
   params,
 }: {
@@ -95,34 +177,42 @@ export default function ViewsPage({
     );
   };
 
-  const handleNavigateToView = (view: {
-    id: number;
-    layoutType: string;
-  }) => {
-    const urlParams = new URLSearchParams();
-    urlParams.set("viewId", view.id.toString());
-    urlParams.set("view", view.layoutType);
-    router.push(`/projects/${projectId}?${urlParams.toString()}`);
-  };
+  const handleNavigateToView = useCallback(
+    (view: { id: number; layoutType: string }) => {
+      const urlParams = new URLSearchParams();
+      urlParams.set("viewId", view.id.toString());
+      urlParams.set("view", view.layoutType);
+      router.push(`/projects/${projectId}?${urlParams.toString()}`);
+    },
+    [router, projectId]
+  );
 
-  const handleTogglePin = (viewId: number, isPinned: boolean) => {
-    togglePinMutation.mutate(
-      { id: viewId, projectId, isPinned },
-      {
-        onError: (err) => toast.error((err as Error).message),
-      }
-    );
-  };
+  const handleTogglePin = useCallback(
+    (viewId: number, isPinned: boolean) => {
+      togglePinMutation.mutate(
+        { id: viewId, projectId, isPinned },
+        {
+          onError: (err) => toast.error((err as Error).message),
+        }
+      );
+    },
+    [togglePinMutation, projectId]
+  );
 
-  const handleDelete = (viewId: number) => {
-    deleteMutation.mutate(
-      { id: viewId, projectId },
-      {
-        onSuccess: () => toast.success("View deleted"),
-        onError: (err) => toast.error((err as Error).message),
-      }
-    );
-  };
+  const handleDelete = useCallback(
+    (viewId: number) => {
+      deleteMutation.mutate(
+        { id: viewId, projectId },
+        {
+          onSuccess: () => toast.success("View deleted"),
+          onError: (err) => toast.error((err as Error).message),
+        }
+      );
+    },
+    [deleteMutation, projectId]
+  );
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const pinnedViews = (views ?? []).filter((v) => v.isPinned);
   const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
@@ -216,7 +306,7 @@ export default function ViewsPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create custom views with saved filters and layouts.
             </p>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-1" /> Create First View
             </Button>
           </div>
@@ -229,50 +319,14 @@ export default function ViewsPage({
                 </h2>
                 <div className="space-y-2">
                   {pinnedViews.map((view) => (
-                    <Card
+                    <ViewCard
                       key={view.id}
-                      className="hover:border-primary/50 transition-colors cursor-pointer"
-                      onClick={() => handleNavigateToView(view)}
-                    >
-                      <CardContent className="py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="shrink-0 text-muted-foreground">
-                            {layoutIcons[view.layoutType] ?? layoutIcons.board}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{view.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {view.layoutType.charAt(0).toUpperCase() +
-                                view.layoutType.slice(1)}{" "}
-                              {view.filters && Object.keys(view.filters).length > 0 &&
-                                `with ${Object.keys(view.filters).length} filter${Object.keys(view.filters).length > 1 ? "s" : ""}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className="flex items-center gap-1 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleTogglePin(view.id, false)
-                            }
-                          >
-                            <PinOff className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(view.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
+                      view={view}
+                      isPinned
+                      onNavigate={handleNavigateToView}
+                      onTogglePin={handleTogglePin}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </div>
               </section>
@@ -287,50 +341,14 @@ export default function ViewsPage({
                 )}
                 <div className="space-y-2">
                   {unpinnedViews.map((view) => (
-                    <Card
+                    <ViewCard
                       key={view.id}
-                      className="hover:border-primary/50 transition-colors cursor-pointer"
-                      onClick={() => handleNavigateToView(view)}
-                    >
-                      <CardContent className="py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="shrink-0 text-muted-foreground">
-                            {layoutIcons[view.layoutType] ?? layoutIcons.board}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{view.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {view.layoutType.charAt(0).toUpperCase() +
-                                view.layoutType.slice(1)}{" "}
-                              {view.filters && Object.keys(view.filters).length > 0 &&
-                                `with ${Object.keys(view.filters).length} filter${Object.keys(view.filters).length > 1 ? "s" : ""}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className="flex items-center gap-1 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleTogglePin(view.id, true)
-                            }
-                          >
-                            <Pin className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(view.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
+                      view={view}
+                      isPinned={false}
+                      onNavigate={handleNavigateToView}
+                      onTogglePin={handleTogglePin}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </div>
               </section>

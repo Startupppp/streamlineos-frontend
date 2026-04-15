@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import { useCycles, useCreateCycle } from "@/lib/api/hooks/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   const [showCompleted, setShowCompleted] = useState(false);
 
   const createMutation = useCreateCycle();
+
+  const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const form = useForm<CreateCycleForm>({
     resolver: zodResolver(createCycleSchema),
@@ -225,7 +228,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
         {completedCycles.length > 0 && (
           <section>
             <button
-              onClick={() => setShowCompleted(!showCompleted)}
+              onClick={handleToggleCompleted}
               className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 hover:text-foreground transition-colors"
             >
               Completed ({completedCycles.length}) {showCompleted ? "▼" : "▶"}
@@ -257,7 +260,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
             <EmptyCalendarIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No cycles yet</h3>
             <p className="text-sm text-muted-foreground mb-4">Create your first cycle to start planning work in time-boxed iterations.</p>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-1" /> Create First Cycle
             </Button>
           </div>

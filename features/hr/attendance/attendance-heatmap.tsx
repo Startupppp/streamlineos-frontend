@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { format, parseISO, eachWeekOfInterval, startOfYear, endOfYear, addDays, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,9 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useAttendanceHeatmap({ userId, year });
+
+  const handlePrevYear = useCallback(() => setYear((y) => y - 1), []);
+  const handleNextYear = useCallback(() => setYear((y) => y + 1), []);
 
   const { weeks, monthPositions } = useMemo(() => {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -73,7 +76,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             Attendance Heatmap
           </CardTitle>
           <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setYear((y) => y - 1)} aria-label="Previous year">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevYear} aria-label="Previous year">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium min-w-[50px] text-center text-foreground">{year}</span>
@@ -81,7 +84,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setYear((y) => y + 1)}
+              onClick={handleNextYear}
               disabled={year >= new Date().getFullYear()}
               aria-label="Next year"
             >

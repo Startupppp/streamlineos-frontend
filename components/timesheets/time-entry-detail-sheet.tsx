@@ -80,6 +80,15 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
     );
   };
 
+  const handleCancelReject = useCallback(() => {
+    setRejectDialogOpen(false);
+    setRejectionReason("");
+  }, []);
+
+  const handleRejectionReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRejectionReason(e.target.value);
+  }, []);
+
   if (!entry) return null;
 
   const canApproveReject = !entry.status || entry.status === "PENDING";
@@ -277,7 +286,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
             <Textarea
               placeholder="Enter rejection reason..."
               value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              onChange={handleRejectionReasonChange}
               rows={4}
             />
           </div>
@@ -285,10 +294,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectionReason("");
-              }}
+              onClick={handleCancelReject}
             >
               Cancel
             </Button>

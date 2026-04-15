@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, PartyPopper } from "lucide-react";
+
+interface HolidayRowProps {
+  id: number;
+  name: string;
+  date: string;
+  onDelete: (id: number) => void;
+  isDeleting: boolean;
+}
+
+const HolidayRow = memo(function HolidayRow({ id, name, date, onDelete, isDeleting }: HolidayRowProps) {
+  const handleDelete = useCallback(() => onDelete(id), [id, onDelete]);
+  return (
+    <li className="flex items-center justify-between gap-2 py-2.5 px-3 first:pt-2 last:pb-2">
+      <div>
+        <span className="font-medium text-foreground">{name}</span>
+        <span className="text-muted-foreground text-sm ml-2">{date}</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+        onClick={handleDelete}
+        disabled={isDeleting}
+        aria-label={`Remove ${name}`}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </li>
+  );
+});
 
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const currentYear = new Date().getFullYear();
@@ -23,39 +54,48 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const addMutation = useAddHoliday();
   const deleteMutation = useDeleteHoliday();
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Enter holiday name");
-      return;
-    }
-    addMutation.mutate(
-      {
-        name: name.trim(),
-        date: new Date(date),
-        message: message.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Holiday added");
-          setName("");
-          setDate(format(new Date(), "yyyy-MM-dd"));
-          setMessage("");
-        },
-        onError: (e) => toast.error(e.message),
-      }
-    );
-  };
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value), []);
 
-  const handleDelete = (holidayId: number) => {
-    deleteMutation.mutate(
-      { holidayId },
-      {
-        onSuccess: () => toast.success("Holiday removed"),
-        onError: (e) => toast.error(e.message),
+  const handleAdd = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!name.trim()) {
+        toast.error("Enter holiday name");
+        return;
       }
-    );
-  };
+      addMutation.mutate(
+        {
+          name: name.trim(),
+          date: new Date(date),
+          message: message.trim() || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Holiday added");
+            setName("");
+            setDate(format(new Date(), "yyyy-MM-dd"));
+            setMessage("");
+          },
+          onError: (e) => toast.error(e.message),
+        }
+      );
+    },
+    [name, date, message, addMutation]
+  );
+
+  const handleDelete = useCallback(
+    (holidayId: number) => {
+      deleteMutation.mutate(
+        { holidayId },
+        {
+          onSuccess: () => toast.success("Holiday removed"),
+          onError: (e) => toast.error(e.message),
+        }
+      );
+    },
+    [deleteMutation]
+  );
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -76,7 +116,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                 id="holiday-name"
                 placeholder="e.g. Republic Day"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
                 className="bg-background"
               />
             </div>

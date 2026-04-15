@@ -108,6 +108,8 @@ function CreateTemplateDialog({ open, onOpenChange }: CreateTemplateDialogProps)
     setCriteria((prev) => [...prev, { _key: nextKey(), name: "", weight: 2 }]);
   }, []);
 
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
   const handleSubmit = useCallback(() => {
     if (!name.trim()) { toast.error("Template name is required"); return; }
     const filled = criteria.filter((c) => c.name.trim());
@@ -196,7 +198,7 @@ function CreateTemplateDialog({ open, onOpenChange }: CreateTemplateDialogProps)
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={create.isPending}>
             {create.isPending ? "Creating..." : "Create Template"}
           </Button>
@@ -218,12 +220,14 @@ export default function ScorecardTemplatesPage() {
   const { data: templates, isLoading } = useScorecardTemplates();
   const [createOpen, setCreateOpen] = useState(false);
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
   return (
     <PageWrapper
       title="Scorecard Templates"
       subtitle="Define evaluation criteria for each interview round"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" />
           New Template
         </Button>
@@ -238,7 +242,7 @@ export default function ScorecardTemplatesPage() {
           illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
           title="No Scorecard Templates"
           description="Create a template to standardize how interviewers evaluate candidates."
-          action={{ label: "Create Template", onClick: () => setCreateOpen(true) }}
+          action={{ label: "Create Template", onClick: handleOpenCreate }}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -140,10 +140,37 @@ const slideVariants: Variants = {
   }),
 };
 
+interface SlideIndicatorButtonProps {
+  index: number;
+  current: number;
+  goTo: (idx: number) => void;
+}
+
+const SlideIndicatorButton = memo(function SlideIndicatorButton({
+  index,
+  current,
+  goTo,
+}: SlideIndicatorButtonProps) {
+  const handleClick = useCallback(() => goTo(index), [index, goTo]);
+  return (
+    <button
+      onClick={handleClick}
+      aria-label={`Go to slide ${index + 1}`}
+      className={cn(
+        "h-1.5 rounded-full transition-all duration-300",
+        index === current ? "w-6 bg-amber-400" : "w-1.5 bg-white/20 hover:bg-white/40"
+      )}
+    />
+  );
+});
+
 export function AuthRightPanel() {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
+
+  const handleMouseEnter = useCallback(() => setPaused(true), []);
+  const handleMouseLeave = useCallback(() => setPaused(false), []);
 
   const goTo = useCallback((idx: number, dir?: number) => {
     setDirection(dir ?? (idx > current ? 1 : -1));
@@ -173,8 +200,8 @@ export function AuthRightPanel() {
   return (
     <div
       className="relative h-full overflow-hidden bg-[#080a14] flex flex-col"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
 
       <div className="absolute inset-0 pointer-events-none">
@@ -289,15 +316,7 @@ export function AuthRightPanel() {
       <div className="relative z-10 px-8 pb-5 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
-                i === current ? "w-6 bg-amber-400" : "w-1.5 bg-white/20 hover:bg-white/40"
-              )}
-            />
+            <SlideIndicatorButton key={i} index={i} current={current} goTo={goTo} />
           ))}
         </div>
         <div className="flex items-center gap-1">

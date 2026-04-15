@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, memo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -28,6 +28,155 @@ const STATUS_COLORS: Record<string, string> = {
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   EXPIRED: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
 };
+
+// ─── Line Item Row ─────────────────────────────────────────────────────────────
+
+interface LineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxRate: number;
+}
+
+interface LineItemRowProps {
+  item: LineItem;
+  idx: number;
+  isFirst: boolean;
+  canRemove: boolean;
+  onUpdate: (idx: number, field: string, value: string | number) => void;
+  onRemove: (idx: number) => void;
+}
+
+const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, onUpdate, onRemove }: LineItemRowProps) {
+  const handleDescription = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "description", e.target.value), [onUpdate, idx]);
+  const handleQuantity = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "quantity", Number(e.target.value)), [onUpdate, idx]);
+  const handleUnitPrice = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "unitPrice", Number(e.target.value)), [onUpdate, idx]);
+  const handleTaxRate = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "taxRate", Number(e.target.value)), [onUpdate, idx]);
+  const handleRemove = useCallback(() => onRemove(idx), [onRemove, idx]);
+
+  return (
+    <div className="grid grid-cols-12 gap-2 items-end">
+      <div className="col-span-5">
+        {isFirst && <span className="text-xs text-muted-foreground">Description</span>}
+        <Input value={item.description} onChange={handleDescription} placeholder="Item description" />
+      </div>
+      <div className="col-span-2">
+        {isFirst && <span className="text-xs text-muted-foreground">Qty</span>}
+        <Input type="number" min={0} value={item.quantity} onChange={handleQuantity} />
+      </div>
+      <div className="col-span-2">
+        {isFirst && <span className="text-xs text-muted-foreground">Price</span>}
+        <Input type="number" min={0} value={item.unitPrice} onChange={handleUnitPrice} />
+      </div>
+      <div className="col-span-2">
+        {isFirst && <span className="text-xs text-muted-foreground">Tax %</span>}
+        <Input type="number" min={0} value={item.taxRate} onChange={handleTaxRate} />
+      </div>
+      <div className="col-span-1">
+        <Button type="button" variant="ghost" size="icon" onClick={handleRemove} disabled={!canRemove}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+// ─── Create Quote Form ─────────────────────────────────────────────────────────
+
+function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
+  const createQuote = useCreateQuote();
+  const [subject, setSubject] = useState("");
+  const [validUntil, setValidUntil] = useState("");
+  const [notes, setNotes] = useState("");
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { description: "", quantity: 1, unitPrice: 0, taxRate: 0 },
+  ]);
+
+  const addLine = useCallback(() => setLineItems((prev) => [...prev, { description: "", quantity: 1, unitPrice: 0, taxRate: 0 }]), []);
+
+  const updateLine = useCallback((idx: number, field: string, value: string | number) => {
+    setLineItems((prev) =>
+      prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
+    );
+  }, []);
+
+  const removeLine = useCallback((idx: number) => {
+    setLineItems((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const handleSubjectChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value), []);
+  const handleValidUntilChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setValidUntil(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+
+  const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject || !validUntil || lineItems.some((li) => !li.description)) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    createQuote.mutate(
+      { subject, validUntil, notes: notes || undefined, lineItems },
+      {
+        onSuccess: () => {
+          toast.success("Quote created successfully");
+          onSuccess();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      }
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <Label>Subject *</Label>
+          <Input value={subject} onChange={handleSubjectChange} placeholder="Quote subject" />
+        </div>
+        <div>
+          <Label>Valid Until *</Label>
+          <Input type="date" value={validUntil} onChange={handleValidUntilChange} />
+        </div>
+      </div>
+
+      <div>
+        <Label className="mb-2 block">Line Items</Label>
+        <div className="space-y-2">
+          {lineItems.map((item, idx) => (
+            <LineItemRow
+              key={idx}
+              item={item}
+              idx={idx}
+              isFirst={idx === 0}
+              canRemove={lineItems.length > 1}
+              onUpdate={updateLine}
+              onRemove={removeLine}
+            />
+          ))}
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={addLine} className="mt-2">
+          <Plus className="mr-1 h-3 w-3" /> Add Line
+        </Button>
+        <p className="text-sm text-right mt-2 font-medium">
+          Subtotal: INR {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+        </p>
+      </div>
+
+      <div>
+        <Label>Notes</Label>
+        <Textarea value={notes} onChange={handleNotesChange} rows={2} />
+      </div>
+
+      <Button type="submit" className="w-full" disabled={createQuote.isPending}>
+        {createQuote.isPending ? "Creating..." : "Create Quote"}
+      </Button>
+    </form>
+  );
+}
+
+// ─── Quotes Page ───────────────────────────────────────────────────────────────
 
 export default function QuotesPage() {
   const searchParams = useSearchParams();
@@ -60,6 +209,19 @@ export default function QuotesPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => updateParams({ q: e.target.value }),
+    [updateParams],
+  );
+
+  const handleStatusFilter = useCallback(
+    (v: string) => updateParams({ status: v === "all" ? null : v }),
+    [updateParams],
+  );
+
+  const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
+  const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
+
   return (
     <PageWrapper
       title="Quotes"
@@ -72,7 +234,7 @@ export default function QuotesPage() {
               Export CSV
             </a>
           </Button>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
@@ -83,7 +245,7 @@ export default function QuotesPage() {
               <DialogHeader>
                 <DialogTitle>Create Quote</DialogTitle>
               </DialogHeader>
-              <CreateQuoteForm onSuccess={() => setCreateOpen(false)} />
+              <CreateQuoteForm onSuccess={handleCreateSuccess} />
             </DialogContent>
           </Dialog>
         </div>
@@ -95,11 +257,11 @@ export default function QuotesPage() {
           <Input
             placeholder="Search quotes..."
             value={search}
-            onChange={(e) => updateParams({ q: e.target.value })}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={(v) => updateParams({ status: v === "all" ? null : v })}>
+        <Select value={statusFilter} onValueChange={handleStatusFilter}>
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
@@ -181,128 +343,5 @@ export default function QuotesPage() {
         </div>
       )}
     </PageWrapper>
-  );
-}
-
-function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
-  const createQuote = useCreateQuote();
-  const [subject, setSubject] = useState("");
-  const [validUntil, setValidUntil] = useState("");
-  const [notes, setNotes] = useState("");
-  const [lineItems, setLineItems] = useState([
-    { description: "", quantity: 1, unitPrice: 0, taxRate: 0 },
-  ]);
-
-  const addLine = () => setLineItems((prev) => [...prev, { description: "", quantity: 1, unitPrice: 0, taxRate: 0 }]);
-
-  const updateLine = (idx: number, field: string, value: string | number) => {
-    setLineItems((prev) =>
-      prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
-    );
-  };
-
-  const removeLine = (idx: number) => {
-    if (lineItems.length <= 1) return;
-    setLineItems((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!subject || !validUntil || lineItems.some((li) => !li.description)) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-    createQuote.mutate(
-      { subject, validUntil, notes: notes || undefined, lineItems },
-      {
-        onSuccess: () => {
-          toast.success("Quote created successfully");
-          onSuccess();
-        },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      }
-    );
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <Label>Subject *</Label>
-          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Quote subject" />
-        </div>
-        <div>
-          <Label>Valid Until *</Label>
-          <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
-        </div>
-      </div>
-
-      <div>
-        <Label className="mb-2 block">Line Items</Label>
-        <div className="space-y-2">
-          {lineItems.map((item, idx) => (
-            <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-5">
-                {idx === 0 && <span className="text-xs text-muted-foreground">Description</span>}
-                <Input
-                  value={item.description}
-                  onChange={(e) => updateLine(idx, "description", e.target.value)}
-                  placeholder="Item description"
-                />
-              </div>
-              <div className="col-span-2">
-                {idx === 0 && <span className="text-xs text-muted-foreground">Qty</span>}
-                <Input
-                  type="number"
-                  min={0}
-                  value={item.quantity}
-                  onChange={(e) => updateLine(idx, "quantity", Number(e.target.value))}
-                />
-              </div>
-              <div className="col-span-2">
-                {idx === 0 && <span className="text-xs text-muted-foreground">Price</span>}
-                <Input
-                  type="number"
-                  min={0}
-                  value={item.unitPrice}
-                  onChange={(e) => updateLine(idx, "unitPrice", Number(e.target.value))}
-                />
-              </div>
-              <div className="col-span-2">
-                {idx === 0 && <span className="text-xs text-muted-foreground">Tax %</span>}
-                <Input
-                  type="number"
-                  min={0}
-                  value={item.taxRate}
-                  onChange={(e) => updateLine(idx, "taxRate", Number(e.target.value))}
-                />
-              </div>
-              <div className="col-span-1">
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeLine(idx)} disabled={lineItems.length <= 1}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Button type="button" variant="outline" size="sm" onClick={addLine} className="mt-2">
-          <Plus className="mr-1 h-3 w-3" /> Add Line
-        </Button>
-        <p className="text-sm text-right mt-2 font-medium">
-          Subtotal: INR {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-        </p>
-      </div>
-
-      <div>
-        <Label>Notes</Label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-      </div>
-
-      <Button type="submit" className="w-full" disabled={createQuote.isPending}>
-        {createQuote.isPending ? "Creating..." : "Create Quote"}
-      </Button>
-    </form>
   );
 }

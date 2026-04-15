@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import Link from "next/link";
 import { Plus, ExternalLink, Trash2, Pencil, FileText, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,43 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCrmPages, useUpdateCrmPage, useDeleteCrmPage, type CrmPage } from "@/lib/api/hooks/marketing";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+
+// ─── Page Row ─────────────────────────────────────────────────────────────────
+
+interface PageRowProps {
+  page: CrmPage;
+  onTogglePublish: (page: CrmPage) => void;
+  onDelete: (id: number) => void;
+}
+
+const PageRow = memo(function PageRow({ page, onTogglePublish, onDelete }: PageRowProps) {
+  const handleToggle = useCallback(() => onTogglePublish(page), [onTogglePublish, page]);
+  const handleDelete = useCallback(() => onDelete(page.id), [onDelete, page.id]);
+
+  return (
+    <div className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate">{page.title ?? page.name}</p>
+          {page.isPublished ? (
+            <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-transparent text-xs"><CheckCircle2 className="mr-1 h-3 w-3" />Live</Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs text-muted-foreground"><Clock className="mr-1 h-3 w-3" />Draft</Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">/{page.slug ?? "\u2014"}{page.description && <span className="ml-2 truncate">{page.description}</span>}</p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {page.isPublished && page.slug && (<Button variant="ghost" size="icon" className="h-7 w-7" asChild><a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer" aria-label="View live"><ExternalLink className="h-3.5 w-3.5" /></a></Button>)}
+        <Switch checked={page.isPublished ?? false} onCheckedChange={handleToggle} aria-label={`Toggle publish for ${page.title}`} className="scale-75" />
+        <Button variant="ghost" size="icon" className="h-7 w-7" asChild><Link href={`/marketing/landing-pages/${page.id}/edit`} aria-label="Edit page"><Pencil className="h-3.5 w-3.5" /></Link></Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={handleDelete} aria-label="Delete page"><Trash2 className="h-3.5 w-3.5" /></Button>
+      </div>
+    </div>
+  );
+});
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function CrmHostedPagesTab() {
   const { data: pages, isLoading } = useCrmPages();
@@ -30,6 +67,9 @@ export function CrmHostedPagesTab() {
       onError: (e) => { toast.error(getErrorMessage(e)); setDeleteCrmId(null); },
     });
   }, [deleteCrmId, deletePage]);
+  const handleAlertOpenChange = useCallback((o: boolean) => {
+    if (!o) setDeleteCrmId(null);
+  }, []);
   const crmPages: CrmPage[] = pages ?? [];
   return (
     <>
@@ -45,29 +85,16 @@ export function CrmHostedPagesTab() {
       ) : (
         <div className="space-y-3">
           {crmPages.map((page) => (
-            <div key={page.id} className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{page.title ?? page.name}</p>
-                  {page.isPublished ? (
-                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-transparent text-xs"><CheckCircle2 className="mr-1 h-3 w-3" />Live</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs text-muted-foreground"><Clock className="mr-1 h-3 w-3" />Draft</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">/{page.slug ?? "\u2014"}{page.description && <span className="ml-2 truncate">{page.description}</span>}</p>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {page.isPublished && page.slug && (<Button variant="ghost" size="icon" className="h-7 w-7" asChild><a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer" aria-label="View live"><ExternalLink className="h-3.5 w-3.5" /></a></Button>)}
-                <Switch checked={page.isPublished ?? false} onCheckedChange={() => handleTogglePublish(page)} aria-label={`Toggle publish for ${page.title}`} className="scale-75" />
-                <Button variant="ghost" size="icon" className="h-7 w-7" asChild><Link href={`/marketing/landing-pages/${page.id}/edit`} aria-label="Edit page"><Pencil className="h-3.5 w-3.5" /></Link></Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteCrmId(page.id)} aria-label="Delete page"><Trash2 className="h-3.5 w-3.5" /></Button>
-              </div>
-            </div>
+            <PageRow
+              key={page.id}
+              page={page}
+              onTogglePublish={handleTogglePublish}
+              onDelete={setDeleteCrmId}
+            />
           ))}
         </div>
       )}
-      <AlertDialog open={deleteCrmId !== null} onOpenChange={(o) => { if (!o) setDeleteCrmId(null); }}>
+      <AlertDialog open={deleteCrmId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Page?</AlertDialogTitle>

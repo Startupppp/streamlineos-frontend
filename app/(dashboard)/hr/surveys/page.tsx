@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   usePulseSurveys, useCreateSurvey, useUpdateSurvey,
   type PulseSurvey,
@@ -17,7 +17,7 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  Plus, ClipboardList, Users, Calendar, Play, Archive, BarChart3,
+  Plus, ClipboardList, Calendar, Play, Archive, BarChart3,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -27,6 +27,49 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
   if (s === "CLOSED") return "outline";
   return "secondary";
 }
+
+// ─── Survey Card ──────────────────────────────────────────────────────────────
+
+interface SurveyCardProps {
+  s: PulseSurvey;
+  isAdmin: boolean;
+  onPublish: (id: number) => void;
+  onClose: (id: number) => void;
+}
+
+const SurveyCard = memo(function SurveyCard({ s, isAdmin, onPublish, onClose }: SurveyCardProps) {
+  const handlePublish = useCallback(() => onPublish(s.id), [onPublish, s.id]);
+  const handleClose = useCallback(() => onClose(s.id), [onClose, s.id]);
+
+  return (
+    <Card className="hover:shadow-sm transition-shadow">
+      <CardContent className="p-4 space-y-2">
+        <div className="flex items-start justify-between">
+          <Badge variant={statusBadge(s.status)} className="text-[10px]">{s.status ?? "DRAFT"}</Badge>
+          {s.isAnonymous && <Badge variant="outline" className="text-[10px]">Anonymous</Badge>}
+        </div>
+        <h3 className="text-sm font-semibold leading-tight">{s.title}</h3>
+        <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-0.5"><ClipboardList className="h-3 w-3" />{s.questions?.length ?? 0} questions</span>
+          <span className="flex items-center gap-0.5"><BarChart3 className="h-3 w-3" />{s.responses?.length ?? 0} responses</span>
+          {s.closesAt && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />Closes {format(new Date(s.closesAt), "MMM d")}</span>}
+        </div>
+        {isAdmin && s.status === "DRAFT" && (
+          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={handlePublish}>
+            <Play className="h-3 w-3 mr-1" />Publish
+          </Button>
+        )}
+        {isAdmin && s.status === "ACTIVE" && (
+          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={handleClose}>
+            <Archive className="h-3 w-3 mr-1" />Close Survey
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SurveysPage() {
   const { data: session } = useSession();
@@ -39,6 +82,8 @@ export default function SurveysPage() {
   const [closeId, setCloseId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [closesAt, setClosesAt] = useState("");
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleCreate = useCallback(() => {
     if (!title.trim()) { toast.error("Title is required"); return; }
@@ -61,6 +106,8 @@ export default function SurveysPage() {
     });
   }, [update]);
 
+  const handleCloseOpen = useCallback((id: number) => setCloseId(id), []);
+
   const handleClose = useCallback(() => {
     if (!closeId) return;
     update.mutate({ id: closeId, status: "CLOSED" }, {
@@ -68,6 +115,10 @@ export default function SurveysPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [closeId, update]);
+
+  const handleCloseDialogChange = useCallback((open: boolean) => {
+    if (!open) setCloseId(null);
+  }, []);
 
   if (isLoading) {
     return (
@@ -84,7 +135,7 @@ export default function SurveysPage() {
       title="Pulse Surveys"
       subtitle="Create and manage employee engagement surveys"
       badge={`${surveys?.length ?? 0} surveys`}
-      actions={isAdmin ? <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Create Survey</Button> : undefined}
+      actions={isAdmin ? <Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />Create Survey</Button> : undefined}
     >
       {!surveys?.length ? (
         <Card><CardContent className="py-12 text-center">
@@ -94,30 +145,13 @@ export default function SurveysPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {surveys.map((s: PulseSurvey) => (
-            <Card key={s.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <Badge variant={statusBadge(s.status)} className="text-[10px]">{s.status ?? "DRAFT"}</Badge>
-                  {s.isAnonymous && <Badge variant="outline" className="text-[10px]">Anonymous</Badge>}
-                </div>
-                <h3 className="text-sm font-semibold leading-tight">{s.title}</h3>
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5"><ClipboardList className="h-3 w-3" />{s.questions?.length ?? 0} questions</span>
-                  <span className="flex items-center gap-0.5"><BarChart3 className="h-3 w-3" />{s.responses?.length ?? 0} responses</span>
-                  {s.closesAt && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />Closes {format(new Date(s.closesAt), "MMM d")}</span>}
-                </div>
-                {isAdmin && s.status === "DRAFT" && (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => handlePublish(s.id)}>
-                    <Play className="h-3 w-3 mr-1" />Publish
-                  </Button>
-                )}
-                {isAdmin && s.status === "ACTIVE" && (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => setCloseId(s.id)}>
-                    <Archive className="h-3 w-3 mr-1" />Close Survey
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <SurveyCard
+              key={s.id}
+              s={s}
+              isAdmin={isAdmin}
+              onPublish={handlePublish}
+              onClose={handleCloseOpen}
+            />
           ))}
         </div>
       )}
@@ -136,7 +170,7 @@ export default function SurveysPage() {
 
       <ConfirmActionDialog
         open={closeId !== null}
-        onOpenChange={(open) => { if (!open) setCloseId(null); }}
+        onOpenChange={handleCloseDialogChange}
         title="Close Survey"
         description="Close this survey? No more responses will be accepted."
         confirmLabel="Close"

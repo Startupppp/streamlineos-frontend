@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, memo } from "react";
 import { Check, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,35 @@ interface DepartmentComboboxProps {
   allowCreate?: boolean;
   className?: string;
 }
+
+// ─── Department Option Item ────────────────────────────────────────────────────
+
+interface DepartmentOptionProps {
+  dept: { id: number; name: string };
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+}
+
+const DepartmentOption = memo(function DepartmentOption({ dept, isSelected, onSelect }: DepartmentOptionProps) {
+  const handleClick = useCallback(() => onSelect(dept.id), [onSelect, dept.id]);
+  return (
+    <button
+      type="button"
+      className={cn(
+        "flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+        isSelected && "bg-accent text-accent-foreground"
+      )}
+      onClick={handleClick}
+    >
+      <Check
+        className={cn("h-4 w-4 shrink-0", isSelected ? "opacity-100" : "opacity-0")}
+      />
+      <span className="truncate">{dept.name}</span>
+    </button>
+  );
+});
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 
 export function DepartmentCombobox({
   value,
@@ -72,12 +101,20 @@ export function DepartmentCombobox({
     }
   }, [open]);
 
-  const handleSelect = (id: number) => {
+  const handleSelect = useCallback((id: number) => {
     onValueChange(id);
     setOpen(false);
-  };
+  }, [onValueChange]);
 
-  const handleAdd = () => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") setOpen(false);
+  }, []);
+
+  const handleAdd = useCallback(() => {
     const name = search.trim();
     if (!name) return;
     createDepartment.mutate(
@@ -105,7 +142,7 @@ export function DepartmentCombobox({
         },
       }
     );
-  };
+  }, [search, createDepartment, qc, onValueChange]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -134,30 +171,20 @@ export function DepartmentCombobox({
             ref={inputRef}
             placeholder="Search or add department..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
-            }}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
             className="h-9"
           />
         </div>
         <ScrollArea className="max-h-[240px]">
           <div className="p-1">
             {filtered.map((dept) => (
-              <button
+              <DepartmentOption
                 key={dept.id}
-                type="button"
-                className={cn(
-                  "flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
-                  value === dept.id && "bg-accent text-accent-foreground"
-                )}
-                onClick={() => handleSelect(dept.id)}
-              >
-                <Check
-                  className={cn("h-4 w-4 shrink-0", value === dept.id ? "opacity-100" : "opacity-0")}
-                />
-                <span className="truncate">{dept.name}</span>
-              </button>
+                dept={dept}
+                isSelected={value === dept.id}
+                onSelect={handleSelect}
+              />
             ))}
             {canAdd && (
               <button

@@ -142,6 +142,13 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
     }
   }, [open, defaultSlot, event, isEdit]);
 
+  const handleSheetOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onOpenChange(false);
+    },
+    [onOpenChange],
+  );
+
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
@@ -256,7 +263,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent side="right" className="flex flex-col p-0 w-full sm:max-w-[480px]">
         <SheetHeader className="px-6 border-b shrink-0">
           <SheetTitle className="text-base font-semibold">

@@ -73,6 +73,9 @@ export function AIEmailDialog({
     setTimeout(() => setCopied(null), 2000);
   }, [email]);
 
+  const handleCopySubject = useCallback(() => handleCopy("subject"), [handleCopy]);
+  const handleCopyBody = useCallback(() => handleCopy("body"), [handleCopy]);
+
   const handleCopyAll = useCallback(async () => {
     if (!email) return;
     await navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.body}`);
@@ -158,7 +161,7 @@ export function AIEmailDialog({
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-[10px]"
-                    onClick={() => handleCopy("subject")}
+                    onClick={handleCopySubject}
                   >
                     {copied === "subject" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
@@ -172,7 +175,7 @@ export function AIEmailDialog({
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-[10px]"
-                    onClick={() => handleCopy("body")}
+                    onClick={handleCopyBody}
                   >
                     {copied === "body" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>

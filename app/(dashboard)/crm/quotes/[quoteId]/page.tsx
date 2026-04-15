@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ quoteId:
   const sendQuote = useSendQuote();
   const updateQuote = useUpdateQuote();
   const deleteQuote = useDeleteQuote();
+
+  const handleGoBack = useCallback(() => router.push("/crm/quotes"), [router]);
 
   if (isLoading) {
     return (
@@ -167,7 +169,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ quoteId:
       subtitle={quote.subject}
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/crm/quotes")}>
+          <Button variant="outline" size="sm" onClick={handleGoBack}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button variant="outline" size="sm" onClick={handleDownloadPdf}>

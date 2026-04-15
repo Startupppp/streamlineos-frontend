@@ -1,0 +1,61 @@
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { db } from "@/lib/db";
+import { users, onboardingSteps, organizationMembers } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+import type { NextRequest } from "next/server";
+
+const schema = z.object({
+  phone: z.string().min(1),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  dateOfBirth: z.string().optional(),
+  experienceYears: z.string().optional(),
+  skills: z.array(z.string()).or(z.string()).optional(),
+});
+
+async function upsertOnboardingStep(
+  userId: string,
+  orgId: string,
+  stepName: string
+) {
+  const existing = await db.query.onboardingSteps.findFirst({
+    where: and(eq(onboardingSteps.userId, userId), eq(onboardingSteps.stepName, stepName)),
+  });
+  if (existing) {
+    await db
+      .update(onboardingSteps)
+      .set({ status: "COMPLETED", completedAt: new Date() })
+      .where(eq(onboardingSteps.id, existing.id));
+  } else {
+    await db.insert(onboardingSteps).values({
+      userId,
+      orgId,
+      stepName,
+      status: "COMPLETED",
+      completedAt: new Date(),
+    });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  return withAuth(async (session) => {
+    const body = await parseBody(req, schema);
+    const skillsArray = Array.isArray(body.skills)
+      ? body.skills
+      : body.skills
+      ? (body.skills as string).split(",").map((s) => s.trim()).filter(Boolean)
+      : undefined;
+
+    await db.update(users).set({
+      phone: body.phone,
+      ...(body.gender ? { gender: body.gender } : {}),
+      ...(body.dateOfBirth ? { dateOfBirth: body.dateOfBirth } : {}),
+      ...(body.experienceYears ? { experienceYears: body.experienceYears } : {}),
+      ...(skillsArray ? { skills: skillsArray } : {}),
+    }).where(eq(users.id, session.user.id));
+
+    await upsertOnboardingStep(session.user.id, session.orgId, "Personal Details");
+
+    return ok({ success: true });
+  });
+}

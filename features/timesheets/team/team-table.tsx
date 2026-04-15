@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Clock, Download, MoreVertical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,83 @@ const statusBadgeStyles: Record<string, string> = {
   REJECTED: "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400",
 };
 
+// ─── Entry Row ────────────────────────────────────────────────────────────────
+
+interface EntryRowProps {
+  entry: TimesheetEntry;
+  onEntryClick: (entry: TimesheetEntry) => void;
+}
+
+const EntryRow = memo(function EntryRow({ entry, onEntryClick }: EntryRowProps) {
+  const handleRowClick = useCallback(() => onEntryClick(entry), [onEntryClick, entry]);
+  const handleDetailClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEntryClick(entry);
+  }, [onEntryClick, entry]);
+
+  return (
+    <TableRow
+      className="cursor-pointer hover:bg-muted/50 transition-colors"
+      onClick={handleRowClick}
+    >
+      <TableCell className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={resolveImageUrl(entry.user?.image)} />
+            <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+              {entry.user?.firstName?.[0]}
+              {entry.user?.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-semibold">
+            {entry.user?.firstName} {entry.user?.lastName}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="px-6 py-4 whitespace-nowrap">
+        {entry.ticket?.project?.name ? (
+          <Badge variant="secondary" className="font-medium text-xs">
+            {entry.ticket.project.name}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">N/A</span>
+        )}
+      </TableCell>
+      <TableCell className="px-6 py-4 max-w-xs">
+        <p className="text-sm text-muted-foreground truncate">
+          {entry.description || "No description provided"}
+        </p>
+      </TableCell>
+      <TableCell className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-sm font-bold">{entry.hours || "0"}h</span>
+        </div>
+      </TableCell>
+      <TableCell className="px-6 py-4 text-center">
+        <Badge
+          className={`text-[10px] font-bold uppercase tracking-wide border-0 ${
+            statusBadgeStyles[entry.status || "PENDING"]
+          }`}
+        >
+          {entry.status || "PENDING"}
+        </Badge>
+      </TableCell>
+      <TableCell className="px-6 py-4 text-right">
+        <button
+          onClick={handleDetailClick}
+          className="p-1 hover:text-primary transition-colors"
+          aria-label="View details"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+    </TableRow>
+  );
+});
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
 export interface TeamTableProps {
   timesheets: TimesheetEntry[] | undefined;
   isLoading: boolean;
@@ -51,6 +128,9 @@ export const TeamTable = memo(function TeamTable({
   onEntryClick,
   onExportCSV,
 }: TeamTableProps) {
+  const handlePrevPage = useCallback(() => onPageChange((p) => Math.max(1, p - 1)), [onPageChange]);
+  const handleNextPage = useCallback(() => onPageChange((p) => p + 1), [onPageChange]);
+
   return (
     <Card>
       <CardHeader className="pb-3 border-b">

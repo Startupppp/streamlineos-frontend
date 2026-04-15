@@ -76,6 +76,8 @@ export default function QuestionBankPage() {
 
   const createQuestion = useCreateInterviewQuestion();
 
+  const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
+
   const handleCreate = useCallback(() => {
     if (!newQuestion.trim()) { toast.error("Question text is required"); return; }
     createQuestion.mutate(
@@ -161,7 +163,7 @@ export default function QuestionBankPage() {
                 </div>
               </div>
               <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                <Button variant="outline" className="flex-1" onClick={handleCloseSheet}>Cancel</Button>
                 <Button className="flex-1" onClick={handleCreate} disabled={createQuestion.isPending}>
                   {createQuestion.isPending ? "Adding..." : "Add Question"}
                 </Button>

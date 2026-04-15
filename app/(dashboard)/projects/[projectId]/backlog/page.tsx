@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useCallback, useState } from "react";
+import { use, useMemo, useCallback, useState, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/lib/hooks/trpc-hooks";
 import { useBulkUpdateTickets } from "@/lib/api/hooks/projects";
@@ -32,6 +32,98 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+interface TicketRowProps {
+  ticket: {
+    id: number;
+    ticketNumber: string | number;
+    title: string | null;
+    description?: string | null;
+    status: string;
+    priority: string;
+    type: string;
+    assigneeId?: string | null;
+    createdAt?: string | null;
+    assignee?: {
+      image?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+    } | null;
+  };
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+  onToggleSelect: (id: number) => void;
+}
+
+const TicketRow = memo(function TicketRow({
+  ticket,
+  isSelected,
+  onSelect,
+  onToggleSelect,
+}: TicketRowProps) {
+  const handleRowClick = useCallback(() => onSelect(ticket.id), [onSelect, ticket.id]);
+  const handleCheckboxCellClick = useCallback(
+    (e: React.MouseEvent) => { e.stopPropagation(); onToggleSelect(ticket.id); },
+    [onToggleSelect, ticket.id]
+  );
+  const handleCheckedChange = useCallback(
+    () => onToggleSelect(ticket.id),
+    [onToggleSelect, ticket.id]
+  );
+
+  return (
+    <TableRow
+      className={`cursor-pointer hover:bg-muted/50 ${isSelected ? "bg-primary/5" : ""}`}
+      onClick={handleRowClick}
+    >
+      <TableCell onClick={handleCheckboxCellClick}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={handleCheckedChange}
+          aria-label={`Select ticket ${ticket.ticketNumber}`}
+        />
+      </TableCell>
+      <TableCell className="font-mono text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <TicketTypeIcon type={ticket.type} />
+          #{ticket.ticketNumber}
+        </span>
+      </TableCell>
+      <TableCell className="max-w-md">
+        <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
+      </TableCell>
+      <TableCell>
+        <StatusBadge status={ticket.status} />
+      </TableCell>
+      <TableCell>
+        <PriorityBadge priority={ticket.priority} showLabel />
+      </TableCell>
+      <TableCell>
+        {ticket.assignee ? (
+          <div className="flex items-center gap-1.5">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
+              <AvatarFallback className="text-[8px]">
+                {ticket.assignee.firstName?.[0]}
+                {ticket.assignee.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs truncate">
+              {ticket.assignee.firstName}
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {ticket.createdAt
+          ? format(new Date(ticket.createdAt), "MMM d")
+          : "—"}
+      </TableCell>
+    </TableRow>
+  );
+});
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -242,57 +334,13 @@ export default function BacklogPage({ params }: PageProps) {
               </TableRow>
             ) : (
               filteredTickets.map((ticket) => (
-                <TableRow
+                <TicketRow
                   key={ticket.id}
-                  className={`cursor-pointer hover:bg-muted/50 ${selectedIds.has(ticket.id) ? "bg-primary/5" : ""}`}
-                  onClick={() => handleTicketSelect(ticket.id)}
-                >
-                  <TableCell onClick={(e) => { e.stopPropagation(); toggleSelect(ticket.id); }}>
-                    <Checkbox
-                      checked={selectedIds.has(ticket.id)}
-                      onCheckedChange={() => toggleSelect(ticket.id)}
-                      aria-label={`Select ticket ${ticket.ticketNumber}`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <TicketTypeIcon type={ticket.type} />
-                      #{ticket.ticketNumber}
-                    </span>
-                  </TableCell>
-                  <TableCell className="max-w-md">
-                    <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={ticket.status} />
-                  </TableCell>
-                  <TableCell>
-                    <PriorityBadge priority={ticket.priority} showLabel />
-                  </TableCell>
-                  <TableCell>
-                    {ticket.assignee ? (
-                      <div className="flex items-center gap-1.5">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                          <AvatarFallback className="text-[8px]">
-                            {ticket.assignee.firstName?.[0]}
-                            {ticket.assignee.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs truncate">
-                          {ticket.assignee.firstName}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {ticket.createdAt
-                      ? format(new Date(ticket.createdAt), "MMM d")
-                      : "—"}
-                  </TableCell>
-                </TableRow>
+                  ticket={ticket}
+                  isSelected={selectedIds.has(ticket.id)}
+                  onSelect={handleTicketSelect}
+                  onToggleSelect={toggleSelect}
+                />
               ))
             )}
           </TableBody>

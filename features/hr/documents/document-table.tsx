@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, memo } from "react";
 import { format } from "date-fns";
 import {
   FileText,
@@ -111,6 +112,162 @@ export interface DocumentTableProps {
   onOpenUpload: () => void;
 }
 
+// ─── Per-row memo component ───────────────────────────────────────────────────
+
+interface DocumentRowProps {
+  doc: Document;
+  onDelete: (id: number) => Promise<void>;
+}
+
+const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProps) {
+  const fileConfig = getFileIconConfig(doc.fileName || doc.name);
+  const FileIcon = fileConfig.icon;
+  const typeLabel =
+    DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "General";
+  const categoryColor = CATEGORY_COLORS[typeLabel] || CATEGORY_COLORS.General;
+  const hasFileUrl = !!doc.fileUrl;
+
+  const handleView = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!hasFileUrl) { toast.error("This document has no file attached."); return; }
+      viewFile(doc.fileUrl);
+    },
+    [hasFileUrl, doc.fileUrl],
+  );
+
+  const handleDownload = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!hasFileUrl) { toast.error("This document has no file attached."); return; }
+      downloadFile(doc.fileUrl, doc.fileName || doc.name);
+    },
+    [hasFileUrl, doc.fileUrl, doc.fileName, doc.name],
+  );
+
+  const handleVersionHistory = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toast.info(`Document "${doc.name}" has ${doc.version} versions.`);
+    },
+    [doc.name, doc.version],
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      void onDelete(doc.id);
+    },
+    [onDelete, doc.id],
+  );
+
+  const handleMenuTriggerClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
+  return (
+    <TableRow className="hover:bg-muted/30 transition-colors group">
+      <TableCell className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg flex-shrink-0 ${fileConfig.bg}`}>
+            <FileIcon className={`h-5 w-5 ${fileConfig.text}`} />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-sm text-foreground truncate">
+              {doc.fileName || doc.name}
+            </p>
+            {doc.tags && doc.tags.length > 0 && (
+              <div className="flex gap-1.5 mt-1">
+                {doc.tags.slice(0, 3).map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="outline"
+                    className={`text-[10px] px-1.5 py-0 font-medium ${
+                      tag.toLowerCase().includes("confidential")
+                        ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                        : "bg-muted/50 text-muted-foreground border-border"
+                    }`}
+                  >
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="px-6 py-4">
+        <Badge variant="outline" className={`text-xs font-medium ${categoryColor}`}>
+          {typeLabel}
+        </Badge>
+      </TableCell>
+      <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+        {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : "-"}
+      </TableCell>
+      <TableCell className="px-6 py-4 text-sm text-muted-foreground text-right">
+        {formatFileSize(doc.fileSize)}
+      </TableCell>
+      <TableCell className="px-6 py-4">
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            disabled={!hasFileUrl}
+            onClick={handleView}
+          >
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            disabled={!hasFileUrl}
+            onClick={handleDownload}
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!hasFileUrl} onClick={handleDownload}>
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </DropdownMenuItem>
+              {(doc.version || 1) > 1 && (
+                <DropdownMenuItem onClick={handleVersionHistory}>
+                  <History className="mr-2 h-4 w-4" />
+                  Version History ({doc.version})
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function DocumentTable({
   paginatedDocuments,
   folders,
@@ -219,169 +376,9 @@ export function DocumentTable({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedDocuments.map((doc) => {
-                const fileConfig = getFileIconConfig(doc.fileName || doc.name);
-                const FileIcon = fileConfig.icon;
-                const typeLabel =
-                  DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "General";
-                const categoryColor = CATEGORY_COLORS[typeLabel] || CATEGORY_COLORS.General;
-                const hasFileUrl = !!doc.fileUrl;
-
-                return (
-                  <TableRow
-                    key={doc.id}
-                    className="hover:bg-muted/30 transition-colors group"
-                  >
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg flex-shrink-0 ${fileConfig.bg}`}>
-                          <FileIcon className={`h-5 w-5 ${fileConfig.text}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm text-foreground truncate">
-                            {doc.fileName || doc.name}
-                          </p>
-                          {doc.tags && doc.tags.length > 0 && (
-                            <div className="flex gap-1.5 mt-1">
-                              {doc.tags.slice(0, 3).map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className={`text-[10px] px-1.5 py-0 font-medium ${
-                                    tag.toLowerCase().includes("confidential")
-                                      ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                      : "bg-muted/50 text-muted-foreground border-border"
-                                  }`}
-                                >
-                                  #{tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs font-medium ${categoryColor}`}
-                      >
-                        {typeLabel}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                      {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : "-"}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-sm text-muted-foreground text-right">
-                      {formatFileSize(doc.fileSize)}
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={!hasFileUrl}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!hasFileUrl) {
-                              toast.error("This document has no file attached.");
-                              return;
-                            }
-                            viewFile(doc.fileUrl);
-                          }}
-                        >
-                          <Eye className="mr-1.5 h-3.5 w-3.5" />
-                          View
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={!hasFileUrl}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!hasFileUrl) {
-                              toast.error("This document has no file attached.");
-                              return;
-                            }
-                            downloadFile(doc.fileUrl, doc.fileName || doc.name);
-                          }}
-                        >
-                          <Download className="mr-1.5 h-3.5 w-3.5" />
-                          Download
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              aria-label="More options"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              disabled={!hasFileUrl}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!hasFileUrl) {
-                                  toast.error("This document has no file attached.");
-                                  return;
-                                }
-                                viewFile(doc.fileUrl);
-                              }}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={!hasFileUrl}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!hasFileUrl) {
-                                  toast.error("This document has no file attached.");
-                                  return;
-                                }
-                                downloadFile(doc.fileUrl, doc.fileName || doc.name);
-                              }}
-                            >
-                              <Download className="mr-2 h-4 w-4" />
-                              Download
-                            </DropdownMenuItem>
-                            {(doc.version || 1) > 1 && (
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toast.info(
-                                    `Document "${doc.name}" has ${doc.version} versions.`,
-                                  );
-                                }}
-                              >
-                                <History className="mr-2 h-4 w-4" />
-                                Version History ({doc.version})
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(doc.id);
-                              }}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              paginatedDocuments.map((doc) => (
+                <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} />
+              ))
             )}
           </TableBody>
         </Table>

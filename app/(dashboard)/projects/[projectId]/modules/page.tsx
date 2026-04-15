@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import { useModules, useCreateModule, useProjectMembers } from "@/lib/api/hooks/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -106,6 +106,16 @@ export default function ModulesPage({
     defaultValues: { status: "backlog" },
   });
 
+  const handleSetStartDate = useCallback(
+    (v: string) => form.setValue("startDate", v),
+    [form]
+  );
+  const handleSetEndDate = useCallback(
+    (v: string) => form.setValue("endDate", v),
+    [form]
+  );
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
   const onSubmit = (data: CreateModuleForm) => {
     createMutation.mutate(
       { ...data, projectId },
@@ -190,11 +200,11 @@ export default function ModulesPage({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="mod-start">Start Date</Label>
-                  <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
+                  <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
                 </div>
                 <div>
                   <Label htmlFor="mod-end">End Date</Label>
-                  <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
+                  <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
                 </div>
               </div>
               <div>
@@ -246,7 +256,7 @@ export default function ModulesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first module to organize work into feature areas.
             </p>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-1" /> Create First Module
             </Button>
           </div>

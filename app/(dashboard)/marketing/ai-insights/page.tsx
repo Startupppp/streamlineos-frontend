@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   Sparkles,
   Loader2,
@@ -71,14 +71,16 @@ interface PreviousInsightsItemProps {
   onRestore: (result: CampaignInsightsResult & { period: string }) => void;
 }
 
-function PreviousInsightsItem({ result, onRestore }: PreviousInsightsItemProps) {
+const PreviousInsightsItem = memo(function PreviousInsightsItem({ result, onRestore }: PreviousInsightsItemProps) {
   const preview = result.insights.slice(0, 120).trim();
   const generatedAt = new Date(result.generatedAt);
+
+  const handleRestore = useCallback(() => onRestore(result), [result, onRestore]);
 
   return (
     <button
       type="button"
-      onClick={() => onRestore(result)}
+      onClick={handleRestore}
       className="w-full text-left p-3 rounded-lg border border-border hover:border-gold/40 hover:bg-gold/5 transition-colors group"
       aria-label={`Restore insights from ${generatedAt.toLocaleDateString()}`}
     >
@@ -102,7 +104,7 @@ function PreviousInsightsItem({ result, onRestore }: PreviousInsightsItemProps) 
       </div>
     </button>
   );
-}
+});
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -135,6 +137,8 @@ export default function AIInsightsPage() {
     setPeriod(result.period as Period);
   }, []);
 
+  const handlePeriodChange = useCallback((v: string) => setPeriod(v as Period), []);
+
   const previousItems = history.filter((h) => h.generatedAt !== current?.generatedAt);
 
   return (
@@ -157,7 +161,7 @@ export default function AIInsightsPage() {
                 <Label htmlFor="ai-period" className="text-xs font-medium">
                   Analysis Period
                 </Label>
-                <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+                <Select value={period} onValueChange={handlePeriodChange}>
                   <SelectTrigger id="ai-period" className="text-sm" aria-label="Select analysis period">
                     <SelectValue placeholder="Select period" />
                   </SelectTrigger>

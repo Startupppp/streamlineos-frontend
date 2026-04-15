@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   CalendarRange, Plus, Trash2, ChevronLeft, ChevronRight,
   FileText, Mail, Share2, Video, Globe, BookOpen,
@@ -79,7 +79,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // ─── Content Item Card ────────────────────────────────────────────────────────
 
-function ContentItemCard({
+const ContentItemCard = memo(function ContentItemCard({
   item,
   onStatusChange,
 }: {
@@ -88,12 +88,17 @@ function ContentItemCard({
 }) {
   const deleteItem = useDeleteContentItem();
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     deleteItem.mutate(item.id, {
       onSuccess: () => toast.success("Item deleted"),
       onError: () => toast.error("Failed to delete"),
     });
-  };
+  }, [deleteItem, item.id]);
+
+  const handleStatusChange = useCallback(
+    (v: string) => onStatusChange(item.id, v),
+    [item.id, onStatusChange],
+  );
 
   return (
     <div className="bg-card border rounded-lg p-3 space-y-2 shadow-sm">
@@ -152,7 +157,7 @@ function ContentItemCard({
 
       <Select
         value={item.status ?? "idea"}
-        onValueChange={(v) => onStatusChange(item.id, v)}
+        onValueChange={handleStatusChange}
       >
         <SelectTrigger className="h-7 text-xs">
           <SelectValue />
@@ -165,7 +170,7 @@ function ContentItemCard({
       </Select>
     </div>
   );
-}
+});
 
 // ─── Create Sheet ─────────────────────────────────────────────────────────────
 
@@ -179,6 +184,9 @@ function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   const [tagsInput, setTagsInput] = useState("");
 
   const create = useCreateContentItem();
+
+  const handleSheetOpenChange = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
+  const handleStatusChange = useCallback((v: string) => setStatus(v as StatusValue), []);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -208,7 +216,7 @@ function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   };
 
   return (
-    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add Content Item</SheetTitle>
@@ -250,7 +258,7 @@ function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as StatusValue)}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {STATUSES.map((s) => (
@@ -313,6 +321,11 @@ export default function ContentCalendarPage() {
     [updateItem]
   );
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handlePrevMonth = useCallback(() => setCurrentDate((d) => subMonths(d, 1)), []);
+  const handleNextMonth = useCallback(() => setCurrentDate((d) => addMonths(d, 1)), []);
+
   const filteredItems = statusFilter === "all"
     ? allItems
     : allItems.filter((i) => i.status === statusFilter);
@@ -324,7 +337,7 @@ export default function ContentCalendarPage() {
       title="Content Calendar"
       subtitle="Plan and track your content across all channels"
       actions={
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" /> Add Content
         </Button>
       }
@@ -332,11 +345,11 @@ export default function ContentCalendarPage() {
         <div className="flex items-center gap-3">
           {/* Month Picker */}
           <div className="flex items-center gap-1 border rounded-md px-2 py-1">
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handlePrevMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium w-28 text-center">{format(currentDate, "MMMM yyyy")}</span>
-            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleNextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -404,7 +417,7 @@ export default function ContentCalendarPage() {
         </div>
       )}
 
-      <CreateSheet open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateSheet open={createOpen} onClose={handleCloseCreate} />
     </PageWrapper>
   );
 }

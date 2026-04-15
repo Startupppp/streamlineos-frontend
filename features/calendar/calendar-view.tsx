@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect, memo } from "react";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -48,6 +48,29 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 const VIEWS: View[] = ["month", "week", "day"];
+
+interface ViewButtonProps {
+  v: View;
+  current: View;
+  onSelect: (v: View) => void;
+}
+
+const ViewButton = memo(function ViewButton({ v, current, onSelect }: ViewButtonProps) {
+  const handleClick = useCallback(() => onSelect(v), [v, onSelect]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`px-3 text-xs capitalize transition-colors ${
+        current === v
+          ? "bg-primary text-primary-foreground"
+          : "hover:bg-muted text-muted-foreground"
+      }`}
+    >
+      {v}
+    </button>
+  );
+});
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -185,6 +208,12 @@ export function CalendarView() {
     [currentDate]
   );
 
+  const handleExportMonth = useCallback(() => handleExport("month"), [handleExport]);
+  const handleExport3Months = useCallback(() => handleExport("3months"), [handleExport]);
+  const handleExportYear = useCallback(() => handleExport("year"), [handleExport]);
+
+  const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
+
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
@@ -219,18 +248,7 @@ export function CalendarView() {
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border border-border overflow-hidden h-8">
             {VIEWS.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setView(v)}
-                className={`px-3 text-xs capitalize transition-colors ${
-                  view === v
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted text-muted-foreground"
-                }`}
-              >
-                {v}
-              </button>
+              <ViewButton key={v} v={v} current={view} onSelect={setView} />
             ))}
           </div>
           <DropdownMenu>
@@ -243,13 +261,13 @@ export function CalendarView() {
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel className="text-xs">Export to CSV</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs" onClick={() => handleExport("month")}>
+              <DropdownMenuItem className="text-xs" onClick={handleExportMonth}>
                 This month
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={() => handleExport("3months")}>
+              <DropdownMenuItem className="text-xs" onClick={handleExport3Months}>
                 Next 3 months
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={() => handleExport("year")}>
+              <DropdownMenuItem className="text-xs" onClick={handleExportYear}>
                 This year
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -286,7 +304,7 @@ export function CalendarView() {
 
       <EventDetailSheet
         event={selectedEvent}
-        onClose={() => setSelectedEventId(null)}
+        onClose={handleCloseDetail}
       />
     </div>
   );

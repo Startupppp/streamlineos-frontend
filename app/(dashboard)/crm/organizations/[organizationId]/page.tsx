@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, type ElementType } from "react";
+import { useState, use, useCallback, type ElementType } from "react";
 import Link from "next/link";
 import {
   Building2, Globe, Users, Link2, Mail, Phone,
@@ -66,6 +66,8 @@ export default function OrganizationDetailPage({
   const id = Number(organizationId);
 
   const [parentDialogOpen, setParentDialogOpen] = useState(false);
+  const handleOpenParentDialog = useCallback(() => setParentDialogOpen(true), []);
+  const handleParentDialogOpenChange = useCallback((open: boolean) => setParentDialogOpen(open), []);
 
   const { data: org, isLoading: orgLoading } = useCrmOrganizationDetail(id);
   const { data: rollup, isLoading: rollupLoading } = useCrmOrgRollup(id);
@@ -117,7 +119,7 @@ export default function OrganizationDetailPage({
             variant="outline"
             size="sm"
             className="gap-1.5 text-xs"
-            onClick={() => setParentDialogOpen(true)}
+            onClick={handleOpenParentDialog}
           >
             <GitBranch className="h-3.5 w-3.5" />
             {org.parentId ? "Change Parent" : "Link Parent"}
@@ -387,7 +389,7 @@ export default function OrganizationDetailPage({
       {/* Link Parent Dialog */}
       <LinkParentDialog
         open={parentDialogOpen}
-        onOpenChange={setParentDialogOpen}
+        onOpenChange={handleParentDialogOpenChange}
         organizationId={id}
         currentParentId={org.parentId}
       />
