@@ -3,7 +3,6 @@ import { withAdmin, ok, err } from "@/lib/api/helpers";
 import { sendEmail } from "@/lib/email";
 import { z } from "zod";
 
-// ── Template imports ──────────────────────────────────────────────────────────
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -59,7 +58,6 @@ import {
   getCompanyAnnouncementEmailTemplate,
 } from "@/lib/email-templates/organization";
 
-// ── Registry ──────────────────────────────────────────────────────────────────
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://crm.vaivammcapital.com";
 
 interface TemplateEntry {
@@ -377,13 +375,11 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
   },
 };
 
-// ── Schema ────────────────────────────────────────────────────────────────────
 const bodySchema = z.object({
   templateId: z.string().min(1),
   testEmail: z.string().email(),
 });
 
-// ── Route ─────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   let body: z.infer<typeof bodySchema>;
   try {

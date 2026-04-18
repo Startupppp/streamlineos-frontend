@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ProjectTemplateTicket {
   id: number;
@@ -53,7 +52,6 @@ export interface ApplyProjectTemplateInput {
 
 const TEMPLATES_KEY = ["vaivamm", "project-templates"] as const;
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useProjectTemplates() {
   return useQuery({

@@ -14,19 +14,14 @@ const schema = z.object({
   status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]),
   expectedStatus: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
   lostReason: z.string().optional(),
-  // Conversion extras — passed from the conversion modal
   estimatedInvestment: z.string().optional(),
   conversionNotes: z.string().optional(),
 });
 
 type Ctx = { params: Promise<{ leadId: string }> };
 
-/**
- * Round-robin: pick the next CUSTOMER_SUPPORT user for CRM assignment.
- * Cycles through all CS members, assigning to whoever has the fewest active accounts.
- */
+
 async function getNextCrmAssignee(orgId: string): Promise<string | null> {
-  // Get all CUSTOMER_SUPPORT members
   const csMembers = await db
     .select({ userId: organizationMembers.userId })
     .from(organizationMembers)
@@ -39,7 +34,6 @@ async function getNextCrmAssignee(orgId: string): Promise<string | null> {
 
   if (csMembers.length === 0) return null;
 
-  // Count active (non-INVESTED) accounts per CS member
   const counts: Record<string, number> = {};
   for (const m of csMembers) {
     const [result] = await db
@@ -55,7 +49,6 @@ async function getNextCrmAssignee(orgId: string): Promise<string | null> {
     counts[m.userId] = result?.count ?? 0;
   }
 
-  // Assign to the member with fewest active accounts (load-balanced round-robin)
   let minCount = Infinity;
   let assignee: string | null = null;
   for (const m of csMembers) {
@@ -126,12 +119,9 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     }
 
     if (input.status === "CONVERTED") {
-      // Get CRM assignee via round-robin before transaction
       const crmAssigneeId = await getNextCrmAssignee(orgId);
 
-      // ── Critical: create client + client account (must succeed) ──
       await db.transaction(async (tx) => {
-        // Create client record
         const existingClient = await tx.query.clients.findFirst({
           where: and(eq(clients.leadId, updated.id), eq(clients.orgId, orgId)),
         });
@@ -151,7 +141,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           });
         }
 
-        // Create client account with CRM round-robin assignment
         const existingClientAccount = await tx.query.clientAccounts.findFirst({
           where: and(eq(clientAccounts.leadId, updated.id), eq(clientAccounts.orgId, orgId)),
         });
@@ -175,7 +164,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           });
         }
 
-        // Update lead notes/investmentInterest from conversion modal if provided
         if (input.conversionNotes || input.estimatedInvestment) {
           await tx.update(leads)
             .set({
@@ -186,10 +174,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         }
       });
 
-      // ── Non-critical side effects (don't block conversion) ──
       void (async () => {
         try {
-          // Create onboarding ticket
           const firstProject = await db.query.projects.findFirst({
             where: eq(projects.orgId, orgId),
           });
@@ -213,7 +199,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             });
           }
 
-          // In-app notifications
           await db.insert(notifications).values({
             orgId,
             userId: updated.assignedToId || session.user.id,
@@ -234,7 +219,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             });
           }
 
-          // Email notifications
           const salesRep = await db.query.users.findFirst({
             where: eq(users.id, updated.assignedToId || session.user.id),
             columns: { email: true, name: true },
@@ -271,7 +255,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             }
           }
         } catch {
-          // Non-critical — notifications and tickets don't block conversion
         }
       })();
     }

@@ -12,12 +12,7 @@ const slaResetSchema = z.object({
   status: z.enum(SLA_STATUSES).optional().default("ON_TRACK"),
 });
 
-/**
- * PATCH /api/hr/recruitment/candidates/[candidateId]/sla
- * Upsert the SLA tracking record for a candidate+stage.
- * Resets enteredAt to now and clears breachedAt, setting status to ON_TRACK.
- * Called automatically on stage change (or manually to reset a timer).
- */
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ candidateId: string }> }
@@ -61,10 +56,7 @@ export async function PATCH(
   });
 }
 
-/**
- * GET /api/hr/recruitment/candidates/[candidateId]/sla
- * Return all SLA tracking records for this candidate.
- */
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ candidateId: string }> }

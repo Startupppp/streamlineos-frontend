@@ -234,7 +234,6 @@ type AddAttachmentInput = {
   mimeType: string;
 };
 
-// ─── Bulk Update ─────────────────────────────────────────────────────────────
 
 export interface BulkUpdateTicketsInput {
   ticketIds: number[];
@@ -259,7 +258,6 @@ export function useBulkUpdateTickets(projectId: number) {
   });
 }
 
-// ─── Ticket Relations ─────────────────────────────────────────────────────────
 
 export type WorkItemRelationType = "blocks" | "blocked_by" | "duplicate_of" | "relates_to";
 

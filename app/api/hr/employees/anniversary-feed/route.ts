@@ -14,9 +14,7 @@ interface FeedItem {
   yearsCount?: number;
 }
 
-/** GET /api/hr/employees/anniversary-feed
- *  Returns birthdays and work anniversaries in the next 30 days.
- */
+
 export async function GET() {
   return withAuth(async (session) => {
     const members = await db
@@ -37,10 +35,8 @@ export async function GET() {
     for (const m of members) {
       if (!m.name) continue;
 
-      // Birthday
       if (m.dateOfBirth) {
         const dob = new Date(m.dateOfBirth);
-        // Next birthday this year
         let nextBirthday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
         if (nextBirthday < today) nextBirthday = addYears(nextBirthday, 1);
         const days = differenceInDays(nextBirthday, today);
@@ -56,7 +52,6 @@ export async function GET() {
         }
       }
 
-      // Work anniversary
       if (m.joiningDate) {
         const joined = new Date(m.joiningDate);
         const yearsCompleted = today.getFullYear() - joined.getFullYear();
@@ -81,7 +76,6 @@ export async function GET() {
       }
     }
 
-    // Sort by days away
     items.sort((a, b) => a.daysAway - b.daysAway);
     return ok(items);
   });

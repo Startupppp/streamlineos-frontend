@@ -71,7 +71,6 @@ export function LinkParentDialog({
             </div>
           ) : (
             <div className="space-y-1 p-1">
-              {/* None option */}
               <button
                 type="button"
                 onClick={() => setSelectedId(null)}

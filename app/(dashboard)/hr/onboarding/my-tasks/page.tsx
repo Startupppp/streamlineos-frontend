@@ -20,7 +20,6 @@ import {
 } from "@/lib/api/hooks/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── All-done banner ─────────────────────────────────────────────────────────
 
 function AllDoneBanner() {
   return (
@@ -41,7 +40,6 @@ function AllDoneBanner() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyOnboardingTasksPage() {
   const { data: session } = useSession();
@@ -52,13 +50,11 @@ export default function MyOnboardingTasksPage() {
 
   const togglingIds = useRef<Set<number>>(new Set());
 
-  // Derived stats
   const totalTasks = tasks?.length ?? 0;
   const completedTasks = tasks?.filter((t) => t.status === "COMPLETED").length ?? 0;
   const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const allDone = totalTasks > 0 && completedTasks === totalTasks;
 
-  // Track previous allDone to fire celebration toast only once when crossing 100%
   const prevAllDoneRef = useRef(false);
   useEffect(() => {
     if (allDone && !prevAllDoneRef.current) {
@@ -89,7 +85,6 @@ export default function MyOnboardingTasksPage() {
     [completeTask]
   );
 
-  // Pending / in-progress tasks first, completed last
   const sortedTasks = tasks
     ? [
         ...tasks.filter((t) => t.status !== "COMPLETED"),
@@ -109,12 +104,10 @@ export default function MyOnboardingTasksPage() {
     >
       {isLoading ? (
         <div className="space-y-4">
-          {/* Progress ring skeleton */}
           <div className="flex flex-col items-center gap-3 py-4">
             <Skeleton className="h-[120px] w-[120px] rounded-full" />
             <Skeleton className="h-4 w-40" />
           </div>
-          {/* Task skeletons */}
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16" />
@@ -129,7 +122,6 @@ export default function MyOnboardingTasksPage() {
         />
       ) : (
         <div className="space-y-6">
-          {/* Progress ring + summary */}
           <div className="flex flex-col items-center gap-2 pt-2 pb-1">
             <OnboardingProgressRing percentage={percentage} size={128} strokeWidth={11} />
             <p className="text-sm text-muted-foreground">
@@ -138,10 +130,8 @@ export default function MyOnboardingTasksPage() {
             </p>
           </div>
 
-          {/* All-done celebration */}
           {allDone && <AllDoneBanner />}
 
-          {/* Task list */}
           {!allDone && (
             <div className="space-y-2">
               {sortedTasks.map((task) => (
@@ -157,7 +147,6 @@ export default function MyOnboardingTasksPage() {
             </div>
           )}
 
-          {/* Show completed tasks below all-done banner too */}
           {allDone && (
             <div className="space-y-2">
               {sortedTasks.map((task) => (

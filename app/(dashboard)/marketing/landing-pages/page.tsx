@@ -64,7 +64,6 @@ import { toast } from "sonner";
 import { PageDetailContent } from "@/features/marketing/landing-pages/page-detail-content";
 import { CrmHostedPagesTab } from "@/features/marketing/landing-pages/crm-hosted-pages-tab";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return "—";
@@ -81,14 +80,12 @@ function truncateUrl(url: string, max = 40) {
   }
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function LandingPagesPage() {
   const [sheetMode, setSheetMode] = useState<"create" | "edit" | "detail" | null>(null);
   const [selectedPage, setSelectedPage] = useState<LandingPage | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // Form state
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -100,7 +97,6 @@ export default function LandingPagesPage() {
 
   const pages: LandingPage[] = data?.pages ?? [];
 
-  // Aggregate stats
   const totalPages = pages.length;
   const totalViews = pages.reduce((s, p) => s + p.totalViews, 0);
   const todayViews = pages.reduce((s, p) => s + p.todayViews, 0);
@@ -221,7 +217,6 @@ export default function LandingPagesPage() {
 
         <TabsContent value="tracked">
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Pages" value={totalPages} icon={Globe} color="blue" />
         <StatCard label="Total Views" value={totalViews.toLocaleString()} icon={Eye} color="gold" />
@@ -229,7 +224,6 @@ export default function LandingPagesPage() {
         <StatCard label="Views This Week" value={weekViews.toLocaleString()} icon={TrendingUp} color="purple" />
       </div>
 
-      {/* Table */}
       <ScrollArea className="w-full" type="auto">
         <div className="min-w-[720px]">
           <Table>
@@ -334,7 +328,6 @@ export default function LandingPagesPage() {
         </div>
       </ScrollArea>
 
-      {/* Sheet — create / edit / detail */}
       <Sheet open={sheetMode !== null} onOpenChange={(o) => { if (!o) closeSheet(); }}>
         <SheetContent side="right" className="flex flex-col p-0 gap-0 w-full sm:max-w-md">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -397,7 +390,6 @@ export default function LandingPagesPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete confirmation */}
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => { if (!o) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

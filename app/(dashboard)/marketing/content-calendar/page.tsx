@@ -30,7 +30,6 @@ import {
   type ContentCalendarItem, type CreateContentItemInput,
 } from "@/lib/api/hooks/marketing";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const CONTENT_TYPES = [
   { value: "blog", label: "Blog", icon: FileText },
@@ -60,7 +59,6 @@ const STATUSES = [
 
 type StatusValue = (typeof STATUSES)[number]["value"];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getContentTypeIcon(type: string) {
   const found = CONTENT_TYPES.find((t) => t.value === type);
@@ -77,7 +75,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Content Item Card ────────────────────────────────────────────────────────
 
 function ContentItemCard({
   item,
@@ -167,7 +164,6 @@ function ContentItemCard({
   );
 }
 
-// ─── Create Sheet ─────────────────────────────────────────────────────────────
 
 function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
@@ -292,7 +288,6 @@ function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ContentCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -330,7 +325,6 @@ export default function ContentCalendarPage() {
       }
       filters={
         <div className="flex items-center gap-3">
-          {/* Month Picker */}
           <div className="flex items-center gap-1 border rounded-md px-2 py-1">
             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
               <ChevronLeft className="h-4 w-4" />
@@ -341,7 +335,6 @@ export default function ContentCalendarPage() {
             </Button>
           </div>
 
-          {/* Status filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36 h-8">
               <SelectValue placeholder="Filter status" />

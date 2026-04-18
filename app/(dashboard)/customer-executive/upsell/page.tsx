@@ -50,7 +50,6 @@ import {
   type CreateClientOpportunityInput,
 } from "@/lib/api/hooks/crm";
 
-// ─── Stage config ─────────────────────────────────────────────────────────────
 
 type OppStage = "identified" | "proposed" | "negotiating" | "won" | "lost";
 type OppType = "upsell" | "cross_sell";
@@ -99,7 +98,6 @@ const STAGES: {
   },
 ];
 
-// ─── Currency formatter ───────────────────────────────────────────────────────
 
 function formatInrShort(value: string | null | undefined): string {
   if (!value) return "—";
@@ -118,7 +116,6 @@ function sumValues(opps: ClientOpportunity[]): number {
   return opps.reduce((acc, o) => acc + (Number(o.value) || 0), 0);
 }
 
-// ─── Opportunity card ─────────────────────────────────────────────────────────
 
 interface OppCardProps {
   opp: ClientOpportunity;
@@ -134,7 +131,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
     <motion.div variants={fadeUp}>
       <Card className="group hover:shadow-md transition-shadow">
         <CardContent className="p-4 space-y-3">
-          {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm text-foreground truncate">{opp.title}</p>
@@ -151,7 +147,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
             </Badge>
           </div>
 
-          {/* Type badge */}
           <div className="flex items-center gap-2">
             <Badge
               variant="secondary"
@@ -167,7 +162,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
             </Badge>
           </div>
 
-          {/* Value */}
           {opp.value && (
             <div className="flex items-center gap-1 text-sm font-medium text-foreground">
               <IndianRupee className="h-3.5 w-3.5 text-muted-foreground" />
@@ -175,7 +169,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
             </div>
           )}
 
-          {/* Expected close date */}
           {opp.expectedCloseDate && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <CalendarDays className="h-3 w-3" />
@@ -183,7 +176,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
             </div>
           )}
 
-          {/* Stage selector */}
           <Select
             value={opp.stage}
             onValueChange={(v) => onStageChange(opp.id, v as OppStage)}
@@ -201,7 +193,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
             </SelectContent>
           </Select>
 
-          {/* Delete */}
           <Button
             variant="ghost"
             size="sm"
@@ -218,7 +209,6 @@ function OppCard({ opp, onStageChange, onDelete, isPending }: OppCardProps) {
   );
 }
 
-// ─── Column ───────────────────────────────────────────────────────────────────
 
 interface KanbanColumnProps {
   stage: (typeof STAGES)[number];
@@ -231,7 +221,6 @@ interface KanbanColumnProps {
 function KanbanColumn({ stage, opps, onStageChange, onDelete, mutatingId }: KanbanColumnProps) {
   return (
     <div className="flex flex-col gap-2 min-w-[260px] flex-1">
-      {/* Column header */}
       <div className="rounded-t-lg overflow-hidden">
         <div className={cn("px-3 py-2 flex items-center justify-between", stage.headerBg)}>
           <span className="text-white font-semibold text-sm">{stage.label}</span>
@@ -241,7 +230,6 @@ function KanbanColumn({ stage, opps, onStageChange, onDelete, mutatingId }: Kanb
         </div>
       </div>
 
-      {/* Cards */}
       <motion.div
         className="flex flex-col gap-2 min-h-[120px]"
         variants={staggerContainer}
@@ -267,7 +255,6 @@ function KanbanColumn({ stage, opps, onStageChange, onDelete, mutatingId }: Kanb
   );
 }
 
-// ─── Create form ──────────────────────────────────────────────────────────────
 
 interface CreateFormState {
   clientId: string;
@@ -289,7 +276,6 @@ const INITIAL_FORM: CreateFormState = {
   notes: "",
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function UpsellTrackerPage() {
   const { data: opps = [], isLoading } = useClientOpportunities();
@@ -303,7 +289,6 @@ export default function UpsellTrackerPage() {
   const [mutatingId, setMutatingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
 
   const totalCount = opps.length;
   const pipelineValue = sumValues(opps.filter((o) => !["won", "lost"].includes(o.stage)));
@@ -312,7 +297,6 @@ export default function UpsellTrackerPage() {
   const closedCount = opps.filter((o) => ["won", "lost"].includes(o.stage)).length;
   const winRate = closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : 0;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleStageChange = useCallback((id: number, stage: OppStage) => {
     setMutatingId(id);
@@ -349,7 +333,6 @@ export default function UpsellTrackerPage() {
     });
   }, [form, createOpp]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
 
   const actions = (
     <Button size="sm" onClick={() => setSheetOpen(true)}>
@@ -364,7 +347,6 @@ export default function UpsellTrackerPage() {
       subtitle="Track upsell and cross-sell opportunities across the pipeline"
       actions={actions}
     >
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           label="Total Opportunities"
@@ -396,7 +378,6 @@ export default function UpsellTrackerPage() {
         />
       </div>
 
-      {/* Kanban board */}
       {isLoading ? (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {STAGES.map((s) => (
@@ -422,7 +403,6 @@ export default function UpsellTrackerPage() {
         </div>
       )}
 
-      {/* Create sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
@@ -430,7 +410,6 @@ export default function UpsellTrackerPage() {
           </SheetHeader>
 
           <div className="py-4 space-y-4">
-            {/* Client */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-client">Client *</Label>
               <Select
@@ -450,7 +429,6 @@ export default function UpsellTrackerPage() {
               </Select>
             </div>
 
-            {/* Title */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-title">Title *</Label>
               <Input
@@ -461,7 +439,6 @@ export default function UpsellTrackerPage() {
               />
             </div>
 
-            {/* Type */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-type">Type</Label>
               <Select
@@ -478,7 +455,6 @@ export default function UpsellTrackerPage() {
               </Select>
             </div>
 
-            {/* Stage */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-stage">Stage</Label>
               <Select
@@ -498,7 +474,6 @@ export default function UpsellTrackerPage() {
               </Select>
             </div>
 
-            {/* Value */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-value">Value (₹)</Label>
               <Input
@@ -510,7 +485,6 @@ export default function UpsellTrackerPage() {
               />
             </div>
 
-            {/* Expected close date */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-date">Expected Close Date</Label>
               <Input
@@ -521,7 +495,6 @@ export default function UpsellTrackerPage() {
               />
             </div>
 
-            {/* Notes */}
             <div className="space-y-1.5">
               <Label htmlFor="opp-notes">Notes</Label>
               <Textarea
@@ -553,7 +526,6 @@ export default function UpsellTrackerPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete confirmation */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

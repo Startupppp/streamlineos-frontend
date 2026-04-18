@@ -31,7 +31,6 @@ import {
 import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TEMPLATE_TYPES = [
   { value: "OFFER_LETTER", label: "Offer Letter" },
@@ -41,7 +40,7 @@ const TEMPLATE_TYPES = [
   { value: "OTHER", label: "Other" },
 ] as const;
 
-/** Well-known variable tokens available for all templates */
+
 const COMMON_TOKENS = [
   "Candidate_Name",
   "Job_Title",
@@ -55,7 +54,7 @@ const COMMON_TOKENS = [
   "Reporting_To",
 ] as const;
 
-/** Sample values used to render the preview */
+
 const SAMPLE_VARS: Record<string, string> = {
   Candidate_Name: "John Doe",
   Job_Title: "Senior Engineer",
@@ -69,7 +68,6 @@ const SAMPLE_VARS: Record<string, string> = {
   Reporting_To: "Priya Sharma",
 };
 
-// ─── Default HTML starters per type ──────────────────────────────────────────
 
 const DEFAULT_HTML: Record<string, string> = {
   OFFER_LETTER: `<h1>Offer Letter</h1>
@@ -112,14 +110,12 @@ const DEFAULT_HTML: Record<string, string> = {
 <p>...</p>`,
 };
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface TemplateEditorProps {
-  /** If provided, we're editing an existing template */
+  
   template?: DocumentTemplate;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function TemplateEditor({ template }: TemplateEditorProps) {
   const router = useRouter();
@@ -139,21 +135,17 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const { data: versionHistory } = useDocumentTemplateVersions(template?.id ?? 0);
 
-  // Auto-detected variables from the HTML
   const detectedVariables = useMemo(() => extractVariables(htmlContent), [htmlContent]);
 
-  // Preview HTML with sample data substituted
   const previewHtml = useMemo(() => {
     const { result } = substituteVariables(htmlContent, SAMPLE_VARS);
     return result;
   }, [htmlContent]);
 
-  // When type changes and editor is still on a default template, swap the starter HTML
   const prevTypeRef = useRef(type);
   useEffect(() => {
     if (!isEdit && prevTypeRef.current !== type) {
       const prev = DEFAULT_HTML[prevTypeRef.current];
-      // Only swap if the current content still matches the previous default
       if (htmlContent === prev) {
         setHtmlContent(DEFAULT_HTML[type] ?? DEFAULT_HTML.OTHER);
       }
@@ -161,7 +153,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
     }
   }, [type, isEdit, htmlContent]);
 
-  // Insert token at cursor position in textarea
   const insertToken = useCallback((token: string) => {
     const el = textareaRef.current;
     if (!el) return;
@@ -173,7 +164,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       htmlContent.slice(0, start) + tokenStr + htmlContent.slice(end);
     setHtmlContent(newContent);
 
-    // Restore cursor position after the inserted token
     requestAnimationFrame(() => {
       el.focus();
       const pos = start + tokenStr.length;
@@ -271,9 +261,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-3xl mx-auto"
         }`}
       >
-        {/* ── Left: Editor ─────────────────────────────────────────────── */}
         <div className="space-y-5">
-          {/* Metadata */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Template Details</CardTitle>
@@ -308,7 +296,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             </CardContent>
           </Card>
 
-          {/* Token toolbar */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Variable Tokens</CardTitle>
@@ -355,7 +342,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             </CardContent>
           </Card>
 
-          {/* HTML Editor */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">HTML Content</CardTitle>
@@ -376,7 +362,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             </CardContent>
           </Card>
 
-          {/* Version History */}
           {isEdit && versionHistory && versionHistory.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
@@ -408,7 +393,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           )}
         </div>
 
-        {/* ── Right: Preview ────────────────────────────────────────────── */}
         {showPreview && (
           <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             <Card>

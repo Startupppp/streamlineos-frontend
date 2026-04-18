@@ -17,7 +17,7 @@ const PostSchema = z.object({
   reach: z.number().int().min(0).optional().default(0),
 });
 
-/** GET /api/marketing/social-metrics?platform=linkedin&period=30 */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const sp = req.nextUrl.searchParams;
@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(socialMetrics.metricDate))
       .limit(100);
 
-    // Compute summary
     const totalImpressions = rows.reduce((s, r) => s + (r.impressions ?? 0), 0);
     const totalClicks = rows.reduce((s, r) => s + (r.clicks ?? 0), 0);
     const avgEngagement =
@@ -51,7 +50,6 @@ export async function GET(req: NextRequest) {
         ? Math.round(rows.reduce((s, r) => s + (r.engagements ?? 0), 0) / rows.length)
         : 0;
 
-    // Follower growth: latest minus earliest
     let followerGrowth = 0;
     if (rows.length >= 2) {
       const sorted = [...rows].sort(
@@ -79,7 +77,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/marketing/social-metrics — record a new snapshot */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     let body: unknown;

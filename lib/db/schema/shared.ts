@@ -187,7 +187,6 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
   author: one(users, { fields: [announcements.authorId], references: [users.id] }),
 }));
 
-// ─── Subscriptions & Billing ──────────────────────────────────────────
 
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),

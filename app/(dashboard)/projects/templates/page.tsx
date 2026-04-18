@@ -63,7 +63,6 @@ const CATEGORIES = ["GENERAL", "SOFTWARE", "ONBOARDING", "MARKETING", "SALES", "
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const TICKET_TYPES = ["TASK", "STORY", "BUG", "EPIC"] as const;
 
-// ─── Apply Dialog ─────────────────────────────────────────────────────────────
 
 function ApplyDialog({
   template,
@@ -160,7 +159,6 @@ function ApplyDialog({
   );
 }
 
-// ─── Create Template Dialog ───────────────────────────────────────────────────
 
 function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
@@ -339,7 +337,6 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── Template Card ────────────────────────────────────────────────────────────
 
 function TemplateCard({
   template,
@@ -402,7 +399,6 @@ function TemplateCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProjectTemplatesPage() {
   const { data: templates, isLoading } = useProjectTemplates();

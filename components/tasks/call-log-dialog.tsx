@@ -48,7 +48,6 @@ export function CallLogDialog({ task, onClose }: CallLogDialogProps) {
     const outcomeLabel = CALL_OUTCOMES.find((o) => o.value === outcome)?.label ?? outcome;
     const callNotes = `[Call Log] Outcome: ${outcomeLabel}${notes.trim() ? `\n${notes.trim()}` : ""}`;
 
-    // Update notes first, then mark complete
     updateTask.mutate(
       { taskId: task.id, data: { notes: callNotes } },
       {

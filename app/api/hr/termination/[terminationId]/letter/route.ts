@@ -58,7 +58,6 @@ export async function GET(
       });
     }
 
-    // Default: return HTML letter for preview
     const letterHtml = generateTerminationLetterHtml({
       employeeName: employee?.name ?? "Employee",
       designation: employee?.designation ?? "N/A",

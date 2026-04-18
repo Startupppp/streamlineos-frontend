@@ -43,7 +43,6 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface EmployeeDocSummary {
   userId: string;
@@ -75,7 +74,6 @@ interface OnboardingDoc {
   createdAt: string | null;
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 function useDocReviewSummary() {
   return useQuery<EmployeeDocSummary[]>({
@@ -110,7 +108,6 @@ function useReviewDocument() {
   });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getInitials(name: string | null): string {
   if (!name) return "?";
@@ -177,7 +174,6 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ─── Progress Bar ─────────────────────────────────────────────────────────────
 
 function ProgressBar({
   approved,
@@ -202,21 +198,17 @@ function ProgressBar({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DocumentReviewPage() {
   const { data: summary, isLoading } = useDocReviewSummary();
   const reviewMutation = useReviewDocument();
 
-  // ── Review sheet state ────────────────────────────────────────────────────
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
   const [reviewUserName, setReviewUserName] = useState<string | null>(null);
 
-  // ── Re-upload dialog state ────────────────────────────────────────────────
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
 
-  // ── Approve confirm state ─────────────────────────────────────────────────
   const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
 
   const {
@@ -224,7 +216,6 @@ export default function DocumentReviewPage() {
     isLoading: docsLoading,
   } = useEmployeeOnboardingDocs(reviewUserId);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleOpenReview = useCallback((emp: EmployeeDocSummary) => {
     setReviewUserId(emp.userId);
@@ -273,7 +264,6 @@ export default function DocumentReviewPage() {
     );
   }, [reuploadDoc, reuploadRemarks, reviewMutation]);
 
-  // ── Loading state ─────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
@@ -377,7 +367,6 @@ export default function DocumentReviewPage() {
         </ScrollArea>
       )}
 
-      {/* ── Review Sheet ───────────────────────────────────────────────────── */}
       <Sheet open={reviewUserId !== null} onOpenChange={(open) => { if (!open) handleCloseReview(); }}>
         <SheetContent side="right" className="flex flex-col p-0 gap-0 sm:max-w-lg w-full">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -410,7 +399,6 @@ export default function DocumentReviewPage() {
                     key={doc.id}
                     className="rounded-md border bg-muted/20 p-3 space-y-2"
                   >
-                    {/* Header row */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -455,7 +443,6 @@ export default function DocumentReviewPage() {
                       </Badge>
                     </div>
 
-                    {/* Reviewed info */}
                     {doc.reviewedAt && (
                       <p className="text-[11px] text-muted-foreground">
                         Reviewed {format(new Date(doc.reviewedAt), "MMM d, yyyy")}
@@ -468,7 +455,6 @@ export default function DocumentReviewPage() {
                       </p>
                     )}
 
-                    {/* Actions for SUBMITTED docs */}
                     {doc.status === "SUBMITTED" && (
                       <>
                         <Separator />
@@ -507,7 +493,6 @@ export default function DocumentReviewPage() {
         </SheetContent>
       </Sheet>
 
-      {/* ── Approve Confirm ────────────────────────────────────────────────── */}
       <ConfirmActionDialog
         open={approveDoc !== null}
         onOpenChange={(open) => { if (!open) setApproveDoc(null); }}
@@ -519,7 +504,6 @@ export default function DocumentReviewPage() {
         isPending={reviewMutation.isPending}
       />
 
-      {/* ── Re-upload Request Sheet ────────────────────────────────────────── */}
       <Sheet
         open={reuploadDoc !== null}
         onOpenChange={(open) => {

@@ -837,7 +837,7 @@ export const holidays = pgTable("holidays", {
   name: text("name").notNull(),
   date: date("date").notNull(),
   message: text("message"),
-  isPublic: boolean("is_public").default(false).notNull(), // true = national/public holiday, false = org-specific
+  isPublic: boolean("is_public").default(false).notNull(),
   notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -923,7 +923,7 @@ export const jobPostings = pgTable("job_postings", {
   applicationDeadline: date("application_deadline"),
   closingDate: timestamp("closing_date"),
   postedBy: text("posted_by").references(() => users.id),
-  /** JSONB map of external board IDs: { "linkedin": "123", "naukri": "456" } */
+  
   externalPostingIds: jsonb("external_posting_ids").$type<Record<string, string>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -932,15 +932,15 @@ export const jobPostings = pgTable("job_postings", {
   index("idx_job_postings_status").on(table.status),
 ]);
 
-/** Connected job board integrations (per org) */
+
 export const candidateSources = pgTable("candidate_sources", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
-  platform: text("platform").notNull(), // LINKEDIN | NAUKRI | INDEED | ORGANIC
+  platform: text("platform").notNull(),
   isActive: boolean("is_active").notNull().default(true),
-  /** Encrypted OAuth/API token — store opaquely */
+  
   oauthToken: text("oauth_token"),
-  /** Metadata: accountName, scope, etc. */
+  
   meta: jsonb("meta").$type<Record<string, unknown>>(),
   lastSyncedAt: timestamp("last_synced_at"),
   lastSyncCount: integer("last_sync_count").default(0),
@@ -977,7 +977,6 @@ export const candidates = pgTable("candidates", {
   aiScore: integer("ai_score"),
   aiScoreBreakdown: jsonb("ai_score_breakdown").$type<Record<string, number>>(),
   aiScoreGeneratedAt: timestamp("ai_score_generated_at"),
-  // Background Verification
   bgvStatus: text("bgv_status").$type<"NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED">().default("NOT_INITIATED"),
   bgvAgency: text("bgv_agency"),
   bgvNotes: text("bgv_notes"),
@@ -1038,7 +1037,6 @@ export const interviews = pgTable("interviews", {
   index("idx_interviews_scheduled").on(table.scheduledAt),
 ]);
 
-// ─── Interview Scorecards ───────────────────────────────────────────────────
 
 export const scorecardTemplates = pgTable("scorecard_templates", {
   id: serial("id").primaryKey(),
@@ -1071,7 +1069,6 @@ export const interviewScorecards = pgTable("interview_scorecards", {
   uniqueIndex("uniq_scorecard_interview_interviewer").on(table.interviewId, table.interviewerId),
 ]);
 
-// ─── Interview Booking Links (Self-scheduling) ─────────────────────────────
 
 export interface BookingSlot {
   start: string;
@@ -1100,7 +1097,6 @@ export const interviewBookingLinks = pgTable("interview_booking_links", {
   index("idx_booking_links_candidate").on(table.candidateId),
 ]);
 
-// ─── Candidate Referrals ────────────────────────────────────────────────────
 
 export const candidateReferrals = pgTable("candidate_referrals", {
   id: serial("id").primaryKey(),
@@ -1118,7 +1114,6 @@ export const candidateReferrals = pgTable("candidate_referrals", {
   index("idx_referrals_referred_by").on(table.referredBy),
 ]);
 
-// ─── Calibration Sessions ───────────────────────────────────────────────────
 
 export const calibrationSessions = pgTable("calibration_sessions", {
   id: serial("id").primaryKey(),
@@ -1138,7 +1133,6 @@ export const calibrationSessions = pgTable("calibration_sessions", {
   index("idx_calibration_sessions_org").on(table.orgId),
 ]);
 
-// ─── Candidate Documents Vault ──────────────────────────────────────────────
 
 export const candidateDocumentsVault = pgTable("candidate_documents_vault", {
   id: serial("id").primaryKey(),
@@ -1149,10 +1143,10 @@ export const candidateDocumentsVault = pgTable("candidate_documents_vault", {
   fileUrl: text("file_url").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull().default(0),
-  /** Category: AADHAR | PAN | PASSPORT | CERTIFICATE | OTHER */
+  
   documentType: text("document_type"),
   avResult: text("av_result").$type<"PENDING" | "CLEAN" | "INFECTED">().notNull().default("PENDING"),
-  expiresAt: date("expires_at"), // for certifications / passports
+  expiresAt: date("expires_at"),
   uploadedBy: text("uploaded_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -1168,7 +1162,6 @@ export const vaultAccessLogs = pgTable("vault_access_logs", {
   accessedAt: timestamp("accessed_at").defaultNow(),
 });
 
-// ─── Onboarding Workflow ─────────────────────────────────────────────────────
 
 export const onboardingTemplates = pgTable("onboarding_templates", {
   id: serial("id").primaryKey(),
@@ -1215,7 +1208,6 @@ export const onboardingTasks = pgTable("onboarding_tasks", {
   index("idx_onboarding_tasks_status").on(table.orgId, table.status),
 ]);
 
-// ─── Relations ───────────────────────────────────────────────────────────────
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
   organization: one(organizations, {
@@ -1528,7 +1520,6 @@ export const onboardingTasksRelations = relations(onboardingTasks, ({ one }) => 
   templateStep: one(onboardingTemplateSteps, { fields: [onboardingTasks.templateStepId], references: [onboardingTemplateSteps.id] }),
 }));
 
-// ─── Document Templates & Candidate Documents ────────────────────────────────
 
 export const documentTemplates = pgTable("document_templates", {
   id: serial("id").primaryKey(),
@@ -1554,13 +1545,13 @@ export const candidateDocuments = pgTable("candidate_documents", {
   title: text("title").notNull(),
   htmlContent: text("html_content").notNull().default(""),
   status: text("status").notNull().default("GENERATED"),
-  /** External e-sign document ID (DocuSign/Documenso envelope ID) */
+  
   externalDocId: text("external_doc_id"),
   sentAt: timestamp("sent_at"),
   viewedAt: timestamp("viewed_at"),
   signedAt: timestamp("signed_at"),
   declinedAt: timestamp("declined_at"),
-  /** Offer acceptance deadline; reminder sent 24h before */
+  
   acceptanceDeadline: timestamp("acceptance_deadline"),
   createdBy: text("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1585,7 +1576,6 @@ export const documentTemplateVersions = pgTable("document_template_versions", {
   index("idx_dtv_template_id").on(table.templateId),
 ]);
 
-// Relations
 
 export const documentTemplatesRelations = relations(documentTemplates, ({ one, many }) => ({
   organization: one(organizations, { fields: [documentTemplates.orgId], references: [organizations.id] }),
@@ -1605,7 +1595,6 @@ export const candidateDocumentsRelations = relations(candidateDocuments, ({ one 
   creator: one(users, { fields: [candidateDocuments.createdBy], references: [users.id] }),
 }));
 
-// ─── Interview SLA ──────────────────────────────────────────────────────────
 
 export const interviewSlas = pgTable("interview_slas", {
   id: serial("id").primaryKey(),
@@ -1625,7 +1614,7 @@ export const candidateSlaTracking = pgTable("candidate_sla_tracking", {
   stage: text("stage").notNull(),
   enteredAt: timestamp("entered_at").notNull().defaultNow(),
   breachedAt: timestamp("breached_at"),
-  status: text("status").notNull().default("ON_TRACK"), // ON_TRACK | AT_RISK | BREACHED
+  status: text("status").notNull().default("ON_TRACK"),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_sla_tracking_candidate_stage").on(table.candidateId, table.stage),
@@ -1642,7 +1631,6 @@ export const candidateSlaTrackingRelations = relations(candidateSlaTracking, ({ 
   candidate: one(candidates, { fields: [candidateSlaTracking.candidateId], references: [candidates.id] }),
 }));
 
-// ─── Interview Question Bank ──────────────────────────────────────────────────
 
 export const interviewQuestions = pgTable("interview_questions", {
   id: serial("id").primaryKey(),
@@ -1666,7 +1654,6 @@ export const interviewQuestionsRelations = relations(interviewQuestions, ({ one 
   creator: one(users, { fields: [interviewQuestions.createdBy], references: [users.id] }),
 }));
 
-// ─── Reference Checks ────────────────────────────────────────────────────────
 
 export const candidateReferenceChecks = pgTable("candidate_reference_checks", {
   id: serial("id").primaryKey(),
@@ -1696,7 +1683,6 @@ export const candidateReferenceChecksRelations = relations(candidateReferenceChe
   createdByUser: one(users, { fields: [candidateReferenceChecks.createdBy], references: [users.id] }),
 }));
 
-// ─── Candidate Offers ────────────────────────────────────────────────────────
 
 export const candidateOffers = pgTable("candidate_offers", {
   id: serial("id").primaryKey(),
@@ -1705,7 +1691,6 @@ export const candidateOffers = pgTable("candidate_offers", {
   jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
   offeredBy: text("offered_by").references(() => users.id),
   offerStatus: text("offer_status").notNull().default("DRAFT"),
-  // DRAFT | SENT | VIEWED | ACCEPTED | DECLINED | COUNTERED | EXPIRED
   offeredSalary: decimal("offered_salary"),
   offeredDesignation: text("offered_designation"),
   joiningDate: date("joining_date"),
@@ -1729,7 +1714,6 @@ export const candidateOffersRelations = relations(candidateOffers, ({ one }) => 
   offeredByUser: one(users, { fields: [candidateOffers.offeredBy], references: [users.id] }),
 }));
 
-// ─── Leave Blackout Dates ─────────────────────────────────────────────────────
 
 export const leaveBlackoutDates = pgTable("leave_blackout_dates", {
   id: serial("id").primaryKey(),

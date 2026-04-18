@@ -142,7 +142,6 @@ export function LeadQuickActions({
   const handleApplyTemplate = useCallback((templateId: string) => {
     const template = emailTemplates?.find((t) => String(t.id) === templateId);
     if (!template) return;
-    // Substitute {{lead_name}} placeholder if present
     const subject = template.subject.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
     const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
     emailForm.setValue("subject", subject);

@@ -1,6 +1,4 @@
-/**
- * Public (unauthenticated) route for web-to-lead form rendering and submission.
- */
+
 import { db } from "@/lib/db";
 import { webLeadForms, leads } from "@/lib/db/schema/crm";
 import { eq, sql } from "drizzle-orm";
@@ -47,7 +45,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const body = await parseBody(req, leadFormBodySchema);
 
-  // Validate required fields
   const fields = (form.fields ?? []) as Array<{ name: string; label: string; required: boolean }>;
   for (const field of fields) {
     const val = body[field.name];
@@ -56,7 +53,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
   }
 
-  // Build the lead — name is required; derive it from form data
   const strField = (key: string): string | null => {
     const val = body[key];
     return typeof val === "string" && val.length > 0 ? val : null;
@@ -83,7 +79,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     customData: body,
   });
 
-  // Increment submission counter
   await db
     .update(webLeadForms)
     .set({

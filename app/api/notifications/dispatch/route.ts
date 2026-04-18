@@ -5,23 +5,20 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const dispatchSchema = z.object({
-  /** Recipient email address (required when email channel selected) */
+  
   email: z.string().email().optional(),
-  /** Recipient phone in E.164 format e.g. "+919876543210" (required for sms/whatsapp) */
+  
   phone: z.string().optional(),
-  /** Message subject — used for email */
+  
   subject: z.string().min(1),
-  /** Plain-text or HTML body */
+  
   body: z.string().min(1),
-  /** Which channels to attempt. Defaults to ["email"]. */
+  
   channels: z
     .array(z.enum(["email", "sms", "whatsapp"]))
     .min(1)
     .default(["email"]),
-  /**
-   * When true and WhatsApp fails, automatically fall back to SMS.
-   * Only relevant when "whatsapp" is in channels.
-   */
+  
   whatsappSmsFallback: z.boolean().default(true),
 });
 

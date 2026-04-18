@@ -27,7 +27,6 @@ export async function getCalendarEvents(
   end: Date
 ): Promise<CalendarEventItem[]> {
   const [eventsData, leavesData, interviewsData, tasksData, holidaysData] = await Promise.all([
-    // 1. Calendar events
     db.query.calendarEvents.findMany({
       where: and(
         eq(calendarEvents.orgId, orgId),
@@ -38,7 +37,6 @@ export async function getCalendarEvents(
       orderBy: (t, { asc }) => [asc(t.startDate)],
     }),
 
-    // 2. Approved leave requests (OOO events)
     db
       .select({
         id: leaveRequests.id,
@@ -59,7 +57,6 @@ export async function getCalendarEvents(
         )
       ),
 
-    // 3. Scheduled interviews (for HR users — no role filter, filter by org)
     db
       .select({
         id: interviews.id,
@@ -79,7 +76,6 @@ export async function getCalendarEvents(
         )
       ),
 
-    // 4. Tasks with due dates in range
     db
       .select({
         id: tasks.id,
@@ -98,7 +94,6 @@ export async function getCalendarEvents(
         )
       ),
 
-    // 5. Org holidays in range
     db
       .select({
         id: holidays.id,
@@ -116,7 +111,6 @@ export async function getCalendarEvents(
       ),
   ]);
 
-  // Build a map of the current user's RSVP status for calendar events
   const eventIds = eventsData.map((e) => e.id);
   const rsvpMap = new Map<number, string>();
   if (eventIds.length > 0) {
@@ -136,7 +130,6 @@ export async function getCalendarEvents(
 
   const result: CalendarEventItem[] = [];
 
-  // Map calendar events (with current user's RSVP status)
   for (const ev of eventsData) {
     result.push({
       id: `event-${ev.id}`,
@@ -156,7 +149,6 @@ export async function getCalendarEvents(
     });
   }
 
-  // Map approved leaves as OOO events
   for (const lv of leavesData) {
     result.push({
       id: `leave-${lv.id}`,
@@ -172,7 +164,6 @@ export async function getCalendarEvents(
     });
   }
 
-  // Map interviews
   for (const iv of interviewsData) {
     const end = new Date(iv.scheduledAt);
     end.setMinutes(end.getMinutes() + (iv.duration ?? 60));
@@ -189,7 +180,6 @@ export async function getCalendarEvents(
     });
   }
 
-  // Map tasks as due-date markers
   for (const tk of tasksData) {
     if (!tk.dueDate) continue;
     result.push({
@@ -204,7 +194,6 @@ export async function getCalendarEvents(
     });
   }
 
-  // Map holidays
   for (const hd of holidaysData) {
     const hdDate = new Date(hd.date);
     result.push({
@@ -233,7 +222,7 @@ export async function getCalendarEvent(id: number, orgId: string) {
   });
 }
 
-/** Check if any attendees have approved leaves overlapping with the event date range */
+
 export async function getOooConflicts(
   orgId: string,
   attendeeIds: string[],

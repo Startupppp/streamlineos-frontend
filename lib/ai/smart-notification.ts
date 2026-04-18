@@ -2,7 +2,6 @@ import "server-only";
 
 import { aiText, isOpenAIConfigured } from "./openai";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type NotificationEvent =
   | "LEAD_ASSIGNED"
@@ -13,22 +12,21 @@ export type NotificationEvent =
 
 export interface SmartNotificationContext {
   event: NotificationEvent;
-  /** The default title to use as fallback */
+  
   defaultTitle: string;
-  /** The default message body to use as fallback */
+  
   defaultMessage: string;
-  /** Contextual data the AI will use to enrich the message */
+  
   context: Record<string, string | number | null | undefined>;
 }
 
 export interface SmartNotificationResult {
   title: string;
   message: string;
-  /** true if the AI enrichment was used; false if the fallback was used */
+  
   enriched: boolean;
 }
 
-// ─── Prompt builders ──────────────────────────────────────────────────────────
 
 const EVENT_PROMPTS: Record<NotificationEvent, (ctx: Record<string, string | number | null | undefined>) => string> = {
   LEAD_ASSIGNED: (ctx) => `
@@ -115,13 +113,8 @@ Output format: TITLE|||MESSAGE
 `,
 };
 
-// ─── Main function ────────────────────────────────────────────────────────────
 
-/**
- * Generates an AI-enriched notification title and message.
- * Falls back to the default title/message if AI is unavailable or fails.
- * This is non-blocking — always call with `void` or in a try-catch.
- */
+
 export async function generateSmartNotification(
   input: SmartNotificationContext
 ): Promise<SmartNotificationResult> {
@@ -147,7 +140,6 @@ export async function generateSmartNotification(
       temperature: 0.4,
     });
 
-    // Parse TITLE|||MESSAGE format
     const separatorIdx = raw.indexOf("|||");
     if (separatorIdx === -1) return fallback;
 

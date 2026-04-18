@@ -25,7 +25,7 @@ const updateEmployeeSchema = z.object({
   twitterUrl: z.string().url().optional().or(z.literal("")),
   githubUrl: z.string().url().optional().or(z.literal("")),
   websiteUrl: z.string().url().optional().or(z.literal("")),
-  joiningDate: z.string().optional(), // ISO date string (YYYY-MM-DD)
+  joiningDate: z.string().optional(),
   reportingTo: z.string().nullable().optional(),
 });
 
@@ -72,12 +72,10 @@ export async function PATCH(
       if (isSelf) return err("You cannot terminate your own account.", 400);
     }
 
-    // Circular managerId guard: prevent A→B→A cycles
     if (body.reportingTo !== undefined && body.reportingTo !== null) {
       if (body.reportingTo === targetUserId) {
         return err("An employee cannot report to themselves.", 400);
       }
-      // Walk up the chain to detect cycles
       let cursor: string | null = body.reportingTo;
       const visited = new Set<string>([targetUserId]);
       while (cursor) {
@@ -117,7 +115,6 @@ export async function PATCH(
       await db.update(users).set(updateData).where(eq(users.id, targetUserId));
     }
 
-    // Date shift: if joiningDate changed, proportionally shift onboarding task dueDates
     if (body.joiningDate && isOwnerOrAdmin) {
       const currentUser = await db.query.users.findFirst({
         where: eq(users.id, targetUserId),
@@ -159,7 +156,6 @@ export async function PATCH(
       }
     }
 
-    // When an employee is activated (isActive = true), auto-initiate onboarding
     if (body.isActive === true) {
       const activatedUser = await db.query.users.findFirst({
         where: eq(users.id, targetUserId),

@@ -35,7 +35,6 @@ import { Loader2, ChevronDown, Video, Phone, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateInterview } from "@/lib/api/hooks/hr/recruitment";
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
 
 const scheduleSchema = z.object({
   scheduledAt: z.string().min(1, "Date/time required"),
@@ -47,7 +46,6 @@ const scheduleSchema = z.object({
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface ScheduleInterviewDialogProps {
   candidateId: number;
@@ -57,7 +55,6 @@ export interface ScheduleInterviewDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const FORMAT_OPTIONS = [
   { value: "VIDEO" as const, label: "Video", Icon: Video },
@@ -73,14 +70,12 @@ const DURATION_OPTIONS = [
   { value: "120", label: "120 min" },
 ];
 
-// ─── Map form format → API InterviewType ─────────────────────────────────────
 
 function formatToInterviewType(format: "VIDEO" | "PHONE" | "IN_PERSON") {
   if (format === "IN_PERSON") return "ONSITE" as const;
   return format as "VIDEO" | "PHONE";
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ScheduleInterviewDialog({
   candidateId,
@@ -93,7 +88,6 @@ export function ScheduleInterviewDialog({
   const createInterview = useCreateInterview();
 
   const form = useForm<ScheduleFormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(scheduleSchema) as any,
     defaultValues: {
       scheduledAt: "",
@@ -144,7 +138,6 @@ export function ScheduleInterviewDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* Date + Time */}
             <FormField
               control={form.control}
               name="scheduledAt"
@@ -163,7 +156,6 @@ export function ScheduleInterviewDialog({
               )}
             />
 
-            {/* Duration */}
             <FormField
               control={form.control}
               name="durationMinutes"
@@ -192,7 +184,6 @@ export function ScheduleInterviewDialog({
               )}
             />
 
-            {/* Format */}
             <FormField
               control={form.control}
               name="format"
@@ -228,7 +219,6 @@ export function ScheduleInterviewDialog({
               )}
             />
 
-            {/* Notes (collapsible via simple toggle) */}
             <div>
               <button
                 type="button"
@@ -267,7 +257,6 @@ export function ScheduleInterviewDialog({
               )}
             </div>
 
-            {/* Notify email */}
             <FormField
               control={form.control}
               name="notifyEmail"

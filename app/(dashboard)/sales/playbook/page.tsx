@@ -13,7 +13,6 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// ─── Static playbook data ─────────────────────────────────────────────────────
 
 type PlaybookCategory = "Scripts" | "Objections" | "Pricing" | "Qualifying" | "Closing";
 
@@ -165,7 +164,6 @@ const CATEGORY_BADGE_CLASSES: Record<PlaybookCategory, string> = {
   Closing: "bg-green-100 text-green-700 border-green-200",
 };
 
-// ─── Copy button ──────────────────────────────────────────────────────────────
 
 function CopyButton({ content }: { content: string }) {
   const [copied, setCopied] = useState(false);
@@ -194,7 +192,6 @@ function CopyButton({ content }: { content: string }) {
   );
 }
 
-// ─── Entry card ───────────────────────────────────────────────────────────────
 
 function PlaybookCard({ entry }: { entry: PlaybookEntry }) {
   return (
@@ -229,7 +226,6 @@ function PlaybookCard({ entry }: { entry: PlaybookEntry }) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SalesPlaybookPage() {
   const [search, setSearch] = useState("");
@@ -268,7 +264,6 @@ export default function SalesPlaybookPage() {
       }
     >
       <div className="space-y-4">
-        {/* Category tabs */}
         <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as typeof activeCategory)}>
           <TabsList className="h-8 gap-0.5">
             {CATEGORIES.map((cat) => (
@@ -284,14 +279,12 @@ export default function SalesPlaybookPage() {
           </TabsList>
         </Tabs>
 
-        {/* Results count */}
         <p className="text-xs text-muted-foreground">
           {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
           {activeCategory !== "All" && ` in ${activeCategory}`}
           {search && ` matching "${search}"`}
         </p>
 
-        {/* Cards grid */}
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <p className="text-sm font-medium text-foreground">No entries found</p>

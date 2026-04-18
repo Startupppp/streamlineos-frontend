@@ -32,7 +32,7 @@ export interface ActivityDashboardResponse {
   trend: { date: string; count: number }[];
 }
 
-/** GET /api/sales/activity-dashboard?period=week|month */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { period } = parseQuery(req, querySchema);
@@ -49,7 +49,6 @@ export async function GET(req: NextRequest) {
         const endDate = new Date(now);
         endDate.setHours(23, 59, 59, 999);
 
-        // ── Lead activities: fetch all for the org in the period ──────────────
         const leadRows = await db
           .select({
             userId: leadActivities.userId,
@@ -68,7 +67,6 @@ export async function GET(req: NextRequest) {
             ),
           );
 
-        // ── Deal activities: fetch all for the org in the period ──────────────
         const dealRows = await db
           .select({
             userId: dealActivities.userId,
@@ -83,10 +81,8 @@ export async function GET(req: NextRequest) {
             ),
           );
 
-        // ── Aggregate per-rep lead activities ─────────────────────────────────
         const repMap = new Map<string, RepActivity>();
 
-        // Seed from users in lead activities
         for (const row of leadRows) {
           if (!repMap.has(row.userId)) {
             repMap.set(row.userId, {
@@ -122,10 +118,8 @@ export async function GET(req: NextRequest) {
           rep.total++;
         }
 
-        // ── Aggregate deal activities per user ────────────────────────────────
         for (const row of dealRows) {
           if (!repMap.has(row.userId)) {
-            // Resolve user name/role for reps that only have deal activities
             const userInfo = await db
               .select({ name: users.name, role: users.role })
               .from(users)
@@ -147,12 +141,10 @@ export async function GET(req: NextRequest) {
           repMap.get(row.userId)!.dealActivities++;
         }
 
-        // ── Sort reps by total desc ───────────────────────────────────────────
         const reps = Array.from(repMap.values()).sort(
           (a, b) => b.total + b.dealActivities - (a.total + a.dealActivities),
         );
 
-        // ── Compute totals ────────────────────────────────────────────────────
         const totals: Omit<RepActivity, "userId" | "name" | "role"> = {
           calls: 0,
           emails: 0,
@@ -172,8 +164,6 @@ export async function GET(req: NextRequest) {
           totals.dealActivities += rep.dealActivities;
         }
 
-        // ── Build daily trend ─────────────────────────────────────────────────
-        // Pre-fill every day in the range with 0
         const trendMap = new Map<string, number>();
         for (let d = 0; d < days; d++) {
           const day = new Date(startDate);
@@ -181,14 +171,12 @@ export async function GET(req: NextRequest) {
           trendMap.set(day.toISOString().slice(0, 10), 0);
         }
 
-        // Count lead activities per day
         for (const row of leadRows) {
           const day = new Date(row.date).toISOString().slice(0, 10);
           if (trendMap.has(day)) {
             trendMap.set(day, (trendMap.get(day) ?? 0) + 1);
           }
         }
-        // Count deal activities per day
         for (const row of dealRows) {
           if (!row.createdAt) continue;
           const day = new Date(row.createdAt).toISOString().slice(0, 10);

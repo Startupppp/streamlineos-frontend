@@ -18,7 +18,7 @@ import { useAccountSummary, type AccountSummaryResult } from "@/lib/api/hooks/ai
 import { useSimpleClientsList } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 
-/* ─── Copy Button ─────────────────────────────────────────────────────────── */
+
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -45,7 +45,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-/* ─── Download Button ────────────────────────────────────────────────────── */
+
 
 function DownloadButton({ text, clientName }: { text: string; clientName: string }) {
   const handleDownload = useCallback(() => {
@@ -68,7 +68,7 @@ function DownloadButton({ text, clientName }: { text: string; clientName: string
   );
 }
 
-/* ─── Result Card ────────────────────────────────────────────────────────── */
+
 
 interface ResultCardProps {
   result: AccountSummaryResult;
@@ -121,7 +121,6 @@ function ResultCard({ result, onRegenerate, isRegenerating }: ResultCardProps) {
       <CardContent>
         <div className="prose prose-sm max-w-none space-y-3">
           {paragraphs.map((para, i) => {
-            // Detect section headers (lines that end with : or are all-caps or start with number.)
             const lines = para.split("\n");
             return (
               <div key={i} className="space-y-1">
@@ -152,7 +151,7 @@ function ResultCard({ result, onRegenerate, isRegenerating }: ResultCardProps) {
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 
 export default function AccountSummaryPage() {
   const { data: clients = [], isLoading: isLoadingClients } = useSimpleClientsList();
@@ -194,7 +193,6 @@ export default function AccountSummaryPage() {
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Left: Form ─────────────────────────────────────────────────── */}
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
@@ -260,7 +258,6 @@ export default function AccountSummaryPage() {
             </CardContent>
           </Card>
 
-          {/* Tips card */}
           <Card className="mt-4">
             <CardContent className="pt-4">
               <p className="text-xs font-medium text-foreground mb-2">What&apos;s included</p>
@@ -283,7 +280,6 @@ export default function AccountSummaryPage() {
           </Card>
         </div>
 
-        {/* ── Right: Result ───────────────────────────────────────────────── */}
         <div className="lg:col-span-2">
           {isPending && (
             <Card>

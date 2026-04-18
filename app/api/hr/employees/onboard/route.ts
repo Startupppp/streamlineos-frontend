@@ -108,10 +108,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Invalidate HR dashboard caches so headcount reflects immediately
     await invalidateHrDashboardCache(session.orgId);
 
-    // Trigger auto-onboarding workflow (non-blocking)
     void inngest.send({
       name: "hr/employee.onboarded",
       data: {
@@ -120,10 +118,8 @@ export async function POST(req: NextRequest) {
         joiningDate: body.joiningDate ?? null,
       },
     }).catch(() => {
-      // Non-critical — onboarding can be initiated manually if this fails
     });
 
-    // Fire webhook event (non-blocking)
     void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
       dispatchWebhook(session.orgId, "employee.hired", {
         userId: newUser.id,
@@ -134,7 +130,6 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // Audit log
     try {
       await createAuditLog({
         action: "hr.employee_onboarded",
@@ -144,9 +139,8 @@ export async function POST(req: NextRequest) {
         targetType: "employee",
         metadata: { email: body.email, name: `${body.firstName} ${body.lastName}`, role: body.role, designation: body.designation },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
-    // Generate setup token and send welcome email with setup link
     if (newUser.email) {
       try {
         const setupToken = nanoid(48);
@@ -154,7 +148,7 @@ export async function POST(req: NextRequest) {
           id: randomUUID(),
           email: newUser.email,
           token: setupToken,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
 
         const setupUrl = `${appUrl}/setup-password?token=${setupToken}`;

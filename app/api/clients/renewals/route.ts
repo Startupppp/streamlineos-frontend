@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { clientAccounts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-/** GET /api/clients/renewals — all client accounts with renewal fields */
+
 export async function GET() {
   return withAuth(async (session) => {
     const accounts = await db.query.clientAccounts.findMany({

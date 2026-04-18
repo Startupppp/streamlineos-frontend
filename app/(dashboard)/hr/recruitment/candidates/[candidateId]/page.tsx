@@ -187,7 +187,6 @@ export default function CandidateDetailPage() {
         </div>
       }
     >
-      {/* Duplicate candidate warning */}
       {candidate.duplicateOfId != null && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3 mb-4 text-sm">
           <span className="text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden="true">⚠</span>
@@ -273,7 +272,6 @@ export default function CandidateDetailPage() {
             </CardContent>
           </Card>
 
-          {/* AI Score card */}
           <Card>
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-medium flex items-center gap-1.5">
@@ -336,7 +334,6 @@ export default function CandidateDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Composite Score card — only shows after ≥1 scorecard submitted */}
           {(candidate.interviews?.some((iv) => (iv as { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some((sc) => sc.submittedAt)) || compositeScore) && (
             <Card>
               <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">

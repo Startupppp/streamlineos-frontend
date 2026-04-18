@@ -12,7 +12,7 @@ const querySchema = z.object({
     .transform((v) => v === "true"),
 });
 
-/** GET /api/tasks/overdue — tasks past dueDate that are not completed */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { countOnly } = parseQuery(req, querySchema);

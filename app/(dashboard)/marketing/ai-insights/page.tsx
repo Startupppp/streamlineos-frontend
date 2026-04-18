@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PERIODS = [
   { value: "last 7 days", label: "Last 7 Days" },
@@ -36,7 +35,6 @@ const PERIODS = [
 
 type Period = (typeof PERIODS)[number]["value"];
 
-// ─── Insights Display ─────────────────────────────────────────────────────────
 
 function InsightsDisplay({ result }: { result: CampaignInsightsResult }) {
   const paragraphs = result.insights.split("\n").filter((line) => line.trim() !== "");
@@ -44,7 +42,6 @@ function InsightsDisplay({ result }: { result: CampaignInsightsResult }) {
   return (
     <div className="space-y-3">
       {paragraphs.map((para, i) => {
-        // Render numbered sections as bold headings
         const isSectionHeader = /^\d+\./.test(para.trim());
         return (
           <p
@@ -64,7 +61,6 @@ function InsightsDisplay({ result }: { result: CampaignInsightsResult }) {
   );
 }
 
-// ─── Previous Insights Card ───────────────────────────────────────────────────
 
 interface PreviousInsightsItemProps {
   result: CampaignInsightsResult & { period: string };
@@ -104,7 +100,6 @@ function PreviousInsightsItem({ result, onRestore }: PreviousInsightsItemProps) 
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 type StoredInsight = CampaignInsightsResult & { period: string };
 
@@ -120,7 +115,6 @@ export default function AIInsightsPage() {
       onSuccess: (data) => {
         const stored: StoredInsight = { ...data, period };
         setCurrent(stored);
-        // Keep last 3 in history (excluding current)
         setHistory((prev) => [stored, ...prev.filter((h) => h.generatedAt !== stored.generatedAt)].slice(0, 3));
         toast.success("Insights generated successfully");
       },
@@ -143,7 +137,6 @@ export default function AIInsightsPage() {
       subtitle="Weekly AI-powered summary of your marketing performance"
     >
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left: Controls */}
         <div className="lg:w-72 shrink-0 space-y-4">
           <Card className="shadow-soft">
             <CardHeader className="pb-3">
@@ -192,7 +185,6 @@ export default function AIInsightsPage() {
             </CardContent>
           </Card>
 
-          {/* Previous insights */}
           {previousItems.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground px-1">Previous Reports</p>
@@ -207,7 +199,6 @@ export default function AIInsightsPage() {
           )}
         </div>
 
-        {/* Right: Result */}
         <div className="flex-1 min-w-0">
           {isPending ? (
             <Card className="shadow-soft h-full">

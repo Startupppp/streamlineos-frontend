@@ -1,10 +1,4 @@
-/**
- * Lead Temperature Update — daily cron
- * Auto-updates lead priority (HOT/WARM/COLD) based on activity recency:
- * - HOT:  activity in the last 3 days
- * - WARM: activity in the last 14 days (but not last 3)
- * - COLD: no activity in 14+ days
- */
+
 import { inngest } from "../client";
 import { db } from "@/lib/db";
 import { leads, leadActivities } from "@/lib/db/schema";
@@ -14,14 +8,13 @@ export const leadTemperatureUpdate = inngest.createFunction(
   {
     id: "lead-temperature-update",
     name: "Update Lead Temperature (Daily)",
-    triggers: { cron: "0 2 * * *" }, // 2 AM daily
+    triggers: { cron: "0 2 * * *" },
   },
   async ({ step }) => {
     const now = new Date();
     const hot3d = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
     const warm14d = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    // Get all orgs with active leads (not CONVERTED/LOST)
     const activeLeads = await step.run("fetch-active-leads", async () => {
       return db.query.leads.findMany({
         where: and(
@@ -39,7 +32,6 @@ export const leadTemperatureUpdate = inngest.createFunction(
     let coldCount = 0;
 
     await step.run("update-temperatures", async () => {
-      // Mark HOT — has activity in last 3 days
       const hotResult = await db
         .update(leads)
         .set({ priority: "HOT" })
@@ -57,7 +49,6 @@ export const leadTemperatureUpdate = inngest.createFunction(
         .returning({ id: leads.id });
       hotCount = hotResult.length;
 
-      // Mark WARM — has activity in last 14 days but NOT in last 3 days
       const warmResult = await db
         .update(leads)
         .set({ priority: "WARM" })
@@ -80,7 +71,6 @@ export const leadTemperatureUpdate = inngest.createFunction(
         .returning({ id: leads.id });
       warmCount = warmResult.length;
 
-      // Mark COLD — no activity in last 14 days
       const coldResult = await db
         .update(leads)
         .set({ priority: "COLD" })

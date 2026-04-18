@@ -31,9 +31,7 @@ interface RepComparisonData {
   monthly: RepMonthStat[];
 }
 
-/** GET /api/sales/dashboard/rep-comparison?rep1=1&rep2=2&from=...&to=...
- *  Returns side-by-side stats + monthly trend for two reps.
- */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const parsed = parseQuery(req, schema);
@@ -77,7 +75,6 @@ export async function GET(req: NextRequest) {
       const totalDeals = totalStats?.total ?? 0;
       const revenue = Number(wonStats?.revenue ?? 0);
 
-      // Monthly breakdown (last 6 months)
       const monthly: RepMonthStat[] = [];
       for (let i = 5; i >= 0; i--) {
         const mStart = startOfMonth(subMonths(new Date(), i));

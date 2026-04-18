@@ -80,7 +80,6 @@ export default async function JobDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
           <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
@@ -96,7 +95,6 @@ export default async function JobDetailPage({ params }: Props) {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{job.title}</h1>
@@ -156,7 +154,6 @@ export default async function JobDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-4">
             <div className="rounded-lg border bg-card p-5 space-y-4">
               <h3 className="text-sm font-semibold">Job Details</h3>

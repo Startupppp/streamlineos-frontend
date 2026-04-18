@@ -27,7 +27,7 @@ const FilterSchema = z.object({
 
 type ParsedFilters = z.infer<typeof FilterSchema>;
 
-/** POST /api/ai/nl-search — Natural language search for leads */
+
 export async function POST(req: NextRequest) {
   return withAuth<unknown>(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { query } = bodySchema.parse(body);
 
-    // Step 1: Parse natural language into structured filters
     const parsedFilters: ParsedFilters = await aiInvoke({
       model: "fast",
       schema: FilterSchema,
@@ -53,11 +52,9 @@ export async function POST(req: NextRequest) {
       user: query,
     });
 
-    // Step 2: Build Drizzle query conditions
     const conditions = [eq(leads.orgId, session.orgId)];
 
     if (parsedFilters.status?.length) {
-      // Cast because Drizzle enum type
       conditions.push(
         inArray(leads.status, parsedFilters.status as Array<"NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST">),
       );
@@ -93,7 +90,6 @@ export async function POST(req: NextRequest) {
       conditions.push(lte(leads.potentialValue, String(parsedFilters.maxValue)));
     }
 
-    // Step 3: Execute query with assignee join if needed
     const rows = await db
       .select({
         id: leads.id,
@@ -115,7 +111,6 @@ export async function POST(req: NextRequest) {
       .where(and(...conditions))
       .limit(50);
 
-    // Filter by assignedToName if provided (post-query filter since it's a join)
     let filteredRows = rows;
     if (parsedFilters.assignedToName) {
       const search = parsedFilters.assignedToName.toLowerCase();

@@ -12,7 +12,7 @@ import type { NextRequest } from "next/server";
 
 const bodySchema = z.object({
   comment: z.string().optional(),
-  forceApprove: z.boolean().optional(), // HR override: approve beyond balance with justification
+  forceApprove: z.boolean().optional(),
   justification: z.string().optional(),
 });
 
@@ -57,7 +57,6 @@ export async function PUT(
       return err("You cannot approve your own leave request.", 403);
     }
 
-    // Approve with auto-LOP: excess days beyond balance are automatically Loss of Pay
     let lopDaysApplied = 0;
     await db.transaction(async (tx) => {
       await tx
@@ -98,7 +97,6 @@ export async function PUT(
 
           if (balanceRecord) {
             const available = Number(balanceRecord.balance);
-            // Excess days beyond available balance are automatically converted to LOP
             const lopDays = available <= 0 ? diffDays : Math.max(0, diffDays - available);
             const paidDays = diffDays - lopDays;
             const newBal = Math.max(0, available - paidDays);
@@ -115,7 +113,6 @@ export async function PUT(
       }
     });
 
-    // Fetch employee details for email
     const employee = await db.query.users.findFirst({
       where: eq(users.id, existing.userId),
       columns: { email: true, name: true },
@@ -157,7 +154,6 @@ export async function PUT(
         : Promise.resolve(),
     ]);
 
-    // Fire webhook event (non-blocking)
     void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
       dispatchWebhook(session.orgId, "leave.approved", {
         leaveId,

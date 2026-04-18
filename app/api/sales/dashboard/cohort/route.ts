@@ -8,20 +8,18 @@ import { cached, CACHE_TTL } from "@/lib/cache";
 import { startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 const schema = z.object({
-  months: z.string().optional(), // number of cohort months to analyse (default 6)
+  months: z.string().optional(),
 });
 
 interface CohortRow {
-  cohortMonth: string;  // "2026-01"
+  cohortMonth: string;
   created: number;
   converted: number;
   conversionRate: number;
   avgDaysToConvert: number | null;
 }
 
-/** GET /api/sales/dashboard/cohort
- *  Returns monthly lead cohorts: how many were created vs converted, avg time to convert.
- */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { months: monthsStr } = parseQuery(req, schema);

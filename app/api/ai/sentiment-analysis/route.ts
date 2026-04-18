@@ -17,7 +17,7 @@ const SentimentSchema = z.object({
   churnRisk: z.enum(["low", "medium", "high"]),
 });
 
-/** POST /api/ai/sentiment-analysis — Analyze client communication sentiment */
+
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) {

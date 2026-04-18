@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function getOrgUsersByRoles(orgId: string, roles: string[]): Promise<string[]> {
   const members = await db.query.organizationMembers.findMany({
@@ -15,7 +14,6 @@ async function getOrgUsersByRoles(orgId: string, roles: string[]): Promise<strin
     .map((m) => m.userId);
 }
 
-// ─── Resignation submitted → notify HR + CEO ─────────────────────────────────
 export const onResignationSubmitted = inngest.createFunction(
   { id: "hr-resignation-submitted", name: "Notify HR on Resignation Submitted", triggers: { event: "hr/resignation.submitted" } },
   async ({ event, step }) => {
@@ -43,7 +41,6 @@ export const onResignationSubmitted = inngest.createFunction(
   }
 );
 
-// ─── HR approves resignation → notify CEO ────────────────────────────────────
 export const onResignationHrApproved = inngest.createFunction(
   { id: "hr-resignation-hr-approved", name: "Notify CEO on HR Resignation Approval", triggers: { event: "hr/resignation.hr_approved" } },
   async ({ event, step }) => {
@@ -71,7 +68,6 @@ export const onResignationHrApproved = inngest.createFunction(
   }
 );
 
-// ─── CEO approves/rejects resignation → notify employee ──────────────────────
 export const onResignationCeoApproved = inngest.createFunction(
   { id: "hr-resignation-ceo-approved", name: "Notify Employee on CEO Resignation Decision", triggers: { event: "hr/resignation.ceo_approved" } },
   async ({ event, step }) => {
@@ -95,7 +91,6 @@ export const onResignationCeoApproved = inngest.createFunction(
   }
 );
 
-// ─── Termination submitted for CEO review ────────────────────────────────────
 export const onTerminationSubmitted = inngest.createFunction(
   { id: "hr-termination-submitted", name: "Notify CEO on Termination Submitted", triggers: { event: "hr/termination.submitted" } },
   async ({ event, step }) => {
@@ -123,7 +118,6 @@ export const onTerminationSubmitted = inngest.createFunction(
   }
 );
 
-// ─── CEO approves/rejects termination → notify HR ────────────────────────────
 export const onTerminationCeoApproved = inngest.createFunction(
   { id: "hr-termination-ceo-decision", name: "Notify HR on Termination CEO Decision", triggers: { event: "hr/termination.ceo_decision" } },
   async ({ event, step }) => {

@@ -51,7 +51,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       logger.error("Failed to write lead assignment audit log", { leadId, error: auditErr });
     }
 
-    // Generate AI-enriched notification (non-blocking, falls back gracefully)
     const notifContent = await generateSmartNotification({
       event: "LEAD_ASSIGNED",
       defaultTitle: "Lead Assigned to You",

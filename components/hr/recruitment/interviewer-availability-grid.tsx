@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import type { InterviewerAvailability } from "@/lib/api/hooks/hr/recruitment";
 import { cn } from "@/lib/utils";
 
-const WORK_START = 9; // 9 AM
-const WORK_END = 19; // 7 PM
+const WORK_START = 9;
+const WORK_END = 19;
 const TOTAL_HOURS = WORK_END - WORK_START;
 const SLOT_WIDTH_PX = 36;
 
@@ -57,7 +57,6 @@ export function InterviewerAvailabilityGrid({
         Availability ({WORK_START > 12 ? `${WORK_START - 12} PM` : `${WORK_START} AM`} – {WORK_END > 12 ? `${WORK_END - 12} PM` : `${WORK_END} AM`})
       </p>
 
-      {/* Hour labels */}
       <div className="relative ml-20">
         <div className="flex">
           {hourLabels.map((label) => (
@@ -72,14 +71,12 @@ export function InterviewerAvailabilityGrid({
         </div>
       </div>
 
-      {/* Per-interviewer rows */}
       {availability.map((iv) => (
         <div key={iv.interviewerId} className="flex items-center gap-2">
           <span className="text-xs truncate w-18 shrink-0 text-right text-muted-foreground">
             {interviewerNames.get(iv.interviewerId)?.split(" ")[0] ?? "—"}
           </span>
           <div className="relative flex-1 h-5 rounded bg-emerald-100 dark:bg-emerald-900/30 overflow-hidden">
-            {/* Busy blocks */}
             {iv.busyBlocks.map((block, idx) => {
               const start = new Date(block.start);
               const end = new Date(block.end);
@@ -96,7 +93,6 @@ export function InterviewerAvailabilityGrid({
                 />
               );
             })}
-            {/* Proposed time */}
             {proposedBlock && (
               <div
                 className="absolute top-0 h-full border-2 border-blue rounded-sm bg-blue/20"
@@ -107,7 +103,6 @@ export function InterviewerAvailabilityGrid({
         </div>
       ))}
 
-      {/* Legend */}
       <div className="flex items-center gap-4 text-[10px] text-muted-foreground ml-20">
         <div className="flex items-center gap-1">
           <div className="w-3 h-2 rounded-sm bg-emerald-100 dark:bg-emerald-900/30 border" />

@@ -104,7 +104,6 @@ export async function DELETE(
       if (!existing) return err("Role not found", 404);
       if (existing.isSystem) return err("System roles cannot be deleted", 403);
 
-      // Block delete if any org members use this role slug
       const { users: usersTable, organizationMembers } = await import("@/lib/db/schema");
       const { count } = await import("drizzle-orm");
       const [{ value: userCount }] = await db

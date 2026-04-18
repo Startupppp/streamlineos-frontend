@@ -37,8 +37,6 @@ export async function GET() {
         .where(eq(candidateSlaTracking.orgId, session.orgId)),
     ]);
 
-    // Build a lookup: `${candidateId}:${stage}` → SLA status
-    // Only the entry matching the candidate's *current* stage is used on cards
     const slaLookup = new Map<string, SlaCandidateStatus>();
     for (const row of slaRows) {
       slaLookup.set(`${row.candidateId}:${row.stage}`, row.status as SlaCandidateStatus);

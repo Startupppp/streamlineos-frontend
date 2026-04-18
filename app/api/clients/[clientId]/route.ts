@@ -106,7 +106,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         });
       }
 
-      // Notify salesperson (in-app)
       await db.insert(notifications).values({
         orgId,
         userId: account.salesRepId,
@@ -116,7 +115,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         link: `/crm/clients/${account.id}`,
       });
 
-      // Notify all HR users (in-app)
       const hrMembers = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
@@ -133,10 +131,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         });
       }
 
-      // Send email notifications (non-blocking)
       void (async () => {
         try {
-          // Email to salesperson
           const salesRep = await db.query.users.findFirst({
             where: eq(users.id, account.salesRepId),
             columns: { email: true, name: true },
@@ -154,7 +150,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             });
           }
 
-          // Email to HR
           for (const hr of hrMembers) {
             const hrUser = await db.query.users.findFirst({
               where: eq(users.id, hr.userId),
@@ -174,7 +169,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             }
           }
         } catch {
-          // Non-critical
         }
       })();
     }

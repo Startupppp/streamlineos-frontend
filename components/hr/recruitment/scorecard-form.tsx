@@ -14,7 +14,6 @@ import {
   type InterviewScorecard,
 } from "@/lib/api/hooks/hr/recruitment";
 
-// ─── Default criteria ─────────────────────────────────────────────────────────
 
 const DEFAULT_CRITERIA = [
   "Technical Skills",
@@ -23,7 +22,6 @@ const DEFAULT_CRITERIA = [
   "Problem Solving",
 ];
 
-// ─── Recommendation Options ───────────────────────────────────────────────────
 
 type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
 
@@ -59,7 +57,6 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
   },
 ];
 
-// ─── Star Rating ──────────────────────────────────────────────────────────────
 
 interface StarRatingProps {
   value: number;
@@ -107,7 +104,6 @@ function StarRating({ value, onChange, readOnly, label }: StarRatingProps) {
   );
 }
 
-// ─── Read-only View ───────────────────────────────────────────────────────────
 
 interface ReadOnlyViewProps {
   scorecard: InterviewScorecard;
@@ -119,7 +115,6 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Submitted banner */}
       <div className="rounded-md border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
         Scorecard submitted on{" "}
         {scorecard.submittedAt
@@ -133,7 +128,6 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
           : "—"}
       </div>
 
-      {/* Criteria */}
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-foreground">Ratings</h4>
         {criteriaNames.map((name) => (
@@ -150,7 +144,6 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
 
       <Separator />
 
-      {/* Recommendation */}
       {rec && (
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-foreground">Recommendation</h4>
@@ -161,7 +154,6 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
         </div>
       )}
 
-      {/* Notes */}
       {scorecard.notes && (
         <>
           <Separator />
@@ -177,7 +169,6 @@ function ReadOnlyView({ scorecard, criteriaNames }: ReadOnlyViewProps) {
   );
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface ScorecardFormProps {
   interviewId: number;
@@ -185,7 +176,6 @@ export interface ScorecardFormProps {
   existingScorecard?: InterviewScorecard | null;
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ScorecardForm({
   interviewId,
@@ -196,7 +186,6 @@ export function ScorecardForm({
     ? template.criteria.map((c) => c.name)
     : DEFAULT_CRITERIA;
 
-  // Build initial ratings map: criterion name → 0 (unrated)
   const initialRatings = criteriaNames.reduce<Record<string, number>>((acc, name) => {
     acc[name] = existingScorecard?.ratings?.[name] ?? 0;
     return acc;
@@ -247,7 +236,6 @@ export function ScorecardForm({
     );
   }, [ratings, recommendation, notes, criteriaNames, template, submitScorecard]);
 
-  // ── Read-only mode if already submitted ─────────────────────────────────────
   if (isSubmitted && existingScorecard) {
     return (
       <ReadOnlyView
@@ -257,10 +245,8 @@ export function ScorecardForm({
     );
   }
 
-  // ── Edit mode ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Blind mode banner */}
       {isBlindMode && (
         <div className="flex items-start gap-2 rounded-md border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
           <EyeOff className="mt-0.5 h-4 w-4 shrink-0" />
@@ -268,7 +254,6 @@ export function ScorecardForm({
         </div>
       )}
 
-      {/* Criteria ratings */}
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-foreground">Criteria Ratings</h4>
         {criteriaNames.map((name) => (
@@ -285,7 +270,6 @@ export function ScorecardForm({
 
       <Separator />
 
-      {/* Recommendation */}
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-foreground">Recommendation</h4>
         <div
@@ -320,7 +304,6 @@ export function ScorecardForm({
 
       <Separator />
 
-      {/* Notes */}
       <div className="space-y-2">
         <h4 className="text-sm font-semibold text-foreground">
           Notes{" "}
@@ -336,7 +319,6 @@ export function ScorecardForm({
         />
       </div>
 
-      {/* Submit */}
       <Button
         type="button"
         className="w-full"

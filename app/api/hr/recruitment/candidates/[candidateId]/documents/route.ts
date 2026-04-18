@@ -19,7 +19,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const candidateIdNum = Number(candidateId);
     if (!Number.isFinite(candidateIdNum)) return err("Invalid candidate ID", 400);
 
-    // Verify candidate belongs to org
     const [candidate] = await db
       .select({ id: candidates.id })
       .from(candidates)
@@ -46,7 +45,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     const body = await parseBody(req, generateSchema);
 
-    // Verify candidate belongs to org
     const [candidate] = await db
       .select({ id: candidates.id, firstName: candidates.firstName, lastName: candidates.lastName })
       .from(candidates)
@@ -55,7 +53,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     if (!candidate) return err("Candidate not found", 404);
 
-    // Load the template
     const [template] = await db
       .select()
       .from(documentTemplates)
@@ -70,7 +67,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     if (!template) return err("Template not found or inactive", 404);
 
-    // Substitute variables
     const { result, missing } = substituteVariables(template.htmlContent, body.variables);
 
     if (missing.length > 0) {

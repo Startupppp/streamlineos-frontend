@@ -331,7 +331,7 @@ export const projectMilestones = pgTable("project_milestones", {
   name: text("name").notNull(),
   description: text("description"),
   targetDate: date("target_date").notNull(),
-  status: text("status").notNull().default("PENDING"), // PENDING | ACHIEVED | MISSED
+  status: text("status").notNull().default("PENDING"),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -472,7 +472,6 @@ export const timesheetsRelations = relations(timesheets, ({ one }) => ({
   user: one(users, { fields: [timesheets.userId], references: [users.id] }),
 }));
 
-// ─── Project Templates ─────────────────────────────────────────────────────────
 
 export const projectTemplates = pgTable("project_templates", {
   id: serial("id").primaryKey(),

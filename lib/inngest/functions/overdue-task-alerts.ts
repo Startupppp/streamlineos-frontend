@@ -14,7 +14,6 @@ export const overdueTaskAlerts = inngest.createFunction(
     const result = await step.run("notify-overdue-tasks", async () => {
       const now = startOfDay(new Date());
 
-      // Find all pending tasks with a dueDate in the past
       const overdueTasks = await db
         .select({
           id: tasks.id,
@@ -34,7 +33,6 @@ export const overdueTaskAlerts = inngest.createFunction(
 
       if (overdueTasks.length === 0) return { notified: 0, taskCount: 0 };
 
-      // Group by assigneeId
       const byAssignee = new Map<string, { orgId: string; count: number; taskIds: number[] }>();
 
       for (const task of overdueTasks) {

@@ -29,7 +29,6 @@ export async function PATCH(
       })
       .where(eq(payrolls.id, payrollId));
 
-    // Await audit + email so serverless doesn't kill the promises
     try {
       await createAuditLog({
         action: "hr.payroll_approved",
@@ -39,7 +38,7 @@ export async function PATCH(
         targetType: "payroll",
         metadata: { employeeId: existing.userId, month: existing.month },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
     if (existing.userId) {
       try {
@@ -55,7 +54,7 @@ export async function PATCH(
             session.user.name ?? "Admin"
           );
         }
-      } catch { /* email failure is non-blocking */ }
+      } catch {  }
     }
 
     return ok({ success: true });

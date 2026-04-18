@@ -12,10 +12,8 @@ import {
   departmentMembers,
 } from "@/lib/db/schema";
 
-// GET /api/onboarding — HR admin: all active onboardings for the org
 export async function GET(_req: NextRequest) {
   return withAdmin(async (session) => {
-    // Aggregate tasks per user
     const rows = await db
       .select({
         userId: onboardingTasks.userId,
@@ -59,12 +57,10 @@ const DEFAULT_TASKS: { title: string; description: string; ownerRole: string; du
   { title: "Code of Conduct Sign-Off", description: "Read and digitally sign the company Code of Conduct document.", ownerRole: "NEW_HIRE", dueOffsetDays: 5, isComplianceItem: true },
 ];
 
-// POST /api/onboarding — initiate onboarding for a user
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = await parseBody(req, initiateSchema);
 
-    // Ensure user belongs to this org via organization_members
     const [membership] = await db
       .select({ userId: organizationMembers.userId })
       .from(organizationMembers)
@@ -84,7 +80,6 @@ export async function POST(req: NextRequest) {
       .from(users)
       .where(eq(users.id, body.userId));
 
-    // Check if already initiated (avoid duplicates)
     const existing = await db
       .select({ id: onboardingTasks.id })
       .from(onboardingTasks)
@@ -97,7 +92,6 @@ export async function POST(req: NextRequest) {
 
     const baseDate = targetUser?.joiningDate ? new Date(targetUser.joiningDate) : new Date();
 
-    // Look up employee's primary department
     const [deptMember] = await db
       .select({ departmentId: departmentMembers.departmentId })
       .from(departmentMembers)
@@ -106,7 +100,6 @@ export async function POST(req: NextRequest) {
 
     const employeeDeptId = deptMember?.departmentId ?? null;
 
-    // Find best-matching template: prefer department-specific, then fall back to general (null departmentId)
     const allTemplates = await db
       .select({ id: onboardingTemplates.id, departmentId: onboardingTemplates.departmentId })
       .from(onboardingTemplates)
@@ -123,7 +116,6 @@ export async function POST(req: NextRequest) {
         )
       );
 
-    // Prefer department-specific template over generic
     const template =
       allTemplates.find((t) => t.departmentId === employeeDeptId) ??
       allTemplates.find((t) => t.departmentId === null) ??
@@ -136,8 +128,6 @@ export async function POST(req: NextRequest) {
         .where(eq(onboardingTemplateSteps.templateId, template.id))
         .orderBy(onboardingTemplateSteps.sortOrder);
 
-      // Also gather compliance steps from other active templates not already included
-      // (so compliance items always appear regardless of which department template was picked)
       const otherTemplateIds = allTemplates
         .filter((t) => t.id !== template.id)
         .map((t) => t.id);
@@ -178,7 +168,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fall back to default tasks (includes compliance items)
     const defaultInserts = DEFAULT_TASKS.map((t) => {
       const due = new Date(baseDate);
       due.setDate(due.getDate() + t.dueOffsetDays);

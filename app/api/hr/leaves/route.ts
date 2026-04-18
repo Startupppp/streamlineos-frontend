@@ -54,7 +54,6 @@ export async function GET() {
       db.query.organizationMembers.findFirst({ where: eq(organizationMembers.userId, userId) }),
     ]);
 
-    // Deduplicate balances by typeName and filter to allowed types
     const seenNames = new Set<string>();
     const balances = rawBalances.filter((b) => {
       if (!b.typeName || !ALLOWED_LEAVE_TYPE_NAMES.has(b.typeName) || seenNames.has(b.typeName)) return false;
@@ -62,7 +61,6 @@ export async function GET() {
       return true;
     });
 
-    // Deduplicate types
     const seenTypeNames = new Set<string>();
     const types = allTypes.filter((t) => {
       if (seenTypeNames.has(t.name)) return false;
@@ -70,7 +68,6 @@ export async function GET() {
       return true;
     });
 
-    // Get approvers based on role
     let approvers: Array<Record<string, unknown>> = [];
     if (member) {
       const role = member.role;
@@ -174,7 +171,6 @@ export async function POST(req: NextRequest) {
         status: "PENDING",
       });
 
-      // Notify HR/Admin about the leave request (non-blocking)
       void (async () => {
         const hrMembers = await db
           .select({ userId: organizationMembers.userId })

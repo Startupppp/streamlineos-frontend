@@ -161,7 +161,6 @@ export function WorkLogEntryRow({
           )}
         />
 
-        {/* Link field — editable for own logs, display-only for readOnly */}
         {!readOnly && (
           <div className="flex items-center gap-2">
             <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -178,7 +177,6 @@ export function WorkLogEntryRow({
           </div>
         )}
 
-        {/* Show link in read-only mode */}
         {readOnly && initialWorkLink && (
           <a
             href={initialWorkLink}

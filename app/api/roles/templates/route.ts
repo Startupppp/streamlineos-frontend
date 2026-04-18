@@ -6,7 +6,6 @@ import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { z } from "zod";
 
-// ─── Pre-built role templates ─────────────────────────────────────────────────
 
 const ROLE_TEMPLATES = [
   {
@@ -53,14 +52,14 @@ const cloneSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[A-Z_]+$/).optional(),
 });
 
-/** GET /api/roles/templates — list available role templates */
+
 export async function GET() {
   return withAuth(async () => {
     return ok(ROLE_TEMPLATES);
   });
 }
 
-/** POST /api/roles/templates — clone a template into the org's roles */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isAdminOrOwner(session.user.role)) {
@@ -76,7 +75,6 @@ export async function POST(req: NextRequest) {
     const slug = input.slug ?? template.slug;
     const name = input.name ?? template.name;
 
-    // Check for slug conflict
     const existing = await db.query.roles.findFirst({
       where: and(eq(roles.slug, slug), eq(roles.orgId, session.orgId)),
     });

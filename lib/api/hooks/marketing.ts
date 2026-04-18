@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface AbTest {
   id: number;
@@ -62,7 +61,6 @@ export interface UpdateAbTestInput {
   endedAt?: string;
 }
 
-// ─── Hooks ───────────────────────────────────────────────────────────────────
 
 export function useAbTests() {
   return useQuery<{ tests: AbTest[] }>({
@@ -104,7 +102,6 @@ export function useDeleteAbTest() {
   });
 }
 
-// ─── Landing Pages ────────────────────────────────────────────────────────────
 
 export interface LandingPage {
   id: number;
@@ -201,7 +198,6 @@ export function useDeleteLandingPage() {
   });
 }
 
-// ─── CRM-Hosted Landing Pages ─────────────────────────────────────────────────
 
 export interface CrmPageTestimonial {
   id: string;
@@ -324,7 +320,6 @@ export function useDeleteCrmPage() {
   });
 }
 
-// ─── Social Metrics ───────────────────────────────────────────────────────────
 
 export interface SocialMetric {
   id: number;
@@ -399,7 +394,6 @@ export function useDeleteSocialMetric() {
   });
 }
 
-// ─── Content Calendar ─────────────────────────────────────────────────────────
 
 export interface ContentCalendarItem {
   id: number;

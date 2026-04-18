@@ -72,7 +72,6 @@ function StatBlock({ label, value, color }: { label: string; value: string | num
   );
 }
 
-// ─── Availability Dot ────────────────────────────────────────────────────────
 
 function AvailabilityDot({ userId }: { userId: string }) {
   const { data } = useEmployeeAvailability([userId]);
@@ -104,7 +103,6 @@ function AvailabilityDot({ userId }: { userId: string }) {
   );
 }
 
-// ─── Profile Completeness ────────────────────────────────────────────────────
 
 function profileCompletenessScore(employee: EmployeeData): { pct: number; missing: string[] } {
   const fields: Array<{ label: string; filled: boolean }> = [
@@ -122,7 +120,6 @@ function profileCompletenessScore(employee: EmployeeData): { pct: number; missin
   return { pct: Math.round((filled / fields.length) * 100), missing };
 }
 
-// ─── Who Reports To Me ───────────────────────────────────────────────────────
 
 function DirectReportsSection({ employeeId }: { employeeId: string }) {
   const { data: reports, isLoading } = useDirectReports(employeeId);
@@ -177,7 +174,6 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
   );
 }
 
-// ─── Manager Scorecard Section ───────────────────────────────────────────────
 
 function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   const { data: scorecard, isLoading } = useManagerScorecard(employeeId);
@@ -216,7 +212,6 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
   );
 }
 
-// ─── Main View ────────────────────────────────────────────────────────────────
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(employee.id);
@@ -252,7 +247,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     });
   }, [employee.id, employeeName, terminateMutation, router]);
 
-  // Cast to Employee for new fields
   const employeeAsEmployee = employee as unknown as Employee;
 
   return (
@@ -314,15 +308,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <InfoItem icon={Calendar} label="Joined" value={employee.joiningDate ? format(new Date(String(employee.joiningDate)), "MMM yyyy") : null} />
                 </div>
 
-                {/* Availability dot */}
                 <AvailabilityDot userId={employee.id} />
 
-                {/* Bio */}
                 {(employeeAsEmployee as Employee).bio && (
                   <p className="text-sm text-muted-foreground line-clamp-2">{(employeeAsEmployee as Employee).bio}</p>
                 )}
 
-                {/* Profile completeness nudge */}
                 {isSelf && completeness < 100 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
@@ -396,10 +387,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </Card>
               )}
 
-              {/* Manager Scorecard */}
               <ManagerScorecardSection employeeId={employee.id} />
 
-              {/* Direct Reports */}
               <DirectReportsSection employeeId={employee.id} />
 
               <div className="grid gap-3 lg:grid-cols-2">

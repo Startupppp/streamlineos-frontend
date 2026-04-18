@@ -120,13 +120,6 @@ async function main() {
     });
   }
 
-  console.log("\nSeed complete!");
-  console.log(`  Organization: Vaivamm Capital (${orgId})`);
-  console.log(`  CEO: ${adminEmail} / ${password}`);
-  console.log(`  Departments: ${departmentList.length}`);
-  console.log(`  Roles: ${systemRoles.length}`);
-  console.log(`\n  Cleaned up: ${staleEmails.join(", ")}`);
-
   process.exit(0);
 }
 

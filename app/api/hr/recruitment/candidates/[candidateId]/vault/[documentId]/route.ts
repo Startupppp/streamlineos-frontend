@@ -28,20 +28,17 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     });
     if (!doc) return err("Document not found.", 404);
 
-    // Log the access
     await db.insert(vaultAccessLogs).values({
       vaultDocumentId: documentId,
       accessedBy: session.user.id,
       action: "VIEW",
     });
 
-    // Generate a presigned URL that expires in 15 minutes
     let signedUrl = doc.fileUrl;
     if (doc.s3Key && isStorageConfigured()) {
       try {
-        signedUrl = await getFileUrl(doc.s3Key, 900); // 900 seconds = 15 minutes
+        signedUrl = await getFileUrl(doc.s3Key, 900);
       } catch {
-        // Fall back to stored URL if signing fails
       }
     }
 
@@ -70,7 +67,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     });
     if (!doc) return err("Document not found.", 404);
 
-    // Log the delete action before removing
     await db.insert(vaultAccessLogs).values({
       vaultDocumentId: documentId,
       accessedBy: session.user.id,

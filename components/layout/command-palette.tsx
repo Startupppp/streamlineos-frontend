@@ -17,7 +17,6 @@ import { useDebouncedValue } from "@/hooks/use-debounce";
 import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
 import { cn } from "@/lib/utils";
 
-// ─── Entity search types ──────────────────────────────────────────────────────
 
 interface SearchResult {
   id: number;
@@ -44,7 +43,6 @@ const ENTITY_LABELS = {
   ticket: "Tickets",
 } as const;
 
-// ─── Shared item icon box ─────────────────────────────────────────────────────
 
 function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
   return (
@@ -54,7 +52,6 @@ function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
       "transition-colors duration-150",
       "group-data-[selected=true]:bg-white/20 group-data-[selected=true]:text-white",
     )}>
-      {/* Isolate icon from CommandDialog's [cmdk-item]_svg size override */}
       <span className="flex items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4">
         <Icon />
       </span>
@@ -62,7 +59,6 @@ function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
   );
 }
 
-// ─── CommandPalette ───────────────────────────────────────────────────────────
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -73,7 +69,6 @@ export function CommandPalette() {
   const { data: session } = useSession();
   const role = session?.user?.role;
 
-  // Build deduplicated page list from actual sidebar nav based on user role
   const pages = useMemo(() => {
     const groups = getNavGroupsForRole(role);
     const seen = new Set<string>();
@@ -88,7 +83,6 @@ export function CommandPalette() {
     );
   }, [role]);
 
-  // Keyboard shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -102,7 +96,6 @@ export function CommandPalette() {
 
   const debouncedQuery = useDebouncedValue(query, 280);
 
-  // Entity search
   useEffect(() => {
     if (!debouncedQuery || debouncedQuery.length < 2) {
       setEntityResults([]);
@@ -133,7 +126,6 @@ export function CommandPalette() {
     }
   }, []);
 
-  // Filter pages by query
   const filteredPages = useMemo(() => {
     if (!query) return [];
     const q = query.toLowerCase();
@@ -158,7 +150,6 @@ export function CommandPalette() {
     [entityResults]
   );
 
-  // Quick nav — top 5 groups, first 4 deduplicated items each
   const quickNavGroups = useMemo(() => {
     const groups = getNavGroupsForRole(role);
     const seen = new Set<string>();
@@ -179,7 +170,6 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange}>
-      {/* Input row — CommandInput already renders its own border-b and search icon */}
       <div className="relative">
         <CommandInput
           placeholder="Search pages, leads, deals, contacts…"
@@ -193,7 +183,6 @@ export function CommandPalette() {
 
       <CommandList className="max-h-[420px] px-1 py-1">
 
-        {/* Empty state */}
         {showEmpty && (
           <CommandEmpty>
             <div className="flex flex-col items-center gap-2 py-6">
@@ -206,7 +195,6 @@ export function CommandPalette() {
           </CommandEmpty>
         )}
 
-        {/* Entity results */}
         {Object.entries(entityGroups).map(([type, items]) => {
           const Icon = ENTITY_ICONS[type as keyof typeof ENTITY_ICONS] ?? Search;
           const label = ENTITY_LABELS[type as keyof typeof ENTITY_LABELS] ?? type;
@@ -236,7 +224,6 @@ export function CommandPalette() {
 
         {entityResults.length > 0 && filteredPages.length > 0 && <CommandSeparator className="my-1" />}
 
-        {/* Filtered page results */}
         {query && Object.entries(pageGroups).map(([group, items]) => (
           <CommandGroup key={group} heading={group}>
             {items.map((page) => (
@@ -257,7 +244,6 @@ export function CommandPalette() {
           </CommandGroup>
         ))}
 
-        {/* Quick navigation — shown when no query */}
         {!query && (
           <>
             <div className="px-2 pb-1 pt-2">
@@ -287,7 +273,6 @@ export function CommandPalette() {
         )}
       </CommandList>
 
-      {/* Footer */}
       <div className="flex items-center justify-between border-t px-3 py-1.5 text-[11px] text-muted-foreground/60 bg-muted/20">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">

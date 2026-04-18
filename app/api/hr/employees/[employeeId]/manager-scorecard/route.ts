@@ -11,7 +11,7 @@ export interface ManagerScorecard {
   managerId: string;
   teamSize: number;
   avgPerformanceRating: number | null;
-  teamAttendanceRate: number | null; // % present days in last 30d
+  teamAttendanceRate: number | null;
   pendingLeaveRequests: number;
   directReports: Array<{
     id: string;
@@ -29,13 +29,11 @@ export async function GET(
   return withAuth<ManagerScorecard>(async (session) => {
     const { employeeId } = await params;
 
-    // Only HR/Admin or the manager themselves
     const isSelf = session.user.id === employeeId;
     if (!isSelf && !isAdminOrOwner(session.user.role)) {
       return err("Access denied", 403);
     }
 
-    // Verify member is in org
     const member = await db.query.organizationMembers.findFirst({
       where: and(
         eq(organizationMembers.userId, employeeId),
@@ -44,7 +42,6 @@ export async function GET(
     });
     if (!member) return err("Employee not found", 404);
 
-    // Get direct reports
     const reports = await db
       .select({
         id: users.id,
@@ -75,7 +72,6 @@ export async function GET(
 
     const reportIds = reports.map((r) => r.id);
 
-    // Per-report avg rating
     const ratingsPerReport = await Promise.all(
       reportIds.map(async (userId) => {
         const [r] = await db
@@ -91,7 +87,6 @@ export async function GET(
       }),
     );
 
-    // Team attendance rate: last 30 days
     const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
     const attendanceCounts = await Promise.all(
       reportIds.map(async (userId) => {
@@ -112,7 +107,6 @@ export async function GET(
     const maxPossible = reportIds.length * 30;
     const teamAttendanceRate = maxPossible > 0 ? Math.round((totalPresent / maxPossible) * 100) : null;
 
-    // Pending leave requests
     const [pendingResult] = await db
       .select({ cnt: count() })
       .from(leaveRequests)
@@ -125,7 +119,6 @@ export async function GET(
       );
     const pendingLeaveRequests = pendingResult?.cnt ?? 0;
 
-    // Overall avg perf
     const ratingValues = ratingsPerReport.map((r) => r.avg).filter((v): v is number => v !== null);
     const avgPerformanceRating = ratingValues.length > 0
       ? Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 10) / 10

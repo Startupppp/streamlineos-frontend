@@ -19,7 +19,6 @@ export async function GET() {
         const currentMonth = `${year}-${month}`;
 
         const [currentResult, prevResult] = await Promise.all([
-          // This month's approved/submitted payroll totals
           db
             .select({
               totalGross: sum(payrolls.grossSalary),
@@ -36,7 +35,6 @@ export async function GET() {
               ),
             ),
 
-          // Last month for comparison
           db
             .select({
               totalNet: sum(payrolls.netSalary),

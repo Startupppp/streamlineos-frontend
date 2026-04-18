@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { OnboardingTask } from "@/lib/api/hooks/hr/onboarding";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface OnboardingTaskCardProps {
   task: OnboardingTask;
@@ -16,7 +15,6 @@ export interface OnboardingTaskCardProps {
   isToggling: boolean;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function ownerBadgeClass(ownerRole: string): string {
   switch (ownerRole.toUpperCase()) {
@@ -72,7 +70,6 @@ function formatDueDate(dateStr: string): { label: string; overdue: boolean } {
   }
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTaskCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -93,7 +90,6 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
     >
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          {/* Checkbox */}
           <Checkbox
             checked={isCompleted}
             onCheckedChange={handleToggle}
@@ -102,9 +98,7 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
             className="mt-0.5 shrink-0"
           />
 
-          {/* Body */}
           <div className="flex-1 min-w-0">
-            {/* Title row */}
             <div className="flex items-center gap-2 flex-wrap">
               <p
                 className={cn(
@@ -115,7 +109,6 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
                 {task.title}
               </p>
 
-              {/* Owner badge */}
               <span
                 className={cn(
                   "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
@@ -126,7 +119,6 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
               </span>
             </div>
 
-            {/* Due date */}
             {dueInfo && (
               <p
                 className={cn(
@@ -140,7 +132,6 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
               </p>
             )}
 
-            {/* Expandable description */}
             {task.description && (
               <div className="mt-1">
                 {expanded ? (
@@ -173,7 +164,6 @@ export function OnboardingTaskCard({ task, onToggle, isToggling }: OnboardingTas
             )}
           </div>
 
-          {/* Completion indicator */}
           {isCompleted && (
             <Badge variant="secondary" className="text-[10px] shrink-0 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
               Done

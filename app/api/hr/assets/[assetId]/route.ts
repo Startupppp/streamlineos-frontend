@@ -48,7 +48,6 @@ export async function PATCH(
     if (body.notes !== undefined) updatePayload.notes = body.notes;
     updatePayload.updatedAt = new Date();
 
-    // Fetch existing asset to check if assignee changed
     const existing = await db.query.assets.findFirst({
       where: and(eq(assets.id, assetId), eq(assets.orgId, session.orgId)),
       columns: { assignedTo: true, name: true, type: true, serialNumber: true },
@@ -61,7 +60,6 @@ export async function PATCH(
         and(eq(assets.id, assetId), eq(assets.orgId, session.orgId))
       );
 
-    // Email the new assignee if asset was reassigned (non-blocking)
     if (body.assignedTo && body.assignedTo !== existing?.assignedTo) {
       void (async () => {
         const employee = await db.query.users.findFirst({

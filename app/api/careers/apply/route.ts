@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
 
   const { jobPostingId, name, email, phone, linkedinUrl, coverLetter, resumeUrl } = body;
 
-  // Validate job exists and is open
   const [job] = await db
     .select({ id: jobPostings.id, orgId: jobPostings.orgId })
     .from(jobPostings)
@@ -37,12 +36,10 @@ export async function POST(req: NextRequest) {
     return err("Job posting not found or is no longer accepting applications.", 404);
   }
 
-  // Split name into first/last
   const nameParts = name.trim().split(/\s+/);
   const firstName = nameParts[0] ?? name.trim();
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
 
-  // Create candidate
   const [candidate] = await db
     .insert(candidates)
     .values({
@@ -62,7 +59,6 @@ export async function POST(req: NextRequest) {
     return err("Failed to create application. Please try again.", 500);
   }
 
-  // Create application record
   await db.insert(candidateApplications).values({
     orgId: job.orgId,
     candidateId: candidate.id,

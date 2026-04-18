@@ -26,7 +26,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.vaivamm.com";
 
-    // Build the canonical job page URL (public careers page)
     const jobSlug = job.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const baseJobUrl = `${appUrl}/careers/${jobId}/${jobSlug}`;
 

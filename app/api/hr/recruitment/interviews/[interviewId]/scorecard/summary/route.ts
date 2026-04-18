@@ -18,7 +18,6 @@ export async function GET(
     const interviewId = Number(idParam);
     if (!interviewId) return err("Invalid interview ID.", 400);
 
-    // Verify interview belongs to org
     const interview = await db.query.interviews.findFirst({
       where: and(eq(interviews.id, interviewId), eq(interviews.orgId, session.orgId)),
     });
@@ -30,7 +29,6 @@ export async function GET(
 
     const submittedScorecards = scorecards.filter((sc) => sc.submittedAt !== null);
 
-    // Aggregate average per criterion key
     const aggregated: Record<string, { total: number; count: number; average: number }> = {};
     for (const sc of submittedScorecards) {
       for (const [key, value] of Object.entries(sc.ratings)) {
@@ -46,7 +44,6 @@ export async function GET(
       entry.average = entry.count > 0 ? entry.total / entry.count : 0;
     }
 
-    // Count recommendations
     const recommendationCounts = submittedScorecards.reduce<Record<string, number>>(
       (acc, sc) => {
         const rec = sc.recommendation;

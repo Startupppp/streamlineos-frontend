@@ -888,7 +888,6 @@ export function useCustomerExecutiveDashboard() {
   });
 }
 
-// ─── Deal Meetings ────────────────────────────────────────────────────────────
 
 export interface DealMeeting {
   id: number;
@@ -962,7 +961,6 @@ export function useDeleteDealMeeting(dealId: number) {
   });
 }
 
-// ─── Win/Loss Analysis ────────────────────────────────────────────────────────
 
 export interface WinLossAnalysis {
   summary: {
@@ -983,7 +981,6 @@ export function useWinLossAnalysis() {
   });
 }
 
-// ─── Lead Source Attribution ─────────────────────────────────────────────────
 
 export interface LeadSourceStat {
   source: string;
@@ -1005,7 +1002,6 @@ export function useLeadSourceReport() {
   });
 }
 
-// ─── Simple Clients List (dropdown) ──────────────────────────────────────────
 
 export interface SimpleClient {
   id: number;
@@ -1019,7 +1015,6 @@ export function useSimpleClientsList() {
   });
 }
 
-// ─── Client Opportunities ─────────────────────────────────────────────────────
 
 export interface ClientOpportunity {
   id: number;
@@ -1084,7 +1079,6 @@ export function useDeleteClientOpportunity() {
   });
 }
 
-// ─── Client Onboarding ───────────────────────────────────────────────────────
 
 export interface OnboardingTemplate {
   id: number;
@@ -1168,7 +1162,6 @@ export function useCreateOnboardingTemplate() {
   });
 }
 
-// ─── CSAT Surveys ─────────────────────────────────────────────────────────────
 
 export interface CsatSurvey {
   id: number;
@@ -1239,7 +1232,6 @@ export function useDeleteCsatSurvey() {
   });
 }
 
-// ─── Duplicate Lead Detection + Merge ─────────────────────────────────────────
 
 export interface DuplicateLeadEntry {
   id: number;
@@ -1287,7 +1279,6 @@ export function useMergeLead() {
   });
 }
 
-// ─── SLA Compliance ──────────────────────────────────────────────────────────
 
 export interface SlaByPriority {
   priority: string;
@@ -1328,7 +1319,6 @@ export function useSlaCompliance() {
   });
 }
 
-// ─── Territories ─────────────────────────────────────────────────────────────
 
 export interface Territory {
   id: number;
@@ -1390,7 +1380,6 @@ export function useDeleteTerritory() {
   });
 }
 
-// ─── Custom Fields ────────────────────────────────────────────────────────────
 
 export interface CustomFieldDefinition {
   id: number;
@@ -1488,7 +1477,6 @@ export function useUpdateDealCustomData() {
   });
 }
 
-// ─── Web-to-Lead Forms ────────────────────────────────────────────────────────
 
 export interface WebLeadFormField {
   name: string;
@@ -1566,9 +1554,6 @@ export function useDeleteWebLeadForm() {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Sales Dashboard — filtered KPI, funnel, leaderboard, revenue-vs-goal hooks
-// ---------------------------------------------------------------------------
 
 export interface SalesDashboardFilters {
   from?: string;
@@ -1691,7 +1676,6 @@ export function useAgingDeals(thresholdDays = 14) {
   });
 }
 
-// ─── Sales Cycle Length ───────────────────────────────────────────────────────
 
 export interface CycleLengthResult {
   avgDays: number | null;
@@ -1712,7 +1696,6 @@ export function useSalesCycleLength(repId?: string) {
   });
 }
 
-// ─── Lost Deal Analysis ───────────────────────────────────────────────────────
 
 export interface LostAnalysisResult {
   total: number;
@@ -1730,7 +1713,6 @@ export function useLostDealAnalysis(repId?: string) {
   });
 }
 
-// ─── Cohort Analysis ──────────────────────────────────────────────────────────
 
 export interface CohortRow {
   cohortMonth: string;
@@ -1748,7 +1730,6 @@ export function useSalesCohort(months = 6) {
   });
 }
 
-// ─── Rep Comparison ───────────────────────────────────────────────────────────
 
 export interface RepMonthStat {
   month: string;

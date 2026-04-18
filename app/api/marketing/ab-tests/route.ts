@@ -16,7 +16,7 @@ const createSchema = z.object({
   audienceSize: z.number().int().min(0).optional().default(0),
 });
 
-/** GET /api/marketing/ab-tests */
+
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const tests = await db
@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest) {
   });
 }
 
-/** POST /api/marketing/ab-tests */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);

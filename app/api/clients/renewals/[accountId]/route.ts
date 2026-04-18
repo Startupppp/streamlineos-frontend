@@ -15,7 +15,7 @@ const updateRenewalSchema = z.object({
 
 type Ctx = { params: Promise<{ accountId: string }> };
 
-/** PATCH /api/clients/renewals/[accountId] — update renewal stage/date/notes */
+
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { accountId: id } = await ctx.params;
   const accountId = Number(id);

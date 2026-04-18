@@ -33,7 +33,6 @@ export async function PATCH(
       .set({ status: "PAID" })
       .where(eq(payrolls.id, payrollId));
 
-    // Send payslip email with PDF attachment — awaited so serverless doesn't kill it
     try {
       await createAuditLog({
         action: "hr.payroll_paid",
@@ -43,7 +42,7 @@ export async function PATCH(
         targetType: "payroll",
         metadata: { employeeId: existing.userId, month: existing.month, netSalary: existing.netSalary },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
     try {
         const [employee, org] = await Promise.all([

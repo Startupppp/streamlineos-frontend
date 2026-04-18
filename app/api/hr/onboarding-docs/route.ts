@@ -19,18 +19,11 @@ const createSchema = z.object({
   mimeType: z.string().optional(),
 });
 
-/**
- * Recalculate and persist onboardingDocStatus for a user.
- * Logic:
- *   - All mandatory docs APPROVED → "APPROVED"
- *   - Any doc SUBMITTED/RE_UPLOAD_REQUESTED → "IN_PROGRESS"
- *   - Otherwise → "PENDING"
- */
+
 export async function recalcOnboardingStatus(
   orgId: string,
   userId: string
 ): Promise<void> {
-  // Count mandatory doc types for this org
   const mandatoryTypes = await db
     .select({ id: documentTypes.id })
     .from(documentTypes)
@@ -43,7 +36,6 @@ export async function recalcOnboardingStatus(
     );
 
   if (mandatoryTypes.length === 0) {
-    // No mandatory docs required — mark as APPROVED
     await db
       .update(users)
       .set({ onboardingDocStatus: "APPROVED", updatedAt: new Date() })
@@ -53,7 +45,6 @@ export async function recalcOnboardingStatus(
 
   const mandatoryTypeIds = mandatoryTypes.map((t) => t.id);
 
-  // Fetch the most recent document per mandatory type for this user (ordered by id desc)
   const userDocs = await db
     .select({
       documentTypeId: onboardingDocuments.documentTypeId,
@@ -68,7 +59,6 @@ export async function recalcOnboardingStatus(
     )
     .orderBy(desc(onboardingDocuments.id));
 
-  // Build a map of latest status per documentTypeId
   const latestByType = new Map<number, string>();
   for (const doc of userDocs) {
     if (!latestByType.has(doc.documentTypeId)) {
@@ -97,7 +87,6 @@ export async function recalcOnboardingStatus(
     .where(eq(users.id, userId));
 }
 
-// Alias for reviewer join (users table used twice: employee + reviewer)
 const reviewerUsers = aliasedTable(users, "reviewer");
 
 export async function GET(req: NextRequest) {
@@ -152,7 +141,6 @@ export async function GET(req: NextRequest) {
       return ok(rows);
     }
 
-    // Regular employee — own docs only
     const rows = await db
       .select({
         id: onboardingDocuments.id,
@@ -196,7 +184,6 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createSchema);
 
-    // Verify document type belongs to org and is active
     const docType = await db.query.documentTypes.findFirst({
       where: and(
         eq(documentTypes.id, body.documentTypeId),
@@ -206,7 +193,6 @@ export async function POST(req: NextRequest) {
     });
     if (!docType) return err("Document type not found or inactive.", 404);
 
-    // Check for an existing document of this type for this user (for versioning)
     const existing = await db
       .select({ id: onboardingDocuments.id, version: onboardingDocuments.version })
       .from(onboardingDocuments)
@@ -239,7 +225,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Write audit log
     await db.insert(documentAuditLogs).values({
       orgId: session.orgId,
       onboardingDocumentId: record.id,
@@ -248,7 +233,6 @@ export async function POST(req: NextRequest) {
       metadata: { fileName: body.fileName, version: nextVersion },
     });
 
-    // Recalculate user's onboarding doc status
     await recalcOnboardingStatus(session.orgId, session.user.id);
 
     return ok(record, 201);

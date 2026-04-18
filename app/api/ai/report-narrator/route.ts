@@ -10,7 +10,7 @@ const BodySchema = z.object({
   context: z.string().max(500).optional(),
 });
 
-/** POST /api/ai/report-narrator */
+
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) {

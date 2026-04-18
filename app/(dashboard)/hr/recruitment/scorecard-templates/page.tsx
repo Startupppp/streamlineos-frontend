@@ -24,7 +24,6 @@ import {
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Criterion Row ────────────────────────────────────────────────────────────
 
 interface CriterionRowProps {
   criterion: ScorecardCriterion & { _key: string };
@@ -68,7 +67,6 @@ function CriterionRow({ criterion, onUpdate, onRemove, canRemove }: CriterionRow
   );
 }
 
-// ─── Create Template Dialog ───────────────────────────────────────────────────
 
 interface CreateTemplateDialogProps {
   open: boolean;
@@ -206,13 +204,11 @@ function CreateTemplateDialog({ open, onOpenChange }: CreateTemplateDialogProps)
   );
 }
 
-// ─── Template Card ────────────────────────────────────────────────────────────
 
 function TemplateCardSkeleton() {
   return <Skeleton className="h-36 w-full rounded-xl" />;
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ScorecardTemplatesPage() {
   const { data: templates, isLoading } = useScorecardTemplates();

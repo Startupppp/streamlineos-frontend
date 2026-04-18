@@ -59,7 +59,6 @@ export function CandidateKanban({ stages, onStageChange }: CandidateKanbanProps)
                 isRejected ? "opacity-75" : ""
               }`}
             >
-              {/* Column header */}
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className={`h-2 w-2 rounded-full ${col.color}`} />
                 <span className="text-xs font-semibold">{col.label}</span>
@@ -114,12 +113,10 @@ export function CandidateKanban({ stages, onStageChange }: CandidateKanbanProps)
                                       </Avatar>
 
                                       <div className="min-w-0 flex-1">
-                                        {/* Name */}
                                         <p className="text-xs font-medium truncate">
                                           {candidate.name}
                                         </p>
 
-                                        {/* Applied role */}
                                         {candidate.jobTitle && (
                                           <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                                             <Briefcase className="h-2.5 w-2.5 shrink-0" />
@@ -127,7 +124,6 @@ export function CandidateKanban({ stages, onStageChange }: CandidateKanbanProps)
                                           </p>
                                         )}
 
-                                        {/* Email (if no job title) */}
                                         {!candidate.jobTitle && (
                                           <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                                             <MailIcon className="h-2.5 w-2.5 shrink-0" />
@@ -135,7 +131,6 @@ export function CandidateKanban({ stages, onStageChange }: CandidateKanbanProps)
                                           </p>
                                         )}
 
-                                        {/* Source + rating row */}
                                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                           {candidate.source && (
                                             <Badge

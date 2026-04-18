@@ -11,7 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useReportNarrator, type ReportNarratorResult } from "@/lib/api/hooks/ai";
 import { toast } from "sonner";
 
-/* ─── Sample Data ─────────────────────────────────────────────────────────── */
+
 
 const SAMPLE_DATA = `Month, New Leads, Converted, Revenue
 Jan, 45, 12, 2.3L
@@ -23,7 +23,7 @@ Jun, 73, 30, 6.4L`;
 
 const SAMPLE_CONTEXT = "Q2 Sales Performance — Lead Conversion Report";
 
-/* ─── Copy Button ─────────────────────────────────────────────────────────── */
+
 
 function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -50,7 +50,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   );
 }
 
-/* ─── Previous Narrative Entry ────────────────────────────────────────────── */
+
 
 interface PreviousEntry {
   id: number;
@@ -99,7 +99,7 @@ function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 
 export default function ReportNarratorPage() {
   const { mutateAsync: generateNarrative, isPending } = useReportNarrator();
@@ -125,7 +125,6 @@ export default function ReportNarratorPage() {
           narrative: res.narrative,
           generatedAt: res.generatedAt,
         };
-        // Keep last 3
         return [entry, ...prev].slice(0, 3);
       });
       setNextId((n) => n + 1);
@@ -163,7 +162,6 @@ export default function ReportNarratorPage() {
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* ── Left: Input form ───────────────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
@@ -176,7 +174,6 @@ export default function ReportNarratorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Context */}
               <div className="space-y-1.5">
                 <Label htmlFor="report-context">
                   Context{" "}
@@ -191,7 +188,6 @@ export default function ReportNarratorPage() {
                 />
               </div>
 
-              {/* Data textarea */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="report-data">
@@ -238,7 +234,6 @@ export default function ReportNarratorPage() {
             </CardContent>
           </Card>
 
-          {/* Previous narratives */}
           {history.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
@@ -254,7 +249,6 @@ export default function ReportNarratorPage() {
           )}
         </div>
 
-        {/* ── Right: Result ───────────────────────────────────────────────── */}
         <div className="lg:col-span-3">
           {isPending && (
             <Card>
@@ -314,7 +308,7 @@ export default function ReportNarratorPage() {
   );
 }
 
-/* ─── Skeleton (inline for loading state within the page) ─────────────────── */
+
 function Skeleton({ className }: { className?: string }) {
   return (
     <div

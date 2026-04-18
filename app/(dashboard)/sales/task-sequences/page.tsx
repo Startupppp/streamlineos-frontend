@@ -53,7 +53,6 @@ interface StepDraft {
 
 const TASK_TYPES = ["CALL", "EMAIL", "MEETING", "CUSTOM"] as const;
 
-// ─── Apply Dialog ─────────────────────────────────────────────────────────────
 
 function ApplyDialog({
   sequence,
@@ -157,7 +156,6 @@ function ApplyDialog({
   );
 }
 
-// ─── Create Dialog ────────────────────────────────────────────────────────────
 
 function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
@@ -317,7 +315,6 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── Sequence Card ────────────────────────────────────────────────────────────
 
 function SequenceCard({
   sequence,
@@ -377,7 +374,6 @@ function SequenceCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TaskSequencesPage() {
   const { data: sequences, isLoading } = useTaskSequences();

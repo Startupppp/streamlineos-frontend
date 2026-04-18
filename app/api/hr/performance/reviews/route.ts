@@ -70,7 +70,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Notify the employee about the assigned review (non-blocking)
     void (async () => {
       const [employee, reviewer] = await Promise.all([
         db.query.users.findFirst({

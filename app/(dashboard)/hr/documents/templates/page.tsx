@@ -60,7 +60,6 @@ import {
 } from "@/lib/api/hooks/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Type config ─────────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<
   string,
@@ -97,7 +96,6 @@ function getTypeConfig(type: string) {
   return TYPE_CONFIG[type] ?? TYPE_CONFIG.OTHER;
 }
 
-// ─── Variable chips ───────────────────────────────────────────────────────────
 
 function VariableChips({ variables }: { variables: string[] }) {
   const visible = variables.slice(0, 3);
@@ -124,7 +122,6 @@ function VariableChips({ variables }: { variables: string[] }) {
   );
 }
 
-// ─── Preview dialog ───────────────────────────────────────────────────────────
 
 function PreviewDialog({ template }: { template: DocumentTemplate }) {
   const [open, setOpen] = useState(false);
@@ -163,7 +160,6 @@ function PreviewDialog({ template }: { template: DocumentTemplate }) {
   );
 }
 
-// ─── Delete confirm ───────────────────────────────────────────────────────────
 
 function DeleteConfirm({
   template,
@@ -207,7 +203,6 @@ function DeleteConfirm({
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function TemplatesPageSkeleton() {
   return (
@@ -253,7 +248,6 @@ function TemplatesPageSkeleton() {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function DocumentTemplatesPage() {
   const router = useRouter();
@@ -293,7 +287,6 @@ export default function DocumentTemplatesPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Templates" value={total} icon={FileText} color="blue" index={0} />
           <StatCard label="Active" value={active} icon={FileCheck} color="green" index={1} />
@@ -301,7 +294,6 @@ export default function DocumentTemplatesPage() {
           <StatCard label="Offer Letters" value={offerCount} icon={FileKey} color="gold" index={3} />
         </div>
 
-        {/* Table */}
         {list.length === 0 ? (
           <EmptyState
             illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}

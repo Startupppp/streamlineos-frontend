@@ -10,7 +10,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { useSlaCompliance } from "@/lib/api/hooks/crm";
 import { cn } from "@/lib/utils";
 
-// ─── Priority badge colours ───────────────────────────────────────────────────
 
 const PRIORITY_BADGE: Record<string, string> = {
   URGENT: "bg-red-100 text-red-700 border-red-200",
@@ -26,7 +25,6 @@ const STATUS_BADGE: Record<string, string> = {
   CLOSED: "bg-slate-100 text-slate-500 border-slate-200",
 };
 
-// ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function SlaLoadingSkeleton() {
   return (
@@ -47,7 +45,6 @@ function SlaLoadingSkeleton() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SlaCompliancePage() {
   const { data, isLoading } = useSlaCompliance();
@@ -74,7 +71,6 @@ export default function SlaCompliancePage() {
       }
     >
       <div className="space-y-6">
-        {/* ── Stat cards ── */}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <StatCard
             label="Compliance Rate"
@@ -102,7 +98,6 @@ export default function SlaCompliancePage() {
           />
         </div>
 
-        {/* ── By Priority table ── */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Breakdown by Priority</CardTitle>
@@ -162,7 +157,6 @@ export default function SlaCompliancePage() {
           </CardContent>
         </Card>
 
-        {/* ── Recent Breaches ── */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">

@@ -53,8 +53,6 @@ export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
 
-  // Measure the container height so month view can be set taller,
-  // ensuring the parent scroll kicks in just like week/day's internal time scroll.
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
   useEffect(() => {
@@ -67,12 +65,9 @@ export function CalendarView() {
     return () => ro.disconnect();
   }, []);
 
-  // Month view: add 200px on top of the measured container so there's always
-  // something to scroll (min 900px so all 6 week-rows have room to breathe).
   const calHeight = Math.max(containerHeight + 200, 900);
   const [createSlot, setCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // ID is a string like "event-123" matching CalendarListItem.id
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const rangeStart = useMemo(() => startOfMonth(subMonths(currentDate, 0)), [currentDate]);
@@ -90,7 +85,6 @@ export function CalendarView() {
       events.map((e) => ({
         id: e.id,
         title: e.title,
-        // API returns serialised Date objects as ISO strings under `start`/`end`
         start: new Date(e.start),
         end: new Date(e.end),
         allDay: e.allDay ?? false,
@@ -117,7 +111,6 @@ export function CalendarView() {
   }, []);
 
   const handleSelectEvent = useCallback((event: BigCalEvent) => {
-    // BigCalEvent.id is string (the prefixed CalendarListItem.id)
     setSelectedEventId(String(event.id));
   }, []);
 

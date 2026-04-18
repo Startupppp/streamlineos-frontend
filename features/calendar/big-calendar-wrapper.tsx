@@ -57,8 +57,6 @@ export function BigCalendarWrapper({
   onSelectEvent,
   eventPropGetter,
 }: BigCalendarWrapperProps) {
-  // Month view: measured container height (min 720px) so overflow-y-auto kicks in on small screens.
-  // Week/day views fill the container and use react-big-calendar's internal timeline scroll.
   const calendarStyle =
     view === "month"
       ? { height: calHeight }

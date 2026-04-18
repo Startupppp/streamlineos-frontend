@@ -49,7 +49,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     if (!existing) return err("Template not found", 404);
 
-    // Archive the current version before overwriting (only when content actually changes)
     const contentChanging =
       body.htmlContent !== undefined && body.htmlContent !== existing.htmlContent;
     if (contentChanging) {
@@ -65,7 +64,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
       });
     }
 
-    // Re-extract variables if htmlContent changed and variables not explicitly provided
     let variables = body.variables;
     if (body.htmlContent !== undefined && variables === undefined) {
       variables = extractVariables(body.htmlContent);

@@ -23,7 +23,6 @@ export async function PATCH(
 
     const body = await parseBody(req, patchSchema);
 
-    // Load the task to verify ownership / org membership
     const [task] = await db
       .select()
       .from(onboardingTasks)
@@ -50,7 +49,6 @@ export async function PATCH(
       })
       .where(eq(onboardingTasks.id, taskIdNum));
 
-    // Check if all onboarding tasks are now complete — send completion emails
     if (body.status === "COMPLETED") {
       void (async () => {
         const pendingTasks = await db
@@ -64,9 +62,8 @@ export async function PATCH(
             )
           );
 
-        if (pendingTasks.length > 0) return; // Still tasks remaining
+        if (pendingTasks.length > 0) return;
 
-        // All tasks complete — notify employee + HR
         const employee = await db.query.users.findFirst({
           where: eq(users.id, task.userId),
           columns: { email: true, name: true },
@@ -79,7 +76,6 @@ export async function PATCH(
           );
         }
 
-        // Notify HR members
         const hrMembers = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)

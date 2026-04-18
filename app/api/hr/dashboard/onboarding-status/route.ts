@@ -9,7 +9,6 @@ export async function GET() {
   return withAdmin(async (session) => {
     const orgId = session.orgId;
 
-    // Per-user task completion aggregates
     const taskStats = await db
       .select({
         userId: onboardingTasks.userId,
@@ -42,7 +41,6 @@ export async function GET() {
     const total = inProgress + completedCount;
     const completionPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
-    // Fetch user details for in-progress new hires (up to 5 for widget preview)
     const newHires: {
       userId: string;
       name: string;

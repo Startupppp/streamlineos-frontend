@@ -42,12 +42,11 @@ function buildTree(employees: Employee[]): TreeNode[] {
     }
   }
 
-  // Break any remaining cycles (e.g. A→B→A) by DFS; nodes in cycles become roots
   const visited = new Set<string>();
   const inStack = new Set<string>();
 
   function detectAndBreakCycles(nodeId: string): boolean {
-    if (inStack.has(nodeId)) return true; // cycle detected
+    if (inStack.has(nodeId)) return true;
     if (visited.has(nodeId)) return false;
     visited.add(nodeId);
     inStack.add(nodeId);
@@ -56,7 +55,6 @@ function buildTree(employees: Employee[]): TreeNode[] {
       node.children = node.children.filter((child) => {
         const isCycle = detectAndBreakCycles(child.employee.id);
         if (isCycle) {
-          // Detach this child from the cycle; make it a root instead
           roots.push(child);
           return false;
         }

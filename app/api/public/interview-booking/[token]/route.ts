@@ -76,7 +76,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  // Verify the selected slot is one of the available ones
   const slotStart = new Date(body.slotStart);
   const validSlot = link.availableSlots.some(
     (s) => new Date(s.start).getTime() === slotStart.getTime()
@@ -93,7 +92,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     IN_PERSON: "ONSITE",
   };
 
-  // Create the interview
   const [interview] = await db
     .insert(interviews)
     .values({
@@ -110,7 +108,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     })
     .returning();
 
-  // Create calendar event
   await db.insert(calendarEvents).values({
     orgId: link.orgId,
     title: `Interview (self-scheduled)`,
@@ -125,13 +122,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     attendeeIds: link.interviewerIds,
   });
 
-  // Mark booking link as used
   await db
     .update(interviewBookingLinks)
     .set({ status: "booked", selectedSlot: slotStart, updatedAt: new Date() })
     .where(eq(interviewBookingLinks.id, link.id));
 
-  // Notify creator via email (non-blocking)
   void (async () => {
     try {
       const candidate = await db.query.candidates.findFirst({
@@ -151,7 +146,7 @@ export async function POST(req: NextRequest, { params }: Params) {
           html: `<p>${candidateName} has scheduled their interview for <strong>${slotStart.toLocaleString("en-IN", { dateStyle: "full", timeStyle: "short", timeZone: "Asia/Kolkata" })}</strong>.</p>`,
         });
       }
-    } catch { /* non-blocking */ }
+    } catch {  }
   })();
 
   return NextResponse.json({ success: true, interviewId: interview.id });

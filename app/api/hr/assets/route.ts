@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Email the assigned employee (non-blocking)
     if (body.assignedTo) {
       void (async () => {
         const employee = await db.query.users.findFirst({

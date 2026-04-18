@@ -1,13 +1,9 @@
-/**
- * Shared utilities for normalizing inbound candidate payloads from job boards
- * into a unified CandidateInput structure before DB insertion.
- */
+
 
 import { db } from "@/lib/db";
 import { candidates, candidateApplications, candidateSources } from "@/lib/db/schema";
 import { eq, and, or } from "drizzle-orm";
 
-// ─── Unified candidate payload ────────────────────────────────────────────────
 
 export interface NormalizedCandidate {
   firstName: string;
@@ -22,12 +18,8 @@ export interface NormalizedCandidate {
   externalId?: string;
 }
 
-// ─── Deduplication ────────────────────────────────────────────────────────────
 
-/**
- * Find an existing candidate by email or phone (fuzzy dedup).
- * Returns the existing candidate's ID if found.
- */
+
 export async function findExistingCandidate(
   orgId: string,
   email: string,
@@ -52,21 +44,16 @@ export async function findExistingCandidate(
   return existing[0]?.id ?? null;
 }
 
-/**
- * Create a new candidate from a normalized payload, or return existing ID if duplicate.
- * Also updates `candidateSources.lastSyncedAt` and `lastSyncCount`.
- */
+
 export async function upsertCandidateFromBoard(
   orgId: string,
   payload: NormalizedCandidate
 ): Promise<{ candidateId: number; isNew: boolean }> {
-  // Dedup check
   const existingId = await findExistingCandidate(orgId, payload.email, payload.phone);
   if (existingId !== null) {
     return { candidateId: existingId, isNew: false };
   }
 
-  // Insert new candidate
   const [candidate] = await db
     .insert(candidates)
     .values({
@@ -87,7 +74,6 @@ export async function upsertCandidateFromBoard(
 
   if (!candidate) throw new Error("Failed to insert candidate");
 
-  // Update last synced timestamp on the source integration
   await db
     .update(candidateSources)
     .set({ lastSyncedAt: new Date(), updatedAt: new Date() })
@@ -97,12 +83,11 @@ export async function upsertCandidateFromBoard(
         eq(candidateSources.platform, payload.source)
       )
     )
-    .catch(() => undefined); // Non-fatal if source record doesn't exist yet
+    .catch(() => undefined);
 
   return { candidateId: candidate.id, isNew: true };
 }
 
-// ─── LinkedIn payload normalizer ──────────────────────────────────────────────
 
 interface LinkedInApplication {
   firstName?: string;
@@ -149,7 +134,6 @@ export function normalizeLinkedInPayload(
   };
 }
 
-// ─── Naukri payload normalizer ────────────────────────────────────────────────
 
 interface NaukriApplication {
   candidateName?: string;
@@ -195,7 +179,6 @@ export function normalizeNaukriPayload(
   };
 }
 
-// ─── Indeed payload normalizer ────────────────────────────────────────────────
 
 interface IndeedApplication {
   applicant?: {

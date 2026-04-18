@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FolderKanban } from "lucide-react";
 
-// ─── Meeting Dialog ──────────────────────────────────────────────────────────
 
 interface MeetingDialogProps {
   open: boolean;
@@ -112,7 +111,6 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
   );
 }
 
-// ─── Create Project Dialog ───────────────────────────────────────────────────
 
 interface CreateProjectDialogProps {
   open: boolean;

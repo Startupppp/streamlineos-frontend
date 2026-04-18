@@ -102,7 +102,6 @@ export function useHrOnboardingStatus() {
   });
 }
 
-// ─── Diversity ────────────────────────────────────────────────────────────────
 export interface HrDiversityMetrics {
   genderBreakdown: { gender: string; count: number }[];
   ageDistribution: { range: string; count: number }[];
@@ -116,7 +115,6 @@ export function useHrDiversityMetrics() {
   });
 }
 
-// ─── Time to Fill ─────────────────────────────────────────────────────────────
 export interface HrTimeToFill {
   avgDaysOverall: number | null;
   byDepartment: { department: string; avgDays: number; filledCount: number }[];
@@ -130,7 +128,6 @@ export function useHrTimeToFill() {
   });
 }
 
-// ─── Payroll Summary ──────────────────────────────────────────────────────────
 export interface HrPayrollSummary {
   month: string;
   totalGross: number;
@@ -149,7 +146,6 @@ export function useHrPayrollSummary() {
   });
 }
 
-// ─── Salary Bands ─────────────────────────────────────────────────────────────
 export interface HrSalaryBands {
   byDepartment: {
     department: string;
@@ -169,7 +165,6 @@ export function useHrSalaryBands() {
   });
 }
 
-// ─── Compliance ────────────────────────────────────────────────────────────────
 export interface HrCompliance {
   total: number;
   overallCompliant: number;

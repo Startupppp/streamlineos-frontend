@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BgvStatus as CandidateBgvStatus } from "@/types/hr";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const DOCUMENT_TYPES: Array<{ value: VaultDocumentType; label: string }> = [
   { value: "AADHAR", label: "Aadhar Card" },
@@ -55,7 +54,6 @@ function getBgvStyle(status: string | null) {
   return BGV_STATUSES.find((s) => s.value === status) ?? BGV_STATUSES[0]!;
 }
 
-// ─── AV Scan Badge ────────────────────────────────────────────────────────────
 
 function AvScanBadge({ result }: { result: "PENDING" | "CLEAN" | "INFECTED" | null }) {
   if (result === "CLEAN") {
@@ -82,7 +80,6 @@ function AvScanBadge({ result }: { result: "PENDING" | "CLEAN" | "INFECTED" | nu
   );
 }
 
-// ─── BgV Status Tracker ───────────────────────────────────────────────────────
 
 interface BgvTrackerProps {
   candidateId: number;
@@ -129,7 +126,6 @@ function BgvTracker({ candidateId, bgvStatus, bgvAgency, bgvNotes, bgvInitiatedA
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-3">
-        {/* Timeline pills */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
           {bgvInitiatedAt && (
             <span className="flex items-center gap-1">
@@ -201,7 +197,6 @@ function BgvTracker({ candidateId, bgvStatus, bgvAgency, bgvNotes, bgvInitiatedA
   );
 }
 
-// ─── Document Upload ──────────────────────────────────────────────────────────
 
 interface UploadAreaProps {
   candidateId: number;
@@ -215,8 +210,6 @@ function UploadArea({ candidateId }: UploadAreaProps) {
 
   const handleFile = useCallback(
     async (file: File) => {
-      // For demo/dev: create a blob URL as the "uploaded" URL
-      // In production this would upload to S3/R2 first and get back a URL + key
       const fakeUrl = URL.createObjectURL(file);
       const fakeKey = `org/candidates/${candidateId}/${Date.now()}-${file.name}`;
 
@@ -298,7 +291,6 @@ function UploadArea({ candidateId }: UploadAreaProps) {
   );
 }
 
-// ─── Document List ─────────────────────────────────────────────────────────────
 
 interface DocumentListProps {
   candidateId: number;
@@ -424,7 +416,6 @@ function DocumentList({ candidateId }: DocumentListProps) {
   );
 }
 
-// ─── Vault Tab ─────────────────────────────────────────────────────────────────
 
 export interface VaultTabProps {
   candidateId: number;
@@ -440,7 +431,6 @@ export function VaultTab(props: VaultTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* BgV Status Tracker */}
       <BgvTracker
         candidateId={props.candidateId}
         bgvStatus={props.bgvStatus}
@@ -450,7 +440,6 @@ export function VaultTab(props: VaultTabProps) {
         bgvCompletedAt={props.bgvCompletedAt ? String(props.bgvCompletedAt) : null}
       />
 
-      {/* Documents Vault */}
       <Card>
         <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">

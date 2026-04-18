@@ -14,7 +14,6 @@ function playNotificationSound(type: "success" | "error" | "other") {
     gain.connect(ctx.destination)
 
     if (type === "success") {
-      // Short ascending two-tone chime
       osc.type = "sine"
       osc.frequency.setValueAtTime(660, ctx.currentTime)
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1)
@@ -23,7 +22,6 @@ function playNotificationSound(type: "success" | "error" | "other") {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.35)
     } else if (type === "error") {
-      // Short descending tone
       osc.type = "sine"
       osc.frequency.setValueAtTime(440, ctx.currentTime)
       osc.frequency.setValueAtTime(330, ctx.currentTime + 0.12)
@@ -32,7 +30,6 @@ function playNotificationSound(type: "success" | "error" | "other") {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.4)
     } else {
-      // Single soft ping
       osc.type = "sine"
       osc.frequency.setValueAtTime(660, ctx.currentTime)
       gain.gain.setValueAtTime(0.06, ctx.currentTime)
@@ -43,7 +40,6 @@ function playNotificationSound(type: "success" | "error" | "other") {
 
     osc.onended = () => ctx.close()
   } catch {
-    // Silently fail — AudioContext not available (SSR, blocked, etc.)
   }
 }
 
@@ -57,7 +53,6 @@ function ToastSoundListener() {
     const isNewToast = toasts.some((t) => !knownIdsRef.current.has(t.id))
 
     if (isNewToast && toasts.length > prevCountRef.current) {
-      // Find the newest toast
       const newest = toasts.find((t) => !knownIdsRef.current.has(t.id))
       if (newest) {
         const type =

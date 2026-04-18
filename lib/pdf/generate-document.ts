@@ -1,14 +1,6 @@
 import { substituteVariables } from "@/lib/utils/document-variables";
 
-/**
- * Generates a document by substituting variables in an HTML template and
- * returning the result as a Buffer.
- *
- * jsPDF is a browser library; puppeteer/chromium is not installed.
- * The MVP approach is to return the fully-substituted HTML wrapped in a
- * minimal print-ready page so it can be downloaded and printed/viewed directly.
- * The content-type should be "text/html" and the filename should end in ".html".
- */
+
 export async function generateDocumentPdf(
   htmlContent: string,
   variables: Record<string, string>

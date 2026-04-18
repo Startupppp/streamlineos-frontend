@@ -7,7 +7,6 @@ import { eq, and, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { differenceInHours } from "date-fns";
 
-// ─── Output schema ────────────────────────────────────────────────────────────
 
 const PriorityItemSchema = z.object({
   taskId: z.number(),
@@ -24,7 +23,6 @@ const PriorityResponseSchema = z.object({
 export type PriorityItem = z.infer<typeof PriorityItemSchema>;
 export type PriorityResponse = z.infer<typeof PriorityResponseSchema>;
 
-// ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   void req;
@@ -33,7 +31,6 @@ export async function GET(req: NextRequest) {
       return err("AI is not configured. Set OPENAI_API_KEY.", 503);
     }
 
-    // Fetch pending tasks for the current user
     const pendingTasks = await db
       .select()
       .from(tasks)
@@ -51,7 +48,6 @@ export async function GET(req: NextRequest) {
       return ok({ items: [], summary: "No pending tasks to prioritize." });
     }
 
-    // Enrich tasks with entity context (lead score, sla, deal value)
     const enriched = await Promise.all(
       pendingTasks.map(async (t) => {
         let entityContext: Record<string, unknown> = {};

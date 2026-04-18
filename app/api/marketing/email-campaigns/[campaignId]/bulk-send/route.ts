@@ -9,7 +9,7 @@ const bodySchema = z.object({
   leadIds: z.array(z.number().int().positive()).min(1, "At least one lead is required"),
 });
 
-/** POST /api/marketing/email-campaigns/:campaignId/bulk-send */
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ campaignId: string }> },
@@ -21,7 +21,6 @@ export async function POST(
 
     const { leadIds } = await parseBody(req, bodySchema);
 
-    // Verify campaign belongs to org and is a draft
     const [campaign] = await db
       .select({ id: emailCampaigns.id, status: emailCampaigns.status })
       .from(emailCampaigns)
@@ -30,7 +29,6 @@ export async function POST(
     if (!campaign) return err("Campaign not found", 404);
     if (campaign.status !== "draft") return err("Only draft campaigns can be sent", 400);
 
-    // Count valid leads that have emails
     const matchedLeads = await db
       .select({ id: leads.id, email: leads.email })
       .from(leads)
@@ -44,7 +42,6 @@ export async function POST(
     const validLeads = matchedLeads.filter((l) => l.email != null);
     const sentCount = validLeads.length;
 
-    // Update campaign: mark as sent with counts
     await db
       .update(emailCampaigns)
       .set({

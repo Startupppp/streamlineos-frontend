@@ -87,7 +87,6 @@ export default function InvoiceDetailPage({
     notes: "",
   });
 
-  // Edit state
   const [editOpen, setEditOpen] = useState(false);
   const [editLineItems, setEditLineItems] = useState<{ description: string; quantity: number; rate: number; amount: number }[]>([]);
   const [editTaxRate, setEditTaxRate] = useState(0);
@@ -110,7 +109,6 @@ export default function InvoiceDetailPage({
       setEditNotes(invoice.notes ?? "");
       setEditCurrency(invoice.currency ?? "INR");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editOpen]);
 
   if (isLoading) {
@@ -410,14 +408,12 @@ export default function InvoiceDetailPage({
         )}
       </div>
 
-      {/* Edit Dialog — only available for DRAFT invoices */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-sm">Edit Invoice</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-1">
-            {/* Line items */}
             <div className="rounded-lg border border-border overflow-hidden">
               <div className="px-4 py-2 border-b border-border">
                 <p className="text-xs font-semibold">Line Items</p>
@@ -497,7 +493,6 @@ export default function InvoiceDetailPage({
               </div>
             </div>
 
-            {/* Settings */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Tax Rate (%)</Label>

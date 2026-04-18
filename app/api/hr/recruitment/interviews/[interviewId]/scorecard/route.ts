@@ -23,7 +23,6 @@ export async function GET(
     const interviewId = Number(idParam);
     if (!interviewId) return err("Invalid interview ID.", 400);
 
-    // Verify interview belongs to org
     const interview = await db.query.interviews.findFirst({
       where: and(eq(interviews.id, interviewId), eq(interviews.orgId, session.orgId)),
     });
@@ -36,12 +35,10 @@ export async function GET(
       ),
     });
 
-    // Blind mode: if not yet submitted, only return own (empty) scorecard
     if (!scorecard) {
       return ok(null);
     }
 
-    // If blind mode and not submitted yet, hide other interviewers' data (this is own scorecard)
     return ok(scorecard);
   });
 }
@@ -55,13 +52,11 @@ export async function POST(
     const interviewId = Number(idParam);
     if (!interviewId) return err("Invalid interview ID.", 400);
 
-    // Verify interview belongs to org
     const interview = await db.query.interviews.findFirst({
       where: and(eq(interviews.id, interviewId), eq(interviews.orgId, session.orgId)),
     });
     if (!interview) return err("Interview not found.", 404);
 
-    // Check if already submitted
     const existing = await db.query.interviewScorecards.findFirst({
       where: and(
         eq(interviewScorecards.interviewId, interviewId),
@@ -75,7 +70,6 @@ export async function POST(
     const body = await parseBody(req, submitScorecardSchema);
 
     if (existing) {
-      // Update the draft
       const [updated] = await db
         .update(interviewScorecards)
         .set({

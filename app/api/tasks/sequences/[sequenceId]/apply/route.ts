@@ -15,9 +15,7 @@ const applySchema = z.object({
 
 type RouteContext = { params: Promise<{ sequenceId: string }> };
 
-/** POST /api/tasks/sequences/[sequenceId]/apply
- *  Creates tasks for all steps offset from baseDate.
- */
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { sequenceId: seqIdStr } = await ctx.params;
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const input = await parseBody(req, applySchema);
     
 
-    // Verify the sequence belongs to this org
     const seq = await db.query.taskSequences.findFirst({
       where: and(eq(taskSequences.id, sequenceId), eq(taskSequences.orgId, session.orgId)),
       with: { steps: { orderBy: (s, { asc }) => [asc(s.order)] } },

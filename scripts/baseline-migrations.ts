@@ -1,15 +1,4 @@
-/**
- * Baseline migration script.
- *
- * Use this when the DB was originally set up with `db:push` (no migration tracking),
- * and you now want to switch to `db:migrate`.
- *
- * It creates the `__drizzle_migrations` table and marks all migrations that
- * already exist in the DB as applied, so `db:migrate` only runs NEW ones.
- *
- * Run ONCE before your first `db:migrate`:
- *   npx tsx --env-file=.env scripts/baseline-migrations.ts
- */
+
 import { createHash } from "crypto";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
@@ -68,10 +57,6 @@ function hashFile(tag: string): string {
 async function main() {
   const sql = postgres(DATABASE_URL!, { max: 1, ssl: "require" });
 
-  console.log("📦 Baselining migration history...\n");
-
-  // drizzle-kit defaults to the `drizzle` schema for its migration tracking table
-  // 1. Create the `drizzle` schema + migrations table
   await sql`CREATE SCHEMA IF NOT EXISTS drizzle`;
   await sql`
     CREATE TABLE IF NOT EXISTS drizzle."__drizzle_migrations" (
@@ -80,20 +65,15 @@ async function main() {
       created_at bigint
     )
   `;
-  console.log("✅ drizzle.__drizzle_migrations table ready");
 
-  // 2. Check which entries already exist
   const existing = await sql<{ hash: string }[]>`
     SELECT hash FROM drizzle."__drizzle_migrations"
   `;
   const existingHashes = new Set(existing.map((r) => r.hash));
 
-  // 3. Insert missing baseline entries
-  let inserted = 0;
   for (const tag of BASELINE_TAGS) {
     const hash = hashFile(tag);
     if (existingHashes.has(hash)) {
-      console.log(`  ⏩ ${tag} — already recorded`);
       continue;
     }
     const createdAt = TIMESTAMPS[tag];
@@ -101,18 +81,9 @@ async function main() {
       INSERT INTO drizzle."__drizzle_migrations" (hash, created_at)
       VALUES (${hash}, ${createdAt})
     `;
-    console.log(`  ✅ ${tag} — marked as applied`);
-    inserted++;
   }
 
   await sql.end();
-
-  if (inserted === 0) {
-    console.log("\n✨ All baseline migrations were already recorded — nothing to do.");
-  } else {
-    console.log(`\n🎉 Marked ${inserted} migration(s) as applied.`);
-  }
-  console.log('👉 Now run: pnpm db:migrate\n');
   process.exit(0);
 }
 

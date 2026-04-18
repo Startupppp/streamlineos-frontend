@@ -1,8 +1,4 @@
-/**
- * Source Effectiveness Report
- * Returns candidate counts grouped by source, with hire rate per source.
- * GET /api/reports/source-effectiveness
- */
+
 
 import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -15,7 +11,7 @@ export interface SourceEffectivenessRow {
   total: number;
   hired: number;
   rejected: number;
-  hireRate: number; // percentage 0–100
+  hireRate: number;
 }
 
 export async function GET(_req: NextRequest) {

@@ -13,7 +13,6 @@ import type { SystemRole } from "@/lib/rbac/permissions";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { cn } from "@/lib/utils";
 
-// Friendly display labels for each system role
 const ROLE_LABELS: Record<SystemRole, string> = {
   CEO: "CEO",
   HR: "HR",
@@ -27,7 +26,6 @@ const ROLE_LABELS: Record<SystemRole, string> = {
   BRANCH_HR: "Branch HR",
 };
 
-// Group permissions by resource
 function groupByResource(permissions: typeof PERMISSIONS) {
   const groups: Record<string, typeof PERMISSIONS> = {};
   for (const perm of permissions) {
@@ -38,7 +36,6 @@ function groupByResource(permissions: typeof PERMISSIONS) {
   return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
 }
 
-// Pretty-print a resource key
 function formatResource(resource: string) {
   return resource
     .replace(/:/g, " › ")
@@ -46,7 +43,6 @@ function formatResource(resource: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Pretty-print an action
 function formatAction(action: string) {
   return action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -65,7 +61,6 @@ function PermissionsContent() {
 
   const permissionGroups = useMemo(() => groupByResource(PERMISSIONS), []);
 
-  // Build a Set per role for O(1) lookup
   const rolePermSets = useMemo(() => {
     const result: Record<string, Set<string>> = {};
     for (const r of SYSTEM_ROLES) {
@@ -80,7 +75,6 @@ function PermissionsContent() {
       subtitle="Read-only overview of built-in permissions per system role"
     >
       <div className="space-y-4">
-        {/* Info banner */}
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
@@ -93,7 +87,6 @@ function PermissionsContent() {
           </p>
         </div>
 
-        {/* Role legend */}
         <div className="flex flex-wrap gap-2">
           {SYSTEM_ROLES.map((r) => (
             <Badge
@@ -109,7 +102,6 @@ function PermissionsContent() {
           ))}
         </div>
 
-        {/* Matrix */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -120,7 +112,6 @@ function PermissionsContent() {
           <CardContent className="p-0">
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[900px]">
-                {/* Header row */}
                 <div className="grid bg-muted/50 border-b border-border/40 sticky top-0 z-10"
                   style={{ gridTemplateColumns: `260px repeat(${SYSTEM_ROLES.length}, minmax(72px, 1fr))` }}
                 >
@@ -140,10 +131,8 @@ function PermissionsContent() {
                   ))}
                 </div>
 
-                {/* Groups */}
                 {permissionGroups.map(([resource, perms]) => (
                   <div key={resource}>
-                    {/* Group header */}
                     <div
                       className="grid bg-muted/20 border-b border-border/30"
                       style={{ gridTemplateColumns: `260px repeat(${SYSTEM_ROLES.length}, minmax(72px, 1fr))` }}
@@ -153,7 +142,6 @@ function PermissionsContent() {
                       </div>
                     </div>
 
-                    {/* Permission rows */}
                     {perms.map((perm) => (
                       <PermissionRow
                         key={perm.name}
@@ -187,7 +175,6 @@ function PermissionRow({ perm, roleCount, rolePermSets, currentRole }: Permissio
       className="grid border-b border-border/20 hover:bg-muted/10 transition-colors"
       style={{ gridTemplateColumns: `260px repeat(${roleCount}, minmax(72px, 1fr))` }}
     >
-      {/* Permission label */}
       <div className="px-4 py-2 flex flex-col justify-center">
         <p className="text-[12px] font-medium leading-snug">{perm.description}</p>
         <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
@@ -195,9 +182,7 @@ function PermissionRow({ perm, roleCount, rolePermSets, currentRole }: Permissio
         </p>
       </div>
 
-      {/* Role cells */}
       {SYSTEM_ROLES.map((r) => {
-        // CEO has all permissions
         const hasPermission = r === "CEO" || (rolePermSets[r]?.has(perm.name) ?? false);
         return (
           <div

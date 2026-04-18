@@ -16,6 +16,8 @@ interface DatePickerProps {
   className?: string;
   fromDate?: Date;
   toDate?: Date;
+  fromYear?: number;
+  toYear?: number;
   id?: string;
 }
 
@@ -33,6 +35,8 @@ export function DatePicker({
   className,
   fromDate,
   toDate,
+  fromYear = 1950,
+  toYear = new Date().getFullYear() + 5,
   id,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
@@ -74,6 +78,9 @@ export function DatePicker({
           onSelect={handleSelect}
           fromDate={fromDate}
           toDate={toDate}
+          fromYear={fromYear}
+          toYear={toYear}
+          captionLayout="dropdown-buttons"
           initialFocus
         />
       </PopoverContent>

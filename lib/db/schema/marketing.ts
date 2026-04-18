@@ -1,12 +1,8 @@
-/**
- * Marketing schema: landing pages + page view tracking + A/B tests + content calendar.
- */
+
 import { pgTable, text, serial, timestamp, boolean, integer, index, date, jsonb } from "drizzle-orm/pg-core";
-// Note: integer is used for pageViews.pageId (references landing_pages.id which is serial/integer)
 import { relations } from "drizzle-orm";
 import { users } from "./auth";
 
-// ─── Landing Pages ───────────────────────────────────────────────────────────
 
 export interface LandingPageTestimonial {
   id: string;
@@ -59,7 +55,6 @@ export const pageViews = pgTable("page_views", {
   index("page_views_viewed_at_idx").on(table.viewedAt),
 ]);
 
-// ─── Relations ───────────────────────────────────────────────────────────────
 
 export const landingPagesRelations = relations(landingPages, ({ one, many }) => ({
   creator: one(users, {
@@ -76,7 +71,6 @@ export const pageViewsRelations = relations(pageViews, ({ one }) => ({
   }),
 }));
 
-// ─── A/B Tests ───────────────────────────────────────────────────────────────
 
 export const abTests = pgTable(
   "ab_tests",
@@ -85,7 +79,7 @@ export const abTests = pgTable(
     orgId: text("org_id").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    status: text("status").default("draft"), // draft | running | completed | paused
+    status: text("status").default("draft"),
     variantASubject: text("variant_a_subject").notNull(),
     variantBSubject: text("variant_b_subject").notNull(),
     variantABody: text("variant_a_body"),
@@ -98,7 +92,7 @@ export const abTests = pgTable(
     variantBOpens: integer("variant_b_opens").default(0),
     variantAClicks: integer("variant_a_clicks").default(0),
     variantBClicks: integer("variant_b_clicks").default(0),
-    winnerVariant: text("winner_variant"), // 'A' | 'B' | null
+    winnerVariant: text("winner_variant"),
     startedAt: timestamp("started_at"),
     endedAt: timestamp("ended_at"),
     createdBy: text("created_by").references(() => users.id),
@@ -118,14 +112,13 @@ export const abTestsRelations = relations(abTests, ({ one }) => ({
   }),
 }));
 
-// ─── Social Metrics ───────────────────────────────────────────────────────────
 
 export const socialMetrics = pgTable(
   "social_metrics",
   {
     id: serial("id").primaryKey(),
     orgId: text("org_id").notNull(),
-    platform: text("platform").notNull(), // 'linkedin'|'twitter'|'instagram'|'facebook'|'youtube'
+    platform: text("platform").notNull(),
     metricDate: date("metric_date").notNull(),
     followers: integer("followers").default(0),
     impressions: integer("impressions").default(0),
@@ -150,7 +143,6 @@ export const socialMetricsRelations = relations(socialMetrics, ({ one }) => ({
   }),
 }));
 
-// ─── Content Calendar ─────────────────────────────────────────────────────────
 export const contentCalendarItems = pgTable("content_calendar_items", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull(),

@@ -142,7 +142,7 @@ export function useAIAttritionRisk() {
   });
 }
 
-/* ─── AI8: Objection Handler ────────────────────────────────────────────────── */
+
 
 export interface ObjectionHandlerInput {
   objection: string;
@@ -164,7 +164,7 @@ export function useObjectionHandler() {
   });
 }
 
-/* ─── AI9: Email Subject Line Generator ─────────────────────────────────────── */
+
 
 export interface SubjectLinesInput {
   campaignContext: string;
@@ -184,7 +184,7 @@ export function useGenerateSubjectLines() {
   });
 }
 
-/* ─── AI10: Content Brief Generator ─────────────────────────────────────────── */
+
 
 export interface ContentBrief {
   title: string;
@@ -207,7 +207,7 @@ export function useGenerateContentBrief() {
   });
 }
 
-/* ─── AI13: Client Sentiment Analysis ───────────────────────────────────────── */
+
 
 export interface SentimentResult {
   sentiment: "positive" | "neutral" | "negative" | "critical";
@@ -225,7 +225,7 @@ export function useSentimentAnalysis() {
   });
 }
 
-/* ─── AI15: Natural Language Lead Search ────────────────────────────────────── */
+
 
 export interface NLSearchLead {
   id: number;
@@ -254,7 +254,7 @@ export function useNLSearch() {
   });
 }
 
-/* ─── AI11: Campaign Performance Insights ────────────────────────────────── */
+
 
 export interface CampaignInsightsResult {
   insights: string;
@@ -268,7 +268,7 @@ export function useCampaignInsights() {
   });
 }
 
-/* ─── AI14: Account Summary Generator ───────────────────────────────────────── */
+
 
 export interface AccountSummaryResult {
   summary: string;
@@ -283,7 +283,7 @@ export function useAccountSummary() {
   });
 }
 
-/* ─── AI16: Report Narrator ──────────────────────────────────────────────────── */
+
 
 export interface ReportNarratorResult {
   narrative: string;
@@ -297,7 +297,7 @@ export function useReportNarrator() {
   });
 }
 
-/* ─── AI17: Meeting Prep Brief ───────────────────────────────────────────────── */
+
 
 export interface MeetingPrepResult {
   brief: string;
@@ -317,7 +317,7 @@ export function useMeetingPrep() {
   });
 }
 
-/* ─── AI Job Description Generator ──────────────────────────────────────────── */
+
 
 export interface GenerateJdInput {
   title: string;
@@ -335,7 +335,7 @@ export function useGenerateJobDescription() {
   });
 }
 
-/* ─── Feature Flags ──────────────────────────────────────────────────────────── */
+
 
 export interface OrgFeatureFlags {
   aiChat: boolean;
@@ -366,7 +366,7 @@ export function useUpdateFeatureFlag() {
   });
 }
 
-/* ─── AI Usage ───────────────────────────────────────────────────────────────── */
+
 
 interface AiUsageTotals {
   totalTokens: number;

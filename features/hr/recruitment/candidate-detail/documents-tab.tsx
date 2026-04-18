@@ -23,7 +23,6 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/lib/api/hooks/hr/recruitment";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
 
-// ─── Status config ────────────────────────────────────────────────────────────
 
 type DocStatus = "GENERATED" | "SENT" | "VIEWED" | "SIGNED" | "DECLINED";
 
@@ -62,7 +61,6 @@ function getStatusConfig(status: string) {
   return STATUS_CONFIG[status as DocStatus] ?? STATUS_CONFIG.GENERATED;
 }
 
-// ─── E-sign timeline ──────────────────────────────────────────────────────────
 
 function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
   const steps: Array<{
@@ -117,7 +115,6 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 interface DocumentsTabProps {
   candidateId: number;

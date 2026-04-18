@@ -11,7 +11,6 @@ export async function GET(
   return withAuth(async (session) => {
     const { userId } = await params;
 
-    // Employees can only see their own; HR/CEO/ADMIN can see anyone in the org
     const role = session.user.role;
     const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
 

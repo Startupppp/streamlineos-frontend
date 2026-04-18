@@ -56,15 +56,8 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  console.log(`Creating organization: ${name} (${slug}) for ${finalOwnerEmail}...`);
-  
   createOrganization(name, slug, finalOwnerEmail)
-    .then((result) => {
-      console.log("✅ Organization created successfully!");
-      console.log(`   ID: ${result.id}`);
-      console.log(`   Name: ${result.name}`);
-      console.log(`   Slug: ${result.slug}`);
-      console.log(`   Owner: ${finalOwnerEmail}`);
+    .then(() => {
       process.exit(0);
     })
     .catch((error) => {

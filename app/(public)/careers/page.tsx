@@ -55,7 +55,6 @@ export default async function CareersPage() {
       .where(eq(jobPostings.status, "OPEN"))
       .orderBy(desc(jobPostings.createdAt));
 
-    // Fetch department names for all unique departmentIds in one query
     const departmentIds = [...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null))];
     const deptRows = departmentIds.length > 0
       ? await db
@@ -65,12 +64,10 @@ export default async function CareersPage() {
       : [];
     deptMap = new Map(deptRows.map((d) => [d.id, d.name]));
   } catch {
-    // DB may not have tables during initial build — gracefully show empty state
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
           <div>
@@ -85,7 +82,6 @@ export default async function CareersPage() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="bg-card border-b">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-14 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
@@ -100,7 +96,6 @@ export default async function CareersPage() {
         </div>
       </section>
 
-      {/* Jobs list */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
         {jobs.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
@@ -199,7 +194,6 @@ export default async function CareersPage() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t mt-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.

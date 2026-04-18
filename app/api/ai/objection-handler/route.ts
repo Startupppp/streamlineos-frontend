@@ -16,7 +16,7 @@ const ObjectionResponseSchema = z.object({
   suggestedResponse: z.string(),
 });
 
-/** POST /api/ai/objection-handler — Generate counter-arguments for a sales objection */
+
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) {

@@ -17,7 +17,6 @@ import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { Role } from "@/types/organization";
 
-// ─── Permission Row ──────────────────────────────────────────────────────────
 
 interface PermissionRowProps {
   perm: Permission;
@@ -40,7 +39,6 @@ function PermissionRow({ perm, enabled, isCEO, onToggle }: PermissionRowProps) {
   );
 }
 
-// ─── Permission Group Row ────────────────────────────────────────────────────
 
 interface PermissionGroupRowProps {
   groupName: string;
@@ -89,7 +87,6 @@ function PermissionGroupRow({ groupName, perms, isExpanded, enabledCount, isCEO,
   );
 }
 
-// ─── Permission Matrix ───────────────────────────────────────────────────────
 
 interface PermissionMatrixProps {
   role: Role;

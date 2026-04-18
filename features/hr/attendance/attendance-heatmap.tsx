@@ -35,7 +35,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       }
     }
 
-    // Build weeks grid: each week is an array of 7 days (Sun–Sat)
     const weekStarts = eachWeekOfInterval({ start: yearStart, end: yearEnd });
     const weeksData = weekStarts.map((weekStart) => {
       return Array.from({ length: 7 }, (_, dayIdx) => {
@@ -47,7 +46,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       });
     });
 
-    // Calculate month label positions (column index where each month starts)
     const positions: { month: number; col: number }[] = [];
     weeksData.forEach((week, colIdx) => {
       const firstValid = week.find((d) => d !== null);
@@ -112,7 +110,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         ) : (
           <div className="overflow-x-auto">
             <div className="inline-block min-w-max">
-              {/* Month labels */}
               <div className="flex mb-1 ml-8">
                 {monthPositions.map(({ month, col }) => (
                   <div
@@ -126,7 +123,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               </div>
               <div className="relative mt-4">
                 <div className="flex gap-0.5">
-                  {/* Day labels */}
                   <div className="flex flex-col gap-0.5 mr-1.5">
                     {DAY_LABELS.map((d, i) => (
                       <div key={d} className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}>
@@ -134,7 +130,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                       </div>
                     ))}
                   </div>
-                  {/* Heatmap grid */}
                   {weeks.map((week, colIdx) => (
                     <div key={colIdx} className="flex flex-col gap-0.5">
                       {week.map((day, rowIdx) => {
@@ -159,7 +154,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                   ))}
                 </div>
               </div>
-              {/* Legend */}
               <div className="flex items-center gap-1.5 mt-3">
                 <span className="text-[10px] text-muted-foreground">Less</span>
                 {[0, 1, 2, 3, 4].map((level) => (

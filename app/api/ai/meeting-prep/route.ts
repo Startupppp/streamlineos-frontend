@@ -16,7 +16,7 @@ const BodySchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 
-/** POST /api/ai/meeting-prep */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
 
       attendeeName = lead.name;
 
-      // Fetch recent lead activities
       const activities = await db
         .select({
           type: leadActivities.type,
@@ -97,7 +96,6 @@ LEAD PROFILE:
 PREVIOUS INTERACTIONS:
 ${activitiesText}`;
     } else {
-      // client
       const account = await db.query.clientAccounts.findFirst({
         where: and(
           eq(clientAccounts.id, attendeeId),
@@ -111,7 +109,6 @@ ${activitiesText}`;
 
       attendeeName = account.clientName;
 
-      // Fetch recent activities
       const activities = await db
         .select({
           activityType: clientAccountActivities.activityType,

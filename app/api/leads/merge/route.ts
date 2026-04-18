@@ -1,9 +1,4 @@
-/**
- * POST /api/leads/merge
- * Merges two duplicate lead records.
- * The "winner" lead survives; the "loser" is soft-deleted.
- * All related records (activities, notes, interactions) are re-parented to the winner.
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -14,11 +9,11 @@ import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 
 const mergeSchema = z.object({
-  /** The lead ID to keep */
+  
   winnerId: z.number().int().positive(),
-  /** The lead ID to merge into winner (will be soft-deleted) */
+  
   loserId: z.number().int().positive(),
-  /** Field overrides: for each field, choose winner or loser values */
+  
   overrides: z
     .object({
       name: z.enum(["winner", "loser"]).optional(),
@@ -49,7 +44,6 @@ export async function POST(req: NextRequest) {
       return err("Cannot merge a lead with itself", 400);
     }
 
-    // Load both leads, verify they belong to this org
     const [winner, loser] = await Promise.all([
       db.query.leads.findFirst({
         where: and(eq(leads.id, winnerId), eq(leads.orgId, session.orgId)),
@@ -62,7 +56,6 @@ export async function POST(req: NextRequest) {
     if (!winner) return err("Winner lead not found", 404);
     if (!loser) return err("Loser lead not found", 404);
 
-    // Build the merged field values
     const pick = <T>(field: keyof typeof overrides, winVal: T, loseVal: T): T =>
       overrides[field] === "loser" ? loseVal : winVal;
 
@@ -80,12 +73,10 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
-    // If either lead has a score, keep the higher one
     if (loser.score != null && (winner.score ?? 0) < loser.score) {
       mergedFields.score = loser.score;
     }
 
-    // Re-parent related records from loser → winner (non-blocking, best effort)
     const reParent = async () => {
       await db.update(leadActivities)
         .set({ leadId: winnerId })
@@ -98,14 +89,12 @@ export async function POST(req: NextRequest) {
         .catch(() => undefined);
     };
 
-    // Execute in a transaction: update winner + soft-delete loser
     await db.transaction(async (tx) => {
       await tx
         .update(leads)
         .set(mergedFields)
         .where(eq(leads.id, winnerId));
 
-      // Soft-delete the loser: set deletedAt + mergedIntoId
       await tx
         .update(leads)
         .set({ deletedAt: new Date(), mergedIntoId: winnerId, updatedAt: new Date() })
@@ -114,7 +103,6 @@ export async function POST(req: NextRequest) {
 
     void reParent();
 
-    // Audit log
     void writeAuditLog({
       action: "LEAD_MERGED",
       userId: session.user.id,
@@ -130,7 +118,6 @@ export async function POST(req: NextRequest) {
       },
     }).catch(() => undefined);
 
-    // Return the updated winner
     const updatedWinner = await db.query.leads.findFirst({
       where: eq(leads.id, winnerId),
     });

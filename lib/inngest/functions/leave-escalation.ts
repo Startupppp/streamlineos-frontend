@@ -1,8 +1,4 @@
-/**
- * Inngest cron: runs every 6 hours.
- * For each PENDING leave request older than 48 hours, finds an HR Manager or CEO
- * in the org and sends them an escalation notification email.
- */
+
 import { inngest } from "../client";
 import { db } from "@/lib/db";
 import { leaveRequests, users, leaveTypes, organizations, organizationMembers } from "@/lib/db/schema";
@@ -15,12 +11,11 @@ export const leaveEscalation = inngest.createFunction(
   {
     id: "leave-escalation",
     name: "Auto-Escalate Stale Leave Requests (48h)",
-    triggers: { cron: "0 */6 * * *" }, // every 6 hours
+    triggers: { cron: "0 */6 * * *" },
   },
   async () => {
     const cutoff = subHours(new Date(), 48);
 
-    // Find PENDING requests submitted more than 48 hours ago
     const staleRequests = await db
       .select({
         id: leaveRequests.id,
@@ -43,7 +38,6 @@ export const leaveEscalation = inngest.createFunction(
 
     if (staleRequests.length === 0) return { escalated: 0 };
 
-    // Group by org
     const byOrg = new Map<string, typeof staleRequests>();
     for (const req of staleRequests) {
       const list = byOrg.get(req.orgId) ?? [];
@@ -54,7 +48,6 @@ export const leaveEscalation = inngest.createFunction(
     let escalated = 0;
 
     for (const [orgId, requests] of byOrg) {
-      // Find HR Manager / CEO in this org to escalate to (via organizationMembers)
       const escalationMember = await db
         .select({
           id: users.id,
@@ -82,7 +75,6 @@ export const leaveEscalation = inngest.createFunction(
         columns: { name: true },
       });
 
-      // Build table rows for pending requests
       const rows = await Promise.all(
         requests.map(async (r) => {
           const employee = await db.query.users.findFirst({

@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
 
     const { name, description, fields, submitMessage, redirectUrl, isActive } = parsed.data;
 
-    // Generate a unique 16-char token
     const publicToken = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 
     const [created] = await db

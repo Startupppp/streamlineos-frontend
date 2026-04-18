@@ -3,12 +3,9 @@ import { db } from "@/lib/db";
 import { projects, projectMembers, tickets, users } from "@/lib/db/schema";
 import { eq, and, inArray, count, sql } from "drizzle-orm";
 
-/** GET /api/projects/resource-allocation
- *  Returns per-member ticket allocation across all active projects.
- */
+
 export async function GET() {
   return withAuth(async (session) => {
-    // Get all active projects in this org
     const activeProjects = await db.query.projects.findMany({
       where: and(eq(projects.orgId, session.orgId), eq(projects.status, "ACTIVE")),
       columns: { id: true, name: true, key: true },
@@ -18,7 +15,6 @@ export async function GET() {
 
     const projectIds = activeProjects.map((p) => p.id);
 
-    // Get ticket counts per assignee per project (open tickets only)
     const allocation = await db
       .select({
         assigneeId: tickets.assigneeId,
@@ -35,14 +31,12 @@ export async function GET() {
       )
       .groupBy(tickets.assigneeId, tickets.projectId);
 
-    // Get unique assignee IDs
     const assigneeIds = [...new Set(
       allocation.map((a) => a.assigneeId).filter((id): id is string => id !== null),
     )];
 
     if (assigneeIds.length === 0) return ok([]);
 
-    // Fetch user details
     const members = await db.query.users.findMany({
       where: inArray(users.id, assigneeIds),
       columns: { id: true, name: true, email: true, image: true },
@@ -51,7 +45,6 @@ export async function GET() {
     const memberMap = new Map(members.map((m) => [m.id, m]));
     const projectMap = new Map(activeProjects.map((p) => [p.id, p]));
 
-    // Build per-member summary
     const byMember = new Map<string, {
       user: { id: string; name: string | null; email: string; image: string | null };
       totalOpen: number;

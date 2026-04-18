@@ -14,7 +14,6 @@ export async function GET(req: NextRequest, { params }: Params) {
     const pid = Number(pageId);
     if (!Number.isFinite(pid) || pid <= 0) return err("Invalid page ID.", 400);
 
-    // Verify page belongs to org
     const [page] = await db
       .select({ id: landingPages.id, slug: landingPages.slug, title: landingPages.title })
       .from(landingPages)
@@ -27,13 +26,11 @@ export async function GET(req: NextRequest, { params }: Params) {
 
     const [totalViewsResult, totalLeadsResult, dailyViews, deviceBreakdownRows, utmSourceRows] =
       await Promise.all([
-        // Total views
         db
           .select({ total: count() })
           .from(pageViews)
           .where(and(eq(pageViews.pageId, pid), gte(pageViews.viewedAt, since))),
 
-        // Total leads from this slug (via referrer — approximate)
         db
           .select({ total: count() })
           .from(leads)
@@ -45,7 +42,6 @@ export async function GET(req: NextRequest, { params }: Params) {
             )
           ),
 
-        // Daily view counts for sparkline
         db
           .select({
             date: sql<string>`date_trunc('day', ${pageViews.viewedAt})::date`,
@@ -56,7 +52,6 @@ export async function GET(req: NextRequest, { params }: Params) {
           .groupBy(sql`date_trunc('day', ${pageViews.viewedAt})::date`)
           .orderBy(sql`date_trunc('day', ${pageViews.viewedAt})::date`),
 
-        // Device type breakdown
         db
           .select({
             deviceType: pageViews.deviceType,
@@ -66,7 +61,6 @@ export async function GET(req: NextRequest, { params }: Params) {
           .where(and(eq(pageViews.pageId, pid), gte(pageViews.viewedAt, since)))
           .groupBy(pageViews.deviceType),
 
-        // UTM source breakdown (from leads referencing this page)
         db
           .select({
             utmSource: leads.utmSource,

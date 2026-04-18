@@ -1,7 +1,4 @@
-/**
- * Public (unauthenticated) endpoint for landing page lead capture.
- * Rate limited to 5 requests/min per IP.
- */
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema/crm";
@@ -23,19 +20,16 @@ const submitSchema = z.object({
   utmContent: z.string().max(200).optional().nullable(),
   utmTerm: z.string().max(200).optional().nullable(),
   referrerUrl: z.string().max(2000).optional().nullable(),
-  /** Cloudflare Turnstile challenge token — required when TURNSTILE_SECRET_KEY is configured */
+  
   cfTurnstileToken: z.string().optional(),
 });
 
-/**
- * Verify a Cloudflare Turnstile token server-side.
- * Returns true if the token is valid or if Turnstile is not configured.
- */
+
 async function verifyTurnstile(token: string | undefined, ip: string): Promise<boolean> {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
-  if (!secretKey) return true; // Not configured — skip verification
+  if (!secretKey) return true;
 
-  if (!token) return false; // Secret key is set but no token provided
+  if (!token) return false;
 
   try {
     const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -65,7 +59,6 @@ function getClientIp(req: NextRequest): string {
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
 
-  // Rate limit: 5 submissions per minute per IP
   const rl = await checkRateLimit("landing-submit", ip);
   if (!rl.allowed) {
     return NextResponse.json(
@@ -94,7 +87,6 @@ export async function POST(req: NextRequest) {
 
   const data = parsed.data;
 
-  // Cloudflare Turnstile bot protection
   const turnstileValid = await verifyTurnstile(data.cfTurnstileToken, ip);
   if (!turnstileValid) {
     return NextResponse.json(
@@ -103,7 +95,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify the org exists (don't leak whether it exists — return generic 400 on miss)
   const [org] = await db
     .select({ id: organizations.id })
     .from(organizations)

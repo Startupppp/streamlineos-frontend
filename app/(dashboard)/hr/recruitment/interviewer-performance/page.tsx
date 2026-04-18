@@ -91,7 +91,6 @@ export default function InterviewerPerformancePage() {
         </div>
       }
     >
-      {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-1 pt-4 px-4">
@@ -159,7 +158,6 @@ export default function InterviewerPerformancePage() {
         </Card>
       </div>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>

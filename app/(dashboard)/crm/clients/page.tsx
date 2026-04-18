@@ -29,7 +29,6 @@ import { useDebouncedValue } from "@/hooks/use-debounce";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 import { AssignCrmDialog } from "@/features/crm/clients/assign-crm-dialog";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
 type ClientStatus = typeof STATUSES[number];
@@ -48,7 +47,6 @@ function formatINR(val: string | number | null | undefined): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
 }
 
-// ─── Kanban Card ──────────────────────────────────────────────────────────────
 
 interface ClientAccount {
   id: number;
@@ -122,7 +120,6 @@ function KanbanCard({ account }: { account: ClientAccount }) {
   );
 }
 
-// ─── Kanban Column ────────────────────────────────────────────────────────────
 
 function KanbanColumn({
   status,
@@ -158,7 +155,6 @@ function KanbanColumn({
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ClientAccountsPage() {
   const searchParams = useSearchParams();
@@ -196,7 +192,6 @@ export default function ClientAccountsPage() {
     updateParams({ view: mode === "kanban" ? null : mode });
   }, [updateParams]);
 
-  // Load all accounts just for stats (separate lightweight call)
   const { data: allData, isLoading: statsLoading } = useClientAccounts({ limit: 500 });
   const allAccounts = (allData?.accounts ?? []) as ClientAccount[];
   const stats = {
@@ -207,7 +202,6 @@ export default function ClientAccountsPage() {
     invested: allAccounts.filter((a) => a.status === "INVESTED").length,
   };
 
-  // Single query — kanban uses high limit with no status filter, table uses pagination
   const queryFilters = viewMode === "kanban"
     ? { search: debouncedSearch || undefined, limit: 200 }
     : {
@@ -220,7 +214,6 @@ export default function ClientAccountsPage() {
   const { data, isLoading } = useClientAccounts(queryFilters);
   const accounts = (data?.accounts ?? []) as ClientAccount[];
 
-  // Group accounts by status for kanban — use allAccounts for complete view
   const kanbanAccounts = viewMode === "kanban" ? accounts : allAccounts;
   const kanbanColumns = STATUSES.map((status) => ({
     status,
@@ -287,7 +280,6 @@ export default function ClientAccountsPage() {
     >
       <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
 
-      {/* Stats */}
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-5">
         {[
           { label: "Total", value: stats?.total ?? 0, icon: Users, color: "text-foreground" },
@@ -310,7 +302,6 @@ export default function ClientAccountsPage() {
         ))}
       </motion.div>
 
-      {/* Kanban View */}
       {viewMode === "kanban" && (
         <motion.div variants={fadeUp}>
           {isLoading ? (
@@ -340,7 +331,6 @@ export default function ClientAccountsPage() {
         </motion.div>
       )}
 
-      {/* Table View */}
       {viewMode === "table" && (
         <motion.div variants={fadeUp}>
           <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">

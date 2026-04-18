@@ -84,7 +84,6 @@ export const initiateOnboarding = inngest.createFunction(
 
       const baseDate = joiningDate ? new Date(joiningDate) : new Date();
 
-      // Check if there is an org-specific default template to use
       const defaultTemplate = await db.query.onboardingTemplates.findFirst({
         where: and(
           eq(onboardingTemplates.orgId, orgId),
@@ -124,7 +123,6 @@ export const initiateOnboarding = inngest.createFunction(
       return { tasksCreated: taskInserts.length };
     });
 
-    // Send onboarding welcome email to the new employee
     await step.run("send-welcome-onboarding-email", async () => {
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
@@ -159,7 +157,6 @@ export const initiateOnboarding = inngest.createFunction(
 
       const employeeName = employee?.name ?? "New Employee";
 
-      // Fetch created tasks to know which roles have tasks
       const createdTasks = await db
         .select({ ownerRole: onboardingTasks.ownerRole })
         .from(onboardingTasks)
@@ -171,7 +168,6 @@ export const initiateOnboarding = inngest.createFunction(
 
       const emailPromises: Promise<void>[] = [];
 
-      // Notify HR members
       if (taskRoles.has("HR")) {
         const hrMembers = await db
           .select({ userId: organizationMembers.userId })
@@ -190,7 +186,6 @@ export const initiateOnboarding = inngest.createFunction(
             link: `/hr/onboarding`,
           });
 
-          // Send email to HR members
           const hrUser = await db.query.users.findFirst({
             where: eq(users.id, m.userId),
             columns: { email: true, name: true },
@@ -203,7 +198,6 @@ export const initiateOnboarding = inngest.createFunction(
         }
       }
 
-      // Notify IT members
       if (taskRoles.has("IT")) {
         const itMembers = await db
           .select({ userId: organizationMembers.userId })
@@ -222,7 +216,6 @@ export const initiateOnboarding = inngest.createFunction(
             link: `/hr/onboarding`,
           });
 
-          // Send email to IT members
           const itUser = await db.query.users.findFirst({
             where: eq(users.id, m.userId),
             columns: { email: true, name: true },
@@ -235,7 +228,6 @@ export const initiateOnboarding = inngest.createFunction(
         }
       }
 
-      // Notify direct manager
       if (taskRoles.has("MANAGER") && employee?.reportingTo) {
         notificationRows.push({
           orgId,
@@ -262,7 +254,6 @@ export const initiateOnboarding = inngest.createFunction(
 
       await db.insert(notifications).values(notificationRows);
 
-      // Send all emails (non-blocking, don't fail the step)
       await Promise.allSettled(emailPromises);
 
       return { notified: notificationRows.length };
