@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { format, parseISO, eachWeekOfInterval, startOfYear, endOfYear, addDays, getDay } from "date-fns";
+import { format, eachWeekOfInterval, startOfYear, endOfYear, addDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Activity } from "lucide-react";
 import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -60,6 +66,9 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
     return { weeks: weeksData, monthPositions: positions };
   }, [year, data]);
 
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
@@ -70,22 +79,16 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             </div>
             Attendance Heatmap
           </CardTitle>
-          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setYear((y) => y - 1)} aria-label="Previous year">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[50px] text-center text-foreground">{year}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setYear((y) => y + 1)}
-              disabled={year >= new Date().getFullYear()}
-              aria-label="Next year"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Select value={String(year)} onValueChange={(v) => setYear(parseInt(v))}>
+            <SelectTrigger className="h-8 w-[80px] text-xs border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         {data?.summary && (
           <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">

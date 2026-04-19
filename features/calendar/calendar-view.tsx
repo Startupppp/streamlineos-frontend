@@ -20,6 +20,13 @@ import {
 import { ChevronLeft, ChevronRight, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,6 +34,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 import { useCalendarEvents } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
@@ -178,6 +190,11 @@ export function CalendarView() {
     [currentDate]
   );
 
+  const calYear = currentDate.getFullYear();
+  const calMonth = currentDate.getMonth();
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
+
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
@@ -191,11 +208,41 @@ export function CalendarView() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[140px] text-center">
-            {view === "month" && format(currentDate, "MMMM yyyy")}
-            {view === "week" && `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
-            {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
-          </span>
+          {view === "month" ? (
+            <>
+              <Select
+                value={String(calMonth)}
+                onValueChange={(v) => setCurrentDate(new Date(calYear, parseInt(v), 1))}
+              >
+                <SelectTrigger className="h-8 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m, i) => (
+                    <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(calYear)}
+                onValueChange={(v) => setCurrentDate(new Date(parseInt(v), calMonth, 1))}
+              >
+                <SelectTrigger className="h-8 w-[76px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearOptions.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          ) : (
+            <span className="text-sm font-semibold min-w-[140px] text-center">
+              {view === "week" && `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
+              {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
+            </span>
+          )}
           <Button
             variant="outline"
             size="icon"

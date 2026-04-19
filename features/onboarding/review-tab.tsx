@@ -17,9 +17,14 @@ const ROLE_LABELS: Record<string, string> = {
   HR: "Human Resources",
   ENGINEERING: "Engineering",
   SALES: "Sales",
-  MARKETING: "Marketing",
+  DIGITAL_MARKETING: "Digital Marketing",
   FINANCE: "Finance",
   OPERATIONS: "Operations",
+  BRANCH_MANAGER: "Branch Manager",
+  BRANCH_HR: "Branch HR",
+  CUSTOMER_SUPPORT: "Customer Support",
+  DESIGN: "Design",
+  VIDEO_EDITOR: "Video Editor",
 };
 
 interface Step {

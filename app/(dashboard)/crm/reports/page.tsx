@@ -170,7 +170,12 @@ export default function CrmReportsPage() {
           </div>
           <div>
             <Label htmlFor="dateTo" className="text-xs text-muted-foreground">To</Label>
-            <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" />
+            <DatePicker
+              value={dateTo}
+              onChange={setDateTo}
+              placeholder="To date"
+              fromDate={dateFrom ? new Date(dateFrom) : undefined}
+            />
           </div>
           <Button variant="outline" size="sm" onClick={handleApplyFilter}>
             <Filter className="h-4 w-4 mr-1" />

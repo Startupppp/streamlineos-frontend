@@ -3,8 +3,20 @@
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 interface Ticket {
   id: number;
@@ -71,10 +83,53 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const toDateStr = (d: Date) => d.toISOString().split("T")[0];
   const today = toDateStr(new Date());
 
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+  const jumpToMonth = (year: number, month: number) => {
+    const target = new Date(year, month, 1);
+    const now = new Date();
+    now.setDate(now.getDate() - now.getDay());
+    now.setHours(0, 0, 0, 0);
+    const diff = Math.round((target.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    setWeekOffset(diff);
+  };
+
+  const displayDate = startOfWeek;
+  const displayMonth = displayDate.getMonth();
+  const displayYear = displayDate.getFullYear();
+
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Gantt Chart</h3>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-1.5">
+          <Select
+            value={String(displayMonth)}
+            onValueChange={(v) => jumpToMonth(displayYear, parseInt(v))}
+          >
+            <SelectTrigger className="h-8 w-[120px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(displayYear)}
+            onValueChange={(v) => jumpToMonth(parseInt(v), displayMonth)}
+          >
+            <SelectTrigger className="h-8 w-[80px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((w) => w - 1)} aria-label="Previous week">
             <ChevronLeft className="h-4 w-4" />

@@ -62,6 +62,7 @@ export function PayslipDetailSheet({
       title="Payslip Preview"
       description={`Review the payslip for ${selectedEmployeeData?.firstName ?? "employee"} before generating.`}
       onSubmit={onConfirmGenerate}
+      onCancel={onBackToEdit}
       submitLabel={
         <>
           <Check className="h-4 w-4 mr-1.5" />
