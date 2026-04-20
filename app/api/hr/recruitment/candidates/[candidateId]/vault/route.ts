@@ -7,8 +7,8 @@ import type { NextRequest } from "next/server";
 
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-  "application/msword", // .doc (legacy)
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
 ]);
 
 const ALLOWED_EXTENSIONS = /\.(pdf|docx|doc)$/i;
@@ -38,7 +38,6 @@ export async function GET(
     const candidateId = Number(idParam);
     if (!candidateId) return err("Invalid candidate ID.", 400);
 
-    // Verify candidate belongs to org
     const candidate = await db.query.candidates.findFirst({
       where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
     });
@@ -70,7 +69,6 @@ export async function POST(
     const candidateId = Number(idParam);
     if (!candidateId) return err("Invalid candidate ID.", 400);
 
-    // Verify candidate belongs to org
     const candidate = await db.query.candidates.findFirst({
       where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
     });
@@ -78,7 +76,6 @@ export async function POST(
 
     const body = await parseBody(req, addDocumentSchema);
 
-    // Validate file type — only PDF and DOCX are allowed for candidate documents
     const mimeAllowed = ALLOWED_MIME_TYPES.has(body.fileType.toLowerCase());
     const extAllowed = ALLOWED_EXTENSIONS.test(body.filename);
     if (!mimeAllowed && !extAllowed) {

@@ -13,9 +13,7 @@ const creditSchema = z.object({
   reason: z.string().optional(),
 });
 
-/** POST /api/hr/leaves/comp-off — credit compensatory leave to an employee
- *  Called by HR/Admin when employee works on a holiday.
- */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role;
@@ -26,7 +24,6 @@ export async function POST(req: NextRequest) {
     const input = await parseBody(req, creditSchema);
     
 
-    // Find or create a "Compensatory Off" leave type
     let compOffType = await db.query.leaveTypes.findFirst({
       where: and(eq(leaveTypes.orgId, session.orgId), eq(leaveTypes.name, "Compensatory Off")),
     });
@@ -46,7 +43,6 @@ export async function POST(req: NextRequest) {
 
     if (!compOffType) return err("Failed to find/create comp-off leave type", 500);
 
-    // Upsert leave balance
     const existing = await db.query.leaveBalances.findFirst({
       where: and(
         eq(leaveBalances.userId, input.userId),

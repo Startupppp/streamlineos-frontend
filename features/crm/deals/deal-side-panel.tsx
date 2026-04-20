@@ -103,9 +103,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 </div>
               </SheetHeader>
 
-              {/* Two-column body */}
               <div className="flex flex-1 min-h-0 divide-x">
-                {/* Left: Form fields */}
                 <ScrollArea className="flex-1 min-w-0">
                   <div className="p-6">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -122,7 +120,6 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
 
                 <Separator orientation="vertical" />
 
-                {/* Right: Activity timeline */}
                 <div className="w-72 shrink-0 flex flex-col min-h-0">
                   <div className="px-4 pt-4 pb-3 border-b shrink-0">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

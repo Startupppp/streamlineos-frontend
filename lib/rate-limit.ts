@@ -61,12 +61,10 @@ export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
     maxRequests: 100,
     windowMs: 60_000,
   },
-  // Dedicated tier for programmatic API key access (keyed by API key ID, not IP)
   "api-key": {
     maxRequests: 300,
     windowMs: 60_000,
   },
-  // Stricter tier for webhook/ingest endpoints accessed via API key
   "api-key-ingest": {
     maxRequests: 60,
     windowMs: 60_000,
@@ -246,7 +244,6 @@ const NEXTAUTH_INTERNAL = new Set([
   "/api/auth/_log",
 ]);
 
-// Routes that handle their own per-API-key rate limiting; skip middleware IP-based tier
 const API_KEY_SELF_LIMITED = new Set(["/api/leads/ingest"]);
 
 export function resolveTier(pathname: string): string | null {

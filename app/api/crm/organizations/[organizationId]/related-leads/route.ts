@@ -12,7 +12,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!Number.isFinite(id)) return err("Invalid organizationId", 400);
 
   return withAuth(async (session) => {
-    // Fetch the org name
     const [org] = await db
       .select({ name: crmOrganizations.name })
       .from(crmOrganizations)
@@ -20,7 +19,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     if (!org) return err("Organization not found", 404);
 
-    // Leads linked via contacts with organizationId
     const linkedContactLeadIds = await db
       .select({ leadId: contacts.leadId })
       .from(contacts)
@@ -32,7 +30,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
       )
       .then((rows) => rows.map((r) => r.leadId).filter((lid): lid is number => lid !== null));
 
-    // Leads matching by company name + leads linked via contacts
     const safeName = org.name.replaceAll("%", "\\%").replaceAll("_", "\\_");
 
     const conditions = [ilike(leads.company, `%${safeName}%`)];

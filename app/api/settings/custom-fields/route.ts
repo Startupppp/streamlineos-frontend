@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
   }
 
   return withAdmin(async (session) => {
-    // Check uniqueness (org + entityType + name)
     const existing = await db
       .select({ id: customFieldDefinitions.id })
       .from(customFieldDefinitions)

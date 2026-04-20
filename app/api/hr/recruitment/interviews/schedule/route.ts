@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
 
     const body = await parseBody(req, scheduleSchema);
 
-    // Validate candidate belongs to this org
     const candidate = await db.query.candidates.findFirst({
       where: and(
         eq(candidates.id, body.candidateId),
@@ -51,14 +50,12 @@ export async function POST(req: NextRequest) {
     const scheduledDate = new Date(body.scheduledAt);
     const endDate = new Date(scheduledDate.getTime() + body.durationMinutes * 60 * 1000);
 
-    // Map format to the existing interviewTypeEnum values
     const typeMap: Record<string, "VIDEO" | "PHONE" | "ONSITE" | "TECHNICAL" | "HR" | "FINAL"> = {
       VIDEO: "VIDEO",
       PHONE: "PHONE",
       IN_PERSON: "ONSITE",
     };
 
-    // Use first interviewer for the legacy single-interviewer column
     const primaryInterviewerId = body.interviewers[0];
 
     const [interview] = await db
@@ -80,7 +77,6 @@ export async function POST(req: NextRequest) {
 
     const candidateName = `${candidate.firstName} ${candidate.lastName}`;
 
-    // Create a calendar event for the interview
     await db.insert(calendarEvents).values({
       orgId: session.orgId,
       title: `Interview: ${candidateName}`,
@@ -95,7 +91,6 @@ export async function POST(req: NextRequest) {
       attendeeIds: body.interviewers,
     });
 
-    // Send in-app notifications to all interviewers
     const notifPromises = body.interviewers.map((userId) =>
       createNotification({
         orgId: session.orgId,
@@ -114,7 +109,6 @@ export async function POST(req: NextRequest) {
     const formatLabel =
       body.format === "VIDEO" ? "Video Call" : body.format === "PHONE" ? "Phone Call" : "In-Person";
 
-    // Sync to Google Calendar if current user has connected Google account (non-blocking)
     void (async () => {
       try {
         const currentUser = await db.query.users.findFirst({
@@ -150,14 +144,11 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch {
-        // Non-blocking — Google sync failure should not affect scheduling
       }
     })();
 
-    // Send email + optional WhatsApp to interviewers and candidate (non-blocking)
     void (async () => {
       try {
-        // Fetch interviewer emails
         const interviewerUsers = await db
           .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, email: users.email, phone: users.phone })
           .from(users)
@@ -166,7 +157,6 @@ export async function POST(req: NextRequest) {
         const emailTasks: Promise<unknown>[] = [];
 
         if (body.notifyChannels.email) {
-          // Notify each interviewer
           for (const interviewer of interviewerUsers) {
             if (!interviewer.email) continue;
             const { subject, html } = getInterviewInviteEmail({
@@ -183,7 +173,6 @@ export async function POST(req: NextRequest) {
             emailTasks.push(sendEmail({ to: interviewer.email, subject, html }));
           }
 
-          // Notify candidate (if email exists)
           if (candidate.email) {
             const { subject, html } = getInterviewInviteEmail({
               recipientName: candidateName,
@@ -200,7 +189,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // WhatsApp/SMS to candidate if channel selected
         if (body.notifyChannels.whatsapp && candidate.phone) {
           const waBody = `Hi ${candidate.firstName}, your interview at Vaivamm Capital is scheduled for ${dateLabel} (${formatLabel}, ${body.durationMinutes} min). Please be available on time.`;
           emailTasks.push(sendWhatsAppWithSmsFallback(candidate.phone, waBody));
@@ -208,7 +196,6 @@ export async function POST(req: NextRequest) {
 
         await Promise.allSettled(emailTasks);
       } catch {
-        // Non-blocking — never fail the main request
       }
     })();
 

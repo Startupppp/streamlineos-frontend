@@ -88,7 +88,7 @@ function getFileExtension(name: string): string {
   return name.slice(name.lastIndexOf(".")).toLowerCase();
 }
 
-/* ─── Raw extractors (return headers + rows) ─── */
+
 function extractCSV(text: string): { headers: string[]; rows: string[][] } {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   if (lines.length < 2) return { headers: [], rows: [] };
@@ -122,13 +122,12 @@ async function extractExcel(buffer: ArrayBuffer): Promise<{ headers: string[]; r
   return { headers, rows };
 }
 
-/* ─── Apply mapping to produce ParsedLead[] ─── */
+
 function applyMapping(
   headers: string[],
   rows: string[][],
   fieldMappings: Record<number, string>,
 ): { leads: ParsedLead[]; errors: string[] } {
-  // Reverse map: fieldKey → colIndex
   const fieldToCol: Record<string, number> = {};
   for (const [idxStr, field] of Object.entries(fieldMappings)) {
     if (field !== "_skip") fieldToCol[field] = Number(idxStr);
@@ -224,7 +223,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         return;
       }
 
-      // Auto-detect initial mappings
       const mappings: Record<number, string> = {};
       headers.forEach((h, i) => {
         const field = matchHeader(h);
@@ -331,7 +329,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setAutoDistribute(true);
   }, []);
 
-  // ── Render steps ──
 
   const stepLabel =
     step === "upload" ? "Step 1 of 3 — Upload File" :
@@ -352,7 +349,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           <p className="text-xs text-muted-foreground">{stepLabel}</p>
         </DialogHeader>
 
-        {/* Step indicator */}
         <div className="flex items-center gap-1 mb-4">
           {["upload", "mapping", "preview"].map((s, i) => (
             <div key={s} className="flex items-center gap-1">
@@ -372,7 +368,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           ))}
         </div>
 
-        {/* ── Step 1: Upload ── */}
         {step === "upload" && !isParsing && (
           <div className="space-y-4">
             <div
@@ -418,7 +413,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         )}
 
-        {/* ── Step 2: Map Columns ── */}
         {step === "mapping" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -514,7 +508,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         )}
 
-        {/* ── Step 3: Preview & Import ── */}
         {step === "preview" && parsed !== null && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">

@@ -555,7 +555,6 @@ export function useChangePassword() {
   });
 }
 
-// ─── Leave Blackout Dates ─────────────────────────────────────────────────────
 
 export interface LeaveBlackoutDate {
   id: number;
@@ -601,7 +600,6 @@ export function useDeleteLeaveBlackout() {
   });
 }
 
-// ─── Leave Analytics ──────────────────────────────────────────────────────────
 export interface HrLeaveAnalytics {
   year: number;
   byDepartment: {
@@ -624,7 +622,6 @@ export function useHrLeaveAnalytics(year?: number) {
   });
 }
 
-// ─── Comp-Off ─────────────────────────────────────────────────────────────────
 export function useCreditCompOff() {
   const qc = useQueryClient();
   return useMutation({

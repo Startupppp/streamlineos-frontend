@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { format, parseISO, eachWeekOfInterval, startOfYear, endOfYear, addDays, getDay } from "date-fns";
+import { format, eachWeekOfInterval, startOfYear, endOfYear, addDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Activity } from "lucide-react";
 import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -35,7 +41,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       }
     }
 
-    // Build weeks grid: each week is an array of 7 days (Sun–Sat)
     const weekStarts = eachWeekOfInterval({ start: yearStart, end: yearEnd });
     const weeksData = weekStarts.map((weekStart) => {
       return Array.from({ length: 7 }, (_, dayIdx) => {
@@ -47,7 +52,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       });
     });
 
-    // Calculate month label positions (column index where each month starts)
     const positions: { month: number; col: number }[] = [];
     weeksData.forEach((week, colIdx) => {
       const firstValid = week.find((d) => d !== null);
@@ -62,6 +66,9 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
     return { weeks: weeksData, monthPositions: positions };
   }, [year, data]);
 
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
@@ -72,22 +79,16 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             </div>
             Attendance Heatmap
           </CardTitle>
-          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setYear((y) => y - 1)} aria-label="Previous year">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[50px] text-center text-foreground">{year}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setYear((y) => y + 1)}
-              disabled={year >= new Date().getFullYear()}
-              aria-label="Next year"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Select value={String(year)} onValueChange={(v) => setYear(parseInt(v))}>
+            <SelectTrigger className="h-8 w-[80px] text-xs border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         {data?.summary && (
           <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
@@ -112,7 +113,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         ) : (
           <div className="overflow-x-auto">
             <div className="inline-block min-w-max">
-              {/* Month labels */}
               <div className="flex mb-1 ml-8">
                 {monthPositions.map(({ month, col }) => (
                   <div
@@ -126,7 +126,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               </div>
               <div className="relative mt-4">
                 <div className="flex gap-0.5">
-                  {/* Day labels */}
                   <div className="flex flex-col gap-0.5 mr-1.5">
                     {DAY_LABELS.map((d, i) => (
                       <div key={d} className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}>
@@ -134,7 +133,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                       </div>
                     ))}
                   </div>
-                  {/* Heatmap grid */}
                   {weeks.map((week, colIdx) => (
                     <div key={colIdx} className="flex flex-col gap-0.5">
                       {week.map((day, rowIdx) => {
@@ -159,7 +157,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                   ))}
                 </div>
               </div>
-              {/* Legend */}
               <div className="flex items-center gap-1.5 mt-3">
                 <span className="text-[10px] text-muted-foreground">Less</span>
                 {[0, 1, 2, 3, 4].map((level) => (

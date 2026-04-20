@@ -71,7 +71,6 @@ export default function InterviewBookingPage() {
   return (
     <main className="min-h-screen bg-gray-50 flex items-start justify-center pt-12 px-4">
       <div className="w-full max-w-lg">
-        {/* Header */}
         <div className="bg-[#0f2b7f] text-white rounded-t-xl px-6 py-8 text-center">
           <h1 className="text-2xl font-bold">
             {status === "success" ? "Interview Confirmed!" : "Schedule Your Interview"}

@@ -22,7 +22,6 @@ const updateSchema = z.object({
   actualCloseDate: z.string().nullable().optional(),
   lostReason: z.string().optional(),
   notes: z.string().optional(),
-  // Optimistic locking: client sends the updatedAt it last saw
   version: z.string().datetime().optional(),
 });
 
@@ -55,7 +54,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         columns: { stage: true, updatedAt: true },
       });
 
-      // Optimistic locking: reject if client's version is stale
       if (input.version && existing?.updatedAt) {
         const clientVersion = new Date(input.version).getTime();
         const serverVersion = new Date(existing.updatedAt).getTime();
@@ -83,7 +81,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           userId: session.user.id,
         });
 
-        // Auto-create a linked channel when a deal enters NEGOTIATION stage
         if (input.stage === "NEGOTIATION") {
           const alreadyLinked = await db.query.chatChannels.findFirst({
             where: eq(chatChannels.linkedDealId, dealId),
@@ -143,12 +140,10 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     if (!updated) return err("Deal not found", 404);
 
-    // Invalidate sales KPI cache when stage changes (affects revenue/pipeline metrics)
     if (input.stage !== undefined) {
       void invalidateSalesKpiCache(session.orgId!).catch(() => undefined);
     }
 
-    // Fire webhook event when deal is won
     if (input.stage === "WON") {
       void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
         dispatchWebhook(session.orgId!, "deal.won", {
@@ -160,7 +155,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       );
     }
 
-    // Email the deal owner on stage change
     if (input.stage !== undefined && updated.assignedToId) {
       try {
         const existingDeal = await db.query.deals.findFirst({
@@ -183,7 +177,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             dealId
           );
         }
-      } catch { /* email failure non-blocking */ }
+      } catch {  }
     }
 
     try {
@@ -195,7 +189,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         targetType: "deal",
         metadata: { changedFields: Object.keys(input), newStage: input.stage },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
     return ok(updated);
   });

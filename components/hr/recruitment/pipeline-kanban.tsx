@@ -32,7 +32,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { AtsPipelineStage, AtsPipelineCandidate, CandidateStatus, SlaCandidateStatus } from "@/types/hr";
 
-// ─── Column config ────────────────────────────────────────────────────────────
 
 interface ColumnConfig {
   id: CandidateStatus;
@@ -87,7 +86,6 @@ const COLUMNS: ColumnConfig[] = [
   },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
   return name
@@ -107,7 +105,6 @@ function formatDate(val: Date | string | null): string {
   });
 }
 
-// ─── SLA badge ────────────────────────────────────────────────────────────────
 
 const SLA_CONFIG: Record<SlaCandidateStatus, { dot: string; label: string; title: string }> = {
   ON_TRACK: {
@@ -149,7 +146,6 @@ function SlaBadge({ status }: { status: SlaCandidateStatus }) {
   );
 }
 
-// ─── Candidate detail sheet ───────────────────────────────────────────────────
 
 interface CandidateSheetProps {
   candidate: AtsPipelineCandidate | null;
@@ -163,7 +159,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col p-0 gap-0 w-full sm:max-w-[900px]">
-        {/* Header */}
         <SheetHeader className="shrink-0 px-5 pt-4 pb-3 border-b">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 shrink-0">
@@ -187,9 +182,7 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
           </div>
         </SheetHeader>
 
-        {/* Split body */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* Left — Resume PDF viewer */}
           <div className="flex-1 border-r bg-muted/20 flex flex-col min-w-0">
             <div className="flex items-center justify-between px-4 py-2 border-b bg-background shrink-0">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
@@ -227,9 +220,7 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
             )}
           </div>
 
-          {/* Right — Actions & info panel */}
           <div className="w-[280px] shrink-0 overflow-y-auto p-4 space-y-4">
-            {/* Contact */}
             <div className="rounded-lg border p-3 space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Contact
@@ -246,7 +237,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
               )}
             </div>
 
-            {/* Application */}
             <div className="rounded-lg border p-3 space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Application
@@ -271,7 +261,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
               )}
             </div>
 
-            {/* Rating */}
             {candidate.rating !== null && (
               <div className="rounded-lg border p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
@@ -294,7 +283,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
               </div>
             )}
 
-            {/* SLA status */}
             {candidate.slaStatus && (
               <div className="rounded-lg border p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
@@ -318,7 +306,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
               </div>
             )}
 
-            {/* Notes */}
             {candidate.notes && (
               <div className="rounded-lg border p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
@@ -337,7 +324,6 @@ function CandidateSheet({ candidate, open, onOpenChange }: CandidateSheetProps) 
   );
 }
 
-// ─── Candidate card ───────────────────────────────────────────────────────────
 
 interface CandidateCardProps {
   candidate: AtsPipelineCandidate;
@@ -413,7 +399,6 @@ function CandidateCard({ candidate, index, onClick }: CandidateCardProps) {
   );
 }
 
-// ─── Column skeleton ──────────────────────────────────────────────────────────
 
 function ColumnSkeleton({ col }: { col: ColumnConfig }) {
   return (
@@ -440,7 +425,6 @@ function ColumnSkeleton({ col }: { col: ColumnConfig }) {
   );
 }
 
-// ─── Main kanban ──────────────────────────────────────────────────────────────
 
 interface PipelineKanbanProps {
   stages: AtsPipelineStage[];
@@ -452,7 +436,6 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
   const [selectedCandidate, setSelectedCandidate] = useState<AtsPipelineCandidate | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // State for rejection confirmation dialog
   const [pendingReject, setPendingReject] = useState<{
     candidateId: number;
     candidateName: string;
@@ -473,7 +456,6 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
       if (result.source.droppableId === newStage) return;
 
       if (newStage === "REJECTED") {
-        // Find candidate name for the dialog
         const candidate = stages
           .flatMap((s) => s.candidates)
           .find((c) => c.id === candidateId);
@@ -521,7 +503,6 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
                   isRejected && "opacity-80"
                 )}
               >
-                {/* Column header */}
                 <div className="flex items-center gap-2 mb-2 px-0.5">
                   <span className="text-xs font-semibold tracking-wide">{col.label}</span>
                   <span
@@ -534,7 +515,6 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
                   </span>
                 </div>
 
-                {/* Droppable area */}
                 <Droppable droppableId={col.id}>
                   {(provided, snapshot) => (
                     <div
@@ -561,7 +541,6 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
                         ))}
                         {provided.placeholder}
 
-                        {/* Empty state */}
                         {items.length === 0 && !snapshot.isDraggingOver && (
                           <div className="flex items-center justify-center h-16 rounded-lg border border-dashed border-border/50">
                             <p className="text-[10px] text-muted-foreground">Drop here</p>
@@ -577,14 +556,12 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
         </div>
       </DragDropContext>
 
-      {/* Candidate detail sheet */}
       <CandidateSheet
         candidate={selectedCandidate}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
 
-      {/* Rejection confirmation dialog */}
       <AlertDialog
         open={!!pendingReject}
         onOpenChange={(open) => {

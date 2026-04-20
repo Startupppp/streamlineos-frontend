@@ -20,7 +20,7 @@ const ContentBriefSchema = z.object({
   targetAudienceInsights: z.string(),
 });
 
-/** POST /api/ai/content-brief — Generate a structured content brief */
+
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) {

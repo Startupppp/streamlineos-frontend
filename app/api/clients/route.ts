@@ -14,13 +14,10 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
 
-    // Backfill any CONVERTED leads that don't have a client account yet (single SQL, idempotent)
-    // Non-blocking: if backfill fails, still return existing data
     try {
       await backfillConvertedLeadsToClientAccounts(session.orgId, session.user.id);
       await backfillCrmAssignments(session.orgId);
     } catch {
-      // Backfill failure should not block the main query
     }
 
     const data = await getClientAccounts(session.orgId, {

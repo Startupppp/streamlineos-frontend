@@ -1,7 +1,4 @@
-/**
- * POST /api/projects/[projectId]/tickets/bulk
- * Bulk update multiple tickets: assign, change status, or move to sprint.
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -30,7 +27,6 @@ export async function POST(
     const projectId = Number(rawId);
     if (!projectId) return err("Invalid project ID.", 400);
 
-    // Verify membership
     const member = await db.query.projectMembers.findFirst({
       where: and(
         eq(projectMembers.projectId, projectId),
@@ -41,7 +37,6 @@ export async function POST(
 
     const body = await parseBody(req, bulkUpdateSchema);
 
-    // Build update payload
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (body.assigneeId !== undefined) updateData.assigneeId = body.assigneeId;
     if (body.status !== undefined) updateData.status = body.status;

@@ -51,7 +51,6 @@ export async function POST(req: NextRequest) {
 
   logger.info("Auth: password reset completed", { email: tokenRecord.email });
 
-  // Send confirmation email (non-blocking)
   const user = await db.query.users.findFirst({
     where: eq(users.email, tokenRecord.email),
     columns: { name: true },

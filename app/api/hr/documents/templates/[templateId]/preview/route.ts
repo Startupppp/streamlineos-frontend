@@ -21,7 +21,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     if (!template) return err("Template not found", 404);
 
-    // Replace every {{Token}} with a visible [Token] placeholder for preview
     const variables = extractVariables(template.htmlContent);
     const placeholderMap: Record<string, string> = {};
     for (const v of variables) {

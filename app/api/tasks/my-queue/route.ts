@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 
-/** GET /api/tasks/my-queue — current user's tasks sorted by urgency */
+
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const now = new Date();
@@ -24,13 +24,11 @@ export async function GET(_req: NextRequest) {
         ),
       )
       .orderBy(
-        // Overdue first (dueDate < now), then by dueDate ascending
         asc(tasks.dueDate),
         asc(tasks.createdAt),
       )
       .limit(50);
 
-    // Bucket the tasks client-side friendly grouping info
     const categorised = rows.map((task) => {
       let bucket: "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING" | "NO_DATE" =
         "NO_DATE";
@@ -51,7 +49,6 @@ export async function GET(_req: NextRequest) {
       return { ...task, bucket };
     });
 
-    // Sort so OVERDUE is first
     const bucketOrder: Record<string, number> = {
       OVERDUE: 0,
       TODAY: 1,

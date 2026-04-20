@@ -101,10 +101,8 @@ export async function POST(
           );
       }
 
-      // Notify the other party about the reply (non-blocking)
       if (!input.isInternal) {
         void (async () => {
-          // If author is the creator, notify assignee; otherwise notify creator
           const notifyUserId =
             session.user.id === ticket.createdBy
               ? ticket.assigneeId

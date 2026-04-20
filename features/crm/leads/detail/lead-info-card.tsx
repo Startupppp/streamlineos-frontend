@@ -353,7 +353,6 @@ export function LeadInfoCard({
         <CardTitle className="text-base">Lead Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Contact chips grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {contactChips.map((chip) => (
             <CopyChip
@@ -366,7 +365,6 @@ export function LeadInfoCard({
           ))}
         </div>
 
-        {/* Financial gradient band */}
         {(lead.potentialValue || lead.investmentInterest) && (
           <div
             className={cn(
@@ -400,7 +398,6 @@ export function LeadInfoCard({
           </div>
         )}
 
-        {/* Notes block */}
         {lead.notes && (
           <div className="rounded-lg bg-muted/20 border border-border/30 overflow-hidden">
             <div className="px-3 py-1.5 bg-muted/30 border-b border-border/20">
@@ -414,7 +411,6 @@ export function LeadInfoCard({
           </div>
         )}
 
-        {/* Tags */}
         {Array.isArray(lead.tags) && (lead.tags as string[]).length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {(lead.tags as string[]).map((tag) => (

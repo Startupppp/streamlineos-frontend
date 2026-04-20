@@ -46,7 +46,6 @@ function toSnakeCase(str: string): string {
     .replace(/^_+|_+$/g, "");
 }
 
-// ─── Embed Code Dialog ────────────────────────────────────────────────────────
 
 function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean; onClose: () => void }) {
   const [copiedIframe, setCopiedIframe] = useState(false);
@@ -113,7 +112,6 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
   );
 }
 
-// ─── Form Builder Sheet ───────────────────────────────────────────────────────
 
 interface FormBuilderProps {
   open: boolean;
@@ -146,7 +144,6 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
       prev.map((f, i) => {
         if (i !== index) return f;
         const updated = { ...f, ...patch };
-        // Auto-generate name from label when label changes
         if (patch.label !== undefined) updated.name = toSnakeCase(patch.label) || `field_${i}`;
         return updated;
       })
@@ -178,7 +175,6 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
     }
   };
 
-  // Reset state when sheet opens with new data
   const handleOpenChange = (o: boolean) => {
     if (!o) onClose();
   };
@@ -284,7 +280,6 @@ function FormBuilderSheet({ open, onClose, existing }: FormBuilderProps) {
   );
 }
 
-// ─── Form Card ────────────────────────────────────────────────────────────────
 
 function WebFormCard({ form }: { form: WebLeadForm }) {
   const [embedOpen, setEmbedOpen] = useState(false);
@@ -357,7 +352,6 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function WebFormsPage() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -375,13 +369,11 @@ export default function WebFormsPage() {
         </Button>
       }
     >
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
         <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="gold" />
       </div>
 
-      {/* Forms Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (

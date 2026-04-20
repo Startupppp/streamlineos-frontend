@@ -435,7 +435,6 @@ export function getDocumentExpiryReminderEmailTemplate(
   });
 }
 
-// ─── Candidate Rejection ─────────────────────────────────────────────────────
 
 export function getCandidateRejectionEmail(params: {
   candidateName: string;
@@ -478,7 +477,6 @@ export function getCandidateRejectionEmail(params: {
   };
 }
 
-// ─── Payslip Generated ────────────────────────────────────────────────────────
 
 export function getPayslipEmailTemplate(params: {
   employeeName: string;
@@ -528,7 +526,7 @@ export function getInterviewInviteEmail(params: {
   meetingLink?: string;
   location?: string;
   notes?: string;
-  /** "candidate" or "interviewer" — controls email copy */
+  
   recipientRole: "candidate" | "interviewer";
 }): { subject: string; html: string } {
   const sRecipient = escapeHtml(params.recipientName);

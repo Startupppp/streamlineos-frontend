@@ -60,17 +60,14 @@ export interface CalendarEvent {
   creator?: { name: string | null } | null;
 }
 
-/**
- * Shape returned by GET /api/calendar/events (aggregated list).
- * The server returns events, OOO leaves, interviews and tasks in this format.
- */
+
 export interface CalendarListItem {
-  /** Prefixed string ID: "event-123", "leave-456", "interview-789", "task-012" */
+  
   id: string;
   title: string;
-  /** ISO date string (Date serialised to JSON) */
+  
   start: string;
-  /** ISO date string */
+  
   end: string;
   allDay?: boolean;
   color?: string | null;
@@ -84,7 +81,7 @@ export interface CalendarListItem {
   myRsvpStatus?: string | null;
 }
 
-/** Extract the numeric DB id from a prefixed list-item id like "event-123" → 123 */
+
 export function extractEventNumericId(id: string): number | null {
   const match = id.match(/(\d+)$/);
   return match ? parseInt(match[1], 10) : null;

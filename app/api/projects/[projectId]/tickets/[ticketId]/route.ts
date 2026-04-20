@@ -166,7 +166,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
           logger.error("Failed to create ticket assignment notification", { error: notifErr });
         }
 
-        // Send assignment email (non-blocking)
         void (async () => {
           const assignee = await db.query.users.findFirst({
             where: eq(users.id, userId),
@@ -189,7 +188,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Send review/changes request emails on status change (non-blocking)
     if (body.status === "IN_REVIEW" || body.status === "CHANGES_REQUESTED") {
       void (async () => {
         const ticketData = await db.query.tickets.findFirst({
@@ -255,7 +253,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     });
     if (!ticket) return err("Ticket not found", 404);
 
-    // Check for blocking dependents before deletion
     if (!force) {
       const blockedBy = await db.query.workItemRelations.findMany({
         where: and(

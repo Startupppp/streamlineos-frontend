@@ -68,7 +68,7 @@ export default function MarketingCalendarPage() {
     if (!campaigns) return [];
     return campaigns.filter(c => {
       if (channelFilter !== "All" && c.channel?.toLowerCase() !== channelFilter) return false;
-      if (!c.startDate && !c.endDate) return false; // skip if no dates
+      if (!c.startDate && !c.endDate) return false;
       return true;
     });
   }, [campaigns, channelFilter]);
@@ -76,7 +76,6 @@ export default function MarketingCalendarPage() {
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
 
-  // Build a map: day number → campaigns active that day
   const dayMap = useMemo(() => {
     const map = new Map<number, CampaignOnDay[]>();
     for (let d = 1; d <= daysInMonth; d++) {
@@ -91,7 +90,6 @@ export default function MarketingCalendarPage() {
         const afterStart = !start || dayDate >= new Date(year, month > start.getMonth() ? 0 : start.getMonth(), start.getDate() < 1 ? 1 : start.getDate());
         const beforeEnd = !end || dayDate <= new Date(year, month > end.getMonth() ? 11 : end.getMonth(), end.getDate());
 
-        // Check if this day falls within campaign date range
         const inRange = (!start || dayDate >= new Date(start.getFullYear(), start.getMonth(), start.getDate())) &&
                        (!end || dayDate <= new Date(end.getFullYear(), end.getMonth(), end.getDate()));
 
@@ -120,7 +118,6 @@ export default function MarketingCalendarPage() {
     setMonth(today.getMonth());
   }, [today]);
 
-  // Campaign list for the sidebar (all this month)
   const monthCampaigns = useMemo(() => {
     return filteredCampaigns.filter(c => {
       const start = c.startDate ? new Date(c.startDate) : null;
@@ -171,11 +168,9 @@ export default function MarketingCalendarPage() {
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         <div className="grid gap-4 lg:grid-cols-4">
-          {/* Calendar */}
           <motion.div variants={fadeUp} className="lg:col-span-3">
             <Card className="shadow-noir">
               <CardContent className="p-4">
-                {/* Nav header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prevMonth} aria-label="Previous month">
@@ -193,7 +188,6 @@ export default function MarketingCalendarPage() {
                   </Button>
                 </div>
 
-                {/* Day headers */}
                 <div className="grid grid-cols-7 mb-1">
                   {DAY_NAMES.map(d => (
                     <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">
@@ -202,14 +196,11 @@ export default function MarketingCalendarPage() {
                   ))}
                 </div>
 
-                {/* Days grid */}
                 <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
-                  {/* Empty cells before month start */}
                   {Array.from({ length: firstDay }).map((_, i) => (
                     <div key={`empty-${i}`} className="bg-background min-h-[80px] p-1" />
                   ))}
 
-                  {/* Day cells */}
                   {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                     const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
                     const dayCampaigns = dayMap.get(day) ?? [];
@@ -274,7 +265,6 @@ export default function MarketingCalendarPage() {
             </Card>
           </motion.div>
 
-          {/* Sidebar: this month's campaigns */}
           <motion.div variants={fadeUp} className="space-y-3">
             <Card className="shadow-noir">
               <CardContent className="p-4">
@@ -324,7 +314,6 @@ export default function MarketingCalendarPage() {
               </CardContent>
             </Card>
 
-            {/* Channel legend */}
             <Card className="shadow-noir">
               <CardContent className="p-4">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Channel Legend</p>

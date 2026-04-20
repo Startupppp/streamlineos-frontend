@@ -39,7 +39,6 @@ export async function GET(
     });
     if (!dept) return err("Team not found", 404);
 
-    // Get all members whose departmentId matches this dept
     const members = await db
       .select({
         id: users.id,
@@ -59,7 +58,6 @@ export async function GET(
         ),
       );
 
-    // Resolve manager name
     let managerName: string | null = null;
     if (dept.managerId) {
       const mgr = await db.query.users.findFirst({

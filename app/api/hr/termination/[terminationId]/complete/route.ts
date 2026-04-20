@@ -60,7 +60,6 @@ export async function PATCH(
       );
     }
 
-    // Invalidate HR dashboard caches so headcount reflects immediately
     await invalidateHrDashboardCache(session.orgId);
 
     void writeAuditLog({

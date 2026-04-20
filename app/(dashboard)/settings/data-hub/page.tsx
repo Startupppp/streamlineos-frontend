@@ -157,7 +157,6 @@ export default function DataHubPage() {
     if (!entity.exportEndpoint) return;
     setExportingIds(prev => new Set([...prev, entity.id]));
     try {
-      // For export, trigger download via fetch
       const response = await fetch(`/api${entity.exportEndpoint}`, { method: "GET" });
       if (!response.ok) throw new Error("Export failed");
       const blob = await response.blob();
@@ -212,7 +211,6 @@ export default function DataHubPage() {
                 <CardContent className="flex-1 flex flex-col gap-3">
                   <p className="text-xs text-muted-foreground flex-1">{entity.description}</p>
 
-                  {/* Upload state feedback */}
                   {upload.status !== "idle" && (
                     <div className="space-y-1.5">
                       {upload.status === "uploading" && (

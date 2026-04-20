@@ -32,7 +32,6 @@ const updateProjectSchema = z.object({
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   memberIds: z.array(z.string()).optional(),
-  // Map of removed userId → replacement assignee userId (null = unassign)
   reassignments: z.record(z.string(), z.string()).optional(),
 });
 
@@ -151,7 +150,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
           );
         }
 
-        // Reassign open tickets for removed members
         const newMemberSet = new Set(body.memberIds!);
         const removedMembers = [...existing].filter((id) => !newMemberSet.has(id));
         if (removedMembers.length > 0 && body.reassignments) {
@@ -176,7 +174,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
               .where(eq(tickets.id, ticket.id));
           }
         } else if (removedMembers.length > 0) {
-          // Auto-unassign (no reassignment specified)
           await tx
             .update(tickets)
             .set({ assigneeId: null })

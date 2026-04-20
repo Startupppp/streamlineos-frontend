@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DocumentTemplate {
   id: number;
@@ -55,7 +54,6 @@ export interface GenerateCandidateDocumentInput {
   variables: Record<string, string>;
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useDocumentTemplates(type?: string) {
   const params = type ? { type } : undefined;

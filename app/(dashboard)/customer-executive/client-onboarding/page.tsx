@@ -30,7 +30,6 @@ import {
 } from "@/lib/api/hooks/crm";
 import type { ClientAccount } from "@/types/crm";
 
-// ─── Checklist Tab ─────────────────────────────────────────────────────────────
 
 function ChecklistTab() {
   const [selectedClientId, setSelectedClientId] = useState<number>(0);
@@ -57,7 +56,6 @@ function ChecklistTab() {
 
   return (
     <div className="space-y-4">
-      {/* Client selector */}
       <Card>
         <CardContent className="pt-4">
           <Label className="mb-2 block text-sm font-medium">Select Client</Label>
@@ -81,7 +79,6 @@ function ChecklistTab() {
 
       {selectedClientId > 0 && (
         <>
-          {/* Progress */}
           {total > 0 && (
             <Card>
               <CardContent className="pt-4 space-y-2">
@@ -96,7 +93,6 @@ function ChecklistTab() {
             </Card>
           )}
 
-          {/* Checklist */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -181,7 +177,6 @@ function ChecklistTab() {
                 </ScrollArea>
               )}
 
-              {/* Add item form */}
               <div className="flex gap-2 pt-2 border-t">
                 <Input
                   placeholder="Add a checklist item…"
@@ -210,7 +205,6 @@ function ChecklistTab() {
   );
 }
 
-// ─── Templates Tab ─────────────────────────────────────────────────────────────
 
 function TemplatesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -275,7 +269,6 @@ function TemplatesTab() {
         </div>
       )}
 
-      {/* Create Template Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent>
           <SheetHeader>
@@ -328,7 +321,6 @@ function TemplatesTab() {
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ClientOnboardingPage() {
   const { data: session } = useSession();

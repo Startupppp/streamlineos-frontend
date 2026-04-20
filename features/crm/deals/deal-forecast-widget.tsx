@@ -8,7 +8,6 @@ import { formatINRCompact } from "@/lib/format-utils";
 import { TrendingUp, Target } from "lucide-react";
 import type { DealStage } from "@/features/crm/shared/constants";
 
-// Default win-probability % by stage
 const STAGE_PROBABILITIES: Record<DealStage, number> = {
   LEAD: 10,
   CONTACTED: 25,
@@ -45,7 +44,6 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
 
     for (const deal of activeDeals) {
       const raw = Number(deal.value ?? 0);
-      // Use deal's own probability if set, otherwise fall back to stage default
       const prob = (deal.probability != null && deal.probability > 0)
         ? deal.probability
         : (STAGE_PROBABILITIES[deal.stage as DealStage] ?? 0);
@@ -58,7 +56,6 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
       stageMap[deal.stage]!.weighted += weighted;
       stageMap[deal.stage]!.count++;
 
-      // Monthly forecast: deals with close date in current month
       if (deal.expectedCloseDate) {
         const closeDate = new Date(deal.expectedCloseDate);
         if (closeDate >= thisMonthStart && closeDate <= thisMonthEnd) {
@@ -101,7 +98,6 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {/* Weighted pipeline by stage */}
       <Card>
         <CardHeader className="p-4 pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">
@@ -134,7 +130,6 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
         </CardContent>
       </Card>
 
-      {/* Monthly forecast */}
       <Card>
         <CardHeader className="p-4 pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5">

@@ -102,15 +102,12 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const updateMutation = useUpdateProject();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Reassignment dialog: fires when an existing member is removed from the roster
   const [reassignDialog, setReassignDialog] = useState<{
     memberId: string;
     memberName: string;
   } | null>(null);
   const [reassignTo, setReassignTo] = useState<string>("__unassign__");
-  // Accumulated map of { removedUserId → replacementUserId } built as user dismisses dialogs
   const reassignmentsRef = useRef<Record<string, string>>({});
-  // Pending field change that waits for dialog confirmation
   const pendingFieldChangeRef = useRef<(() => void) | null>(null);
 
   const handleMemberRemoved = useCallback(
@@ -347,7 +344,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Ticket reassignment dialog shown when an existing member is removed */}
       <ReassignDialog
         open={reassignDialog !== null}
         memberName={reassignDialog?.memberName ?? ""}
@@ -388,7 +384,6 @@ function ReassignDialog({
     ? employeesData
     : (employeesData?.data ?? []);
 
-  // Only show current (remaining) members as reassignment targets
   const remainingMembers = employees.filter(
     (emp) =>
       currentMemberIds.includes(emp.id) && emp.id !== removedMemberId
@@ -509,7 +504,6 @@ function MembersSelector({
                         onClick={() => {
                           const current = field.value || [];
                           if (selected) {
-                            // Removing a member — check if they were an original member
                             const applyRemoval = () =>
                               field.onChange(current.filter((id: string) => id !== emp.id));
                             if (originalMemberIds.includes(emp.id)) {

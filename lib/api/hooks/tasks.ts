@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
 export type TaskType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
@@ -83,7 +82,6 @@ export interface TasksFilters {
   page?: number;
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useTasks(filters?: TasksFilters) {
   return useQuery({
@@ -111,7 +109,7 @@ export function useOverdueTaskCount() {
   return useQuery({
     queryKey: queryKeys.tasks.overdueCount(),
     queryFn: () => apiClient.get<TaskOverdueCountResponse>("/tasks/overdue", { countOnly: "true" }),
-    refetchInterval: 5 * 60 * 1000, // poll every 5 min
+    refetchInterval: 5 * 60 * 1000,
     staleTime: 4 * 60 * 1000,
   });
 }
@@ -143,7 +141,6 @@ export function useCompleteTask() {
     mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt?: string }) =>
       apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }),
     onMutate: async ({ taskId }) => {
-      // Optimistic update — remove from my-queue immediately
       await qc.cancelQueries({ queryKey: queryKeys.tasks.myQueue() });
       const prev = qc.getQueryData<TaskWithBucket[]>(queryKeys.tasks.myQueue());
       qc.setQueryData<TaskWithBucket[]>(queryKeys.tasks.myQueue(), (old) =>
@@ -198,7 +195,6 @@ export function useTaskAnalytics(days = 30) {
   });
 }
 
-// ─── Task Sequences ───────────────────────────────────────────────────────────
 
 export interface TaskSequenceStep {
   id: number;
@@ -283,7 +279,6 @@ export function useApplyTaskSequence() {
   });
 }
 
-// ─── AI Task Prioritization ───────────────────────────────────────────────────
 
 export interface TaskPriorityItem {
   taskId: number;

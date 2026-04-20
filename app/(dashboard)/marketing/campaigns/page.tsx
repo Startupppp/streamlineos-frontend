@@ -102,7 +102,6 @@ export default function CampaignsPage() {
 
   const items: MarketingCampaign[] = Array.isArray(data) ? data : [];
 
-  // Populate form when opening edit sheet
   useEffect(() => {
     if (editingCampaign) {
       setForm({
@@ -298,7 +297,6 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* Create Sheet */}
       <HrSheet
         open={createOpen}
         onOpenChange={setCreateOpen}
@@ -311,7 +309,6 @@ export default function CampaignsPage() {
         {formFields}
       </HrSheet>
 
-      {/* Edit Sheet */}
       <HrSheet
         open={!!editingCampaign}
         onOpenChange={(open) => { if (!open) { setEditingCampaign(null); resetForm(); } }}
@@ -324,7 +321,6 @@ export default function CampaignsPage() {
         {formFields}
       </HrSheet>
 
-      {/* Preview Sheet */}
       <Sheet open={!!previewCampaign} onOpenChange={(open) => { if (!open) setPreviewCampaign(null); }}>
         <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-md">
           <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
@@ -334,7 +330,6 @@ export default function CampaignsPage() {
           <ScrollArea className="flex-1 min-h-0">
             {previewCampaign && (
               <div className="px-5 py-4 space-y-5">
-                {/* Status + Channel */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_COLORS[previewCampaign.status] ?? "bg-muted text-muted-foreground"}`}>
                     {previewCampaign.status}
@@ -350,7 +345,6 @@ export default function CampaignsPage() {
 
                 <Separator />
 
-                {/* Key metrics */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">Budget Allocated</p>
@@ -372,7 +366,6 @@ export default function CampaignsPage() {
 
                 <Separator />
 
-                {/* Dates + audience */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -405,7 +398,6 @@ export default function CampaignsPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

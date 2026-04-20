@@ -17,7 +17,6 @@ import { useUpdateProfile } from "@/lib/api/hooks/hr";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
   image: z.string().url().optional().or(z.literal("")),
@@ -31,7 +30,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 interface SelfEditProfileFormProps {
   employee: Employee;
@@ -102,7 +100,6 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
-      {/* Avatar + Image URL */}
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-4">
@@ -134,7 +131,6 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
         </CardContent>
       </Card>
 
-      {/* Bio */}
       <Card>
         <CardContent className="p-4 space-y-2">
           <Label htmlFor="bio" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -156,7 +152,6 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
         </CardContent>
       </Card>
 
-      {/* Skills */}
       <Card>
         <CardContent className="p-4 space-y-3">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -200,7 +195,6 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
         </CardContent>
       </Card>
 
-      {/* Social Links */}
       <Card>
         <CardContent className="p-4 space-y-3">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -250,7 +244,6 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
   );
 }
 
-// ─── SocialField ──────────────────────────────────────────────────────────────
 
 interface SocialFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;

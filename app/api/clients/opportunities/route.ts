@@ -15,7 +15,7 @@ const createSchema = z.object({
   expectedCloseDate: z.string().optional(),
 });
 
-/** GET /api/clients/opportunities — list all org opportunities, optional ?clientId=N */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const clientIdParam = req.nextUrl.searchParams.get("clientId");
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/clients/opportunities — create a new opportunity */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await req.json();
@@ -63,7 +63,6 @@ export async function POST(req: NextRequest) {
 
     const { clientId, title, type, stage, value, notes, expectedCloseDate } = parsed.data;
 
-    // Verify client belongs to org
     const client = await db.query.clients.findFirst({
       where: and(eq(clients.id, clientId), eq(clients.orgId, session.orgId)),
       columns: { id: true },

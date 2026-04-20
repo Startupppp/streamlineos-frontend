@@ -1,13 +1,9 @@
-/**
- * Twilio SMS + WhatsApp helper.
- * Uses Twilio REST API directly — no SDK dependency required.
- * Gracefully skips sending if TWILIO_* env vars are not configured.
- */
+
 
 import { logger } from "./logger";
 
 interface TwilioSendParams {
-  to: string; // E.164 format e.g. "+919876543210"
+  to: string;
   body: string;
   channel: "sms" | "whatsapp";
 }
@@ -27,10 +23,7 @@ function isTwilioConfigured(): boolean {
   );
 }
 
-/**
- * Send a message via Twilio SMS or WhatsApp.
- * Returns { sent: true } on success, { sent: false, reason } if skipped/failed.
- */
+
 export async function sendTwilioMessage(
   params: TwilioSendParams
 ): Promise<{ sent: boolean; sid?: string; reason?: string }> {
@@ -56,7 +49,7 @@ export async function sendTwilioMessage(
       ? `whatsapp:${params.to}`
       : params.to;
 
-  const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  const endpoint = `https:
 
   const formData = new URLSearchParams();
   formData.append("To", to);
@@ -101,9 +94,7 @@ export async function sendTwilioMessage(
   }
 }
 
-/**
- * Send SMS. Falls back gracefully if Twilio not configured.
- */
+
 export async function sendSms(
   to: string,
   body: string
@@ -111,9 +102,7 @@ export async function sendSms(
   return sendTwilioMessage({ to, body, channel: "sms" });
 }
 
-/**
- * Send WhatsApp message. Falls back gracefully if Twilio not configured.
- */
+
 export async function sendWhatsApp(
   to: string,
   body: string
@@ -121,10 +110,7 @@ export async function sendWhatsApp(
   return sendTwilioMessage({ to, body, channel: "whatsapp" });
 }
 
-/**
- * Send via WhatsApp first; if it fails (or no WhatsApp configured),
- * fall back to SMS.
- */
+
 export async function sendWhatsAppWithSmsFallback(
   to: string,
   body: string

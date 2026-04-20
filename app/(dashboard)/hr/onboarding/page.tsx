@@ -45,7 +45,6 @@ import {
   type OnboardingStatus,
 } from "@/lib/api/hooks/hr/onboarding";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DocumentType {
   id: number;
@@ -72,7 +71,6 @@ interface OnboardingDoc {
   version: number | null;
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 function useMyOnboardingDocs() {
   return useQuery<OnboardingDoc[]>({
@@ -102,7 +100,6 @@ function useSubmitOnboardingDoc() {
   });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function docStatusIcon(status: OnboardingDoc["status"]) {
   const icons = {
@@ -144,7 +141,6 @@ function canUpload(status: OnboardingDoc["status"] | undefined): boolean {
   return !status || status === "PENDING" || status === "RE_UPLOAD_REQUESTED" || status === "REJECTED";
 }
 
-// ─── Document Upload Sheet ────────────────────────────────────────────────────
 
 interface UploadSheetProps {
   open: boolean;
@@ -206,7 +202,6 @@ function UploadSheet({
       submitLabel="Submit Document"
       isPending={isPending}
     >
-      {/* Upload note */}
       <div className="rounded-md border bg-muted/40 px-3 py-2.5 text-[12px] text-muted-foreground leading-relaxed">
         <p className="font-medium text-foreground mb-0.5">How to upload</p>
         <p>
@@ -216,7 +211,6 @@ function UploadSheet({
         </p>
       </div>
 
-      {/* If re-upload requested, show remarks */}
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
         <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 px-3 py-2.5 text-[12px] text-orange-800 dark:text-orange-300">
           <p className="font-medium mb-0.5">Reviewer remarks</p>
@@ -226,7 +220,6 @@ function UploadSheet({
 
       <Separator />
 
-      {/* File URL */}
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">
           File URL <span className="text-destructive">*</span>
@@ -240,7 +233,6 @@ function UploadSheet({
         />
       </div>
 
-      {/* File name */}
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">
           File Name <span className="text-destructive">*</span>
@@ -259,7 +251,6 @@ function UploadSheet({
   );
 }
 
-// ─── Employee Documents Tab ───────────────────────────────────────────────────
 
 function EmployeeDocumentsTab() {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
@@ -272,7 +263,6 @@ function EmployeeDocumentsTab() {
 
   const isLoading = docsLoading || typesLoading;
 
-  // Build merged checklist: all active doc types + match existing submissions
   const checklist = (() => {
     const types = (docTypes ?? []).filter((dt) => dt.isActive !== false);
     const docsByTypeId = new Map(
@@ -343,7 +333,6 @@ function EmployeeDocumentsTab() {
 
   return (
     <>
-      {/* Progress summary */}
       <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 mb-3">
         <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
         <p className="text-sm">
@@ -389,7 +378,6 @@ function EmployeeDocumentsTab() {
                     </p>
                   )}
 
-                  {/* Existing file link */}
                   {submission?.fileUrl && (
                     <a
                       href={submission.fileUrl}
@@ -403,7 +391,6 @@ function EmployeeDocumentsTab() {
                     </a>
                   )}
 
-                  {/* Reviewer remarks for re-upload */}
                   {submission?.status === "RE_UPLOAD_REQUESTED" &&
                     submission.remarks && (
                       <p className="text-[11px] text-orange-600 dark:text-orange-400 mt-0.5">
@@ -412,7 +399,6 @@ function EmployeeDocumentsTab() {
                     )}
                 </div>
 
-                {/* Upload button */}
                 {canUpload(submission?.status) && (
                   <Button
                     size="sm"
@@ -443,7 +429,6 @@ function EmployeeDocumentsTab() {
   );
 }
 
-// ─── HR Workflow Tab ─────────────────────────────────────────────────────────
 
 function InitiateSheet({
   open,
@@ -595,7 +580,6 @@ function HrWorkflowTab() {
   );
 }
 
-// ─── HR / CEO Documents Tab ───────────────────────────────────────────────────
 
 function HrDocumentsTab() {
   return (
@@ -646,7 +630,6 @@ function HrDocumentsTab() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
   const { data: session } = useSession();

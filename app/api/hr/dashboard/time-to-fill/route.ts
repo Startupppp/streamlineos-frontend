@@ -13,7 +13,6 @@ export async function GET() {
     const data = await cached(
       `hr:dashboard:time-to-fill:${orgId}`,
       async () => {
-        // Avg days from createdAt to updatedAt for FILLED jobs (by department)
         const filledJobs = await db
           .select({
             departmentId: jobPostings.departmentId,
@@ -33,7 +32,6 @@ export async function GET() {
           return { avgDaysOverall: null, byDepartment: [] };
         }
 
-        // Compute per-job fill time in days
         let totalDays = 0;
         const deptMap: Record<string, { total: number; count: number }> = {};
 
@@ -56,7 +54,6 @@ export async function GET() {
 
         const avgDaysOverall = Math.round(totalDays / filledJobs.length);
 
-        // Get department names
         const deptIds = Object.keys(deptMap)
           .filter((k) => k !== "unknown")
           .map(Number);

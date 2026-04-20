@@ -2,7 +2,6 @@ import { Inngest } from "inngest";
 
 export const inngest = new Inngest({
   id: "vaivamm-crm",
-  // In local dev (INNGEST_DEV=1) the event key is not required
   ...(process.env.INNGEST_EVENT_KEY ? { eventKey: process.env.INNGEST_EVENT_KEY } : {}),
 });
 

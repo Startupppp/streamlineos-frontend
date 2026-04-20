@@ -59,7 +59,6 @@ import {
   TERMINATION_STATUS_LABELS,
 } from "@/lib/constants/hr-separation";
 
-// ─── Status helpers ──────────────────────────────────────────────────────────
 
 function statusVariant(
   status: TerminationStatus | null
@@ -150,7 +149,6 @@ Regards,
 Human Resources Department`;
 }
 
-// ─── Status filter tabs ──────────────────────────────────────────────────────
 
 type StatusFilter = "ALL" | TerminationStatus;
 
@@ -162,7 +160,6 @@ const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   })),
 ];
 
-// ─── Termination Card ────────────────────────────────────────────────────────
 
 interface TerminationCardProps {
   record: Termination;
@@ -207,7 +204,6 @@ function TerminationCard({
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            {/* Top row: name + status */}
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold truncate">{employee?.name ?? "Employee"}</p>
               <Badge variant={statusVariant(status)} className="text-[10px] shrink-0">
@@ -220,7 +216,6 @@ function TerminationCard({
               )}
             </div>
 
-            {/* Second row: designation + employeeId */}
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
               {employee?.designation && (
                 <span className="flex items-center gap-1">
@@ -246,14 +241,12 @@ function TerminationCard({
               )}
             </div>
 
-            {/* CEO remarks for rejected */}
             {status === "REJECTED" && record.ceoRemarks && (
               <p className="text-[11px] text-destructive mt-1 line-clamp-2">
                 CEO: {record.ceoRemarks}
               </p>
             )}
 
-            {/* Reasons row */}
             {reasonsList.length > 0 && (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                 {visibleReasons.map((r) => (
@@ -270,9 +263,7 @@ function TerminationCard({
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-            {/* HR: submit DRAFT for CEO approval */}
             {isHR && status === "DRAFT" && (
               <Button
                 size="sm"
@@ -287,7 +278,6 @@ function TerminationCard({
               </Button>
             )}
 
-            {/* HR: resubmit REJECTED for CEO approval */}
             {isHR && status === "REJECTED" && (
               <Button
                 size="sm"
@@ -302,7 +292,6 @@ function TerminationCard({
               </Button>
             )}
 
-            {/* CEO: approve or reject PENDING_CEO */}
             {isCEO && status === "PENDING_CEO" && (
               <>
                 <Button
@@ -328,7 +317,6 @@ function TerminationCard({
               </>
             )}
 
-            {/* HR: send email after APPROVED */}
             {isHR && status === "APPROVED" && (
               <Button
                 size="sm"
@@ -342,7 +330,6 @@ function TerminationCard({
               </Button>
             )}
 
-            {/* HR: complete after SENT */}
             {isHR && status === "SENT" && (
               <Button
                 size="sm"
@@ -357,7 +344,6 @@ function TerminationCard({
               </Button>
             )}
 
-            {/* Completed label */}
             {status === "COMPLETED" && (
               <span className="text-[11px] text-muted-foreground italic">Completed</span>
             )}
@@ -431,14 +417,12 @@ export default function TerminationPage() {
     [selectedEmployee, effectiveDate, selectedReasons, explanation, noticePeriodWaived, severanceAmount]
   );
 
-  // Filtered list based on status tab
   const list = useMemo(() => {
     const all = terminations ?? [];
     if (statusFilter === "ALL") return all;
     return all.filter((t) => t.status === statusFilter);
   }, [terminations, statusFilter]);
 
-  // Count per status for badges
   const statusCounts = useMemo(() => {
     const all = terminations ?? [];
     const counts: Record<string, number> = { ALL: all.length };
@@ -624,7 +608,6 @@ export default function TerminationPage() {
         ) : undefined
       }
     >
-      {/* ── Status filter tabs ──────────────────────────────────────────────── */}
       <div className="flex items-center gap-1.5 flex-wrap mb-4">
         {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
           <Button
@@ -647,7 +630,6 @@ export default function TerminationPage() {
         ))}
       </div>
 
-      {/* ── Records list ──────────────────────────────────────────────────── */}
       {list.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -684,7 +666,6 @@ export default function TerminationPage() {
         </div>
       )}
 
-      {/* ── Create Sheet (HR) ──────────────────────────────────────────────── */}
       <HrSheet
         open={createOpen}
         onOpenChange={(open) => {
@@ -697,7 +678,6 @@ export default function TerminationPage() {
         submitLabel="Save as Draft"
         isPending={createTermination.isPending}
       >
-        {/* Employee select */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Employee <span className="text-destructive">*</span>
@@ -723,7 +703,6 @@ export default function TerminationPage() {
 
         <Separator />
 
-        {/* Termination Reasons */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             Termination Reasons <span className="text-destructive">*</span>
@@ -750,7 +729,6 @@ export default function TerminationPage() {
 
         <Separator />
 
-        {/* Detailed explanation */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Detailed Explanation <span className="text-destructive">*</span>
@@ -767,7 +745,6 @@ export default function TerminationPage() {
           </p>
         </div>
 
-        {/* Effective date */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Effective Date <span className="text-destructive">*</span>
@@ -782,7 +759,6 @@ export default function TerminationPage() {
 
         <Separator />
 
-        {/* Notice period waived */}
         <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
           <div>
             <p className="text-sm font-medium">Notice Period Waived</p>
@@ -797,7 +773,6 @@ export default function TerminationPage() {
           />
         </div>
 
-        {/* Severance amount */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Severance Amount{" "}
@@ -820,7 +795,6 @@ export default function TerminationPage() {
           </div>
         </div>
 
-        {/* Internal notes */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Internal Notes{" "}
@@ -837,7 +811,6 @@ export default function TerminationPage() {
 
         <Separator />
 
-        {/* Letter preview */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">Letter Preview</Label>
           <Textarea
@@ -854,7 +827,6 @@ export default function TerminationPage() {
         </div>
       </HrSheet>
 
-      {/* ── Submit for Approval Confirm ────────────────────────────────────── */}
       <ConfirmActionDialog
         open={submitId !== null}
         onOpenChange={(open) => {
@@ -868,7 +840,6 @@ export default function TerminationPage() {
         isPending={submitTermination.isPending}
       />
 
-      {/* ── CEO Review Sheet ───────────────────────────────────────────────── */}
       <HrSheet
         open={ceoSheetOpen}
         onOpenChange={(open) => {
@@ -903,7 +874,6 @@ export default function TerminationPage() {
       >
         {reviewRecord && (
           <>
-            {/* Employee info */}
             <div className="flex items-center gap-3 rounded-md border bg-muted/30 p-3">
               <Avatar className="h-9 w-9 shrink-0">
                 <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -923,7 +893,6 @@ export default function TerminationPage() {
               </div>
             </div>
 
-            {/* Effective date */}
             <div className="space-y-1">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Effective Date
@@ -935,7 +904,6 @@ export default function TerminationPage() {
               </p>
             </div>
 
-            {/* Reasons */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Reasons
@@ -949,7 +917,6 @@ export default function TerminationPage() {
               </div>
             </div>
 
-            {/* Explanation */}
             <div className="space-y-1">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Detailed Explanation
@@ -959,7 +926,6 @@ export default function TerminationPage() {
               </p>
             </div>
 
-            {/* Severance / notice */}
             {(reviewRecord.severanceAmount || reviewRecord.noticePeriodWaived) && (
               <div className="flex items-center gap-4 text-sm">
                 {reviewRecord.severanceAmount &&
@@ -982,7 +948,6 @@ export default function TerminationPage() {
 
             <Separator />
 
-            {/* CEO Remarks */}
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">
                 CEO Remarks{" "}
@@ -1008,7 +973,6 @@ export default function TerminationPage() {
         )}
       </HrSheet>
 
-      {/* ── Send Email Confirm ─────────────────────────────────────────────── */}
       <ConfirmActionDialog
         open={emailRecord !== null}
         onOpenChange={(open) => {
@@ -1022,7 +986,6 @@ export default function TerminationPage() {
         isPending={sendEmail.isPending}
       />
 
-      {/* ── Complete Termination Confirm ──────────────────────────────────── */}
       <ConfirmActionDialog
         open={completeId !== null}
         onOpenChange={(open) => {

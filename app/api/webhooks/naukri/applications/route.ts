@@ -1,7 +1,4 @@
-/**
- * Naukri.com Webhook Receiver
- * Receives inbound job application events from Naukri.
- */
+
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createHmac } from "crypto";

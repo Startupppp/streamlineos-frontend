@@ -76,7 +76,6 @@ export async function PATCH(
           )
         );
 
-      // Email the ticket creator on status change (non-blocking)
       if (input.status) {
         void (async () => {
           const creator = await db.query.users.findFirst({
@@ -96,7 +95,6 @@ export async function PATCH(
         })().catch(() => {});
       }
 
-      // Email the new assignee on assignment change (non-blocking)
       if (input.assigneeId && input.assigneeId !== ticket.assigneeId) {
         void (async () => {
           const assignee = await db.query.users.findFirst({

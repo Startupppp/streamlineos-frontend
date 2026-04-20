@@ -132,7 +132,6 @@ export default function OrganizationDetailPage({
       }
     >
       <div className="space-y-6">
-        {/* Header info */}
         <Card className="shadow-sm">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4 items-start">
@@ -170,7 +169,6 @@ export default function OrganizationDetailPage({
           </CardContent>
         </Card>
 
-        {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label="Contacts"
@@ -198,7 +196,6 @@ export default function OrganizationDetailPage({
           />
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="timeline" className="space-y-4">
           <TabsList className="h-8 text-xs">
             <TabsTrigger value="timeline" className="text-xs gap-1.5">
@@ -218,7 +215,6 @@ export default function OrganizationDetailPage({
             </TabsTrigger>
           </TabsList>
 
-          {/* Timeline Tab */}
           <TabsContent value="timeline">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
@@ -239,7 +235,6 @@ export default function OrganizationDetailPage({
             </Card>
           </TabsContent>
 
-          {/* UserCircles Tab */}
           <TabsContent value="contacts">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
@@ -287,7 +282,6 @@ export default function OrganizationDetailPage({
             </Card>
           </TabsContent>
 
-          {/* Related Leads Tab */}
           <TabsContent value="leads">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
@@ -337,7 +331,6 @@ export default function OrganizationDetailPage({
             </Card>
           </TabsContent>
 
-          {/* Hierarchy Tab */}
           <TabsContent value="hierarchy">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
@@ -367,7 +360,6 @@ export default function OrganizationDetailPage({
             </Card>
           </TabsContent>
 
-          {/* Notes Tab */}
           <TabsContent value="notes">
             <Card className="shadow-sm">
               <CardHeader className="px-4 py-3 border-b">
@@ -384,7 +376,6 @@ export default function OrganizationDetailPage({
         </Tabs>
       </div>
 
-      {/* Link Parent Dialog */}
       <LinkParentDialog
         open={parentDialogOpen}
         onOpenChange={setParentDialogOpen}

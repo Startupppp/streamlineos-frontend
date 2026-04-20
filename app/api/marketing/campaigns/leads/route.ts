@@ -11,9 +11,7 @@ const querySchema = z.object({
   q: z.string().optional(),
 });
 
-/** GET /api/marketing/campaigns/leads
- * Returns leads that have an email address, filtered by status/source/search.
- */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, source, q } = parseQuery(req, querySchema);
@@ -39,7 +37,6 @@ export async function GET(req: NextRequest) {
       .where(and(...conditions))
       .orderBy(leads.createdAt);
 
-    // Apply search filter in-memory (email/name/company)
     const filtered = q
       ? rows.filter((r) => {
           const term = q.toLowerCase();

@@ -18,7 +18,6 @@ function isLoopbackHostname(hostname: string): boolean {
   );
 }
 
-/** Must match Auth.js session cookie: `__Secure-` prefix only when the response uses a secure cookie (HTTPS). */
 function authJsSessionCookieName(req: NextRequest): string {
   if (process.env.NODE_ENV !== "production") {
     return "authjs.session-token";
@@ -46,6 +45,8 @@ const PROTECTED_ROUTES = [
   "/reports",
   "/notifications",
   "/marketing",
+  "/ai",
+  "/calendar",
 ];
 
 const AUTH_ROUTES = [
@@ -62,10 +63,7 @@ const ALLOW_AUTHENTICATED = [
   "/auth/reset-password",
 ];
 
-// Route → allowed roles. CEO always has access (hardcoded bypass).
-// Routes not listed here are accessible to all authenticated users.
 const ROUTE_ROLE_MAP: Record<string, string[]> = {
-  // HR Management — CEO, HR, and branch roles (branch-scoped access)
   "/hr": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/onboarding": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/payroll": ["CEO", "HR", "BRANCH_HR"],
@@ -75,84 +73,54 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/hr/performance": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/org-chart": ["CEO", "HR"],
   "/hr/incentives": ["CEO", "HR"],
-
-  // Self-service HR — all roles (explicit override for sub-routes of /hr)
   "/hr/my-payslips": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/leaves": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/expenses": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/attendance": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/helpdesk": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-
-  // CRM — CEO, HR, SALES, BRANCH_MANAGER (sales/branch see filtered data)
   "/crm/leads": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
   "/crm/deals": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
   "/crm/targets": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
   "/crm/reports": ["CEO", "HR"],
   "/crm/clients": ["CEO", "HR", "CUSTOMER_SUPPORT", "SALES"],
-
-  // Digital Marketing
   "/digital-marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
-
-  // Projects & Timesheets — all roles
   "/projects": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/timesheets": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-
-  // Support/Tickets — all roles
   "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-
-  // Chat — all roles
+  "/support/inbox": ["CEO", "HR", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "SALES"],
   "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-
   "/sales": ["CEO", "HR", "SALES"],
   "/customer-executive": ["CEO", "HR", "CUSTOMER_SUPPORT"],
   "/marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
-
-  // Settings — CEO and HR
   "/settings": ["CEO", "HR"],
   "/settings/roles": ["CEO", "HR"],
   "/settings/branches": ["CEO", "HR"],
-
-  // Billing & Invoices — CEO, HR
   "/billing": ["CEO", "HR"],
   "/billing/invoices": ["CEO", "HR"],
-
-  // Support Inbox — all roles
-  "/support/inbox": ["CEO", "HR", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "SALES"],
-
-  // Notifications — all roles
   "/notifications": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-
-  // CEO and HR
   "/ceo": ["CEO", "HR"],
+
+  "/ai": ["CEO", "HR"],
+
+  "/calendar": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
 };
 
 function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
 
-/**
- * Check if user's role can access this pathname.
- * Matches the most specific route first (longest prefix).
- */
 function canAccessRoute(pathname: string, role: string): boolean {
-  // CEO bypasses everything
   if (role === "CEO") return true;
 
-  // Find the most specific matching route
   const matchingRoutes = Object.keys(ROUTE_ROLE_MAP)
     .filter((route) => pathname === route || pathname.startsWith(route + "/"))
-    .sort((a, b) => b.length - a.length); // longest first
+    .sort((a, b) => b.length - a.length);
 
-  if (matchingRoutes.length === 0) {
-    // No specific rule → allow (e.g., /dashboard itself)
-    return true;
-  }
+  if (matchingRoutes.length === 0) return true;
 
-  const bestMatch = matchingRoutes[0];
-  return ROUTE_ROLE_MAP[bestMatch].includes(role);
+  return ROUTE_ROLE_MAP[matchingRoutes[0]].includes(role);
 }
 
-/** Endpoints where automated bot User-Agents are blocked */
 const BOT_BLOCKED_PREFIXES = [
   "/api/auth/",
   "/api/trpc/auth.",
@@ -166,7 +134,6 @@ const BOT_BLOCKED_PREFIXES = [
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
-  // ── Rate limiting (tiered, per-bucket) ──────────────────────────────
   const tier = resolveTier(pathname);
   if (tier) {
     const ip =
@@ -187,7 +154,6 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // ── Bot / scraper detection on sensitive endpoints ──────────────────
   if (BOT_BLOCKED_PREFIXES.some((p) => pathname.startsWith(p))) {
     const ua = req.headers.get("user-agent");
     if (isSuspiciousBot(ua)) {
@@ -203,7 +169,6 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // ── Enforce HTTPS in production (skip loopback: no TLS on `next start`) ─
   if (
     process.env.NODE_ENV === "production" &&
     req.headers.get("x-forwarded-proto") === "http" &&
@@ -297,7 +262,6 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Org guard — redirect to onboarding if user has no organization
   if (
     isAuthenticated &&
     token?.orgId === null &&
@@ -310,7 +274,6 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // IP allowlist — check if org has IP restrictions and enforce them
   if (isAuthenticated && token?.orgId && redis) {
     try {
       const allowlistRaw = await redis.get<string>(`org:ip-allowlist:${token.orgId as string}`);
@@ -321,10 +284,7 @@ export default async function middleware(req: NextRequest) {
         if (allowlist.length > 0) {
           const clientIp =
             req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-          const allowed = allowlist.some((entry) => {
-            // Exact match or simple prefix match (e.g. "192.168.1." for /24 CIDR shorthand)
-            return clientIp === entry || clientIp.startsWith(entry);
-          });
+          const allowed = allowlist.some((entry) => clientIp === entry || clientIp.startsWith(entry));
           if (!allowed) {
             logger.warn("IP not in org allowlist", { ip: clientIp, orgId: token.orgId });
             return NextResponse.json(
@@ -335,11 +295,9 @@ export default async function middleware(req: NextRequest) {
         }
       }
     } catch {
-      // Redis unavailable — fail open (don't block access on cache miss)
     }
   }
 
-  // RBAC route protection — block unauthorized role access
   if (isAuthenticated && token?.role && startsWithAny(pathname, PROTECTED_ROUTES)) {
     const userRole = token.role as string;
     if (!canAccessRoute(pathname, userRole)) {

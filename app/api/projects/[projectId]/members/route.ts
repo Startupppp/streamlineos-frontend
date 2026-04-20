@@ -83,7 +83,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     const userId = body.userId;
 
-    // Remove from project roster
     await db.delete(projectMembers).where(
       and(
         eq(projectMembers.projectId, projectId),
@@ -91,7 +90,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       ),
     );
 
-    // Auto-unassign from open tickets (primary assignee)
     await db
       .update(tickets)
       .set({ assigneeId: null })
@@ -104,7 +102,6 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         ),
       );
 
-    // Remove from ticket_assignees multi-assignee table for this project's open tickets
     const { inArray } = await import("drizzle-orm");
     const projectTicketIds = await db
       .select({ id: tickets.id })

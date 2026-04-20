@@ -62,7 +62,6 @@ export default function OrganizationSettingsPage() {
   const [editSlug, setEditSlug] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  // App config state
   const [configInitialized, setConfigInitialized] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [logoUploading, setLogoUploading] = useState(false);
@@ -75,12 +74,10 @@ export default function OrganizationSettingsPage() {
   const [loginBgUrl, setLoginBgUrl] = useState<string>("");
   const [isEditingConfig, setIsEditingConfig] = useState(false);
 
-  // IP allowlist state
   const [ipAllowlist, setIpAllowlist] = useState<string[]>([]);
   const [ipInput, setIpInput] = useState("");
   const [ipAllowlistInitialized, setIpAllowlistInitialized] = useState(false);
 
-  // Security state
   const [mfaEnforced, setMfaEnforced] = useState(false);
   const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>("");
   const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
@@ -390,7 +387,6 @@ export default function OrganizationSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Logo */}
               <div className="space-y-1.5">
                 <Label htmlFor="logo-url" className="text-sm flex items-center gap-1.5">
                   <Image className="h-3.5 w-3.5 text-muted-foreground" />
@@ -453,7 +449,6 @@ export default function OrganizationSettingsPage() {
 
               <Separator />
 
-              {/* Timezone + Currency side-by-side */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="timezone" className="text-sm flex items-center gap-1.5">
@@ -514,7 +509,6 @@ export default function OrganizationSettingsPage() {
                 </div>
               </div>
 
-              {/* Fiscal Year Start */}
               <div className="space-y-1.5">
                 <Label htmlFor="fiscal-year" className="text-sm flex items-center gap-1.5">
                   <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />
@@ -546,7 +540,6 @@ export default function OrganizationSettingsPage() {
 
               <Separator />
 
-              {/* Public Employee Directory */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm flex items-center gap-1.5">
@@ -567,7 +560,6 @@ export default function OrganizationSettingsPage() {
 
               <Separator />
 
-              {/* Branding */}
               <div className="space-y-3">
                 <Label className="text-sm flex items-center gap-1.5 font-semibold">
                   <Palette className="h-3.5 w-3.5 text-muted-foreground" />
@@ -690,7 +682,6 @@ export default function OrganizationSettingsPage() {
 
               <Separator />
 
-              {/* Email Domain Restriction */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />

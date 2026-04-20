@@ -154,7 +154,7 @@ export function formatINRCompact(amount: string | number): string {
   return `${sign}₹${new Intl.NumberFormat("en-IN", { minimumFractionDigits: hasPaisa ? 2 : 0, maximumFractionDigits: 2 }).format(abs)}`;
 }
 
-/** Formats a deal's numeric ID as a human-readable unique deal code, e.g. DEAL-0042 */
+
 export function formatDealId(id: number): string {
   return `DEAL-${id.toString().padStart(4, "0")}`;
 }

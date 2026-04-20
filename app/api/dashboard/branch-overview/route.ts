@@ -16,7 +16,6 @@ export async function GET(_req: NextRequest) {
     monthStart.setHours(0, 0, 0, 0);
     const monthStartStr = monthStart.toISOString().split("T")[0];
 
-    // Get all branches with their managers
     const allBranches = await db.query.branches.findMany({
       where: eq(branches.orgId, orgId),
       with: {
@@ -25,7 +24,6 @@ export async function GET(_req: NextRequest) {
       },
     });
 
-    // Aggregate KPIs per branch
     const branchKpis = await Promise.all(
       allBranches.map(async (branch) => {
         const [
@@ -34,13 +32,11 @@ export async function GET(_req: NextRequest) {
           pendingExpensesResult,
           clientCountResult,
         ] = await Promise.all([
-          // Employee count
           db
             .select({ count: count() })
             .from(users)
             .where(and(eq(users.branchId, branch.id), eq(users.isActive, true))),
 
-          // Work log hours this month
           db
             .select({
               totalHours: sql<string>`COALESCE(SUM(${timesheets.hours}::numeric), 0)`,
@@ -53,7 +49,6 @@ export async function GET(_req: NextRequest) {
               gte(timesheets.date, monthStartStr),
             )),
 
-          // Pending expenses
           db
             .select({
               count: count(),
@@ -67,7 +62,6 @@ export async function GET(_req: NextRequest) {
               eq(expenses.status, "PENDING"),
             )),
 
-          // Client accounts count
           db
             .select({ count: count() })
             .from(clientAccounts)
@@ -96,7 +90,6 @@ export async function GET(_req: NextRequest) {
       })
     );
 
-    // Totals
     const totalEmployees = branchKpis.reduce((sum, b) => sum + b.kpis.employees, 0);
     const totalHours = branchKpis.reduce((sum, b) => sum + b.kpis.workLogHours, 0);
     const totalClients = branchKpis.reduce((sum, b) => sum + b.kpis.clients, 0);

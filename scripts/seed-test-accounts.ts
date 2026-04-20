@@ -1,7 +1,4 @@
-/**
- * Seed 5 test accounts for Vaivamm Capital CRM
- * Run: npx tsx scripts/seed-test-accounts.ts
- */
+
 import { db } from "../lib/db";
 import { users, organizationMembers, organizations } from "../lib/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -52,9 +49,6 @@ const TEST_ACCOUNTS = [
 ];
 
 async function main() {
-  console.log("🔧 Seeding test accounts...\n");
-
-  // Find or create org
   let org = await db.query.organizations.findFirst();
   if (!org) {
     const [newOrg] = await db.insert(organizations).values({
@@ -63,22 +57,17 @@ async function main() {
       slug: "vaivamm-capital",
     }).returning();
     org = newOrg;
-    console.log("✅ Created organization: Vaivamm Capital");
-  } else {
-    console.log(`✅ Using existing organization: ${org.name} (${org.id})`);
   }
 
   for (const account of TEST_ACCOUNTS) {
     const normalizedEmail = account.email.toLowerCase().trim();
     const hashedPassword = await bcrypt.hash(account.password, 10);
 
-    // Check if user exists
     const existing = await db.query.users.findFirst({
       where: sql`lower(${users.email}) = ${normalizedEmail}`,
     });
 
     if (existing) {
-      // Update: set password, emailVerified, isActive, unlock, reset login attempts
       await db.update(users).set({
         password: hashedPassword,
         emailVerified: new Date(),
@@ -94,7 +83,6 @@ async function main() {
         hasDashboardAccess: true,
       }).where(eq(users.id, existing.id));
 
-      // Ensure org membership exists with correct role
       const membership = await db.query.organizationMembers.findFirst({
         where: sql`${organizationMembers.userId} = ${existing.id} AND ${organizationMembers.orgId} = ${org.id}`,
       });
@@ -110,9 +98,7 @@ async function main() {
         });
       }
 
-      console.log(`✅ Updated: ${normalizedEmail} → ${account.role}`);
     } else {
-      // Create new user
       const userId = nanoid();
       await db.insert(users).values({
         id: userId,
@@ -137,11 +123,9 @@ async function main() {
         role: account.role,
       });
 
-      console.log(`✅ Created: ${normalizedEmail} → ${account.role}`);
     }
   }
 
-  console.log("\n🎉 All 5 test accounts ready! They can login directly.\n");
   process.exit(0);
 }
 

@@ -43,9 +43,12 @@ export async function POST(req: NextRequest) {
     const hra = (basicSalary * hraPercentage) / 100;
     const grossSalary = basicSalary + hra + allowances + (body.bonus || 0) + (body.overtimeAmount || 0);
 
+    const [payYear, payMonth] = body.month.split("-").map(Number);
+    const daysInMonth = new Date(payYear, payMonth, 0).getDate();
+
     const PROFESSIONAL_TAX = 200;
-    const lopDeduction = body.lopDays ? (basicSalary / 30) * body.lopDays : 0;
-    const halfDayDeduction = body.halfDays ? ((basicSalary / 30) * body.halfDays) / 2 : 0;
+    const lopDeduction = body.lopDays ? (basicSalary / daysInMonth) * body.lopDays : 0;
+    const halfDayDeduction = body.halfDays ? ((basicSalary / daysInMonth) * body.halfDays) / 2 : 0;
     const totalDeductions = deductions + lopDeduction + halfDayDeduction + (body.otherDeductions || 0) + PROFESSIONAL_TAX;
 
     const netSalary = grossSalary - totalDeductions;

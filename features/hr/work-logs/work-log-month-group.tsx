@@ -30,7 +30,7 @@ interface WorkLogMonthGroupProps {
   searchTerm: string;
   logs: WorkLog[] | undefined;
   selectedUserId: string | undefined;
-  onSave: (date: Date, content: string, workLink: string) => void;
+  onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
 }
 
@@ -97,7 +97,7 @@ export function WorkLogMonthGroup({
                   initialContent={log?.description ?? ""}
                   initialWorkLink={log?.workLink ?? ""}
                   ticket={log?.ticket}
-                  onSave={(content, workLink) => onSave(date, content, workLink)}
+                  onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
                   readOnly={isViewingOther}

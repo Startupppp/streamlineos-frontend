@@ -590,7 +590,6 @@ export async function emailExpenseReport(
 
     if (expenseList.length === 0) return { success: false, error: "No expenses found for the selected filters" };
 
-    // Get CEO and HR emails
     const adminMembers = await db.query.organizationMembers.findMany({
       where: and(
         eq(organizationMembers.orgId, orgId),

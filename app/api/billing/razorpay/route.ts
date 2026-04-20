@@ -14,7 +14,6 @@ function isRazorpayConfigured(): boolean {
   return Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
 }
 
-// GET: Fetch current subscription status
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const sub = await db.query.subscriptions.findFirst({
@@ -35,12 +34,11 @@ const createOrderSchema = z.object({
 });
 
 const PLAN_PRICES: Record<string, number> = {
-  STARTER: 99900,       // INR 999/month in paise
-  PROFESSIONAL: 249900, // INR 2,499/month
-  ENTERPRISE: 499900,   // INR 4,999/month
+  STARTER: 99900,
+  PROFESSIONAL: 249900,
+  ENTERPRISE: 499900,
 };
 
-// POST: Create Razorpay order for subscription
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isRazorpayConfigured()) {
@@ -51,7 +49,6 @@ export async function POST(req: NextRequest) {
     const amount = PLAN_PRICES[input.plan];
     if (!amount) return err("Invalid plan", 400);
 
-    // Create Razorpay order via API
     const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -87,7 +84,6 @@ export async function POST(req: NextRequest) {
   });
 }
 
-// PATCH: Verify payment and activate subscription
 const verifySchema = z.object({
   razorpay_order_id: z.string(),
   razorpay_payment_id: z.string(),
@@ -99,7 +95,6 @@ export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, verifySchema);
 
-    // Verify signature
     const generatedSignature = crypto
       .createHmac("sha256", RAZORPAY_KEY_SECRET ?? "")
       .update(`${input.razorpay_order_id}|${input.razorpay_payment_id}`)
@@ -111,7 +106,6 @@ export async function PATCH(req: NextRequest) {
 
     const amount = PLAN_PRICES[input.plan];
 
-    // Update or create subscription
     const existing = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.orgId, session.orgId),
     });
@@ -138,7 +132,6 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
-    // Record payment
     const subRecord = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.orgId, session.orgId),
     });

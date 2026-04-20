@@ -69,7 +69,6 @@ export default function WinLossAnalysisPage() {
         initial="hidden"
         animate="visible"
       >
-        {/* Summary stat cards */}
         <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <StatCard
             label="Won Deals"
@@ -98,7 +97,6 @@ export default function WinLossAnalysisPage() {
         </motion.div>
 
         <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2">
-          {/* Win vs Loss donut-style card */}
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -120,7 +118,6 @@ export default function WinLossAnalysisPage() {
                   <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
                 </div>
               </div>
-              {/* Visual bar split */}
               <div>
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Won {wonPct.toFixed(0)}%</span>
@@ -158,7 +155,6 @@ export default function WinLossAnalysisPage() {
             </CardContent>
           </Card>
 
-          {/* Lost reasons breakdown */}
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

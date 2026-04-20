@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
     const days = Math.min(Number(url.searchParams.get("days") ?? "90"), 365);
     const since = subDays(new Date(), days);
 
-    // Fetch all submitted scorecards for org in the period, joined with interview data
     const rows = await db
       .select({
         interviewerId: interviewScorecards.interviewerId,
@@ -32,7 +31,6 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    // Aggregate per interviewer
     const map = new Map<
       string,
       {
@@ -76,7 +74,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Also count total assigned (including pending) from interviews table
     const assignedRows = await db
       .select({
         interviewerId: interviews.interviewerId,
@@ -111,7 +108,6 @@ export async function GET(req: NextRequest) {
       recommendations: item.recommendations,
     }));
 
-    // Sort by avg submission time (nulls last)
     stats.sort((a, b) => {
       if (a.avgHoursToSubmit === null && b.avgHoursToSubmit === null) return 0;
       if (a.avgHoursToSubmit === null) return 1;

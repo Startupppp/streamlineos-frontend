@@ -244,7 +244,6 @@ export default function InterviewsPage() {
                 <SheetDescription className="text-xs">Set up an interview with a candidate. Notifications will be sent to interviewers and the candidate.</SheetDescription>
               </SheetHeader>
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                {/* Candidate picker */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Candidate <span className="text-destructive">*</span></label>
                   <Popover open={candidatePickerOpen} onOpenChange={setCandidatePickerOpen}>
@@ -291,7 +290,6 @@ export default function InterviewsPage() {
                   </Popover>
                 </div>
 
-                {/* Job position */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Job Position</label>
                   <Select value={jobPostingId} onValueChange={setJobPostingId}>
@@ -304,7 +302,6 @@ export default function InterviewsPage() {
                   </Select>
                 </div>
 
-                {/* Format + duration */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Format</label>
@@ -323,13 +320,11 @@ export default function InterviewsPage() {
                   </div>
                 </div>
 
-                {/* Date & time */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Date & Time <span className="text-destructive">*</span></label>
                   <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
                 </div>
 
-                {/* Availability grid */}
                 {availabilityData && availabilityData.availability.length > 0 && (
                   <InterviewerAvailabilityGrid
                     availability={availabilityData.availability}
@@ -339,7 +334,6 @@ export default function InterviewsPage() {
                   />
                 )}
 
-                {/* Interviewers multi-select */}
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Interviewers <span className="text-destructive">*</span></label>
                   {selectedInterviewers.length > 0 && (
@@ -396,7 +390,6 @@ export default function InterviewsPage() {
                   </Popover>
                 </div>
 
-                {/* Notification channels */}
                 <div className="space-y-2 rounded-lg border p-3 bg-muted/30">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notification Channels</p>
                   <div className="flex items-center justify-between">
@@ -423,7 +416,6 @@ export default function InterviewsPage() {
         </div>
       }
     >
-      {/* View toggle */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1 rounded-lg border p-1">
           <button
@@ -467,7 +459,6 @@ export default function InterviewsPage() {
         )}
       </div>
 
-      {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 mb-2">
           <span className="text-sm font-medium text-primary">{selectedIds.size} selected</span>

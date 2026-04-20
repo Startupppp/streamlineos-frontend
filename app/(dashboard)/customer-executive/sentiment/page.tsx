@@ -22,7 +22,7 @@ import { useSentimentAnalysis, type SentimentResult } from "@/lib/api/hooks/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-/* ─── Config ──────────────────────────────────────────────────────────────── */
+
 
 const sentimentConfig = {
   positive: {
@@ -70,7 +70,7 @@ const churnRiskConfig = {
   },
 } as const;
 
-/* ─── Score Circle ────────────────────────────────────────────────────────── */
+
 
 function ScoreCircle({ score, sentiment }: { score: number; sentiment: SentimentResult["sentiment"] }) {
   const cfg = sentimentConfig[sentiment];
@@ -110,7 +110,7 @@ function ScoreCircle({ score, sentiment }: { score: number; sentiment: Sentiment
   );
 }
 
-/* ─── Result Card ─────────────────────────────────────────────────────────── */
+
 
 function ResultCard({ result }: { result: SentimentResult }) {
   const sentCfg = sentimentConfig[result.sentiment];
@@ -119,7 +119,6 @@ function ResultCard({ result }: { result: SentimentResult }) {
 
   return (
     <div className="space-y-5">
-      {/* Score row */}
       <div className="flex items-center gap-6 flex-wrap">
         <ScoreCircle score={result.score} sentiment={result.sentiment} />
         <div className="space-y-2">
@@ -147,7 +146,6 @@ function ResultCard({ result }: { result: SentimentResult }) {
         </div>
       </div>
 
-      {/* Risk Factors */}
       {result.riskFactors.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -168,7 +166,6 @@ function ResultCard({ result }: { result: SentimentResult }) {
         </div>
       )}
 
-      {/* Recommendations */}
       {result.recommendations.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -194,7 +191,7 @@ function ResultCard({ result }: { result: SentimentResult }) {
   );
 }
 
-/* ─── History Item ────────────────────────────────────────────────────────── */
+
 
 interface HistoryEntry {
   id: number;
@@ -242,7 +239,7 @@ function HistoryItem({
   );
 }
 
-/* ─── Main Page ───────────────────────────────────────────────────────────── */
+
 
 export default function SentimentAnalysisPage() {
   const [clientName, setClientName] = useState("");
@@ -291,7 +288,6 @@ export default function SentimentAnalysisPage() {
       subtitle="Paste recent client communications to detect sentiment and churn risk"
     >
       <div className="space-y-4">
-        {/* Description */}
         <p className="text-sm text-muted-foreground max-w-2xl">
           Paste emails, support tickets, meeting notes, or chat messages from a client. Our AI will
           analyze the sentiment, calculate a client health score, identify churn risk, and provide
@@ -299,7 +295,6 @@ export default function SentimentAnalysisPage() {
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Form */}
           <div className="lg:col-span-1 space-y-4">
             <Card className="shadow-noir">
               <CardHeader className="pb-3">
@@ -361,7 +356,6 @@ export default function SentimentAnalysisPage() {
               </CardContent>
             </Card>
 
-            {/* History */}
             {history.length > 0 && (
               <Card className="shadow-noir">
                 <CardHeader className="pb-2">
@@ -383,7 +377,6 @@ export default function SentimentAnalysisPage() {
             )}
           </div>
 
-          {/* Result */}
           <div className="lg:col-span-2">
             <Card className={cn("shadow-noir h-full", isPending && "opacity-70")}>
               <CardContent className="p-5">

@@ -17,7 +17,6 @@ import { useRenewalAccounts, useUpdateRenewal } from "@/lib/api/hooks/crm";
 import type { ClientAccount } from "@/types/crm";
 import { cn } from "@/lib/utils";
 
-// ─── Stage config ─────────────────────────────────────────────────────────────
 
 type RenewalStage = "upcoming" | "in_discussion" | "renewed" | "churned";
 
@@ -58,7 +57,6 @@ const STAGES: {
   },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatInr(value: string | null | undefined): string {
   if (!value) return "—";
@@ -71,7 +69,6 @@ function formatInr(value: string | null | undefined): string {
   }).format(num);
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
 
 interface AccountCardProps {
   account: ClientAccount;
@@ -85,7 +82,6 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-3">
-        {/* Header row */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="font-semibold text-sm text-foreground truncate">{account.clientName}</p>
@@ -102,20 +98,17 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
           </Badge>
         </div>
 
-        {/* Investment */}
         <div className="flex items-center gap-1 text-sm font-medium text-foreground">
           <IndianRupee className="h-3.5 w-3.5 text-muted-foreground" />
           {formatInr(account.investmentAmount ?? account.estimatedInvestment)}
         </div>
 
-        {/* Renewal date */}
         {account.renewalDate && (
           <p className="text-xs text-muted-foreground">
             Renewal: {new Date(account.renewalDate).toLocaleDateString("en-IN")}
           </p>
         )}
 
-        {/* Sales rep */}
         {account.salesRep && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <UserCheck className="h-3 w-3" />
@@ -123,7 +116,6 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
           </div>
         )}
 
-        {/* Stage selector */}
         <Select
           value={account.renewalStage}
           onValueChange={(v) => onStageChange(account.id, v as RenewalStage)}
@@ -145,7 +137,6 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
   );
 }
 
-// ─── Column ───────────────────────────────────────────────────────────────────
 
 interface KanbanColumnProps {
   stage: (typeof STAGES)[number];
@@ -157,7 +148,6 @@ interface KanbanColumnProps {
 function KanbanColumn({ stage, accounts, onStageChange, mutatingId }: KanbanColumnProps) {
   return (
     <div className="flex flex-col gap-2 min-w-[260px] flex-1">
-      {/* Column header */}
       <div className={cn("rounded-t-lg px-3 py-2 flex items-center justify-between", stage.headerBg)}>
         <span className="text-white text-sm font-semibold">{stage.label}</span>
         <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -165,7 +155,6 @@ function KanbanColumn({ stage, accounts, onStageChange, mutatingId }: KanbanColu
         </span>
       </div>
 
-      {/* Cards */}
       <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-b-lg flex-1 min-h-[200px]">
         {accounts.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-8">No accounts</p>
@@ -184,7 +173,6 @@ function KanbanColumn({ stage, accounts, onStageChange, mutatingId }: KanbanColu
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RenewalPipelinePage() {
   const { data: accounts, isLoading } = useRenewalAccounts();

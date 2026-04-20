@@ -13,7 +13,6 @@ export async function GET() {
     const data = await cached(
       `hr:dashboard:diversity:${orgId}`,
       async () => {
-        // Gender breakdown
         const genderRows = await db
           .select({
             gender: users.gender,
@@ -29,7 +28,6 @@ export async function GET() {
           count: Number(r.count),
         }));
 
-        // Age distribution (bucket by decade)
         const membersForAge = await db
           .select({ dateOfBirth: users.dateOfBirth })
           .from(organizationMembers)

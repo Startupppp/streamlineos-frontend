@@ -44,7 +44,6 @@ export async function GET(req: NextRequest) {
           };
         }
 
-        // Compute days-to-close per deal
         const daysList: number[] = wonDeals
           .map((d) => {
             if (!d.createdAt || !d.actualCloseDate) return null;
@@ -66,7 +65,6 @@ export async function GET(req: NextRequest) {
             ? Math.round((sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2)
             : sorted[Math.floor(sorted.length / 2)];
 
-        // Build histogram buckets (0-7, 8-14, 15-30, 31-60, 61-90, 90+)
         const buckets = [
           { label: "0–7d", min: 0, max: 7, count: 0 },
           { label: "8–14d", min: 8, max: 14, count: 0 },

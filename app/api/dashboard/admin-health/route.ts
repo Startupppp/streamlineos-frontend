@@ -16,19 +16,16 @@ export async function GET(_req: NextRequest) {
       onboardingResult,
       totalEmployeesResult,
     ] = await Promise.all([
-      // Unassigned leads
       db
         .select({ count: count() })
         .from(leads)
         .where(and(eq(leads.orgId, orgId), isNull(leads.assignedToId), sql`${leads.status} NOT IN ('CONVERTED', 'LOST')`)),
 
-      // Overdue tasks
       db
         .select({ count: count() })
         .from(tasks)
         .where(and(eq(tasks.orgId, orgId), eq(tasks.status, "pending"), lt(tasks.dueDate, new Date()))),
 
-      // Pending expenses (count + total amount)
       db
         .select({
           count: count(),
@@ -37,13 +34,11 @@ export async function GET(_req: NextRequest) {
         .from(expenses)
         .where(and(eq(expenses.orgId, orgId), eq(expenses.status, "PENDING"))),
 
-      // Pending leave approvals
       db
         .select({ count: count() })
         .from(leaveRequests)
         .where(and(eq(leaveRequests.orgId, orgId), eq(leaveRequests.status, "PENDING"))),
 
-      // Incomplete onboarding
       db
         .select({
           total: count(),
@@ -52,7 +47,6 @@ export async function GET(_req: NextRequest) {
         .from(onboardingTasks)
         .where(eq(onboardingTasks.orgId, orgId)),
 
-      // Total active employees
       db
         .select({ count: count() })
         .from(users)

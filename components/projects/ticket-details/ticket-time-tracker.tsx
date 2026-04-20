@@ -127,7 +127,6 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
         </Button>
       </div>
 
-      {/* Timer */}
       <div className="flex items-center gap-2 mb-2">
         <div className={cn(
           "flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-mono flex-1",
@@ -166,7 +165,6 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
         />
       )}
 
-      {/* Manual log */}
       {showManual && (
         <div className="flex items-center gap-2 pt-1 border-t mt-2">
           <Input

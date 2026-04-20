@@ -203,7 +203,6 @@ export default function CampaignsPage() {
         </Card>
       </div>
 
-      {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Create Campaign</DialogTitle></DialogHeader>
@@ -235,7 +234,6 @@ export default function CampaignsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
       <Dialog open={!!editingCampaign} onOpenChange={(open) => { if (!open) setEditingCampaign(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Edit Campaign</DialogTitle></DialogHeader>
@@ -263,7 +261,6 @@ export default function CampaignsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Preview Sheet */}
       <Sheet open={!!previewCampaign} onOpenChange={(open) => { if (!open) setPreviewCampaign(null); }}>
         <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-md">
           <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
@@ -323,7 +320,6 @@ export default function CampaignsPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}

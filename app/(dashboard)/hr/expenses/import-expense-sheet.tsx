@@ -278,7 +278,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-border p-4 space-y-3 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
               <Label className="text-sm font-semibold">Upload File</Label>

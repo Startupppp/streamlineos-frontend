@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
             pct: total > 0 ? Math.round((Number(r.count) / total) * 100) : 0,
           }))
           .sort((a, b) => b.count - a.count)
-          .slice(0, 10); // top 10 reasons
+          .slice(0, 10);
 
         return {
           total,

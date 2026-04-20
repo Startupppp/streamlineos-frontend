@@ -10,7 +10,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useDealForecast } from "@/lib/api/hooks/crm";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtCurrency(val: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -24,7 +23,6 @@ function fmtPct(val: number) {
   return `${val}%`;
 }
 
-// ─── Excel export ─────────────────────────────────────────────────────────────
 
 async function exportToExcel(data: {
   byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
@@ -35,7 +33,6 @@ async function exportToExcel(data: {
   wb.creator = "Vaivamm Capital CRM";
   wb.created = new Date();
 
-  // Sheet 1 — Monthly Forecast
   const monthly = wb.addWorksheet("Monthly Forecast");
   monthly.columns = [
     { header: "Month", key: "label", width: 16 },
@@ -46,7 +43,6 @@ async function exportToExcel(data: {
   monthly.getRow(1).font = { bold: true };
   data.byMonth.forEach((row) => monthly.addRow(row));
 
-  // Sheet 2 — Stage Breakdown
   const stages = wb.addWorksheet("Stage Breakdown");
   stages.columns = [
     { header: "Stage", key: "stage", width: 18 },
@@ -70,7 +66,6 @@ async function exportToExcel(data: {
   URL.revokeObjectURL(url);
 }
 
-// ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function ForecastSkeleton() {
   return (
@@ -88,7 +83,6 @@ function ForecastSkeleton() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ForecastReportPage() {
   const { data, isLoading } = useDealForecast();
@@ -112,7 +106,6 @@ export default function ForecastReportPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stat cards */}
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard
             label="Total Weighted Revenue"
@@ -137,7 +130,6 @@ export default function ForecastReportPage() {
           />
         </div>
 
-        {/* Monthly forecast table */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Monthly Forecast</CardTitle>
@@ -179,7 +171,6 @@ export default function ForecastReportPage() {
           </CardContent>
         </Card>
 
-        {/* Stage breakdown table */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Stage Breakdown</CardTitle>

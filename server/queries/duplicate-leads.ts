@@ -66,7 +66,6 @@ export async function findDuplicateLeads(orgId: string): Promise<DuplicateGroup[
       const matchReasons: string[] = [];
       let score = 0;
 
-      // Email exact match (after normalize)
       const emailA = normalize(a.email);
       const emailB = normalize(b.email);
       if (emailA && emailB && emailA === emailB) {
@@ -74,7 +73,6 @@ export async function findDuplicateLeads(orgId: string): Promise<DuplicateGroup[
         score += 50;
       }
 
-      // Phone exact match (digits only)
       const phoneA = (a.phone ?? "").replace(/\D/g, "");
       const phoneB = (b.phone ?? "").replace(/\D/g, "");
       if (phoneA.length >= 8 && phoneB.length >= 8 && phoneA === phoneB) {
@@ -82,7 +80,6 @@ export async function findDuplicateLeads(orgId: string): Promise<DuplicateGroup[
         score += 40;
       }
 
-      // Name similarity
       const nameA = normalize(a.name);
       const nameB = normalize(b.name);
       const nameSim = similarity(nameA, nameB);
@@ -91,7 +88,6 @@ export async function findDuplicateLeads(orgId: string): Promise<DuplicateGroup[
         score += Math.round(nameSim * 20);
       }
 
-      // Company similarity
       const compA = normalize(a.company);
       const compB = normalize(b.company);
       if (compA && compB) {

@@ -19,13 +19,12 @@ const rolloutSchema = z.object({
   templateIds: z.array(z.number().int().positive()).min(1, "Select at least one template"),
   variables: z.record(z.string(), z.string()).default({}),
   sendEmail: z.boolean().default(true),
-  /** ISO date string for offer acceptance deadline; triggers 24h-before reminder */
+  
   acceptanceDeadline: z.string().datetime({ offset: true }).optional(),
 });
 
 type Params = { params: Promise<{ candidateId: string }> };
 
-// ─── GET — list all rollout documents for this candidate ────────────────────
 
 export async function GET(_req: NextRequest, { params }: Params) {
   return withAuth(async (session) => {
@@ -33,7 +32,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const candidateIdNum = Number(candidateId);
     if (!Number.isFinite(candidateIdNum)) return err("Invalid candidate ID", 400);
 
-    // Verify candidate belongs to org
     const [candidate] = await db
       .select({ id: candidates.id })
       .from(candidates)
@@ -65,7 +63,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
   });
 }
 
-// ─── POST — generate and optionally email documents for a candidate ─────────
 
 export async function POST(req: NextRequest, { params }: Params) {
   return withAuth(async (session) => {
@@ -80,7 +77,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     const body = await parseBody(req, rolloutSchema);
 
-    // Verify candidate belongs to org and get their details for email
     const [candidate] = await db
       .select({
         id: candidates.id,
@@ -94,7 +90,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     if (!candidate) return err("Candidate not found", 404);
 
-    // Load all requested templates at once
     const templates = await db
       .select()
       .from(documentTemplates)
@@ -120,7 +115,6 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Generate all documents
     const generatedDocs: (typeof candidateDocuments.$inferSelect)[] = [];
     const missingVarErrors: string[] = [];
 
@@ -158,7 +152,6 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // For each generated document, try to create a Documenso signing request
     const candidateName = `${candidate.firstName} ${candidate.lastName}`;
     const webhookUrl = `${appUrl}/api/webhooks/esign`;
 
@@ -180,7 +173,6 @@ export async function POST(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Send email notification if requested
     if (body.sendEmail && generatedDocs.length > 0) {
       const documentLinks = generatedDocs
         .map(
@@ -211,7 +203,6 @@ export async function POST(req: NextRequest, { params }: Params) {
           html: emailHtml,
         });
 
-        // Mark all docs as SENT
         const docIds = generatedDocs.map((d) => d.id);
         await db
           .update(candidateDocuments)
@@ -223,11 +214,9 @@ export async function POST(req: NextRequest, { params }: Params) {
           doc.sentAt = new Date();
         }
       } catch {
-        // Email failure is non-fatal — documents are still generated
       }
     }
 
-    // Audit log — document generation
     await createAuditLog({
       action: "document.generated",
       userId: session.user.id,
@@ -242,7 +231,6 @@ export async function POST(req: NextRequest, { params }: Params) {
       },
     });
 
-    // Schedule 24h-before acceptance deadline reminder if deadline is set
     if (body.acceptanceDeadline && generatedDocs.length > 0) {
       const deadlineMs = new Date(body.acceptanceDeadline).getTime();
       const reminderMs = deadlineMs - 24 * 60 * 60 * 1000;

@@ -56,7 +56,6 @@ function ConfettiOverlay({ onDone }: { onDone: () => void }) {
       size: `${6 + Math.random() * 8}px`,
       duration: `${1.5 + Math.random() * 1.5}s`,
     }))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   , []);
 
   return (
@@ -130,7 +129,6 @@ export default function DealsPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const handleConfettiDone = useCallback(() => setShowConfetti(false), []);
 
-  // Filter state
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
   const [filterMinValue, setFilterMinValue] = useState("");
   const [filterMaxValue, setFilterMaxValue] = useState("");
@@ -219,7 +217,6 @@ export default function DealsPage() {
       setWinLossNotes("");
       return;
     }
-    // Stage skip validation: detect if moving forward more than 1 stage
     const currentDeal = allDeals?.find((d) => d.id === id);
     const currentStage = currentDeal?.stage;
     const fromIdx = STAGE_ORDER.indexOf(currentStage as typeof STAGE_ORDER[number]);
@@ -295,7 +292,6 @@ export default function DealsPage() {
     return map;
   }, [filteredDeals]);
 
-  // Unique assignees from all deals for filter dropdown
   const assigneeOptions = useMemo(() => {
     if (!allDeals) return [];
     const seen = new Set<string>();
@@ -398,7 +394,6 @@ export default function DealsPage() {
 
         {view === "kanban" && (
           <motion.div variants={fadeUp} className="space-y-3">
-            {/* Filters bar */}
             <div className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-border/50 bg-muted/20">
               <Filter className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
               <div className="flex flex-col gap-1">
@@ -609,7 +604,6 @@ export default function DealsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Stage skip warning dialog */}
         <Dialog open={stageSkipDialog !== null} onOpenChange={(open) => { if (!open) setStageSkipDialog(null); }}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
@@ -643,7 +637,6 @@ export default function DealsPage() {
       </motion.div>
     </PageWrapper>
 
-    {/* Deal side-panel */}
     <DealSidePanel
       dealId={sidePanelDealId}
       onClose={() => setSidePanelDealId(null)}

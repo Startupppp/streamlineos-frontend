@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);
 
-    // Ensure slug is unique within the org
     const [existing] = await db
       .select({ id: landingPages.id })
       .from(landingPages)

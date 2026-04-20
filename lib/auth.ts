@@ -204,7 +204,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           deviceId,
         }).catch(() => {});
 
-        // Audit log for login (non-blocking)
         createAuditLog({
           action: "user.login",
           userId: user.id as string,

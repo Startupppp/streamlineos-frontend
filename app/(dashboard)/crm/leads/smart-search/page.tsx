@@ -229,7 +229,6 @@ export default function SmartLeadSearchPage() {
       }
     >
       <div className="space-y-6">
-        {/* Search Bar */}
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -273,7 +272,6 @@ export default function SmartLeadSearchPage() {
             </Button>
           </div>
 
-          {/* Example query chips */}
           <div className="flex flex-wrap gap-2">
             {EXAMPLE_QUERIES.map((q) => (
               <button
@@ -293,15 +291,12 @@ export default function SmartLeadSearchPage() {
           </div>
         </div>
 
-        {/* Results area */}
         {isPending ? (
           <LoadingSkeleton />
         ) : hasResult ? (
           <div className="space-y-4">
-            {/* Filter interpretation */}
             <FilterBadges filters={data.parsedFilters} />
 
-            {/* Result count */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">{data.total}</span>{" "}
@@ -309,11 +304,10 @@ export default function SmartLeadSearchPage() {
               </p>
             </div>
 
-            {/* Table */}
             <ResultsTable leads={data.leads} />
           </div>
         ) : (
-          /* Initial empty state */
+          
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
             <div className="rounded-full bg-primary/10 p-5">
               <Sparkles className="h-10 w-10 text-primary" />

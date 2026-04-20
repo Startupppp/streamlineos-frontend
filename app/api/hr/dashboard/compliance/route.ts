@@ -6,7 +6,7 @@ import { cached, CACHE_TTL } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
 
-/** HR/Admin — employee profile compliance tracker */
+
 export async function GET() {
   return withAuth(async (session) => {
     const role = session.user.role;

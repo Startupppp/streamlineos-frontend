@@ -13,7 +13,7 @@ import { useMeetingPrep, type MeetingPrepResult } from "@/lib/api/hooks/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-/* ─── Copy Button ─────────────────────────────────────────────────────────── */
+
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -40,7 +40,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-/* ─── Form state ──────────────────────────────────────────────────────────── */
+
 
 interface FormState {
   meetingTitle: string;
@@ -58,7 +58,7 @@ const INITIAL_FORM: FormState = {
   notes: "",
 };
 
-/* ─── Result display ─────────────────────────────────────────────────────── */
+
 
 interface ResultDisplayProps {
   result: MeetingPrepResult;
@@ -176,7 +176,7 @@ ${result.brief}`;
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 
 export default function MeetingPrepPage() {
   const { mutateAsync: generateBrief, isPending } = useMeetingPrep();
@@ -268,7 +268,6 @@ export default function MeetingPrepPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Meeting Title */}
             <div className="space-y-1.5">
               <Label htmlFor="meeting-title">
                 Meeting Title <span className="text-destructive">*</span>
@@ -282,7 +281,6 @@ export default function MeetingPrepPage() {
               />
             </div>
 
-            {/* Attendee Type toggle */}
             <div className="space-y-1.5">
               <Label>Attendee Type <span className="text-destructive">*</span></Label>
               <div className="flex gap-2">
@@ -305,7 +303,6 @@ export default function MeetingPrepPage() {
               </div>
             </div>
 
-            {/* Attendee ID */}
             <div className="space-y-1.5">
               <Label htmlFor="attendee-id">
                 {form.attendeeType === "lead" ? "Lead ID" : "Client ID"}{" "}
@@ -332,7 +329,6 @@ export default function MeetingPrepPage() {
               </p>
             </div>
 
-            {/* Scheduled Date/Time */}
             <div className="space-y-1.5">
               <Label htmlFor="scheduled-at">
                 Scheduled Date &amp; Time <span className="text-destructive">*</span>
@@ -347,7 +343,6 @@ export default function MeetingPrepPage() {
               />
             </div>
 
-            {/* Notes */}
             <div className="space-y-1.5">
               <Label htmlFor="meeting-notes">
                 Additional Notes{" "}
@@ -385,7 +380,6 @@ export default function MeetingPrepPage() {
           </CardContent>
         </Card>
 
-        {/* What&apos;s included callout */}
         <Card className="mt-4">
           <CardContent className="pt-4">
             <p className="text-xs font-medium text-foreground mb-2">The brief will include</p>

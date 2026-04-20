@@ -176,7 +176,7 @@ export const apiKeys = pgTable("api_keys", {
   keyHash: text("key_hash").notNull(),
   keyPrefix: text("key_prefix").notNull(),
   description: text("description"),
-  scopes: text("scopes").array().default([]).notNull(), // e.g. ["leads:write", "deals:read"]
+  scopes: text("scopes").array().default([]).notNull(),
   isRevoked: boolean("is_revoked").default(false).notNull(),
   lastUsedAt: timestamp("last_used_at"),
   expiresAt: timestamp("expires_at"),

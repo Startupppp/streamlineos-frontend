@@ -226,7 +226,6 @@ export async function processLeaveRequest(data: {
         throw new Error("Leave request not found");
       }
 
-      // ── Revert APPROVED → PENDING: restore only paid days (not LOP days) ──
       if (data.status === "PENDING" && request.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, request.leaveTypeId),
@@ -252,7 +251,6 @@ export async function processLeaveRequest(data: {
             ),
           });
           if (balanceRecord) {
-            // Only restore the paid portion (not LOP days — those were never deducted)
             const prevLopDays = Number(request.lopDays ?? 0);
             const paidDays = diffDays - prevLopDays;
             const restored = Number(balanceRecord.balance) + paidDays;
@@ -262,7 +260,6 @@ export async function processLeaveRequest(data: {
         }
       }
 
-      // ── Approve: auto-convert excess to LOP, no manual override needed ──
       if (data.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, request.leaveTypeId),
@@ -291,7 +288,6 @@ export async function processLeaveRequest(data: {
 
           if (balanceRecord) {
             const available = Number(balanceRecord.balance);
-            // Excess days beyond balance automatically become LOP
             const lopDays = available <= 0 ? diffDays : Math.max(0, diffDays - available);
             const paidDays = diffDays - lopDays;
             const newBal = Math.max(0, available - paidDays);

@@ -39,7 +39,6 @@ async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isA
 
   if (isAdmin) return base;
 
-  // For non-admin managers, also include requests where they are the reporting manager
   const reportingUsers = await db.query.users.findMany({
     where: eq(users.reportingTo, userId),
     columns: { id: true },
@@ -63,11 +62,7 @@ async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isA
   return [...base, ...extra];
 }
 
-/**
- * GET /api/hr/leaves/team
- * Returns { pending, all } for admins/managers.
- * Used by the approvals tab to show pending and full history.
- */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";

@@ -6,8 +6,9 @@ dotenv.config({ path: ".env" });
 
 async function main() {
   const { db } = await import("../lib/db");
-  const { users, organizations, organizationMembers, departments, roles } = await import("../lib/db/schema");
+  const { users, organizations, organizationMembers, departments, roles, leaveTypes } = await import("../lib/db/schema");
   const { ROLE_DEFAULT_PERMISSIONS } = await import("../lib/rbac/permissions");
+  const { DEFAULT_LEAVE_TYPES } = await import("../lib/leave-policy");
   const { eq, and } = await import("drizzle-orm");
 
   const password = "Tarun@1234";
@@ -91,7 +92,7 @@ async function main() {
   // ─── Departments (clean + re-insert to avoid duplicates) ───
   await db.delete(departments).where(eq(departments.orgId, orgId));
   const departmentList = [
-    "Engineering", "Design", "Marketing", "Sales",
+    "Engineering", "Design", "Digital Marketing", "Sales",
     "Finance", "Operations", "Customer Support", "Administration",
   ];
   for (const deptName of departmentList) {
@@ -120,12 +121,16 @@ async function main() {
     });
   }
 
-  console.log("\nSeed complete!");
-  console.log(`  Organization: Vaivamm Capital (${orgId})`);
-  console.log(`  CEO: ${adminEmail} / ${password}`);
-  console.log(`  Departments: ${departmentList.length}`);
-  console.log(`  Roles: ${systemRoles.length}`);
-  console.log(`\n  Cleaned up: ${staleEmails.join(", ")}`);
+  // ─── Leave Types (clean + re-insert) ───
+  await db.delete(leaveTypes).where(eq(leaveTypes.orgId, orgId));
+  for (const lt of DEFAULT_LEAVE_TYPES) {
+    await db.insert(leaveTypes).values({
+      orgId,
+      name: lt.name,
+      daysPerYear: lt.daysPerYear,
+      carryForward: lt.carryForward,
+    });
+  }
 
   process.exit(0);
 }

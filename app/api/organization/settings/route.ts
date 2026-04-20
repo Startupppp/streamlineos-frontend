@@ -19,10 +19,8 @@ const updateSchema = z.object({
   directoryPublic: z.boolean().optional(),
   mfaEnforced: z.boolean().optional(),
   allowedEmailDomains: z.array(z.string().min(1)).optional(),
-  // Branding
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
   loginBgUrl: z.string().url().nullable().optional(),
-  // IP allowlist — CIDR ranges or exact IPs; empty array = no restriction
   ipAllowlist: z.array(z.string().min(1)).optional(),
 });
 
@@ -94,7 +92,6 @@ export async function PATCH(req: NextRequest) {
       if (input.mfaEnforced !== undefined) updateData.mfaEnforced = input.mfaEnforced;
       if (input.allowedEmailDomains !== undefined) updateData.allowedEmailDomains = input.allowedEmailDomains;
 
-      // Settings JSONB fields (merge-patch)
       const hasSettingsUpdate =
         input.directoryPublic !== undefined ||
         input.primaryColor !== undefined ||
@@ -125,7 +122,6 @@ export async function PATCH(req: NextRequest) {
         }
         if (input.ipAllowlist !== undefined) {
           currentSettings.ipAllowlist = input.ipAllowlist;
-          // Update Redis cache so middleware can read it without DB lookup
           if (redis) {
             try {
               if (input.ipAllowlist.length === 0) {
@@ -134,11 +130,10 @@ export async function PATCH(req: NextRequest) {
                 await redis.set(
                   `org:ip-allowlist:${session.orgId}`,
                   JSON.stringify(input.ipAllowlist),
-                  { ex: 3600 } // 1 hour TTL
+                  { ex: 3600 }
                 );
               }
             } catch {
-              // Non-fatal: IP check will fall back to DB on next middleware run
             }
           }
         }

@@ -43,7 +43,6 @@ export async function PATCH(req: NextRequest) {
       .where(eq(timesheets.id, body.id))
       .returning();
 
-    // Send email to the work log owner (non-blocking)
     if (existing.userId) {
       void (async () => {
         const employee = await db.query.users.findFirst({

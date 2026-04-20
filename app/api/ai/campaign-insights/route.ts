@@ -19,7 +19,7 @@ function getPeriodDays(period: string): number {
   return 30;
 }
 
-/** POST /api/ai/campaign-insights */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     since.setDate(since.getDate() - days);
     const sinceStr = since.toISOString().split("T")[0];
 
-    // Fetch email campaigns in the period
     const campaigns = await db
       .select({
         name: emailCampaigns.name,
@@ -61,7 +60,6 @@ export async function POST(req: NextRequest) {
       .orderBy(desc(emailCampaigns.createdAt))
       .limit(10);
 
-    // Fetch social metrics in the period
     const social = await db
       .select()
       .from(socialMetrics)
@@ -71,7 +69,6 @@ export async function POST(req: NextRequest) {
       .orderBy(desc(socialMetrics.metricDate))
       .limit(20);
 
-    // Format context
     const campaignLines =
       campaigns.length === 0
         ? "No email campaigns found in this period."
@@ -89,7 +86,6 @@ export async function POST(req: NextRequest) {
             })
             .join("\n");
 
-    // Group social by platform (latest entry per platform)
     const platformMap: Record<string, typeof social[0]> = {};
     for (const row of social) {
       if (!platformMap[row.platform]) {

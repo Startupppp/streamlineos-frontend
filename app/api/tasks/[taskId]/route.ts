@@ -6,7 +6,6 @@ import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { sendTaskAssignedEmail } from "@/lib/email";
 
-// ─── Update Schema ────────────────────────────────────────────────────────────
 
 const updateSchema = z.object({
   title: z.string().min(1).max(255).optional(),
@@ -21,14 +20,13 @@ const updateSchema = z.object({
 
 type RouteContext = { params: Promise<{ taskId: string }> };
 
-/** PATCH /api/tasks/[taskId] — update task fields */
+
 export async function PATCH(req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { taskId: taskIdStr } = await ctx.params;
     const taskId = Number(taskIdStr);
     if (!Number.isFinite(taskId)) return err("Invalid task ID", 400);
 
-    // Verify ownership
     const [existing] = await db
       .select()
       .from(tasks)
@@ -61,7 +59,6 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     if (!updated) return err("Failed to update task", 500);
 
-    // Email the new assignee on reassignment (non-blocking)
     if (body.assigneeId && body.assigneeId !== existing.assigneeId && body.assigneeId !== session.user.id) {
       void (async () => {
         const assignee = await db.query.users.findFirst({
@@ -88,7 +85,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   });
 }
 
-/** DELETE /api/tasks/[taskId] — delete task */
+
 export async function DELETE(_req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { taskId: taskIdStr } = await ctx.params;

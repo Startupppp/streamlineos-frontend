@@ -5,7 +5,6 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TerminationLetterData {
   employeeName: string;
@@ -19,7 +18,6 @@ export interface TerminationLetterData {
   companyName?: string;
 }
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
 
 const NAVY = rgb(0.059, 0.169, 0.498);
 const GOLD = rgb(0.741, 0.533, 0.173);
@@ -27,7 +25,6 @@ const WHITE = rgb(1, 1, 1);
 const BLACK = rgb(0, 0, 0);
 const GRAY = rgb(0.35, 0.35, 0.35);
 
-// ─── Drawing helpers ──────────────────────────────────────────────────────────
 
 function createDt(page: PDFPage) {
   return function dt(
@@ -40,7 +37,6 @@ function createDt(page: PDFPage) {
   };
 }
 
-// For paragraph helpers that take page as param
 function dtOnPage(
   page: PDFPage, text: string,
   x: number, y: number,
@@ -67,7 +63,6 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): 
   return lines;
 }
 
-// ─── Logo loader ──────────────────────────────────────────────────────────────
 
 let logoPngCache: Buffer | null = null;
 
@@ -85,13 +80,12 @@ async function getLogoPng(size: number): Promise<Buffer> {
   return pngBuffer;
 }
 
-// ─── Main generator ──────────────────────────────────────────────────────────
 
 export async function generateTerminationLetterPdf(
   data: TerminationLetterData
 ): Promise<Buffer> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]); // A4
+  const page = doc.addPage([595, 842]);
 
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
@@ -105,7 +99,6 @@ export async function generateTerminationLetterPdf(
 
   let y = height - margin;
 
-  // ── Load and embed logo ────────────────────────────────────────────────────
 
   let logoImage: Awaited<ReturnType<typeof doc.embedPng>> | null = null;
   let watermarkImage: Awaited<ReturnType<typeof doc.embedPng>> | null = null;
@@ -122,10 +115,8 @@ export async function generateTerminationLetterPdf(
       .toBuffer();
     watermarkImage = await doc.embedPng(watermarkPng);
   } catch {
-    // Fallback: no logo if file not found
   }
 
-  // ── Background watermark (centered, faded) ────────────────────────────────
 
   if (watermarkImage) {
     const wmSize = 250;
@@ -138,12 +129,9 @@ export async function generateTerminationLetterPdf(
     });
   }
 
-  // ── Header: Navy stripe + Logo + Company name ──────────────────────────────
 
-  // Navy accent stripe (top-right)
   page.drawRectangle({ x: pageW * 0.5, y: y - 2, width: pageW * 0.5, height: 6, color: NAVY });
 
-  // Logo
   if (logoImage) {
     const logoSize = 55;
     page.drawImage(logoImage, {
@@ -152,11 +140,9 @@ export async function generateTerminationLetterPdf(
       width: logoSize,
       height: logoSize,
     });
-    // Company name next to logo
     dt("VAIVAMM", margin + 62, y - 18, bold, 26, NAVY);
     dt("CAPITAL ADVISORS LLP", margin + 62, y - 38, regular, 11, NAVY);
   } else {
-    // Fallback text-only header
     page.drawRectangle({ x: margin, y: y - 52, width: 50, height: 50, color: GOLD });
     dt("V", margin + 14, y - 40, bold, 30, WHITE);
     dt("VAIVAMM", margin + 60, y - 18, bold, 26, NAVY);
@@ -165,14 +151,12 @@ export async function generateTerminationLetterPdf(
 
   y -= 78;
 
-  // ── Title ──────────────────────────────────────────────────────────────────
 
   const reasonSummary = data.reasons.length > 0
     ? summarizeReasonForTitle(data.reasons)
     : "Policy Violation";
   const title = `Termination of Employment Due to ${reasonSummary}:`;
 
-  // Wrap title if too long
   const titleLines = wrapText(title, bold, 12, contentW);
   for (const line of titleLines) {
     const tw = bold.widthOfTextAtSize(line, 12);
@@ -184,13 +168,11 @@ export async function generateTerminationLetterPdf(
 
   y -= 18;
 
-  // ── Date ───────────────────────────────────────────────────────────────────
 
   dt("Date:", margin, y, bold, 10, BLACK);
   dt(` ${data.effectiveDate}.`, margin + 30, y, regular, 10, BLACK);
   y -= 28;
 
-  // ── To section ─────────────────────────────────────────────────────────────
 
   const toX = margin + 40;
   dt("To", toX, y, bold, 10, BLACK);
@@ -204,12 +186,10 @@ export async function generateTerminationLetterPdf(
   dt(data.designation, toX, y, regular, 10, BLACK);
   y -= 26;
 
-  // ── Salutation ─────────────────────────────────────────────────────────────
 
   dt(`Dear ${data.employeeName},`, margin, y, regular, 10, BLACK);
   y -= 22;
 
-  // ── Body paragraph 1: formal notice with reasons ──────────────────────────
 
   const reasonText = data.reasons.length > 0
     ? data.reasons.join(", ").toLowerCase()
@@ -219,7 +199,6 @@ export async function generateTerminationLetterPdf(
   y = drawParagraph(page, para1, margin, y, regular, 10, contentW);
   y -= 6;
 
-  // ── Body paragraph 2: explanation ─────────────────────────────────────────
 
   const para2 = data.detailedExplanation
     ? data.detailedExplanation
@@ -227,18 +206,15 @@ export async function generateTerminationLetterPdf(
   y = drawParagraph(page, para2, margin, y, regular, 10, contentW);
   y -= 6;
 
-  // ── Body paragraph 3: handover + FnF ──────────────────────────────────────
 
   const para3 = "You are requested to hand over all company assets, documents, and responsibilities to Reporting Manager/HR on your last working day. Your full and final settlement will be processed by the end of the month as per company policy.";
   y = drawParagraphWithBold(page, para3, "Reporting Manager/HR", margin, y, regular, bold, 10, contentW);
   y -= 6;
 
-  // ── Best wishes ────────────────────────────────────────────────────────────
 
   dt("We wish you the best in your future endeavours.", margin, y, regular, 10, BLACK);
   y -= 32;
 
-  // ── Sign-off ───────────────────────────────────────────────────────────────
 
   dt("Sincerely,", margin, y, regular, 10, BLACK);
   y -= 16;
@@ -249,17 +225,14 @@ export async function generateTerminationLetterPdf(
   dt(company + ".", margin, y, regular, 10, BLACK);
   y -= 38;
 
-  // ── Company seal (logo in a circle) ────────────────────────────────────────
 
   const sealX = pageW - margin - 65;
   const sealY = Math.max(y + 10, 80);
   const sealRadius = 35;
 
-  // Draw seal circles
   page.drawCircle({ x: sealX, y: sealY, size: sealRadius, borderColor: NAVY, borderWidth: 2 });
   page.drawCircle({ x: sealX, y: sealY, size: sealRadius - 5, borderColor: NAVY, borderWidth: 0.8 });
 
-  // Logo inside seal
   if (logoImage) {
     const sealLogoSize = 32;
     page.drawImage(logoImage, {
@@ -276,11 +249,9 @@ export async function generateTerminationLetterPdf(
     dt("LLP", sealX - 8, sealY - 16, bold, 7, NAVY);
   }
 
-  // "Hyderabad" text below seal
   const hydW = regular.widthOfTextAtSize("Hyderabad", 7);
   dt("Hyderabad", sealX - hydW / 2, sealY - sealRadius - 10, regular, 7, NAVY);
 
-  // ── Footer ─────────────────────────────────────────────────────────────────
 
   page.drawLine({ start: { x: margin, y: 42 }, end: { x: pageW - margin, y: 42 }, thickness: 0.5, color: GRAY });
   const footer = "This is a system-generated document from Vaivamm Capital Advisors LLP | hr@vaivammcapital.com";
@@ -291,7 +262,6 @@ export async function generateTerminationLetterPdf(
   return Buffer.from(pdfBytes);
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function drawParagraph(
   page: PDFPage, text: string,
@@ -338,9 +308,7 @@ function drawParagraphWithBold(
 
 function summarizeReasonForTitle(reasons: string[]): string {
   if (reasons.length === 0) return "Policy Violation";
-  // Use the first reason, shorten if needed
   const first = reasons[0];
-  // Map common reasons to short title forms
   const titleMap: Record<string, string> = {
     "Poor performance": "Poor Performance",
     "Misconduct / violation of company policies": "Policy Violation",

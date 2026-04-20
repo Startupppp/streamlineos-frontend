@@ -92,7 +92,6 @@ export default function BranchCommandCenterPage() {
         </Button>
       }
     >
-      {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         {summaryCards.map((card) => {
           const Icon = card.icon;
@@ -209,7 +208,6 @@ function BranchCard({ branch, isSelected, onSelect }: { branch: BranchKpi; isSel
         )}
       </CardHeader>
       <CardContent>
-        {/* KPIs Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-muted/50 rounded-md p-2">
             <p className="text-xs text-muted-foreground">Employees</p>
@@ -231,7 +229,6 @@ function BranchCard({ branch, isSelected, onSelect }: { branch: BranchKpi; isSel
           </div>
         </div>
 
-        {/* Manager & HR */}
         <div className="flex items-center gap-4 text-sm border-t pt-3">
           {branch.branchManager && (
             <div className="flex items-center gap-2">
@@ -266,7 +263,6 @@ function BranchCard({ branch, isSelected, onSelect }: { branch: BranchKpi; isSel
           )}
         </div>
 
-        {/* Expanded Details */}
         {isSelected && (
           <div className="mt-4 pt-4 border-t space-y-2">
             {branch.kpis.pendingExpenses.count > 0 && (

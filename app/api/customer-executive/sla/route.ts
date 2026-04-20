@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { supportTickets } from "@/lib/db/schema/crm";
 import { eq, and } from "drizzle-orm";
 
-// SLA targets by priority (hours)
 const SLA_TARGETS: Record<string, { firstResponse: number; resolution: number }> = {
   URGENT: { firstResponse: 2, resolution: 8 },
   HIGH: { firstResponse: 4, resolution: 24 },
@@ -41,7 +40,6 @@ export async function GET() {
       const createdMs = t.createdAt ? new Date(t.createdAt).getTime() : now;
       const hoursOpen = (now - createdMs) / 3_600_000;
 
-      // Resolution time (if resolved or closed)
       const resolvedMs = t.resolvedAt
         ? new Date(t.resolvedAt).getTime()
         : t.closedAt
@@ -49,10 +47,6 @@ export async function GET() {
           : null;
       const resolutionHours = resolvedMs ? (resolvedMs - createdMs) / 3_600_000 : null;
 
-      // Breach logic:
-      // - For open tickets: breached if hours open > SLA resolution target
-      // - For resolved tickets: breached if resolution hours > SLA resolution target
-      // - If slaDeadline is set, use that
       let breached = false;
       if (t.slaDeadline) {
         const deadlineMs = new Date(t.slaDeadline).getTime();
@@ -100,7 +94,6 @@ export async function GET() {
           ) / 10
         : 0;
 
-    // By priority breakdown
     const priorities = ["URGENT", "HIGH", "MEDIUM", "LOW"];
     const byPriority = priorities.map((priority) => {
       const group = analyzed.filter((t) => t.priority === priority);
@@ -123,7 +116,6 @@ export async function GET() {
       };
     });
 
-    // Recent breaches — only breached tickets, sorted by hoursOpen desc, limit 10
     const recentBreaches = analyzed
       .filter((t) => t.breached)
       .sort((a, b) => b.hoursOpen - a.hoursOpen)

@@ -19,7 +19,6 @@ export async function GET(
   return withAuth<DirectReport[]>(async (session) => {
     const { employeeId } = await params;
 
-    // Verify the employee is in this org
     const member = await db.query.organizationMembers.findFirst({
       where: and(
         eq(organizationMembers.userId, employeeId),
@@ -28,7 +27,6 @@ export async function GET(
     });
     if (!member) return err("Employee not found", 404);
 
-    // Find all users in this org who report to this employee
     const reports = await db
       .select({
         id: users.id,

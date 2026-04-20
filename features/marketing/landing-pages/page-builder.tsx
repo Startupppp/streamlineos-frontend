@@ -49,7 +49,6 @@ import {
 } from "@/lib/api/hooks/marketing";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function slugify(value: string): string {
   return value
@@ -61,7 +60,6 @@ function slugify(value: string): string {
     .slice(0, 120);
 }
 
-// ─── Analytics Panel ─────────────────────────────────────────────────────────
 
 function AnalyticsPanel({ pageId }: { pageId: number }) {
   const { data, isLoading } = useCrmPageAnalytics(pageId, 30);
@@ -83,7 +81,6 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* Summary stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-lg border bg-muted/40 p-4 text-center">
           <p className="text-2xl font-bold">{summary.totalViews.toLocaleString()}</p>
@@ -101,7 +98,6 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
         </div>
       </div>
 
-      {/* Daily views chart */}
       {dailyViews.length > 0 && (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Daily Views (30 days)</p>
@@ -121,7 +117,6 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
         </div>
       )}
 
-      {/* Device breakdown */}
       {deviceBreakdown.length > 0 && (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Device Breakdown</p>
@@ -148,7 +143,6 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
         </div>
       )}
 
-      {/* UTM source breakdown */}
       {utmSourceBreakdown.length > 0 && (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Lead Sources</p>
@@ -182,7 +176,6 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
   );
 }
 
-// ─── Preview Frame ────────────────────────────────────────────────────────────
 
 function buildPreviewHtml(title: string, description: string, content: string): string {
   return `<!DOCTYPE html>
@@ -229,14 +222,12 @@ function buildPreviewHtml(title: string, description: string, content: string): 
 </html>`;
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface PageBuilderProps {
-  /** Existing page to edit — omit for create mode */
+  
   page?: CrmPage;
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function PageBuilder({ page }: PageBuilderProps) {
   const router = useRouter();
@@ -261,7 +252,6 @@ export function PageBuilder({ page }: PageBuilderProps) {
   const updatePage = useUpdateCrmPage();
   const isPending = createPage.isPending || updatePage.isPending;
 
-  // Auto-generate slug from title (only if slug hasn't been manually edited)
   useEffect(() => {
     if (!slugTouched && title) {
       setSlug(slugify(title));
@@ -363,7 +353,6 @@ export function PageBuilder({ page }: PageBuilderProps) {
         </div>
       }
     >
-      {/* Published status banner */}
       {isEditing && (
         <div className="flex items-center gap-3 rounded-lg border px-4 py-2.5 mb-4 bg-card">
           <div className="flex items-center gap-2 flex-1">
@@ -470,7 +459,6 @@ export function PageBuilder({ page }: PageBuilderProps) {
   );
 }
 
-// ─── Editor layout ────────────────────────────────────────────────────────────
 
 interface EditorLayoutProps {
   title: string;
@@ -494,9 +482,7 @@ function EditorLayout({
 }: EditorLayoutProps) {
   return (
     <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "max-w-2xl"}`}>
-      {/* Left: Form */}
       <div className="space-y-5">
-        {/* Title */}
         <div className="space-y-1.5">
           <Label htmlFor="lp-title">
             Page Title <span className="text-destructive" aria-hidden="true">*</span>
@@ -509,7 +495,6 @@ function EditorLayout({
           />
         </div>
 
-        {/* Slug */}
         <div className="space-y-1.5">
           <Label htmlFor="lp-slug">
             URL Slug <span className="text-destructive" aria-hidden="true">*</span>
@@ -531,7 +516,6 @@ function EditorLayout({
           </p>
         </div>
 
-        {/* Description */}
         <div className="space-y-1.5">
           <Label htmlFor="lp-desc">Sub-headline / Description</Label>
           <Input
@@ -544,7 +528,6 @@ function EditorLayout({
 
         <Separator />
 
-        {/* Content */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="lp-content">Body Content (HTML)</Label>
@@ -564,7 +547,6 @@ function EditorLayout({
         </div>
       </div>
 
-      {/* Right: Preview */}
       {showPreview && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -586,7 +568,6 @@ function EditorLayout({
   );
 }
 
-// ─── Testimonials Editor ──────────────────────────────────────────────────────
 
 interface TestimonialsEditorProps {
   testimonials: CrmPageTestimonial[];

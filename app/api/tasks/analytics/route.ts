@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-    // Overall completion rate
     const [{ total }] = await db
       .select({ total: count() })
       .from(tasks)
@@ -40,7 +39,6 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    // Per-rep breakdown
     const perRep = await db
       .select({
         assigneeId: tasks.assigneeId,

@@ -36,7 +36,6 @@ export async function POST(
       return err(`Invalid role. Valid roles: ${ALL_ROLES.join(", ")}`, 400);
     }
 
-    // Prevent changing own role
     if (userId === session.user.id) {
       return err("You cannot change your own role", 403);
     }

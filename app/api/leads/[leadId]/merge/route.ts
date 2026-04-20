@@ -23,7 +23,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       return err("Cannot merge a lead with itself", 400);
     }
 
-    // Verify keep lead exists in this org
     const [keepLead] = await db
       .select({ id: leads.id })
       .from(leads)
@@ -31,7 +30,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     if (!keepLead) return err("Lead not found", 404);
 
-    // Verify duplicate lead exists in this org
     const [mergeLead] = await db
       .select({ id: leads.id })
       .from(leads)
@@ -39,7 +37,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     if (!mergeLead) return err("Duplicate lead not found", 404);
 
-    // Soft-delete the duplicate: mark as LOST with merge note
     await db
       .update(leads)
       .set({

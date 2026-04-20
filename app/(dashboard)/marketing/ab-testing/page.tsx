@@ -55,7 +55,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function calcOpenRate(opens: number, sent: number): number {
   if (sent === 0) return 0;
@@ -76,7 +75,6 @@ function formatDate(dateStr: string | null): string {
   }
 }
 
-// ── Status Badge ──────────────────────────────────────────────────────────────
 
 const STATUS_BADGE: Record<
   AbTest["status"],
@@ -88,7 +86,6 @@ const STATUS_BADGE: Record<
   paused: { label: "Paused", variant: "secondary" },
 };
 
-// ── Comparison Bar ────────────────────────────────────────────────────────────
 
 function ComparisonBar({
   label,
@@ -135,7 +132,6 @@ function ComparisonBar({
   );
 }
 
-// ── Test Card ─────────────────────────────────────────────────────────────────
 
 interface TestCardProps {
   test: AbTest;
@@ -159,7 +155,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
 
   return (
     <div className="rounded-xl border border-border bg-card flex flex-col">
-      {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-border/60">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -174,7 +169,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
         </div>
       </div>
 
-      {/* Variant subjects */}
       <div className="px-4 py-3 space-y-1 border-b border-border/60">
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 shrink-0 w-4">
@@ -190,7 +184,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
         </div>
       </div>
 
-      {/* Metrics */}
       {showMetrics && (
         <div className="px-4 py-3 space-y-3 border-b border-border/60">
           <div className="space-y-1.5">
@@ -230,7 +223,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
         </div>
       )}
 
-      {/* Footer meta */}
       <div className="px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground border-b border-border/60">
         <span className="flex items-center gap-1">
           <Users className="h-3 w-3" />
@@ -260,7 +252,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
         )}
       </div>
 
-      {/* Actions */}
       <div className="px-4 py-2.5 flex items-center gap-1.5 flex-wrap">
         <Button
           size="sm"
@@ -318,7 +309,6 @@ function TestCard({ test, onEdit, onStart, onStop, onDeclareWinner, onDelete }: 
   );
 }
 
-// ── Form default state ────────────────────────────────────────────────────────
 
 const EMPTY_FORM = {
   name: "",
@@ -331,7 +321,6 @@ const EMPTY_FORM = {
   audienceSize: 0,
 };
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AbTestingPage() {
   const { data, isLoading } = useAbTests();
@@ -347,7 +336,6 @@ export default function AbTestingPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [winnerTestId, setWinnerTestId] = useState<number | null>(null);
 
-  // Stats
   const totalTests = tests.length;
   const runningTests = tests.filter((t) => t.status === "running").length;
   const completedTests = tests.filter((t) => t.status === "completed").length;
@@ -362,7 +350,6 @@ export default function AbTestingPage() {
     return Math.round((total / withData.length) * 10) / 10;
   })();
 
-  // Handlers
   const openCreateSheet = useCallback(() => {
     setEditingTest(null);
     setForm(EMPTY_FORM);
@@ -488,7 +475,6 @@ export default function AbTestingPage() {
       }
     >
       <div className="space-y-5">
-        {/* Stat Cards */}
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Tests" value={totalTests} icon={FlaskConical} color="gold" index={0} />
           <StatCard label="Running Tests" value={runningTests} icon={Play} color="green" index={1} />
@@ -496,7 +482,6 @@ export default function AbTestingPage() {
           <StatCard label="Avg Open Rate" value={`${avgOpenRate}%`} icon={BarChart2} color="purple" index={3} />
         </div>
 
-        {/* Tests grid */}
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">
             {Array.from({ length: 2 }).map((_, i) => (
@@ -527,7 +512,6 @@ export default function AbTestingPage() {
         )}
       </div>
 
-      {/* Create / Edit Sheet */}
       <HrSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
@@ -650,7 +634,6 @@ export default function AbTestingPage() {
         </div>
       </HrSheet>
 
-      {/* Delete confirmation */}
       <AlertDialog
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
@@ -676,7 +659,6 @@ export default function AbTestingPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Declare winner dialog */}
       <Dialog
         open={winnerTestId !== null}
         onOpenChange={(open) => { if (!open) setWinnerTestId(null); }}

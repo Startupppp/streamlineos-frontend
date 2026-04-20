@@ -20,13 +20,11 @@ async function seed() {
     process.exit(1);
   }
   const orgId = orgs[0].id;
-  console.log(`Seeding CRM data for org: ${orgs[0].name} (${orgId})`);
   const existingPeople = await db.query.crmPeople.findMany({
     where: eq(schema.crmPeople.orgId, orgId),
     limit: 1,
   });
   if (existingPeople.length > 0) {
-    console.log("CRM data already seeded for this org. Skipping.");
     await client.end();
     return;
   }
@@ -46,7 +44,6 @@ async function seed() {
   ).returning();
 
   const personBySlug = new Map(insertedPeople.map((p) => [p.slug, p]));
-  console.log(`  Inserted ${insertedPeople.length} CRM people`);
   const emma = personBySlug.get("emma-watson")!;
   const ryan = personBySlug.get("ryan-torres")!;
   const lisa = personBySlug.get("lisa-huang")!;
@@ -72,7 +69,6 @@ async function seed() {
   await db.insert(schema.crmCompanies).values(
     companiesData.map((c) => ({ ...c, orgId }))
   );
-  console.log(`  Inserted ${companiesData.length} CRM companies`);
   const sarah = personBySlug.get("sarah-mitchell")!;
   const jason = personBySlug.get("jason-lee")!;
   const maria = personBySlug.get("maria-kim")!;
@@ -105,7 +101,6 @@ async function seed() {
   await db.insert(schema.crmDeals).values(
     dealsData.map((d) => ({ ...d, orgId }))
   );
-  console.log(`  Inserted ${dealsData.length} CRM deals`);
   const campaignsData = [
     { name: "Spring Product Launch", status: "active" as const, leads: 620, spend: "45000", roi: "4.2" },
     { name: "LinkedIn ABM Campaign", status: "active" as const, leads: 340, spend: "28000", roi: "3.8" },
@@ -120,7 +115,6 @@ async function seed() {
   await db.insert(schema.crmCampaigns).values(
     campaignsData.map((c) => ({ ...c, orgId }))
   );
-  console.log(`  Inserted ${campaignsData.length} CRM campaigns`);
   const leadChannels = [
     { channel: "Organic Search", count: 17000 },
     { channel: "Paid Ads", count: 13500 },
@@ -156,7 +150,6 @@ async function seed() {
       await db.insert(schema.crmLeads).values(batch);
     }
   }
-  console.log(`  Inserted CRM leads across 5 channels`);
   const contentData = [
     { title: "2026 CRM Trends Report", type: "Whitepaper", views: 4200, leads: 180, convRate: "4.3" },
     { title: "ROI Calculator Tool", type: "Interactive", views: 3800, leads: 320, convRate: "8.4" },
@@ -168,7 +161,6 @@ async function seed() {
   await db.insert(schema.crmContent).values(
     contentData.map((c) => ({ ...c, orgId }))
   );
-  console.log(`  Inserted ${contentData.length} CRM content pieces`);
   const eventsData = [
     { name: "CRM Summit 2026", date: "Mar 12-14", type: "Conference", status: "confirmed" as const },
     { name: "Product Webinar: AI Features", date: "Mar 20", type: "Webinar", status: "confirmed" as const },
@@ -180,7 +172,6 @@ async function seed() {
   await db.insert(schema.crmEvents).values(
     eventsData.map((e) => ({ ...e, orgId }))
   );
-  console.log(`  Inserted ${eventsData.length} CRM events`);
   const activitiesData = [
     { type: "deal_won" as const, message: "Closed $285K deal with Global Dynamics", time: "2h ago", person: "Maria K.", personId: maria.id, category: "sales" },
     { type: "meeting" as const, message: "Demo scheduled with Nexus Systems", time: "3h ago", person: "Alex P.", personId: alex.id, category: "sales" },
@@ -233,7 +224,6 @@ async function seed() {
   await db.insert(schema.crmActivities).values(
     activitiesData.map((a) => ({ ...a, orgId }))
   );
-  console.log(`  Inserted ${activitiesData.length} CRM activities`);
   const supportTicketsData: { title: string; priority: "critical" | "high" | "medium" | "low"; status: "new" | "in_progress" | "resolved" | "closed" }[] = [];
   const ticketDistribution = [
     { status: "new" as const, count: 438 },
@@ -274,7 +264,6 @@ async function seed() {
       batch.map((t) => ({ ...t, orgId }))
     );
   }
-  console.log(`  Inserted ${supportTicketsData.length} CRM support tickets`);
   const monthlyMetricsData = [
     { month: "Aug", revenue: "320000", mqls: 520, retention: "91.2", csat: "4.2", ticketVolume: 68 },
     { month: "Sep", revenue: "410000", mqls: 610, retention: "92.0", csat: "4.3", ticketVolume: 75 },
@@ -288,7 +277,6 @@ async function seed() {
   await db.insert(schema.crmMonthlyMetrics).values(
     monthlyMetricsData.map((m) => ({ ...m, orgId }))
   );
-  console.log(`  Inserted ${monthlyMetricsData.length} monthly metrics`);
   const teamPerformanceData = [
     { personId: sarah.id, month: "Aug", value: "120000" },
     { personId: sarah.id, month: "Sep", value: "185000" },
@@ -351,7 +339,6 @@ async function seed() {
   await db.insert(schema.crmTeamPerformance).values(
     teamPerformanceData.map((t) => ({ ...t, orgId }))
   );
-  console.log(`  Inserted ${teamPerformanceData.length} team performance records`);
   const teamMembersData = [
     { name: "Jane Doe", role: "Admin", access: "Full", avatar: "JD", status: "online" },
     { name: "John Smith", role: "Manager", access: "Edit", avatar: "JS", status: "online" },
@@ -363,9 +350,7 @@ async function seed() {
   await db.insert(schema.crmSupportTeamMembers).values(
     teamMembersData.map((m) => ({ ...m, orgId }))
   );
-  console.log(`  Inserted ${teamMembersData.length} support team members`);
 
-  console.log("\nCRM seed complete!");
   await client.end();
 }
 

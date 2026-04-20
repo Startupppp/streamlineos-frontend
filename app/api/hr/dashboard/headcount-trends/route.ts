@@ -15,7 +15,6 @@ export async function GET() {
       async () => {
         const now = new Date();
 
-        // Build last 12 month buckets
         const months: { label: string; start: string; end: string }[] = [];
         for (let i = 11; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -30,9 +29,6 @@ export async function GET() {
           months.push({ label, start, end });
         }
 
-        // For each month end, count employees who joined on or before that date
-        // and are still active (approximate: ignore termination date since schema
-        // doesn't have it, use isActive flag for current state)
         const results = await Promise.all(
           months.map(async ({ label, end }) => {
             const [row] = await db

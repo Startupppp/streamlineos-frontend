@@ -326,7 +326,6 @@ export default function MembersSettingsPage() {
           </TabsContent>
 
           <TabsContent value="invitations" className="space-y-4">
-            {/* Invite form — always visible on this tab */}
             <Card className="rounded-xl border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Invite New Member</CardTitle>
@@ -363,7 +362,6 @@ export default function MembersSettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Pending invitations list */}
             <Card className="rounded-xl border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">

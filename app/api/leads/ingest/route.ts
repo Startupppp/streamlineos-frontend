@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
     return err("API key has expired", 401);
   }
 
-  // Rate limit keyed by API key ID (separate tier from user sessions)
   const rl = await checkRateLimit("api-key-ingest", apiKey.id);
   if (!rl.allowed) {
     return NextResponse.json(
@@ -57,7 +56,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Scope check: if scopes are defined, key must have leads:write or leads:*
   if (apiKey.scopes && apiKey.scopes.length > 0) {
     const hasScope =
       apiKey.scopes.includes("leads:write") ||
@@ -100,14 +98,12 @@ export async function POST(req: NextRequest) {
     })
     .returning({ id: leads.id });
 
-  // Update API key last used timestamp (non-blocking)
   void db
     .update(apiKeys)
     .set({ lastUsedAt: new Date() })
     .where(eq(apiKeys.id, apiKey.id))
     .catch(() => undefined);
 
-  // Fire post-creation triggers (non-blocking)
   void Promise.allSettled([
     evaluateAssignmentRules(db, apiKey.orgId, lead.id).catch((e: unknown) =>
       logger.error("Ingest: assignment rules failed", { leadId: lead.id, error: e })

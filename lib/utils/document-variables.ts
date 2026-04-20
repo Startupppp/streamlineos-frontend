@@ -1,7 +1,4 @@
-/**
- * Substitutes `{{Variable_Name}}` tokens in an HTML template with provided values.
- * Returns the substituted result and a list of any tokens that had no corresponding value.
- */
+
 export function substituteVariables(
   htmlContent: string,
   variables: Record<string, string>
@@ -20,9 +17,7 @@ export function substituteVariables(
   return { result, missing };
 }
 
-/**
- * Extracts all unique `{{Variable_Name}}` token names from an HTML template.
- */
+
 export function extractVariables(htmlContent: string): string[] {
   const tokenRegex = /\{\{([^}]+)\}\}/g;
   const vars: string[] = [];

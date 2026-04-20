@@ -16,7 +16,7 @@ const updateSchema = z.object({
 
 type Ctx = { params: Promise<{ oppId: string }> };
 
-/** PATCH /api/clients/opportunities/[oppId] — update an opportunity */
+
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { oppId: rawId } = await ctx.params;
   const oppId = Number(rawId);
@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** DELETE /api/clients/opportunities/[oppId] — remove an opportunity */
+
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { oppId: rawId } = await ctx.params;
   const oppId = Number(rawId);

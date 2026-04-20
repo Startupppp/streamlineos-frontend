@@ -16,7 +16,6 @@ import {
 import { RolloutDocumentsDialog } from "./rollout-documents-dialog";
 import { useRolloutDocuments } from "@/lib/api/hooks/hr/recruitment";
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
 
 const STATUS_VARIANTS: Record<string, string> = {
   GENERATED: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -34,7 +33,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Date helper ──────────────────────────────────────────────────────────────
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -45,7 +43,6 @@ function formatDate(value: string | null): string {
   });
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CandidateDocumentsTabProps {
   candidateId: number;
@@ -53,7 +50,6 @@ interface CandidateDocumentsTabProps {
   jobTitle?: string;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function CandidateDocumentsTab({
   candidateId,
@@ -67,7 +63,6 @@ export function CandidateDocumentsTab({
   return (
     <>
       <div className="space-y-4">
-        {/* Header row */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -102,7 +97,6 @@ export function CandidateDocumentsTab({
           </div>
         </div>
 
-        {/* Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />

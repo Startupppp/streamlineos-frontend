@@ -5,10 +5,7 @@ import { eq, and, lte, gte, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/hr/leaves/this-week
- * Returns approved leaves overlapping the current week.
- */
+
 export async function GET() {
   return withAuth(async (session) => {
     const now = new Date();

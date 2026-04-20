@@ -91,7 +91,6 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
 }
 
 function toEditForm(event: CalendarListItem): FormState {
-  // API returns `start`/`end` as ISO strings (serialised from Date)
   const start = new Date(event.start);
   const end = new Date(event.end);
   return {

@@ -8,7 +8,7 @@ import { z } from "zod";
 import { format } from "date-fns";
 
 const querySchema = z.object({
-  userIds: z.string().optional(), // comma-separated list; omit = all org members
+  userIds: z.string().optional(),
 });
 
 type AvailabilityStatus = "ON_LEAVE" | "HALF_DAY" | "AVAILABLE";
@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
     const q = parseQuery(req, querySchema);
     const today = format(new Date(), "yyyy-MM-dd");
 
-    // Resolve which users to check
     let userIdList: string[] = [];
     if (q.userIds) {
       userIdList = q.userIds.split(",").map((id) => id.trim()).filter(Boolean);
@@ -38,7 +37,6 @@ export async function GET(req: NextRequest) {
 
     if (userIdList.length === 0) return ok([]);
 
-    // Find approved leaves that cover today (join leaveTypes for name)
     const activeLeaves = await db
       .select({
         userId: leaveRequests.userId,

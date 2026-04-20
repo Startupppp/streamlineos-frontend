@@ -39,6 +39,13 @@ export async function GET(
       ? format(new Date(payroll.month + "-01"), "MMMM yyyy")
       : "Unknown Month";
 
+    const daysInPayMonth = payroll.month
+      ? (() => {
+          const [yr, mo] = payroll.month.split("-").map(Number);
+          return new Date(yr, mo, 0).getDate();
+        })()
+      : 30;
+
     const fmt = (v: string | null | undefined) =>
       `₹${parseFloat(v || "0").toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
@@ -71,17 +78,14 @@ export async function GET(
       ? format(new Date(employee.joiningDate), "dd MMM yyyy")
       : "—";
 
-    // Load SVG logo
     let logoSvg = "";
     try {
       const svgPath = path.join(process.cwd(), "public", "logo.svg");
       const svgContent = await fs.readFile(svgPath, "utf-8");
-      // Remove XML declaration and set size
       logoSvg = svgContent
         .replace(/<\?xml[^?]*\?>/, "")
         .replace(/viewBox="[^"]*"/, 'viewBox="0 0 180 180" width="54" height="54"');
     } catch {
-      // Fallback handled in template
     }
 
     function toWords(n: number): string {
@@ -112,7 +116,7 @@ export async function GET(
     body { font-family: Arial, 'Segoe UI', sans-serif; background: #f0f0f0; color: #111; font-size: 13px; }
     .page { max-width: 800px; margin: 20px auto; background: #fff; border: 1px solid #ccc; }
 
-    /* Header */
+    
     .header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 3px solid #0f2b7f; gap: 16px; }
     .header-logo { width: 64px; height: 64px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #bd882c; font-size: 22px; font-weight: 900; letter-spacing: -1px; flex-shrink: 0; overflow: hidden; }
     .header-logo svg { width: 54px; height: 54px; }
@@ -124,13 +128,13 @@ export async function GET(
     .header-slip p { font-size: 11px; color: #555; margin-top: 2px; }
     .paid-badge { display: inline-block; background: #15803d; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-top: 4px; letter-spacing: 0.05em; }
 
-    /* Employee info bar */
+    
     .emp-bar { background: #0f2b7f; color: #fff; padding: 8px 20px; display: flex; gap: 40px; flex-wrap: wrap; }
     .emp-bar .ef { display: flex; flex-direction: column; }
     .emp-bar .ef-label { font-size: 9px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.06em; }
     .emp-bar .ef-val { font-size: 13px; font-weight: 600; margin-top: 1px; }
 
-    /* Two-column detail section */
+    
     .detail-section { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #ddd; }
     .detail-col { padding: 14px 20px; }
     .detail-col:first-child { border-right: 1px solid #ddd; }
@@ -139,7 +143,7 @@ export async function GET(
     .dl .dk { font-size: 11px; color: #555; }
     .dl .dv { font-size: 11px; font-weight: 600; color: #111; text-align: right; }
 
-    /* Salary table */
+    
     .salary-section { padding: 0 20px 16px; }
     .salary-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0f2b7f; padding: 12px 0 6px; border-bottom: 1px solid #e0e8ff; margin-bottom: 0; }
     table.salary { width: 100%; border-collapse: collapse; }
@@ -151,20 +155,20 @@ export async function GET(
     table.salary tr.subtotal td { background: #f5f7ff; font-weight: 600; border-top: 2px solid #dde3f0; }
     table.salary tr.deduction td { color: #b91c1c; }
 
-    /* Net pay */
+    
     .net-bar { background: #0f2b7f; color: #fff; margin: 0 0 0 0; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
     .net-bar .nb-label { font-size: 13px; font-weight: 700; }
     .net-bar .nb-amt { font-size: 18px; font-weight: 800; color: #bd882c; }
     .net-words { background: #f5f7ff; padding: 7px 20px; font-size: 11px; color: #333; border-bottom: 2px solid #0f2b7f; font-style: italic; }
 
-    /* Bank + sign */
+    
     .bottom-section { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #ddd; }
     .bottom-col { padding: 14px 20px; }
     .bottom-col:first-child { border-right: 1px solid #ddd; }
     .bottom-col h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0f2b7f; border-bottom: 1px solid #e0e8ff; padding-bottom: 5px; margin-bottom: 10px; }
     .sign-area { margin-top: 24px; border-top: 1px solid #aaa; padding-top: 6px; font-size: 10px; color: #666; text-align: center; }
 
-    /* Footer */
+    
     .footer { background: #f9f9f9; border-top: 1px solid #e0e0e0; padding: 8px 20px; font-size: 10px; color: #888; text-align: center; }
 
     @media print {
@@ -217,7 +221,7 @@ export async function GET(
         <h3>Payroll Information</h3>
         <div class="dl"><span class="dk">Pay Period</span><span class="dv">${monthLabel}</span></div>
         <div class="dl"><span class="dk">Payment Mode</span><span class="dv">Bank Transfer</span></div>
-        <div class="dl"><span class="dk">Working Days</span><span class="dv">30</span></div>
+        <div class="dl"><span class="dk">Working Days</span><span class="dv">${daysInPayMonth}</span></div>
       </div>
     </div>
 

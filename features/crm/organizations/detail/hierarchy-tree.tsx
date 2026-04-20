@@ -47,7 +47,6 @@ interface HierarchyTreeProps {
 export function HierarchyTree({ root, currentId, ancestors }: HierarchyTreeProps) {
   return (
     <div className="space-y-2">
-      {/* Breadcrumb */}
       {ancestors.length > 0 && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3 flex-wrap">
           {ancestors.map((a, i) => (
@@ -63,7 +62,6 @@ export function HierarchyTree({ root, currentId, ancestors }: HierarchyTreeProps
         </div>
       )}
 
-      {/* Tree */}
       <HierarchyNodeCard node={root} currentId={currentId} depth={0} />
     </div>
   );

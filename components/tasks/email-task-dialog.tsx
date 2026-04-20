@@ -31,7 +31,6 @@ export function EmailTaskDialog({ task, onClose }: EmailTaskDialogProps) {
   const [body, setBody] = useState("");
   const completeTask = useCompleteTask();
 
-  // Once lead loads, fill in the email field
   const resolvedTo = to || lead?.email || "";
 
   function handleSend() {
@@ -39,12 +38,10 @@ export function EmailTaskDialog({ task, onClose }: EmailTaskDialogProps) {
       toast.error("Recipient email is required");
       return;
     }
-    // Open the system mail client as a fallback (deep mailto link)
     window.open(
       `mailto:${encodeURIComponent(resolvedTo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
       "_blank",
     );
-    // Mark task complete
     completeTask.mutate(
       { taskId: task.id },
       {

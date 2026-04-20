@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, postWorkLogSchema);
 
-    const dateStr = formatDateOnly(new Date(body.date));
+    const dateStr = formatDateOnly(body.date);
     const normalizedDescription = body.description
       ? body.description.replace(
           /(^\s*\w|[.!?]\s+\w)/g,

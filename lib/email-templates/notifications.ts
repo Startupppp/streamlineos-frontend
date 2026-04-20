@@ -1,6 +1,5 @@
 import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
 
-// ─── Work Log Status ──────────────────────────────────────────────────────────
 
 export function getWorkLogApprovedEmailTemplate(
   employeeName: string,
@@ -63,7 +62,6 @@ export function getWorkLogRejectedEmailTemplate(
   return getEmailTemplate({ title: "Work Log Rejected", content });
 }
 
-// ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export function getOnboardingWelcomeEmailTemplate(
   employeeName: string,
@@ -138,7 +136,6 @@ export function getOnboardingTaskEmailTemplate(
   return getEmailTemplate({ title: "Onboarding Tasks Assigned", content });
 }
 
-// ─── Support Ticket ───────────────────────────────────────────────────────────
 
 export function getTicketCreatedEmailTemplate(
   assigneeName: string,
@@ -240,7 +237,6 @@ export function getTicketStatusEmailTemplate(
   return getEmailTemplate({ title: "Ticket Status Updated", content });
 }
 
-// ─── Task Assignment ──────────────────────────────────────────────────────────
 
 export function getTaskAssignedEmailTemplate(
   assigneeName: string,
@@ -286,7 +282,6 @@ export function getTaskAssignedEmailTemplate(
   return getEmailTemplate({ title: "New Task Assigned", content });
 }
 
-// ─── Deal Stage Change ────────────────────────────────────────────────────────
 
 export function getDealStageChangeEmailTemplate(
   recipientName: string,
@@ -329,7 +324,6 @@ export function getDealStageChangeEmailTemplate(
   return getEmailTemplate({ title: `Deal ${newStage === "WON" ? "Won" : newStage === "LOST" ? "Lost" : "Updated"}`, content });
 }
 
-// ─── Lead Assignment ──────────────────────────────────────────────────────────
 
 export function getLeadAssignedEmailTemplate(
   repName: string,
@@ -369,7 +363,6 @@ export function getLeadAssignedEmailTemplate(
   return getEmailTemplate({ title: "New Lead Assigned", content });
 }
 
-// ─── Performance Review ───────────────────────────────────────────────────────
 
 export function getReviewAssignedEmailTemplate(
   employeeName: string,
@@ -399,7 +392,6 @@ export function getReviewAssignedEmailTemplate(
   return getEmailTemplate({ title: "Performance Review Assigned", content });
 }
 
-// ─── Onboarding Complete ──────────────────────────────────────────────────────
 
 export function getOnboardingCompleteEmployeeEmailTemplate(
   employeeName: string
@@ -436,7 +428,6 @@ export function getOnboardingCompleteHrEmailTemplate(
   return getEmailTemplate({ title: "Onboarding Complete", content });
 }
 
-// ─── Helpdesk Ticket ──────────────────────────────────────────────────────────
 
 export function getHelpdeskTicketEmailTemplate(
   recipientName: string,
@@ -477,7 +468,6 @@ export function getHelpdeskTicketEmailTemplate(
   return getEmailTemplate({ title: "New Helpdesk Ticket", content });
 }
 
-// ─── Asset Assignment ─────────────────────────────────────────────────────────
 
 export function getAssetAssignedEmailTemplate(
   employeeName: string,
@@ -515,7 +505,6 @@ export function getAssetAssignedEmailTemplate(
   return getEmailTemplate({ title: "Asset Assigned", content });
 }
 
-// ─── Payroll Approved ─────────────────────────────────────────────────────────
 
 export function getPayrollApprovedEmailTemplate(
   employeeName: string,

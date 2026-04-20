@@ -29,21 +29,17 @@ export interface OrgTimelineEvent {
   entityId: number;
 }
 
-/**
- * Fetch full ancestor chain for a given org (to detect cycles and build breadcrumb).
- * Returns an array from root → direct parent (not including the org itself).
- */
+
 export async function getAncestorChain(
   orgId: string,
   accountId: number,
 ): Promise<{ id: number; name: string }[]> {
-  // Walk upward via repeated queries (max depth 20 to prevent runaway)
   const ancestors: { id: number; name: string }[] = [];
   let currentId: number | null = accountId;
   const visited = new Set<number>();
 
   while (currentId !== null) {
-    if (visited.has(currentId)) break; // cycle guard
+    if (visited.has(currentId)) break;
     visited.add(currentId);
 
     const rows: { id: number; name: string; parentId: number | null }[] = await db
@@ -63,10 +59,7 @@ export async function getAncestorChain(
   return ancestors;
 }
 
-/**
- * Returns true if `candidateParentId` is a descendant of `accountId`
- * (which would create a cycle). Safe circular-dependency guard.
- */
+
 export async function wouldCreateCycle(
   orgId: string,
   accountId: number,
@@ -74,12 +67,11 @@ export async function wouldCreateCycle(
 ): Promise<boolean> {
   if (candidateParentId === accountId) return true;
 
-  // Walk upward from candidateParentId; if we encounter accountId, it's a cycle
   let currentId: number | null = candidateParentId;
   const visited = new Set<number>();
 
   while (currentId !== null) {
-    if (visited.has(currentId)) return false; // already looping without finding accountId
+    if (visited.has(currentId)) return false;
     visited.add(currentId);
 
     if (currentId === accountId) return true;
@@ -98,10 +90,7 @@ export async function wouldCreateCycle(
   return false;
 }
 
-/**
- * Recursively fetches all descendant IDs (including self) for rollup aggregation.
- * Uses iterative BFS to avoid deep recursion.
- */
+
 export async function getAllDescendantIds(
   orgId: string,
   accountId: number,
@@ -132,9 +121,7 @@ export async function getAllDescendantIds(
   return allIds;
 }
 
-/**
- * Build a tree structure for the given accountId and all its descendants.
- */
+
 export async function getAccountHierarchy(
   orgId: string,
   accountId: number,
@@ -174,16 +161,13 @@ export async function getAccountHierarchy(
   return root;
 }
 
-/**
- * Aggregate rollup stats for an account and all its descendants.
- */
+
 export async function getAccountRollup(
   orgId: string,
   accountId: number,
 ): Promise<OrgRollup> {
   const ids = await getAllDescendantIds(orgId, accountId);
 
-  // Get contact counts for organizations
   const contactCountRows = await db
     .select({ count: sql<string>`count(*)` })
     .from(contacts)
@@ -196,7 +180,6 @@ export async function getAccountRollup(
 
   const totalContacts = Number(contactCountRows[0]?.count ?? 0);
 
-  // Get org names for deal matching (deals use `companyName` text, not FK)
   const orgRows = await db
     .select({ name: crmOrganizations.name })
     .from(crmOrganizations)
@@ -234,7 +217,6 @@ export async function getAccountRollup(
     totalDealValue = dealRows.reduce((sum, d) => sum + Number(d.value ?? 0), 0);
   }
 
-  // Leads linked to these org names
   const leadCountRows = await db
     .select({ count: sql<string>`count(*)` })
     .from(leads)
@@ -252,9 +234,7 @@ export async function getAccountRollup(
   return { totalContacts, totalDeals, openDeals, totalDealValue, totalLeads };
 }
 
-/**
- * Build a timeline of recent events linked to this account (contacts, deals, leads).
- */
+
 export async function getAccountTimeline(
   orgId: string,
   accountId: number,
@@ -271,7 +251,6 @@ export async function getAccountTimeline(
 
   const events: OrgTimelineEvent[] = [];
 
-  // Contacts linked to this org
   const contactRows = await db
     .select({ id: contacts.id, name: contacts.name, createdAt: contacts.createdAt })
     .from(contacts)
@@ -289,7 +268,6 @@ export async function getAccountTimeline(
     });
   }
 
-  // Deals matching org name
   const dealRows = await db
     .select({ id: deals.id, name: deals.name, stage: deals.stage, createdAt: deals.createdAt })
     .from(deals)
@@ -312,7 +290,6 @@ export async function getAccountTimeline(
     });
   }
 
-  // Leads matching org name
   const leadRows = await db
     .select({ id: leads.id, name: leads.name, createdAt: leads.createdAt })
     .from(leads)
@@ -345,7 +322,6 @@ export async function getAccountTimeline(
     });
   }
 
-  // Sort by date desc and cap
   return events
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, limit);

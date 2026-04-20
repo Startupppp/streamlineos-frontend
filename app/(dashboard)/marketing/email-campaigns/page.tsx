@@ -86,7 +86,6 @@ const LEAD_SOURCES = [
   { value: "other", label: "Other" },
 ];
 
-// ─── Bulk Send Dialog ─────────────────────────────────────────────────────────
 
 interface BulkSendDialogProps {
   campaign: EmailCampaign | null;
@@ -133,7 +132,6 @@ function BulkSendDialog({ campaign, onClose }: BulkSendDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Select
             value={filters.status ?? ""}
@@ -177,14 +175,12 @@ function BulkSendDialog({ campaign, onClose }: BulkSendDialogProps) {
           />
         </div>
 
-        {/* Lead count */}
         <p className="text-sm text-muted-foreground">
           {isLoading
             ? "Counting leads…"
             : `Found ${total} lead${total === 1 ? "" : "s"} with email addresses`}
         </p>
 
-        {/* Lead list */}
         <ScrollArea className="h-64 w-full rounded-md border">
           {isLoading ? (
             <div className="p-3 space-y-2">
@@ -243,7 +239,6 @@ function BulkSendDialog({ campaign, onClose }: BulkSendDialogProps) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EmailCampaignsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);

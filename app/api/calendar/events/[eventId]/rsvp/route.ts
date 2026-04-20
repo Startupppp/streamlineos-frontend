@@ -24,13 +24,11 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       return err("Invalid request body: status must be accepted, declined, or tentative", 400);
     }
 
-    // Verify the event exists and belongs to the user's org
     const event = await db.query.calendarEvents.findFirst({
       where: and(eq(calendarEvents.id, id), eq(calendarEvents.orgId, session.orgId)),
     });
     if (!event) return err("Event not found", 404);
 
-    // Upsert attendee row
     const [attendee] = await db
       .insert(eventAttendees)
       .values({
@@ -55,7 +53,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!Number.isFinite(id)) return err("Invalid event id", 400);
 
   return withAuth(async (session) => {
-    // Verify event belongs to org
     const event = await db.query.calendarEvents.findFirst({
       where: and(eq(calendarEvents.id, id), eq(calendarEvents.orgId, session.orgId)),
     });

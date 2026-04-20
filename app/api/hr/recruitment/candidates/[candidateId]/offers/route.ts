@@ -29,7 +29,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       return err("Forbidden", 403);
     }
 
-    // Verify candidate belongs to org
     const candidate = await db.query.candidates.findFirst({
       where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
       columns: { id: true },
@@ -61,7 +60,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const input = await parseBody(req, createOfferSchema);
     
 
-    // Verify candidate belongs to org
     const candidate = await db.query.candidates.findFirst({
       where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
       columns: { id: true },

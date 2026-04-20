@@ -9,14 +9,11 @@ async function clean() {
     SELECT tablename FROM pg_tables WHERE schemaname = 'public'
   `);
 
-  console.log("Tables found:", tables.map((t: any) => t.tablename));
-
   const tableNames = tables.map((t: any) => `"${t.tablename}"`).join(", ");
   if (tableNames) {
     await db.execute(sql.raw(`TRUNCATE TABLE ${tableNames} CASCADE`));
   }
 
-  console.log("All tables cleaned!");
   process.exit(0);
 }
 

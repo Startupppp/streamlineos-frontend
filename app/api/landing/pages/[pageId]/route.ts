@@ -63,7 +63,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     const input = await parseBody(req, updateSchema);
 
-    // If updating slug, ensure uniqueness (excluding this page)
     if (input.slug !== undefined) {
       const [conflict] = await db
         .select({ id: landingPages.id })
@@ -102,7 +101,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     const pid = Number(pageId);
     if (!Number.isFinite(pid) || pid <= 0) return err("Invalid page ID.", 400);
 
-    // Archive by unpublishing and deactivating rather than hard delete
     const [archived] = await db
       .update(landingPages)
       .set({ isActive: false, isPublished: false, updatedAt: new Date() })

@@ -35,7 +35,6 @@ import { useTasks, useTaskAnalytics, type Task } from "@/lib/api/hooks/tasks";
 import { isToday, startOfWeek, endOfWeek, isPast, isWithinInterval } from "date-fns";
 import { MyTasksPanel } from "@/components/tasks/my-tasks-panel";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface RepActivity {
   userId: string;
@@ -59,7 +58,6 @@ interface ActivityDashboardResponse {
   trend: { date: string; count: number }[];
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 function useSalesActivityDashboard(period: "week" | "month") {
   return useQuery<ActivityDashboardResponse>({
@@ -72,7 +70,6 @@ function useSalesActivityDashboard(period: "week" | "month") {
   });
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
 
 interface StatTileProps {
   label: string;
@@ -99,10 +96,8 @@ function StatTile({ label, value, icon: Icon, colorClass }: StatTileProps) {
   );
 }
 
-// ─── Task Analytics Bar ───────────────────────────────────────────────────────
 
 function TaskAnalyticsBar() {
-  // Fetch all pending + recently completed tasks for this week
   const { data: allTasks, isLoading } = useTasks({ limit: 200 });
 
   const stats = useMemo(() => {
@@ -196,7 +191,6 @@ function TaskAnalyticsBar() {
   );
 }
 
-// ─── Task Analytics Chart ─────────────────────────────────────────────────────
 
 function TaskRepChart({ days }: { days: number }) {
   const { data, isLoading } = useTaskAnalytics(days);
@@ -256,7 +250,6 @@ function TaskRepChart({ days }: { days: number }) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SalesActivityPage() {
   const [period, setPeriod] = useState<"week" | "month">("week");
@@ -296,7 +289,6 @@ export default function SalesActivityPage() {
     </div>
   );
 
-  // ── Loading skeleton ───────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <PageWrapper
@@ -334,7 +326,6 @@ export default function SalesActivityPage() {
   const totals = data?.totals;
   const reps = data?.reps ?? [];
 
-  // ── Empty state ────────────────────────────────────────────────────────────
   if (!isLoading && reps.length === 0) {
     return (
       <PageWrapper
@@ -363,13 +354,10 @@ export default function SalesActivityPage() {
       subtitle="Team activity metrics and call/meeting tracking"
       actions={periodToggle}
     >
-      {/* ── My Tasks slide-over ──────────────────────────────────────────────── */}
       <MyTasksPanel open={tasksOpen} onOpenChange={setTasksOpen} />
 
-      {/* ── Task Analytics Bar ───────────────────────────────────────────────── */}
       <TaskAnalyticsBar />
 
-      {/* ── Stat tiles ──────────────────────────────────────────────────────── */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile
           label="Total Activities"
@@ -403,7 +391,6 @@ export default function SalesActivityPage() {
         />
       </div>
 
-      {/* ── Task completion chart ───────────────────────────────────────────── */}
       <Card className="mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -416,7 +403,6 @@ export default function SalesActivityPage() {
         </CardContent>
       </Card>
 
-      {/* ── Rep breakdown table ─────────────────────────────────────────────── */}
       <Card className="mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -503,7 +489,6 @@ export default function SalesActivityPage() {
                     );
                   })}
 
-                  {/* Totals row */}
                   {totals && (
                     <TableRow className="border-t-2 border-border bg-muted/30 font-semibold">
                       <TableCell>Totals</TableCell>

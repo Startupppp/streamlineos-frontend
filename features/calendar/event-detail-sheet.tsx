@@ -53,7 +53,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const deleteEvent = useDeleteCalendarEvent();
   const rsvpMutation = useRsvpCalendarEvent();
 
-  // The list item id is like "event-123"; extract the numeric part for API calls
   const numericEventId = event ? extractEventNumericId(event.id) : null;
   const isCalendarEvent = event?.source === "event";
 
@@ -153,7 +152,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                     </>
                   )}
 
-                  {/* RSVP buttons — only for calendar events */}
                   {isCalendarEvent && (
                     <>
                       <Separator />
@@ -198,7 +196,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                     </>
                   )}
 
-                  {/* Attendees list */}
                   {attendees.length > 0 && (
                     <>
                       <Separator />

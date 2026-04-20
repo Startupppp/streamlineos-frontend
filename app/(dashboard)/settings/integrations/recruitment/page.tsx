@@ -30,7 +30,6 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import Link from "next/link";
 
-// ─── Platform config ──────────────────────────────────────────────────────────
 
 interface PlatformConfig {
   id: UpsertPortalInput["platform"];
@@ -65,7 +64,6 @@ const PLATFORMS: PlatformConfig[] = [
   },
 ];
 
-// ─── Portal card ──────────────────────────────────────────────────────────────
 
 function PortalCard({
   config,
@@ -172,7 +170,6 @@ function PortalCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RecruitmentIntegrationsPage() {
   const { data: portals, isLoading } = useSourcePortals();

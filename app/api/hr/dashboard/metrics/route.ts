@@ -36,20 +36,17 @@ export async function GET() {
           openPositionsResult,
           monthlyHiresResult,
         ] = await Promise.all([
-          // Total employees in org
           db
             .select({ count: count() })
             .from(organizationMembers)
             .where(eq(organizationMembers.orgId, orgId)),
 
-          // Active employees
           db
             .select({ count: count() })
             .from(organizationMembers)
             .innerJoin(users, eq(organizationMembers.userId, users.id))
             .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))),
 
-          // On leave today (approved leave spanning today)
           db
             .select({ count: count() })
             .from(leaveRequests)
@@ -62,7 +59,6 @@ export async function GET() {
               ),
             ),
 
-          // Pending leave requests
           db
             .select({ count: count() })
             .from(leaveRequests)
@@ -73,7 +69,6 @@ export async function GET() {
               ),
             ),
 
-          // Open job postings
           db
             .select({ count: count() })
             .from(jobPostings)
@@ -81,7 +76,6 @@ export async function GET() {
               and(eq(jobPostings.orgId, orgId), eq(jobPostings.status, "OPEN")),
             ),
 
-          // New hires this month (joiningDate in current month)
           db
             .select({ count: count() })
             .from(organizationMembers)
@@ -95,7 +89,6 @@ export async function GET() {
             ),
         ]);
 
-        // Upcoming birthdays next 7 days (month/day comparison)
         const allMembersForBirthdays = await db
           .select({
             id: users.id,

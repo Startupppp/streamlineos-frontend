@@ -3,8 +3,20 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 interface Ticket {
   id: number;
@@ -43,7 +55,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
     tickets.forEach((t) => {
       const date = t.dueDate || t.startDate;
       if (!date) return;
-      const key = new Date(date).toISOString().split("T")[0];
+      const key = typeof date === "string" ? date.split("T")[0] : new Date(date).toISOString().split("T")[0];
       const existing = map.get(key) ?? [];
       existing.push(t);
       map.set(key, existing);
@@ -54,6 +66,8 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const today = new Date().toISOString().split("T")[0];
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   const days: (number | null)[] = [];
   for (let i = 0; i < firstDayOfWeek; i++) days.push(null);
@@ -61,10 +75,35 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">
-          {currentDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
-        </h3>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-1.5">
+          <Select
+            value={String(month)}
+            onValueChange={(v) => setCurrentDate(new Date(year, parseInt(v), 1))}
+          >
+            <SelectTrigger className="h-8 w-[120px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(year)}
+            onValueChange={(v) => setCurrentDate(new Date(parseInt(v), month, 1))}
+          >
+            <SelectTrigger className="h-8 w-[80px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={prevMonth} aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />

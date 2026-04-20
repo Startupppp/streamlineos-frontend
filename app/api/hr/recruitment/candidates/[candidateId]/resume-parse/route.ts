@@ -52,7 +52,6 @@ export async function POST(req: NextRequest, { params }: Params) {
     const body = await parseBody(req, schema);
     const extracted = extractFromText(body.resumeText);
 
-    // Persist the resume text to the candidates record
     await db
       .update(candidates)
       .set({ resumeText: body.resumeText, updatedAt: new Date() })

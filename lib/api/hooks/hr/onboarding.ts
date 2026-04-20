@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface OnboardingStatus {
   userId: string;
@@ -66,9 +65,8 @@ export interface CreateTemplateInput {
   }[];
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
-/** HR/Admin: all active onboardings in the org */
+
 export function useOnboardingStatus() {
   return useQuery<OnboardingStatus[]>({
     queryKey: ["onboarding", "status"],
@@ -76,7 +74,7 @@ export function useOnboardingStatus() {
   });
 }
 
-/** Personal checklist for a specific user */
+
 export function useUserOnboarding(userId: string) {
   return useQuery<OnboardingTask[]>({
     queryKey: ["onboarding", "user", userId],
@@ -85,7 +83,7 @@ export function useUserOnboarding(userId: string) {
   });
 }
 
-/** PATCH a task status to COMPLETED or PENDING */
+
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();
   return useMutation({
@@ -97,7 +95,7 @@ export function useCompleteOnboardingTask() {
   });
 }
 
-/** Initiate onboarding for an employee */
+
 export function useInitiateOnboarding() {
   const qc = useQueryClient();
   return useMutation({
@@ -109,7 +107,7 @@ export function useInitiateOnboarding() {
   });
 }
 
-/** List templates */
+
 export function useHrOnboardingTemplates() {
   return useQuery<HrOnboardingTemplate[]>({
     queryKey: ["onboarding", "templates"],
@@ -117,7 +115,7 @@ export function useHrOnboardingTemplates() {
   });
 }
 
-/** Create a new template */
+
 export function useCreateHrOnboardingTemplate() {
   const qc = useQueryClient();
   return useMutation({

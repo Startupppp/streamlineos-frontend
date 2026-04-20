@@ -1,9 +1,9 @@
 "use client";
 
 interface ProgressRingProps {
-  percentage: number; // 0–100
-  size?: number;      // default 120
-  strokeWidth?: number; // default 10
+  percentage: number;
+  size?: number;
+  strokeWidth?: number;
 }
 
 export function OnboardingProgressRing({
@@ -18,10 +18,10 @@ export function OnboardingProgressRing({
 
   const strokeColor =
     clampedPct === 100
-      ? "#22c55e" // green-500
+      ? "#22c55e"
       : clampedPct >= 50
-      ? "#f59e0b" // amber-500
-      : "#ef4444"; // red-500
+      ? "#f59e0b"
+      : "#ef4444";
 
   const center = size / 2;
 
@@ -41,7 +41,6 @@ export function OnboardingProgressRing({
         style={{ transform: "rotate(-90deg)" }}
         aria-hidden="true"
       >
-        {/* Track */}
         <circle
           cx={center}
           cy={center}
@@ -51,7 +50,6 @@ export function OnboardingProgressRing({
           strokeWidth={strokeWidth}
           className="text-muted-foreground/20"
         />
-        {/* Progress */}
         <circle
           cx={center}
           cy={center}
@@ -65,7 +63,6 @@ export function OnboardingProgressRing({
           style={{ transition: "stroke-dashoffset 0.6s ease, stroke 0.3s ease" }}
         />
       </svg>
-      {/* Center label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="font-bold leading-none tabular-nums"

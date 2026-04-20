@@ -291,7 +291,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
 }: {
   request: LeaveRequest;
   isAdmin?: boolean;
-  /** True when this row belongs to the currently logged-in user */
+  
   isSelf?: boolean;
   onApprove?: (id: number) => void;
   onReject?: (id: number, reason?: string) => void;

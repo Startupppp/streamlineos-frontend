@@ -237,7 +237,6 @@ export default function ExitManagementPage() {
         </div>
       )}
 
-      {/* Submission sheet */}
       <HrSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
@@ -328,7 +327,6 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      {/* HR approve confirmation */}
       <ConfirmActionDialog
         open={hrApproveId !== null}
         onOpenChange={(open) => {
@@ -342,7 +340,6 @@ export default function ExitManagementPage() {
         isPending={hrReview.isPending}
       />
 
-      {/* CEO approve confirmation */}
       <ConfirmActionDialog
         open={ceoApproveId !== null}
         onOpenChange={(open) => {
@@ -356,7 +353,6 @@ export default function ExitManagementPage() {
         isPending={ceoReview.isPending}
       />
 
-      {/* Reject dialog with remarks */}
       <HrSheet
         open={rejectRemarksOpen}
         onOpenChange={(open) => {
@@ -387,7 +383,6 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      {/* Withdraw confirmation */}
       <ConfirmActionDialog
         open={withdrawId !== null}
         onOpenChange={(open) => {

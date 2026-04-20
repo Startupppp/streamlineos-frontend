@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
       ? and(eq(candidates.orgId, session.orgId), sql`${candidates.id} IN (SELECT candidate_id FROM candidate_applications WHERE job_posting_id = ${Number(jobId)})`)
       : eq(candidates.orgId, session.orgId);
 
-    // Gender breakdown (anonymized counts only)
     const genderRows = await db
       .select({
         gender: candidates.gender,
@@ -28,7 +27,6 @@ export async function GET(req: NextRequest) {
       count: r.count,
     }));
 
-    // Location breakdown
     const locationRows = await db
       .select({
         location: candidates.location,
@@ -45,7 +43,6 @@ export async function GET(req: NextRequest) {
       count: r.count,
     }));
 
-    // Source breakdown
     const sourceRows = await db
       .select({
         source: candidates.source,
@@ -61,7 +58,6 @@ export async function GET(req: NextRequest) {
       count: r.count,
     }));
 
-    // Stage distribution
     const stageRows = await db
       .select({
         status: candidates.status,
@@ -76,7 +72,6 @@ export async function GET(req: NextRequest) {
       count: r.count,
     }));
 
-    // Total
     const [totalRow] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(candidates)

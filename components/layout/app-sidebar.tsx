@@ -49,7 +49,6 @@ export function AppSidebar({
   );
   const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
-  // Which group label contains the currently active route
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
       const match = group.routes.some((route) => {
@@ -61,10 +60,8 @@ export function AppSidebar({
     return null;
   }, [navGroups, pathname]);
 
-  // All groups start collapsed; user overrides are stored in localStorage
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
-  // Load saved state from localStorage once on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem("sidebar-groups");
@@ -72,11 +69,10 @@ export function AppSidebar({
     } catch { }
   }, []);
 
-  // Auto-open the group containing the active route whenever the path changes
   useEffect(() => {
     if (!activeGroupLabel) return;
     setCollapsedGroups((prev) => {
-      if (prev[activeGroupLabel] === false) return prev; // already open
+      if (prev[activeGroupLabel] === false) return prev;
       const next = { ...prev, [activeGroupLabel]: false };
       try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { }
       return next;
@@ -263,7 +259,7 @@ export function AppSidebar({
               const groupLabel = group.label;
               const isGroupCollapsed = groupLabel in collapsedGroups
                 ? collapsedGroups[groupLabel]
-                : true; // all groups collapsed by default
+                : true;
               return (
                 <SidebarSection
                   key={groupLabel}

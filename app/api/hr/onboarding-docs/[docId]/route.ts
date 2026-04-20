@@ -73,7 +73,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     const doc = rows[0];
 
-    // Fetch audit logs for this document
     const auditRows = await db
       .select({
         id: documentAuditLogs.id,
@@ -109,7 +108,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     });
     if (!existing) return err("Document not found.", 404);
 
-    // Map review status to audit action
     const actionMap = {
       APPROVED: "APPROVED",
       REJECTED: "REJECTED",
@@ -133,7 +131,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       )
       .returning();
 
-    // Write audit log
     await db.insert(documentAuditLogs).values({
       orgId: session.orgId,
       onboardingDocumentId: docId,
@@ -143,7 +140,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       metadata: { previousStatus: existing.status },
     });
 
-    // Recalculate the employee's overall onboarding doc status
     await recalcOnboardingStatus(session.orgId, existing.userId);
 
     return ok(updated);

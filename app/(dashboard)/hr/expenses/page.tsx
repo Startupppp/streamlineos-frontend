@@ -171,7 +171,6 @@ export default function ExpensesPage() {
     categories: [],
   };
 
-  // Fall back to static list when no DB categories exist yet
   const expenseCategories = rawCategories.length > 0
     ? rawCategories
     : EXPENSE_CATEGORIES.map((name, i) => ({ id: i + 1, name, description: null, budgetLimit: null, budgetPeriod: null, isActive: true }));

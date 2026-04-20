@@ -13,7 +13,6 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 import { formatDistanceToNow } from "date-fns";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 
-// ─── Pie chart colours ────────────────────────────────────────────────────────
 
 const PIE_COLORS = ["#0f2b7f", "#bd882c", "#10b981", "#8b5cf6", "#f43f5e", "#06b6d4"];
 
@@ -220,7 +219,6 @@ export default function RecruitmentDashboardPage() {
         </div>
       </div>
 
-      {/* Time-to-Hire Funnel */}
       {analytics && analytics.funnel.some((s) => s.count > 0) && (
         <Card>
           <CardHeader className="p-4 pb-2">

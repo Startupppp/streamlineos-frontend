@@ -20,7 +20,7 @@ import type { ObjectionHandlerResult, SubjectLinesResult } from "@/lib/api/hooks
 import { Loader2, Copy, CheckCheck, Sparkles, MessageSquareQuote, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-/* ─── Copy Button ─────────────────────────────────────────────────────────── */
+
 
 function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -53,7 +53,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   );
 }
 
-/* ─── Objection Handler Tab ───────────────────────────────────────────────── */
+
 
 function ObjectionHandlerTab() {
   const [objection, setObjection] = useState("");
@@ -232,7 +232,7 @@ function ObjectionHandlerTab() {
   );
 }
 
-/* ─── Subject Line Generator Tab ──────────────────────────────────────────── */
+
 
 function SubjectLineGeneratorTab() {
   const [campaignContext, setCampaignContext] = useState("");
@@ -372,7 +372,7 @@ function SubjectLineGeneratorTab() {
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 
 export default function AISalesToolsPage() {
   return (

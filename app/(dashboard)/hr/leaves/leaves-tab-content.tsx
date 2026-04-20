@@ -131,7 +131,6 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
           return isWithinInterval(day, { start, end });
         }),
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [approvedLeaves],
   );
 

@@ -12,10 +12,7 @@ export const HR_CACHE = {
   headcountTrends: (orgId: string) => `hr:dashboard:headcount-trends:${orgId}`,
 } as const;
 
-/**
- * Invalidate all HR dashboard caches for an org.
- * Call this after hire, termination, or org member changes.
- */
+
 export async function invalidateHrDashboardCache(orgId: string): Promise<void> {
   await Promise.all([
     invalidateCache(HR_CACHE.analytics(orgId)),

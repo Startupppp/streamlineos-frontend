@@ -29,7 +29,6 @@ export function useAddSkill() {
   });
 }
 
-// ─── Skills Matrix ────────────────────────────────────────────────────────────
 
 export interface SkillsMatrixData {
   employees: {
@@ -49,7 +48,6 @@ export function useSkillsMatrix() {
   });
 }
 
-// ─── Anniversary Feed ─────────────────────────────────────────────────────────
 
 export interface AnniversaryFeedItem {
   userId: string;
@@ -65,6 +63,6 @@ export function useAnniversaryFeed() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "anniversary-feed"] as const,
     queryFn: () => apiClient.get<AnniversaryFeedItem[]>("/hr/employees/anniversary-feed"),
-    staleTime: 60 * 60_000, // 1 hour
+    staleTime: 60 * 60_000,
   });
 }

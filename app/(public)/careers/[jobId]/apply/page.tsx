@@ -69,7 +69,6 @@ export default function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
           <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
@@ -109,7 +108,6 @@ export default function ApplyPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name */}
               <div className="space-y-1.5">
                 <label htmlFor="name" className="block text-sm font-medium">
                   Full Name <span className="text-destructive">*</span>
@@ -125,7 +123,6 @@ export default function ApplyPage() {
                 />
               </div>
 
-              {/* Email */}
               <div className="space-y-1.5">
                 <label htmlFor="email" className="block text-sm font-medium">
                   Email Address <span className="text-destructive">*</span>
@@ -141,7 +138,6 @@ export default function ApplyPage() {
                 />
               </div>
 
-              {/* Phone */}
               <div className="space-y-1.5">
                 <label htmlFor="phone" className="block text-sm font-medium">
                   Phone Number
@@ -156,7 +152,6 @@ export default function ApplyPage() {
                 />
               </div>
 
-              {/* LinkedIn */}
               <div className="space-y-1.5">
                 <label htmlFor="linkedinUrl" className="block text-sm font-medium">
                   LinkedIn Profile URL
@@ -171,7 +166,6 @@ export default function ApplyPage() {
                 />
               </div>
 
-              {/* Resume URL */}
               <div className="space-y-1.5">
                 <label htmlFor="resumeUrl" className="block text-sm font-medium">
                   Resume URL
@@ -186,7 +180,6 @@ export default function ApplyPage() {
                 />
               </div>
 
-              {/* Cover Letter */}
               <div className="space-y-1.5">
                 <label htmlFor="coverLetter" className="block text-sm font-medium">
                   Cover Letter

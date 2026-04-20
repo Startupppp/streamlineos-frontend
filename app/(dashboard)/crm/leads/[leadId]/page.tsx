@@ -122,7 +122,6 @@ export default function LeadDetailPage({
 
   const onTaskSubmit = useCallback(
     (data: TaskForm) => {
-      // Build ISO dueDate: DatePicker returns "yyyy-MM-dd", default time to 09:00
       const dueDate = data.dueDate
         ? new Date(`${data.dueDate}T09:00:00`).toISOString()
         : undefined;

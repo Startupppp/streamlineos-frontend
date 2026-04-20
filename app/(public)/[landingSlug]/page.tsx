@@ -71,7 +71,6 @@ export default async function LandingPageRoute({ params, searchParams }: Props) 
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Hero */}
       <section className="bg-blue text-white py-16 px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
@@ -84,7 +83,6 @@ export default async function LandingPageRoute({ params, searchParams }: Props) 
       </section>
 
       <div className="max-w-5xl mx-auto px-4 py-12 grid gap-10 lg:grid-cols-2">
-        {/* Content */}
         {page.content && (
           <article
             className="prose prose-neutral dark:prose-invert max-w-none"
@@ -92,13 +90,11 @@ export default async function LandingPageRoute({ params, searchParams }: Props) 
           />
         )}
 
-        {/* Contact form */}
         <div className={page.content ? "" : "lg:col-span-2 max-w-xl mx-auto w-full"}>
           <LandingForm orgId={page.orgId} utm={utm} />
         </div>
       </div>
 
-      {/* Testimonials section */}
       {page.settings?.showTrustSection && page.settings?.testimonials && page.settings.testimonials.length > 0 && (
         <section className="bg-muted/40 py-14 px-4">
           <div className="max-w-5xl mx-auto">

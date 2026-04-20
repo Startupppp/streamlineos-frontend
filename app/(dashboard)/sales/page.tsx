@@ -69,9 +69,6 @@ import {
   format,
 } from "date-fns";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 
 const DEFAULT_BAR_COLOR = "bg-muted-foreground/40";
 const formatRevenueValue = (v: number) => `$${(v / 1000).toFixed(0)}K`;
@@ -132,25 +129,19 @@ function getPresetRange(preset: DatePreset): { from?: string; to?: string } {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function SalesDashboardPage() {
   const { data: session } = useSession();
   const isSalesRep = session?.user?.role === "SALES";
 
-  // Filter state
   const [datePreset, setDatePreset] = useState<DatePreset>("this_month");
   const [repId, setRepId] = useState<number | undefined>(undefined);
 
   const dateRange = useMemo(() => getPresetRange(datePreset), [datePreset]);
 
-  // Base dashboard (overview data — not date-filtered)
   const { data, isLoading } = useSalesDashboard();
   const { data: slugMap } = useCrmPeopleSlugs();
 
-  // Filtered data from new endpoints
   const { data: kpisData } = useSalesDashboardKPIs({ ...dateRange, repId });
   const { data: funnelData } = useSalesDashboardFunnel({ ...dateRange, repId });
   const { data: leaderboardData } = useSalesDashboardLeaderboard(dateRange);
@@ -164,7 +155,6 @@ export default function SalesDashboardPage() {
   const dealsByStage = data?.dealsByStage ?? [];
   const enhanced = data?.enhancedMetrics;
 
-  // Use filtered leaderboard if available, fall back to base data
   const salesLeaderboard = data?.salesLeaderboard ?? [];
 
   const maxLeaderboardRevenue = useMemo(
@@ -193,13 +183,11 @@ export default function SalesDashboardPage() {
     setRepId(value === "all" ? undefined : Number(value));
   }, []);
 
-  // Build rep options from leaderboard data
   const repOptions = useMemo(() => {
     const reps = leaderboardData ?? [];
     return reps.map((r) => ({ id: r.repId, name: r.name }));
   }, [leaderboardData]);
 
-  // KPI values — prefer filtered KPIs when available
   const kpiPipeline = kpisData?.pipelineValue ?? salesStats?.pipeline.value ?? 0;
   const kpiDealsWon = kpisData?.dealsWon ?? salesStats?.dealsWon.value ?? 0;
   const kpiCloseRate = kpisData?.closeRate ?? salesStats?.conversionRate.value ?? 0;
@@ -229,7 +217,6 @@ export default function SalesDashboardPage() {
         }
       : salesStats?.avgDealSize.trend ?? { value: 0, isPositive: true };
 
-  // Funnel — prefer filtered
   const activeFunnel = funnelData ?? salesFunnel;
 
   const { data: velocityData } = useDealVelocity(dateRange);
@@ -289,9 +276,6 @@ export default function SalesDashboardPage() {
         initial="hidden"
         animate="visible"
       >
-        {/* ------------------------------------------------------------------ */}
-        {/* Filter bar                                                          */}
-        {/* ------------------------------------------------------------------ */}
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardContent className="py-3">
@@ -350,9 +334,6 @@ export default function SalesDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* KPI Cards                                                           */}
-        {/* ------------------------------------------------------------------ */}
         <motion.div variants={fadeUp} className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Pipeline Value"
@@ -385,9 +366,6 @@ export default function SalesDashboardPage() {
           />
         </motion.div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Live CRM Metrics                                                    */}
-        {/* ------------------------------------------------------------------ */}
         {enhanced && (
           <motion.div variants={fadeUp}>
             <Card className="shadow-noir">
@@ -430,9 +408,6 @@ export default function SalesDashboardPage() {
           </motion.div>
         )}
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Revenue Trend + Pipeline Funnel                                     */}
-        {/* ------------------------------------------------------------------ */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
           <motion.div className="lg:col-span-7" variants={fadeUp}>
             <Card className="h-full shadow-noir">
@@ -477,9 +452,6 @@ export default function SalesDashboardPage() {
           </motion.div>
         </div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Revenue vs Goal                                                     */}
-        {/* ------------------------------------------------------------------ */}
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardHeader>
@@ -494,9 +466,6 @@ export default function SalesDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Top Deals / Leaderboard / Activity                                  */}
-        {/* ------------------------------------------------------------------ */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <motion.div variants={fadeUp}>
             <Card className="h-full shadow-noir">
@@ -703,9 +672,6 @@ export default function SalesDashboardPage() {
           </motion.div>
         </div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* Deals by Stage                                                      */}
-        {/* ------------------------------------------------------------------ */}
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardHeader>
@@ -765,12 +731,10 @@ export default function SalesDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Deal Velocity & Pipeline Aging */}
         <motion.div
           className="grid gap-4 lg:grid-cols-2"
           variants={fadeUp}
         >
-          {/* Deal Velocity */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -814,7 +778,6 @@ export default function SalesDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Sales Cycle Length */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -860,7 +823,6 @@ export default function SalesDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Lost Deal Analysis */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -895,7 +857,6 @@ export default function SalesDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Pipeline Aging Alerts */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
