@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     await db.insert(organizationMembers).values({
       orgId: session.orgId,
       userId: newUser.id,
-      role: "member",
+      role: body.role || "ENGINEERING",
     });
 
     if (body.monthlySalary && body.monthlySalary > 0) {
