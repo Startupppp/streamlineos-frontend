@@ -80,7 +80,6 @@ export function DatePicker({
           toDate={toDate}
           fromYear={fromYear}
           toYear={toYear}
-          captionLayout="dropdown-buttons"
           initialFocus
         />
       </PopoverContent>
