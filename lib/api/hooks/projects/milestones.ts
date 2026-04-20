@@ -50,7 +50,6 @@ function milestoneKey(projectId: number) {
   return ["vaivamm", "projects", projectId, "milestones"] as const;
 }
 
-// ─── Milestone Hooks ──────────────────────────────────────────────────────────
 
 export function useProjectMilestones(projectId: number) {
   return useQuery({
@@ -88,7 +87,6 @@ export function useDeleteMilestone(projectId: number) {
   });
 }
 
-// ─── Budget Hooks ─────────────────────────────────────────────────────────────
 
 export function useProjectBudget(projectId: number) {
   return useQuery({
@@ -108,7 +106,6 @@ export function useUpdateProjectBudget(projectId: number) {
   });
 }
 
-// ─── Resource Allocation Hook ─────────────────────────────────────────────────
 
 export function useResourceAllocation() {
   return useQuery({

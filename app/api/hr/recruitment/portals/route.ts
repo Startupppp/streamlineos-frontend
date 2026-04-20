@@ -1,7 +1,4 @@
-/**
- * GET /api/hr/recruitment/portals — list connected job board integrations for this org
- * POST /api/hr/recruitment/portals — create/update a sourcing integration
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -35,7 +32,6 @@ export async function GET(_req: NextRequest) {
         lastSyncedAt: candidateSources.lastSyncedAt,
         lastSyncCount: candidateSources.lastSyncCount,
         createdAt: candidateSources.createdAt,
-        // Never expose oauthToken in list endpoint
       })
       .from(candidateSources)
       .where(eq(candidateSources.orgId, session.orgId))
@@ -66,7 +62,6 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Update existing record
       const [updated] = await db
         .update(candidateSources)
         .set({
@@ -81,7 +76,6 @@ export async function POST(req: NextRequest) {
       return ok(updated);
     }
 
-    // Create new record
     const [created] = await db
       .insert(candidateSources)
       .values({

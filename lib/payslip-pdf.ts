@@ -6,7 +6,6 @@ import path from "path";
 import fs from "fs/promises";
 import { format } from "date-fns";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PayslipPdfData {
   orgName: string;
@@ -32,10 +31,9 @@ export interface PayslipPdfData {
   netSalary: number;
 }
 
-// ─── Color constants ──────────────────────────────────────────────────────────
 
-const NAVY = rgb(0.059, 0.169, 0.498); // #0f2b7f
-const GOLD = rgb(0.741, 0.533, 0.173); // #bd882c
+const NAVY = rgb(0.059, 0.169, 0.498);
+const GOLD = rgb(0.741, 0.533, 0.173);
 const WHITE = rgb(1, 1, 1);
 const BLACK = rgb(0, 0, 0);
 const GRAY = rgb(0.4, 0.4, 0.4);
@@ -43,7 +41,6 @@ const LIGHT_GRAY = rgb(0.94, 0.95, 0.98);
 const GREEN = rgb(0.086, 0.502, 0.243);
 const RED = rgb(0.7, 0.1, 0.1);
 
-// ─── Helper: number to words (Indian system) ──────────────────────────────────
 
 function toWords(n: number): string {
   const a = [
@@ -70,7 +67,6 @@ function fmt(v: number): string {
   return "Rs " + v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ─── Drawing helpers ──────────────────────────────────────────────────────────
 
 function drawRect(
   page: PDFPage,
@@ -100,11 +96,10 @@ function drawLine(page: PDFPage, x1: number, y1: number, x2: number, y2: number)
   });
 }
 
-// ─── Main generator ───────────────────────────────────────────────────────────
 
 export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]); // A4
+  const page = doc.addPage([595, 842]);
 
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
@@ -117,7 +112,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   let y = height - margin;
 
-  // ── Load logo ────────────────────────────────────────────────────────────
   let logoImage: Awaited<ReturnType<typeof doc.embedPng>> | null = null;
   try {
     const svgPath = path.join(process.cwd(), "public", "logo.svg");
@@ -128,13 +122,10 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
       .toBuffer();
     logoImage = await doc.embedPng(pngBuffer);
   } catch {
-    // Fallback handled below
   }
 
-  // ── Header ────────────────────────────────────────────────────────────────
   drawRect(page, 0, y - 70, pageW, 70, NAVY);
 
-  // Logo
   if (logoImage) {
     page.drawImage(logoImage, { x: margin + 2, y: y - 60, width: 46, height: 46 });
   } else {
@@ -142,14 +133,12 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
     drawText(page, "V", margin + 14, y - 42, bold, 28, WHITE);
   }
 
-  // Company name — always use full name
   const companyFullName = "Vaivamm Capital Advisors LLP";
   drawText(page, companyFullName, margin + 56, y - 20, bold, 14, WHITE);
   if (data.orgAddress) {
     drawText(page, data.orgAddress, margin + 56, y - 34, regular, 8, rgb(0.8, 0.85, 1));
   }
 
-  // Right side: Salary Slip label
   const slipLabel = "Salary Slip";
   const slipW = bold.widthOfTextAtSize(slipLabel, 14);
   drawText(page, slipLabel, pageW - margin - slipW, y - 20, bold, 14, WHITE);
@@ -158,7 +147,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   y -= 70;
 
-  // ── Employee blue bar ────────────────────────────────────────────────────
   drawRect(page, 0, y - 32, pageW, 32, NAVY);
   const empFields = [
     ["Employee", data.employeeName],
@@ -174,16 +162,13 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   }
   y -= 32;
 
-  // ── PAID badge (no pay date) ────────────────────────────────────────────
   drawRect(page, margin, y - 22, 44, 16, GREEN);
   drawText(page, "PAID", margin + 8, y - 17, bold, 9, WHITE);
   y -= 28;
 
-  // ── Divider ───────────────────────────────────────────────────────────────
   drawLine(page, margin, y, pageW - margin, y);
   y -= 10;
 
-  // ── Two-column info section ───────────────────────────────────────────────
   const col1X = margin;
   const col2X = margin + contentW / 2 + 10;
   const colW = contentW / 2 - 10;
@@ -205,7 +190,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   rowY = drawSectionHeader(col1X, rowY, "EMPLOYEE INFORMATION");
   rowY = drawRow(col1X, rowY, "Date of Joining", data.joiningDate ?? "—");
   rowY = drawRow(col1X, rowY, "PAN Number", data.panNumber ?? "—");
-  // Only show PF UAN if the employee actually has one
   if (data.pfUan) {
     rowY = drawRow(col1X, rowY, "PF UAN", data.pfUan);
   }
@@ -220,7 +204,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawLine(page, margin, y, pageW - margin, y);
   y -= 14;
 
-  // ── Salary breakdown table ────────────────────────────────────────────────
   drawText(page, "SALARY BREAKDOWN", margin, y, bold, 8, NAVY);
   drawLine(page, margin, y - 4, pageW - margin, y - 4);
   y -= 18;
@@ -228,7 +211,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   const earningsW = contentW * 0.35;
   const amtW = contentW * 0.15;
 
-  // Table header row
   drawRect(page, margin, y - 4, contentW, 16, LIGHT_GRAY);
   drawText(page, "Earnings", margin + 4, y + 4, bold, 8, NAVY);
   drawText(page, "Amount", margin + earningsW + amtW - 4, y + 4, bold, 8, NAVY);
@@ -236,7 +218,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, "Amount", margin + contentW - 4, y + 4, bold, 8, NAVY);
   y -= 18;
 
-  // Build earnings rows
   const earningsRows: [string, number][] = [
     ["Basic Salary", data.basicSalary],
     ...(data.hra > 0 ? [["HRA", data.hra] as [string, number]] : []),
@@ -244,7 +225,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
     ...(data.overtimeAmount > 0 ? [["Overtime", data.overtimeAmount] as [string, number]] : []),
   ];
 
-  // Build deductions rows — itemize Professional Tax separately
   const professionalTax = data.professionalTax ?? 200;
   const otherDeductions = data.deductions - professionalTax;
   const deductionRows: [string, number][] = [];
@@ -254,7 +234,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   if (otherDeductions > 0) {
     deductionRows.push(["Other Deductions", otherDeductions]);
   }
-  // If no itemized deductions but total > 0, show as single line
   if (deductionRows.length === 0 && data.deductions > 0) {
     deductionRows.push(["Total Deductions", data.deductions]);
   }
@@ -262,7 +241,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   const maxRows = Math.max(earningsRows.length, deductionRows.length);
 
   for (let i = 0; i < maxRows; i++) {
-    // Earnings column
     if (i < earningsRows.length) {
       const [label, amount] = earningsRows[i];
       drawText(page, label, margin + 4, y, regular, 8);
@@ -271,7 +249,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
         drawText(page, fmt(amount), margin + earningsW + amtW - 4 - aw, y, regular, 8);
       }
     }
-    // Deductions column
     if (i < deductionRows.length) {
       const [label, amount] = deductionRows[i];
       drawText(page, label, margin + earningsW + amtW + 4, y, regular, 8);
@@ -281,7 +258,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
     y -= 14;
   }
 
-  // Subtotal row
   drawRect(page, margin, y - 4, contentW, 16, LIGHT_GRAY);
   drawText(page, "Gross Earnings", margin + 4, y + 4, bold, 8, NAVY);
   const gw = bold.widthOfTextAtSize(fmt(data.grossSalary), 8);
@@ -291,7 +267,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, fmt(data.deductions), margin + contentW - 4 - ndw, y + 4, bold, 8, RED);
   y -= 24;
 
-  // ── Net pay bar ───────────────────────────────────────────────────────────
   drawRect(page, 0, y - 28, pageW, 28, NAVY);
   drawText(page, "NET SALARY PAYABLE", margin, y - 18, bold, 10, WHITE);
   const netStr = fmt(data.netSalary);
@@ -299,7 +274,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, netStr, pageW - margin - nw, y - 20, bold, 14, GOLD);
   y -= 28;
 
-  // In words
   drawRect(page, 0, y - 18, pageW, 18, LIGHT_GRAY);
   drawText(page, `In words: ${toWords(data.netSalary)}`, margin, y - 12, oblique, 8, GRAY);
   y -= 22;
@@ -307,7 +281,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawLine(page, margin, y, pageW - margin, y);
   y -= 14;
 
-  // ── Bank + Authorisation ──────────────────────────────────────────────────
   let bankY = y;
   bankY = drawSectionHeader(col1X, bankY, "BANK DETAILS");
   bankY = drawRow(col1X, bankY, "Bank Name", data.bankName ?? "—");
@@ -328,7 +301,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   y = Math.min(bankY, authY) - 16;
 
-  // ── Footer ────────────────────────────────────────────────────────────────
   drawRect(page, 0, 0, pageW, 28, LIGHT_GRAY);
   const footerText = `Generated ${format(new Date(), "dd MMM yyyy 'at' HH:mm")}  ·  Vaivamm Capital Advisors LLP  ·  Confidential — For Employee Use Only`;
   const fw = regular.widthOfTextAtSize(footerText, 7.5);

@@ -178,7 +178,6 @@ export default function LeadsPipelinePage() {
     extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string; createDeal?: boolean; dealName?: string },
   ) => {
     if (status === "CONVERTED" && extra) {
-      // Pass conversion data directly into the status request (server handles lead update atomically)
       updateStatus.mutate(
         {
           leadId: id,

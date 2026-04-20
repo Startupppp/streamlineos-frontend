@@ -54,10 +54,7 @@ export async function getClientAccounts(
   };
 }
 
-/**
- * Backfill clientAccount records for CONVERTED leads that don't have one yet.
- * Uses a single INSERT ... SELECT query — safe to call on every page load (idempotent).
- */
+
 export async function backfillConvertedLeadsToClientAccounts(
   orgId: string,
   fallbackSalesRepId: string
@@ -92,12 +89,8 @@ export async function backfillConvertedLeadsToClientAccounts(
   `);
 }
 
-/**
- * Auto-assign CRM reps to unassigned client accounts via round-robin.
- * Runs on every page load (idempotent — skips if no CS users exist).
- */
+
 export async function backfillCrmAssignments(orgId: string) {
-  // Get CUSTOMER_SUPPORT members
   const { organizationMembers } = await import("@/lib/db/schema");
   const csMembers = await db
     .select({ userId: organizationMembers.userId })
@@ -106,7 +99,6 @@ export async function backfillCrmAssignments(orgId: string) {
 
   if (csMembers.length === 0) return;
 
-  // Get unassigned accounts
   const unassigned = await db.query.clientAccounts.findMany({
     where: and(
       eq(clientAccounts.orgId, orgId),
@@ -117,7 +109,6 @@ export async function backfillCrmAssignments(orgId: string) {
 
   if (unassigned.length === 0) return;
 
-  // Count current assignments per CS member
   const counts: Record<string, number> = {};
   for (const m of csMembers) {
     const [result] = await db
@@ -131,7 +122,6 @@ export async function backfillCrmAssignments(orgId: string) {
     counts[m.userId] = result?.count ?? 0;
   }
 
-  // Assign each unassigned account to the CS member with fewest accounts
   for (const account of unassigned) {
     let minCount = Infinity;
     let assignee: string | null = null;
@@ -150,11 +140,7 @@ export async function backfillCrmAssignments(orgId: string) {
   }
 }
 
-/**
- * Return CRM assignment stats: each CUSTOMER_SUPPORT member with their
- * active (non-INVESTED) account count and total count, plus the number
- * of unassigned client accounts.
- */
+
 export async function getCrmAssignmentStats(orgId: string) {
   const { organizationMembers, users } = await import("@/lib/db/schema");
 

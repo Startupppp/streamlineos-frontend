@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
 
     const lowerSkill = q.skill.toLowerCase();
 
-    // Find org members whose skills array contains the skill (case-insensitive)
     const results = await db
       .select({
         userId: users.id,
@@ -41,7 +40,6 @@ export async function GET(req: NextRequest) {
         and(
           eq(organizationMembers.orgId, session.orgId),
           eq(users.isActive, true),
-          // PostgreSQL array containment: any element ilike skill
           sql`EXISTS (
             SELECT 1 FROM unnest(${users.skills}) AS s
             WHERE lower(s) LIKE ${"%" + lowerSkill + "%"}

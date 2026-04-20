@@ -12,7 +12,7 @@ const BodySchema = z.object({
   clientId: z.number().int().positive(),
 });
 
-/** POST /api/ai/account-summary */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
 
     const { clientId } = parsed.data;
 
-    // Fetch client account
     const account = await db.query.clientAccounts.findFirst({
       where: and(
         eq(clientAccounts.id, clientId),
@@ -45,14 +44,12 @@ export async function POST(req: NextRequest) {
       return err("Client account not found", 404);
     }
 
-    // Fetch associated lead for extra context
     const lead = account.leadId
       ? await db.query.leads.findFirst({
           where: eq(leads.id, account.leadId),
         })
       : null;
 
-    // Fetch recent activities (last 5)
     const activities = await db
       .select({
         activityType: clientAccountActivities.activityType,
@@ -64,7 +61,6 @@ export async function POST(req: NextRequest) {
       .orderBy(desc(clientAccountActivities.createdAt))
       .limit(5);
 
-    // Build context string
     const investmentAmount = account.investmentAmount
       ? `₹${Number(account.investmentAmount).toLocaleString("en-IN")}`
       : "Not specified";

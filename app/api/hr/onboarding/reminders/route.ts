@@ -9,7 +9,6 @@ import { logger } from "@/lib/logger";
 
 export async function POST(_req: NextRequest) {
   return withAdmin(async (session) => {
-    // Find users with incomplete onboarding tasks
     const incompleteUsers = await db
       .select({
         userId: onboardingTasks.userId,
@@ -33,7 +32,6 @@ export async function POST(_req: NextRequest) {
     let sentCount = 0;
 
     for (const user of incompleteUsers) {
-      // Create in-app notification
       await db.insert(notifications).values({
         orgId: session.orgId,
         userId: user.userId,
@@ -43,7 +41,6 @@ export async function POST(_req: NextRequest) {
         link: "/hr/onboarding/my-tasks",
       });
 
-      // Send email reminder
       if (user.userEmail) {
         try {
           await sendEmail({

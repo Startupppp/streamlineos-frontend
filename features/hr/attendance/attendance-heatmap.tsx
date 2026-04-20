@@ -1,14 +1,41 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { format, parseISO, eachWeekOfInterval, startOfYear, endOfYear, addDays, getDay } from "date-fns";
+import {
+  format,
+  parseISO,
+  eachWeekOfInterval,
+  startOfYear,
+  endOfYear,
+  addDays,
+  getDay,
+} from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Activity } from "lucide-react";
 import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
 
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const intensityClasses: Record<number, string> = {
@@ -38,7 +65,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
       }
     }
 
-    // Build weeks grid: each week is an array of 7 days (Sun–Sat)
     const weekStarts = eachWeekOfInterval({ start: yearStart, end: yearEnd });
     const weeksData = weekStarts.map((weekStart) => {
       return Array.from({ length: 7 }, (_, dayIdx) => {
@@ -46,17 +72,24 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         if (date < yearStart || date > yearEnd) return null;
         const dateStr = format(date, "yyyy-MM-dd");
         const entry = heatmapMap.get(dateStr);
-        return { date, dateStr, hours: entry?.hours ?? 0, intensity: entry?.intensity ?? 0 };
+        return {
+          date,
+          dateStr,
+          hours: entry?.hours ?? 0,
+          intensity: entry?.intensity ?? 0,
+        };
       });
     });
 
-    // Calculate month label positions (column index where each month starts)
     const positions: { month: number; col: number }[] = [];
     weeksData.forEach((week, colIdx) => {
       const firstValid = week.find((d) => d !== null);
       if (firstValid) {
         const m = firstValid.date.getMonth();
-        if (positions.length === 0 || positions[positions.length - 1].month !== m) {
+        if (
+          positions.length === 0 ||
+          positions[positions.length - 1].month !== m
+        ) {
           positions.push({ month: m, col: colIdx });
         }
       }
@@ -64,6 +97,9 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
 
     return { weeks: weeksData, monthPositions: positions };
   }, [year, data]);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -76,10 +112,18 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             Attendance Heatmap
           </CardTitle>
           <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevYear} aria-label="Previous year">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handlePrevYear}
+              aria-label="Previous year"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[50px] text-center text-foreground">{year}</span>
+            <span className="text-sm font-medium min-w-[50px] text-center text-foreground">
+              {year}
+            </span>
             <Button
               variant="ghost"
               size="icon"
@@ -94,10 +138,30 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         </div>
         {data?.summary && (
           <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
-            <span><span className="font-semibold text-foreground">{data.summary.totalDays}</span> days</span>
-            <span><span className="font-semibold text-foreground">{data.summary.totalHours}h</span> worked</span>
-            <span><span className="font-semibold text-foreground">{data.summary.avgHoursPerDay}h</span> avg/day</span>
-            <span><span className="font-semibold text-foreground">{data.summary.longestStreak}d</span> longest streak</span>
+            <span>
+              <span className="font-semibold text-foreground">
+                {data.summary.totalDays}
+              </span>{" "}
+              days
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">
+                {data.summary.totalHours}h
+              </span>{" "}
+              worked
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">
+                {data.summary.avgHoursPerDay}h
+              </span>{" "}
+              avg/day
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">
+                {data.summary.longestStreak}d
+              </span>{" "}
+              longest streak
+            </span>
           </div>
         )}
       </CardHeader>
@@ -115,13 +179,15 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         ) : (
           <div className="overflow-x-auto">
             <div className="inline-block min-w-max">
-              {/* Month labels */}
               <div className="flex mb-1 ml-8">
                 {monthPositions.map(({ month, col }) => (
                   <div
                     key={month}
                     className="text-[10px] text-muted-foreground"
-                    style={{ position: "absolute", marginLeft: `${col * 14 + 32}px` }}
+                    style={{
+                      position: "absolute",
+                      marginLeft: `${col * 14 + 32}px`,
+                    }}
                   >
                     {MONTH_LABELS[month]}
                   </div>
@@ -129,25 +195,29 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
               </div>
               <div className="relative mt-4">
                 <div className="flex gap-0.5">
-                  {/* Day labels */}
                   <div className="flex flex-col gap-0.5 mr-1.5">
                     {DAY_LABELS.map((d, i) => (
-                      <div key={d} className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}>
+                      <div
+                        key={d}
+                        className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}
+                      >
                         {d}
                       </div>
                     ))}
                   </div>
-                  {/* Heatmap grid */}
                   {weeks.map((week, colIdx) => (
                     <div key={colIdx} className="flex flex-col gap-0.5">
                       {week.map((day, rowIdx) => {
                         if (!day) {
                           return <div key={rowIdx} className="h-3 w-3" />;
                         }
-                        const cls = intensityClasses[day.intensity] ?? intensityClasses[0];
-                        const title = day.hours > 0
-                          ? `${format(day.date, "MMM d, yyyy")} — ${day.hours}h`
-                          : format(day.date, "MMM d, yyyy");
+                        const cls =
+                          intensityClasses[day.intensity] ??
+                          intensityClasses[0];
+                        const title =
+                          day.hours > 0
+                            ? `${format(day.date, "MMM d, yyyy")} — ${day.hours}h`
+                            : format(day.date, "MMM d, yyyy");
                         return (
                           <div
                             key={rowIdx}
@@ -162,11 +232,13 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                   ))}
                 </div>
               </div>
-              {/* Legend */}
               <div className="flex items-center gap-1.5 mt-3">
                 <span className="text-[10px] text-muted-foreground">Less</span>
                 {[0, 1, 2, 3, 4].map((level) => (
-                  <div key={level} className={`h-3 w-3 rounded-[2px] ${intensityClasses[level]}`} />
+                  <div
+                    key={level}
+                    className={`h-3 w-3 rounded-[2px] ${intensityClasses[level]}`}
+                  />
                 ))}
                 <span className="text-[10px] text-muted-foreground">More</span>
               </div>

@@ -12,7 +12,7 @@ const bodySchema = z.object({
 
 type RouteContext = { params: Promise<{ taskId: string }> };
 
-/** POST /api/tasks/[taskId]/complete — mark done + log to activity timeline */
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { taskId: taskIdStr } = await ctx.params;
@@ -43,7 +43,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     if (!updated) return err("Failed to complete task", 500);
 
-    // ── Log to crm_activities timeline ────────────────────────────────────────
     type CrmActivityType = "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
     const typeToActivity: Partial<Record<string, CrmActivityType>> = {
       CALL: "call",
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       category: "sales",
     });
 
-    // ── Auto-regenerate recurring task ────────────────────────────────────────
     const recurrence = existing.recurrence as {
       frequency: "DAILY" | "WEEKLY" | "MONTHLY";
       interval: number;

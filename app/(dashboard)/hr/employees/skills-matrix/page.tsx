@@ -104,7 +104,6 @@ export default function SkillsMatrixPage() {
               </tbody>
             </table>
 
-            {/* Legend */}
             <div className="flex items-center gap-3 mt-4 px-1 flex-wrap">
               {Object.entries(LEVEL_LABELS).map(([lvl, lbl]) => (
                 <div key={lvl} className="flex items-center gap-1">

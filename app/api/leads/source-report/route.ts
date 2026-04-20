@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
-/** GET /api/leads/source-report — Lead source attribution with conversion rates */
+
 export async function GET() {
   return withAuth(async (session) => {
     const data = await cached(

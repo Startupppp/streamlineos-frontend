@@ -14,7 +14,7 @@ const updateSchema = z.object({
 
 type Ctx = { params: Promise<{ pageId: string }> };
 
-/** GET /api/marketing/landing-pages/[pageId] */
+
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { pageId: id } = await ctx.params;
   const pageId = Number(id);
@@ -26,7 +26,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     });
     if (!page) return err("Landing page not found", 404);
 
-    // Daily views for last 30 days
     const viewsByDay = await db
       .select({
         date: sql<string>`to_char(${pageViews.viewedAt}, 'YYYY-MM-DD')`,
@@ -42,7 +41,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       .groupBy(sql`to_char(${pageViews.viewedAt}, 'YYYY-MM-DD')`)
       .orderBy(sql`to_char(${pageViews.viewedAt}, 'YYYY-MM-DD')`);
 
-    // Device breakdown
     const deviceBreakdown = await db
       .select({
         device: sql<string>`coalesce(${pageViews.deviceType}, 'unknown')`,
@@ -52,7 +50,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       .where(eq(pageViews.pageId, pageId))
       .groupBy(pageViews.deviceType);
 
-    // Top referrers
     const referrerBreakdown = await db
       .select({
         referrer: sql<string>`coalesce(${pageViews.referrer}, 'direct')`,
@@ -64,7 +61,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       .orderBy(desc(sql`count(*)`))
       .limit(10);
 
-    // Total / today / week stats for the summary
     const [stats] = await db
       .select({
         totalViews: sql<number>`cast(count(*) as int)`,
@@ -88,7 +84,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** PATCH /api/marketing/landing-pages/[pageId] */
+
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { pageId: id } = await ctx.params;
   const pageId = Number(id);
@@ -108,7 +104,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** DELETE /api/marketing/landing-pages/[pageId] */
+
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { pageId: id } = await ctx.params;
   const pageId = Number(id);

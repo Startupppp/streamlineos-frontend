@@ -11,14 +11,7 @@ interface AccountHealthBadgeProps {
   className?: string;
 }
 
-/**
- * Computes a health score from rollup data if no explicit score is set.
- * Formula:
- *  - Contacts: +10 pts per contact (max 30)
- *  - Open deals: +10 pts per open deal (max 40)
- *  - Any leads: +20 pts flat
- *  - Total deal value > 100k: +10 pts
- */
+
 export function computeHealthScore(rollup: OrgRollup): number {
   let score = 0;
   score += Math.min(rollup.totalContacts * 10, 30);

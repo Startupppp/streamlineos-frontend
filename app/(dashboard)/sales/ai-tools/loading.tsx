@@ -9,16 +9,13 @@ export default function AISalesToolsLoading() {
       subtitle="AI-powered tools to help close more deals and craft better campaigns"
     >
       <div className="space-y-5">
-        {/* Tabs skeleton */}
         <div className="flex gap-1 h-9 w-full max-w-sm rounded-lg bg-muted p-1">
           <Skeleton className="flex-1 rounded-md" />
           <Skeleton className="flex-1 rounded-md" />
         </div>
 
-        {/* Description banner */}
         <Skeleton className="h-12 w-full rounded-lg" />
 
-        {/* Form card */}
         <Card>
           <CardHeader>
             <Skeleton className="h-4 w-32" />

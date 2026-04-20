@@ -325,6 +325,7 @@ export function useProjectAnalytics(
     queryFn: () =>
       apiClient.get<ProjectAnalytics>(`/projects/${projectId}/analytics`),
     enabled: !!projectId,
+    refetchInterval: 30_000,
     ...options,
   });
 }

@@ -22,7 +22,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/lib/api/hooks/crm";
 import { cn } from "@/lib/utils";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function scoreColor(score: number): string {
   if (score >= 80) return "bg-red-500/10 text-red-500 border-red-500/20";
@@ -47,7 +46,6 @@ function statusBadgeClass(status: string): string {
   return map[status] ?? "bg-muted text-muted-foreground border-border";
 }
 
-// ─── Duplicate Group Card ─────────────────────────────────────────────────────
 
 interface MergeTarget {
   keepLeadId: number;
@@ -112,7 +110,6 @@ function DuplicateGroupCard({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Lead A — keep */}
                   <TableRow>
                     <TableCell className="font-medium">{leadA.name}</TableCell>
                     <TableCell className="text-muted-foreground">{leadA.email ?? "—"}</TableCell>
@@ -131,7 +128,6 @@ function DuplicateGroupCard({
                     </TableCell>
                   </TableRow>
 
-                  {/* Lead B — duplicate */}
                   <TableRow>
                     <TableCell className="font-medium">{leadB.name}</TableCell>
                     <TableCell className="text-muted-foreground">{leadB.email ?? "—"}</TableCell>
@@ -170,7 +166,6 @@ function DuplicateGroupCard({
   );
 }
 
-// ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
 function DuplicatesSkeleton() {
   return (
@@ -188,7 +183,6 @@ function DuplicatesSkeleton() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DuplicateLeadsPage() {
   const { data, isLoading, isFetching, refetch } = useDuplicateLeads();
@@ -237,7 +231,6 @@ export default function DuplicateLeadsPage() {
         <DuplicatesSkeleton />
       ) : (
         <div className="space-y-6">
-          {/* Stat cards */}
           <div className="grid gap-4 grid-cols-2 md:grid-cols-2">
             <StatCard
               label="Duplicate Groups Found"
@@ -253,7 +246,6 @@ export default function DuplicateLeadsPage() {
             />
           </div>
 
-          {/* Content */}
           {!data?.groups.length ? (
             <EmptyState
               illustration={<EmptySearchIllustration className="h-40 w-40" />}
@@ -275,7 +267,6 @@ export default function DuplicateLeadsPage() {
         </div>
       )}
 
-      {/* Merge Confirmation Dialog */}
       <ConfirmDialog
         open={!!pendingMerge}
         onOpenChange={(open) => !open && setPendingMerge(null)}

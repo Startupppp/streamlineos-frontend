@@ -184,7 +184,6 @@ export function WorkLogFilterActions({
         </SelectContent>
       </Select>
 
-      {/* Employee selector — visible directly for HR/CEO */}
       {isAdminOrCeo && employees && employees.length > 0 && (
         <Popover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
           <PopoverTrigger asChild>

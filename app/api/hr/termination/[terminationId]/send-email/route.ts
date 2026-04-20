@@ -28,7 +28,6 @@ export async function POST(
     if (!existing) return err("Termination not found.", 404);
     if (existing.status !== "APPROVED") return err("Termination must be CEO-approved before sending.", 400);
 
-    // Idempotency: prevent duplicate sends
     if (existing.emailSentAt && existing.emailStatus === "sent") {
       return err("Termination email has already been sent.", 409);
     }
@@ -48,7 +47,6 @@ export async function POST(
       : "N/A";
 
     try {
-      // Generate formal PDF termination letter
       const pdfBuffer = await generateTerminationLetterPdf({
         employeeName: employee.name ?? "Employee",
         employeeId: employee.employeeId ?? undefined,

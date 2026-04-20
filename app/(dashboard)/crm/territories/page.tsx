@@ -42,7 +42,6 @@ import {
 } from "@/lib/api/hooks/crm";
 import { cn } from "@/lib/utils";
 
-// ─── Tag Input ────────────────────────────────────────────────────────────────
 
 interface TagInputProps {
   label: string;
@@ -124,7 +123,6 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
   );
 }
 
-// ─── Territory Form State ─────────────────────────────────────────────────────
 
 interface FormState {
   name: string;
@@ -148,7 +146,6 @@ function fromTerritory(t: Territory): FormState {
   };
 }
 
-// ─── Territory Card ───────────────────────────────────────────────────────────
 
 interface TerritoryCardProps {
   territory: Territory;
@@ -183,7 +180,6 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-3">
-        {/* States */}
         {(t.states ?? []).length > 0 && (
           <div className="flex items-start gap-2">
             <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
@@ -193,7 +189,6 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
           </div>
         )}
 
-        {/* Cities */}
         {(t.cities ?? []).length > 0 && (
           <div className="flex items-start gap-2">
             <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
@@ -212,18 +207,15 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
           </div>
         )}
 
-        {/* Assigned reps */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Users className="h-3.5 w-3.5" />
           <span>{(t.assignedReps ?? []).length} assigned rep{(t.assignedReps ?? []).length !== 1 ? "s" : ""}</span>
         </div>
 
-        {/* Description */}
         {t.description && (
           <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
         )}
 
-        {/* Actions */}
         <div className="flex gap-2 pt-1">
           <Button
             variant="outline"
@@ -272,7 +264,6 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TerritoriesPage() {
   const { data: territories = [], isLoading } = useTerritories();
@@ -315,7 +306,6 @@ export default function TerritoriesPage() {
     }
   }, [form, editTarget, createTerritory, updateTerritory]);
 
-  // Stats
   const totalTerritories = territories.length;
   const activeTerritories = territories.filter((t) => t.isActive).length;
   const totalCities = territories.reduce((sum, t) => sum + (t.cities ?? []).length, 0);
@@ -350,7 +340,6 @@ export default function TerritoriesPage() {
       }
     >
       <div className="space-y-6">
-        {/* ── Stat cards ── */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
             label="Total Territories"
@@ -372,7 +361,6 @@ export default function TerritoriesPage() {
           />
         </div>
 
-        {/* ── Territory grid ── */}
         {territories.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <Map className="h-12 w-12 mx-auto text-muted-foreground/40" />
@@ -400,7 +388,6 @@ export default function TerritoriesPage() {
         )}
       </div>
 
-      {/* ── Create/Edit Sheet ── */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
@@ -408,7 +395,6 @@ export default function TerritoriesPage() {
           </SheetHeader>
 
           <div className="space-y-5 py-4">
-            {/* Name */}
             <div className="space-y-1.5">
               <Label htmlFor="territory-name">Name *</Label>
               <Input
@@ -419,7 +405,6 @@ export default function TerritoriesPage() {
               />
             </div>
 
-            {/* States */}
             <TagInput
               label="States"
               tags={form.states}
@@ -427,7 +412,6 @@ export default function TerritoriesPage() {
               placeholder="Type a state and press Enter…"
             />
 
-            {/* Cities */}
             <TagInput
               label="Cities"
               tags={form.cities}
@@ -435,7 +419,6 @@ export default function TerritoriesPage() {
               placeholder="Type a city and press Enter…"
             />
 
-            {/* Description */}
             <div className="space-y-1.5">
               <Label htmlFor="territory-description">Description</Label>
               <Textarea
@@ -447,7 +430,6 @@ export default function TerritoriesPage() {
               />
             </div>
 
-            {/* Active toggle */}
             <div className="flex items-center justify-between">
               <Label htmlFor="territory-active">Active</Label>
               <Switch

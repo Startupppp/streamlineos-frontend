@@ -26,6 +26,7 @@ export function useProjects(
     queryKey: queryKeys.projects.list(),
     queryFn: () =>
       apiClient.get<PaginatedResponse<ProjectListItem>>("/projects", filters as Record<string, unknown>),
+    refetchInterval: 30_000,
     ...options,
   });
 }

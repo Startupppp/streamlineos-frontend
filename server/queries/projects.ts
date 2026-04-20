@@ -343,11 +343,6 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
       .limit(50),
   ]);
 
-  // ── Health Score ─────────────────────────────────────────────────────────────
-  // Composed of three signals (0–100):
-  //   1. Completion rate  (50 pts): % of tickets DONE
-  //   2. On-time rate     (30 pts): % of tickets not overdue among open ones
-  //   3. Velocity trend   (20 pts): recent sprint velocity ≥ avg velocity
 
   const today = new Date();
   const totalTickets = stateDistribution.reduce((s, r) => s + Number(r.count), 0);
@@ -356,7 +351,6 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
     .reduce((s, r) => s + Number(r.count), 0);
   const completionRate = totalTickets > 0 ? doneTickets / totalTickets : 0;
 
-  // Overdue = not DONE/CANCELLED and dueDate < today
   const [overdueResult] = await db
     .select({ count: count() })
     .from(tickets)
@@ -374,7 +368,6 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
   const overdueCount = Number(overdueResult?.count ?? 0);
   const onTimeRate = openTickets > 0 ? 1 - overdueCount / openTickets : 1;
 
-  // Velocity trend: is latest sprint ≥ average?
   const velocities = cycleVelocity.map((c) => Number(c.completedPoints));
   const avgVelocity = velocities.length > 0 ? velocities.reduce((a, b) => a + b, 0) / velocities.length : 0;
   const latestVelocity = velocities.length > 0 ? velocities[velocities.length - 1] : 0;

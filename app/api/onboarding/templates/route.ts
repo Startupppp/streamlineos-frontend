@@ -5,7 +5,6 @@ import { withAdmin, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTemplates, onboardingTemplateSteps } from "@/lib/db/schema";
 
-// GET /api/onboarding/templates — list all templates for the org
 export async function GET(_req: NextRequest) {
   return withAdmin(async (session) => {
     const templates = await db
@@ -14,7 +13,6 @@ export async function GET(_req: NextRequest) {
       .where(eq(onboardingTemplates.orgId, session.orgId))
       .orderBy(onboardingTemplates.createdAt);
 
-    // Attach steps to each template
     const templateIds = templates.map((t) => t.id);
     const steps =
       templateIds.length > 0
@@ -57,7 +55,6 @@ const createTemplateSchema = z.object({
   steps: z.array(stepSchema).default([]),
 });
 
-// POST /api/onboarding/templates — create a new template with steps
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = await parseBody(req, createTemplateSchema);

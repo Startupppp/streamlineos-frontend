@@ -60,7 +60,6 @@ export function LeadSidebar({
 
   return (
     <div className="space-y-4">
-      {/* Assigned To */}
       {lead.assignedTo && (
         <Card className="shadow-noir">
           <CardHeader className="pb-2">
@@ -93,7 +92,6 @@ export function LeadSidebar({
         </Card>
       )}
 
-      {/* Key Dates */}
       {keyDates.length > 0 && (
         <Card className="shadow-noir">
           <CardHeader className="pb-2">
@@ -103,12 +101,10 @@ export function LeadSidebar({
           </CardHeader>
           <CardContent>
             <div className="relative">
-              {/* Vertical connector line */}
               <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border/50" />
               <div className="space-y-3">
                 {keyDates.map((d, idx) => (
                   <div key={d.label} className="flex items-center gap-3 pl-5 relative">
-                    {/* Dot */}
                     <div
                       className={cn(
                         "absolute left-0 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center",
@@ -134,7 +130,6 @@ export function LeadSidebar({
         </Card>
       )}
 
-      {/* Activity Timeline */}
       <LeadActivityTimeline timeline={timeline} isLoading={timelineLoading} />
     </div>
   );

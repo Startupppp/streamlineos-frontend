@@ -88,9 +88,8 @@ export async function POST(req: NextRequest) {
         targetType: "expense",
         metadata: { category: body.category, amount: body.amount },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
-    // Notify HR/Admin about the new expense
     try {
       const hrMembers = await db
         .select({ userId: organizationMembers.userId })
@@ -113,7 +112,7 @@ export async function POST(req: NextRequest) {
           );
         }
       }
-    } catch { /* email failure non-blocking */ }
+    } catch {  }
 
     return ok(expense);
   });

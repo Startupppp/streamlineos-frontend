@@ -45,7 +45,10 @@ import { AiScoreCard } from "./_components/ai-score-card";
 import { CompositeScoreCard } from "./_components/composite-score-card";
 import { ApplicationsTab } from "./_components/applications-tab";
 import { InterviewsTab } from "./_components/interviews-tab";
-import { ScheduleInterviewSheet, ApplyToJobSheet } from "./_components/candidate-sheets";
+import {
+  ScheduleInterviewSheet,
+  ApplyToJobSheet,
+} from "./_components/candidate-sheets";
 
 export default function CandidateDetailPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
@@ -65,9 +68,14 @@ export default function CandidateDetailPage() {
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState("");
-  const [latestAiScore, setLatestAiScore] = useState<AiScoreResult | null>(null);
-  const [expandedScorecardId, setExpandedScorecardId] = useState<number | null>(null);
-  const [compositeScore, setCompositeScore] = useState<CompositeScoreResult | null>(null);
+  const [latestAiScore, setLatestAiScore] = useState<AiScoreResult | null>(
+    null,
+  );
+  const [expandedScorecardId, setExpandedScorecardId] = useState<number | null>(
+    null,
+  );
+  const [compositeScore, setCompositeScore] =
+    useState<CompositeScoreResult | null>(null);
 
   const { data: scorecardTemplates } = useScorecardTemplates();
   const generateCompositeScore = useGenerateCandidateCompositeScore();
@@ -79,10 +87,10 @@ export default function CandidateDetailPage() {
         {
           onSuccess: () => toast.success("Status updated"),
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     },
-    [id, updateCandidate]
+    [id, updateCandidate],
   );
 
   const handleScheduleInterview = useCallback(() => {
@@ -106,7 +114,7 @@ export default function CandidateDetailPage() {
           setMeetingLink("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [id, interviewType, scheduledAt, duration, meetingLink, createInterview]);
 
@@ -124,7 +132,7 @@ export default function CandidateDetailPage() {
           setSelectedJobId("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [id, selectedJobId, createApplication]);
 
@@ -150,8 +158,10 @@ export default function CandidateDetailPage() {
 
   const handleToggleScorecard = useCallback(
     (interviewId: number) =>
-      setExpandedScorecardId((prev) => (prev === interviewId ? null : interviewId)),
-    []
+      setExpandedScorecardId((prev) =>
+        prev === interviewId ? null : interviewId,
+      ),
+    [],
   );
 
   const handleInterviewOpen = useCallback(() => setInterviewOpen(true), []);
@@ -162,14 +172,16 @@ export default function CandidateDetailPage() {
     (candidate?.aiScore != null && candidate.aiScoreBreakdown
       ? {
           overall: candidate.aiScore,
-          breakdown: candidate.aiScoreBreakdown as unknown as AiScoreResult["breakdown"],
+          breakdown:
+            candidate.aiScoreBreakdown as unknown as AiScoreResult["breakdown"],
           summary: "",
         }
       : null);
 
-  const hasSubmittedScorecard = candidate?.interviews?.some(
-    (iv) =>
-      (iv as { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some((sc) => sc.submittedAt)
+  const hasSubmittedScorecard = candidate?.interviews?.some((iv) =>
+    (iv as { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some(
+      (sc) => sc.submittedAt,
+    ),
   );
 
   if (isLoading) {
@@ -208,7 +220,8 @@ export default function CandidateDetailPage() {
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/hr/recruitment/candidates">
-              <ArrowLeft className="mr-1 h-3.5 w-3.5" />Back
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+              Back
             </Link>
           </Button>
           <Button size="sm" onClick={handleInterviewOpen}>
@@ -219,7 +232,10 @@ export default function CandidateDetailPage() {
     >
       {candidate.duplicateOfId != null && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 px-4 py-3 mb-4 text-sm">
-          <span className="text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden="true">
+          <span
+            className="text-amber-600 dark:text-amber-400 mt-0.5"
+            aria-hidden="true"
+          >
             ⚠
           </span>
           <div className="flex-1">
@@ -357,9 +373,15 @@ export default function CandidateDetailPage() {
                 bgvStatus={candidate.bgvStatus ?? null}
                 bgvAgency={candidate.bgvAgency ?? null}
                 bgvNotes={candidate.bgvNotes ?? null}
-                bgvInitiatedAt={candidate.bgvInitiatedAt ? String(candidate.bgvInitiatedAt) : null}
+                bgvInitiatedAt={
+                  candidate.bgvInitiatedAt
+                    ? String(candidate.bgvInitiatedAt)
+                    : null
+                }
                 bgvCompletedAt={
-                  candidate.bgvCompletedAt ? String(candidate.bgvCompletedAt) : null
+                  candidate.bgvCompletedAt
+                    ? String(candidate.bgvCompletedAt)
+                    : null
                 }
               />
             </TabsContent>

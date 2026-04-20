@@ -50,7 +50,6 @@ import {
 import { CallLogDialog } from "@/components/tasks/call-log-dialog";
 import { EmailTaskDialog } from "@/components/tasks/email-task-dialog";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TYPE_ICONS: Record<TaskType, React.ElementType> = {
   CALL: Phone,
@@ -92,7 +91,6 @@ const TYPE_FILTER_OPTIONS: Array<{ value: "ALL" | TaskType; label: string }> = [
 
 const MANAGER_ROLES = ["CEO", "ADMIN", "SALES_DIRECTOR", "BRANCH_MANAGER", "HR", "ENGINEERING_LEAD"];
 
-// ─── Add Task Form ────────────────────────────────────────────────────────────
 
 function AddTaskForm({ onCreated }: { onCreated: () => void }) {
   const [title, setTitle] = useState("");
@@ -198,7 +196,6 @@ function AddTaskForm({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-// ─── Task Card ────────────────────────────────────────────────────────────────
 
 function TaskCard({ task }: { task: TaskWithBucket }) {
   const [showCallLog, setShowCallLog] = useState(false);
@@ -297,7 +294,6 @@ function TaskCard({ task }: { task: TaskWithBucket }) {
   );
 }
 
-// ─── Panel ────────────────────────────────────────────────────────────────────
 
 interface MyTasksPanelProps {
   open: boolean;
@@ -317,7 +313,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
       ? (tasks ?? [])
       : (tasks ?? []).filter((t) => t.type === typeFilter);
 
-  // Group into buckets
   const bucketOrder: TaskWithBucket["bucket"][] = [
     "OVERDUE",
     "TODAY",
@@ -336,7 +331,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
 
   const overdueCount = grouped.OVERDUE.length;
 
-  // When AI priority is active, flatten all tasks in AI-ranked order
   const aiRankMap = aiPriority
     ? new Map(aiPriority.items.map((item) => [item.taskId, item]))
     : null;
@@ -362,7 +356,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
         className="w-full sm:max-w-md flex flex-col p-0"
         aria-label="My Tasks panel"
       >
-        {/* Header */}
         <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-base">
@@ -403,7 +396,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
             </div>
           </div>
 
-          {/* Type filter chips */}
           <div className="flex gap-1 flex-wrap pt-1">
             {TYPE_FILTER_OPTIONS.map((opt) => (
               <button
@@ -423,14 +415,12 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
           </div>
         </SheetHeader>
 
-        {/* Add Task Form */}
         {showAddForm && (
           <div className="px-4 pt-3 pb-0 shrink-0">
             <AddTaskForm onCreated={() => setShowAddForm(false)} />
           </div>
         )}
 
-        {/* Task List */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
           {isLoading ? (
             <div className="space-y-2">
@@ -446,7 +436,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
               compact
             />
           ) : aiPriority ? (
-            // ── AI Priority view ──
             <>
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
@@ -476,7 +465,6 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
               </div>
             </>
           ) : (
-            // ── Default bucket view ──
             bucketOrder.map((bucket) => {
               const items = grouped[bucket];
               if (items.length === 0) return null;

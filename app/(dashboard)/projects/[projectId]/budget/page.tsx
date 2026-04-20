@@ -86,7 +86,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
   return (
     <PageWrapper title="Budget" subtitle="Planned budget vs actual cost from billable timesheets">
-      {/* Set budget bar */}
       <div className="flex items-center justify-between mb-6">
         {editMode ? (
           <div className="flex items-center gap-2">
@@ -139,7 +138,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         />
       </div>
 
-      {/* Utilization bar */}
       {(budget?.plannedBudget ?? 0) > 0 && (
         <Card className="mb-6">
           <CardHeader className="pb-2">
@@ -158,7 +156,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         </Card>
       )}
 
-      {/* Member breakdown */}
       {budget?.memberBreakdown && budget.memberBreakdown.length > 0 && (
         <Card>
           <CardHeader className="pb-2">

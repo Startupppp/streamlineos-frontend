@@ -10,7 +10,7 @@ export const weeklyProjectReport = inngest.createFunction(
   {
     id: "weekly-project-report",
     name: "Weekly Project Status Report",
-    triggers: { cron: "0 7 * * 1" }, // Every Monday at 7am
+    triggers: { cron: "0 7 * * 1" },
   },
   async ({ step }) => {
     const orgs = await step.run("fetch-orgs", () =>
@@ -33,7 +33,6 @@ export const weeklyProjectReport = inngest.createFunction(
         const summaries: string[] = [];
 
         for (const project of activeProjects) {
-          // Total open tickets
           const [{ openCount }] = await db
             .select({ openCount: count(tickets.id) })
             .from(tickets)
@@ -45,7 +44,6 @@ export const weeklyProjectReport = inngest.createFunction(
               ),
             );
 
-          // Completed this week
           const [{ doneCount }] = await db
             .select({ doneCount: count(tickets.id) })
             .from(tickets)
@@ -58,7 +56,6 @@ export const weeklyProjectReport = inngest.createFunction(
               ),
             );
 
-          // Overdue tickets
           const [{ overdueCount }] = await db
             .select({ overdueCount: count(tickets.id) })
             .from(tickets)
@@ -71,7 +68,6 @@ export const weeklyProjectReport = inngest.createFunction(
               ),
             );
 
-          // Upcoming milestones (next 14 days)
           const upcomingMilestones = await db
             .select({ name: projectMilestones.name, targetDate: projectMilestones.targetDate })
             .from(projectMilestones)
@@ -94,7 +90,6 @@ export const weeklyProjectReport = inngest.createFunction(
           );
         }
 
-        // Notify all managers / admins / PMs
         const managers = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)

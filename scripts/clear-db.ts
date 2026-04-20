@@ -26,7 +26,6 @@ async function main() {
   rl.close();
 
   if (answer !== "DELETE ALL DATA") {
-    console.log("Aborted.");
     process.exit(1);
   }
 
@@ -44,7 +43,6 @@ async function main() {
     END $$;
   `);
 
-  console.log("Database cleared successfully.");
   process.exit(0);
 }
 

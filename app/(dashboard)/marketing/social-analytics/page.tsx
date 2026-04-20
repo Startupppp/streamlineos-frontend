@@ -62,7 +62,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PLATFORMS = [
   { value: "all", label: "All Platforms" },
@@ -91,7 +90,6 @@ const PLATFORM_BADGE: Record<string, string> = {
   youtube: "text-red-700 bg-red-50 border-red-200",
 };
 
-// ─── Bar Chart ────────────────────────────────────────────────────────────────
 
 function BarChartViz({ metrics }: { metrics: SocialMetric[] }) {
   const recent = useMemo(
@@ -137,7 +135,6 @@ function BarChartViz({ metrics }: { metrics: SocialMetric[] }) {
   );
 }
 
-// ─── Log Metrics Sheet ────────────────────────────────────────────────────────
 
 interface LogMetricsSheetProps {
   open: boolean;
@@ -320,7 +317,6 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SocialAnalyticsPage() {
   const [activePlatform, setActivePlatform] = useState<PlatformFilter>("all");
@@ -371,7 +367,6 @@ export default function SocialAnalyticsPage() {
         </Button>
       }
     >
-      {/* Platform tabs */}
       <div className="flex gap-1 flex-wrap">
         {PLATFORMS.map((p) => (
           <button
@@ -390,7 +385,6 @@ export default function SocialAnalyticsPage() {
         ))}
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -426,7 +420,6 @@ export default function SocialAnalyticsPage() {
         )}
       </div>
 
-      {/* Bar chart */}
       <Card className="shadow-soft">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -443,7 +436,6 @@ export default function SocialAnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Metrics table */}
       <Card className="shadow-soft">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold">Recent Entries (Last 30 Days)</CardTitle>
@@ -517,10 +509,8 @@ export default function SocialAnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Log metrics sheet */}
       <LogMetricsSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
 
-      {/* Delete confirm dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={(v) => !v && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

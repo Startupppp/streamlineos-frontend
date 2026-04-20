@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
     const body = await parseBody(req, bulkRejectSchema);
     const { candidateIds, sendRejectionEmail } = body;
 
-    // Verify all candidates belong to this org and are not already rejected
     const existing = await db
       .select({
         id: candidates.id,
@@ -51,7 +50,6 @@ export async function POST(req: NextRequest) {
       return err("No matching candidates found", 404);
     }
 
-    // Filter out already-rejected candidates
     const toReject = existing.filter((c) => c.status !== "REJECTED");
     const alreadyRejected = existing.length - toReject.length;
 
@@ -61,13 +59,11 @@ export async function POST(req: NextRequest) {
 
     const toRejectIds = toReject.map((c) => c.id);
 
-    // Bulk update status
     await db
       .update(candidates)
       .set({ status: "REJECTED", updatedAt: new Date() })
       .where(inArray(candidates.id, toRejectIds));
 
-    // Audit log (non-blocking)
     void Promise.all(
       toReject.map((c) =>
         writeAuditLog({
@@ -97,19 +93,16 @@ export async function POST(req: NextRequest) {
 
       const companyName = org?.name ?? "our company";
 
-      // Fetch latest job posting for each candidate to personalise the rejection
       const latestApps = await db
         .select({
           candidateId: candidateApplications.candidateId,
-          jobTitle: candidateApplications.candidateId, // placeholder — see join below
+          jobTitle: candidateApplications.candidateId,
         })
         .from(candidateApplications)
         .where(inArray(candidateApplications.candidateId, toRejectIds));
 
-      // Build a candidateId → jobTitle map from existing data
       const jobTitleMap: Record<number, string> = {};
       for (const app of latestApps) {
-        // Default job title if we don't have the join data
         jobTitleMap[app.candidateId] ??= "the position";
       }
 
@@ -125,7 +118,6 @@ export async function POST(req: NextRequest) {
           await sendEmail({ to: candidate.email, subject, html });
           emailsSent++;
         } catch {
-          // Non-fatal — log but continue
         }
       });
 

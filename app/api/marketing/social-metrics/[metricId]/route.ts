@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { socialMetrics } from "@/lib/db/schema/marketing";
 import { and, eq } from "drizzle-orm";
 
-/** DELETE /api/marketing/social-metrics/[metricId] */
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ metricId: string }> }

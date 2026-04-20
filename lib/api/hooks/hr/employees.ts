@@ -118,7 +118,6 @@ export function useOnboardEmployee() {
   });
 }
 
-// ─── Availability ─────────────────────────────────────────────────────────────
 
 export type AvailabilityStatus = "ON_LEAVE" | "HALF_DAY" | "AVAILABLE";
 
@@ -138,7 +137,6 @@ export function useEmployeeAvailability(userIds?: string[]) {
   });
 }
 
-// ─── Find Expert ──────────────────────────────────────────────────────────────
 
 export interface ExpertResult {
   userId: string;
@@ -158,7 +156,6 @@ export function useFindExpert(skill: string) {
   });
 }
 
-// ─── Direct Reports ───────────────────────────────────────────────────────────
 
 export interface DirectReport {
   id: string;
@@ -177,7 +174,6 @@ export function useDirectReports(employeeId: string) {
   });
 }
 
-// ─── Manager Scorecard ────────────────────────────────────────────────────────
 
 export interface ManagerScorecard {
   managerId: string;

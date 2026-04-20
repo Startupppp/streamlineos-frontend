@@ -28,6 +28,13 @@ export async function ensureOrgMembership(
   });
 
   if (existing) {
+    if (role && existing.role !== role) {
+      await db
+        .update(organizationMembers)
+        .set({ role })
+        .where(eq(organizationMembers.id, existing.id));
+      return { orgId: existing.orgId, role };
+    }
     return { orgId: existing.orgId, role: existing.role };
   }
 

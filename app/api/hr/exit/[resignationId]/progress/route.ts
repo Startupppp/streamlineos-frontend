@@ -24,7 +24,6 @@ export async function GET(
       return err("Access denied.", 403);
     }
 
-    // Build progress steps
     type StepStatus = "completed" | "active" | "pending" | "rejected";
     const steps: { label: string; status: StepStatus; actor?: string; timestamp?: string; remarks?: string }[] = [];
 
@@ -37,7 +36,6 @@ export async function GET(
       timestamp: record.createdAt ? format(new Date(record.createdAt), "dd MMM yyyy, HH:mm") : undefined,
     });
 
-    // HR Review step
     if (record.hrReviewedAt) {
       const hrUser = record.hrReviewedBy
         ? await db.query.users.findFirst({ where: eq(users.id, record.hrReviewedBy) })
@@ -55,7 +53,6 @@ export async function GET(
       steps.push({ label: "HR Review", status: "pending" });
     }
 
-    // CEO Review step
     if (record.ceoReviewedAt) {
       const ceoUser = record.ceoReviewedBy
         ? await db.query.users.findFirst({ where: eq(users.id, record.ceoReviewedBy) })
@@ -73,7 +70,6 @@ export async function GET(
       steps.push({ label: "CEO Approval", status: "pending" });
     }
 
-    // Exit process
     steps.push({
       label: "Exit Process",
       status: record.status === "IN_PROGRESS" || record.status === "COMPLETED" ? "completed" : "pending",

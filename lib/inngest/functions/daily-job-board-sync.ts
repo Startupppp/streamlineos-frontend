@@ -1,9 +1,4 @@
-/**
- * Inngest cron: Daily job board sync at midnight UTC.
- * Iterates all active integrations across all orgs and triggers sync.
- * In production each platform branch would call the real API; here we
- * record the sync timestamp and leave the API call as a documented stub.
- */
+
 
 import { inngest } from "../client";
 import { db } from "@/lib/db";
@@ -14,7 +9,6 @@ import { logger } from "@/lib/logger";
 export const dailyJobBoardSync = inngest.createFunction(
   { id: "daily-job-board-sync", name: "Daily Job Board Sync", triggers: { cron: "0 0 * * *" } },
   async ({ step }) => {
-    // Step 1: fetch all active integrations that have an OAuth token
     const activeSources = await step.run("fetch-active-sources", async () => {
       return db
         .select({
@@ -36,15 +30,11 @@ export const dailyJobBoardSync = inngest.createFunction(
       return { synced: 0 };
     }
 
-    // Step 2: sync each integration
     let syncedCount = 0;
 
     for (const source of activeSources) {
       await step.run(`sync-${source.orgId}-${source.platform}`, async () => {
         try {
-          // In production: call platform API here using stored oauthToken
-          // e.g. for LinkedIn: await syncLinkedInApplications(source.orgId, source.oauthToken)
-          // e.g. for Naukri: await syncNaukriApplications(source.orgId, source.oauthToken)
 
           await db
             .update(candidateSources)

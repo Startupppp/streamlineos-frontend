@@ -84,7 +84,6 @@ function PipelineStep({
         className="flex flex-col items-center gap-1.5 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         title={`Move to ${STATUS_LABELS[status]}`}
       >
-        {/* Circle node */}
         <div
           className={cn(
             "flex items-center justify-center rounded-full transition-all duration-200",
@@ -107,7 +106,6 @@ function PipelineStep({
             />
           )}
         </div>
-        {/* Label */}
         <span
           className={cn(
             "text-[10px] font-medium whitespace-nowrap leading-none",
@@ -124,7 +122,6 @@ function PipelineStep({
         </span>
       </button>
 
-      {/* Connector line */}
       {!isLast && (
         <div
           className={cn(
@@ -173,14 +170,11 @@ export function LeadDetailHeader({
   return (
     <Card className="shadow-noir border-t-2 border-t-gold overflow-hidden">
       <CardContent className="p-0">
-        {/* Top banner: avatar + meta + badges + actions */}
         <div className="flex items-start gap-4 p-4 pb-3">
-          {/* Avatar */}
           <div className="shrink-0 h-12 w-12 rounded-full ring-2 ring-gold/50 bg-gold/10 flex items-center justify-center text-gold font-bold text-lg select-none">
             {initials || "?"}
           </div>
 
-          {/* Name + company */}
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-baseline gap-2">
               <h2 className="text-xl font-bold truncate leading-tight">
@@ -211,9 +205,7 @@ export function LeadDetailHeader({
             )}
           </div>
 
-          {/* Right: badge row + action buttons */}
           <div className="flex flex-col items-end gap-2 shrink-0">
-            {/* Badges row */}
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               <Badge
                 variant="outline"
@@ -256,7 +248,6 @@ export function LeadDetailHeader({
               )}
             </div>
 
-            {/* AI tool buttons + edit/convert */}
             <div className="flex items-center gap-1 flex-wrap justify-end">
               <AIScoreButton
                 leadId={(lead as Record<string, unknown>).id as number}
@@ -317,7 +308,6 @@ export function LeadDetailHeader({
           </div>
         </div>
 
-        {/* Pipeline stepper */}
         <div className="px-4 pb-4 pt-1">
           <div className="flex items-start px-2 py-2.5 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
             {STATUS_PIPELINE.map((status, i) => (

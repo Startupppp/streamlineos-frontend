@@ -32,7 +32,6 @@ import { useDocumentTemplates } from "@/lib/api/hooks/hr/document-templates";
 import { useGenerateAndRollout } from "@/lib/api/hooks/hr/recruitment";
 import { extractVariables } from "@/lib/utils/document-variables";
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
 
 export interface RolloutDocumentsDialogProps {
   candidateId: number;
@@ -42,7 +41,6 @@ export interface RolloutDocumentsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// ─── Form schema ──────────────────────────────────────────────────────────────
 
 const rolloutFormSchema = z.object({
   selectedTemplateIds: z.array(z.number()).min(1, "Select at least one template"),
@@ -52,7 +50,6 @@ const rolloutFormSchema = z.object({
 
 type RolloutFormValues = z.infer<typeof rolloutFormSchema>;
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function RolloutDocumentsDialog({
   candidateId,
@@ -67,7 +64,6 @@ export function RolloutDocumentsDialog({
   const { data: templates, isLoading: templatesLoading } = useDocumentTemplates();
   const rollout = useGenerateAndRollout(candidateId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<RolloutFormValues>({
     resolver: zodResolver(rolloutFormSchema) as any,
     defaultValues: {
@@ -85,7 +81,6 @@ export function RolloutDocumentsDialog({
 
   const selectedIds = form.watch("selectedTemplateIds");
 
-  // Collect all unique variables from selected templates
   const requiredVariables = useMemo(() => {
     if (!templates) return [] as string[];
     const selected = templates.filter((t) => selectedIds.includes(t.id));
@@ -167,7 +162,6 @@ export function RolloutDocumentsDialog({
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* Template selection */}
               <div className="space-y-2">
                 <p className="text-sm font-medium">Select Templates</p>
                 {templatesLoading ? (
@@ -210,7 +204,6 @@ export function RolloutDocumentsDialog({
                 )}
               </div>
 
-              {/* Variable fields */}
               {requiredVariables.length > 0 && (
                 <>
                   <Separator />
@@ -249,7 +242,6 @@ export function RolloutDocumentsDialog({
 
               <Separator />
 
-              {/* Send email toggle */}
               <FormField
                 control={form.control}
                 name="sendEmail"

@@ -101,7 +101,6 @@ async function readRowsFromFile(file: File): Promise<ParsedImportRow[]> {
         if (cellValue instanceof Date) {
           val = cellValue.toISOString().split("T")[0];
         } else if (typeof cellValue === "number") {
-          // Treat numbers as Excel dates only for date-like columns.
           val = key.includes("date") ? excelSerialToIsoDate(cellValue) : String(cellValue);
         } else if (cellValue && typeof cellValue === "object" && "text" in cellValue) {
           val = String(cellValue.text ?? "");
@@ -222,7 +221,6 @@ export async function POST(req: Request) {
     }
 
     if (batchValues.length > 0) {
-      // Insert in batches of 500 to avoid query size limits
       for (let i = 0; i < batchValues.length; i += 500) {
         const batch = batchValues.slice(i, i + 500);
         await db.insert(expenses).values(batch);

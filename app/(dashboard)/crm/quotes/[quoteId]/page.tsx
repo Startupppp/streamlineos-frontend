@@ -113,7 +113,6 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ quoteId:
         doc.text(quote.description, 20, 80, { maxWidth: 170 });
       }
 
-      // Line items table
       let y = 95;
       doc.setFontSize(9);
       doc.setTextColor(100);

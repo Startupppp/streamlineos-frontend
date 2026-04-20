@@ -10,7 +10,6 @@ export const interviewSlaCheck = inngest.createFunction(
     const results = await step.run("check-interview-sla-statuses", async () => {
       const now = new Date();
 
-      // Fetch all non-breached tracking records
       const trackingRecords = await db
         .select()
         .from(candidateSlaTracking)
@@ -26,7 +25,6 @@ export const interviewSlaCheck = inngest.createFunction(
         .from(interviewSlas)
         .where(inArray(interviewSlas.orgId, orgIds));
 
-      // Build lookup map: orgId+stage → policy
       const policyMap = new Map(
         slaPolicies.map((p) => [`${p.orgId}:${p.stage}`, p])
       );

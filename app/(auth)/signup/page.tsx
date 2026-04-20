@@ -58,7 +58,6 @@ export default function SignupPage() {
       await apiClient.post("/auth/signup", { ...data, plan: selectedPlan });
       toast.success("Account created! Signing you in...");
 
-      // Auto sign in after successful signup
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,

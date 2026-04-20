@@ -12,7 +12,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const id = Number(templateId);
     if (!Number.isFinite(id)) return err("Invalid template ID", 400);
 
-    // Verify the template belongs to this org
     const [template] = await db
       .select({ id: documentTemplates.id })
       .from(documentTemplates)

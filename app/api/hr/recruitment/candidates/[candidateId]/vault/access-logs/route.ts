@@ -8,7 +8,6 @@ type RouteParams = { params: Promise<{ candidateId: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    // HR/Admin only
     const role = session.user.role as string;
     if (!["CEO", "HR", "ADMIN"].includes(role)) {
       return err("Access denied — HR only", 403);

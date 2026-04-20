@@ -14,7 +14,7 @@ const SubjectLinesSchema = z.object({
   subjects: z.array(z.string()).min(3).max(10),
 });
 
-/** POST /api/ai/subject-lines — Generate email subject line variations */
+
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) {

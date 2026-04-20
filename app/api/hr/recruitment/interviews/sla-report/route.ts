@@ -3,24 +3,20 @@ import { db } from "@/lib/db";
 import { candidateSlaTracking } from "@/lib/db/schema";
 import { eq, and, gte } from "drizzle-orm";
 
-// GET /api/hr/recruitment/interviews/sla-report
-// Returns monthly SLA breach stats per stage for the last 6 months
 export async function GET() {
   return withAuth(async (session) => {
-    // Fetch all SLA tracking records for this org
     const records = await db.query.candidateSlaTracking.findMany({
       where: eq(candidateSlaTracking.orgId, session.orgId),
       orderBy: (t, { desc }) => [desc(t.enteredAt)],
     });
 
-    // Group by month (YYYY-MM) and stage
-    type MonthKey = string; // "2026-03"
+    type MonthKey = string;
     type StageKey = string;
 
     const grouped: Record<MonthKey, Record<StageKey, { total: number; breached: number }>> = {};
 
     for (const record of records) {
-      const month = record.enteredAt.toISOString().slice(0, 7); // "YYYY-MM"
+      const month = record.enteredAt.toISOString().slice(0, 7);
       if (!grouped[month]) grouped[month] = {};
       if (!grouped[month][record.stage]) grouped[month][record.stage] = { total: 0, breached: 0 };
       grouped[month][record.stage].total++;
@@ -29,7 +25,6 @@ export async function GET() {
       }
     }
 
-    // Build sorted report for last 6 months
     const now = new Date();
     const months: MonthKey[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -37,7 +32,6 @@ export async function GET() {
       months.push(d.toISOString().slice(0, 7));
     }
 
-    // Collect all unique stages across all months
     const allStages = Array.from(
       new Set(Object.values(grouped).flatMap((m) => Object.keys(m)))
     ).sort();
@@ -62,7 +56,6 @@ export async function GET() {
       };
     });
 
-    // Summary: average breach % per stage across all months
     const stageSummary = allStages.map((stage) => {
       const monthsWithData = report.filter((r) => {
         const s = r.stages.find((st) => st.stage === stage);

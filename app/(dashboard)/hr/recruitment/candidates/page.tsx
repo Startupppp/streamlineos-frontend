@@ -84,7 +84,6 @@ export default function CandidatesPage() {
   const deleteCandidate = useDeleteCandidate();
   const bulkReject = useBulkRejectCandidates();
 
-  // Create sheet state
   const [sheetOpen, setSheetOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -92,7 +91,6 @@ export default function CandidatesPage() {
   const [phone, setPhone] = useState("");
   const [source, setSource] = useState("DIRECT");
 
-  // Edit sheet state
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
   const [editFirstName, setEditFirstName] = useState("");
@@ -105,7 +103,6 @@ export default function CandidatesPage() {
   const [editSource, setEditSource] = useState("DIRECT");
   const [editNotes, setEditNotes] = useState("");
 
-  // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingCandidate, setDeletingCandidate] = useState<Candidate | null>(null);
 
@@ -412,7 +409,6 @@ export default function CandidatesPage() {
               key={candidate.id}
               className={`hover:border-primary/30 transition-colors relative ${selectedIds.has(candidate.id) ? "ring-2 ring-primary/40 border-primary/40" : ""}`}
             >
-              {/* Checkbox + Actions overlay */}
               <div
                 className="absolute top-3 right-3 z-10 flex items-center gap-1"
                 onClick={(e) => e.stopPropagation()}
@@ -522,7 +518,6 @@ export default function CandidatesPage() {
         />
       )}
 
-      {/* Edit Candidate Sheet */}
       <Sheet open={editSheetOpen} onOpenChange={(open) => { setEditSheetOpen(open); if (!open) setEditingCandidate(null); }}>
         <SheetContent className="flex flex-col p-0 gap-0">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -600,7 +595,6 @@ export default function CandidatesPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Candidate Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletingCandidate(null); }}

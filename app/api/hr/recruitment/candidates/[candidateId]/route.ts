@@ -105,7 +105,6 @@ export async function PATCH(
       })
       .where(eq(candidates.id, candidateId));
 
-    // Send rejection email if status flipped to REJECTED (and wasn't already)
     if (body.status === "REJECTED" && existing.status !== "REJECTED") {
       const emailTarget = body.email ?? existing.email;
 
@@ -134,7 +133,6 @@ export async function PATCH(
             });
             await sendEmail({ to: emailTarget, subject, html });
           } catch {
-            // Non-blocking — don't fail the request if email fails
           }
    
       }
@@ -158,7 +156,6 @@ export async function DELETE(
     });
     if (!existing) return err("Candidate not found.", 404);
 
-    // Delete in dependency order
     await db.delete(candidateSlaTracking).where(eq(candidateSlaTracking.candidateId, candidateId));
     await db.delete(interviews).where(eq(interviews.candidateId, candidateId));
     await db.delete(candidateApplications).where(eq(candidateApplications.candidateId, candidateId));

@@ -25,7 +25,6 @@ import { apiClient } from "@/lib/api-client";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AgingDeal {
   id: number;
@@ -43,17 +42,15 @@ interface AgingResponse {
   deals: AgingDeal[];
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 function useDealAging() {
   return useQuery<AgingResponse>({
     queryKey: ["deals", "aging"],
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
-    refetchInterval: 300_000, // 5 minutes
+    refetchInterval: 300_000,
   });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STAGE_BADGE: Record<string, { label: string; className: string }> = {
   LEAD:        { label: "Lead",        className: "bg-muted text-muted-foreground border-border" },
@@ -95,7 +92,6 @@ function getSeverityChip(days: number) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DealAgingPage() {
   const { data, isLoading } = useDealAging();
@@ -152,7 +148,6 @@ export default function DealAgingPage() {
       actions={backAction}
     >
       <div className="space-y-6">
-        {/* ── Summary stat cards ─────────────────────────────────────────── */}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <StatCard
             label="Total Stale Deals"
@@ -184,7 +179,6 @@ export default function DealAgingPage() {
           />
         </div>
 
-        {/* ── Table ──────────────────────────────────────────────────────── */}
         <Card>
           <CardContent className="p-0">
             {sortedDeals.length === 0 ? (
@@ -214,7 +208,6 @@ export default function DealAgingPage() {
                         const badge = getStageBadge(deal.stage);
                         return (
                           <TableRow key={deal.id}>
-                            {/* Deal Name */}
                             <TableCell className="font-medium">
                               <Link
                                 href={`/crm/deals/${deal.id}`}
@@ -224,7 +217,6 @@ export default function DealAgingPage() {
                               </Link>
                             </TableCell>
 
-                            {/* Stage badge */}
                             <TableCell>
                               <Badge
                                 variant="outline"
@@ -234,31 +226,26 @@ export default function DealAgingPage() {
                               </Badge>
                             </TableCell>
 
-                            {/* Assignee */}
                             <TableCell className="text-sm text-muted-foreground">
                               {deal.assigneeName ?? (
                                 <span className="italic text-muted-foreground/60">Unassigned</span>
                               )}
                             </TableCell>
 
-                            {/* Days in stage */}
                             <TableCell>
                               <span className={cn("text-sm tabular-nums", getDayColor(deal.daysInStage))}>
                                 {deal.daysInStage}d
                               </span>
                             </TableCell>
 
-                            {/* Severity chip */}
                             <TableCell>{getSeverityChip(deal.daysInStage)}</TableCell>
 
-                            {/* Deal value */}
                             <TableCell className="text-sm tabular-nums">
                               {deal.value ? formatINR(deal.value) : (
                                 <span className="text-muted-foreground/60">—</span>
                               )}
                             </TableCell>
 
-                            {/* Created date */}
                             <TableCell className="text-sm text-muted-foreground tabular-nums">
                               {deal.createdAt
                                 ? new Date(deal.createdAt).toLocaleDateString("en-IN", {
@@ -269,7 +256,6 @@ export default function DealAgingPage() {
                                 : "—"}
                             </TableCell>
 
-                            {/* Actions */}
                             <TableCell className="text-right">
                               <Button variant="ghost" size="sm" asChild>
                                 <Link href={`/crm/deals/${deal.id}`}>

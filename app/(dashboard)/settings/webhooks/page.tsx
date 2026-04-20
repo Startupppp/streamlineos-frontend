@@ -246,7 +246,6 @@ export default function WebhooksPage() {
         )}
       </motion.div>
 
-      {/* Create Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
@@ -307,7 +306,6 @@ export default function WebhooksPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirm */}
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

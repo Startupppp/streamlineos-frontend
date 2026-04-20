@@ -86,7 +86,6 @@ export default function LeadSourceReportPage() {
         initial="hidden"
         animate="visible"
       >
-        {/* Summary cards */}
         <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <StatCard
             label="Total Leads"
@@ -114,7 +113,6 @@ export default function LeadSourceReportPage() {
           />
         </motion.div>
 
-        {/* Source breakdown table */}
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardHeader>
@@ -199,7 +197,6 @@ export default function LeadSourceReportPage() {
           </Card>
         </motion.div>
 
-        {/* Conversion rate comparison */}
         {data && data.sources.length > 0 && (
           <motion.div variants={fadeUp}>
             <Card className="shadow-noir">

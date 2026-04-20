@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
     const dayStart = startOfDay(date);
     const dayEnd = endOfDay(date);
 
-    // Fetch calendar events where any of the interviewers are attendees or creator
     const events = await db
       .select({
         id: calendarEvents.id,
@@ -44,7 +43,6 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    // Fetch interviews on this day for these interviewers
     const interviewRows = await db
       .select({
         id: interviews.id,
@@ -61,13 +59,11 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    // Build busy blocks per interviewer
     const busyMap = new Map<string, { start: string; end: string; title: string }[]>();
     for (const id of interviewerIds) {
       busyMap.set(id, []);
     }
 
-    // Calendar events
     for (const ev of events) {
       const eventAttendees = ev.attendeeIds ?? [];
       const relevantIds = interviewerIds.filter(
@@ -82,7 +78,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Interviews
     for (const iv of interviewRows) {
       if (iv.interviewerId && interviewerIds.includes(iv.interviewerId)) {
         const endTime = new Date(iv.scheduledAt.getTime() + (iv.duration ?? 60) * 60_000);

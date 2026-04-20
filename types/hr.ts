@@ -1018,7 +1018,6 @@ export interface CandidateApplication {
 
 export type SlaCandidateStatus = "ON_TRACK" | "AT_RISK" | "BREACHED";
 
-// ATS Kanban pipeline types
 export interface AtsPipelineCandidate {
   id: number;
   name: string;

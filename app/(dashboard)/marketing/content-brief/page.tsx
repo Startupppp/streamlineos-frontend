@@ -116,7 +116,6 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
         </Badge>
       </div>
 
-      {/* Outline */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <ListOrdered className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -134,7 +133,6 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
         </ol>
       </div>
 
-      {/* Key Points */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Lightbulb className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -150,7 +148,6 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
         </ul>
       </div>
 
-      {/* SEO Keywords */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Tag className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -165,7 +162,6 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
         </div>
       </div>
 
-      {/* Call to Action */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <MessageSquareQuote className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -176,7 +172,6 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
         </blockquote>
       </div>
 
-      {/* Target Audience Insights */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-gold" aria-hidden="true" />
@@ -229,7 +224,6 @@ export default function ContentBriefPage() {
       subtitle="AI-powered structured briefs for financial services content"
     >
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left: Form */}
         <div className="lg:w-2/5 shrink-0">
           <Card className="shadow-noir">
             <CardHeader className="pb-3">
@@ -324,7 +318,6 @@ export default function ContentBriefPage() {
           </Card>
         </div>
 
-        {/* Right: Result */}
         <div className="flex-1 min-w-0">
           <Card
             className={cn(

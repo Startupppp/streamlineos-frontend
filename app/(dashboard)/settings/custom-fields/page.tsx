@@ -91,7 +91,6 @@ function autoName(label: string): string {
     .replace(/[^a-z0-9_]/g, "");
 }
 
-// ─── Field List Tab ───────────────────────────────────────────────────────────
 
 function EntityFieldsTab({ entityType }: { entityType: EntityType }) {
   const { data, isLoading } = useCustomFields(entityType);
@@ -257,7 +256,6 @@ function EntityFieldsTab({ entityType }: { entityType: EntityType }) {
   );
 }
 
-// ─── Field Sheet (Create / Edit) ──────────────────────────────────────────────
 
 function FieldSheet({
   open,
@@ -279,7 +277,6 @@ function FieldSheet({
     getInitialForm(editingField)
   );
 
-  // Reset form when sheet opens
   function handleOpenChange(v: boolean) {
     if (v) {
       setForm(getInitialForm(editingField));
@@ -287,7 +284,6 @@ function FieldSheet({
     onOpenChange(v);
   }
 
-  // Sync when editingField changes while open
   function syncForm(field: CustomFieldDefinition | null) {
     setForm(getInitialForm(field));
   }
@@ -410,7 +406,6 @@ function FieldSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          {/* Label */}
           <div className="space-y-1.5">
             <Label htmlFor="cf-label">
               Label <span className="text-destructive">*</span>
@@ -424,7 +419,6 @@ function FieldSheet({
             />
           </div>
 
-          {/* Name (auto-generated; disabled in edit mode) */}
           <div className="space-y-1.5">
             <Label htmlFor="cf-name">
               Field Name <span className="text-destructive">*</span>
@@ -445,7 +439,6 @@ function FieldSheet({
             </p>
           </div>
 
-          {/* Field Type (only in create mode) */}
           {isCreate && (
             <div className="space-y-1.5">
               <Label htmlFor="cf-type">Field Type</Label>
@@ -471,7 +464,6 @@ function FieldSheet({
             </div>
           )}
 
-          {/* Dropdown options */}
           {form.fieldType === "select" && (
             <div className="space-y-2">
               <Label>Dropdown Options</Label>
@@ -517,7 +509,6 @@ function FieldSheet({
 
           <Separator />
 
-          {/* Required */}
           <div className="flex items-center gap-3">
             <Checkbox
               id="cf-required"
@@ -531,7 +522,6 @@ function FieldSheet({
             </Label>
           </div>
 
-          {/* Sort Order */}
           <div className="space-y-1.5">
             <Label htmlFor="cf-sort">Sort Order</Label>
             <Input
@@ -570,7 +560,6 @@ function FieldSheet({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CustomFieldsPage() {
   return (

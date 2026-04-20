@@ -70,13 +70,11 @@ export async function GET(req: NextRequest) {
       .where(
         and(
           eq(leaveRequests.orgId, session.orgId),
-          // leave overlaps the month window
           lte(leaveRequests.startDate, monthEnd),
           gte(leaveRequests.endDate, monthStart),
         ),
       );
 
-    // Batch-fetch leave type names
     const leaveTypeIds = [...new Set(rows.map((r) => r.leaveTypeId).filter(Boolean) as number[])];
     let leaveTypeMap = new Map<number, string>();
     if (leaveTypeIds.length > 0) {

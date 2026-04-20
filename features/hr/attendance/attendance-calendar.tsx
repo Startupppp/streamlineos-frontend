@@ -1,13 +1,24 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isWeekend, subMonths, addMonths, isToday } from "date-fns";
+import { useState, useMemo, memo } from "react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isWeekend, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/lib/api/hooks/hr";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: { userId: string }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -72,29 +83,46 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
   const startDayOfWeek = getDay(startOfMonth(currentMonth));
   const paddingDays = Array.from({ length: startDayOfWeek }, (_, i) => i);
 
-  const handlePrevMonth = useCallback(() => setCurrentMonth((prev) => subMonths(prev, 1)), []);
-  const handleNextMonth = useCallback(() => setCurrentMonth((prev) => addMonths(prev, 1)), []);
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/10">
               <CalendarDays className="h-4 w-4 text-gold" />
             </div>
             Attendance Calendar
           </CardTitle>
-          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevMonth} aria-label="Previous month">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[110px] text-center text-foreground">
-              {format(currentMonth, "MMMM yyyy")}
-            </span>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth} aria-label="Next month">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-1">
+            <Select
+              value={String(month)}
+              onValueChange={(v) => setCurrentMonth(new Date(year, parseInt(v), 1))}
+            >
+              <SelectTrigger className="h-8 w-[110px] text-xs border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_NAMES.map((m, i) => (
+                  <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={String(year)}
+              onValueChange={(v) => setCurrentMonth(new Date(parseInt(v), month, 1))}
+            >
+              <SelectTrigger className="h-8 w-[72px] text-xs border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>

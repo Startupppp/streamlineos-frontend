@@ -58,7 +58,6 @@ function LeaveCalendarWidget() {
   const now = new Date();
   const { data, isLoading } = useHrLeaveCalendar(now.getMonth() + 1, now.getFullYear());
 
-  // Filter to show only leaves overlapping next 7 days
   const today = now.toISOString().slice(0, 10);
   const next7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -397,7 +396,6 @@ function PayrollSummaryWidget() {
   const role = session?.user?.role;
   const { data, isLoading } = useHrPayrollSummary();
 
-  // Only visible to CEO, Admin, Finance roles
   if (!role || !["CEO", "ADMIN", "FINANCE"].includes(role)) return null;
 
   const formatINR = (n: number) =>
@@ -691,14 +689,12 @@ export function HrDashboardOverview() {
   const { data: session } = useSession();
   const role = session?.user?.role;
 
-  // Only show to HR admin roles
   if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
 
   const { data: metrics, isLoading } = useHrDashboardMetrics();
 
   return (
     <div className="mb-6 space-y-4">
-      {/* Quick stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard
           label="Total Employees"
@@ -748,7 +744,6 @@ export function HrDashboardOverview() {
         />
       </div>
 
-      {/* Leave this week + Birthdays + Onboarding */}
       <div className="grid sm:grid-cols-3 gap-3">
         <LeaveCalendarWidget />
         <UpcomingBirthdaysWidget
@@ -758,23 +753,19 @@ export function HrDashboardOverview() {
         <OnboardingStatusWidget />
       </div>
 
-      {/* Diversity + Time to Fill + Payroll */}
       <div className="grid sm:grid-cols-3 gap-3">
         <DiversityWidget />
         <TimeToFillWidget />
         <PayrollSummaryWidget />
       </div>
 
-      {/* Salary Bands + Compliance */}
       <div className="grid sm:grid-cols-2 gap-3">
         <SalaryBandWidget />
         <ComplianceWidget />
       </div>
 
-      {/* Leave Analytics */}
       <LeaveAnalyticsWidget />
 
-      {/* Anniversaries */}
       <AnniversaryFeedWidget />
     </div>
   );

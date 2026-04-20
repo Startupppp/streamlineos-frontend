@@ -73,7 +73,6 @@ export function LeadActivityTimeline({
         ) : timeline && timeline.length > 0 ? (
           <ScrollArea className="h-[450px] pr-2">
             <div className="relative">
-              {/* Vertical spine */}
               <div className="absolute left-[15px] top-4 bottom-4 w-px bg-border/40" />
 
               <div className="space-y-3">
@@ -89,7 +88,6 @@ export function LeadActivityTimeline({
                       key={`${item.type}-${item.id}`}
                       className="relative flex gap-3 pl-9"
                     >
-                      {/* Icon circle on the spine */}
                       <div
                         className={cn(
                           "absolute left-0 top-1 h-[30px] w-[30px] rounded-full",
@@ -101,7 +99,6 @@ export function LeadActivityTimeline({
                         <ItemIcon className="h-3.5 w-3.5" />
                       </div>
 
-                      {/* Content card */}
                       <div
                         className={cn(
                           "flex-1 rounded-lg border border-border/40 bg-muted/15 px-3 py-2.5",
@@ -109,7 +106,6 @@ export function LeadActivityTimeline({
                           !isLast && "mb-0"
                         )}
                       >
-                        {/* Header row */}
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-xs font-semibold capitalize text-foreground/80">
                             {TYPE_LABELS[item.type] ?? item.type}
@@ -126,7 +122,6 @@ export function LeadActivityTimeline({
                           </span>
                         </div>
 
-                        {/* Type-specific content */}
                         {item.type === "note" && (
                           <p className="text-xs text-muted-foreground leading-relaxed">
                             {String(data.body ?? "")}
@@ -176,7 +171,6 @@ export function LeadActivityTimeline({
                           </div>
                         )}
 
-                        {/* Author */}
                         {data.author ? (
                           <p className="text-[10px] text-muted-foreground/70 mt-1.5 flex items-center gap-1">
                             <User className="h-2.5 w-2.5" />

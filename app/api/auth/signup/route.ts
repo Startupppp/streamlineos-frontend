@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const input = signupSchema.parse(body);
 
-    // Check if email already exists
     const existing = await db.query.users.findFirst({
       where: (u, { eq }) => eq(u.email, input.email.toLowerCase()),
     });
@@ -42,7 +41,6 @@ export async function POST(req: NextRequest) {
     const orgId = randomUUID();
 
     await db.transaction(async (tx) => {
-      // Create organization
       await tx.insert(organizations).values({
         id: orgId,
         name: input.companyName,
@@ -53,7 +51,6 @@ export async function POST(req: NextRequest) {
           .substring(0, 50) + "-" + Date.now().toString(36),
       });
 
-      // Create user
       await tx.insert(users).values({
         id: userId,
         email: input.email.toLowerCase(),
@@ -69,14 +66,12 @@ export async function POST(req: NextRequest) {
         isPasswordChangeRequired: false,
       });
 
-      // Link user to org
       await tx.insert(organizationMembers).values({
         orgId,
         userId,
         role: "owner",
       });
 
-      // Create trial subscription (14 days)
       await tx.insert(subscriptions).values({
         orgId,
         plan: input.plan ?? "STARTER",

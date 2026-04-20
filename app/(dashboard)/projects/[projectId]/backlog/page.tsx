@@ -258,7 +258,6 @@ export default function BacklogPage({ params }: PageProps) {
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
-      {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
         <div className="mx-4 mb-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
           <span className="text-sm font-medium text-primary shrink-0">{selectedIds.size} selected</span>

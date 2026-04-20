@@ -1,7 +1,4 @@
-/**
- * Indeed Apply Webhook Receiver
- * Receives inbound job application events from Indeed.
- */
+
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createHmac } from "crypto";
@@ -54,7 +51,6 @@ export async function POST(req: NextRequest) {
   }
 
   const raw = payload as Record<string, unknown>;
-  // Indeed sends individual events or arrays
   const applications: unknown[] = Array.isArray(raw.applications)
     ? (raw.applications as unknown[])
     : [raw];

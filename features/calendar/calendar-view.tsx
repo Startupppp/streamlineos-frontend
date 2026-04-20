@@ -20,6 +20,13 @@ import {
 import { ChevronLeft, ChevronRight, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,6 +34,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 import { useCalendarEvents } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
@@ -34,8 +56,11 @@ import { EventDetailSheet } from "./event-detail-sheet";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 
 const BigCalendarWrapper = dynamic(
-  () => import("./big-calendar-wrapper").then((m) => ({ default: m.BigCalendarWrapper })),
-  { ssr: false }
+  () =>
+    import("./big-calendar-wrapper").then((m) => ({
+      default: m.BigCalendarWrapper,
+    })),
+  { ssr: false },
 );
 
 const EVENT_COLORS: Record<string, string> = {
@@ -55,7 +80,11 @@ interface ViewButtonProps {
   onSelect: (v: View) => void;
 }
 
-const ViewButton = memo(function ViewButton({ v, current, onSelect }: ViewButtonProps) {
+const ViewButton = memo(function ViewButton({
+  v,
+  current,
+  onSelect,
+}: ViewButtonProps) {
   const handleClick = useCallback(() => onSelect(v), [v, onSelect]);
   return (
     <button
@@ -76,8 +105,6 @@ export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
 
-  // Measure the container height so month view can be set taller,
-  // ensuring the parent scroll kicks in just like week/day's internal time scroll.
   const calContainerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(600);
   useEffect(() => {
@@ -90,22 +117,31 @@ export function CalendarView() {
     return () => ro.disconnect();
   }, []);
 
-  // Month view: add 200px on top of the measured container so there's always
-  // something to scroll (min 900px so all 6 week-rows have room to breathe).
   const calHeight = Math.max(containerHeight + 200, 900);
-  const [createSlot, setCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
+  const [createSlot, setCreateSlot] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // ID is a string like "event-123" matching CalendarListItem.id
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  const rangeStart = useMemo(() => startOfMonth(subMonths(currentDate, 0)), [currentDate]);
-  const rangeEnd = useMemo(() => endOfMonth(addMonths(currentDate, 1)), [currentDate]);
+  const rangeStart = useMemo(
+    () => startOfMonth(subMonths(currentDate, 0)),
+    [currentDate],
+  );
+  const rangeEnd = useMemo(
+    () => endOfMonth(addMonths(currentDate, 1)),
+    [currentDate],
+  );
 
   const { data: events = [] } = useCalendarEvents(rangeStart, rangeEnd);
 
   const selectedEvent = useMemo<CalendarListItem | null>(
-    () => (selectedEventId !== null ? (events.find((e) => e.id === selectedEventId) ?? null) : null),
-    [selectedEventId, events]
+    () =>
+      selectedEventId !== null
+        ? (events.find((e) => e.id === selectedEventId) ?? null)
+        : null,
+    [selectedEventId, events],
   );
 
   const calEvents = useMemo(
@@ -113,7 +149,6 @@ export function CalendarView() {
       events.map((e) => ({
         id: e.id,
         title: e.title,
-        // API returns serialised Date objects as ISO strings under `start`/`end`
         start: new Date(e.start),
         end: new Date(e.end),
         allDay: e.allDay ?? false,
@@ -126,7 +161,7 @@ export function CalendarView() {
           myRsvpStatus: e.myRsvpStatus,
         },
       })),
-    [events]
+    [events],
   );
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
@@ -140,7 +175,6 @@ export function CalendarView() {
   }, []);
 
   const handleSelectEvent = useCallback((event: BigCalEvent) => {
-    // BigCalEvent.id is string (the prefixed CalendarListItem.id)
     setSelectedEventId(String(event.id));
   }, []);
 
@@ -150,24 +184,22 @@ export function CalendarView() {
     tentative: "#f59e0b",
   };
 
-  const eventPropGetter = useCallback(
-    (event: BigCalEvent) => {
-      const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
-      const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
-      return {
-        style: {
-          backgroundColor: EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
-          border: "none",
-          borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
-          borderRadius: "4px",
-          color: "#fff",
-          fontSize: "12px",
-          padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
-        },
-      };
-    },
-    []
-  );
+  const eventPropGetter = useCallback((event: BigCalEvent) => {
+    const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
+    const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
+    return {
+      style: {
+        backgroundColor:
+          EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
+        border: "none",
+        borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
+        borderRadius: "4px",
+        color: "#fff",
+        fontSize: "12px",
+        padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
+      },
+    };
+  }, []);
 
   const handlePrev = useCallback(() => {
     setCurrentDate((d) => {
@@ -205,12 +237,21 @@ export function CalendarView() {
       const toStr = format(to, "yyyy-MM-dd");
       window.open(`/api/calendar/export?from=${fromStr}&to=${toStr}`, "_blank");
     },
-    [currentDate]
+    [currentDate],
   );
 
-  const handleExportMonth = useCallback(() => handleExport("month"), [handleExport]);
-  const handleExport3Months = useCallback(() => handleExport("3months"), [handleExport]);
-  const handleExportYear = useCallback(() => handleExport("year"), [handleExport]);
+  const handleExportMonth = useCallback(
+    () => handleExport("month"),
+    [handleExport],
+  );
+  const handleExport3Months = useCallback(
+    () => handleExport("3months"),
+    [handleExport],
+  );
+  const handleExportYear = useCallback(
+    () => handleExport("year"),
+    [handleExport],
+  );
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
 
@@ -227,11 +268,50 @@ export function CalendarView() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[140px] text-center">
-            {view === "month" && format(currentDate, "MMMM yyyy")}
-            {view === "week" && `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
-            {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
-          </span>
+          {view === "month" ? (
+            <>
+              <Select
+                value={String(calMonth)}
+                onValueChange={(v) =>
+                  setCurrentDate(new Date(calYear, parseInt(v), 1))
+                }
+              >
+                <SelectTrigger className="h-8 w-[110px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m, i) => (
+                    <SelectItem key={m} value={String(i)} className="text-xs">
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(calYear)}
+                onValueChange={(v) =>
+                  setCurrentDate(new Date(parseInt(v), calMonth, 1))
+                }
+              >
+                <SelectTrigger className="h-8 w-[76px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearOptions.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          ) : (
+            <span className="text-sm font-semibold min-w-[140px] text-center">
+              {view === "week" &&
+                `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
+              {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
+            </span>
+          )}
           <Button
             variant="outline"
             size="icon"
@@ -241,7 +321,12 @@ export function CalendarView() {
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToday}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={handleToday}
+          >
             Today
           </Button>
         </div>
@@ -253,18 +338,28 @@ export function CalendarView() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs" aria-label="Export calendar">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                aria-label="Export calendar"
+              >
                 <Download className="h-3.5 w-3.5 mr-1" />
                 Export
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel className="text-xs">Export to CSV</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs">
+                Export to CSV
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-xs" onClick={handleExportMonth}>
                 This month
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={handleExport3Months}>
+              <DropdownMenuItem
+                className="text-xs"
+                onClick={handleExport3Months}
+              >
                 Next 3 months
               </DropdownMenuItem>
               <DropdownMenuItem className="text-xs" onClick={handleExportYear}>
@@ -302,10 +397,7 @@ export function CalendarView() {
         defaultSlot={createSlot}
       />
 
-      <EventDetailSheet
-        event={selectedEvent}
-        onClose={handleCloseDetail}
-      />
+      <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
     </div>
   );
 }

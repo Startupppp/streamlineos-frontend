@@ -6,7 +6,6 @@ import { eq, and, desc, asc } from "drizzle-orm";
 import { z } from "zod";
 import { sendTaskAssignedEmail } from "@/lib/email";
 
-// ─── Query Schema ─────────────────────────────────────────────────────────────
 
 const listSchema = z.object({
   assigneeId: z.string().optional(),
@@ -18,7 +17,6 @@ const listSchema = z.object({
   page: z.string().optional().transform((v) => (v ? Math.max(Number(v), 1) : 1)),
 });
 
-// ─── Create Schema ────────────────────────────────────────────────────────────
 
 const createSchema = z.object({
   title: z.string().min(1).max(255),
@@ -32,13 +30,12 @@ const createSchema = z.object({
   timezone: z.string().optional(),
 });
 
-/** GET /api/tasks — list tasks for org (filtered by query params) */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const query = parseQuery(req, listSchema);
     const offset = (query.page - 1) * query.limit;
 
-    // Resolve "me" shorthand
     const resolvedAssigneeId =
       query.assigneeId === "me" ? session.user.id : query.assigneeId;
 
@@ -68,7 +65,6 @@ export async function GET(req: NextRequest) {
       .limit(query.limit)
       .offset(offset);
 
-    // Total count (simple – no pagination cursor needed for task queue)
     const allForCount = await db
       .select({ id: tasks.id })
       .from(tasks)
@@ -78,7 +74,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/tasks — create a new task */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createSchema);
@@ -102,7 +98,6 @@ export async function POST(req: NextRequest) {
 
     if (!created) return err("Failed to create task", 500);
 
-    // Email the assignee if task is assigned to someone else (non-blocking)
     const assigneeId = body.assigneeId ?? session.user.id;
     if (assigneeId !== session.user.id) {
       void (async () => {

@@ -11,7 +11,6 @@ export async function GET() {
   return withAuth(async (session) => {
     const orgId = session.orgId;
 
-    // Time-to-hire: avg days from NEW to HIRED per candidate
     const timeToHireData = await db
       .select({
         stage: candidateSlaTracking.stage,
@@ -22,7 +21,6 @@ export async function GET() {
       .where(eq(candidateSlaTracking.orgId, orgId))
       .groupBy(candidateSlaTracking.stage);
 
-    // Pipeline velocity: candidate count per stage
     const pipelineVelocity = await db
       .select({
         status: candidates.status,
@@ -32,7 +30,6 @@ export async function GET() {
       .where(eq(candidates.orgId, orgId))
       .groupBy(candidates.status);
 
-    // Total candidates to hired conversion rate
     const [totalResult] = await db
       .select({ total: count() })
       .from(candidates)
@@ -47,7 +44,6 @@ export async function GET() {
     const hired = Number(hiredResult?.hired ?? 0);
     const hireRate = total > 0 ? Math.round((hired / total) * 100) : 0;
 
-    // Build time-to-hire funnel with ordered stages
     const stageTimes = Object.fromEntries(
       timeToHireData.map((r) => [r.stage, { avgHours: Number(r.avgHours ?? 0), count: Number(r.count) }])
     );

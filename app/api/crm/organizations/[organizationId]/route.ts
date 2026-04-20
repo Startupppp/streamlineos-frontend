@@ -49,7 +49,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!Number.isFinite(id)) return err("Invalid organizationId", 400);
 
   return withAuth(async (session) => {
-    // Verify org exists and belongs to this tenant
     const [existing] = await db
       .select({ id: crmOrganizations.id })
       .from(crmOrganizations)
@@ -59,7 +58,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const input = await parseBody(req, updateSchema);
 
-    // Circular dependency guard
     if (input.parentId !== undefined && input.parentId !== null) {
       const cycle = await wouldCreateCycle(session.orgId, id, input.parentId);
       if (cycle) {

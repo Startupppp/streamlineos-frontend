@@ -4,9 +4,7 @@ import { employeeSkills, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { cached, CACHE_TTL } from "@/lib/cache";
 
-/** GET /api/hr/employees/skills-matrix
- *  Returns { employees, skills, matrix } for the skills matrix view.
- */
+
 export async function GET() {
   return withAuth(async (session) => {
     const data = await cached(
@@ -17,7 +15,6 @@ export async function GET() {
           with: { user: { columns: { id: true, name: true, image: true } } },
         });
 
-        // Get active members
         const members = await db
           .select({
             userId: organizationMembers.userId,
@@ -29,10 +26,8 @@ export async function GET() {
           .where(eq(organizationMembers.orgId, session.orgId))
           .limit(100);
 
-        // Unique skill names (sorted)
         const skillNames = [...new Set(allSkills.map((s) => s.skillName))].sort();
 
-        // Build per-employee skill map: { userId → { skillName → level } }
         const matrixMap = new Map<string, Map<string, number>>();
         for (const skill of allSkills) {
           if (!matrixMap.has(skill.userId)) matrixMap.set(skill.userId, new Map());

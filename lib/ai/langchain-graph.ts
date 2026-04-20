@@ -35,7 +35,6 @@ interface GraphState {
       netSalary: string;
       status: string;
     }>;
-    // CRM context
     myLeadsCount: number;
     hotLeadsCount: number;
     myOpenDealsCount: number;
@@ -85,15 +84,12 @@ async function fetchContext(userId: string, orgId: string) {
       orderBy: [desc(payrolls.createdAt)],
       limit: 3,
     }),
-    // CRM: my assigned leads
     db.select({ count: count() })
       .from(leads)
       .where(and(eq(leads.orgId, orgId), eq(leads.assignedToId, userId))),
-    // CRM: hot leads in org
     db.select({ count: count() })
       .from(leads)
       .where(and(eq(leads.orgId, orgId), eq(leads.priority, "HOT"))),
-    // CRM: my open deals
     db.select({ count: count() })
       .from(deals)
       .where(and(
@@ -101,7 +97,6 @@ async function fetchContext(userId: string, orgId: string) {
         eq(deals.assignedToId, userId),
         sql`${deals.stage} NOT IN ('CLOSED_WON', 'CLOSED_LOST')`
       )),
-    // CRM: top 5 recent leads assigned to user
     db.select({ name: leads.name, status: leads.status, priority: leads.priority })
       .from(leads)
       .where(and(eq(leads.orgId, orgId), eq(leads.assignedToId, userId)))

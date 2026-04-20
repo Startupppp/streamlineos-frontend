@@ -13,7 +13,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     const contact = await getContact(session.orgId, contactId);
     if (!contact) return err("Contact not found", 404);
 
-    // Split name into first/last for the N field
     const nameParts = contact.name.trim().split(/\s+/);
     const firstName = nameParts.slice(0, -1).join(" ") || contact.name;
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";

@@ -1,9 +1,4 @@
-/**
- * E-Sign Webhook Receiver
- * Supports Documenso and DocuSign callback payloads.
- * Verifies HMAC signature when ESIGN_WEBHOOK_SECRET is configured.
- * Updates candidate_documents.status on signed / viewed / declined events.
- */
+
 
 import { ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -29,7 +24,6 @@ interface DocuSignWebhookPayload {
   data?: {
     envelopeId?: string;
   };
-  // Legacy format
   envelopeId?: string;
   status?: string;
 }
@@ -38,14 +32,13 @@ type WebhookPayload = DocumensoWebhookPayload | DocuSignWebhookPayload;
 
 function verifyDocumensoSignature(body: string, signature: string | null): boolean {
   const secret = process.env.ESIGN_WEBHOOK_SECRET;
-  if (!secret) return true; // Skip verification if not configured
+  if (!secret) return true;
   if (!signature) return false;
 
   const expected = createHmac("sha256", secret)
     .update(body)
     .digest("hex");
 
-  // Constant-time comparison
   try {
     return signature.length === expected.length &&
       Buffer.from(signature, "hex").compare(Buffer.from(expected, "hex")) === 0;
@@ -58,7 +51,6 @@ function normalizePayload(raw: WebhookPayload): {
   event: EsignEvent | null;
   externalDocId: string | null;
 } {
-  // Documenso format
   if ("event" in raw && "data" in raw && raw.data && "id" in raw.data) {
     const documenso = raw as DocumensoWebhookPayload;
     const knownEvents: EsignEvent[] = [
@@ -73,7 +65,6 @@ function normalizePayload(raw: WebhookPayload): {
     return { event, externalDocId: String(documenso.data.id) };
   }
 
-  // DocuSign format
   const docusign = raw as DocuSignWebhookPayload;
   const envelopeId = docusign.data?.envelopeId ?? docusign.envelopeId ?? null;
   const status = docusign.status?.toLowerCase();
@@ -117,7 +108,6 @@ export async function POST(req: NextRequest) {
 
   if (!doc) {
     logger.warn("E-sign webhook: document not found", { externalDocId });
-    // Return 200 so the provider doesn't retry (document may not be in our system)
     return ok({ received: true, processed: false, reason: "document_not_found" });
   }
 
@@ -148,7 +138,6 @@ export async function POST(req: NextRequest) {
     .returning({ candidateId: candidateDocuments.candidateId, orgId: candidateDocuments.orgId })
     .then((rows) => rows[0]);
 
-  // Audit log every document lifecycle event
   if (updatedDoc && event && event !== "document.sent") {
     void createAuditLog({
       action: event,

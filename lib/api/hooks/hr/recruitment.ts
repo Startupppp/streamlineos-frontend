@@ -258,7 +258,7 @@ export function useRecruitmentPipeline() {
 
 const ATS_KANBAN_KEY = ["vaivamm", "hr", "atsKanban"] as const;
 
-/** ATS Kanban pipeline — returns the rich `stages` array format. */
+
 export function useAtsKanban() {
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
@@ -266,7 +266,7 @@ export function useAtsKanban() {
   });
 }
 
-/** Dedicated stage-move mutation with optimistic update on the ATS kanban cache. */
+
 export function useUpdateCandidateStage() {
   const qc = useQueryClient();
   return useMutation({
@@ -282,10 +282,8 @@ export function useUpdateCandidateStage() {
       if (previous) {
         const next: AtsPipelineResponse = {
           stages: previous.stages.map((s) => {
-            // Remove candidate from whichever column it sits in
             const withoutCandidate = s.candidates.filter((c) => c.id !== candidateId);
             if (s.stage !== stage) return { ...s, candidates: withoutCandidate };
-            // Find the candidate card from old data to slot into target column
             const moved = previous.stages
               .flatMap((st) => st.candidates)
               .find((c) => c.id === candidateId);
@@ -321,7 +319,6 @@ export function useGenerateOfferLetter() {
   });
 }
 
-// ─── Scorecard Templates ─────────────────────────────────────────────────────
 
 export interface ScorecardCriterion {
   name: string;
@@ -396,7 +393,6 @@ export function useCreateScorecardTemplate() {
   });
 }
 
-// ─── Scorecard Submit ────────────────────────────────────────────────────────
 
 export function useInterviewScorecard(interviewId: number) {
   return useQuery({
@@ -437,7 +433,6 @@ export function useInterviewScorecardSummary(interviewId: number) {
   });
 }
 
-// ─── Schedule Interview (full: calendar + notifications) ────────────────────
 
 export interface ScheduleInterviewInput {
   candidateId: number;
@@ -463,7 +458,6 @@ export function useScheduleInterview() {
   });
 }
 
-// ─── SLA Config ──────────────────────────────────────────────────────────────
 
 export interface InterviewSla {
   id: number;
@@ -492,7 +486,6 @@ export function useUpsertInterviewSla() {
   });
 }
 
-// ─── Candidate SLA Tracking ──────────────────────────────────────────────────
 
 export interface CandidateSlaRecord {
   id: number;
@@ -529,7 +522,6 @@ export function useResetCandidateSla() {
   });
 }
 
-// ─── Candidate Vault ─────────────────────────────────────────────────────────
 
 export function useCandidateVault(candidateId: number) {
   return useQuery({
@@ -571,7 +563,6 @@ export function useDeleteVaultDocument(candidateId: number) {
   });
 }
 
-// ─── Offer & Document Rollout ─────────────────────────────────────────────────
 
 export interface RolloutDocumentRecord {
   id: number;
@@ -624,7 +615,6 @@ export function useGenerateAndRollout(candidateId: number) {
   });
 }
 
-// ─── SLA Report ──────────────────────────────────────────────────────────────
 
 export interface SlaReportStage {
   stage: string;
@@ -662,7 +652,6 @@ export function useHrSlaReport() {
   });
 }
 
-// ─── Bulk reschedule ─────────────────────────────────────────────────────────
 
 export function useBulkRescheduleInterviews() {
   const qc = useQueryClient();
@@ -679,7 +668,6 @@ export function useBulkRescheduleInterviews() {
   });
 }
 
-// ─── Portal Sync & Job Publish ───────────────────────────────────────────────
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
@@ -717,7 +705,6 @@ export function usePublishJobToBoards() {
   });
 }
 
-// ─── Bulk reject ──────────────────────────────────────────────────────────────
 
 export interface BulkRejectInput {
   candidateIds: number[];
@@ -745,7 +732,6 @@ export function useBulkRejectCandidates() {
   });
 }
 
-// ─── Sourcing portals ─────────────────────────────────────────────────────────
 
 export interface SourcePortal {
   id: number;
@@ -780,7 +766,6 @@ export function useUpsertSourcePortal() {
   });
 }
 
-// ─── Source effectiveness report ─────────────────────────────────────────────
 
 export interface SourceEffectivenessRow {
   source: string;
@@ -797,7 +782,6 @@ export function useSourceEffectiveness() {
   });
 }
 
-// ─── BgV Status Update ───────────────────────────────────────────────────────
 
 export interface UpdateBgvInput {
   bgvStatus: BgvStatus;
@@ -815,7 +799,6 @@ export function useUpdateCandidateBgv(candidateId: number) {
   });
 }
 
-// ─── Interview Question Bank ──────────────────────────────────────────────────
 
 export interface InterviewQuestion {
   id: number;
@@ -889,7 +872,6 @@ export function useDeleteInterviewQuestion(questionId: number) {
   });
 }
 
-// ─── Reference Checks ────────────────────────────────────────────────────────
 
 export interface ReferenceCheck {
   id: number;
@@ -971,7 +953,6 @@ export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
   });
 }
 
-// ─── Recruitment Analytics (Time-to-Hire / Pipeline Velocity) ─────────────────
 
 export interface RecruitmentFunnelStage {
   stage: string;
@@ -993,7 +974,6 @@ export function useRecruitmentAnalytics() {
   });
 }
 
-// ─── Vault Access Logs ────────────────────────────────────────────────────────
 
 export interface VaultAccessLog {
   id: number;
@@ -1015,7 +995,6 @@ export function useVaultAccessLogs(candidateId: number) {
   });
 }
 
-// ─── Job Share Links ──────────────────────────────────────────────────────────
 
 export interface JobShareLinks {
   jobId: number;
@@ -1038,7 +1017,6 @@ export function useJobShareLinks(jobId: number) {
   });
 }
 
-// ─── Offer Tracking ───────────────────────────────────────────────────────────
 
 export interface CandidateOffer {
   id: number;
@@ -1125,7 +1103,6 @@ export function useBgvComplianceDashboard() {
   });
 }
 
-// ─── Interviewer Performance ─────────────────────────────────────────────────
 
 export interface InterviewerPerformanceStat {
   interviewerId: string;
@@ -1154,7 +1131,6 @@ export function useInterviewerPerformance(days = 90) {
   });
 }
 
-// ─── Interviewer Availability ────────────────────────────────────────────────
 
 export interface BusyBlock {
   start: string;
@@ -1172,7 +1148,6 @@ export interface InterviewerAvailabilityResponse {
   availability: InterviewerAvailability[];
 }
 
-// ─── Referrals ───────────────────────────────────────────────────────────────
 
 export interface CandidateReferral {
   id: number;
@@ -1228,7 +1203,6 @@ export function useUpdateReferral(candidateId: number) {
   });
 }
 
-// ─── Calibration Sessions ────────────────────────────────────────────────────
 
 export interface CalibrationSession {
   id: number;
@@ -1286,7 +1260,6 @@ export function useUpdateCalibration(candidateId: number) {
   });
 }
 
-// ─── Self-Scheduling Booking Links ───────────────────────────────────────────
 
 export interface CreateBookingLinkInput {
   candidateId: number;

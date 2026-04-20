@@ -71,7 +71,6 @@ export const leads = pgTable("leads", {
   followUpDate: timestamp("follow_up_date"),
   followUpNotes: text("follow_up_notes"),
   customData: jsonb("custom_data").$type<Record<string, unknown>>(),
-  // UTM tracking + attribution
   utmSource: text("utm_source"),
   utmMedium: text("utm_medium"),
   utmCampaign: text("utm_campaign"),
@@ -899,7 +898,6 @@ export const targetHistoryRelations = relations(targetHistory, ({ one }) => ({
   changedBy: one(users, { fields: [targetHistory.changedById], references: [users.id] }),
 }));
 
-// ─── Deal Meetings ───
 export const dealMeetings = pgTable("deal_meetings", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -912,7 +910,7 @@ export const dealMeetings = pgTable("deal_meetings", {
   notes: text("notes"),
   actionItems: text("action_items"),
   recordingLink: text("recording_link"),
-  status: text("status").default("scheduled").notNull(), // scheduled | completed | cancelled
+  status: text("status").default("scheduled").notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -921,14 +919,13 @@ export const dealMeetings = pgTable("deal_meetings", {
   index("idx_deal_meetings_org").on(table.orgId),
 ]);
 
-// ─── Client Opportunities (Upsell / Cross-sell) ───
 export const clientOpportunities = pgTable("client_opportunities", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
-  type: text("type").default("upsell").notNull(), // upsell | cross_sell
-  stage: text("stage").default("identified").notNull(), // identified | proposed | negotiating | won | lost
+  type: text("type").default("upsell").notNull(),
+  stage: text("stage").default("identified").notNull(),
   value: decimal("value", { precision: 15, scale: 2 }),
   notes: text("notes"),
   expectedCloseDate: date("expected_close_date"),
@@ -945,7 +942,6 @@ export const clientOpportunitiesRelations = relations(clientOpportunities, ({ on
   creator: one(users, { fields: [clientOpportunities.createdBy], references: [users.id] }),
 }));
 
-// ─── Client Onboarding Checklists ───
 export const clientOnboardingTemplates = pgTable("client_onboarding_templates", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1087,7 +1083,6 @@ export const contactsRelations = relations(contacts, ({ one }) => ({
   deal: one(deals, { fields: [contacts.dealId], references: [deals.id] }),
 }));
 
-// ─── CSAT Surveys ───
 export const csatSurveys = pgTable("csat_surveys", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1095,8 +1090,8 @@ export const csatSurveys = pgTable("csat_surveys", {
   title: text("title").notNull(),
   question: text("question").notNull().default("How satisfied are you with our service?"),
   scaleMax: integer("scale_max").default(5).notNull(),
-  status: text("status").default("draft").notNull(), // draft | sent | closed
-  publicToken: text("public_token").notNull(), // UUID for public response URL
+  status: text("status").default("draft").notNull(),
+  publicToken: text("public_token").notNull(),
   sentAt: timestamp("sent_at"),
   closedAt: timestamp("closed_at"),
   createdBy: text("created_by").references(() => users.id).notNull(),
@@ -1202,14 +1197,13 @@ export const supportTicketMessagesRelations = relations(supportTicketMessages, (
   author: one(users, { fields: [supportTicketMessages.authorId], references: [users.id] }),
 }));
 
-// ─── Custom Field Definitions ───
 export const customFieldDefinitions = pgTable("custom_field_definitions", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
-  entityType: text("entity_type").notNull(), // 'lead' | 'deal' | 'contact'
-  name: text("name").notNull(),             // machine name (snake_case)
-  label: text("label").notNull(),           // display label
-  fieldType: text("field_type").notNull().default("text"), // 'text' | 'number' | 'date' | 'boolean' | 'select'
+  entityType: text("entity_type").notNull(),
+  name: text("name").notNull(),
+  label: text("label").notNull(),
+  fieldType: text("field_type").notNull().default("text"),
   options: jsonb("options").$type<Array<{ value: string; label: string }>>(),
   isRequired: boolean("is_required").default(false),
   isActive: boolean("is_active").default(true),
@@ -1227,7 +1221,6 @@ export const customFieldDefinitionsRelations = relations(customFieldDefinitions,
   creator: one(users, { fields: [customFieldDefinitions.createdBy], references: [users.id] }),
 }));
 
-// ─── Territories ─────────────────────────────────────────────────────────────
 export const territories = pgTable("territories", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -1249,7 +1242,6 @@ export const territoriesRelations = relations(territories, ({ one }) => ({
   creator: one(users, { fields: [territories.createdBy], references: [users.id] }),
 }));
 
-// ─── Web-to-Lead Forms ────────────────────────────────────────────────────────
 export const webLeadForms = pgTable("web_lead_forms", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -1274,7 +1266,6 @@ export const webLeadFormsRelations = relations(webLeadForms, ({ one }) => ({
   creator: one(users, { fields: [webLeadForms.createdBy], references: [users.id] }),
 }));
 
-// ─── Sales Tasks (polymorphic) ────────────────────────────────────────────────
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1290,14 +1281,12 @@ export const tasks = pgTable("tasks", {
   remindAt: timestamp("remind_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   timezone: text("timezone"),
-  // Recurrence support
   recurrence: jsonb("recurrence").$type<{
     frequency: "DAILY" | "WEEKLY" | "MONTHLY";
     interval: number;
     endDate?: string;
   } | null>(),
   parentTaskId: integer("parent_task_id"),
-  // Template support
   isTemplate: boolean("is_template").notNull().default(false),
   templateName: text("template_name"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1311,7 +1300,6 @@ export const tasks = pgTable("tasks", {
   index("idx_tasks_parent").on(table.parentTaskId),
 ]);
 
-// Task Sequences (pre-built task chains/templates)
 export const taskSequences = pgTable("task_sequences", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -1369,7 +1357,6 @@ export const leadImportBatchesRelations = relations(leadImportBatches, ({ one })
   creator: one(users, { fields: [leadImportBatches.createdBy], references: [users.id] }),
 }));
 
-// ─── Quotes & Proposals ─────────────────────────────────────────────
 
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),

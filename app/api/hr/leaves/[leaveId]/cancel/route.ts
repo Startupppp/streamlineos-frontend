@@ -23,7 +23,6 @@ export async function PATCH(
     });
     if (!existing) return err("Leave request not found.", 404);
 
-    // Only the requesting employee can cancel their own pending request
     if (existing.userId !== session.user.id) {
       return err("You can only cancel your own leave requests.", 403);
     }
@@ -44,7 +43,6 @@ export async function PATCH(
       targetType: "leave_request",
     });
 
-    // Notify HR about the cancellation (non-blocking)
     void (async () => {
       const leaveType = existing.leaveTypeId
         ? await db.query.leaveTypes.findFirst({

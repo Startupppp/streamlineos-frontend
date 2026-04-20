@@ -24,7 +24,6 @@ import {
   type RoleTemplate,
 } from "@/lib/api/hooks/roles";
 
-// ─── Role Templates (inline presets) ─────────────────────────────────────────
 
 const ROLE_TEMPLATES: Array<{ label: string; name: string; slug: string; permissions: string[] }> = [
   {
@@ -78,7 +77,6 @@ const ROLE_TEMPLATES: Array<{ label: string; name: string; slug: string; permiss
   },
 ];
 
-// ─── Create Role Dialog ──────────────────────────────────────────────────────
 
 export function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [name, setName] = useState("");
@@ -125,7 +123,6 @@ export function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpen
           <DialogDescription className="text-xs">Start from a template or create a custom role.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {/* Templates */}
           <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Start from a template</Label>
             <div className="flex flex-wrap gap-2">
@@ -187,7 +184,6 @@ export function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpen
   );
 }
 
-// ─── Role Template Dialog ────────────────────────────────────────────────────
 
 export function RoleTemplateDialog({
   open,

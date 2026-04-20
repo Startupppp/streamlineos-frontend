@@ -1,8 +1,4 @@
-/**
- * LinkedIn Talent Solutions Webhook
- * Receives inbound job application events from LinkedIn.
- * Normalizes the payload and creates a candidate record.
- */
+
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createHmac } from "crypto";
@@ -14,7 +10,7 @@ import { logger } from "@/lib/logger";
 
 function verifyLinkedInSignature(body: string, signature: string | null): boolean {
   const secret = process.env.LINKEDIN_WEBHOOK_SECRET;
-  if (!secret) return true; // Skip if not configured
+  if (!secret) return true;
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("hex");
   try {
@@ -42,7 +38,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // LinkedIn sends orgId (or accountId) in the query param or body
   const orgId = req.nextUrl.searchParams.get("orgId");
   if (!orgId) {
     logger.warn("LinkedIn webhook: missing orgId query param");
@@ -52,7 +47,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify org exists
   const org = await db.query.organizations.findFirst({
     where: eq(organizations.id, orgId),
     columns: { id: true },
@@ -61,9 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, processed: false, reason: "unknown_org" });
   }
 
-  // Normalize payload
   const raw = payload as Record<string, unknown>;
-  // LinkedIn may batch multiple applications
   const applications: unknown[] = Array.isArray(raw.applications)
     ? (raw.applications as unknown[])
     : Array.isArray(raw.elements)

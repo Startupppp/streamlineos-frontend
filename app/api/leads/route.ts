@@ -99,7 +99,6 @@ export async function POST(req: NextRequest) {
         link: `/crm/leads`,
       });
 
-      // Email the assigned rep (non-blocking)
       void (async () => {
         const rep = await db.query.users.findFirst({
           where: eq(users.id, input.assignedToId!),
@@ -136,7 +135,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`leads:*:${orgId}:*`);
 
-    // Fire webhook event (non-blocking)
     void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
       dispatchWebhook(orgId, "lead.created", {
         id: newLead.id,

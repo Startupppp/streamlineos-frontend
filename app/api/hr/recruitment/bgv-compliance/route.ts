@@ -1,8 +1,4 @@
-/**
- * GET /api/hr/recruitment/bgv-compliance
- * Returns per-job-posting BgV completion stats: total candidates, cleared, pending, failed.
- * HR/Admin/CEO only.
- */
+
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { candidates, candidateApplications, jobPostings } from "@/lib/db/schema";
@@ -20,7 +16,6 @@ export async function GET() {
 
     const cacheKey = `hr:bgv-compliance:${session.orgId}`;
     const data = await cached(cacheKey, async () => {
-      // Per job posting: count total applications + BgV status breakdown
       const rows = await db
         .select({
           jobPostingId: candidateApplications.jobPostingId,

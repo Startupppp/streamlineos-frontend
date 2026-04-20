@@ -646,7 +646,6 @@ export async function sendPasswordExpiryWarningEmail(
   });
 }
 
-// ─── Work Log Status ──────────────────────────────────────────────────────────
 
 export async function sendWorkLogStatusEmail(
   email: string,
@@ -668,7 +667,6 @@ export async function sendWorkLogStatusEmail(
   });
 }
 
-// ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export async function sendOnboardingWelcomeEmail(
   email: string,
@@ -698,7 +696,6 @@ export async function sendOnboardingTaskEmail(
   });
 }
 
-// ─── Support Ticket ───────────────────────────────────────────────────────────
 
 export async function sendSupportTicketCreatedEmail(
   email: string,
@@ -745,7 +742,6 @@ export async function sendSupportTicketStatusEmail(
   });
 }
 
-// ─── Task Assignment ──────────────────────────────────────────────────────────
 
 export async function sendTaskAssignedEmail(
   email: string,
@@ -763,7 +759,6 @@ export async function sendTaskAssignedEmail(
   });
 }
 
-// ─── Deal Stage Change ────────────────────────────────────────────────────────
 
 export async function sendDealStageChangeEmail(
   email: string,
@@ -782,7 +777,6 @@ export async function sendDealStageChangeEmail(
   });
 }
 
-// ─── Lead Assignment ──────────────────────────────────────────────────────────
 
 export async function sendLeadAssignedEmail(
   email: string,
@@ -799,7 +793,6 @@ export async function sendLeadAssignedEmail(
   });
 }
 
-// ─── Performance Review ───────────────────────────────────────────────────────
 
 export async function sendReviewAssignedEmail(
   email: string,
@@ -815,7 +808,6 @@ export async function sendReviewAssignedEmail(
   });
 }
 
-// ─── Helpdesk Ticket ──────────────────────────────────────────────────────────
 
 export async function sendHelpdeskTicketEmail(
   email: string,
@@ -832,7 +824,6 @@ export async function sendHelpdeskTicketEmail(
   });
 }
 
-// ─── Asset Assignment ─────────────────────────────────────────────────────────
 
 export async function sendAssetAssignedEmail(
   email: string,
@@ -848,7 +839,6 @@ export async function sendAssetAssignedEmail(
   });
 }
 
-// ─── Payroll Approved ─────────────────────────────────────────────────────────
 
 export async function sendPayrollApprovedEmail(
   email: string,
@@ -863,7 +853,6 @@ export async function sendPayrollApprovedEmail(
   });
 }
 
-// ─── Onboarding Complete ──────────────────────────────────────────────────────
 
 export async function sendOnboardingCompleteEmployeeEmail(
   email: string,

@@ -1,7 +1,4 @@
-/**
- * GET /api/leads/[leadId]/score-explanation
- * Returns which scoring rules matched the lead, with their point contributions.
- */
+
 import { NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";

@@ -1,8 +1,4 @@
-/**
- * GET /api/hr/employees/[employeeId]/profile-pdf
- * Returns a print-ready HTML document of the employee's profile.
- * HR/Admin/CEO only.
- */
+
 import { withAuth, err } from "@/lib/api/helpers";
 import { getEmployee } from "@/server/queries/hr";
 import { NextRequest, NextResponse } from "next/server";

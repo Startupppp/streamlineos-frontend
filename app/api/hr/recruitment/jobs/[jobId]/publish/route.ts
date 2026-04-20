@@ -1,8 +1,4 @@
-/**
- * POST /api/hr/recruitment/jobs/[jobId]/publish
- * Pushes a job posting to all connected & active job boards simultaneously.
- * Updates job_postings.externalPostingIds with the platform → posting ID map.
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -41,7 +37,6 @@ export async function POST(
 
     const body = await parseBody(req, publishSchema);
 
-    // Fetch active integrations for the requested platforms
     const sources = await db.query.candidateSources.findMany({
       where: eq(candidateSources.orgId, session.orgId),
     });
@@ -67,9 +62,6 @@ export async function POST(
         continue;
       }
 
-      // In production: call platform's job posting API here
-      // e.g. LinkedIn Jobs API, Naukri JobPost API
-      // Generate a mock external ID to record the posting
       const externalId = `${platform.toLowerCase()}-${jobId}-${Date.now()}`;
       externalIds[platform.toLowerCase()] = externalId;
       results.push({ platform, status: "PUBLISHED" });

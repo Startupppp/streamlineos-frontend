@@ -60,7 +60,6 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-// ─── Star display ────────────────────────────────────────────────────────────
 
 function StarDisplay({ rating, max }: { rating: number; max: number }) {
   return (
@@ -72,7 +71,6 @@ function StarDisplay({ rating, max }: { rating: number; max: number }) {
   );
 }
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "draft")
@@ -90,7 +88,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Results Sheet ────────────────────────────────────────────────────────────
 
 function ResultsSheet({
   survey,
@@ -133,7 +130,6 @@ function ResultsSheet({
               </div>
             ) : (
               <>
-                {/* Average */}
                 <div className="text-center">
                   <div className="text-5xl font-bold text-foreground">
                     {avgRating !== null ? avgRating.toFixed(1) : "—"}
@@ -152,7 +148,6 @@ function ResultsSheet({
                   )}
                 </div>
 
-                {/* Distribution */}
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Distribution
@@ -177,7 +172,6 @@ function ResultsSheet({
                   ))}
                 </div>
 
-                {/* Response list */}
                 {responses.length > 0 && (
                   <div className="space-y-3">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -232,7 +226,6 @@ function ResultsSheet({
   );
 }
 
-// ─── Create Survey Sheet ──────────────────────────────────────────────────────
 
 function CreateSurveySheet({
   open,
@@ -334,7 +327,6 @@ function CreateSurveySheet({
   );
 }
 
-// ─── Survey Row ───────────────────────────────────────────────────────────────
 
 function SurveyRow({
   survey,
@@ -472,7 +464,6 @@ function SurveyRow({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CsatSurveysPage() {
   const { data: surveys = [], isLoading } = useCsatSurveys();
@@ -523,7 +514,6 @@ export default function CsatSurveysPage() {
         }
       >
         <div className="space-y-6">
-          {/* Summary cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
               label="Total Surveys"
@@ -545,7 +535,6 @@ export default function CsatSurveysPage() {
             />
           </div>
 
-          {/* Survey list */}
           {isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -578,13 +567,11 @@ export default function CsatSurveysPage() {
         </div>
       </PageWrapper>
 
-      {/* Create sheet */}
       <CreateSurveySheet
         open={createOpen}
         onClose={() => setCreateOpen(false)}
       />
 
-      {/* Results sheet */}
       {resultsTarget && (
         <ResultsSheet
           survey={resultsTarget}
@@ -593,7 +580,6 @@ export default function CsatSurveysPage() {
         />
       )}
 
-      {/* Delete confirmation */}
       <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}

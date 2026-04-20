@@ -63,7 +63,6 @@ export async function POST(req: NextRequest) {
     const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL ?? "https://vaivammcapital.com";
     const bookingUrl = `${baseUrl}/interview-booking/${token}`;
 
-    // Send booking email to candidate (non-blocking)
     if (candidate.email) {
       const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
       void sendEmail({

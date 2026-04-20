@@ -15,7 +15,7 @@ const SALARY_BANDS = [
 
 export const dynamic = "force-dynamic";
 
-/** CEO/HR only — salary band distribution per department */
+
 export async function GET() {
   return withAuth(async (session) => {
     const role = session.user.role;
@@ -25,7 +25,6 @@ export async function GET() {
 
     const cacheKey = `hr:salary-bands:${session.orgId}`;
     const data = await cached(cacheKey, async () => {
-      // Per-department avg/min/max basic salary
       const rows = await db
         .select({
           departmentName: departments.name,
@@ -40,7 +39,6 @@ export async function GET() {
         .where(eq(salaryStructures.orgId, session.orgId))
         .groupBy(departments.name);
 
-      // Global distribution across salary bands
       const allSalaries = await db
         .select({ basicSalary: salaryStructures.basicSalary })
         .from(salaryStructures)

@@ -17,7 +17,7 @@ const trackSchema = z.object({
 
 type Ctx = { params: Promise<{ pageId: string }> };
 
-/** POST /api/marketing/landing-pages/[pageId]/track — public, no auth */
+
 export async function POST(req: NextRequest, ctx: Ctx) {
   const { pageId: id } = await ctx.params;
   const pageId = Number(id);
@@ -25,7 +25,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "Invalid page id" }, { status: 400 });
   }
 
-  // Lookup the page to get orgId (and verify page exists)
   const page = await db.query.landingPages.findFirst({
     where: eq(landingPages.id, pageId),
     columns: { id: true, orgId: true, isActive: true },
@@ -35,14 +34,12 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "Page not found" }, { status: 404 });
   }
 
-  // Parse body safely — don't block on malformed input
   let input: z.infer<typeof trackSchema> = {};
   try {
     const body = await req.json();
     const parsed = trackSchema.safeParse(body);
     if (parsed.success) input = parsed.data;
   } catch {
-    // Ignore parse errors — still record the view
   }
 
   await db.insert(pageViews).values({

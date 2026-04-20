@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = await parseBody(req, createSchema);
 
-    // Auto-extract variables from htmlContent if not provided
     const variables = body.variables ?? extractVariables(body.htmlContent);
 
     const [template] = await db

@@ -83,7 +83,6 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
-      // Email the assignee if one was set (non-blocking)
       if (input.assigneeId) {
         void (async () => {
           const assignee = await db.query.users.findFirst({

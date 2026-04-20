@@ -1,9 +1,4 @@
-/**
- * POST /api/hr/recruitment/portals/[platform]/sync
- * Manually triggers a sync pull from the given job board platform.
- * In production this would call the platform's API using the stored OAuth token.
- * This endpoint scaffolds the auth check, token retrieval, and result recording.
- */
+
 
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -50,9 +45,6 @@ export async function POST(
       return err(`No API token configured for ${platform}. Please authenticate via the integration settings.`, 400);
     }
 
-    // In production: call platform API using source.oauthToken to pull new applications
-    // For now we record the sync attempt and return a status response.
-    // Platform-specific sync logic would live in lib/integrations/<platform>-sync.ts
 
     await db
       .update(candidateSources)

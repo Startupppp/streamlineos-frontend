@@ -40,7 +40,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
 
   return (
     <div className="flex-1 min-w-0 space-y-4 px-3">
-      {/* Header */}
       <div className="text-center space-y-1">
         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto text-sm font-semibold">
           {candidate.firstName[0]}{candidate.lastName[0]}
@@ -60,7 +59,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
         </Badge>
       </div>
 
-      {/* AI Score */}
       <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium">AI Score</span>
@@ -84,7 +82,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
         )}
       </div>
 
-      {/* Details */}
       <div className="space-y-2 text-xs">
         {candidate.currentCompany && (
           <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -126,7 +123,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
         )}
       </div>
 
-      {/* Rating */}
       {candidate.rating != null && (
         <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -138,7 +134,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
         </div>
       )}
 
-      {/* Skills */}
       {candidate.skills && candidate.skills.length > 0 && (
         <div className="space-y-1">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Skills</p>
@@ -150,7 +145,6 @@ function CandidateColumn({ candidate }: { candidate: Candidate }) {
         </div>
       )}
 
-      {/* Source */}
       {candidate.source && (
         <div>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-1">Source</p>

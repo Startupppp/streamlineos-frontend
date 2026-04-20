@@ -43,7 +43,6 @@ export async function PATCH(
       .where(eq(candidates.id, candidateId))
       .returning();
 
-    // Fire audit log (non-blocking)
     void writeAuditLog({
       action: "CANDIDATE_STAGE_CHANGED",
       userId: session.user.id,
@@ -57,7 +56,6 @@ export async function PATCH(
       },
     });
 
-    // On REJECTED: notify HR + send rejection email to candidate
     if (newStage === "REJECTED") {
       void notifyByRoles(session.orgId, ["HR_MANAGER", "CEO", "HR"], {
         type: "INFO",
@@ -67,7 +65,6 @@ export async function PATCH(
         metadata: { candidateId, stage: newStage },
       });
 
-      // Send automated rejection email to candidate (non-blocking)
       if (existing.email) {
         void (async () => {
           try {
@@ -87,13 +84,11 @@ export async function PATCH(
             });
             await sendEmail({ to: existing.email!, subject, html });
           } catch {
-            // Non-blocking — don't fail the request if email fails
           }
         })();
       }
     }
 
-    // Reset SLA timer for the new stage (non-blocking)
     void db
       .insert(candidateSlaTracking)
       .values({

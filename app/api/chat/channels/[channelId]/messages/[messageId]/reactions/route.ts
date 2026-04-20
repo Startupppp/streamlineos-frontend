@@ -20,7 +20,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
     if (!Number.isFinite(messageId)) return err("Invalid message id", 400);
 
-    // Verify user is a member of the channel
     const membership = await db.query.chatChannelMembers.findFirst({
       where: and(
         eq(chatChannelMembers.channelId, channelId),
@@ -54,7 +53,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     let updated: Record<string, string[]>;
     if (existing.includes(userId)) {
-      // Remove reaction
       const filtered = existing.filter((id) => id !== userId);
       if (filtered.length === 0) {
         const { [emoji]: _removed, ...rest } = current;
@@ -63,7 +61,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         updated = { ...current, [emoji]: filtered };
       }
     } else {
-      // Add reaction
       updated = { ...current, [emoji]: [...existing, userId] };
     }
 

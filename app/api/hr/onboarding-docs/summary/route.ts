@@ -7,7 +7,6 @@ import type { NextRequest } from "next/server";
 
 export async function GET(_req: NextRequest) {
   return withAdmin(async (session) => {
-    // 1. Fetch all active mandatory document types for this org
     const mandatoryTypes = await db
       .select({ id: documentTypes.id, name: documentTypes.name })
       .from(documentTypes)
@@ -21,7 +20,6 @@ export async function GET(_req: NextRequest) {
 
     const totalRequired = mandatoryTypes.length;
 
-    // 2. Fetch all org employees
     const employees = await db
       .select({
         id: users.id,
@@ -45,8 +43,6 @@ export async function GET(_req: NextRequest) {
 
     const employeeIds = employees.map((e) => e.id);
 
-    // 3. Fetch all onboarding documents for these employees in bulk
-    //    We want the latest version per (userId, documentTypeId)
     const allDocs = await db
       .select({
         userId: onboardingDocuments.userId,
@@ -58,7 +54,6 @@ export async function GET(_req: NextRequest) {
       .where(eq(onboardingDocuments.orgId, session.orgId))
       .orderBy(desc(onboardingDocuments.id));
 
-    // Build a map: userId → Map<documentTypeId, latest status>
     type DocStatusMap = Map<number, string>;
     const userDocMap = new Map<string, DocStatusMap>();
 
@@ -69,13 +64,11 @@ export async function GET(_req: NextRequest) {
         userDocMap.set(doc.userId, new Map());
       }
       const typeMap = userDocMap.get(doc.userId)!;
-      // Keep only the first (latest by id desc) entry per type
       if (!typeMap.has(doc.documentTypeId)) {
         typeMap.set(doc.documentTypeId, doc.status ?? "PENDING");
       }
     }
 
-    // 4. Build summary per employee
     const summary = employees.map((emp) => {
       const typeMap = userDocMap.get(emp.id) ?? new Map<number, string>();
 

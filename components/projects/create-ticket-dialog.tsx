@@ -57,7 +57,7 @@ export function CreateTicketDialog({
   variant?: "default" | "fab";
 }) {
   const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
@@ -91,33 +91,32 @@ export function CreateTicketDialog({
 
   const createTicketMutation = useCreateTicket({
     onSuccess: async (data) => {
-      if (file) {
+      if (files.length > 0) {
         try {
           setIsUploading(true);
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", "tickets");
-
-          const response = await fetch("/api/storage/upload", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) throw new Error("Failed to upload file");
-
-          const result = await response.json();
-
-          await addAttachmentMutation.mutateAsync({
-            ticketId: data.id,
-            fileUrl: result.url,
-            fileName: file.name,
-            fileSize: file.size,
-            mimeType: file.type,
-          });
-
-          toast.success("Ticket created with attachment");
-        } catch (error) {
-          toast.error("Ticket created but failed to upload attachment");
+          await Promise.all(
+            files.map(async (file) => {
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("folder", "tickets");
+              const response = await fetch("/api/storage/upload", {
+                method: "POST",
+                body: formData,
+              });
+              if (!response.ok) throw new Error("Failed to upload file");
+              const result = await response.json();
+              await addAttachmentMutation.mutateAsync({
+                ticketId: data.id,
+                fileUrl: result.url,
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type,
+              });
+            })
+          );
+          toast.success(`Ticket created with ${files.length} attachment${files.length > 1 ? "s" : ""}`);
+        } catch {
+          toast.error("Ticket created but failed to upload attachments");
         } finally {
           setIsUploading(false);
           finishCreation();
@@ -135,7 +134,7 @@ export function CreateTicketDialog({
   const finishCreation = () => {
     setOpen(false);
     form.reset();
-    setFile(null);
+    setFiles([]);
     setSelectedAssignees([]);
     queryClient.invalidateQueries({
       queryKey: queryKeys.projects.detail(projectId),
@@ -353,84 +352,56 @@ export function CreateTicketDialog({
             </div>
 
             <FormItem className="pt-2">
-                <FormLabel>Attachment</FormLabel>
+                <FormLabel>Attachments</FormLabel>
                 <FormControl>
-                    {!file ? (
-                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg p-6 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors">
-                            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                            <span className="text-sm font-medium text-foreground">
-                                Click or drag to upload
-                            </span>
-                            <span className="text-xs text-muted-foreground mt-1">
-                                Images, PDF, DOC, XLS up to 25MB
-                            </span>
-                            <input
-                                type="file"
-                                className="hidden"
-                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                                onChange={(e) => {
-                                    const selected = e.target.files?.[0];
-                                    if (selected) {
-                                        if (selected.size > 25 * 1024 * 1024) {
-                                            toast.error("File size must be less than 25MB");
-                                            return;
-                                        }
-                                        setFile(selected);
-                                    }
-                                }}
-                            />
-                        </label>
-                    ) : (
-                        <div className="flex items-center gap-4 p-4 border border-dashed rounded-lg bg-muted/20">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                        {file.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {(file.size / 1024).toFixed(1)} KB
-                                    </p>
-                                </div>
+                  <div className="space-y-2">
+                    {files.length > 0 && (
+                      <div className="space-y-1.5">
+                        {files.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-3 p-2.5 border border-border rounded-lg bg-muted/20">
+                            <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{file.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                             </div>
-                            <label className="cursor-pointer">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="sm"
-                                    className="shrink-0 pointer-events-none"
-                                >
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Change
-                                </Button>
-                                <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-                                    onChange={(e) => {
-                                        const selected = e.target.files?.[0];
-                                        if (selected) {
-                                            if (selected.size > 25 * 1024 * 1024) {
-                                                toast.error("File size must be less than 25MB");
-                                                return;
-                                            }
-                                            setFile(selected);
-                                        }
-                                    }}
-                                />
-                            </label>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setFile(null)}
-                                className="text-destructive h-8 w-8 shrink-0"
+                            <button
+                              type="button"
+                              onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-muted-foreground hover:text-destructive shrink-0"
+                              aria-label="Remove file"
                             >
-                                <span className="sr-only">Remove</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                            </Button>
-                        </div>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors">
+                      <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-xs font-medium text-foreground">
+                        {files.length > 0 ? "Add more files" : "Click to upload"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">Images, PDF, DOC, XLS up to 25MB each</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                        multiple
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.files ?? []);
+                          const valid = selected.filter((f) => {
+                            if (f.size > 25 * 1024 * 1024) {
+                              toast.error(`${f.name} exceeds 25MB limit`);
+                              return false;
+                            }
+                            return true;
+                          });
+                          setFiles((prev) => [...prev, ...valid]);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
                 </FormControl>
             </FormItem>
 

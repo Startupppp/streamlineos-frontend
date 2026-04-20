@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Notify HR about new helpdesk ticket (non-blocking)
     void (async () => {
       const hrMembers = await db
         .select({ userId: organizationMembers.userId })

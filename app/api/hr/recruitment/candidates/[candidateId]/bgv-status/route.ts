@@ -1,7 +1,4 @@
-/**
- * PATCH /api/hr/recruitment/candidates/[candidateId]/bgv-status
- * Update background verification status for a candidate.
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";

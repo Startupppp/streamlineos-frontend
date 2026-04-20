@@ -28,7 +28,6 @@ function clampScore(n: number): number {
 }
 
 function safeParseJson(text: string): unknown {
-  // Try to extract JSON from the response if wrapped in markdown code blocks
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ?? text.match(/(\{[\s\S]*\})/);
   try {
     return JSON.parse(jsonMatch ? jsonMatch[1] : text);
@@ -56,7 +55,6 @@ export async function POST(
     });
     if (!candidate) return err("Candidate not found.", 404);
 
-    // Fetch most recent application to get job requirements
     const application = await db.query.candidateApplications.findFirst({
       where: and(
         eq(candidateApplications.candidateId, candidateId),
@@ -69,7 +67,6 @@ export async function POST(
     const jobTitle = application?.jobPosting?.title ?? "an unspecified position";
     const jobRequirements = application?.jobPosting?.requirements ?? "";
 
-    // Build the candidate profile for scoring
     const profileLines: string[] = [];
     profileLines.push(`Name: ${candidate.firstName} ${candidate.lastName}`);
     if (candidate.currentRole) profileLines.push(`Current Role: ${candidate.currentRole}`);
@@ -147,7 +144,6 @@ Respond ONLY with valid JSON in this exact format (no other text):
       return err("AI scoring failed. Please check your AI API configuration.", 500);
     }
 
-    // Persist the scores
     await db
       .update(candidates)
       .set({

@@ -9,9 +9,6 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, count, sql, isNotNull, ne, lt } from "drizzle-orm";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface DateRange {
   from?: Date;
@@ -71,9 +68,6 @@ export interface AgingDeal {
   salesRepId: number | null;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 const STAGE_ORDER = ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"] as const;
 const STAGE_COLORS: Record<string, string> = {
@@ -101,9 +95,6 @@ function shiftRange(range: DateRange): DateRange {
   };
 }
 
-// ---------------------------------------------------------------------------
-// KPIs
-// ---------------------------------------------------------------------------
 
 export const SALES_KPI_CACHE_KEY = (orgId: string) => `sales:kpis:${orgId}:::`;
 
@@ -114,17 +105,12 @@ export async function getSalesDashboardKPIs(
 ): Promise<SalesDashboardKPIs> {
   const cacheKey = `sales:kpis:${orgId}:${range.from?.toISOString() ?? ""}:${range.to?.toISOString() ?? ""}:${repId ?? ""}`;
   return cached(cacheKey, () => _getSalesDashboardKPIs(orgId, range, repId), {
-    // 5-minute TTL ensures repeated loads are sub-1.5s from Redis cache
     ttlSeconds: CACHE_TTL.MEDIUM,
   });
 }
 
-/**
- * Invalidate sales KPI cache for an org.
- * Call this after a deal stage change (WON/LOST) or value update.
- */
+
 export async function invalidateSalesKpiCache(orgId: string): Promise<void> {
-  // Invalidate the default (no-range) cache key used by the dashboard
   await invalidateCache(SALES_KPI_CACHE_KEY(orgId));
 }
 
@@ -190,9 +176,6 @@ async function _getSalesDashboardKPIs(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Funnel
-// ---------------------------------------------------------------------------
 
 export async function getSalesFunnel(
   orgId: string,
@@ -240,9 +223,6 @@ async function _getSalesFunnel(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Leaderboard
-// ---------------------------------------------------------------------------
 
 export async function getSalesDashboardLeaderboard(
   orgId: string,
@@ -328,9 +308,6 @@ async function _getSalesDashboardLeaderboard(
     });
 }
 
-// ---------------------------------------------------------------------------
-// Revenue vs Goal
-// ---------------------------------------------------------------------------
 
 export async function getRevenueVsGoal(
   orgId: string,
@@ -382,14 +359,12 @@ async function _getRevenueVsGoal(
       ),
   ]);
 
-  // Aggregate quota targets by month
   const quotaMap = new Map<number, number>();
   for (const q of quotasByMonth) {
     const m = new Date(q.startDate).getMonth() + 1;
     quotaMap.set(m, (quotaMap.get(m) ?? 0) + Number(q.targetRevenue));
   }
 
-  // Build sorted result for all 12 months
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const actualMap = new Map(dealsByMonth.map((r) => [r.monthNum, r.revenue]));
 
@@ -400,9 +375,6 @@ async function _getRevenueVsGoal(
   }));
 }
 
-// ---------------------------------------------------------------------------
-// Deal Velocity
-// ---------------------------------------------------------------------------
 
 export async function getDealVelocity(
   orgId: string,
@@ -447,9 +419,6 @@ async function _getDealVelocity(orgId: string, range: DateRange): Promise<DealVe
   };
 }
 
-// ---------------------------------------------------------------------------
-// Pipeline Aging Alerts
-// ---------------------------------------------------------------------------
 
 export async function getAgingDeals(
   orgId: string,

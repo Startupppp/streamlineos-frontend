@@ -87,7 +87,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");
 
-  // ── Follow-up scheduling state ───────────────────────────────────────
   const [fuTitle, setFuTitle] = useState("");
   const [fuType, setFuType] = useState<TaskType>("CALL");
   const [fuDate, setFuDate] = useState("");
@@ -108,7 +107,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
     if (!title) { toast.error("Follow-up title is required"); return; }
     if (!fuDate) { toast.error("Please pick a date"); return; }
 
-    // Build ISO datetime: combine date + time (default 09:00 if blank)
     const time = fuTime || "09:00";
     const dueDate = new Date(`${fuDate}T${time}:00`).toISOString();
 
@@ -455,7 +453,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                   </TabsContent>
 
                   <TabsContent value="follow-up" className="mt-4 space-y-5">
-                    {/* ── Schedule new follow-up ─────────────────────────── */}
                     <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3">
                       <p className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
                         <Plus className="h-3.5 w-3.5 text-gold" />
@@ -536,7 +533,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       </Button>
                     </div>
 
-                    {/* ── Pending follow-ups ─────────────────────────────── */}
                     {pendingTasks.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -591,7 +587,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       </div>
                     )}
 
-                    {/* ── Completed follow-ups (compact) ─────────────────── */}
                     {doneTasks.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // Announce holiday to all org members (non-blocking)
     void (async () => {
       const members = await db
         .select({ userId: organizationMembers.userId })

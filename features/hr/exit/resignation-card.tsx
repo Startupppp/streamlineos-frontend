@@ -118,7 +118,6 @@ export function ResignationCard({
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* HR review actions */}
           {hrCanAct && (
             <>
               <Button
@@ -142,7 +141,6 @@ export function ResignationCard({
             </>
           )}
 
-          {/* CEO review actions */}
           {ceoCanAct && (
             <>
               <Button
@@ -166,7 +164,6 @@ export function ResignationCard({
             </>
           )}
 
-          {/* Employee withdraw */}
           {canWithdraw && (
             <Button
               size="sm"
@@ -179,7 +176,6 @@ export function ResignationCard({
             </Button>
           )}
 
-          {/* Expand/collapse */}
           <Button
             size="sm"
             variant="ghost"
@@ -196,7 +192,6 @@ export function ResignationCard({
         </div>
       </CardContent>
 
-      {/* Collapsible progress timeline */}
       {isExpanded && (
         <div className="border-t bg-muted/20">
           <ProgressTimeline id={r.id} />

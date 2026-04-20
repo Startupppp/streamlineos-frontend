@@ -115,7 +115,6 @@ export default function CohortAnalysisPage() {
             </CardContent>
           </Card>
 
-          {/* Cohort table */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Cohort Detail</CardTitle>

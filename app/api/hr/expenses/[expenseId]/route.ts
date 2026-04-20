@@ -111,9 +111,8 @@ export async function PATCH(
         targetType: "expense",
         metadata: { status: body.status, rejectionReason: body.rejectionReason },
       });
-    } catch { /* non-critical */ }
+    } catch {  }
 
-    // Send email to the expense owner
     try {
       const expenseRow = await db.query.expenses.findFirst({
         where: eq(expenses.id, expenseId),
@@ -140,7 +139,7 @@ export async function PATCH(
           
         }
       }
-    } catch { /* email failure non-blocking */ }
+    } catch {  }
 
     return ok({ success: true });
   });

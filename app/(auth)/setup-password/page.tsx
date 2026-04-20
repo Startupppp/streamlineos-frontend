@@ -50,7 +50,6 @@ function SetupPasswordContent() {
   const password = form.watch("password");
   const strength = useMemo(() => (password ? getPasswordStrength(password) : null), [password]);
 
-  // Validate token on load
   const { data: tokenInfo, isLoading: isValidating, error: tokenError } = useQuery({
     queryKey: ["setup-password", token],
     queryFn: () => apiClient.get<{ email: string; name: string }>("/auth/validate-setup-token", { token }),
@@ -74,7 +73,6 @@ function SetupPasswordContent() {
     }
   }, [token, router]);
 
-  // No token provided
   if (!token) {
     return (
       <div className="w-full max-w-sm text-center">
@@ -90,7 +88,6 @@ function SetupPasswordContent() {
     );
   }
 
-  // Validating token
   if (isValidating) {
     return (
       <div className="w-full max-w-sm text-center">
@@ -100,7 +97,6 @@ function SetupPasswordContent() {
     );
   }
 
-  // Token expired or invalid
   if (tokenError || !tokenInfo) {
     return (
       <div className="w-full max-w-sm text-center">

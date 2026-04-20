@@ -11,7 +11,7 @@ const createSchema = z.object({
   description: z.string().optional(),
 });
 
-/** GET /api/marketing/landing-pages */
+
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const pages = await db
@@ -49,7 +49,7 @@ export async function GET(_req: NextRequest) {
   });
 }
 
-/** POST /api/marketing/landing-pages */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);

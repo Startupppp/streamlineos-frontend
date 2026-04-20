@@ -13,7 +13,6 @@ export const eventReminders = inngest.createFunction(
   async ({ step }) => {
     const results = await step.run("check-upcoming-events", async () => {
       const now = new Date();
-      // Window: events starting 14–16 min from now (15min reminder window)
       const windowStart = addMinutes(now, 14);
       const windowEnd = addMinutes(now, 16);
 

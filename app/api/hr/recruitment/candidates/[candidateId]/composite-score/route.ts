@@ -63,7 +63,6 @@ export async function POST(
     });
     if (!candidate) return err("Candidate not found.", 404);
 
-    // Fetch all interviews for this candidate with their submitted scorecards
     const candidateInterviews = await db.query.interviews.findMany({
       where: and(
         eq(interviews.candidateId, candidateId),
@@ -82,7 +81,6 @@ export async function POST(
       return err("No submitted scorecards found. At least one scorecard must be submitted before generating a composite score.", 400);
     }
 
-    // Fetch most recent application for job context
     const application = await db.query.candidateApplications.findFirst({
       where: and(
         eq(candidateApplications.candidateId, candidateId),
@@ -95,7 +93,6 @@ export async function POST(
     const jobTitle = application?.jobPosting?.title ?? "an unspecified position";
     const jobRequirements = application?.jobPosting?.requirements ?? "";
 
-    // Build scorecard summaries for the prompt
     const roundBlocks = candidateInterviews
       .filter((iv) => (iv.scorecards ?? []).some((sc) => sc.submittedAt != null))
       .map((iv, i) => {

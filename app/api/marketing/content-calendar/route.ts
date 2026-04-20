@@ -19,7 +19,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = new URL(req.url);
-    const month = searchParams.get("month"); // YYYY-MM
+    const month = searchParams.get("month");
 
     let query = db
       .select()

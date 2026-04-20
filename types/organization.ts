@@ -10,7 +10,6 @@ export interface OrgSettings {
   passwordExpiryDays?: number | null;
   allowedEmailDomains?: string[] | null;
   settings?: Record<string, unknown> | null;
-  // Flattened from settings JSONB
   primaryColor?: string | null;
   loginBgUrl?: string | null;
   ipAllowlist?: string[];

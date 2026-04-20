@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FlaskConical, Plus, Play, CheckCircle2, BarChart2, Loader2 } from "lucide-react";
+import {
+  FlaskConical,
+  Plus,
+  Play,
+  CheckCircle2,
+  BarChart2,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -123,7 +130,7 @@ export default function AbTestingPage() {
             setSheetOpen(false);
           },
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     } else {
       createTest.mutate(payload, {
@@ -143,10 +150,10 @@ export default function AbTestingPage() {
         {
           onSuccess: () => toast.success("Test started"),
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     },
-    [updateTest]
+    [updateTest],
   );
 
   const handleStop = useCallback(
@@ -156,10 +163,10 @@ export default function AbTestingPage() {
         {
           onSuccess: () => toast.success("Test paused"),
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     },
-    [updateTest]
+    [updateTest],
   );
 
   const handleDeclareWinner = useCallback((test: AbTest) => {
@@ -180,10 +187,10 @@ export default function AbTestingPage() {
             toast.error(getErrorMessage(e));
             setWinnerTestId(null);
           },
-        }
+        },
       );
     },
-    [winnerTestId, updateTest]
+    [winnerTestId, updateTest],
   );
 
   const handleDelete = useCallback(() => {
@@ -201,18 +208,12 @@ export default function AbTestingPage() {
   }, [deleteId, deleteTest]);
 
   const handleDeleteRequest = useCallback((id: number) => setDeleteId(id), []);
-  const handleWinnerDialogChange = useCallback(
-    (open: boolean) => {
-      if (!open) setWinnerTestId(null);
-    },
-    []
-  );
-  const handleDeleteDialogChange = useCallback(
-    (open: boolean) => {
-      if (!open) setDeleteId(null);
-    },
-    []
-  );
+  const handleWinnerDialogChange = useCallback((open: boolean) => {
+    if (!open) setWinnerTestId(null);
+  }, []);
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
 
   const isPending = createTest.isPending || updateTest.isPending;
 
@@ -308,12 +309,16 @@ export default function AbTestingPage() {
         <AbTestFormFields form={form} onChange={handleFormChange} />
       </HrSheet>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete A/B Test?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the test and all its data. This action cannot be undone.
+              This will permanently delete the test and all its data. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -323,7 +328,9 @@ export default function AbTestingPage() {
               onClick={handleDelete}
               disabled={deleteTest.isPending}
             >
-              {deleteTest.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {deleteTest.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

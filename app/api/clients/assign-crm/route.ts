@@ -5,7 +5,7 @@ import {
   getCrmAssignmentStats,
 } from "@/server/queries/crm-clients";
 
-/** GET — return current CRM assignment stats */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const stats = await getCrmAssignmentStats(session.orgId);
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST — trigger round-robin assignment for unassigned clients */
+
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     try {

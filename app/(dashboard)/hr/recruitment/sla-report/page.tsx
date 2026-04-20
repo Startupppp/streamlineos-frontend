@@ -62,7 +62,6 @@ export default function SlaReportPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* Stage Summary Cards */}
           <div>
             <h2 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -94,7 +93,6 @@ export default function SlaReportPage() {
             </div>
           </div>
 
-          {/* Bar chart: breach % per stage over months */}
           <Card>
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-sm">Breach % by Stage — Last 6 Months</CardTitle>
@@ -130,7 +128,6 @@ export default function SlaReportPage() {
             </CardContent>
           </Card>
 
-          {/* Monthly breakdown table */}
           <Card>
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-sm">Monthly Breakdown</CardTitle>

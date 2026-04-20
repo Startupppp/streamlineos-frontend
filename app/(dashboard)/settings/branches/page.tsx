@@ -350,7 +350,6 @@ export default function BranchManagementPage() {
       )}
       </div>
 
-      {/* Create Sheet */}
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">
@@ -376,7 +375,6 @@ export default function BranchManagementPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Edit Sheet */}
       <Sheet open={!!editingBranch} onOpenChange={(open) => { if (!open) setEditingBranch(null); }}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">
@@ -402,7 +400,6 @@ export default function BranchManagementPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={!!deletingBranch}
         onOpenChange={(open) => { if (!open) setDeletingBranch(null); }}

@@ -66,7 +66,6 @@ export default function RepComparisonPage() {
   const [rep1, setRep1] = useState<string>("");
   const [rep2, setRep2] = useState<string>("");
 
-  // Use leaderboard to get rep list
   const { data: leaderboard, isLoading: lbLoading } = useSalesDashboardLeaderboard();
   const { data: comparison, isLoading: cmpLoading } = useRepComparison(
     rep1 ? Number(rep1) : null,
@@ -75,7 +74,6 @@ export default function RepComparisonPage() {
 
   const reps = leaderboard ?? [];
 
-  // Build combined monthly chart data
   const monthlyData = comparison
     ? comparison.rep1.monthly.map((m, i) => ({
         month: m.month,
@@ -94,7 +92,6 @@ export default function RepComparisonPage() {
       title="Rep Comparison"
       subtitle="Overlay two sales reps' performance side by side"
     >
-      {/* Selectors */}
       <div className="flex items-center gap-3 mb-6">
         <Select value={rep1} onValueChange={setRep1}>
           <SelectTrigger className="w-48">
@@ -135,7 +132,6 @@ export default function RepComparisonPage() {
 
       {comparison && (
         <>
-          {/* Head-to-head stats */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center justify-between">
@@ -153,7 +149,6 @@ export default function RepComparisonPage() {
             </CardContent>
           </Card>
 
-          {/* Monthly deals trend */}
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Monthly Deals Won</CardTitle>
@@ -173,7 +168,6 @@ export default function RepComparisonPage() {
             </CardContent>
           </Card>
 
-          {/* Monthly revenue */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Monthly Revenue</CardTitle>

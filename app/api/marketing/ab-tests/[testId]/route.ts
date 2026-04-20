@@ -28,7 +28,7 @@ const updateSchema = z.object({
 
 type RouteContext = { params: Promise<{ testId: string }> };
 
-/** GET /api/marketing/ab-tests/[testId] */
+
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   return withAuth(async (session) => {
     const { testId } = await params;
@@ -45,7 +45,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   });
 }
 
-/** PATCH /api/marketing/ab-tests/[testId] */
+
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   return withAuth(async (session) => {
     const { testId } = await params;
@@ -93,7 +93,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   });
 }
 
-/** DELETE /api/marketing/ab-tests/[testId] */
+
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   return withAuth(async (session) => {
     const { testId } = await params;

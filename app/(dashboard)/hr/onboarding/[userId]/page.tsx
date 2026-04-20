@@ -16,7 +16,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useUserOnboarding, useCompleteOnboardingTask } from "@/lib/api/hooks/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {
   switch (role) {
@@ -43,7 +42,6 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-// ─── Progress Ring ────────────────────────────────────────────────────────────
 
 function ProgressRing({
   percent,
@@ -100,7 +98,6 @@ function ProgressRing({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function UserOnboardingPage({
   params,
@@ -161,12 +158,10 @@ export default function UserOnboardingPage({
         />
       ) : (
         <div className="space-y-5">
-          {/* Progress ring */}
           <div className="flex justify-center py-2">
             <ProgressRing percent={percent} completed={completed} total={total} />
           </div>
 
-          {/* Celebration */}
           {allDone && (
             <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800 px-4 py-3 text-center">
               <p className="text-lg font-semibold text-green-700 dark:text-green-300">
@@ -178,7 +173,6 @@ export default function UserOnboardingPage({
             </div>
           )}
 
-          {/* Task cards */}
           <div className="space-y-2">
             {taskList.map((task) => {
               const done = task.status === "COMPLETED";
@@ -191,7 +185,6 @@ export default function UserOnboardingPage({
                 >
                   <CardContent className="p-3">
                     <div className="flex items-start gap-3">
-                      {/* Toggle button */}
                       <button
                         onClick={() => handleToggle(task.id, task.status)}
                         disabled={completeTask.isPending}
@@ -205,7 +198,6 @@ export default function UserOnboardingPage({
                         )}
                       </button>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
                           <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>

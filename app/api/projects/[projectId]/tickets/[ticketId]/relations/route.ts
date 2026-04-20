@@ -1,8 +1,4 @@
-/**
- * GET  /api/projects/[projectId]/tickets/[ticketId]/relations
- * POST /api/projects/[projectId]/tickets/[ticketId]/relations
- * DELETE /api/projects/[projectId]/tickets/[ticketId]/relations?relatedId=X
- */
+
 
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -49,7 +45,6 @@ export async function GET(
       },
     });
 
-    // Normalize so the "other" ticket is always `relatedTicket`
     const normalized = relations.map((r) => {
       const isSource = r.workItemId === ticketId;
       return {
@@ -88,7 +83,6 @@ export async function POST(
       return err("A ticket cannot relate to itself.", 400);
     }
 
-    // Verify related ticket is in same project
     const relatedTicket = await db.query.tickets.findFirst({
       where: and(eq(tickets.id, body.relatedTicketId), eq(tickets.projectId, projectId)),
       columns: { id: true },

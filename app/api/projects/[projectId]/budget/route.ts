@@ -11,9 +11,7 @@ const updateSchema = z.object({
 
 type RouteContext = { params: Promise<{ projectId: string }> };
 
-/** GET /api/projects/[projectId]/budget
- *  Returns planned budget + actual cost from billable timesheets.
- */
+
 export async function GET(_req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { projectId: idStr } = await ctx.params;
@@ -26,7 +24,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
     });
     if (!project) return err("Project not found", 404);
 
-    // Get all project members with their hourly rates
     const members = await db.query.projectMembers.findMany({
       where: eq(projectMembers.projectId, projectId),
       columns: { userId: true, hourlyRate: true },
@@ -36,7 +33,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
       members.map((m) => [m.userId, Number(m.hourlyRate ?? 0)]),
     );
 
-    // Sum approved/completed billable timesheets for this project's tickets
     const [{ value: totalHours }] = await db
       .select({ value: sum(timesheets.hours) })
       .from(timesheets)
@@ -47,8 +43,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
         ),
       );
 
-    // For each member calculate cost: hours * hourlyRate
-    // We aggregate per user from timesheets where the timesheet's ticket belongs to this project
     const memberCosts: { userId: string; hours: number; cost: number }[] = [];
     for (const [userId, rate] of memberRates) {
       const [{ value: hrs }] = await db
@@ -80,7 +74,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
   });
 }
 
-/** PATCH /api/projects/[projectId]/budget — update planned budget */
+
 export async function PATCH(req: NextRequest, ctx: RouteContext) {
   return withAuth(async (session) => {
     const { projectId: idStr } = await ctx.params;

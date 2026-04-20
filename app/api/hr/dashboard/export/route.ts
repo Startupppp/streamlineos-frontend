@@ -19,7 +19,7 @@ function toRow(cells: unknown[]): string {
   return cells.map(csvEscape).join(",");
 }
 
-/** GET /api/hr/dashboard/export — CSV of all employees + basic stats */
+
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role;

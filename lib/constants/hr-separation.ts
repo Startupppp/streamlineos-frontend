@@ -1,4 +1,3 @@
-// ─── Termination Reasons (employer-initiated) ────────────────────────────────
 
 export const TERMINATION_REASONS = [
   "Poor performance",
@@ -15,7 +14,6 @@ export const TERMINATION_REASONS = [
 
 export type TerminationReason = (typeof TERMINATION_REASONS)[number];
 
-// ─── Resignation Reasons (employee-initiated) ────────────────────────────────
 
 export const RESIGNATION_REASONS = [
   "Career growth opportunities",
@@ -32,7 +30,6 @@ export const RESIGNATION_REASONS = [
 
 export type ResignationReason = (typeof RESIGNATION_REASONS)[number];
 
-// ─── Termination Status ──────────────────────────────────────────────────────
 
 export const TERMINATION_STATUSES = [
   "DRAFT",

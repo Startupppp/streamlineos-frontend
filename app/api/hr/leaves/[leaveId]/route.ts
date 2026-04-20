@@ -46,7 +46,6 @@ export async function PATCH(
         })
         .where(eq(leaveRequests.id, requestId));
 
-      // Revert APPROVED → PENDING: restore paid days (not LOP days)
       if (body.status === "PENDING" && existing.status === "APPROVED" && existing.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, existing.leaveTypeId),

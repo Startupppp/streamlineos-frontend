@@ -23,7 +23,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const body = await parseBody(req, patchSchema);
 
-    // Verify ownership
     const [existing] = await db
       .select({ id: clientOnboardingItems.id })
       .from(clientOnboardingItems)

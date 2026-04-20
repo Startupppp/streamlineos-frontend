@@ -76,22 +76,25 @@ export function useApproveLeave() {
   return useMutation({
     mutationFn: ({ requestId, ...data }: ApproveLeaveInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${requestId}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
   });
 }
 
 export function useHrMyLeaves() {
   return useQuery({
     queryKey: ["vaivamm", "hr", "leaves", "my"] as const,
-    queryFn: () => apiClient.get<{ requests: unknown[]; balances: unknown[] }>("/hr/leaves/my"),
+    queryFn: () =>
+      apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
+        "/hr/leaves/my",
+      ),
   });
 }
 
 export function useHrTeamLeaves() {
   return useQuery({
     queryKey: ["vaivamm", "hr", "leaves", "team"] as const,
-    queryFn: () => apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
+    queryFn: () =>
+      apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
   });
 }
 
@@ -99,7 +102,9 @@ export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
-      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, { comment }),
+      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, {
+        comment,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
@@ -112,8 +117,19 @@ export function useApproveLeaveDedicated() {
 export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ leaveId, reason, comment }: { leaveId: number; reason: string; comment?: string }) =>
-      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, { reason, comment }),
+    mutationFn: ({
+      leaveId,
+      reason,
+      comment,
+    }: {
+      leaveId: number;
+      reason: string;
+      comment?: string;
+    }) =>
+      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, {
+        reason,
+        comment,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
@@ -138,7 +154,9 @@ export function useRevertLeave() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (leaveId: number) =>
-      apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, { status: "PENDING" }),
+      apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, {
+        status: "PENDING",
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
       qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
@@ -148,10 +166,28 @@ export function useRevertLeave() {
 }
 
 interface LeaveContextResult {
-  balances: Array<{ id: number; leaveTypeId: number | null; balance: string; typeName: string | null; daysPerYear: number | null }>;
-  types: Array<{ id: number; name: string; daysPerYear: number; orgId: string }>;
+  balances: Array<{
+    id: number;
+    leaveTypeId: number | null;
+    balance: string;
+    typeName: string | null;
+    daysPerYear: number | null;
+  }>;
+  types: Array<{
+    id: number;
+    name: string;
+    daysPerYear: number;
+    orgId: string;
+  }>;
   joiningDate: string | null;
-  approvers: Array<{ id: string; name: string | null; email: string; firstName?: string | null; lastName?: string | null; image?: string | null }>;
+  approvers: Array<{
+    id: string;
+    name: string | null;
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    image?: string | null;
+  }>;
 }
 
 export function useHrLeaveContext() {
@@ -183,7 +219,10 @@ export function useHrLeavesThisWeek() {
 export function useHrMyLeaveRequests() {
   return useQuery({
     queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] as const,
-    queryFn: () => apiClient.get<{ requests: unknown[]; balances: unknown[] }>("/hr/leaves/my"),
+    queryFn: () =>
+      apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
+        "/hr/leaves/my",
+      ),
   });
 }
 
@@ -224,34 +263,61 @@ export function useExpensePageData(filters: ExpensePageFilters = {}) {
         expenses: unknown[];
         pendingExpenses: unknown[];
         stats: {
-          totalAmount: number; pendingAmount: number; approvedAmount: number;
-          rejectedAmount: number; paidAmount: number; totalCount: number;
-          pendingCount: number; approvedCount: number; rejectedCount: number;
-          paidCount: number; avgExpenseAmount: number;
+          totalAmount: number;
+          pendingAmount: number;
+          approvedAmount: number;
+          rejectedAmount: number;
+          paidAmount: number;
+          totalCount: number;
+          pendingCount: number;
+          approvedCount: number;
+          rejectedCount: number;
+          paidCount: number;
+          avgExpenseAmount: number;
         } | null;
-        categories: Array<{ id: number; name: string; description: string | null; budgetLimit: string | null; budgetPeriod: string | null; isActive: boolean | null }>;
-        pagination: { page: number; pageSize: number; total: number; totalPages: number };
+        categories: Array<{
+          id: number;
+          name: string;
+          description: string | null;
+          budgetLimit: string | null;
+          budgetPeriod: string | null;
+          isActive: boolean | null;
+        }>;
+        pagination: {
+          page: number;
+          pageSize: number;
+          total: number;
+          totalPages: number;
+        };
         isAdmin: boolean;
-      }>("/hr/expenses/page-data", Object.keys(params).length ? params : undefined),
+      }>(
+        "/hr/expenses/page-data",
+        Object.keys(params).length ? params : undefined,
+      ),
     staleTime: 30_000,
   });
 }
 
 export function useHrExpenses(
   userId?: string,
-  status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID"
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID",
 ) {
   const params: Record<string, unknown> = {};
   if (userId) params.userId = userId;
   if (status) params.status = status;
 
   return useQuery({
-    queryKey: queryKeys.hr.expenses(Object.keys(params).length ? params : undefined),
+    queryKey: queryKeys.hr.expenses(
+      Object.keys(params).length ? params : undefined,
+    ),
     queryFn: () =>
-      apiClient.get<{ data: Expense[]; total: number; page: number; limit: number; totalPages: number }>(
-        "/hr/expenses",
-        Object.keys(params).length ? params : undefined
-      ),
+      apiClient.get<{
+        data: Expense[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      }>("/hr/expenses", Object.keys(params).length ? params : undefined),
   });
 }
 
@@ -278,7 +344,20 @@ export function useUpdateExpenseStatus() {
 export function useUpdateExpense() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ expenseId, ...data }: { expenseId: number; category?: string; amount?: number; description?: string; merchant?: string; paymentMethod?: string; expenseDate?: string; receiptUrl?: string; receiptFileName?: string }) =>
+    mutationFn: ({
+      expenseId,
+      ...data
+    }: {
+      expenseId: number;
+      category?: string;
+      amount?: number;
+      description?: string;
+      merchant?: string;
+      paymentMethod?: string;
+      expenseDate?: string;
+      receiptUrl?: string;
+      receiptFileName?: string;
+    }) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
@@ -307,8 +386,7 @@ export function useCreateAsset() {
   return useMutation({
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
   });
 }
 
@@ -317,25 +395,23 @@ export function useUpdateAsset() {
   return useMutation({
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
   });
 }
 
-export function useHrDocuments(
-  userId?: string,
-  type?: DocumentType
-) {
+export function useHrDocuments(userId?: string, type?: DocumentType) {
   const params: Record<string, unknown> = {};
   if (userId) params.userId = userId;
   if (type) params.type = type;
 
   return useQuery({
-    queryKey: queryKeys.hr.documents(Object.keys(params).length ? params : undefined),
+    queryKey: queryKeys.hr.documents(
+      Object.keys(params).length ? params : undefined,
+    ),
     queryFn: () =>
       apiClient.get<Document[]>(
         "/hr/documents",
-        Object.keys(params).length ? params : undefined
+        Object.keys(params).length ? params : undefined,
       ),
   });
 }
@@ -357,7 +433,9 @@ export function useDeleteDocument() {
       apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documents() });
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "documentStats"] });
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "documentStats"],
+      });
     },
   });
 }
@@ -382,7 +460,7 @@ export function useHrPerformanceReviews(userId?: string) {
     queryFn: () =>
       apiClient.get<PerformanceReview[]>(
         "/hr/performance/reviews",
-        userId ? { userId } : undefined
+        userId ? { userId } : undefined,
       ),
   });
 }
@@ -393,7 +471,7 @@ export function useHrGoals(userId?: string) {
     queryFn: () =>
       apiClient.get<Goal[]>(
         "/hr/performance/goals",
-        userId ? { userId } : undefined
+        userId ? { userId } : undefined,
       ),
   });
 }
@@ -410,20 +488,19 @@ export function useCreateGoal() {
   });
 }
 
-export function useHrHelpdeskTickets(
-  userId?: string,
-  status?: TicketStatus
-) {
+export function useHrHelpdeskTickets(userId?: string, status?: TicketStatus) {
   const params: Record<string, unknown> = {};
   if (userId) params.userId = userId;
   if (status) params.status = status;
 
   return useQuery({
-    queryKey: queryKeys.hr.helpdeskTickets(Object.keys(params).length ? params : undefined),
+    queryKey: queryKeys.hr.helpdeskTickets(
+      Object.keys(params).length ? params : undefined,
+    ),
     queryFn: () =>
       apiClient.get<HelpdeskTicket[]>(
         "/hr/helpdesk",
-        Object.keys(params).length ? params : undefined
+        Object.keys(params).length ? params : undefined,
       ),
   });
 }
@@ -480,15 +557,24 @@ export function useHrHolidaysForYear(year: number) {
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
     queryFn: () =>
-      apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<string, unknown>),
+      apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<
+        string,
+        unknown
+      >),
   });
 }
 
-export function useHrHolidaysForCalendar(params: { year: number; month: number }) {
+export function useHrHolidaysForCalendar(params: {
+  year: number;
+  month: number;
+}) {
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
     queryFn: () =>
-      apiClient.get<Holiday[]>("/hr/holidays/calendar", params as Record<string, unknown>),
+      apiClient.get<Holiday[]>(
+        "/hr/holidays/calendar",
+        params as Record<string, unknown>,
+      ),
   });
 }
 
@@ -497,8 +583,7 @@ export function useAddHoliday() {
   return useMutation({
     mutationFn: (data: AddHolidayInput) =>
       apiClient.post<{ success: boolean }>("/hr/holidays", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }
 
@@ -507,8 +592,7 @@ export function useDeleteHoliday() {
   return useMutation({
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }
 
@@ -524,8 +608,7 @@ export function useCreateDevice() {
   return useMutation({
     mutationFn: (data: CreateDeviceInput) =>
       apiClient.post<Device>("/hr/devices", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
   });
 }
 
@@ -534,8 +617,7 @@ export function useUpdateDevice() {
   return useMutation({
     mutationFn: ({ deviceId, ...data }: UpdateDeviceInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/devices/${deviceId}`, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
   });
 }
 
@@ -544,16 +626,20 @@ export function useDeleteDevice() {
   return useMutation({
     mutationFn: ({ deviceId }: DeleteDeviceInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/devices/${deviceId}`),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
   });
 }
 
 export function useHrIncentives(params?: GetIncentivesInput) {
   return useQuery({
-    queryKey: queryKeys.hr.incentives(params as Record<string, unknown> | undefined),
+    queryKey: queryKeys.hr.incentives(
+      params as Record<string, unknown> | undefined,
+    ),
     queryFn: () =>
-      apiClient.get<IncentivesResult>("/hr/incentives", params as Record<string, unknown> | undefined),
+      apiClient.get<IncentivesResult>(
+        "/hr/incentives",
+        params as Record<string, unknown> | undefined,
+      ),
   });
 }
 
@@ -575,7 +661,10 @@ export function useApproveIncentive() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...data }: ApproveIncentiveInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, data),
+      apiClient.patch<{ success: boolean }>(
+        `/hr/incentives/${id}/approve`,
+        data,
+      ),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() }),
   });
@@ -625,7 +714,7 @@ export function useUpdateNotificationPreferences() {
     mutationFn: (data: Partial<NotificationPreferences>) =>
       apiClient.patch<{ success: boolean }>(
         "/hr/notification-preferences",
-        data
+        data,
       ),
     onSuccess: () =>
       qc.invalidateQueries({
@@ -645,8 +734,6 @@ export function useChangePassword() {
       apiClient.patch<{ success: boolean }>("/hr/change-password", data),
   });
 }
-
-// ─── Leave Blackout Dates ─────────────────────────────────────────────────────
 
 export interface LeaveBlackoutDate {
   id: number;
@@ -675,10 +762,16 @@ export function useLeaveBlackoutDates(from?: string, to?: string) {
 export function useCreateLeaveBlackout() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { startDate: string; endDate: string; reason: string; appliesTo?: string }) =>
-      apiClient.post<LeaveBlackoutDate>("/hr/leaves/blackout", data),
+    mutationFn: (data: {
+      startDate: string;
+      endDate: string;
+      reason: string;
+      appliesTo?: string;
+    }) => apiClient.post<LeaveBlackoutDate>("/hr/leaves/blackout", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "leaveBlackout"] }),
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "leaveBlackout"],
+      }),
   });
 }
 
@@ -688,11 +781,12 @@ export function useDeleteLeaveBlackout() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/leaves/blackout/${id}`),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "leaveBlackout"] }),
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "leaveBlackout"],
+      }),
   });
 }
 
-// ─── Leave Analytics ──────────────────────────────────────────────────────────
 export interface HrLeaveAnalytics {
   year: number;
   byDepartment: {
@@ -710,7 +804,9 @@ export function useHrLeaveAnalytics(year?: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "leaveAnalytics", y] as const,
     queryFn: () =>
-      apiClient.get<HrLeaveAnalytics>("/hr/leaves/analytics", { year: String(y) }),
+      apiClient.get<HrLeaveAnalytics>("/hr/leaves/analytics", {
+        year: String(y),
+      }),
     staleTime: 120_000,
   });
 }
@@ -753,7 +849,9 @@ export function useCreateExpenseCategory() {
     mutationFn: (data: CreateExpenseCategoryInput) =>
       apiClient.post<ExpenseCategory>("/hr/expenses/categories", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "expenseCategories"] }),
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "expenseCategories"],
+      }),
   });
 }
 
@@ -802,9 +900,17 @@ export interface ExpenseReportData {
 
 export function useExpenseReport(startDate: string, endDate: string) {
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "expenseReport", startDate, endDate] as const,
+    queryKey: [
+      ...queryKeys.hr.all,
+      "expenseReport",
+      startDate,
+      endDate,
+    ] as const,
     queryFn: () =>
-      apiClient.get<ExpenseReportData>("/hr/expenses/report", { startDate, endDate }),
+      apiClient.get<ExpenseReportData>("/hr/expenses/report", {
+        startDate,
+        endDate,
+      }),
     staleTime: 60_000,
     enabled: !!startDate && !!endDate,
   });
@@ -815,11 +921,11 @@ export function useCreditCompOff() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { userId: string; days: number; reason?: string }) =>
-      apiClient.post<{ success: boolean; credited: number; leaveTypeId: number }>(
-        "/hr/leaves/comp-off",
-        data,
-      ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+      apiClient.post<{
+        success: boolean;
+        credited: number;
+        leaveTypeId: number;
+      }>("/hr/leaves/comp-off", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }

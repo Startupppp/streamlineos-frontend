@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo } from "react";
-import {
-  DragDropContext,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +13,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import type { AtsPipelineStage, AtsPipelineCandidate, CandidateStatus } from "@/types/hr";
+import type {
+  AtsPipelineStage,
+  AtsPipelineCandidate,
+  CandidateStatus,
+} from "@/types/hr";
 import {
   COLUMNS,
   CandidateCard,
@@ -45,7 +45,7 @@ const KanbanColumn = memo(function KanbanColumn({
     <div
       className={cn(
         "flex flex-col min-w-[280px] w-[280px] shrink-0",
-        isRejected && "opacity-80"
+        isRejected && "opacity-80",
       )}
     >
       <div className="flex items-center gap-2 mb-2 px-0.5">
@@ -53,7 +53,7 @@ const KanbanColumn = memo(function KanbanColumn({
         <span
           className={cn(
             "ml-auto inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold min-w-[22px]",
-            col.badge
+            col.badge,
           )}
         >
           {items.length}
@@ -69,7 +69,7 @@ const KanbanColumn = memo(function KanbanColumn({
               "flex-1 rounded-xl border-2 p-2 transition-colors",
               col.bg,
               col.border,
-              snapshot.isDraggingOver && "ring-2 ring-primary/30"
+              snapshot.isDraggingOver && "ring-2 ring-primary/30",
             )}
           >
             <div
@@ -99,16 +99,19 @@ const KanbanColumn = memo(function KanbanColumn({
   );
 });
 
-// ─── Main kanban ──────────────────────────────────────────────────────────────
-
 interface PipelineKanbanProps {
   stages: AtsPipelineStage[];
   onStageChange: (candidateId: number, newStage: CandidateStatus) => void;
   isLoading?: boolean;
 }
 
-export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKanbanProps) {
-  const [selectedCandidate, setSelectedCandidate] = useState<AtsPipelineCandidate | null>(null);
+export function PipelineKanban({
+  stages,
+  onStageChange,
+  isLoading,
+}: PipelineKanbanProps) {
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<AtsPipelineCandidate | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const [pendingReject, setPendingReject] = useState<{
@@ -116,7 +119,9 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
     candidateName: string;
   } | null>(null);
 
-  const stageMap = Object.fromEntries(stages.map((s) => [s.stage, s.candidates]));
+  const stageMap = Object.fromEntries(
+    stages.map((s) => [s.stage, s.candidates]),
+  );
 
   const handleCardClick = useCallback((candidate: AtsPipelineCandidate) => {
     setSelectedCandidate(candidate);
@@ -142,7 +147,7 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
         onStageChange(candidateId, newStage);
       }
     },
-    [onStageChange, stages]
+    [onStageChange, stages],
   );
 
   const confirmReject = useCallback(() => {
@@ -188,15 +193,21 @@ export function PipelineKanban({ stages, onStageChange, isLoading }: PipelineKan
         onOpenChange={setSheetOpen}
       />
 
-      <AlertDialog open={!!pendingReject} onOpenChange={handleRejectDialogChange}>
+      <AlertDialog
+        open={!!pendingReject}
+        onOpenChange={handleRejectDialogChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reject candidate?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to move{" "}
-              <span className="font-semibold">{pendingReject?.candidateName}</span> to{" "}
-              <span className="font-semibold text-destructive">Rejected</span>? This will notify
-              the HR team.
+              <span className="font-semibold">
+                {pendingReject?.candidateName}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold text-destructive">Rejected</span>?
+              This will notify the HR team.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

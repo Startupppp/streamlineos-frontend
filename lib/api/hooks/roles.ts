@@ -77,7 +77,6 @@ export function useRolesList(
   return useRoles(options);
 }
 
-// ─── Role Templates ───────────────────────────────────────────────────────────
 
 export interface RoleTemplate {
   id: string;

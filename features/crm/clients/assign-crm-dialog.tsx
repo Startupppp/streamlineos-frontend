@@ -61,7 +61,6 @@ export function AssignCrmDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Unassigned alert */}
           {!statsLoading && unassignedCount > 0 && (
             <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
@@ -80,7 +79,6 @@ export function AssignCrmDialog() {
             </div>
           )}
 
-          {/* CRM Members list */}
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
               CRM Representatives ({members.length})
@@ -145,7 +143,6 @@ export function AssignCrmDialog() {
               </div>
             )}
 
-            {/* Summary bar */}
             {!statsLoading && members.length > 0 && (
               <div className="flex items-center justify-between px-1 pt-1 text-xs text-muted-foreground">
                 <span>{totalActive} active across {members.length} reps</span>

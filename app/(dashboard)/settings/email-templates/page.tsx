@@ -18,7 +18,6 @@ import {
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 
-// ── Template imports ──────────────────────────────────────────────────────────
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -74,7 +73,6 @@ import {
   getCompanyAnnouncementEmailTemplate,
 } from "@/lib/email-templates/organization";
 
-// ── Template registry ─────────────────────────────────────────────────────────
 interface EmailTemplateConfig {
   id: string;
   category: string;
@@ -85,7 +83,6 @@ interface EmailTemplateConfig {
 const BASE_URL = "https://crm.vaivammcapital.com";
 
 const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
-  // ── Auth ───────────────────────────────────────────────────────────────────
   {
     id: "auth.verify",
     category: "Auth",
@@ -167,7 +164,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Organization ───────────────────────────────────────────────────────────
   {
     id: "org.invitation",
     category: "Organization",
@@ -208,7 +204,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── HR Leave ───────────────────────────────────────────────────────────────
   {
     id: "hr.leave_request",
     category: "HR Leave",
@@ -324,7 +319,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── HR Expense ─────────────────────────────────────────────────────────────
   {
     id: "expense.submitted",
     category: "HR Expense",
@@ -375,7 +369,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Appraisal ──────────────────────────────────────────────────────────────
   {
     id: "appraisal.self_review",
     category: "Appraisal",
@@ -433,7 +426,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── CRM ────────────────────────────────────────────────────────────────────
   {
     id: "crm.lead_welcome",
     category: "CRM",
@@ -506,7 +498,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Projects ───────────────────────────────────────────────────────────────
   {
     id: "project.assigned",
     category: "Projects",
@@ -574,7 +565,6 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
   },
 ];
 
-// ── Category list ─────────────────────────────────────────────────────────────
 const CATEGORIES = Array.from(new Set(TEMPLATE_REGISTRY.map((t) => t.category)));
 
 export default function EmailTemplatesPage() {
@@ -588,7 +578,6 @@ export default function EmailTemplatesPage() {
     [activeCategory]
   );
 
-  // Auto-select first template when category changes
   const handleCategoryChange = useCallback(
     (cat: string) => {
       setActiveCategory(cat);
@@ -657,7 +646,6 @@ export default function EmailTemplatesPage() {
       }
     >
       <div className="flex flex-col gap-4">
-        {/* Category tabs */}
         <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
           <TabsList className="flex-wrap h-auto gap-1">
             {CATEGORIES.map((cat) => (
@@ -668,7 +656,6 @@ export default function EmailTemplatesPage() {
           </TabsList>
         </Tabs>
 
-        {/* Template selector + metadata */}
         <div className="flex items-center gap-3 flex-wrap">
           <Select
             value={selectedTemplate?.id ?? ""}
@@ -695,11 +682,9 @@ export default function EmailTemplatesPage() {
           )}
         </div>
 
-        {/* Preview panel */}
         {preview ? (
           <Card className="shadow-noir overflow-hidden">
             <CardContent className="p-0">
-              {/* Subject bar */}
               <div className="border-b px-4 py-2.5 bg-muted/40 flex items-center gap-2">
                 <Label className="text-xs text-muted-foreground shrink-0">Subject</Label>
                 <span className="text-xs font-medium text-foreground truncate">
@@ -707,7 +692,6 @@ export default function EmailTemplatesPage() {
                 </span>
               </div>
 
-              {/* HTML preview */}
               <div
                 className="bg-white rounded-b-lg"
                 style={{ minHeight: "500px" }}

@@ -92,7 +92,6 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);
 
-    // Generate quote number: QT-YYYYMMDD-XXX
     const today = new Date();
     const dateStr = today.toISOString().split("T")[0].replace(/-/g, "");
     const existingCount = await db
@@ -102,7 +101,6 @@ export async function POST(req: NextRequest) {
     const seq = ((existingCount[0]?.count ?? 0) + 1).toString().padStart(3, "0");
     const quoteNumber = `QT-${dateStr}-${seq}`;
 
-    // Calculate totals from line items
     let totalAmount = 0;
     let totalTax = 0;
     for (const item of input.lineItems) {

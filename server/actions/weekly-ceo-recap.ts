@@ -113,7 +113,6 @@ export async function generateAndSendWeeklyCeoRecap() {
         pipelineSummary: pipelineRaw.map((r) => ({ status: r.status, count: r.count })),
       };
 
-      // Generate AI narrative (non-blocking fallback)
       let aiNarrative = "";
       try {
         aiNarrative = await generateRecapNarrative(recapData);

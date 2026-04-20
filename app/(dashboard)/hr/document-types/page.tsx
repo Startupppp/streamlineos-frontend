@@ -39,7 +39,6 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DocumentType {
   id: number;
@@ -53,7 +52,6 @@ interface DocumentType {
   createdAt: string | null;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const ALL_ROLES = [
   "CEO",
@@ -66,7 +64,6 @@ const ALL_ROLES = [
   "CUSTOMER_SUPPORT",
 ];
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
 
 function useDocumentTypes() {
   return useQuery<DocumentType[]>({
@@ -128,7 +125,6 @@ function useDeleteDocumentType() {
   });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function slugify(name: string): string {
   return name
@@ -137,7 +133,6 @@ function slugify(name: string): string {
     .replace(/^_|_$/g, "");
 }
 
-// ─── Blank form state ─────────────────────────────────────────────────────────
 
 function blankForm() {
   return {
@@ -150,7 +145,6 @@ function blankForm() {
   };
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DocumentTypesPage() {
   const { data: session } = useSession();
@@ -162,16 +156,13 @@ export default function DocumentTypesPage() {
   const updateMutation = useUpdateDocumentType();
   const deleteMutation = useDeleteDocumentType();
 
-  // ── Sheet state ───────────────────────────────────────────────────────────
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<DocumentType | null>(null);
   const [form, setForm] = useState(blankForm());
 
-  // ── Deactivate / Reactivate confirm ──────────────────────────────────────
   const [deactivateTarget, setDeactivateTarget] = useState<DocumentType | null>(null);
   const [reactivateTarget, setReactivateTarget] = useState<DocumentType | null>(null);
 
-  // ── Form helpers ──────────────────────────────────────────────────────────
   const setField = useCallback(
     <K extends keyof ReturnType<typeof blankForm>>(
       key: K,
@@ -216,7 +207,6 @@ export default function DocumentTypesPage() {
     setSheetOpen(true);
   }, []);
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(() => {
     if (!form.name.trim()) {
       toast.error("Name is required");
@@ -253,7 +243,6 @@ export default function DocumentTypesPage() {
     }
   }, [form, editTarget, createMutation, updateMutation, resetAndClose]);
 
-  // ── Deactivate ────────────────────────────────────────────────────────────
   const handleDeactivate = useCallback(() => {
     if (!deactivateTarget) return;
     deleteMutation.mutate(deactivateTarget.id, {
@@ -265,7 +254,6 @@ export default function DocumentTypesPage() {
     });
   }, [deactivateTarget, deleteMutation]);
 
-  // ── Reactivate ────────────────────────────────────────────────────────────
   const handleReactivate = useCallback(() => {
     if (!reactivateTarget) return;
     updateMutation.mutate(
@@ -280,7 +268,6 @@ export default function DocumentTypesPage() {
     );
   }, [reactivateTarget, updateMutation]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
 
   const list = data ?? [];
 
@@ -439,7 +426,6 @@ export default function DocumentTypesPage() {
         </ScrollArea>
       )}
 
-      {/* ── Create / Edit Sheet ────────────────────────────────────────────── */}
       <HrSheet
         open={sheetOpen}
         onOpenChange={(open) => {
@@ -456,7 +442,6 @@ export default function DocumentTypesPage() {
         submitLabel={editTarget ? "Save Changes" : "Create"}
         isPending={createMutation.isPending || updateMutation.isPending}
       >
-        {/* Name */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Name <span className="text-destructive">*</span>
@@ -474,7 +459,6 @@ export default function DocumentTypesPage() {
           )}
         </div>
 
-        {/* Description */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Description{" "}
@@ -491,7 +475,6 @@ export default function DocumentTypesPage() {
 
         <Separator />
 
-        {/* Mandatory toggle */}
         <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
           <div>
             <p className="text-sm font-medium">Mandatory Document</p>
@@ -506,7 +489,6 @@ export default function DocumentTypesPage() {
           />
         </div>
 
-        {/* Active toggle — only shown when editing */}
         {editTarget && (
           <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
             <div>
@@ -523,7 +505,6 @@ export default function DocumentTypesPage() {
           </div>
         )}
 
-        {/* Sort order */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Sort Order{" "}
@@ -545,7 +526,6 @@ export default function DocumentTypesPage() {
 
         <Separator />
 
-        {/* Applicable Roles */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             Applicable Roles{" "}
@@ -574,7 +554,6 @@ export default function DocumentTypesPage() {
         </div>
       </HrSheet>
 
-      {/* ── Deactivate Confirm ─────────────────────────────────────────────── */}
       <ConfirmActionDialog
         open={deactivateTarget !== null}
         onOpenChange={(open) => {
@@ -588,7 +567,6 @@ export default function DocumentTypesPage() {
         isPending={deleteMutation.isPending}
       />
 
-      {/* ── Reactivate Confirm ─────────────────────────────────────────────── */}
       <ConfirmActionDialog
         open={reactivateTarget !== null}
         onOpenChange={(open) => {

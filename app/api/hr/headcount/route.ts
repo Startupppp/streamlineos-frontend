@@ -41,7 +41,6 @@ export async function GET(req: NextRequest) {
         .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)))
         .groupBy(users.departmentId);
 
-      // Fetch department names
       const allDepts = await db
         .select({ id: departments.id, name: departments.name })
         .from(departments)
@@ -68,7 +67,6 @@ export async function GET(req: NextRequest) {
         count: Number(r.count),
       }));
     } else {
-      // groupBy === "branch"
       const rows = await db
         .select({
           branchId: users.branchId,
@@ -85,7 +83,6 @@ export async function GET(req: NextRequest) {
       }));
     }
 
-    // Sort descending by count
     groups.sort((a, b) => b.count - a.count);
 
     return ok(groups);

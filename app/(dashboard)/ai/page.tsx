@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
@@ -59,7 +64,7 @@ const CATEGORIES = [
 
 export default function AIHubPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  const [activeFeature, setActiveFeature] = useState<AiFeature | null>(null);
 
   const filtered = selectedCategory === "all"
     ? AI_FEATURES
@@ -80,46 +85,59 @@ export default function AIHubPage() {
         </TabsList>
 
         <TabsContent value={selectedCategory} className="mt-5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Dialog key={feature.id} open={activeFeature === feature.id} onOpenChange={(open) => setActiveFeature(open ? feature.id : null)}>
-                  <DialogTrigger asChild>
-                    <Card className="h-full cursor-pointer border-l-4 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderLeftColor: "var(--gold, #bd882c)" }}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg bg-muted shrink-0 ${feature.color}`}>
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <CardTitle className="text-sm leading-tight">{feature.title}</CardTitle>
-                            <Badge variant="outline" className="text-[10px] mt-1">{feature.category}</Badge>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <CardDescription className="text-sm leading-relaxed line-clamp-2 min-h-[40px]">
-                          {feature.description}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <Icon className={`h-5 w-5 ${feature.color}`} />
-                        {feature.title}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <AIFeatureForm featureId={feature.id} onClose={() => setActiveFeature(null)} />
-                  </DialogContent>
-                </Dialog>
+                <Card
+                  key={feature.id}
+                  className="h-full cursor-pointer border-l-4 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5"
+                  style={{ borderLeftColor: "var(--gold, #bd882c)" }}
+                  onClick={() => setActiveFeature(feature)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-muted shrink-0 ${feature.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-sm leading-tight">{feature.title}</CardTitle>
+                        <Badge variant="outline" className="text-[10px] mt-1">{feature.category}</Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-sm leading-relaxed line-clamp-2 min-h-[40px]">
+                      {feature.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
         </TabsContent>
       </Tabs>
+
+      <Sheet open={!!activeFeature} onOpenChange={(open) => { if (!open) setActiveFeature(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-[480px] flex flex-col gap-0 p-0">
+          {activeFeature && (
+            <>
+              <SheetHeader className="px-6 py-4 border-b shrink-0">
+                <SheetTitle className="flex items-center gap-2 text-base">
+                  {(() => {
+                    const Icon = activeFeature.icon;
+                    return <Icon className={`h-5 w-5 ${activeFeature.color}`} />;
+                  })()}
+                  {activeFeature.title}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <AIFeatureForm featureId={activeFeature.id} onClose={() => setActiveFeature(null)} />
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </PageWrapper>
   );
 }
@@ -204,7 +222,7 @@ function AIFeatureForm({ featureId, onClose }: { featureId: string; onClose: () 
   return (
     <div className="space-y-4">
       {config.type !== "none" && (
-        <div>
+        <div className="space-y-1.5">
           <Label>{config.label}</Label>
           {config.type === "textarea" ? (
             <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={config.placeholder} rows={4} />
@@ -215,7 +233,7 @@ function AIFeatureForm({ featureId, onClose }: { featureId: string; onClose: () 
       )}
 
       {"hasSecond" in config && config.hasSecond && (
-        <div>
+        <div className="space-y-1.5">
           <Label>{config.secondLabel}</Label>
           <Input value={secondInput} onChange={(e) => setSecondInput(e.target.value)} placeholder={config.secondPlaceholder} />
         </div>
@@ -231,6 +249,10 @@ function AIFeatureForm({ featureId, onClose }: { featureId: string; onClose: () 
           <pre className="text-xs whitespace-pre-wrap break-words">{result}</pre>
         </div>
       )}
+
+      <Button variant="ghost" className="w-full text-muted-foreground" onClick={onClose}>
+        Close
+      </Button>
     </div>
   );
 }

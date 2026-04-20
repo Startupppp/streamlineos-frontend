@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
 
     const slug = toSlug(body.name);
 
-    // Check for duplicate slug within org
     const existing = await db.query.documentTypes.findFirst({
       where: and(
         eq(documentTypes.orgId, session.orgId),

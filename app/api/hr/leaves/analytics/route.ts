@@ -7,7 +7,7 @@ import { cached, CACHE_TTL } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/hr/leaves/analytics — per-department leave utilization */
+
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role;
@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
       const yearStart = `${year}-01-01`;
       const yearEnd = `${year}-12-31`;
 
-      // Leave counts by department using a join
       const byDept = await db
         .select({
           department: departments.name,
@@ -44,7 +43,6 @@ export async function GET(req: NextRequest) {
         )
         .groupBy(departments.name);
 
-      // Monthly trend (approved leaves per month)
       const monthly = await db
         .select({
           month: sql<string>`TO_CHAR(${leaveRequests.startDate}::date, 'Mon')`,

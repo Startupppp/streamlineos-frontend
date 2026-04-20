@@ -34,7 +34,6 @@ interface Props {
 export function LandingForm({ orgId, utm }: Props) {
   const searchParams = useSearchParams();
 
-  // Prefer URL params over server-side utm prop (for CSR navigation)
   const resolvedUtm: UtmParams = {
     utmSource: searchParams.get("utm_source") ?? utm.utmSource,
     utmMedium: searchParams.get("utm_medium") ?? utm.utmMedium,
@@ -54,14 +53,13 @@ export function LandingForm({ orgId, utm }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Turnstile widget ref and token
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileTokenRef = useRef<string | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
   const renderTurnstile = useCallback(() => {
     if (!TURNSTILE_SITE_KEY || !turnstileRef.current) return;
-    if (turnstileWidgetIdRef.current) return; // Already rendered
+    if (turnstileWidgetIdRef.current) return;
     const w = window as unknown as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => string } };
     if (!w.turnstile) return;
     turnstileWidgetIdRef.current = w.turnstile.render(turnstileRef.current, {
@@ -73,7 +71,6 @@ export function LandingForm({ orgId, utm }: Props) {
   }, []);
 
   useEffect(() => {
-    // Render if script already loaded before effect ran
     renderTurnstile();
   }, [renderTurnstile]);
 
@@ -105,7 +102,6 @@ export function LandingForm({ orgId, utm }: Props) {
       setStatus("loading");
 
       try {
-        // Require Turnstile token when configured
         if (TURNSTILE_SITE_KEY && !turnstileTokenRef.current) {
           setServerError("Please complete the bot verification challenge.");
           setStatus("error");
@@ -139,7 +135,6 @@ export function LandingForm({ orgId, utm }: Props) {
         setStatus("error");
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [values, orgId, resolvedUtm.utmSource, resolvedUtm.utmMedium, resolvedUtm.utmCampaign, resolvedUtm.utmContent, resolvedUtm.utmTerm, resolvedUtm.referrerUrl],
   );
 
@@ -163,7 +158,6 @@ export function LandingForm({ orgId, utm }: Props) {
       </p>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        {/* Name */}
         <div>
           <label htmlFor="lf-name" className="block text-sm font-medium text-foreground mb-1">
             Name <span className="text-destructive" aria-hidden="true">*</span>
@@ -188,7 +182,6 @@ export function LandingForm({ orgId, utm }: Props) {
           )}
         </div>
 
-        {/* Email */}
         <div>
           <label htmlFor="lf-email" className="block text-sm font-medium text-foreground mb-1">
             Email
@@ -212,7 +205,6 @@ export function LandingForm({ orgId, utm }: Props) {
           )}
         </div>
 
-        {/* Phone */}
         <div>
           <label htmlFor="lf-phone" className="block text-sm font-medium text-foreground mb-1">
             Phone
@@ -229,7 +221,6 @@ export function LandingForm({ orgId, utm }: Props) {
           />
         </div>
 
-        {/* Message */}
         <div>
           <label htmlFor="lf-message" className="block text-sm font-medium text-foreground mb-1">
             Message
@@ -245,7 +236,6 @@ export function LandingForm({ orgId, utm }: Props) {
           />
         </div>
 
-        {/* Cloudflare Turnstile bot protection widget */}
         {TURNSTILE_SITE_KEY && (
           <div ref={turnstileRef} className="mt-1" aria-label="Bot verification" />
         )}
@@ -265,7 +255,6 @@ export function LandingForm({ orgId, utm }: Props) {
         </button>
       </form>
 
-      {/* Load Turnstile script only when the site key is configured */}
       {TURNSTILE_SITE_KEY && (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js"

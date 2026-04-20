@@ -73,7 +73,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       if (input.status === "REJECTED") updateData.rejectedAt = new Date();
     }
 
-    // Recalculate totals if line items updated
     if (input.lineItems) {
       let totalAmount = 0;
       let totalTax = 0;
@@ -86,7 +85,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       updateData.taxAmount = totalTax.toFixed(2);
       updateData.netAmount = (totalAmount + totalTax).toFixed(2);
 
-      // Replace line items
       await db.delete(quoteLineItems).where(eq(quoteLineItems.quoteId, quoteId));
       await db.insert(quoteLineItems).values(
         input.lineItems.map((item, idx) => ({
