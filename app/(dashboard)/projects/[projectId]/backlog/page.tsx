@@ -40,10 +40,10 @@ interface TicketRowProps {
     title: string | null;
     description?: string | null;
     status: string;
-    priority: string;
+    priority: string | null;
     type: string;
     assigneeId?: string | null;
-    createdAt?: string | null;
+    createdAt?: string | Date | null;
     assignee?: {
       image?: string | null;
       firstName?: string | null;

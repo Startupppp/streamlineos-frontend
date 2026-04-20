@@ -255,6 +255,13 @@ export function CalendarView() {
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
 
+  const calMonth = currentDate.getMonth();
+  const calYear = currentDate.getFullYear();
+  const yearOptions = useMemo(
+    () => Array.from({ length: 11 }, (_, i) => calYear - 5 + i),
+    [calYear],
+  );
+
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">

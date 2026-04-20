@@ -74,6 +74,7 @@ export function ResignationCard({
   const ceoCanAct = isCEO && r.status === "HR_APPROVED";
 
   const handleToggle = useCallback(() => onToggleExpand(r.id), [r.id, onToggleExpand]);
+  const handleWithdraw = useCallback(() => onWithdraw(r.id), [r.id, onWithdraw]);
 
   return (
     <Card className="overflow-hidden">

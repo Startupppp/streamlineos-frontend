@@ -12,6 +12,7 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Activity } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
 
 const MONTH_LABELS = [
