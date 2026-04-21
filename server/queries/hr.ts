@@ -555,7 +555,9 @@ export async function getWorkLogs(
     },
   });
 
-  return logs.filter((l) => l.date >= startStr && l.date <= endStr) as unknown as WorkLog[];
+  return logs
+    .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
+    .filter((l) => l.date >= startStr && l.date <= endStr) as unknown as WorkLog[];
 }
 
 export async function getHelpdeskTickets(

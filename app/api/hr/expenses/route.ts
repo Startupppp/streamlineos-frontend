@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
       return err("category, amount, and expenseDate are required.", 400);
     }
 
+    const isAdminRole = session.user.role === "HR" || session.user.role === "CEO";
+
     const [expense] = await db
       .insert(expenses)
       .values({
@@ -74,8 +76,10 @@ export async function POST(req: NextRequest) {
         merchant: body.merchant,
         paymentMethod: body.paymentMethod,
         projectId: body.projectId,
-        expenseDate: formatDateOnly(new Date(body.expenseDate)),
-        status: "PENDING",
+        expenseDate: formatDateOnly(body.expenseDate),
+        status: isAdminRole ? "APPROVED" : "PENDING",
+        approverId: isAdminRole ? session.user.id : null,
+        approvedAt: isAdminRole ? new Date() : null,
       })
       .returning();
 
@@ -91,25 +95,27 @@ export async function POST(req: NextRequest) {
     } catch {  }
 
     try {
-      const hrMembers = await db
-        .select({ userId: organizationMembers.userId })
-        .from(organizationMembers)
-        .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+      if (!isAdminRole) {
+        const hrMembers = await db
+          .select({ userId: organizationMembers.userId })
+          .from(organizationMembers)
+          .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-      for (const m of hrMembers) {
-        const hrUser = await db.query.users.findFirst({
-          where: eq(users.id, m.userId),
-          columns: { email: true, name: true },
-        });
-        if (hrUser?.email) {
-          await sendExpenseSubmittedEmail(
-            hrUser.email,
-            hrUser.name ?? "HR",
-            session.user.name ?? "Employee",
-            body.category,
-            body.amount.toString(),
-            body.description ?? ""
-          );
+        for (const m of hrMembers) {
+          const hrUser = await db.query.users.findFirst({
+            where: eq(users.id, m.userId),
+            columns: { email: true, name: true },
+          });
+          if (hrUser?.email) {
+            await sendExpenseSubmittedEmail(
+              hrUser.email,
+              hrUser.name ?? "HR",
+              session.user.name ?? "Employee",
+              body.category,
+              body.amount.toString(),
+              body.description ?? ""
+            );
+          }
         }
       }
     } catch {  }

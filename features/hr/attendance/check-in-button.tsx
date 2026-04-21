@@ -115,14 +115,15 @@ export const TimerCard = memo(function TimerCard() {
   }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak]);
 
   const handleCheckIn = useCallback(() => {
-    checkInMutation.mutate({ location: undefined });
+    checkInMutation.mutate({ location: undefined, localDate: format(new Date(), "yyyy-MM-dd") });
   }, [checkInMutation]);
 
   const handleClockAction = useCallback(() => {
+    const localDate = format(new Date(), "yyyy-MM-dd");
     if (isActive) {
-      checkOutMutation.mutate();
+      checkOutMutation.mutate({ localDate });
     } else if (!isInCooldown) {
-      checkInMutation.mutate({ location: undefined });
+      checkInMutation.mutate({ location: undefined, localDate });
     }
   }, [isActive, isInCooldown, checkInMutation, checkOutMutation]);
 
