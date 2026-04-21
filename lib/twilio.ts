@@ -49,7 +49,7 @@ export async function sendTwilioMessage(
       ? `whatsapp:${params.to}`
       : params.to;
 
-  const endpoint = `https:
+  const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
 
   const formData = new URLSearchParams();
   formData.append("To", to);
