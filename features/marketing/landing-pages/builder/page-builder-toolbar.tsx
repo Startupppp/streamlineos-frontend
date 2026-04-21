@@ -13,7 +13,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 
-// ─── Page Builder Toolbar ─────────────────────────────────────────────────────
 
 export interface PageBuilderToolbarProps {
   isEditing: boolean;

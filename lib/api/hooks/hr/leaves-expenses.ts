@@ -811,7 +811,6 @@ export function useHrLeaveAnalytics(year?: number) {
   });
 }
 
-// ─── Expense Categories ───────────────────────────────────────────────────────
 
 export interface ExpenseCategory {
   id: number;
@@ -855,7 +854,6 @@ export function useCreateExpenseCategory() {
   });
 }
 
-// ─── Expense Report ───────────────────────────────────────────────────────────
 
 export interface ExpenseReportData {
   summary: {
@@ -916,7 +914,6 @@ export function useExpenseReport(startDate: string, endDate: string) {
   });
 }
 
-// ─── Comp-Off ─────────────────────────────────────────────────────────────────
 export function useCreditCompOff() {
   const qc = useQueryClient();
   return useMutation({

@@ -29,7 +29,6 @@ const STATUS_COLORS: Record<string, string> = {
   EXPIRED: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
 };
 
-// ─── Line Item Row ─────────────────────────────────────────────────────────────
 
 interface LineItem {
   description: string;
@@ -81,7 +80,6 @@ const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, o
   );
 });
 
-// ─── Create Quote Form ─────────────────────────────────────────────────────────
 
 function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
   const createQuote = useCreateQuote();
@@ -176,7 +174,6 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
-// ─── Quotes Page ───────────────────────────────────────────────────────────────
 
 export default function QuotesPage() {
   const searchParams = useSearchParams();

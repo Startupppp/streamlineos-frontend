@@ -28,7 +28,6 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
   return "secondary";
 }
 
-// ─── Survey Card ──────────────────────────────────────────────────────────────
 
 interface SurveyCardProps {
   s: PulseSurvey;
@@ -69,7 +68,6 @@ const SurveyCard = memo(function SurveyCard({ s, isAdmin, onPublish, onClose }: 
   );
 });
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SurveysPage() {
   const { data: session } = useSession();

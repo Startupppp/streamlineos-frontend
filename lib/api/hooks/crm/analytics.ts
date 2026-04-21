@@ -10,7 +10,6 @@ import type {
   CustomerExecutiveDashboard,
 } from "@/types/crm";
 
-// ─── Dashboard Summaries ──────────────────────────────────────────────────────
 
 export function useSalesDashboard() {
   return useQuery({
@@ -40,9 +39,6 @@ export function useCustomerExecutiveDashboard() {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Sales Dashboard — filtered KPI, funnel, leaderboard, revenue-vs-goal hooks
-// ---------------------------------------------------------------------------
 
 export interface SalesDashboardFilters {
   from?: string;
@@ -165,7 +161,6 @@ export function useAgingDeals(thresholdDays = 14) {
   });
 }
 
-// ─── Sales Cycle Length ───────────────────────────────────────────────────────
 
 export interface CycleLengthResult {
   avgDays: number | null;
@@ -186,7 +181,6 @@ export function useSalesCycleLength(repId?: string) {
   });
 }
 
-// ─── Lost Deal Analysis ───────────────────────────────────────────────────────
 
 export interface LostAnalysisResult {
   total: number;
@@ -204,7 +198,6 @@ export function useLostDealAnalysis(repId?: string) {
   });
 }
 
-// ─── Cohort Analysis ──────────────────────────────────────────────────────────
 
 export interface CohortRow {
   cohortMonth: string;
@@ -222,7 +215,6 @@ export function useSalesCohort(months = 6) {
   });
 }
 
-// ─── Rep Comparison ───────────────────────────────────────────────────────────
 
 export interface RepMonthStat {
   month: string;
@@ -255,7 +247,6 @@ export function useRepComparison(rep1Id: number | null, rep2Id: number | null) {
   });
 }
 
-// ─── SLA Compliance ──────────────────────────────────────────────────────────
 
 export interface SlaByPriority {
   priority: string;
@@ -296,7 +287,6 @@ export function useSlaCompliance() {
   });
 }
 
-// ─── Lead Source Attribution ─────────────────────────────────────────────────
 
 export interface LeadSourceStat {
   source: string;

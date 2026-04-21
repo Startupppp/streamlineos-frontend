@@ -2,7 +2,6 @@
 
 import { useCrmPageAnalytics } from "@/lib/api/hooks/marketing";
 
-// ─── Analytics Panel ─────────────────────────────────────────────────────────
 
 interface AnalyticsPanelProps {
   pageId: number;

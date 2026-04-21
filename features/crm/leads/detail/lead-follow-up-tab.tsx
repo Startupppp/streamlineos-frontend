@@ -16,7 +16,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import type { Task, TaskType } from "@/lib/api/hooks/tasks";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export function formatTaskDue(dueDate: string | null): string {
   if (!dueDate) return "No date";
@@ -57,7 +56,6 @@ function getTaskIconColor(type: TaskType): string {
   }
 }
 
-// ─── Follow-up type option (memo) ────────────────────────────────────────────
 
 interface FollowUpTypeItemProps {
   value: TaskType;
@@ -72,7 +70,6 @@ const FollowUpTypeItem = memo(function FollowUpTypeItem({ value, label }: Follow
   );
 });
 
-// ─── Pending task row (memo) ──────────────────────────────────────────────────
 
 interface PendingTaskRowProps {
   task: Task;
@@ -122,7 +119,6 @@ const PendingTaskRow = memo(function PendingTaskRow({
   );
 });
 
-// ─── Completed task row (memo) ────────────────────────────────────────────────
 
 interface DoneTaskRowProps {
   task: Task;
@@ -144,7 +140,6 @@ const DoneTaskRow = memo(function DoneTaskRow({ task }: DoneTaskRowProps) {
   );
 });
 
-// ─── Main export ─────────────────────────────────────────────────────────────
 
 export interface FollowUpTabState {
   fuTitle: string;

@@ -112,7 +112,6 @@ export interface DocumentTableProps {
   onOpenUpload: () => void;
 }
 
-// ─── Per-row memo component ───────────────────────────────────────────────────
 
 interface DocumentRowProps {
   doc: Document;
@@ -266,7 +265,6 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
   );
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function DocumentTable({
   paginatedDocuments,

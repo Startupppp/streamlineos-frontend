@@ -23,7 +23,6 @@ import {
 } from "@/lib/api/hooks/hr/onboarding";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function stalledBadge(row: OnboardingStatus): boolean {
   if (row.percentComplete >= 100) return false;
@@ -32,7 +31,6 @@ function stalledBadge(row: OnboardingStatus): boolean {
   return Date.now() - last > 48 * 60 * 60 * 1000;
 }
 
-// ─── InitiateSheet ────────────────────────────────────────────────────────────
 
 interface InitiateSheetProps {
   open: boolean;
@@ -94,7 +92,6 @@ function InitiateSheet({ open, onOpenChange }: InitiateSheetProps) {
   );
 }
 
-// ─── OnboardingRow ────────────────────────────────────────────────────────────
 
 interface OnboardingRowProps {
   row: OnboardingStatus;
@@ -146,7 +143,6 @@ const OnboardingRow = memo(function OnboardingRow({ row }: OnboardingRowProps) {
   );
 });
 
-// ─── HrWorkflowTab ────────────────────────────────────────────────────────────
 
 export function HrWorkflowTab() {
   const { data, isLoading } = useOnboardingStatus();

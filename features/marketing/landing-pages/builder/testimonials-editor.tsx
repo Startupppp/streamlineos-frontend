@@ -18,7 +18,6 @@ import {
 
 import { type CrmPageTestimonial } from "@/lib/api/hooks/marketing";
 
-// ─── Testimonial Card ─────────────────────────────────────────────────────────
 
 interface TestimonialCardProps {
   testimonial: CrmPageTestimonial;
@@ -96,7 +95,6 @@ const TestimonialCard = memo(function TestimonialCard({
   );
 });
 
-// ─── Star Rating ──────────────────────────────────────────────────────────────
 
 interface StarRatingProps {
   testimonialId: string;
@@ -129,7 +127,6 @@ const StarRating = memo(function StarRating({
   );
 });
 
-// ─── Star Button ──────────────────────────────────────────────────────────────
 
 interface StarButtonProps {
   star: number;
@@ -157,7 +154,6 @@ const StarButton = memo(function StarButton({
   );
 });
 
-// ─── Testimonials Editor ──────────────────────────────────────────────────────
 
 export interface TestimonialsEditorProps {
   testimonials: CrmPageTestimonial[];

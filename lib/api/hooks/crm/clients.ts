@@ -285,7 +285,6 @@ export function useSimpleClientsList() {
   });
 }
 
-// ─── Client Opportunities ─────────────────────────────────────────────────────
 
 export function useClientOpportunities(clientId?: number) {
   return useQuery({
@@ -324,7 +323,6 @@ export function useDeleteClientOpportunity() {
   });
 }
 
-// ─── Client Onboarding ───────────────────────────────────────────────────────
 
 export function useOnboardingTemplates() {
   return useQuery({
@@ -381,7 +379,6 @@ export function useCreateOnboardingTemplate() {
   });
 }
 
-// ─── CSAT Surveys ─────────────────────────────────────────────────────────────
 
 export function useCsatSurveys() {
   return useQuery({

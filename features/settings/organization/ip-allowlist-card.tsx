@@ -10,7 +10,6 @@ import { useUpdateOrgSettings } from "@/lib/api/hooks/organization";
 import { toast } from "sonner";
 import type { OrgSettings } from "@/types/organization";
 
-// ─── IP Badge Item ─────────────────────────────────────────────────────────────
 
 interface IpBadgeItemProps {
   ip: string;
@@ -34,7 +33,6 @@ const IpBadgeItem = memo(function IpBadgeItem({ ip, onRemove }: IpBadgeItemProps
   );
 });
 
-// ─── Main Component ────────────────────────────────────────────────────────────
 
 interface IpAllowlistCardProps {
   org: OrgSettings;
@@ -47,7 +45,6 @@ export function IpAllowlistCard({ org }: IpAllowlistCardProps) {
 
   const { mutate: updateOrg, isPending: isUpdating } = useUpdateOrgSettings();
 
-  // Lazy-initialize state from org on first render
   if (!initialized && org) {
     setIpAllowlist(org.ipAllowlist ?? []);
     setInitialized(true);
