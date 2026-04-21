@@ -38,6 +38,7 @@ export interface CheckInInput {
     lng: number;
     address?: string;
   } | null;
+  localDate?: string;
 }
 
 export interface GetMonthlyAttendanceInput {

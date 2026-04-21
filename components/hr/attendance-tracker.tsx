@@ -54,7 +54,7 @@ export function AttendanceTracker({
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          checkInMutation.mutate({ location: { lat: latitude, lng: longitude } });
+          checkInMutation.mutate({ location: { lat: latitude, lng: longitude }, localDate: new Date().toLocaleDateString("en-CA") });
         },
         (error) => {
           toast.error("Location required for Check-In");
@@ -117,7 +117,7 @@ export function AttendanceTracker({
               </Button>
 
               <Button
-                onClick={() => checkOutMutation.mutate()}
+                onClick={() => checkOutMutation.mutate({ localDate: new Date().toLocaleDateString("en-CA") })}
                 disabled={loading || initialStatus === "ON_BREAK"}
                 variant="destructive"
                 className="h-12"
