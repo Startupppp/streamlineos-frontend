@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       .values({
         orgId: session.orgId,
         userId: session.user.id,
-        date: formatDateOnly(new Date(body.date)),
+        date: formatDateOnly(body.date),
         reason: body.reason,
         approverId: body.approverId,
         status: "PENDING",

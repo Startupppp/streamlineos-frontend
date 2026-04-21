@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       .values({
         orgId: session.orgId,
         name: body.name,
-        date: formatDateOnly(new Date(body.date)),
+        date: formatDateOnly(body.date),
         message: body.message,
         isPublic: body.isPublic ?? false,
       })
