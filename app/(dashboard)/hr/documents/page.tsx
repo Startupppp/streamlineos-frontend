@@ -52,7 +52,7 @@ export default function DocumentsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 

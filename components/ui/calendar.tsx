@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker, CaptionProps, useNavigation, useDayPicker } from "react-day-picker"
+import { DayPicker, type CaptionProps, useNavigation, useDayPicker } from "react-day-picker"
 import { setMonth, setYear } from "date-fns"
 
 import { cn } from "@/lib/utils"
@@ -27,10 +27,10 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
   const { fromYear, toYear, fromDate, toDate } = useDayPicker()
 
   const month = displayMonth.getMonth()
-  const year  = displayMonth.getFullYear()
+  const year = displayMonth.getFullYear()
 
   const startYear = fromYear ?? fromDate?.getFullYear() ?? 1950
-  const endYear   = toYear   ?? toDate?.getFullYear()   ?? new Date().getFullYear() + 5
+  const endYear = toYear ?? toDate?.getFullYear() ?? new Date().getFullYear() + 5
   const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i)
 
   return (
@@ -39,11 +39,11 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
         type="button"
         onClick={() => previousMonth && goToMonth(previousMonth)}
         disabled={!previousMonth}
-        aria-label="Previous month"
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:pointer-events-none"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20"
         )}
+        aria-label="Previous month"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -53,7 +53,7 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
           value={String(month)}
           onValueChange={(v) => goToMonth(setMonth(displayMonth, parseInt(v)))}
         >
-          <SelectTrigger className="h-7 w-[112px] text-xs focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger className="h-7 w-[112px] text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium">
             <SelectValue>{MONTH_NAMES[month]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -69,7 +69,7 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
           value={String(year)}
           onValueChange={(v) => goToMonth(setYear(displayMonth, parseInt(v)))}
         >
-          <SelectTrigger className="h-7 w-[68px] text-xs focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger className="h-7 w-[68px] text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium">
             <SelectValue>{year}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -86,11 +86,11 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
         type="button"
         onClick={() => nextMonth && goToMonth(nextMonth)}
         disabled={!nextMonth}
-        aria-label="Next month"
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:pointer-events-none"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 disabled:opacity-20"
         )}
+        aria-label="Next month"
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -112,8 +112,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
+        caption_label: "hidden",
+        nav: "hidden",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"

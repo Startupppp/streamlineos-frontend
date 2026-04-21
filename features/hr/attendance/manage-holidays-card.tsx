@@ -55,7 +55,6 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const deleteMutation = useDeleteHoliday();
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value), []);
 
   const handleAdd = useCallback(
     (e: React.FormEvent) => {
@@ -67,7 +66,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       addMutation.mutate(
         {
           name: name.trim(),
-          date: new Date(date),
+          date: date,
           message: message.trim() || undefined,
         },
         {

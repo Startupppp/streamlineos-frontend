@@ -97,7 +97,8 @@ export default function PayrollPage() {
     if (!selectedEmployeeData) return null;
 
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
-    const workingDays = 30;
+    const [payYear, payMonthNum] = selectedMonth.split("-").map(Number);
+    const workingDays = new Date(payYear, payMonthNum, 0).getDate();
     const perDaySalary = monthlySalary / workingDays;
     const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
     const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;

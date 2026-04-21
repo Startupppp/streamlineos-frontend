@@ -72,7 +72,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
   const onSubmit = useCallback((data: WfhFormValues) => {
     createWfhRequest.mutate(
       {
-        date: new Date(data.startDate),
+        date: data.startDate,
         reason: `${data.reason}${data.notes ? ` — ${data.notes}` : ""}`,
         approverId: data.approverId,
       },
