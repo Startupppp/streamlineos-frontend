@@ -1,4 +1,3 @@
-export { DataTable } from "./data-table";
 export { AppSheet } from "./app-sheet";
 export { AppDialog } from "./app-dialog";
 export { CardGrid } from "./card-grid";

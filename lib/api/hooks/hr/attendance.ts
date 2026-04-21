@@ -67,8 +67,8 @@ export function useHrCheckOut(
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data?: { localDate?: string }) =>
-      apiClient.post<{ success: boolean }>("/hr/attendance/check-out", data ?? {}),
+    mutationFn: (data: { localDate?: string }) =>
+      apiClient.post<{ success: boolean }>("/hr/attendance/check-out", data),
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
       const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
