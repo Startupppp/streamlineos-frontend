@@ -26,7 +26,6 @@ import {
   type ColumnConfig,
 } from "@/features/hr/recruitment/kanban";
 
-// ─── Kanban column ────────────────────────────────────────────────────────────
 
 interface KanbanColumnProps {
   col: ColumnConfig;

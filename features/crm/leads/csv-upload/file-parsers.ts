@@ -70,7 +70,6 @@ export function applyMapping(
   rows: string[][],
   fieldMappings: Record<number, string>,
 ): { leads: ParsedLead[]; errors: string[] } {
-  // Reverse map: fieldKey → colIndex
   const fieldToCol: Record<string, number> = {};
   for (const [idxStr, field] of Object.entries(fieldMappings)) {
     if (field !== "_skip") fieldToCol[field] = Number(idxStr);

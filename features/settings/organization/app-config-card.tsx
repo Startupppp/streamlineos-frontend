@@ -33,7 +33,6 @@ export function AppConfigCard({ org }: AppConfigCardProps) {
 
   const { mutate: updateOrg, isPending: isUpdating } = useUpdateOrgSettings();
 
-  // Lazy-initialize state from org on first render
   if (!initialized && org) {
     setLogoUrl(org.logo ?? "");
     setTimezone(org.timezone ?? "Asia/Kolkata");

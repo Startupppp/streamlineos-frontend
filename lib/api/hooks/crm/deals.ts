@@ -141,7 +141,6 @@ export function useCloneDeal() {
   });
 }
 
-// ─── Deal Meetings ────────────────────────────────────────────────────────────
 
 export interface DealMeeting {
   id: number;
@@ -215,7 +214,6 @@ export function useDeleteDealMeeting(dealId: number) {
   });
 }
 
-// ─── Win/Loss Analysis ────────────────────────────────────────────────────────
 
 export interface WinLossAnalysis {
   summary: {
@@ -236,7 +234,6 @@ export function useWinLossAnalysis() {
   });
 }
 
-// ─── Deal Approvals ───────────────────────────────────────────────────────────
 
 export function useDealApprovals(params?: { status?: string }) {
   return useQuery({

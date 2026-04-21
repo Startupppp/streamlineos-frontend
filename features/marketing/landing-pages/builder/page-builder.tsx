@@ -30,14 +30,12 @@ import { TestimonialsEditor } from "./testimonials-editor";
 import { PageBuilderToolbar } from "./page-builder-toolbar";
 import { PublishedStatusBanner } from "./published-status-banner";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface PageBuilderProps {
   /** Existing page to edit — omit for create mode */
   page?: CrmPage;
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function PageBuilder({ page }: PageBuilderProps) {
   const router = useRouter();

@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-// ─── Territories ─────────────────────────────────────────────────────────────
 
 export interface Territory {
   id: number;
@@ -66,7 +65,6 @@ export function useDeleteTerritory() {
   });
 }
 
-// ─── Custom Fields ────────────────────────────────────────────────────────────
 
 export interface CustomFieldDefinition {
   id: number;
@@ -146,7 +144,6 @@ export function useDeleteCustomField() {
   });
 }
 
-// ─── Web-to-Lead Forms ────────────────────────────────────────────────────────
 
 export interface WebLeadFormField {
   name: string;

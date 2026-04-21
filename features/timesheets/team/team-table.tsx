@@ -30,7 +30,6 @@ const statusBadgeStyles: Record<string, string> = {
   REJECTED: "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400",
 };
 
-// ─── Entry Row ────────────────────────────────────────────────────────────────
 
 interface EntryRowProps {
   entry: TimesheetEntry;
@@ -105,7 +104,6 @@ const EntryRow = memo(function EntryRow({ entry, onEntryClick }: EntryRowProps) 
   );
 });
 
-// ─── Main Component ────────────────────────────────────────────────────────────
 
 export interface TeamTableProps {
   timesheets: TimesheetEntry[] | undefined;

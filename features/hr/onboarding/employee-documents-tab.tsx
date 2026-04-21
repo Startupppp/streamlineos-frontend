@@ -35,7 +35,6 @@ import {
   type OnboardingDoc,
 } from "./onboarding-types";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function docStatusIcon(status: OnboardingDoc["status"]) {
   const map = {
@@ -49,7 +48,6 @@ function docStatusIcon(status: OnboardingDoc["status"]) {
   );
 }
 
-// ─── DocRow ───────────────────────────────────────────────────────────────────
 
 interface DocRowProps {
   docType: DocumentType;
@@ -132,7 +130,6 @@ const DocRow = memo(function DocRow({ docType, submission, onUpload }: DocRowPro
   );
 });
 
-// ─── EmployeeDocumentsTab ─────────────────────────────────────────────────────
 
 export function EmployeeDocumentsTab() {
   const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();

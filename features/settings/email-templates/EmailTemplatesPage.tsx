@@ -20,7 +20,6 @@ import { apiClient } from "@/lib/api-client";
 import { TEMPLATE_REGISTRY, CATEGORIES } from "./registry";
 import type { EmailTemplateConfig } from "./types";
 
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 interface CategoryTabProps {
   cat: string;
@@ -132,7 +131,6 @@ const SendTestActions = memo(function SendTestActions({
   );
 });
 
-// ── Page component ────────────────────────────────────────────────────────────
 
 export default function EmailTemplatesPage() {
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0]);

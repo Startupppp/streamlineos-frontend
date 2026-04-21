@@ -330,7 +330,6 @@ export const FieldSheet = memo(function FieldSheet({
   );
 });
 
-// ─── Dropdown options sub-component ──────────────────────────────────────────
 
 interface DropdownOptionsProps {
   options: { value: string; label: string }[];
@@ -373,7 +372,6 @@ const DropdownOptions = memo(function DropdownOptions({
   );
 });
 
-// ─── Option row sub-component ─────────────────────────────────────────────────
 
 interface OptionRowProps {
   idx: number;

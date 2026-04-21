@@ -13,7 +13,6 @@ import { useUpdateOrgSecuritySettings } from "@/lib/api/hooks/organization";
 import { toast } from "sonner";
 import type { OrgSettings } from "@/types/organization";
 
-// ─── Domain Badge Item ─────────────────────────────────────────────────────────
 
 interface DomainBadgeItemProps {
   domain: string;
@@ -37,7 +36,6 @@ const DomainBadgeItem = memo(function DomainBadgeItem({ domain, onRemove }: Doma
   );
 });
 
-// ─── Main Component ────────────────────────────────────────────────────────────
 
 interface SecurityPoliciesCardProps {
   org: OrgSettings;
@@ -53,7 +51,6 @@ export function SecurityPoliciesCard({ org }: SecurityPoliciesCardProps) {
 
   const { mutate: updateSecurity, isPending: isUpdating } = useUpdateOrgSecuritySettings();
 
-  // Lazy-initialize state from org on first render
   if (!initialized && org) {
     setMfaEnforced(org.mfaEnforced ?? false);
     setPasswordExpiryDays(String(org.passwordExpiryDays ?? ""));

@@ -141,7 +141,6 @@ export const EntityFieldsTab = memo(function EntityFieldsTab({
   );
 });
 
-// ─── Field row sub-component ──────────────────────────────────────────────────
 
 interface FieldRowProps {
   field: CustomFieldDefinition;

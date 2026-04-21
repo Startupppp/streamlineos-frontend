@@ -1,4 +1,3 @@
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DocumentType {
   id: number;
@@ -25,7 +24,6 @@ export interface OnboardingDoc {
   version: number | null;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function docStatusVariant(
   status: OnboardingDoc["status"]

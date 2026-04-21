@@ -220,10 +220,10 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       return;
     }
     const startDate = form.allDay
-      ? parseISO(form.startDate)
+      ? parseISO(`${form.startDate}T12:00:00`)
       : parseISO(`${form.startDate}T${form.startTime}`);
     const endDate = form.allDay
-      ? parseISO(form.endDate)
+      ? parseISO(`${form.endDate}T12:00:00`)
       : parseISO(`${form.endDate}T${form.endTime}`);
     if (endDate <= startDate) {
       toast.error("End time must be after start time");

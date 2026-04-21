@@ -5,7 +5,6 @@ import {
 } from "@/lib/constants/hr-separation";
 import type { TerminationStatus } from "@/lib/api/hooks/hr";
 
-// ─── Status helpers ──────────────────────────────────────────────────────────
 
 export function statusVariant(
   status: TerminationStatus | null
@@ -96,7 +95,6 @@ Regards,
 Human Resources Department`;
 }
 
-// ─── Status filter tabs ──────────────────────────────────────────────────────
 
 export type StatusFilter = "ALL" | TerminationStatus;
 

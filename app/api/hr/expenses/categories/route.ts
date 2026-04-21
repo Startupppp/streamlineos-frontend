@@ -15,7 +15,6 @@ export async function GET() {
       orderBy: [expenseCategories.name],
     });
 
-    // Compute spending per category
     const now = new Date();
     const m = String(now.getMonth() + 1).padStart(2, "0");
     const monthStart = `${now.getFullYear()}-${m}-01`;

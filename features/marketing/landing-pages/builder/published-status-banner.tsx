@@ -3,7 +3,6 @@
 import { CheckCircle2, Clock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
-// ─── Published Status Banner ──────────────────────────────────────────────────
 
 export interface PublishedStatusBannerProps {
   isPublished: boolean;

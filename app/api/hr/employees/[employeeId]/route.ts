@@ -113,7 +113,6 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.firstName !== undefined || body.lastName !== undefined) {
-      // Compose name from first/last if provided
       const existing = await db.query.users.findFirst({
         where: eq(users.id, targetUserId),
         columns: { firstName: true, lastName: true, name: true },

@@ -25,7 +25,6 @@ interface DepartmentComboboxProps {
   className?: string;
 }
 
-// ─── Department Option Item ────────────────────────────────────────────────────
 
 interface DepartmentOptionProps {
   dept: { id: number; name: string };
@@ -52,7 +51,6 @@ const DepartmentOption = memo(function DepartmentOption({ dept, isSelected, onSe
   );
 });
 
-// ─── Main Component ────────────────────────────────────────────────────────────
 
 export function DepartmentCombobox({
   value,

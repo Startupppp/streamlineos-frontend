@@ -58,7 +58,6 @@ import type { EmailTemplateConfig } from "./types";
 export const BASE_URL = "https://crm.vaivammcapital.com";
 
 export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
-  // ── Auth ───────────────────────────────────────────────────────────────────
   {
     id: "auth.verify",
     category: "Auth",
@@ -140,7 +139,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Organization ───────────────────────────────────────────────────────────
   {
     id: "org.invitation",
     category: "Organization",
@@ -181,7 +179,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── HR Leave ───────────────────────────────────────────────────────────────
   {
     id: "hr.leave_request",
     category: "HR Leave",
@@ -297,7 +294,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── HR Expense ─────────────────────────────────────────────────────────────
   {
     id: "expense.submitted",
     category: "HR Expense",
@@ -348,7 +344,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Appraisal ──────────────────────────────────────────────────────────────
   {
     id: "appraisal.self_review",
     category: "Appraisal",
@@ -406,7 +401,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── CRM ────────────────────────────────────────────────────────────────────
   {
     id: "crm.lead_welcome",
     category: "CRM",
@@ -479,7 +473,6 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     }),
   },
 
-  // ── Projects ───────────────────────────────────────────────────────────────
   {
     id: "project.assigned",
     category: "Projects",

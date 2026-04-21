@@ -12,7 +12,6 @@ import { useCrmPages, useUpdateCrmPage, useDeleteCrmPage, type CrmPage } from "@
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
-// ─── Page Row ─────────────────────────────────────────────────────────────────
 
 interface PageRowProps {
   page: CrmPage;
@@ -47,7 +46,6 @@ const PageRow = memo(function PageRow({ page, onTogglePublish, onDelete }: PageR
   );
 });
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function CrmHostedPagesTab() {
   const { data: pages, isLoading } = useCrmPages();

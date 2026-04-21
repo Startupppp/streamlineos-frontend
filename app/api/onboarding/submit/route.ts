@@ -5,7 +5,6 @@ import { eq, and } from "drizzle-orm";
 
 export async function POST() {
   return withAuth(async (session) => {
-    // Mark the final review step as complete
     const existing = await db.query.onboardingSteps.findFirst({
       where: and(
         eq(onboardingSteps.userId, session.user.id),
@@ -26,7 +25,6 @@ export async function POST() {
       });
     }
 
-    // Allocate default leaves if not already allocated
     const currentYear = new Date().getFullYear();
     const existingBalance = await db.query.leaveBalances.findFirst({
       where: and(

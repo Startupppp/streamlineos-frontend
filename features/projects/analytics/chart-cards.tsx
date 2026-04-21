@@ -20,7 +20,6 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// ─── shared constants ──────────────────────────────────────────────────────────
 
 const TOOLTIP_STYLE = {
   backgroundColor: "hsl(var(--card))",
@@ -41,7 +40,6 @@ const CHART_COLORS = [
   "#3b82f6",
 ];
 
-// ─── State Distribution ────────────────────────────────────────────────────────
 
 interface StateEntry {
   state: string;
@@ -86,7 +84,6 @@ export const StateDistributionChart = memo(function StateDistributionChart({
   );
 });
 
-// ─── Priority Breakdown ────────────────────────────────────────────────────────
 
 interface PriorityEntry {
   name: string;
@@ -137,7 +134,6 @@ export const PriorityBreakdownChart = memo(function PriorityBreakdownChart({
   );
 });
 
-// ─── Volume Over Time ──────────────────────────────────────────────────────────
 
 interface VolumeEntry {
   date: string;
@@ -185,7 +181,6 @@ export const VolumeOverTimeChart = memo(function VolumeOverTimeChart({
   );
 });
 
-// ─── Assignee Completion ───────────────────────────────────────────────────────
 
 interface AssigneeEntry {
   name: string;
@@ -249,7 +244,6 @@ export const AssigneeCompletionChart = memo(function AssigneeCompletionChart({
   );
 });
 
-// ─── Cycle Velocity ────────────────────────────────────────────────────────────
 
 interface VelocityEntry {
   cycle: string;
@@ -289,7 +283,6 @@ export const CycleVelocityChart = memo(function CycleVelocityChart({
   );
 });
 
-// ─── Estimate vs Actual ────────────────────────────────────────────────────────
 
 interface EstimateEntry {
   label: string;
