@@ -1030,9 +1030,9 @@ export async function getMonthlyAttendance(
   year: number,
   month: number
 ): Promise<AttendanceLog[]> {
-  const mm = String(month).padStart(2, "0");
+  const mm = String(month + 1).padStart(2, "0");
   const startDate = `${year}-${mm}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
+  const lastDay = new Date(year, month + 1, 0).getDate();
   const endDate = `${year}-${mm}-${String(lastDay).padStart(2, "0")}`;
 
   return db.query.attendance.findMany({

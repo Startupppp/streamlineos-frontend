@@ -103,7 +103,15 @@ export const getInitials = (
 export const formatTime = (time: string | Date | null | undefined): string => {
   if (!time) return "";
   try {
-    const date = typeof time === "string" ? new Date(`1970-01-01T${time}`) : time;
+    let date: Date;
+    if (time instanceof Date) {
+      date = time;
+    } else if (/[T ]|Z|\d{4}-\d{2}-\d{2}/.test(time)) {
+      date = new Date(time);
+    } else {
+      date = new Date(`1970-01-01T${time}`);
+    }
+    if (isNaN(date.getTime())) return String(time);
     return format(date, "hh:mm a");
   } catch {
     return String(time);

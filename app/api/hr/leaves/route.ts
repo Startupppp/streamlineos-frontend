@@ -5,6 +5,7 @@ import { eq, and, lte, gte, inArray, desc } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { LEAVE_POLICY, ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 import { ROLES } from "@/lib/constants/roles";
+import { ensureLeaveTypes, ensureUserBalances } from "@/server/actions/leave-actions/leave-balance";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { sendLeaveRequestEmail } from "@/lib/email";
@@ -27,6 +28,12 @@ export async function GET() {
   return withAuth(async (session) => {
     const orgId = session.orgId;
     const userId = session.user.id;
+
+    const seededTypes = await ensureLeaveTypes(orgId);
+    const allowedSeeded = seededTypes
+      .filter((t) => ALLOWED_LEAVE_TYPE_NAMES.has(t.name))
+      .map((t) => ({ id: t.id, name: t.name, daysPerYear: t.daysPerYear }));
+    await ensureUserBalances(orgId, userId, allowedSeeded);
 
     const [rawBalances, allTypes, requests, user, member] = await Promise.all([
       db
