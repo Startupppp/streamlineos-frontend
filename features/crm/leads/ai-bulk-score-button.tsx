@@ -59,7 +59,7 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
           <AlertDialogHeader>
             <AlertDialogTitle>AI Score {leadIds.length} Lead{leadIds.length === 1 ? "" : "s"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will use AI to score the selected leads from 0-100 with reasoning. Each lead's score will be updated in the database. Max 50 leads per batch.
+              This will use AI to score the selected leads from 0-100 with reasoning. Each lead&apos;s score will be updated in the database. Max 50 leads per batch.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

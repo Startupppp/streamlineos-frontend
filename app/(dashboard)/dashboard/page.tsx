@@ -93,7 +93,7 @@ function LeavesTodayCard({ isAdmin }: { isAdmin: boolean }) {
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0">
         <UserCheck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-        <CardTitle className="text-sm font-semibold">Who's On Leave Today</CardTitle>
+        <CardTitle className="text-sm font-semibold">Who&apos;s On Leave Today</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden">
         {isLoading ? (

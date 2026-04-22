@@ -13,7 +13,7 @@ export async function sendDailyNotifications() {
   const day = today.getDate();
 
   let birthdayCount = 0;
-  let leaveCount = 0;
+  const leaveCount = 0;
   const anniversaryCount = 0;
 
   try {

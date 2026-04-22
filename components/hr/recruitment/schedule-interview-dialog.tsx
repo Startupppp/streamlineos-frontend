@@ -88,6 +88,7 @@ export function ScheduleInterviewDialog({
   const createInterview = useCreateInterview();
 
   const form = useForm<ScheduleFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(scheduleSchema) as any,
     defaultValues: {
       scheduledAt: "",

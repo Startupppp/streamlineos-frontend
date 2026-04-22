@@ -65,6 +65,7 @@ export function RolloutDocumentsDialog({
   const rollout = useGenerateAndRollout(candidateId);
 
   const form = useForm<RolloutFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(rolloutFormSchema) as any,
     defaultValues: {
       selectedTemplateIds: [],

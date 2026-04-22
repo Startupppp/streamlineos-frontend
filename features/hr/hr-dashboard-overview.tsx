@@ -688,10 +688,9 @@ function AnniversaryFeedWidget() {
 export function HrDashboardOverview() {
   const { data: session } = useSession();
   const role = session?.user?.role;
+  const { data: metrics, isLoading } = useHrDashboardMetrics();
 
   if (!role || !HR_ADMIN_ROLES.includes(role)) return null;
-
-  const { data: metrics, isLoading } = useHrDashboardMetrics();
 
   return (
     <div className="mb-6 space-y-4">

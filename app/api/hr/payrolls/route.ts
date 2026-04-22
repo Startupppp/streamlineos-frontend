@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const monthStart = `${body.month}-01`;
     const monthEnd = `${body.month}-${String(daysInMonth).padStart(2, "0")}`;
 
-    let attendanceMap = new Map<string, number>();
+    const attendanceMap = new Map<string, number>();
     try {
       const attendanceRecords = await db
         .select({
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
         const allowances = salaryStructure
           ? parseFloat(salaryStructure.allowances || "0")
           : monthlySalary * 0.25;
-        let deductions = salaryStructure
+        const deductions = salaryStructure
           ? parseFloat(salaryStructure.deductions || "0")
           : 0;
         const gross = basic + hra + allowances;

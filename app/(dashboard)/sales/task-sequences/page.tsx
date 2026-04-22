@@ -91,7 +91,7 @@ function ApplyDialog({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Apply "{sequence.name}"</DialogTitle>
+          <DialogTitle>Apply &ldquo;{sequence.name}&rdquo;</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1">
@@ -442,7 +442,7 @@ export default function TaskSequencesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete sequence?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.name}" will be permanently deleted. Tasks already created from it will not be affected.
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Tasks already created from it will not be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

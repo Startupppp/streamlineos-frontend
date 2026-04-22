@@ -264,7 +264,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
           <AlertDialogHeader>
             <AlertDialogTitle>Delete milestone?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.name}" will be permanently deleted.
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

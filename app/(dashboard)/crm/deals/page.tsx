@@ -67,7 +67,7 @@ function ConfettiOverlay({ onDone }: { onDone: () => void }) {
         size: `${6 + Math.random() * 8}px`,
         duration: `${1.5 + Math.random() * 1.5}s`,
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     [],
   );
 

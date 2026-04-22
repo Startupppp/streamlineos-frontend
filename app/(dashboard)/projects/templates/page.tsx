@@ -107,7 +107,7 @@ function ApplyDialog({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Apply "{template.name}"</DialogTitle>
+          <DialogTitle>Apply &ldquo;{template.name}&rdquo;</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1">
@@ -467,7 +467,7 @@ export default function ProjectTemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.name}" will be permanently deleted. Projects created from it will not be affected.
+              &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Projects created from it will not be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
