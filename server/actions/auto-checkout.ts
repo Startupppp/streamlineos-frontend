@@ -3,15 +3,11 @@
 import { db } from "@/lib/db";
 import { attendance } from "@/lib/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
-import { getTodayString } from "@/lib/date-utils";
+import { istSevenPmUtcForDateStr, DEFAULT_AUTO_CHECKOUT_BREAK_HOURS } from "@/lib/attendance-auto-checkout";
 
 export async function processAutoCheckout() {
-  const today = getTodayString();
   const openRecords = await db.query.attendance.findMany({
-    where: and(
-      eq(attendance.date, today),
-      isNull(attendance.checkOut)
-    ),
+    where: isNull(attendance.checkOut),
   });
 
   if (openRecords.length === 0) {
@@ -19,13 +15,16 @@ export async function processAutoCheckout() {
   }
 
   let processed = 0;
+  const now = Date.now();
 
   for (const record of openRecords) {
-    if (!record.checkIn || record.autoCheckedOut) continue;
+    if (!record.checkIn || record.autoCheckedOut || !record.date) continue;
 
     const checkInTime = new Date(record.checkIn);
-    const checkOutTime = new Date(checkInTime);
-    checkOutTime.setHours(19, 0, 0, 0);
+    const checkOutTime = istSevenPmUtcForDateStr(record.date);
+
+    if (checkOutTime.getTime() > now) continue;
+
     if (checkInTime >= checkOutTime) {
       const result = await db
         .update(attendance)
@@ -42,6 +41,7 @@ export async function processAutoCheckout() {
       if (result.length > 0) processed++;
       continue;
     }
+
     const breaks = (record.breaks as { start: string; end?: string }[]) || [];
     let totalBreakHours = Number(record.breakHours) || 0;
 
@@ -50,11 +50,13 @@ export async function processAutoCheckout() {
         b.end = checkOutTime.toISOString();
         const breakStart = new Date(b.start);
         const breakDuration = (checkOutTime.getTime() - breakStart.getTime()) / (1000 * 60 * 60);
-        totalBreakHours += breakDuration;
+        totalBreakHours += Math.max(0, breakDuration);
       }
     }
+
+    const effectiveBreakHours = Math.max(totalBreakHours, DEFAULT_AUTO_CHECKOUT_BREAK_HOURS);
     const durationMs = checkOutTime.getTime() - checkInTime.getTime();
-    const workHours = Math.max(0, durationMs / (1000 * 60 * 60) - totalBreakHours);
+    const workHours = Math.max(0, durationMs / (1000 * 60 * 60) - effectiveBreakHours);
     const isOvertime = workHours > 8;
 
     const result = await db
@@ -62,7 +64,7 @@ export async function processAutoCheckout() {
       .set({
         checkOut: checkOutTime,
         workHours: workHours.toFixed(2),
-        breakHours: totalBreakHours.toFixed(2),
+        breakHours: effectiveBreakHours.toFixed(2),
         breaks: breaks,
         status: "PRESENT",
         autoCheckedOut: true,
