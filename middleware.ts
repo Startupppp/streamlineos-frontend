@@ -53,14 +53,14 @@ const AUTH_ROUTES = [
   "/signin",
   "/signup",
   "/forgot-password",
-  "/auth/reset-password",
+  "/reset-password",
   "/setup-password",
   "/verify-email",
 ];
 
 const ALLOW_AUTHENTICATED = [
   "/invitation",
-  "/auth/reset-password",
+  "/reset-password",
 ];
 
 const ROUTE_ROLE_MAP: Record<string, string[]> = {
@@ -226,18 +226,18 @@ export default async function middleware(req: NextRequest) {
   if (
     isAuthenticated &&
     token?.forceChangePassword &&
-    !pathname.startsWith("/auth/reset-password") &&
+    !pathname.startsWith("/reset-password") &&
     !pathname.startsWith("/api/auth/signout") &&
     !pathname.startsWith("/api/storage/upload")
   ) {
     const url = req.nextUrl.clone();
-    url.pathname = "/auth/reset-password";
+    url.pathname = "/reset-password";
     url.search = "";
     return NextResponse.redirect(url);
   }
   if (
     isAuthenticated &&
-    pathname.startsWith("/auth/reset-password") &&
+    pathname.startsWith("/reset-password") &&
     !token?.forceChangePassword
   ) {
     const url = req.nextUrl.clone();
