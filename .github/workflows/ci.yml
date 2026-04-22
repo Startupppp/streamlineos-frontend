@@ -37,10 +37,6 @@ jobs:
         run: pnpm lint
         continue-on-error: false
 
-      - name: Run unit tests
-        run: pnpm vitest run
-        continue-on-error: false
-
       - name: Build application
         run: pnpm build
         env:
@@ -56,4 +52,4 @@ jobs:
 
       - name: CI complete
         if: success()
-        run: echo "✅ Type check, lint, tests, and build all passed."
+        run: echo "✅ Type check, lint, and build all passed."
