@@ -27,7 +27,6 @@ export async function getBranch(orgId: string, id: number) {
       },
     },
   });
-
   if (!branch) return null;
 
   const employees = await db.query.users.findMany({
