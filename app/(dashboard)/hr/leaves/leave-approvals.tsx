@@ -41,6 +41,11 @@ function LeaveStatusBadge({ status }: { status: string }) {
       className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
       icon: XCircle,
     },
+    CANCELLED: {
+      label: "Cancelled",
+      className: "bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+      icon: XCircle,
+    },
   };
   const c = config[status] ?? config.PENDING;
   const Icon = c.icon;
@@ -103,7 +108,7 @@ function LeaveApprovalItem({
             {req.reason && (
               <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
             )}
-            {!isPending && req.approver?.name && (
+            {!isPending && req.approver?.name && status !== "CANCELLED" && (
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                 <UserCheck className="h-3 w-3" aria-hidden="true" />
                 {status === "APPROVED" ? "Approved" : "Rejected"} by {req.approver.name}

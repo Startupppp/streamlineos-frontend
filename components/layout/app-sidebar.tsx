@@ -112,7 +112,8 @@ export function AppSidebar({
   }, [session, isAdmin]);
 
   const { data: chatUnread } = useChatUnreadTotal();
-  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
+  const unreadChatCount =
+    typeof chatUnread?.total === "number" ? chatUnread.total : 0;
 
   const { data: notifData } = useUnreadNotificationCount();
   const unreadNotifCount = notifData?.count ?? 0;

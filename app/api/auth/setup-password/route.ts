@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
+import { invalidateUserSession } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 
 const schema = z.object({
@@ -32,6 +33,8 @@ export async function POST(req: NextRequest) {
         passwordChangedAt: new Date(),
       })
       .where(eq(users.id, session.user.id));
+
+    await invalidateUserSession(session.user.id);
 
     return ok({ success: true });
   });

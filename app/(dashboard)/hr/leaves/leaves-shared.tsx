@@ -13,6 +13,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 import {
   Clock,
@@ -291,7 +297,6 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
 }: {
   request: LeaveRequest;
   isAdmin?: boolean;
-  
   isSelf?: boolean;
   onApprove?: (id: number) => void;
   onReject?: (id: number, reason?: string) => void;
@@ -300,6 +305,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
 }) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const status = request.status ?? "PENDING";
   const typeName = request.leaveType?.name ?? "Leave";
@@ -307,13 +313,14 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   const Icon = config.icon;
   const start = new Date(request.startDate);
   const end = new Date(request.endDate);
-  const days = differenceInCalendarDays(end, start) + 1;
+  const days = request.isHalfDay ? 0.5 : differenceInCalendarDays(end, start) + 1;
   const createdAt = request.createdAt ? new Date(request.createdAt) : start;
 
-  const periodStr =
-    days === 1
-      ? format(start, "MMM d")
-      : `${format(start, "MMM d")} - ${format(end, "MMM d")}`;
+  const periodStr = request.isHalfDay
+    ? `${format(start, "MMM d")} (${request.halfDayPeriod === "AM" ? "Morning" : "Afternoon"})`
+    : days === 1
+    ? format(start, "MMM d")
+    : `${format(start, "MMM d")} - ${format(end, "MMM d")}`;
 
   const statusDotColor =
     status === "PENDING"
@@ -348,7 +355,9 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
         {periodStr}
       </td>
       <td className="py-3.5 px-3 text-sm text-foreground text-center">
-        {days}
+        {request.isHalfDay ? (
+          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">½</span>
+        ) : days}
       </td>
       <td className="py-3.5 px-3">
         <div className="flex items-center gap-1.5">
@@ -394,7 +403,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDetailsOpen(true)}>
               <Eye className="mr-2 h-4 w-4" />
               View Details
             </DropdownMenuItem>
@@ -466,6 +475,88 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <SheetContent className="sm:max-w-sm p-0 flex flex-col">
+          <SheetHeader className="p-5 pb-4 border-b">
+            <SheetTitle className="text-base">Leave Request Details</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                status === "PENDING" ? "bg-amber-500/10" : status === "APPROVED" ? "bg-emerald-500/10" : "bg-red-500/10"
+              }`}>
+                <Icon className={`h-5 w-5 ${
+                  status === "PENDING" ? "text-amber-600" : status === "APPROVED" ? "text-emerald-600" : "text-red-600"
+                }`} />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{typeName}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
+                  <span className={`text-xs ${
+                    status === "PENDING" ? "text-amber-600" : status === "APPROVED" ? "text-emerald-600" : status === "CANCELLED" ? "text-slate-500" : "text-red-600"
+                  }`}>{status.charAt(0) + status.slice(1).toLowerCase()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 border rounded-lg p-3 bg-muted/20">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-xs">Submitted</span>
+                <span className="font-medium text-xs">{format(createdAt, "MMM d, yyyy")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-xs">Period</span>
+                <span className="font-medium text-xs">{periodStr}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-xs">Duration</span>
+                <span className="font-medium text-xs">
+                  {request.isHalfDay ? `0.5 day (${request.halfDayPeriod === "AM" ? "Morning" : "Afternoon"})` : `${days} day${days !== 1 ? "s" : ""}`}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-xs">Priority</span>
+                <span className={`text-xs font-medium ${pConfig.textColor}`}>{pConfig.label}</span>
+              </div>
+            </div>
+
+            {request.reason && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reason</p>
+                <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3">{request.reason}</p>
+              </div>
+            )}
+
+            {request.approver?.name && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {status === "APPROVED" ? "Approved by" : "Processed by"}
+                </span>
+                <span className="font-medium">{request.approver.name}</span>
+              </div>
+            )}
+
+            {status === "REJECTED" && request.rejectionReason && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rejection Reason</p>
+                <p className="text-sm text-red-600 dark:text-red-400 bg-red-500/5 rounded-lg p-3">{request.rejectionReason}</p>
+              </div>
+            )}
+
+            {request.managerComment && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Manager Comment</p>
+                <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3">{request.managerComment}</p>
+              </div>
+            )}
+          </div>
+          <div className="p-5 pt-4 border-t">
+            <Button variant="outline" className="w-full" onClick={() => setDetailsOpen(false)}>Close</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </tr>
   );
 });

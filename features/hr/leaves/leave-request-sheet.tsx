@@ -50,9 +50,12 @@ export function LeaveRequestSheet({
   const requestLeaveMutation = useRequestLeave();
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
-  const minDate = joiningDate
-    ? format(new Date(joiningDate), "yyyy-MM-dd")
-    : format(startOfDay(new Date()), "yyyy-MM-dd");
+  const minDate = (() => {
+    const today = startOfDay(new Date());
+    if (!joiningDate) return format(today, "yyyy-MM-dd");
+    const joining = new Date(joiningDate);
+    return format(joining > today ? joining : today, "yyyy-MM-dd");
+  })();
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),

@@ -273,6 +273,62 @@ export function useUpdateChannel() {
   });
 }
 
+export function useAddChannelMembers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      channelId,
+      userIds,
+    }: {
+      channelId: number;
+      userIds: string[];
+    }) =>
+      apiClient.post<{ added: number; skipped: number }>(
+        `/chat/channels/${channelId}/members`,
+        { userIds }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useRemoveChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      channelId,
+      userId,
+    }: {
+      channelId: number;
+      userId: string;
+    }) =>
+      apiClient.delete<{ removed: boolean }>(
+        `/chat/channels/${channelId}/members/${userId}`
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useLeaveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.delete<{ left: boolean }>(`/chat/channels/${channelId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useChatHeartbeat() {
   return useMutation({
     mutationFn: () =>

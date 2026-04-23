@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth, invalidateUserSession } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
@@ -33,6 +33,8 @@ export async function resetPassword(password: string) {
            isPasswordChangeRequired: false,
         })
         .where(eq(users.id, session.user.id));
+
+     await invalidateUserSession(session.user.id);
 
      return { success: true };
   } catch (error) {

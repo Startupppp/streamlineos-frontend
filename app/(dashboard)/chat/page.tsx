@@ -73,6 +73,9 @@ export default function ChatPage() {
   const handleNewChannel = useCallback(() => setEmptyGroupOpen(true), []);
   const handleSearch = useCallback(() => { setShowMobileList(true); setShowSearchFocus(true); }, []);
   const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
+  const handleChannelLeft = useCallback((channelId: number) => {
+    if (activeChannelId === channelId) setActiveChannelId(null);
+  }, [activeChannelId]);
 
   return (
     <ChatAblyProvider>
@@ -89,6 +92,7 @@ export default function ChatPage() {
         <ChannelSidebar
           activeChannelId={activeChannelId}
           onSelectChannel={handleSelectChannel}
+          onChannelLeft={handleChannelLeft}
           currentUserId={currentUserId ?? ""}
           autoFocusSearch={showSearchFocus}
           onSearchFocused={handleSearchFocused}

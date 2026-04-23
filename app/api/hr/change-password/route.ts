@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
+import { invalidateUserSession } from "@/lib/auth";
 
 const PASSWORD_HISTORY_LIMIT = 5;
 
@@ -75,6 +76,8 @@ export async function PATCH(req: NextRequest) {
         }
       }
     });
+
+    await invalidateUserSession(session.user.id);
 
     return ok({ success: true });
   });

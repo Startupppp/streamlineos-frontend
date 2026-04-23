@@ -254,19 +254,14 @@ export function ChatBubble({
                 </button>
               )}
               {isOwn && (
-                <div className="relative group/delete">
-                  <button className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400" title="Delete" aria-label="Delete">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                  <div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]">
-                    <button
-                      onClick={onDelete}
-                      className="px-3 py-2 text-[11px] text-left hover:bg-red-500/10 text-red-500 font-medium whitespace-nowrap"
-                    >
-                      Delete for Everyone
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={onDelete}
+                  className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400"
+                  title="Delete message"
+                  aria-label="Delete message"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
           </div>

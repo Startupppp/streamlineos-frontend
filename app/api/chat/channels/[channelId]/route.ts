@@ -1,5 +1,3 @@
-
-
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -75,5 +73,36 @@ export async function PATCH(
       .where(eq(chatChannels.id, channelId));
 
     return ok({ ok: true });
+  });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ channelId: string }> }
+) {
+  return withAuth(async (session) => {
+    const { channelId: id } = await params;
+    const channelId = Number(id);
+    if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
+
+    const membership = await db.query.chatChannelMembers.findFirst({
+      where: and(
+        eq(chatChannelMembers.channelId, channelId),
+        eq(chatChannelMembers.userId, session.user.id)
+      ),
+    });
+
+    if (!membership) return err("You are not a member of this channel", 403);
+
+    await db
+      .delete(chatChannelMembers)
+      .where(
+        and(
+          eq(chatChannelMembers.channelId, channelId),
+          eq(chatChannelMembers.userId, session.user.id)
+        )
+      );
+
+    return ok({ left: true });
   });
 }
