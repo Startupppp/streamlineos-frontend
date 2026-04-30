@@ -148,8 +148,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (newAssigneeNotifyIds.size > 0) {
       const ticketData = await db.query.tickets.findFirst({
         where: eq(tickets.id, id),
-        columns: { title: true, projectId: true, type: true, priority: true },
-        with: { project: { columns: { name: true } } },
+        columns: { title: true, projectId: true, type: true, priority: true, ticketNumber: true },
+        with: { project: { columns: { name: true, key: true } } },
       });
       for (const userId of newAssigneeNotifyIds) {
         if (userId === session.user.id) continue;
@@ -172,6 +172,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
             columns: { email: true, name: true },
           });
           if (assignee?.email && ticketData && ticketData.projectId) {
+            const issueKey = ticketData.project?.key && ticketData.ticketNumber
+              ? `${ticketData.project.key}-${ticketData.ticketNumber}`
+              : undefined;
             await sendTicketAssignmentEmail(
               assignee.email,
               assignee.name ?? "Team Member",
@@ -181,7 +184,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
               ticketData.project?.name ?? "Project",
               ticketData.projectId,
               id,
-              session.user.name ?? "Team Member"
+              session.user.name ?? "Team Member",
+              issueKey,
             );
           }
         })().catch(() => {});

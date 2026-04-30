@@ -123,12 +123,14 @@ export async function sendTicketAssignmentEmail(
   projectName: string,
   projectId: number,
   ticketId: number,
-  createdBy: string
+  createdBy: string,
+  issueKey?: string,
 ) {
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const subjectPrefix = issueKey ? `[${issueKey}] ` : "";
   await sendEmail({
     to: email,
-    subject: `Ticket Assigned: ${ticketTitle} - Vaivamm Capital`,
+    subject: `${subjectPrefix}${ticketTitle} - Vaivamm Capital`,
     html: getTicketAssignmentEmailTemplate(
       assigneeName,
       ticketTitle,
@@ -136,7 +138,8 @@ export async function sendTicketAssignmentEmail(
       ticketPriority,
       projectName,
       ticketUrl,
-      createdBy
+      createdBy,
+      issueKey,
     ),
   });
 }

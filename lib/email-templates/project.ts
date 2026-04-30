@@ -66,7 +66,8 @@ export function getTicketAssignmentEmailTemplate(
   ticketPriority: string,
   projectName: string,
   ticketUrl: string,
-  createdBy: string
+  createdBy: string,
+  issueKey?: string,
 ): string {
   const priorityColors: Record<string, string> = {
     LOW: '#22c55e',
@@ -74,64 +75,77 @@ export function getTicketAssignmentEmailTemplate(
     HIGH: '#f97316',
     URGENT: '#ef4444',
   };
+  const typeColors: Record<string, string> = {
+    BUG: '#ef4444',
+    TASK: '#3b82f6',
+    STORY: '#22c55e',
+    EPIC: '#8b5cf6',
+    SUBTASK: '#64748b',
+  };
 
   const priorityColor = priorityColors[ticketPriority] || '#64748b';
+  const typeColor = typeColors[ticketType] || '#64748b';
   const sTitle = escapeHtml(ticketTitle);
   const sProject = escapeHtml(projectName);
+  const sAssignee = escapeHtml(assigneeName);
   const sCreatedBy = escapeHtml(createdBy);
+  const sKey = issueKey ? escapeHtml(issueKey) : "";
+  const keyPrefix = sKey ? `[${sKey}] ` : "";
 
   const content = `
-    <h2 class="email-title">🎫 New Ticket Assigned to You</h2>
-    <p class="email-text">
-      <strong>${sCreatedBy}</strong> has created a ticket and assigned it to you.
+    <p style="font-size:13px; color:#64748b; margin:0 0 8px 0; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+      ${sProject}
+    </p>
+    <h2 style="font-size:22px; font-weight:600; color:#0f172a; margin:0 0 8px 0; line-height:1.35;">
+      ${sKey ? `<span style="color:#0f2b7f; font-family:'Monaco','Courier New',monospace; font-weight:700;">${sKey}</span> &nbsp;·&nbsp; ` : ""}${sTitle}
+    </h2>
+    <p style="font-size:14px; color:#475569; margin:0 0 24px 0;">
+      <strong style="color:#0f172a;">${sCreatedBy}</strong> assigned this issue to <strong style="color:#0f172a;">${sAssignee}</strong>.
     </p>
 
-    <div class="credential-box">
-      <div class="credential-item">
-        <span class="credential-label">Ticket:</span>
-        <span class="credential-value">${sTitle}</span>
-      </div>
-      <div class="credential-item">
-        <span class="credential-label">Project:</span>
-        <span class="credential-value">${sProject}</span>
-      </div>
-      <div class="credential-item">
-        <span class="credential-label">Type:</span>
-        <span class="credential-value">${ticketType}</span>
-      </div>
-      <div class="credential-item">
-        <span class="credential-label">Priority:</span>
-        <span style="color: ${priorityColor}; font-weight: 600; display: inline-block; margin-left: 8px;">
-          ${ticketPriority}
-        </span>
-      </div>
-    </div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e2e8f0; border-radius:6px; border-collapse:separate; margin:0 0 24px 0; font-size:14px;">
+      <tr>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; width:130px; color:#64748b; font-weight:500;">Type</td>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:${typeColor}; font-weight:600;">${ticketType}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:#64748b; font-weight:500;">Priority</td>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:${priorityColor}; font-weight:600;">${ticketPriority}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:#64748b; font-weight:500;">Status</td>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:#0f172a; font-weight:600;">To Do</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:#64748b; font-weight:500;">Assignee</td>
+        <td style="padding:10px 16px; border-bottom:1px solid #e2e8f0; color:#0f172a; font-weight:500;">${sAssignee}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 16px; color:#64748b; font-weight:500;">Reporter</td>
+        <td style="padding:10px 16px; color:#0f172a; font-weight:500;">${sCreatedBy}</td>
+      </tr>
+    </table>
 
     ${ticketPriority === 'URGENT' || ticketPriority === 'HIGH' ? `
-    <div class="security-notice">
-      <p class="security-text">
-        <strong>High Priority:</strong> This ticket requires immediate attention.
-        Please review and update the status as soon as possible.
-      </p>
-    </div>
+    <p style="font-size:13px; color:#92400e; background:#fef3c7; border-left:3px solid #f59e0b; padding:10px 14px; margin:0 0 24px 0; border-radius:4px;">
+      <strong>High priority.</strong> This issue is flagged for immediate attention.
+    </p>
     ` : ''}
 
-    <div style="text-align: center;">
+    <div style="margin:0 0 32px 0;">
       <a href="${ticketUrl}" class="email-button">
-        View Ticket Details
+        View issue
       </a>
     </div>
 
-    <div class="divider"></div>
-
-    <p class="email-text">
-      Check the status and details in the CRM system. Keep your team updated on your progress!
+    <p style="font-size:12px; color:#94a3b8; margin:0; line-height:1.6;">
+      You are receiving this notification because you were assigned to this issue. Reply to comments and changes are tracked in the CRM.
     </p>
   `;
 
   return getEmailTemplate({
-    title: `Ticket Assigned: ${sTitle} - Vaivamm Capital`,
-    preheader: `${sCreatedBy} assigned you a ${ticketPriority.toLowerCase()} priority ticket`,
+    title: `${keyPrefix}${sTitle} - Vaivamm Capital`,
+    preheader: `${sCreatedBy} assigned ${keyPrefix}${sTitle} to you`,
     content,
   });
 }

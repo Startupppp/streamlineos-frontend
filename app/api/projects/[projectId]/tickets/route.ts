@@ -188,6 +188,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           db.query.projects.findFirst({ where: eq(projects.id, projectId) }),
         ]);
         if (assignee?.email && creator && project) {
+          const issueKey = project.key && ticket.ticketNumber
+            ? `${project.key}-${ticket.ticketNumber}`
+            : undefined;
           await sendTicketAssignmentEmail(
             assignee.email,
             assignee.name || assignee.firstName || "Team Member",
@@ -197,7 +200,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
             project.name,
             projectId,
             ticket.id,
-            creator.name || creator.firstName || "Team Member"
+            creator.name || creator.firstName || "Team Member",
+            issueKey,
           );
         }
       } catch (emailError) {
