@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
+    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
+    "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
