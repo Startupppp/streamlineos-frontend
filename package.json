@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
     "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
-    "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts"
+    "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts",
+    "send:all-emails-test": "npx tsx --env-file=.env scripts/send-all-emails-test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
