@@ -4,10 +4,12 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
 interface StatCardProps {
   label: string;
   value: string | number;
+  valueTooltip?: React.ReactNode;
   icon: LucideIcon;
   trend?: {
     value: number;
@@ -32,6 +34,7 @@ const colorMap = {
 export function StatCard({
   label,
   value,
+  valueTooltip,
   icon: Icon,
   trend,
   href,
@@ -40,6 +43,16 @@ export function StatCard({
   color = "gold",
 }: StatCardProps) {
   const c = colorMap[color];
+
+  const valueNode = (
+    <p className={cn(
+      "font-semibold text-foreground mt-1 truncate leading-none",
+      typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl",
+      valueTooltip && "cursor-help"
+    )}>
+      {value}
+    </p>
+  );
 
   const content = (
     <div
@@ -56,12 +69,18 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-          <p className={cn(
-            "font-semibold text-foreground mt-1 truncate leading-none",
-            typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl"
-          )}>
-            {value}
-          </p>
+          {valueTooltip ? (
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>{valueNode}</TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {valueTooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            valueNode
+          )}
 
           {trend && (
             <div className="flex items-center gap-1 mt-2">
