@@ -15,11 +15,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Download, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 
@@ -94,6 +97,91 @@ export default function AssetReturnsPage() {
     });
   }, [returnId, markReturned]);
 
+  const buildRows = useCallback(() => {
+    return (items ?? []).map((ar) => ({
+      employee: ar.employeeName ?? "",
+      asset: ar.assetName,
+      type: ar.assetType ?? "",
+      serialNumber: ar.serialNumber ?? "",
+      status: ar.status ?? "PENDING",
+      condition: ar.condition ?? "",
+      returnedAt: ar.returnedAt ? format(new Date(ar.returnedAt), "yyyy-MM-dd") : "",
+      createdAt: ar.createdAt ? format(new Date(ar.createdAt), "yyyy-MM-dd") : "",
+      notes: ar.notes ?? "",
+    }));
+  }, [items]);
+
+  const handleExportExcel = useCallback(async () => {
+    if (!items?.length) { toast.error("No data to export"); return; }
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Asset Returns");
+
+      sheet.columns = [
+        { header: "Employee", key: "employee", width: 24 },
+        { header: "Asset", key: "asset", width: 28 },
+        { header: "Type", key: "type", width: 14 },
+        { header: "Serial Number", key: "serialNumber", width: 20 },
+        { header: "Status", key: "status", width: 12 },
+        { header: "Condition", key: "condition", width: 14 },
+        { header: "Returned At", key: "returnedAt", width: 14 },
+        { header: "Created At", key: "createdAt", width: 14 },
+        { header: "Notes", key: "notes", width: 40 },
+      ];
+
+      const headerRow = sheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+
+      buildRows().forEach((row) => sheet.addRow(row));
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `asset-returns-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Asset returns exported");
+    } catch {
+      toast.error("Failed to export asset returns");
+    }
+  }, [items, buildRows]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!items?.length) { toast.error("No data to export"); return; }
+    try {
+      const rows = buildRows();
+      const headers = ["Employee", "Asset", "Type", "Serial Number", "Status", "Condition", "Returned At", "Created At", "Notes"];
+      const escape = (v: string) => {
+        if (v.includes(",") || v.includes("\"") || v.includes("\n")) {
+          return `"${v.replace(/"/g, '""')}"`;
+        }
+        return v;
+      };
+      const csv = [
+        headers.join(","),
+        ...rows.map((r) =>
+          [r.employee, r.asset, r.type, r.serialNumber, r.status, r.condition, r.returnedAt, r.createdAt, r.notes]
+            .map(escape)
+            .join(","),
+        ),
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `asset-returns-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Asset returns exported");
+    } catch {
+      toast.error("Failed to export asset returns");
+    }
+  }, [items, buildRows]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
@@ -107,7 +195,24 @@ export default function AssetReturnsPage() {
       title="Asset Returns"
       subtitle="Track and manage company asset returns from employees"
       badge={`${items?.length ?? 0} items`}
-      actions={isAdmin ? <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Log Return</Button> : undefined}
+      actions={
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={!items?.length}>
+                <Download className="h-3.5 w-3.5 mr-1" />Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportExcel}>Excel (.xlsx)</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCsv}>CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Log Return</Button>
+          )}
+        </div>
+      }
     >
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
