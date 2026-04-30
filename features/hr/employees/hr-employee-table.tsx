@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Eye, Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { AIAttritionRiskButton } from "./ai-attrition-risk-button";
 import {
@@ -206,7 +206,20 @@ export function HrEmployeeTable({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
+                            aria-label={`View ${displayName}`}
+                            title="View details"
+                            asChild
+                          >
+                            <Link href={`/hr/employees/${user.id}`}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
                             aria-label={`Edit ${displayName}`}
+                            title="Edit profile"
                             asChild
                           >
                             <Link href={`/hr/employees/${user.id}?tab=profile`}>
