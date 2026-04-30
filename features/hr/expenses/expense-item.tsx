@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
@@ -150,7 +151,33 @@ export function AdminExpenseItem({
       </div>
 
       <div className="text-right min-w-[150px] flex-shrink-0">
-        <p className="text-2xl font-bold text-foreground">{formatINR(expense.amount)}</p>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-2xl font-bold text-foreground cursor-help inline-block underline decoration-dotted decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground transition-colors">
+                {formatINR(expense.amount)}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="text-xs">
+              <div className="space-y-1">
+                <p>
+                  <span className="text-muted-foreground">Amount: </span>
+                  <span className="font-semibold tabular-nums">{formatINR(expense.amount)}</span>
+                </p>
+                {expense.paymentMethod && (
+                  <p>
+                    <span className="text-muted-foreground">Paid via: </span>
+                    <span className="font-medium capitalize">{expense.paymentMethod.toLowerCase()}</span>
+                  </p>
+                )}
+                <p>
+                  <span className="text-muted-foreground">Date: </span>
+                  <span className="font-medium">{format(new Date(expense.expenseDate), "dd MMM yyyy")}</span>
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <p className="text-xs text-muted-foreground mb-3">INR</p>
 
         {isRejecting ? (
