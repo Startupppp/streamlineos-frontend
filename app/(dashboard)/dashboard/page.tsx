@@ -73,7 +73,6 @@ import {
 } from "@/features/dashboard/hr-widgets";
 import { AnnouncementsWidget } from "@/components/dashboard/widgets/announcements-widget";
 import { MyTasksWidget } from "@/components/dashboard/widgets/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/widgets/timesheet-widget";
 import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/widgets/leave-balance-widget";
 import { ExecutiveKpiWidget } from "@/components/dashboard/widgets/executive-kpi-widget";
 import { ProjectHealthWidget } from "@/components/dashboard/widgets/project-health-widget";
@@ -629,12 +628,7 @@ export default function DashboardPage() {
               <PublicDocumentsCard />
             </motion.div>
 
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
               <Suspense fallback={<WidgetSkeleton rows={3} />}>
                 <QuickActionsWidget />
               </Suspense>
@@ -686,13 +680,10 @@ export default function DashboardPage() {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2"
             >
               <Suspense fallback={<WidgetSkeleton rows={4} />}>
                 <MyTasksWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={2} />}>
-                <TimesheetWidget />
               </Suspense>
               <Suspense fallback={<WidgetSkeleton rows={3} />}>
                 <LeaveBalanceWidgetNew />
