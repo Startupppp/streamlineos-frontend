@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Trash2 } from "lucide-react";
+import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, SmilePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   getInitials,
@@ -17,6 +18,7 @@ import {
   isImageMime,
   resolveFileUrl,
 } from "./chat-helpers";
+import { EmojiGrid } from "./emoji-grid";
 import type { Message } from "./chat-types";
 
 export function ChatBubble({
@@ -25,25 +27,40 @@ export function ChatBubble({
   showSender,
   isEditing,
   editInput,
+  currentUserId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
 }: {
   message: Message;
   isOwn: boolean;
   showSender: boolean;
   isEditing: boolean;
   editInput: string;
+  currentUserId: string;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onReply: () => void;
   onDelete: () => void;
+  onReact: (emoji: string) => void;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      onReact(emoji);
+      setPickerOpen(false);
+    },
+    [onReact]
+  );
+  const reactionEntries = Object.entries(message.reactions ?? {}).filter(
+    ([, ids]) => ids.length > 0
+  );
   const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onEditInputChange(e.target.value), [onEditInputChange]);
   const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSaveEdit(); }
@@ -229,6 +246,35 @@ export function ChatBubble({
           </div>
         )}
 
+        {reactionEntries.length > 0 && (
+          <div
+            className={cn(
+              "flex flex-wrap gap-1 mt-1 px-1 max-w-full",
+              isOwn ? "justify-end" : "justify-start"
+            )}
+          >
+            {reactionEntries.map(([emoji, userIds]) => {
+              const reactedByMe = userIds.includes(currentUserId);
+              return (
+                <button
+                  key={emoji}
+                  onClick={() => onReact(emoji)}
+                  title={reactedByMe ? "Click to remove" : "Click to react"}
+                  className={cn(
+                    "inline-flex items-center gap-1 h-6 px-1.5 rounded-full border text-[11px] transition-colors",
+                    reactedByMe
+                      ? "bg-gold/10 border-gold/40 text-foreground"
+                      : "bg-background border-border/60 text-muted-foreground hover:bg-muted/40"
+                  )}
+                >
+                  <span className="text-[13px] leading-none">{emoji}</span>
+                  <span className="font-semibold tabular-nums">{userIds.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {!isEditing && (
           <div
             className={cn(
@@ -237,6 +283,24 @@ export function ChatBubble({
             )}
           >
             <div className="flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-hidden">
+              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                    title="Add reaction"
+                    aria-label="Add reaction"
+                  >
+                    <SmilePlus className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="top"
+                  align={isOwn ? "start" : "end"}
+                  className="p-0 border-0 bg-transparent shadow-none w-auto"
+                >
+                  <EmojiGrid onSelect={handleEmojiSelect} />
+                </PopoverContent>
+              </Popover>
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
               </button>

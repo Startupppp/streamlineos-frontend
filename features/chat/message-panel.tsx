@@ -31,6 +31,7 @@ import {
   useSetTyping,
   useChatTyping,
   useChatOrgUsers,
+  useToggleReaction,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
@@ -70,6 +71,7 @@ export function MessagePanel({
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
+  const toggleReaction = useToggleReaction(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const setTyping = useSetTyping();
   const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
@@ -409,6 +411,7 @@ export function MessagePanel({
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
+        onReact={(messageId, emoji) => toggleReaction.mutate({ messageId, emoji })}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}

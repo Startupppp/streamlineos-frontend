@@ -1,4 +1,5 @@
 import { type NextRequest } from "next/server";
+import Ably from "ably";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { chatMessages, chatChannelMembers } from "@/lib/db/schema";
@@ -68,6 +69,23 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       .update(chatMessages)
       .set({ reactions: updated, updatedAt: new Date() })
       .where(eq(chatMessages.id, messageId));
+
+    if (process.env.ABLY_API_KEY) {
+      try {
+        const rest = new Ably.Rest(process.env.ABLY_API_KEY);
+        const channelName = `chat:${session.orgId}:${channelId}`;
+        rest.channels
+          .get(channelName)
+          .publish("reaction-updated", {
+            channelId,
+            messageId,
+            reactions: updated,
+          })
+          .catch(() => {});
+      } catch {
+
+      }
+    }
 
     return ok({ reactions: updated });
   });

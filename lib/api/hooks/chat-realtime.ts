@@ -36,6 +36,7 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
     sender: null,
     attachments: [],
     replyTo: null,
+    reactions: {},
   };
 }
 
@@ -111,10 +112,38 @@ export function useChatRealtime(channelId: number | null): { isConnected: boolea
       }
     };
 
+    const reactionHandler = (msg: InboundMessage) => {
+      const payload = msg.data as {
+        channelId: number;
+        messageId: number;
+        reactions: Record<string, string[]>;
+      };
+      if (!payload?.messageId) return;
+
+      const cacheKey = queryKeys.chat.messages(channelId);
+
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) =>
+              m.id === payload.messageId
+                ? { ...m, reactions: payload.reactions }
+                : m
+            ),
+          })),
+        };
+      });
+    };
+
     channel.subscribe("message", handler);
+    channel.subscribe("reaction-updated", reactionHandler);
 
     return () => {
       channel.unsubscribe("message", handler);
+      channel.unsubscribe("reaction-updated", reactionHandler);
     };
   }, [ably, channelId, orgId, queryClient, currentUserId]);
 

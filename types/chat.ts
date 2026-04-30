@@ -81,6 +81,7 @@ export interface Message {
   sender: { id: string; name: string | null; image: string | null } | null;
   attachments: MessageAttachment[];
   replyTo: MessageReplyTo | null;
+  reactions: Record<string, string[]>;
 }
 
 export interface MessageWithChannel extends Message {

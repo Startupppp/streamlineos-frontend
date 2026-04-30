@@ -20,12 +20,14 @@ interface MessageItemProps {
   showHeader: boolean;
   editingMessageId: number | undefined;
   editInput: string;
+  currentUserId: string;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
+  onReact: (messageId: number, emoji: string) => void;
 }
 
 function MessageItem({
@@ -34,17 +36,20 @@ function MessageItem({
   showHeader,
   editingMessageId,
   editInput,
+  currentUserId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
+  const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
   return (
     <ChatBubble
       message={msg}
@@ -52,12 +57,14 @@ function MessageItem({
       showSender={showHeader}
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
+      currentUserId={currentUserId}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
       onCancelEdit={onCancelEdit}
       onSaveEdit={handleSaveEdit}
       onReply={handleReply}
       onDelete={handleDelete}
+      onReact={handleReact}
     />
   );
 }
@@ -81,6 +88,7 @@ export interface MessageListProps {
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
+  onReact: (messageId: number, emoji: string) => void;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -107,6 +115,7 @@ export function MessageList({
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -198,12 +207,14 @@ export function MessageList({
                     showHeader={showHeader}
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
+                    currentUserId={currentUserId}
                     onEditInputChange={onEditInputChange}
                     onStartEdit={onStartEdit}
                     onCancelEdit={onCancelEdit}
                     onSaveEdit={onSaveEdit}
                     onReply={onReply}
                     onDelete={onDelete}
+                    onReact={onReact}
                   />
                 );
               })}
