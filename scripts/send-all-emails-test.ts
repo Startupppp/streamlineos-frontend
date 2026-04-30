@@ -69,7 +69,7 @@ import {
   sendLeaveCancellationEmail,
 } from "@/lib/email/hr-leaves";
 
-const TO = "tarun@vaivammcapital.com";
+const TO = process.env.TEST_EMAIL_TO ?? "tarun@vaivammcapital.com";
 const NAME = "Tarun";
 const ACTOR = "QA Bot";
 const TODAY = new Date().toISOString().slice(0, 10);
