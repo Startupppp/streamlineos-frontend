@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -51,12 +51,22 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function CreateTicketDialog({
   projectId,
-  variant = "default"
+  variant = "default",
+  open: controlledOpen,
+  onOpenChange,
+  defaultStatus,
+  hideTrigger = false,
 }: {
   projectId: number;
   variant?: "default" | "fab";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultStatus?: string;
+  hideTrigger?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [files, setFiles] = useState<File[]>([]);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -151,8 +161,15 @@ export function CreateTicketDialog({
       link: "",
       assigneeId: undefined,
       assigneeIds: [],
+      status: defaultStatus as FormValues["status"],
     },
   });
+
+  useEffect(() => {
+    if (open && defaultStatus) {
+      form.setValue("status", defaultStatus as FormValues["status"]);
+    }
+  }, [open, defaultStatus, form]);
 
   const onSubmit = (values: FormValues) => {
     createTicketMutation.mutate({
@@ -162,26 +179,29 @@ export function CreateTicketDialog({
       link: values.link || undefined,
       assigneeId: selectedAssignees[0] || undefined,
       assigneeIds: selectedAssignees.length > 0 ? selectedAssignees : undefined,
+      status: values.status ?? defaultStatus,
     });
   };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {variant === "fab" ? (
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <Plus className="h-6 w-6" />
-            <span className="sr-only">Create Ticket</span>
-          </Button>
-        ) : (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create Ticket
-          </Button>
-        )}
-      </SheetTrigger>
+      {!hideTrigger && (
+        <SheetTrigger asChild>
+          {variant === "fab" ? (
+            <Button
+              size="lg"
+              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="sr-only">Create Ticket</span>
+            </Button>
+          ) : (
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Create Ticket
+            </Button>
+          )}
+        </SheetTrigger>
+      )}
       <SheetContent
         side="right"
         className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
