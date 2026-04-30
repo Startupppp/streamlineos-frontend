@@ -117,7 +117,7 @@ export function MessageList({
 
   return (
     <div
-      className="flex-1 overflow-y-auto relative"
+      className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative"
       style={{
         backgroundImage:
           "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
@@ -164,10 +164,25 @@ export function MessageList({
               </div>
 
               {group.messages.map((msg, idx) => {
+                if (msg.messageType === "system") {
+                  return (
+                    <div
+                      key={msg.id}
+                      className="flex justify-center my-2"
+                    >
+                      <span className="text-[11px] text-muted-foreground/70 bg-muted/30 px-2.5 py-0.5 rounded-full italic">
+                        {msg.content}
+                      </span>
+                    </div>
+                  );
+                }
+
                 const isOwn = msg.senderId === currentUserId;
                 const prevMsg = idx > 0 ? group.messages[idx - 1] : null;
                 const isSameSender =
-                  prevMsg?.senderId === msg.senderId && !prevMsg?.isDeleted;
+                  prevMsg?.senderId === msg.senderId &&
+                  !prevMsg?.isDeleted &&
+                  prevMsg?.messageType !== "system";
                 const timeDiff =
                   prevMsg?.createdAt && msg.createdAt
                     ? new Date(msg.createdAt).getTime() -

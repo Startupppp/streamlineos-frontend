@@ -80,7 +80,7 @@ export default function ChatPage() {
   return (
     <ChatAblyProvider>
       <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full w-full min-w-0 overflow-hidden bg-background">
 
       <div
         className={cn(
@@ -102,7 +102,7 @@ export default function ChatPage() {
 
       <div
         className={cn(
-          "flex-1 flex flex-col min-w-0 relative",
+          "flex-1 flex flex-col min-w-0 relative overflow-hidden",
           showMobileList && !sidebarCollapsed && "hidden md:flex"
         )}
       >

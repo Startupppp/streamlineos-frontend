@@ -89,9 +89,9 @@ export function ChatBubble({
         </div>
       )}
 
-      <div className={cn("max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
+      <div className={cn("max-w-[75%] sm:max-w-[65%] min-w-0 relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {showSender && !isOwn && (
-          <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1">
+          <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1 truncate max-w-full">
             {message.sender?.name}
           </p>
         )}
@@ -99,13 +99,13 @@ export function ChatBubble({
         {message.replyTo && (
           <div
             className={cn(
-              "mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border text-[11px]",
+              "mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border text-[11px] max-w-full min-w-0 w-full",
               isOwn
                 ? "bg-gold/5 border-gold/15"
                 : "bg-blue/5 border-blue/10"
             )}
           >
-            <p className={cn("font-bold", isOwn ? "text-gold" : "text-blue")}>
+            <p className={cn("font-bold truncate", isOwn ? "text-gold" : "text-blue")}>
               {message.replyTo.sender?.name}
             </p>
             <p className="text-muted-foreground truncate">{message.replyTo.content}</p>
@@ -133,17 +133,19 @@ export function ChatBubble({
         ) : (
           <div
             className={cn(
-              "relative px-3.5 py-2 shadow-sm",
+              "relative px-3.5 py-2 shadow-sm max-w-full min-w-0",
               isOwn
                 ? "bg-gradient-to-br from-gold to-amber-700 text-white rounded-2xl rounded-br-md"
                 : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
             )}
           >
             {message.content && (
-              <p className={cn(
-                "text-[14px] whitespace-pre-wrap break-words leading-[1.55]",
-                isOwn ? "text-white" : "text-foreground"
-              )}>
+              <p
+                className={cn(
+                  "text-[14px] whitespace-pre-wrap break-words leading-[1.55] [overflow-wrap:anywhere]",
+                  isOwn ? "text-white" : "text-foreground"
+                )}
+              >
                 {message.content}
               </p>
             )}

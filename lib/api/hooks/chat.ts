@@ -329,6 +329,19 @@ export function useLeaveChannel() {
   });
 }
 
+export function useDeleteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.delete<{ deleted: boolean }>(
+        `/chat/channels/${channelId}?mode=delete`
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useChatHeartbeat() {
   return useMutation({
     mutationFn: () =>

@@ -150,8 +150,8 @@ export default function SprintsPage({ params }: PageProps) {
       )}
 
       {activeSprints.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <Play className="h-5 w-5 text-blue-500" />
             Active Sprints
           </h2>
@@ -173,8 +173,8 @@ export default function SprintsPage({ params }: PageProps) {
       )}
 
       {plannedSprints.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <Calendar className="h-5 w-5 text-gray-500" />
             Planned Sprints
           </h2>
@@ -196,8 +196,8 @@ export default function SprintsPage({ params }: PageProps) {
       {completedSprints.length > 0 && <VelocityChart sprints={completedSprints} />}
 
       {completedSprints.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-500" />
             Completed Sprints
           </h2>

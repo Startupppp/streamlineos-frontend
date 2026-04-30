@@ -20,6 +20,7 @@ export function ChannelItem({
   currentUserId,
   onlineUserIds,
   onLeave,
+  onDelete,
 }: {
   channel: Channel;
   isActive: boolean;
@@ -27,6 +28,7 @@ export function ChannelItem({
   currentUserId: string;
   onlineUserIds: Set<string>;
   onLeave?: (channelId: number) => void;
+  onDelete?: (channelId: number) => void;
 }) {
   const otherMember =
     channel.type === "DIRECT"
@@ -43,12 +45,26 @@ export function ChannelItem({
 
   const hasUnread = channel.unreadCount > 0;
 
+  const isAdmin = Boolean(
+    channel.members?.some(
+      (m) => m.user?.id === currentUserId && m.role === "ADMIN"
+    )
+  );
+
   const handleLeave = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       onLeave?.(channel.id);
     },
     [channel.id, onLeave]
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete?.(channel.id);
+    },
+    [channel.id, onDelete]
   );
 
   return (
@@ -124,22 +140,34 @@ export function ChannelItem({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem
-              onClick={handleLeave}
-              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-            >
-              {channel.type === "DIRECT" ? (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Conversation
-                </>
-              ) : (
-                <>
+            {channel.type === "DIRECT" ? (
+              <DropdownMenuItem
+                onClick={handleLeave}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Conversation
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  onClick={handleLeave}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Leave Group
-                </>
-              )}
-            </DropdownMenuItem>
+                </DropdownMenuItem>
+                {isAdmin && onDelete && (
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Group
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}

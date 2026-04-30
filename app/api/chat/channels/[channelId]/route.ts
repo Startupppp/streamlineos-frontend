@@ -1,10 +1,15 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { chatChannels, chatChannelMembers } from "@/lib/db/schema";
+import {
+  chatChannels,
+  chatChannelMembers,
+  chatMessages,
+} from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getChannel } from "@/server/queries/chat";
 import { z } from "zod";
+import Ably from "ably";
 
 const updateChannelSchema = z.object({
   name: z.string().min(1).optional(),
@@ -77,7 +82,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ channelId: string }> }
 ) {
   return withAuth(async (session) => {
@@ -85,14 +90,64 @@ export async function DELETE(
     const channelId = Number(id);
     if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
 
+    const mode = req.nextUrl.searchParams.get("mode");
+
+    const channel = await db.query.chatChannels.findFirst({
+      where: eq(chatChannels.id, channelId),
+    });
+    if (!channel) return err("Channel not found", 404);
+    if (channel.orgId !== session.orgId) return err("Forbidden", 403);
+
     const membership = await db.query.chatChannelMembers.findFirst({
       where: and(
         eq(chatChannelMembers.channelId, channelId),
         eq(chatChannelMembers.userId, session.user.id)
       ),
     });
-
     if (!membership) return err("You are not a member of this channel", 403);
+
+    if (mode === "delete") {
+      if (channel.type === "DIRECT") {
+        return err("Cannot hard-delete a direct conversation", 400);
+      }
+      if (membership.role !== "ADMIN") {
+        return err("Only channel admins can delete the group", 403);
+      }
+
+      await db.delete(chatChannels).where(eq(chatChannels.id, channelId));
+
+      if (process.env.ABLY_API_KEY) {
+        try {
+          const rest = new Ably.Rest(process.env.ABLY_API_KEY);
+          const channelName = `chat:${session.orgId}:${channelId}`;
+          rest.channels
+            .get(channelName)
+            .publish("channel_deleted", { channelId, deletedBy: session.user.id })
+            .catch(() => {});
+        } catch {
+          // ignore ably errors
+        }
+      }
+
+      return ok({ deleted: true, left: false });
+    }
+
+    const leaverName =
+      session.user.name ??
+      session.user.email ??
+      "Someone";
+
+    const [systemMessage] = channel.type === "GROUP"
+      ? await db
+          .insert(chatMessages)
+          .values({
+            channelId,
+            senderId: session.user.id,
+            content: `${leaverName} left the group`,
+            messageType: "system",
+          })
+          .returning()
+      : [null];
 
     await db
       .delete(chatChannelMembers)
@@ -103,6 +158,42 @@ export async function DELETE(
         )
       );
 
-    return ok({ left: true });
+    if (systemMessage) {
+      await db
+        .update(chatChannels)
+        .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+        .where(eq(chatChannels.id, channelId));
+
+      if (process.env.ABLY_API_KEY) {
+        try {
+          const rest = new Ably.Rest(process.env.ABLY_API_KEY);
+          const channelName = `chat:${session.orgId}:${channelId}`;
+          rest.channels
+            .get(channelName)
+            .publish("message", {
+              id: systemMessage.id,
+              channelId,
+              senderId: session.user.id,
+              senderName: leaverName,
+              content: systemMessage.content,
+              createdAt: systemMessage.createdAt,
+              messageType: "system",
+            })
+            .catch(() => {});
+          rest.channels
+            .get(channelName)
+            .publish("member_removed", {
+              userId: session.user.id,
+              removedBy: session.user.id,
+              left: true,
+            })
+            .catch(() => {});
+        } catch {
+          // ignore ably errors
+        }
+      }
+    }
+
+    return ok({ left: true, deleted: false });
   });
 }

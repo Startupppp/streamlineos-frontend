@@ -278,13 +278,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
-              <Label className="text-sm font-semibold">Upload File</Label>
-            </div>
+          {!file ? (
+            <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
+                <Label className="text-sm font-semibold">Upload File</Label>
+              </div>
 
-            {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-gold/50 hover:bg-gold/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
@@ -292,49 +292,55 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                   <p className="text-xs text-muted-foreground mt-1">CSV or Excel (.xlsx, .xls) — Max 5MB</p>
                 </div>
               </div>
-            ) : (
-              <div className="pl-8 min-h-[92px]">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <FileText className="h-8 w-8 text-gold shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={resetState} aria-label="Remove file">
-                    <X className="h-4 w-4" />
-                  </Button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileChange}
+                aria-label="Upload expense file"
+              />
+            </div>
+          ) : (
+            <div className="sticky top-0 z-10 -mx-4 -mt-4 px-4 pt-4 pb-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <FileText className="h-8 w-8 text-gold shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB uploaded</p>
                 </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={resetState} aria-label="Remove file">
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileChange}
+                aria-label="Upload expense file"
+              />
+            </div>
+          )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx,.xls"
-              onChange={handleFileChange}
-              aria-label="Upload expense file"
-            />
-          </div>
-
-          <div className="rounded-lg border border-border p-4 space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold">Approval Setting</p>
-                <p className="text-xs text-muted-foreground">
-                  Choose whether imported expenses should be approved immediately.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="auto-approve-expenses"
-                  checked={autoApprove}
-                  onCheckedChange={(checked) => setAutoApprove(checked === true)}
-                />
-                <Label htmlFor="auto-approve-expenses" className="text-sm">
-                  Auto-approve imported expenses
-                </Label>
-              </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Approval Setting</p>
+              <p className="text-xs text-muted-foreground">
+                Choose whether imported expenses should be approved immediately.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="auto-approve-expenses"
+                checked={autoApprove}
+                onCheckedChange={(checked) => setAutoApprove(checked === true)}
+              />
+              <Label htmlFor="auto-approve-expenses" className="text-sm cursor-pointer">
+                Auto-approve imported expenses
+              </Label>
             </div>
           </div>
 
