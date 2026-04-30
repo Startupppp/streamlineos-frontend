@@ -1,6 +1,6 @@
 import { sendEmail } from "@/lib/email/sender";
 
-const RECIPIENT = "hr@vaivammcapital.com";
+const RECIPIENTS = ["hr@vaivammcapital.com", "tarun@vaivammcapital.com"];
 const SUBJECT = "Notice Regarding Unsatisfactory Performance";
 const PERIOD_FROM = "17th February";
 const PERIOD_TO = "17th April";
@@ -64,7 +64,8 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Sending ${TEST_EMPLOYEES.length} test notices to ${RECIPIENT}...`);
+  const recipientList = RECIPIENTS.join(", ");
+  console.log(`Sending ${TEST_EMPLOYEES.length} test notices to ${recipientList}...`);
 
   let sent = 0;
   let failed = 0;
@@ -72,7 +73,7 @@ async function main() {
   for (const emp of TEST_EMPLOYEES) {
     try {
       await sendEmail({
-        to: RECIPIENT,
+        to: recipientList,
         subject: SUBJECT,
         html: buildHtml(emp.name),
       });
