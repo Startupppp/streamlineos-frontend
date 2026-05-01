@@ -45,7 +45,7 @@ export async function DELETE(
     });
     if (!target) return err("User is not a member of this channel", 404);
 
-    if (target.role === "ADMIN" && !isSelfLeave) {
+    if (target.role === "ADMIN") {
       const admins = await db.query.chatChannelMembers.findMany({
         where: and(
           eq(chatChannelMembers.channelId, channelId),
@@ -54,7 +54,12 @@ export async function DELETE(
         columns: { id: true },
       });
       if (admins.length <= 1) {
-        return err("Cannot remove the last admin of the channel", 400);
+        return err(
+          isSelfLeave
+            ? "You are the only admin of this group. Promote another member to admin before leaving."
+            : "Cannot remove the last admin of the channel",
+          400
+        );
       }
     }
 

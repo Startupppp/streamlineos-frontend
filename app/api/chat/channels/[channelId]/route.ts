@@ -132,6 +132,31 @@ export async function DELETE(
       return ok({ deleted: true, left: false });
     }
 
+    if (channel.type === "GROUP") {
+      const myMembership = await db.query.chatChannelMembers.findFirst({
+        where: and(
+          eq(chatChannelMembers.channelId, channelId),
+          eq(chatChannelMembers.userId, session.user.id)
+        ),
+        columns: { role: true },
+      });
+      if (myMembership?.role === "ADMIN") {
+        const admins = await db.query.chatChannelMembers.findMany({
+          where: and(
+            eq(chatChannelMembers.channelId, channelId),
+            eq(chatChannelMembers.role, "ADMIN")
+          ),
+          columns: { id: true },
+        });
+        if (admins.length <= 1) {
+          return err(
+            "You are the only admin of this group. Promote another member to admin before leaving.",
+            400
+          );
+        }
+      }
+    }
+
     const leaverName =
       session.user.name ??
       session.user.email ??
