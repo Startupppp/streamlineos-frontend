@@ -95,16 +95,48 @@ export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, verifySchema);
 
-    const generatedSignature = crypto
+    const generated = crypto
       .createHmac("sha256", RAZORPAY_KEY_SECRET ?? "")
       .update(`${input.razorpay_order_id}|${input.razorpay_payment_id}`)
       .digest("hex");
 
-    if (generatedSignature !== input.razorpay_signature) {
+    let sigValid = false;
+    try {
+      const a = Buffer.from(generated, "hex");
+      const b = Buffer.from(input.razorpay_signature, "hex");
+      sigValid = a.length === b.length && crypto.timingSafeEqual(a, b);
+    } catch {
+      sigValid = false;
+    }
+    if (!sigValid) {
       return err("Payment verification failed: invalid signature", 400);
     }
 
     const amount = PLAN_PRICES[input.plan];
+
+    const orderRes = await fetch(
+      `https://api.razorpay.com/v1/orders/${input.razorpay_order_id}`,
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`,
+        },
+      }
+    );
+    if (!orderRes.ok) {
+      return err("Payment verification failed: could not verify order", 400);
+    }
+    const order = await orderRes.json() as { amount: number };
+    if (order.amount !== amount) {
+      return err("Payment verification failed: plan/amount mismatch", 400);
+    }
+
+    const duplicate = await db.query.subscriptionPayments.findFirst({
+      where: eq(subscriptionPayments.razorpayPaymentId, input.razorpay_payment_id),
+      columns: { id: true },
+    });
+    if (duplicate) {
+      return err("Payment already recorded", 400);
+    }
 
     const existing = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.orgId, session.orgId),

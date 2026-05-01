@@ -32,7 +32,7 @@ type WebhookPayload = DocumensoWebhookPayload | DocuSignWebhookPayload;
 
 function verifyDocumensoSignature(body: string, signature: string | null): boolean {
   const secret = process.env.ESIGN_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) return false;
   if (!signature) return false;
 
   const expected = createHmac("sha256", secret)

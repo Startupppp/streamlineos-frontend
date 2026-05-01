@@ -3,43 +3,60 @@ import { db } from "@/lib/db";
 import { attendance, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 
 const biometricSchema = z.object({
+  orgId: z.string().min(1),
   employeeId: z.string().min(1),
   timestamp: z.string().min(1),
   type: z.enum(["CHECK_IN", "CHECK_OUT"]),
   deviceId: z.string().optional(),
-  apiKey: z.string().min(1),
 });
 
 export async function POST(req: NextRequest) {
+  const expectedKey = process.env.BIOMETRIC_API_KEY;
+  if (!expectedKey) return err("Biometric integration not configured.", 503);
+
+  const apiKey = req.headers.get("x-api-key");
+  if (!apiKey) return err("Invalid API key.", 401);
+
+  let keyValid = false;
+  try {
+    const a = Buffer.from(apiKey);
+    const b = Buffer.from(expectedKey);
+    keyValid = a.length === b.length && timingSafeEqual(a, b);
+  } catch {
+    keyValid = false;
+  }
+  if (!keyValid) return err("Invalid API key.", 401);
+
   const body = biometricSchema.parse(await req.json());
 
-  const expectedKey = process.env.BIOMETRIC_API_KEY;
-  if (!expectedKey || body.apiKey !== expectedKey) {
-    return err("Invalid API key.", 401);
-  }
+  const row = await db
+    .select({ userId: users.id })
+    .from(users)
+    .innerJoin(
+      organizationMembers,
+      and(
+        eq(organizationMembers.userId, users.id),
+        eq(organizationMembers.orgId, body.orgId)
+      )
+    )
+    .where(eq(users.employeeId, body.employeeId))
+    .limit(1)
+    .then((rows) => rows[0]);
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.employeeId, body.employeeId),
-  });
+  if (!row) return err(`Employee not found: ${body.employeeId}`, 404);
 
-  if (!user) return err(`Employee not found: ${body.employeeId}`, 404);
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, user.id),
-  });
-
-  if (!member) return err("Employee not in any organization.", 404);
-
+  const { userId } = row;
   const timestamp = new Date(body.timestamp);
   const dateStr = timestamp.toISOString().split("T")[0];
 
   if (body.type === "CHECK_IN") {
     const [log] = await db.insert(attendance).values({
-      orgId: member.orgId,
-      userId: user.id,
+      orgId: body.orgId,
+      userId,
       date: dateStr,
       checkIn: timestamp,
       status: "PRESENT",
@@ -49,8 +66,9 @@ export async function POST(req: NextRequest) {
 
   const existingLog = await db.query.attendance.findFirst({
     where: and(
-      eq(attendance.userId, user.id),
-      eq(attendance.date, dateStr)
+      eq(attendance.userId, userId),
+      eq(attendance.date, dateStr),
+      eq(attendance.orgId, body.orgId)
     ),
     orderBy: (a, { desc }) => [desc(a.createdAt)],
   });

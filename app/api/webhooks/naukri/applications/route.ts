@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger";
 
 function verifyNaukriSignature(body: string, signature: string | null): boolean {
   const secret = process.env.NAUKRI_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) return false;
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("hex");
   try {
