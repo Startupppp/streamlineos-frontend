@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
 import { patchPIPSchema } from "@/lib/validations/hr-pip";
+import { notifyPIPOutcome, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";
 import type { NextRequest } from "next/server";
 
 async function canAccessPip(
@@ -90,12 +91,26 @@ export async function PATCH(
     if (body.outcome !== undefined) patch.outcome = body.outcome;
     if (body.notes !== undefined) patch.notes = body.notes;
     if (body.endDate !== undefined) patch.endDate = body.endDate;
-    if (body.finalOutcome !== undefined) patch.finalOutcome = body.finalOutcome;
+    if (body.finalOutcome !== undefined) {
+      patch.finalOutcome = body.finalOutcome;
+      if (body.finalOutcome === "SUCCESS") patch.status = "COMPLETED";
+      else if (body.finalOutcome === "EXTENDED") patch.status = "EXTENDED";
+      else if (body.finalOutcome === "FAILED") patch.status = "TERMINATED";
+    }
 
+    const prevFinal = row.finalOutcome;
     await db
       .update(performanceImprovementPlans)
       .set(patch as typeof performanceImprovementPlans.$inferInsert)
       .where(eq(performanceImprovementPlans.id, pipId));
+
+    if (
+      body.finalOutcome !== undefined &&
+      body.finalOutcome !== prevFinal &&
+      (body.finalOutcome === "SUCCESS" || body.finalOutcome === "FAILED" || body.finalOutcome === "EXTENDED")
+    ) {
+      scheduleAppraisalPipEmails(() => notifyPIPOutcome(pipId, body.finalOutcome!));
+    }
 
     const updated = await db.query.performanceImprovementPlans.findFirst({
       where: eq(performanceImprovementPlans.id, pipId),

@@ -1,23 +1,27 @@
 import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { payrolls, salaryStructures, users } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { computeTotalDeductionsAndNet, roundInr } from "@/lib/hr/payroll-calculations";
+import {
+  payrolls,
+  salaryStructures,
+  holidayWorkRequests,
+  attendance,
+  salaryLoans,
+} from "@/lib/db/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
+import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR } from "@/lib/hr/payroll-calculations";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 
+const FULL_DAY_HOURS = 8;
+
 const generateSinglePayrollSchema = z.object({
   userId: z.string(),
-  month: z.string(),
-  lopDays: z.number().optional(),
-  halfDays: z.number().optional(),
-  otherDeductions: z.number().optional(),
-  bonus: z.number().optional(),
-  overtimeType: z.enum(["days", "hours"]).optional(),
-  overtimeDays: z.number().optional(),
-  overtimeHours: z.number().optional(),
-  overtimeAmount: z.number().optional(),
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  lopDays: z.number().min(0).default(0),
+  halfDays: z.number().min(0).default(0),
+  bonus: z.number().min(0).default(0),
+  otherDeductions: z.number().min(0).default(0),
 });
 
 export async function POST(req: NextRequest) {
@@ -36,7 +40,6 @@ export async function POST(req: NextRequest) {
       return err("No active salary structure found for this employee.", 400);
     }
 
-    // Idempotency guard — no unique DB constraint yet; block duplicate generation
     const existingPayroll = await db.query.payrolls.findFirst({
       where: and(
         eq(payrolls.orgId, session.orgId),
@@ -47,35 +50,79 @@ export async function POST(req: NextRequest) {
     });
     if (existingPayroll) {
       return err(
-        `Payroll for this employee already exists for ${body.month} (id: ${existingPayroll.id}, status: ${existingPayroll.status}). ` +
-        `Delete the existing DRAFT first or approve it.`,
+        `Payroll for ${body.month} already exists (id: ${existingPayroll.id}, status: ${existingPayroll.status}). Delete the existing DRAFT first.`,
         409
       );
     }
 
-    const employee = await db.query.users.findFirst({
-      where: eq(users.id, body.userId),
-      columns: { monthlySalary: true },
+    const [yr, mo] = body.month.split("-").map(Number);
+    const monthStart = `${body.month}-01`;
+    const lastDay = new Date(yr, mo, 0).getDate();
+    const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
+
+    const basicSalary = parseFloat(salary.basicSalary ?? "0");
+    const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
+    const specialAllowance = parseFloat((salary as { specialAllowance?: string | null }).specialAllowance ?? "0");
+    const ptAmount = parseFloat((salary as { professionalTax?: string | null }).professionalTax ?? String(PROFESSIONAL_TAX_INR));
+
+    const hra = roundInr((basicSalary * hraPercentage) / 100);
+    const calDays = calendarDaysInMonth(body.month);
+    const ctcMonthly = basicSalary + hra + specialAllowance;
+    const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
+
+    // Auto-compute overtime from approved EXTRA_PAY holiday work requests
+    const approvedHwrs = await db.query.holidayWorkRequests.findMany({
+      where: and(
+        eq(holidayWorkRequests.orgId, session.orgId),
+        eq(holidayWorkRequests.userId, body.userId),
+        eq(holidayWorkRequests.status, "APPROVED"),
+        eq(holidayWorkRequests.compensationPreference, "EXTRA_PAY"),
+        gte(holidayWorkRequests.requestDate, monthStart),
+        lte(holidayWorkRequests.requestDate, monthEnd)
+      ),
+      columns: { id: true, requestDate: true },
     });
-    const monthlySalary = parseFloat(employee?.monthlySalary || "0") || 0;
 
-    const basicSalary = Number(salary.basicSalary);
-    const hraPercentage = Number(salary.hraPercentage || 50);
-    const allowances = Number(salary.allowances || 0);
-    const deductions = Number(salary.deductions || 0);
+    let overtimeDays = 0;
+    for (const hwr of approvedHwrs) {
+      const att = await db.query.attendance.findFirst({
+        where: and(
+          eq(attendance.userId, body.userId),
+          eq(attendance.orgId, session.orgId),
+          eq(attendance.date, hwr.requestDate)
+        ),
+        columns: { workHours: true },
+      });
+      if (parseFloat(att?.workHours ?? "0") >= FULL_DAY_HOURS) {
+        overtimeDays++;
+      }
+    }
+    const overtimeAmount = roundInr(dailyRate * overtimeDays);
 
-    const hra = (basicSalary * hraPercentage) / 100;
-    const grossSalary = basicSalary + hra + allowances + (body.bonus || 0) + (body.overtimeAmount || 0);
-
-    const { totalDeductions, netSalary } = computeTotalDeductionsAndNet({
-      month: body.month,
-      monthlySalary,
-      grossSalary,
-      salaryStructureDeductions: deductions,
-      lopDays: body.lopDays ?? 0,
-      halfDays: body.halfDays ?? 0,
-      otherDeductions: body.otherDeductions ?? 0,
+    // Auto-pull advance recovery from active salary loan (oldest active first)
+    const activeLoan = await db.query.salaryLoans.findFirst({
+      where: and(
+        eq(salaryLoans.orgId, session.orgId),
+        eq(salaryLoans.userId, body.userId),
+        eq(salaryLoans.status, "ACTIVE")
+      ),
+      columns: { emiAmount: true, paidEmis: true, totalEmis: true },
+      orderBy: (t, { asc }) => [asc(t.createdAt)],
     });
+    const loanHasBalance =
+      activeLoan != null &&
+      (activeLoan.totalEmis ?? 0) > 0 &&
+      (activeLoan.paidEmis ?? 0) < (activeLoan.totalEmis ?? 0);
+    const advanceRecoveryAmount = loanHasBalance ? parseFloat(activeLoan!.emiAmount ?? "0") : 0;
+
+    const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount + (body.bonus || 0));
+
+    const lopAmount = roundInr(dailyRate * (body.lopDays || 0));
+    const halfDayLopAmount = roundInr((dailyRate / 2) * (body.halfDays || 0));
+    const totalDeductions = roundInr(
+      lopAmount + halfDayLopAmount + ptAmount + advanceRecoveryAmount + (body.otherDeductions || 0)
+    );
+    const netSalary = roundInr(grossSalary - totalDeductions);
 
     const [payroll] = await db
       .insert(payrolls)
@@ -85,16 +132,20 @@ export async function POST(req: NextRequest) {
         month: body.month,
         basicSalary: basicSalary.toString(),
         hra: hra.toString(),
-        allowances: (allowances + (body.bonus || 0)).toString(),
-        deductions: String(totalDeductions),
-        grossSalary: String(roundInr(grossSalary)),
-        netSalary: String(netSalary),
+        specialAllowance: specialAllowance.toString(),
+        allowances: (body.bonus || 0).toString(),
+        lopDays: (body.lopDays || 0).toString(),
+        lopAmount: (lopAmount + halfDayLopAmount).toString(),
+        ptAmount: ptAmount.toString(),
+        advanceRecoveryAmount: advanceRecoveryAmount.toString(),
+        deductions: totalDeductions.toString(),
+        grossSalary: grossSalary.toString(),
+        netSalary: netSalary.toString(),
         status: "DRAFT",
         generatedBy: session.user.id,
-        overtimeType: body.overtimeType,
-        overtimeDays: body.overtimeDays?.toString(),
-        overtimeHours: body.overtimeHours?.toString(),
-        overtimeAmount: body.overtimeAmount?.toString(),
+        overtimeType: overtimeDays > 0 ? "days" : undefined,
+        overtimeDays: overtimeDays.toString(),
+        overtimeAmount: overtimeAmount.toString(),
       })
       .returning();
 
@@ -104,9 +155,9 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       targetId: String(payroll.id),
       targetType: "payroll",
-      metadata: { employeeId: body.userId, month: body.month, netSalary: roundInr(netSalary) },
+      metadata: { employeeId: body.userId, month: body.month, netSalary },
     }).catch(() => {});
 
-    return ok({ success: true });
+    return ok({ success: true, payrollId: payroll.id });
   });
 }

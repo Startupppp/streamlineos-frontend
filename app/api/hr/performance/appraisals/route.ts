@@ -6,6 +6,7 @@ import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
 import { createAppraisalSchema } from "@/lib/validations/hr-appraisals";
 import { createAppraisalBundle } from "@/lib/hr/create-appraisal";
+import { notifyNewAppraisalAssignee, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -101,6 +102,8 @@ export async function POST(req: NextRequest) {
         stages: true,
       },
     });
+
+    scheduleAppraisalPipEmails(() => notifyNewAppraisalAssignee(appraisalId));
 
     return ok(row, 201);
   });

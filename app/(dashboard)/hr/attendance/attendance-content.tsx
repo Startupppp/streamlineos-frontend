@@ -7,6 +7,7 @@ import { AttendanceCalendar } from "@/features/hr/attendance/attendance-calendar
 import { AttendanceHeatmap } from "@/features/hr/attendance/attendance-heatmap";
 import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
+import { HolidayWorkRequestCard } from "@/features/hr/attendance/holiday-work-request-card";
 
 export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
   return (
@@ -24,6 +25,7 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
         <div className="space-y-5 pr-3 pb-6">
           <AttendanceCalendar userId={userId} />
           <AttendanceHeatmap userId={userId} />
+          <HolidayWorkRequestCard isAdmin={isAdmin} />
           {isAdmin && <ManageHolidaysCard />}
           <DailyHistoryTable />
         </div>

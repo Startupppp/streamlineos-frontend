@@ -53,6 +53,9 @@ export const attendance = pgTable("attendance", {
   breaks: jsonb("breaks").$type<{ start: string; end?: string }[]>().default([]),
   locationData: jsonb("location_data"),
   isOvertime: boolean("is_overtime").default(false),
+  isHolidayWork: boolean("is_holiday_work").default(false).notNull(),
+  isSundayWork: boolean("is_sunday_work").default(false).notNull(),
+  holidayId: integer("holiday_id").references(() => holidays.id),
   autoCheckedOut: boolean("auto_checked_out").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -114,7 +117,12 @@ export const payrolls = pgTable("payrolls", {
   month: text("month").notNull(),
   basicSalary: decimal("basic_salary").notNull(),
   hra: decimal("hra").default("0"),
+  specialAllowance: decimal("special_allowance").default("0"),
   allowances: decimal("allowances").default("0"),
+  lopDays: decimal("lop_days").default("0"),
+  lopAmount: decimal("lop_amount").default("0"),
+  ptAmount: decimal("pt_amount").default("200"),
+  advanceRecoveryAmount: decimal("advance_recovery_amount").default("0"),
   deductions: decimal("deductions").default("0"),
   grossSalary: decimal("gross_salary").notNull(),
   netSalary: decimal("net_salary").notNull(),
@@ -129,6 +137,7 @@ export const payrolls = pgTable("payrolls", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_payrolls_org_month").on(table.orgId, table.month),
+  uniqueIndex("uniq_payroll_org_user_month").on(table.orgId, table.userId, table.month),
 ]);
 
 export const salaryStructures = pgTable("salary_structures", {
@@ -136,15 +145,40 @@ export const salaryStructures = pgTable("salary_structures", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   basicSalary: decimal("basic_salary").notNull(),
-  hraPercentage: decimal("hra_percentage").default("40"),
+  hraPercentage: decimal("hra_percentage").default("50"),
   allowances: decimal("allowances").default("0"),
+  specialAllowance: decimal("special_allowance").default("0"),
   deductions: decimal("deductions").default("0"),
+  professionalTax: decimal("professional_tax").default("200"),
   effectiveFrom: date("effective_from").notNull(),
   effectiveTo: date("effective_to"),
   isActive: boolean("is_active").default(true),
+  createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const salaryRevisionHistory = pgTable("salary_revision_history", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  salaryStructureId: integer("salary_structure_id").references(() => salaryStructures.id),
+  previousBasic: decimal("previous_basic"),
+  previousHraPct: decimal("previous_hra_pct"),
+  previousSpecialAllowance: decimal("previous_special_allowance"),
+  previousPt: decimal("previous_pt"),
+  newBasic: decimal("new_basic").notNull(),
+  newHraPct: decimal("new_hra_pct").notNull(),
+  newSpecialAllowance: decimal("new_special_allowance").notNull(),
+  newPt: decimal("new_pt").notNull(),
+  effectiveFrom: date("effective_from").notNull(),
+  reason: text("reason"),
+  changedBy: text("changed_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_salary_revision_user").on(table.userId),
+  index("idx_salary_revision_org").on(table.orgId, table.userId),
+]);
 
 export const expenseCategories = pgTable("expense_categories", {
   id: serial("id").primaryKey(),
@@ -999,8 +1033,10 @@ export const holidays = pgTable("holidays", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   date: date("date").notNull(),
+  type: text("type").default("PUBLIC"),
   message: text("message"),
   isPublic: boolean("is_public").default(false).notNull(),
+  isHalfDay: boolean("is_half_day").default(false).notNull(),
   notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1951,5 +1987,87 @@ export const leaveBlackoutDates = pgTable("leave_blackout_dates", {
 export const leaveBlackoutDatesRelations = relations(leaveBlackoutDates, ({ one }) => ({
   organization: one(organizations, { fields: [leaveBlackoutDates.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [leaveBlackoutDates.createdBy], references: [users.id] }),
+}));
+
+// ─── Payroll Feature Tables ───────────────────────────────────────────────
+
+export const salaryRevisionHistoryRelations = relations(salaryRevisionHistory, ({ one }) => ({
+  organization: one(organizations, { fields: [salaryRevisionHistory.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [salaryRevisionHistory.userId], references: [users.id], relationName: "revisionUser" }),
+  changedByUser: one(users, { fields: [salaryRevisionHistory.changedBy], references: [users.id], relationName: "revisionChanger" }),
+  salaryStructure: one(salaryStructures, { fields: [salaryRevisionHistory.salaryStructureId], references: [salaryStructures.id] }),
+}));
+
+export const holidayWorkRequests = pgTable("holiday_work_requests", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  requestDate: date("request_date").notNull(),
+  type: text("type").notNull(),
+  holidayId: integer("holiday_id").references(() => holidays.id),
+  reason: text("reason").notNull(),
+  compensationPreference: text("compensation_preference").notNull(),
+  status: text("status").notNull().default("PENDING"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_hwr_org_user_date").on(table.orgId, table.userId, table.requestDate),
+  index("idx_hwr_org_status").on(table.orgId, table.status),
+  index("idx_hwr_user").on(table.userId),
+]);
+
+export const holidayWorkRequestsRelations = relations(holidayWorkRequests, ({ one }) => ({
+  organization: one(organizations, { fields: [holidayWorkRequests.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [holidayWorkRequests.userId], references: [users.id], relationName: "hwrUser" }),
+  approver: one(users, { fields: [holidayWorkRequests.approvedBy], references: [users.id], relationName: "hwrApprover" }),
+  holiday: one(holidays, { fields: [holidayWorkRequests.holidayId], references: [holidays.id] }),
+}));
+
+export const compOffGrants = pgTable("comp_off_grants", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  holidayWorkRequestId: integer("holiday_work_request_id").references(() => holidayWorkRequests.id),
+  grantedDays: decimal("granted_days").notNull().default("1"),
+  usedDays: decimal("used_days").notNull().default("0"),
+  expiryDate: date("expiry_date").notNull(),
+  status: text("status").notNull().default("ACTIVE"),
+  grantedBy: text("granted_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_comp_off_user_status").on(table.userId, table.status, table.expiryDate),
+  index("idx_comp_off_org").on(table.orgId),
+]);
+
+export const compOffGrantsRelations = relations(compOffGrants, ({ one }) => ({
+  organization: one(organizations, { fields: [compOffGrants.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [compOffGrants.userId], references: [users.id], relationName: "compOffUser" }),
+  grantedByUser: one(users, { fields: [compOffGrants.grantedBy], references: [users.id], relationName: "compOffGranter" }),
+  holidayWorkRequest: one(holidayWorkRequests, { fields: [compOffGrants.holidayWorkRequestId], references: [holidayWorkRequests.id] }),
+}));
+
+export const lateArrivalWarnings = pgTable("late_arrival_warnings", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  date: date("date").notNull(),
+  warningNumber: integer("warning_number").notNull().default(1),
+  attendanceId: integer("attendance_id").references(() => attendance.id),
+  notedBy: text("noted_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_late_warnings_user").on(table.userId),
+  index("idx_late_warnings_org_date").on(table.orgId, table.date),
+]);
+
+export const lateArrivalWarningsRelations = relations(lateArrivalWarnings, ({ one }) => ({
+  organization: one(organizations, { fields: [lateArrivalWarnings.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [lateArrivalWarnings.userId], references: [users.id], relationName: "warningUser" }),
+  notedByUser: one(users, { fields: [lateArrivalWarnings.notedBy], references: [users.id], relationName: "warningNoteBy" }),
+  attendance: one(attendance, { fields: [lateArrivalWarnings.attendanceId], references: [attendance.id] }),
 }));
 

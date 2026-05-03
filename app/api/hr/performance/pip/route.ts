@@ -5,6 +5,7 @@ import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
 import { createPIPSchema } from "@/lib/validations/hr-pip";
+import { notifyPIPDraftCreated, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";
 import type { NextRequest } from "next/server";
 
 export async function GET() {
@@ -139,6 +140,9 @@ export async function POST(req: NextRequest) {
         goals: true,
       },
     });
+
+    scheduleAppraisalPipEmails(() => notifyPIPDraftCreated(id));
+
     return ok(row, 201);
   });
 }

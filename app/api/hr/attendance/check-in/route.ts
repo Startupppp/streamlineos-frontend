@@ -1,8 +1,10 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { attendance } from "@/lib/db/schema";
+import { attendance, holidays } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
+import { notifyByRoles } from "@/server/actions/create-notification";
+import { ROLES } from "@/lib/constants/roles";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -16,7 +18,17 @@ export async function POST(req: NextRequest) {
       ? body.localDate
       : getTodayString();
 
+    const todayDate = new Date(today + "T00:00:00");
+    const isSunday = todayDate.getDay() === 0;
+
+    const holiday = await db.query.holidays.findFirst({
+      where: and(eq(holidays.orgId, session.orgId), eq(holidays.date, today)),
+      columns: { id: true, name: true },
+    });
+
     try {
+      let attendanceId: number | undefined;
+
       await db.transaction(async (tx) => {
         const result = await tx
           .select()
@@ -50,39 +62,50 @@ export async function POST(req: NextRequest) {
           const gapMs = now.getTime() - lastCheckOut.getTime();
           const gapHours = gapMs / (1000 * 60 * 60);
 
-          const currentBreaks =
-            (existing.breaks as { start: string; end?: string }[]) || [];
+          const currentBreaks = (existing.breaks as { start: string; end?: string }[]) || [];
           const newBreaks = [
             ...currentBreaks,
             { start: lastCheckOut.toISOString(), end: now.toISOString() },
           ];
-          const newBreakHours =
-            (Number(existing.breakHours) || 0) + gapHours;
+          const newBreakHours = (Number(existing.breakHours) || 0) + gapHours;
 
-          await tx
-            .update(attendance)
-            .set({
-              status: "PRESENT",
-              checkOut: null,
-              breaks: newBreaks,
-              breakHours: newBreakHours.toFixed(2),
-            })
-            .where(eq(attendance.id, existing.id));
+          await tx.update(attendance).set({
+            status: "PRESENT",
+            checkOut: null,
+            breaks: newBreaks,
+            breakHours: newBreakHours.toFixed(2),
+          }).where(eq(attendance.id, existing.id));
 
+          attendanceId = existing.id;
           return;
         }
 
-        await tx.insert(attendance).values({
+        const [inserted] = await tx.insert(attendance).values({
           orgId: session.orgId,
           userId: session.user.id,
           date: today,
           checkIn: new Date(),
           status: "PRESENT",
           locationData: body.location ?? null,
-        });
+          isHolidayWork: !!holiday,
+          isSundayWork: isSunday && !holiday,
+          holidayId: holiday?.id ?? null,
+        }).returning({ id: attendance.id });
+
+        attendanceId = inserted.id;
       });
 
-      return ok({ success: true });
+      if (holiday || isSunday) {
+        const whatDay = holiday ? `holiday (${holiday.name})` : "Sunday";
+        void notifyByRoles(session.orgId, [ROLES.CEO, ROLES.HR], {
+          title: "Employee clocked in on a day off",
+          message: `${session.user.name ?? session.user.email} clocked in on ${whatDay} (${today}). An approved holiday work request is required for compensation.`,
+          link: "/hr/attendance",
+          metadata: { userId: session.user.id, date: today, type: holiday ? "HOLIDAY" : "SUNDAY" },
+        }).catch(() => {});
+      }
+
+      return ok({ success: true, isHolidayWork: !!holiday, isSundayWork: isSunday && !holiday });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Check-in failed";
       return err(message, 400);

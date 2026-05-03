@@ -60,6 +60,11 @@ export const queryKeys = {
     documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
     candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,
     rolloutDocuments: (candidateId: number) => [...base, "hr", "rolloutDocuments", candidateId] as const,
+    salaryRevisionHistory: (userId: string) => [...base, "hr", "salaryRevisionHistory", userId] as const,
+    holidayWorkRequests: (params?: Record<string, unknown>) => [...base, "hr", "holidayWorkRequests", params] as const,
+    compOffGrants: (userId?: string) => [...base, "hr", "compOffGrants", userId] as const,
+    lateArrivalWarnings: (userId?: string) => [...base, "hr", "lateArrivalWarnings", userId] as const,
+    overtimePreview: (params: { userId: string; month: string }) => [...base, "hr", "overtimePreview", params] as const,
   },
 
   leads: {

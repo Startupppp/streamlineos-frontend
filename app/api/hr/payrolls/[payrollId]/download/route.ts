@@ -56,10 +56,13 @@ export async function GET(
 
     const basic = parseFloat(payroll.basicSalary || "0");
     const hra = parseFloat(payroll.hra || "0");
-    const allowances = parseFloat(payroll.allowances || "0");
+    const specialAllowance = parseFloat((payroll as { specialAllowance?: string | null }).specialAllowance ?? "0");
+    const bonus = parseFloat(payroll.allowances || "0");
     const overtime = parseFloat(payroll.overtimeAmount || "0");
     const gross = parseFloat(payroll.grossSalary || "0");
-    const deductions = parseFloat(payroll.deductions || "0");
+    const lopAmount = parseFloat((payroll as { lopAmount?: string | null }).lopAmount ?? "0");
+    const ptAmount = parseFloat((payroll as { ptAmount?: string | null }).ptAmount ?? "200");
+    const advanceRecovery = parseFloat((payroll as { advanceRecoveryAmount?: string | null }).advanceRecoveryAmount ?? "0");
     const net = parseFloat(payroll.netSalary || "0");
 
     const orgAddress = org?.address;
@@ -72,8 +75,6 @@ export async function GET(
       ? "XXXX" + bank.accountNumber.slice(-4)
       : "—";
     const pfUan = bank?.pfUanNumber || null;
-    const professionalTax = 200;
-    const otherDeductions = deductions - professionalTax;
     const joiningDate = employee?.joiningDate
       ? format(new Date(employee.joiningDate), "dd MMM yyyy")
       : "—";
@@ -242,15 +243,16 @@ export async function GET(
             <td>Basic Salary</td>
             <td>${fmt(payroll.basicSalary)}</td>
             <td>Professional Tax</td>
-            <td class="deduction">${professionalTax > 0 ? fmt(String(professionalTax)) : "—"}</td>
+            <td class="deduction">${ptAmount > 0 ? fmt(String(ptAmount)) : "—"}</td>
           </tr>
-          ${hra > 0 ? `<tr><td>House Rent Allowance (HRA)</td><td>${fmt(payroll.hra)}</td>${otherDeductions > 0 ? `<td>Other Deductions</td><td class="deduction">${fmt(String(otherDeductions))}</td>` : `<td></td><td></td>`}</tr>` : ""}
-          ${allowances > 0 ? `<tr><td>Special Allowance</td><td>${fmt(payroll.allowances)}</td><td></td><td></td></tr>` : ""}
-          ${overtime > 0 ? `<tr><td>Overtime (${payroll.overtimeDays ?? 0} days / ${payroll.overtimeHours ?? 0} hrs)</td><td>${fmt(payroll.overtimeAmount)}</td><td></td><td></td></tr>` : ""}
+          ${hra > 0 ? `<tr><td>House Rent Allowance (HRA)</td><td>${fmt(payroll.hra)}</td><td>${lopAmount > 0 ? "Loss of Pay" : ""}</td><td class="deduction">${lopAmount > 0 ? fmt(String(lopAmount)) : ""}</td></tr>` : ""}
+          ${specialAllowance > 0 ? `<tr><td>Special Allowance</td><td>${fmt(String(specialAllowance))}</td><td>${advanceRecovery > 0 ? "Advance Recovery" : ""}</td><td class="deduction">${advanceRecovery > 0 ? fmt(String(advanceRecovery)) : ""}</td></tr>` : ""}
+          ${bonus > 0 ? `<tr><td>Bonus</td><td>${fmt(payroll.allowances)}</td><td></td><td></td></tr>` : ""}
+          ${overtime > 0 ? `<tr><td>Overtime (${payroll.overtimeDays ?? 0} days)</td><td>${fmt(payroll.overtimeAmount)}</td><td></td><td></td></tr>` : ""}
           <tr class="subtotal">
             <td>Gross Earnings</td>
             <td>${fmt(payroll.grossSalary)}</td>
-            <td>Net Deductions</td>
+            <td>Total Deductions</td>
             <td>${fmt(payroll.deductions)}</td>
           </tr>
         </tbody>

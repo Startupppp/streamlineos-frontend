@@ -4,6 +4,7 @@ import { appraisals } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { reopenAppraisalWorkflow } from "@/lib/hr/appraisal-workflow";
+import { notifyNewAppraisalAssignee, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";
 import type { NextRequest } from "next/server";
 
 export async function POST(
@@ -27,6 +28,8 @@ export async function POST(
     }
 
     await reopenAppraisalWorkflow(appraisalId, session.orgId, session.user.id);
+
+    scheduleAppraisalPipEmails(() => notifyNewAppraisalAssignee(appraisalId));
 
     const updated = await db.query.appraisals.findFirst({
       where: eq(appraisals.id, appraisalId),

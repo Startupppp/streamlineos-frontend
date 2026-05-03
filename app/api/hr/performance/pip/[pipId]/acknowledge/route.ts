@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { acknowledgePIPSchema } from "@/lib/validations/hr-pip";
+import { notifyPIPManagerAfterAcknowledge, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";
 import type { NextRequest } from "next/server";
 
 export async function POST(
@@ -36,6 +37,9 @@ export async function POST(
       where: eq(performanceImprovementPlans.id, pipId),
       with: { user: true, manager: true, hrRep: true, goals: true },
     });
+
+    scheduleAppraisalPipEmails(() => notifyPIPManagerAfterAcknowledge(pipId));
+
     return ok(updated);
   });
 }

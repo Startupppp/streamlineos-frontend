@@ -64,6 +64,18 @@ export function useCreateAppraisal() {
   });
 }
 
+export function usePatchAppraisalMeta(appraisalId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { outcomeNotes?: string | null; confidentialityNote?: string | null }) =>
+      apiClient.patch<unknown>(`/hr/performance/appraisals/${appraisalId}`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.detail(appraisalId) });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "appraisals"] });
+    },
+  });
+}
+
 export function usePatchAppraisalRatings(appraisalId: number) {
   const qc = useQueryClient();
   return useMutation({

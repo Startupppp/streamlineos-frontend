@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useAppraisals,
   useAppraisal,
@@ -8,9 +9,11 @@ import {
   useCompleteAppraisalStage,
   useCreateAppraisal,
   usePatchAppraisalRatings,
+  usePatchAppraisalMeta,
   useReopenAppraisal,
   useExportAppraisalPdf,
 } from "@/lib/api/hooks/hr";
+import { PIP_CREATE_PREFILL_STORAGE_KEY, type PipCreatePrefillPayload } from "@/lib/hr/pip-prefill-storage";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
@@ -37,7 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ClipboardList, Download, Plus, RefreshCw } from "lucide-react";
+import { AlertTriangle, ClipboardList, Download, Plus, RefreshCw } from "lucide-react";
 import type { Employee } from "@/types/hr";
 
 type AppraisalRow = {
@@ -67,6 +70,7 @@ type AppraisalDetail = AppraisalRow & {
 };
 
 export function AppraisalsTab() {
+  const router = useRouter();
   const { data: session } = useSession();
   const role = session?.user?.role ?? "";
   const admin = isAdminOrOwner(role) || role === "ADMIN";
@@ -78,6 +82,7 @@ export function AppraisalsTab() {
   useAppraisalCategories();
   const create = useCreateAppraisal();
   const patchRatings = usePatchAppraisalRatings(openId ?? 0);
+  const patchMeta = usePatchAppraisalMeta(openId ?? 0);
   const completeStage = useCompleteAppraisalStage(openId ?? 0);
   const reopen = useReopenAppraisal();
   const exportPdf = useExportAppraisalPdf();
@@ -100,6 +105,23 @@ export function AppraisalsTab() {
   const appraisals = (Array.isArray(list) ? list : []) as AppraisalRow[];
 
   const d = detail as AppraisalDetail | undefined;
+
+  const [outcomeDraft, setOutcomeDraft] = useState("");
+  const [confidentialityDraft, setConfidentialityDraft] = useState("");
+
+  useEffect(() => {
+    setOutcomeDraft(d?.outcomeNotes ?? "");
+    setConfidentialityDraft(d?.confidentialityNote ?? "");
+  }, [d?.outcomeNotes, d?.confidentialityNote, openId]);
+
+  const canEditMeta = admin || (!!d && session?.user?.id === d.reviewerId);
+  const canTriggerPip =
+    !!d && d.currentStage === "CLOSED" && canEditMeta && !!d.userId;
+  const hideManagerInputs =
+    !!d &&
+    session?.user?.id === d.userId &&
+    !!d.currentStage &&
+    !["EMPLOYEE_ACK", "CLOSED"].includes(d.currentStage);
 
   const ratingDraft = useMemo(() => {
     const m = new Map<number, { selfScore?: string; selfText?: string; managerScore?: string; managerComment?: string }>();
@@ -327,7 +349,7 @@ export function AppraisalsTab() {
                     <div key={r.id} className="rounded-md border p-2 space-y-2">
                       <p className="font-medium text-xs">{r.category?.name}</p>
                       {(rt === "NUMERIC" || rt === "BOTH") && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className={`grid gap-2 ${hideManagerInputs ? "grid-cols-1" : "grid-cols-2"}`}>
                           <div>
                             <Label className="text-[10px]">Self 1–5</Label>
                             <Input
@@ -338,16 +360,18 @@ export function AppraisalsTab() {
                               max={5}
                             />
                           </div>
-                          <div>
-                            <Label className="text-[10px]">Mgr 1–5</Label>
-                            <Input
-                              value={loc.managerScore ?? ""}
-                              onChange={(e) => updateLocal(r.categoryId, "managerScore", e.target.value)}
-                              type="number"
-                              min={1}
-                              max={5}
-                            />
-                          </div>
+                          {!hideManagerInputs && (
+                            <div>
+                              <Label className="text-[10px]">Mgr 1–5</Label>
+                              <Input
+                                value={loc.managerScore ?? ""}
+                                onChange={(e) => updateLocal(r.categoryId, "managerScore", e.target.value)}
+                                type="number"
+                                min={1}
+                                max={5}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                       {(rt === "TEXT" || rt === "BOTH") && (
@@ -359,19 +383,65 @@ export function AppraisalsTab() {
                             value={loc.selfText ?? ""}
                             onChange={(e) => updateLocal(r.categoryId, "selfText", e.target.value)}
                           />
-                          <Label className="text-[10px]">Manager text</Label>
-                          <Textarea
-                            rows={2}
-                            className="text-xs"
-                            value={loc.managerComment ?? ""}
-                            onChange={(e) => updateLocal(r.categoryId, "managerComment", e.target.value)}
-                          />
+                          {!hideManagerInputs && (
+                            <>
+                              <Label className="text-[10px]">Manager text</Label>
+                              <Textarea
+                                rows={2}
+                                className="text-xs"
+                                value={loc.managerComment ?? ""}
+                                onChange={(e) => updateLocal(r.categoryId, "managerComment", e.target.value)}
+                              />
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
                   );
                 })}
               </div>
+
+              {canEditMeta && (
+                <div className="space-y-3 border-t pt-3">
+                  <p className="text-xs font-medium">Outcome & confidentiality (placeholders)</p>
+                  <div>
+                    <Label className="text-[10px]">Outcome notes (Q16 placeholder)</Label>
+                    <Textarea
+                      rows={3}
+                      className="text-xs mt-1"
+                      value={outcomeDraft}
+                      onChange={(e) => setOutcomeDraft(e.target.value)}
+                      placeholder="Free-text outcomes, recommendations, etc."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Confidentiality note (Q18 placeholder)</Label>
+                    <Textarea
+                      rows={2}
+                      className="text-xs mt-1"
+                      value={confidentialityDraft}
+                      onChange={(e) => setConfidentialityDraft(e.target.value)}
+                      placeholder="Visibility rules pending — capture context for HR."
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!openId || patchMeta.isPending}
+                    onClick={() =>
+                      patchMeta.mutate(
+                        { outcomeNotes: outcomeDraft || null, confidentialityNote: confidentialityDraft || null },
+                        {
+                          onSuccess: () => toast.success("Appraisal notes saved"),
+                          onError: (e) => toast.error(getErrorMessage(e)),
+                        }
+                      )
+                    }
+                  >
+                    Save notes
+                  </Button>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-2 border-t pt-3">
                 {d.currentStage === "SELF_REVIEW" && session?.user?.id === d.userId && (
@@ -424,6 +494,29 @@ export function AppraisalsTab() {
                   >
                     <RefreshCw className="h-3.5 w-3.5 mr-1" />
                     Reopen
+                  </Button>
+                )}
+                {canTriggerPip && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const payload: PipCreatePrefillPayload = {
+                        userId: d.userId,
+                        linkedAppraisalId: d.id,
+                      };
+                      try {
+                        sessionStorage.setItem(PIP_CREATE_PREFILL_STORAGE_KEY, JSON.stringify(payload));
+                      } catch {
+                        /* ignore */
+                      }
+                      router.replace(`?tab=pip`);
+                      setOpenId(null);
+                      toast.message("Open PIP tab — form is pre-filled from this appraisal.");
+                    }}
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                    Trigger PIP
                   </Button>
                 )}
                 {admin && (

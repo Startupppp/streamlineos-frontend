@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Eye } from "lucide-react";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
 import { PayslipDetailSheet, type PayslipPreview } from "./payslip-detail-sheet";
+import type { OvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
 
 interface GeneratePayrollSheetProps {
   open: boolean;
@@ -31,14 +31,7 @@ interface GeneratePayrollSheetProps {
   onBonusChange: (value: string) => void;
   otherDeductions: string;
   onOtherDeductionsChange: (value: string) => void;
-  overtimeType: string;
-  onOvertimeTypeChange: (value: string) => void;
-  overtimeDays: string;
-  onOvertimeDaysChange: (value: string) => void;
-  overtimeHours: string;
-  onOvertimeHoursChange: (value: string) => void;
-  overtimeAmount: string;
-  onOvertimeAmountChange: (value: string) => void;
+  overtimePreview: OvertimePreview | null | undefined;
   payslipPreview: PayslipPreview | null;
   selectedEmployeeData: Employee | null;
   selectedMonth: string;
@@ -63,14 +56,7 @@ export function GeneratePayrollSheet({
   onBonusChange,
   otherDeductions,
   onOtherDeductionsChange,
-  overtimeType,
-  onOvertimeTypeChange,
-  overtimeDays,
-  onOvertimeDaysChange,
-  overtimeHours,
-  onOvertimeHoursChange,
-  overtimeAmount,
-  onOvertimeAmountChange,
+  overtimePreview,
   payslipPreview,
   selectedEmployeeData,
   selectedMonth,
@@ -98,14 +84,9 @@ export function GeneratePayrollSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Generate Payslip"
-      description="Select an employee and adjust attendance, overtime, and bonus before previewing."
+      description="Select an employee and adjust attendance and bonus before previewing."
       onSubmit={onShowPreview}
-      submitLabel={
-        <>
-          <Eye className="h-4 w-4 mr-1.5" />
-          Preview Payslip
-        </>
-      }
+      submitLabel="Preview Payslip"
       isPending={false}
     >
       <div className="space-y-1.5">
@@ -188,63 +169,37 @@ export function GeneratePayrollSheet({
             </div>
           </div>
 
-          <Separator />
-
-          <div className="space-y-3">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              Overtime
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Overtime Type</label>
-                <Select value={overtimeType} onValueChange={onOvertimeTypeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="days">Days</SelectItem>
-                    <SelectItem value="hours">Hours</SelectItem>
-                  </SelectContent>
-                </Select>
+          {overtimePreview != null && (
+            <>
+              <Separator />
+              <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1 text-sm">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  Auto-Detected Overtime
+                </p>
+                {overtimePreview.overtimeDays > 0 ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Eligible days</span>
+                      <span className="font-medium">{overtimePreview.overtimeDays}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Daily rate</span>
+                      <span className="font-medium">₹{overtimePreview.dailyRate.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">OT amount</span>
+                      <span className="font-semibold text-green-700">+₹{overtimePreview.overtimeAmount.toLocaleString("en-IN")}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground pt-1">
+                      Dates: {overtimePreview.eligibleDates.join(", ")}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-xs">No approved holiday/Sunday work with extra pay found for this month.</p>
+                )}
               </div>
-              {overtimeType === "days" && (
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Overtime Days</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={overtimeDays}
-                    onChange={(e) => onOvertimeDaysChange(e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-              {overtimeType === "hours" && (
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Overtime Hours</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={overtimeHours}
-                    onChange={(e) => onOvertimeHoursChange(e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-            </div>
-            {overtimeType && (
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Overtime Amount (₹)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={overtimeAmount}
-                  onChange={(e) => onOvertimeAmountChange(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </>
       )}
     </HrSheet>

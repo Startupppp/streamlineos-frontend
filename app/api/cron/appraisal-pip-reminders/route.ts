@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 import { logger } from "@/lib/logger";
+import {
+  sendAppraisalDueRemindersForTomorrow,
+  sendPIPCheckInDueRemindersForTomorrow,
+} from "@/lib/email/hr-appraisal-pip";
 
-/** Placeholder: M5 wires email reminders (Q35) — 1 day before stage/check-in due. */
+/** Q35 — 1 day before appraisal stage due + PIP check-in due. */
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
@@ -10,7 +14,13 @@ export async function GET(request: NextRequest) {
   if (dupeCheck) return dupeCheck;
 
   try {
-    return NextResponse.json({ success: true, message: "Reminder scan scheduled (no-op until M5 email wiring)." });
+    const appraisalReminders = await sendAppraisalDueRemindersForTomorrow();
+    const pipReminders = await sendPIPCheckInDueRemindersForTomorrow();
+    return NextResponse.json({
+      success: true,
+      appraisalRemindersSent: appraisalReminders.sent,
+      pipCheckInRemindersSent: pipReminders.sent,
+    });
   } catch (error) {
     logger.error("appraisal-pip-reminders failed", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

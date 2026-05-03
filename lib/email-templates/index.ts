@@ -56,6 +56,15 @@ export {
   getManagerReviewReminderEmail,
   getReviewPublishedEmail,
   getGoalSettingReminderEmail,
+  getAppraisalStageAssignedEmail,
+  getAppraisalFinalApprovedEmail,
+  getAppraisalDueReminderEmail,
+  getPIPCheckInDueReminderEmail,
+  getPIPInitiatedEmail,
+  getPIPManagerActivatedEmail,
+  getPIPSuccessEmail,
+  getPIPFailedEmail,
+  getPIPExtendedEmail,
 } from "./appraisal";
 
 export {

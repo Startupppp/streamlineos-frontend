@@ -120,3 +120,183 @@ export function getGoalSettingReminderEmail(
     content,
   });
 }
+
+export function getAppraisalStageAssignedEmail(
+  recipientName: string,
+  stageLabel: string,
+  employeeName: string,
+  actionUrl: string
+): string {
+  const rn = escapeHtml(recipientName);
+  const sl = escapeHtml(stageLabel);
+  const en = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">Appraisal action required</h2>
+    <p class="email-text">Hi <strong>${rn}</strong>,</p>
+    <p class="email-text">
+      You have a pending <strong>${sl}</strong> for <strong>${en}</strong> in Vaivamm Capital HR.
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${actionUrl}" class="email-button">Open appraisal</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: `Appraisal: ${stageLabel}`,
+    preheader: `Action required — ${stageLabel} for ${employeeName}`,
+    content,
+  });
+}
+
+export function getAppraisalFinalApprovedEmail(
+  recipientName: string,
+  employeeName: string,
+  cycleLabel: string,
+  actionUrl: string
+): string {
+  const rn = escapeHtml(recipientName);
+  const en = escapeHtml(employeeName);
+  const cl = escapeHtml(cycleLabel);
+  const content = `
+    <h2 class="email-title">Appraisal finalized</h2>
+    <p class="email-text">Hi <strong>${rn}</strong>,</p>
+    <p class="email-text">
+      The appraisal for <strong>${en}</strong> (${cl}) has been fully approved and is ready for acknowledgement / viewing.
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${actionUrl}" class="email-button">View appraisal</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: `Appraisal finalized — ${employeeName}`,
+    preheader: `Appraisal approved for ${employeeName}`,
+    content,
+  });
+}
+
+export function getPIPInitiatedEmail(employeeName: string, pipUrl: string): string {
+  const n = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">Performance Improvement Plan</h2>
+    <p class="email-text">Hi <strong>${n}</strong>,</p>
+    <p class="email-text">
+      A PIP has been initiated outlining areas of improvement, goals, and timelines. Please review and acknowledge.
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${pipUrl}" class="email-button">Review PIP</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: "Performance Improvement Plan initiated",
+    preheader: "Please review and acknowledge your PIP",
+    content,
+  });
+}
+
+export function getPIPManagerActivatedEmail(managerName: string, employeeName: string, pipUrl: string): string {
+  const mn = escapeHtml(managerName);
+  const en = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">PIP activated</h2>
+    <p class="email-text">Hi <strong>${mn}</strong>,</p>
+    <p class="email-text">
+      PIP for <strong>${en}</strong> has been activated. Begin monitoring and schedule check-ins.
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${pipUrl}" class="email-button">Open PIP</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: `PIP activated — ${employeeName}`,
+    preheader: `PIP for ${employeeName} is active`,
+    content,
+  });
+}
+
+export function getPIPSuccessEmail(employeeName: string): string {
+  const n = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">PIP successfully completed</h2>
+    <p class="email-text">Hi <strong>${n}</strong>,</p>
+    <p class="email-text">Congratulations! You have successfully met the objectives of your PIP.</p>
+  `;
+  return getEmailTemplate({
+    title: "PIP completed",
+    preheader: "You have successfully completed your PIP",
+    content,
+  });
+}
+
+export function getPIPFailedEmail(employeeName: string): string {
+  const n = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">PIP outcome — not successful</h2>
+    <p class="email-text">Hi <strong>${n}</strong>,</p>
+    <p class="email-text">
+      The PIP has concluded without meeting required expectations. Further action will be communicated.
+    </p>
+  `;
+  return getEmailTemplate({
+    title: "PIP not successful",
+    preheader: "PIP concluded without meeting expectations",
+    content,
+  });
+}
+
+export function getPIPExtendedEmail(employeeName: string): string {
+  const n = escapeHtml(employeeName);
+  const content = `
+    <h2 class="email-title">PIP extended</h2>
+    <p class="email-text">Hi <strong>${n}</strong>,</p>
+    <p class="email-text">Your PIP duration has been extended to allow additional time for improvement.</p>
+  `;
+  return getEmailTemplate({
+    title: "PIP extended",
+    preheader: "Your PIP has been extended",
+    content,
+  });
+}
+
+export function getPIPCheckInDueReminderEmail(
+  recipientName: string,
+  dueDate: string,
+  url: string
+): string {
+  const rn = escapeHtml(recipientName);
+  const dd = escapeHtml(dueDate);
+  const content = `
+    <h2 class="email-title">Reminder: PIP check-in due soon</h2>
+    <p class="email-text">Hi <strong>${rn}</strong>,</p>
+    <p class="email-text">
+      A PIP check-in is due by <strong>${dd}</strong> (1 day remaining). Please complete your part in the portal.
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${url}" class="email-button">Open PIP</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: `PIP check-in due ${dueDate}`,
+    preheader: "Performance Improvement Plan check-in reminder",
+    content,
+  });
+}
+
+export function getAppraisalDueReminderEmail(recipientName: string, stageLabel: string, dueDate: string, url: string): string {
+  const rn = escapeHtml(recipientName);
+  const sl = escapeHtml(stageLabel);
+  const dd = escapeHtml(dueDate);
+  const content = `
+    <h2 class="email-title">Reminder: appraisal due soon</h2>
+    <p class="email-text">Hi <strong>${rn}</strong>,</p>
+    <p class="email-text">
+      Your <strong>${sl}</strong> is due by <strong>${dd}</strong> (1 day remaining).
+    </p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${url}" class="email-button">Complete now</a>
+    </div>
+  `;
+  return getEmailTemplate({
+    title: `Due tomorrow: ${stageLabel}`,
+    preheader: `Appraisal stage due ${dueDate}`,
+    content,
+  });
+}

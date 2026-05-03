@@ -10,7 +10,9 @@ import {
   useGenerateEmployeePayslip,
   useApprovePayroll,
   useMarkPayrollPaid,
+  useHrSalaryStructures,
 } from "@/lib/api/hooks/hr";
+import { useOvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -68,13 +70,13 @@ export default function PayrollPage() {
   const [halfDays, setHalfDays] = useState<string>("");
   const [otherDeductions, setOtherDeductions] = useState<string>("");
   const [bonus, setBonus] = useState<string>("");
-  const [overtimeType, setOvertimeType] = useState<string>("");
-  const [overtimeDays, setOvertimeDays] = useState<string>("");
-  const [overtimeHours, setOvertimeHours] = useState<string>("");
-  const [overtimeAmount, setOvertimeAmount] = useState<string>("");
 
   const { data: allPayrolls, isLoading } = useHrAllPayrolls({ month: selectedMonth });
   const { data: employeesRaw } = useHrEmployees();
+  const { data: salaryStructures } = useHrSalaryStructures(selectedEmployee || undefined);
+  const { data: overtimePreview } = useOvertimePreview(
+    { userId: selectedEmployee, month: selectedMonth },
+  );
 
   const employees = useMemo(
     () =>
@@ -83,6 +85,12 @@ export default function PayrollPage() {
         : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
     [employeesRaw]
   );
+
+  const activeSalary = useMemo(() => {
+    if (!salaryStructures) return null;
+    const list = Array.isArray(salaryStructures) ? salaryStructures : [];
+    return list.find((s) => s.isActive) ?? null;
+  }, [salaryStructures]);
 
   const generatePayrollMutation = useGeneratePayroll();
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
@@ -98,6 +106,7 @@ export default function PayrollPage() {
     if (!selectedEmployeeData) return null;
 
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
+    const otAmt = overtimePreview?.overtimeAmount ?? 0;
 
     return buildPayslipPreviewFromEmployee({
       monthlySalary,
@@ -106,22 +115,24 @@ export default function PayrollPage() {
       halfDays: parseFloat(halfDays) || 0,
       otherDeductions: parseFloat(otherDeductions) || 0,
       bonus: parseFloat(bonus) || 0,
-      overtimeAmount: parseFloat(overtimeAmount) || 0,
-      overtimeType,
-      overtimeDays: parseFloat(overtimeDays) || 0,
-      overtimeHours: parseFloat(overtimeHours) || 0,
+      overtimeAmount: otAmt,
+      overtimeType: otAmt > 0 ? "days" : "",
+      overtimeDays: overtimePreview?.overtimeDays ?? 0,
+      overtimeHours: 0,
+      basicSalary: activeSalary ? parseFloat(activeSalary.basicSalary) : undefined,
+      hraPercentage: activeSalary ? parseFloat(activeSalary.hraPercentage ?? "50") : undefined,
+      allowances: activeSalary ? parseFloat(activeSalary.specialAllowance ?? "0") : undefined,
       salaryStructureDeductions: 0,
     });
   }, [
     selectedEmployeeData,
+    selectedMonth,
     lopDays,
     halfDays,
     otherDeductions,
     bonus,
-    overtimeType,
-    overtimeDays,
-    overtimeHours,
-    overtimeAmount,
+    overtimePreview,
+    activeSalary,
   ]);
 
   const resetSheet = () => {
@@ -132,10 +143,6 @@ export default function PayrollPage() {
     setHalfDays("");
     setOtherDeductions("");
     setBonus("");
-    setOvertimeType("");
-    setOvertimeDays("");
-    setOvertimeHours("");
-    setOvertimeAmount("");
   };
 
   const handleGenerateAll = useCallback(() => {
@@ -169,13 +176,6 @@ export default function PayrollPage() {
         halfDays: parseFloat(halfDays) || 0,
         otherDeductions: parseFloat(otherDeductions) || 0,
         bonus: parseFloat(bonus) || 0,
-        overtimeType:
-          overtimeType === "days" || overtimeType === "hours"
-            ? overtimeType
-            : undefined,
-        overtimeDays: parseFloat(overtimeDays) || 0,
-        overtimeHours: parseFloat(overtimeHours) || 0,
-        overtimeAmount: parseFloat(overtimeAmount) || 0,
       },
       {
         onSuccess: () => {
@@ -186,7 +186,7 @@ export default function PayrollPage() {
         onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
-  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount, qc]);
+  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, qc]);
 
   const handleApprovePayroll = useCallback((payrollId: number) => {
     approvePayrollMutation.mutate(
@@ -324,14 +324,7 @@ export default function PayrollPage() {
             onBonusChange={setBonus}
             otherDeductions={otherDeductions}
             onOtherDeductionsChange={setOtherDeductions}
-            overtimeType={overtimeType}
-            onOvertimeTypeChange={setOvertimeType}
-            overtimeDays={overtimeDays}
-            onOvertimeDaysChange={setOvertimeDays}
-            overtimeHours={overtimeHours}
-            onOvertimeHoursChange={setOvertimeHours}
-            overtimeAmount={overtimeAmount}
-            onOvertimeAmountChange={setOvertimeAmount}
+            overtimePreview={selectedEmployee ? overtimePreview : null}
             payslipPreview={payslipPreview}
             selectedEmployeeData={selectedEmployeeData}
             selectedMonth={selectedMonth}

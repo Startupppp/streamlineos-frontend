@@ -166,8 +166,10 @@ export interface SalaryStructure {
   userId: string;
   basicSalary: string;
   hraPercentage: string | null;
+  specialAllowance: string | null;
   allowances: string | null;
   deductions: string | null;
+  professionalTax: string | null;
   effectiveFrom: string;
   effectiveTo: string | null;
   isActive: boolean | null;
