@@ -256,7 +256,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       return;
     }
     const payload = {
-      title: form.title,
+      title: trimmedTitle,
       description: form.description || undefined,
       location: form.location || undefined,
       startDate: startDate.toISOString(),
