@@ -7,7 +7,7 @@ import {
 import { z } from "zod";
 
 const updateSchema = z.object({
-  title: z.string().min(1).optional(),
+  title: z.string().min(5, "Title must be at least 5 characters").optional(),
   description: z.string().nullable().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),

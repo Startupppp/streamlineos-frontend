@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { format, parseISO, addHours } from "date-fns";
 import {
   Sheet,
@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Check, Video, Loader2 } from "lucide-react";
+import { Check, Video, Loader2, Search } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
   useCreateCalendarEvent,
@@ -124,11 +124,15 @@ interface EventCreateDialogProps {
   event?: CalendarListItem | null;
 }
 
+const TITLE_MIN = 5;
+
 export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: EventCreateDialogProps) {
   const isEdit = !!event;
   const [form, setForm] = useState<FormState>(() =>
     isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot)
   );
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [attendeeSearch, setAttendeeSearch] = useState("");
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
@@ -138,6 +142,8 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   useEffect(() => {
     if (open) {
       setForm(isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot));
+      setTitleError(null);
+      setAttendeeSearch("");
     }
   }, [open, defaultSlot, event, isEdit]);
 
@@ -175,6 +181,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   }, [createMeet, set]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitleError(null);
     set("title", e.target.value);
   }, [set]);
 
@@ -214,11 +221,30 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
     set("color", v);
   }, [set]);
 
+  const filteredMembers = useMemo(() => {
+    const q = attendeeSearch.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((m) => {
+      const name = getMemberName(m).toLowerCase();
+      const mail = (m.email || "").toLowerCase();
+      return name.includes(q) || mail.includes(q);
+    });
+  }, [members, attendeeSearch]);
+
   const handleSave = useCallback(async () => {
-    if (!form.title.trim()) {
+    const trimmedTitle = form.title.trim();
+    if (!trimmedTitle) {
       toast.error("Event title is required");
+      setTitleError("Title is required");
       return;
     }
+    if (trimmedTitle.length < TITLE_MIN) {
+      const msg = `Title must be at least ${TITLE_MIN} characters`;
+      toast.error(msg);
+      setTitleError(msg);
+      return;
+    }
+    setTitleError(null);
     const startDate = form.allDay
       ? parseISO(`${form.startDate}T12:00:00`)
       : parseISO(`${form.startDate}T${form.startTime}`);
@@ -280,10 +306,17 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                 id="ev-title"
                 value={form.title}
                 onChange={handleTitleChange}
-                placeholder="Event title"
-                className="h-9"
+                placeholder="Event title (min. 5 characters)"
+                className={cn("h-9", titleError && "border-destructive focus-visible:ring-destructive")}
                 autoFocus
+                aria-invalid={!!titleError}
+                aria-describedby={titleError ? "ev-title-error" : undefined}
               />
+              {titleError && (
+                <p id="ev-title-error" className="text-[11px] text-destructive">
+                  {titleError}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -422,29 +455,44 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
 
             {members.length > 0 && (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <Label className="text-xs font-medium">Attendees</Label>
                   {form.attendeeIds.length > 0 && (
-                    <Badge variant="secondary" className="text-[11px]">
+                    <Badge variant="secondary" className="text-[11px] shrink-0">
                       {form.attendeeIds.length} selected
                     </Badge>
                   )}
                 </div>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={attendeeSearch}
+                    onChange={(e) => setAttendeeSearch(e.target.value)}
+                    placeholder="Search by name or email..."
+                    className="h-9 pl-8 text-sm"
+                    aria-label="Search attendees"
+                  />
+                </div>
                 <div className="rounded-lg border bg-muted/30 p-1 space-y-0.5 max-h-48 overflow-y-auto">
-                  {members.map((member) => {
-                    const name = getMemberName(member);
-                    const selected = form.attendeeIds.includes(member.id);
-                    return (
-                      <AttendeeRow
-                        key={member.id}
-                        memberId={member.id}
-                        name={name}
-                        image={member.image}
-                        selected={selected}
-                        onToggle={toggleAttendee}
-                      />
-                    );
-                  })}
+                  {filteredMembers.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-3 px-2">No matching people</p>
+                  ) : (
+                    filteredMembers.map((member) => {
+                      const name = getMemberName(member);
+                      const selected = form.attendeeIds.includes(member.id);
+                      return (
+                        <AttendeeRow
+                          key={member.id}
+                          memberId={member.id}
+                          name={name}
+                          email={member.email}
+                          image={member.image}
+                          selected={selected}
+                          onToggle={toggleAttendee}
+                        />
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -455,7 +503,11 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
           <Button variant="outline" className="flex-1" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button className="flex-1" onClick={handleSave} disabled={isPending || !form.title.trim()}>
+          <Button
+            className="flex-1"
+            onClick={handleSave}
+            disabled={isPending || form.title.trim().length < TITLE_MIN}
+          >
             {isPending
               ? (isEdit ? "Saving..." : "Creating...")
               : (isEdit ? "Save Changes" : "Create Event")}
@@ -469,12 +521,13 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
 interface AttendeeRowProps {
   memberId: string;
   name: string;
+  email?: string;
   image: string | null | undefined;
   selected: boolean;
   onToggle: (id: string) => void;
 }
 
-function AttendeeRow({ memberId, name, image, selected, onToggle }: AttendeeRowProps) {
+function AttendeeRow({ memberId, name, email, image, selected, onToggle }: AttendeeRowProps) {
   const handleClick = useCallback(() => {
     onToggle(memberId);
   }, [memberId, onToggle]);
@@ -492,7 +545,12 @@ function AttendeeRow({ memberId, name, image, selected, onToggle }: AttendeeRowP
         <AvatarImage src={resolveImageUrl(image)} />
         <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
       </Avatar>
-      <span className={cn("flex-1 truncate text-sm", selected && "font-medium")}>{name}</span>
+      <span className="flex-1 min-w-0 text-left">
+        <span className={cn("block truncate text-sm", selected && "font-medium")}>{name}</span>
+        {email ? (
+          <span className="block truncate text-[10px] text-muted-foreground">{email}</span>
+        ) : null}
+      </span>
       <div className={cn(
         "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0",
         selected ? "border-gold bg-gold" : "border-muted-foreground/30"

@@ -13,7 +13,7 @@ const getSchema = z.object({
 });
 
 const postSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().optional(),
   location: z.string().optional(),
   startDate: z.string(),
