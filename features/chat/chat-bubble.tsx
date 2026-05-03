@@ -17,6 +17,9 @@ import {
   getFileColor,
   isImageMime,
   resolveFileUrl,
+  isOfficeLikeFileName,
+  getAttachmentDownloadHref,
+  fetchSignedFileUrlForOpen,
 } from "./chat-helpers";
 import { EmojiGrid } from "./emoji-grid";
 import type { Message } from "./chat-types";
@@ -70,6 +73,19 @@ export function ChatBubble({
     navigator.clipboard.writeText(message.content!);
     toast.success("Copied");
   }, [message.content]);
+
+  const handleOpenOfficeFile = useCallback(async (fileUrl: string, mimeType: string) => {
+    try {
+      const signed = await fetchSignedFileUrlForOpen(fileUrl, mimeType);
+      if (signed) {
+        window.open(signed, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("Could not open file");
+      }
+    } catch {
+      toast.error("Could not open file");
+    }
+  }, []);
 
   if (message.isDeleted) {
     return (
@@ -190,39 +206,89 @@ export function ChatBubble({
                     </a>
                   ) : (() => {
                     const colors = getFileColor(att.fileName);
+                    const downloadHref = getAttachmentDownloadHref(att.fileUrl, att.mimeType);
+                    const office = isOfficeLikeFileName(att.fileName);
                     return (
-                      <a
+                      <div
                         key={att.id}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors",
+                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border",
                           isOwn
-                            ? "bg-white/10 border-white/15 hover:bg-white/20"
-                            : "bg-background border-border/50 hover:bg-muted/30 shadow-sm"
+                            ? "bg-white/10 border-white/15"
+                            : "bg-background border-border/50 shadow-sm"
                         )}
                       >
-                        <div className={cn(
-                          "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
-                          isOwn ? "bg-white/15" : colors.bg
-                        )}>
+                        <div
+                          className={cn(
+                            "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
+                            isOwn ? "bg-white/15" : colors.bg
+                          )}
+                        >
                           <FileText className={cn("h-4 w-4", isOwn ? "text-white/80" : colors.text)} />
-                          <span className={cn(
-                            "text-[6px] font-bold text-white px-1 rounded mt-0.5",
-                            isOwn ? "bg-white/30" : colors.badge
-                          )}>
+                          <span
+                            className={cn(
+                              "text-[6px] font-bold text-white px-1 rounded mt-0.5",
+                              isOwn ? "bg-white/30" : colors.badge
+                            )}
+                          >
                             {getFileExt(att.fileName)}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[12px] font-semibold truncate max-w-[180px]">{att.fileName}</p>
-                          <p className={cn("text-[10px] mt-0.5", isOwn ? "text-white/60" : "text-muted-foreground")}>
+                          <p className="text-[12px] font-semibold truncate max-w-[160px]">{att.fileName}</p>
+                          <p
+                            className={cn(
+                              "text-[10px] mt-0.5",
+                              isOwn ? "text-white/60" : "text-muted-foreground"
+                            )}
+                          >
                             {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
                           </p>
                         </div>
-                        <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-white/50" : "text-muted-foreground/50")} />
-                      </a>
+                        {office ? (
+                          <div className="flex flex-col gap-1 shrink-0 items-stretch">
+                            <a
+                              href={downloadHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={att.fileName}
+                              className={cn(
+                                "text-[10px] font-semibold px-2 py-1 rounded-md text-center border transition-colors",
+                                isOwn
+                                  ? "border-white/25 text-white hover:bg-white/15"
+                                  : "border-border bg-muted/40 hover:bg-muted/70 text-foreground"
+                              )}
+                            >
+                              Download
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenOfficeFile(att.fileUrl, att.mimeType)}
+                              className={cn(
+                                "text-[10px] font-semibold px-2 py-1 rounded-md text-center border transition-colors",
+                                isOwn
+                                  ? "border-white/25 text-white hover:bg-white/15"
+                                  : "border-border bg-muted/40 hover:bg-muted/70 text-foreground"
+                              )}
+                            >
+                              Open
+                            </button>
+                          </div>
+                        ) : (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "shrink-0 p-1.5 rounded-md transition-colors",
+                              isOwn ? "hover:bg-white/15" : "hover:bg-muted/50"
+                            )}
+                            aria-label="Download or open file"
+                          >
+                            <ArrowDown className={cn("h-4 w-4", isOwn ? "text-white/50" : "text-muted-foreground/50")} />
+                          </a>
+                        )}
+                      </div>
                     );
                   })();
                 })}
