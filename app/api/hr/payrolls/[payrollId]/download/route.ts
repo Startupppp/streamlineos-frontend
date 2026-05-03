@@ -56,13 +56,13 @@ export async function GET(
 
     const basic = parseFloat(payroll.basicSalary || "0");
     const hra = parseFloat(payroll.hra || "0");
-    const specialAllowance = parseFloat((payroll as { specialAllowance?: string | null }).specialAllowance ?? "0");
+    const specialAllowance = parseFloat(payroll.specialAllowance ?? "0");
     const bonus = parseFloat(payroll.allowances || "0");
     const overtime = parseFloat(payroll.overtimeAmount || "0");
     const gross = parseFloat(payroll.grossSalary || "0");
-    const lopAmount = parseFloat((payroll as { lopAmount?: string | null }).lopAmount ?? "0");
-    const ptAmount = parseFloat((payroll as { ptAmount?: string | null }).ptAmount ?? "200");
-    const advanceRecovery = parseFloat((payroll as { advanceRecoveryAmount?: string | null }).advanceRecoveryAmount ?? "0");
+    const lopAmount = parseFloat(payroll.lopAmount ?? "0");
+    const ptAmount = parseFloat(payroll.ptAmount ?? "200");
+    const advanceRecovery = parseFloat(payroll.advanceRecoveryAmount ?? "0");
     const net = parseFloat(payroll.netSalary || "0");
 
     const orgAddress = org?.address;

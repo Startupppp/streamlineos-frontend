@@ -1427,6 +1427,11 @@ export const departmentMembersRelations = relations(departmentMembers, ({ one })
   }),
 }));
 
+export const attendanceRelations = relations(attendance, ({ one }) => ({
+  user: one(users, { fields: [attendance.userId], references: [users.id] }),
+  holiday: one(holidays, { fields: [attendance.holidayId], references: [holidays.id] }),
+}));
+
 export const leaveRequestsRelations = relations(leaveRequests, ({ one }) => ({
   user: one(users, { fields: [leaveRequests.userId], references: [users.id] }),
   leaveType: one(leaveTypes, { fields: [leaveRequests.leaveTypeId], references: [leaveTypes.id] }),
@@ -2005,7 +2010,7 @@ export const holidayWorkRequests = pgTable("holiday_work_requests", {
   requestDate: date("request_date").notNull(),
   type: text("type").notNull(),
   holidayId: integer("holiday_id").references(() => holidays.id),
-  reason: text("reason").notNull(),
+  reason: text("reason"),
   compensationPreference: text("compensation_preference").notNull(),
   status: text("status").notNull().default("PENDING"),
   approvedBy: text("approved_by").references(() => users.id),

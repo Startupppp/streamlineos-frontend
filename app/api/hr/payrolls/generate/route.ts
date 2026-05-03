@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
 
     const basicSalary = parseFloat(salary.basicSalary ?? "0");
     const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
-    const specialAllowance = parseFloat((salary as { specialAllowance?: string | null }).specialAllowance ?? "0");
-    const ptAmount = parseFloat((salary as { professionalTax?: string | null }).professionalTax ?? String(PROFESSIONAL_TAX_INR));
+    const specialAllowance = parseFloat(salary.specialAllowance ?? "0");
+    const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
 
     const hra = roundInr((basicSalary * hraPercentage) / 100);
     const calDays = calendarDaysInMonth(body.month);

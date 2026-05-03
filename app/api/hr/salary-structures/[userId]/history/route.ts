@@ -12,11 +12,9 @@ export async function GET(
   return withAuth(async (session) => {
     const { userId } = await params;
 
-    const isAdmin = isAdminOrOwner(session.user.role);
-    if (!isAdmin && userId !== session.user.id) {
-      return err("Not authorized.", 403);
+    if (!isAdminOrOwner(session.user.role)) {
+      return err("Only admins can view salary revision history.", 403);
     }
-    if (!isAdmin) return err("Only admins can view salary revision history.", 403);
 
     const history = await db.query.salaryRevisionHistory.findMany({
       where: and(
