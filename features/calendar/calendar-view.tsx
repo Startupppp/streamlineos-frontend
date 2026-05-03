@@ -283,12 +283,12 @@ export function CalendarView() {
                   setCurrentDate(new Date(calYear, parseInt(v), 1))
                 }
               >
-                <SelectTrigger className="h-8 w-[110px] text-xs">
+                <SelectTrigger className="h-9 w-[128px] text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 min-w-[var(--radix-select-trigger-width)]">
                   {MONTHS.map((m, i) => (
-                    <SelectItem key={m} value={String(i)} className="text-xs">
+                    <SelectItem key={m} value={String(i)} className="text-sm py-2.5">
                       {m}
                     </SelectItem>
                   ))}
@@ -300,12 +300,19 @@ export function CalendarView() {
                   setCurrentDate(new Date(parseInt(v), calMonth, 1))
                 }
               >
-                <SelectTrigger className="h-8 w-[76px] text-xs">
+                <SelectTrigger
+                  className="h-9 min-w-[96px] w-[96px] text-sm font-medium tabular-nums"
+                  aria-label="Select year"
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-72 min-w-[var(--radix-select-trigger-width)]">
                   {yearOptions.map((y) => (
-                    <SelectItem key={y} value={String(y)} className="text-xs">
+                    <SelectItem
+                      key={y}
+                      value={String(y)}
+                      className="text-sm py-2.5 tabular-nums focus:bg-accent"
+                    >
                       {y}
                     </SelectItem>
                   ))}
