@@ -13,24 +13,29 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
+import { useChatInboxRealtime } from "@/features/chat/chat-inbox-realtime";
 import type { Channel } from "@/types/chat";
 
 function ChatNotifications({
   activeChannelId,
   currentUserId,
+  orgId,
 }: {
   activeChannelId: number | null;
   currentUserId: string | undefined;
+  orgId: string | undefined;
 }) {
   const { data: rawChannels } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
   useChatGlobalNotifications(channels, activeChannelId, currentUserId);
+  useChatInboxRealtime(orgId);
   return null;
 }
 
 export default function ChatPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const orgId = session?.orgId ?? undefined;
   const [activeChannelId, setActiveChannelId] = useState<number | null>(null);
   const [showMobileList, setShowMobileList] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
@@ -79,7 +84,11 @@ export default function ChatPage() {
 
   return (
     <ChatAblyProvider>
-      <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
+      <ChatNotifications
+        activeChannelId={activeChannelId}
+        currentUserId={currentUserId}
+        orgId={orgId}
+      />
     <div className="flex h-full w-full min-w-0 overflow-hidden bg-background">
 
       <div
