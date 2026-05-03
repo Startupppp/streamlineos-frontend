@@ -27,6 +27,7 @@ export {
 
 export {
   getLeaveRequestEmailTemplate,
+  getWfhRequestEmailTemplate,
   getLeaveStatusUpdateEmailTemplate,
   getLeaveCancellationEmailTemplate,
   getDocumentExpiryReminderEmailTemplate,

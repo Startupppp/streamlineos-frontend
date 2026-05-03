@@ -58,6 +58,61 @@ export function getLeaveRequestEmailTemplate(
   });
 }
 
+export function getWfhRequestEmailTemplate(
+  approverName: string,
+  employeeName: string,
+  wfhDate: string,
+  reason: string,
+  reviewUrl: string
+): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sApprover = escapeHtml(approverName);
+  const sReason = escapeHtml(reason || "—");
+  const content = `
+    <h2 class="email-title">🏠 New Work From Home Request</h2>
+    <p class="email-text">
+      Hi <strong>${sApprover}</strong>,
+    </p>
+    <p class="email-text">
+      <strong>${sEmployee}</strong> has requested to work from home and selected you as the approver.
+    </p>
+
+    <div class="credential-box">
+      <div class="credential-item">
+        <span class="credential-label">Employee:</span>
+        <span class="credential-value">${sEmployee}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">WFH date:</span>
+        <span class="credential-value">${escapeHtml(wfhDate)}</span>
+      </div>
+    </div>
+
+    <div style="background: #f8fafc; border-left: 4px solid #0f2b7f; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b; font-size: 14px;">Reason</p>
+      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${sReason}</p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${reviewUrl}" class="email-button">
+        Review WFH Request
+      </a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="email-text">
+      You can approve or reject this request from the Leaves &amp; WFH section in Vaivamm CRM.
+    </p>
+  `;
+
+  return getEmailTemplate({
+    title: `WFH Request: ${sEmployee} - Vaivamm Capital`,
+    preheader: `${sEmployee} requested WFH on ${wfhDate}`,
+    content,
+  });
+}
+
 export function getLeaveStatusUpdateEmailTemplate(
   employeeName: string,
   leaveType: string,

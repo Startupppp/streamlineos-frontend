@@ -1,10 +1,14 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody } from "@/lib/api/helpers";
 import { getWfhRequests } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { wfhRequests } from "@/lib/db/schema";
+import { wfhRequests, users } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
+import { sendWfhRequestEmail } from "@/lib/email/hr-leaves";
+import { createNotification } from "@/server/actions/create-notification";
+import { logger } from "@/lib/logger";
 
 const createWfhSchema = z.object({
   date: z.string(),
@@ -34,6 +38,57 @@ export async function POST(req: NextRequest) {
         status: "PENDING",
       })
       .returning();
+
+    const [approver, requester] = await Promise.all([
+      db.query.users.findFirst({
+        where: eq(users.id, body.approverId),
+        columns: { email: true, name: true, firstName: true, lastName: true },
+      }),
+      db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+        columns: { name: true, firstName: true, lastName: true },
+      }),
+    ]);
+
+    const employeeName =
+      requester?.name ||
+      `${requester?.firstName ?? ""} ${requester?.lastName ?? ""}`.trim() ||
+      session.user.name ||
+      "An employee";
+
+    const dateLabel = formatDateOnly(body.date);
+
+    if (approver?.email) {
+      const approverName =
+        approver.name ||
+        `${approver.firstName ?? ""} ${approver.lastName ?? ""}`.trim() ||
+        "Approver";
+      void sendWfhRequestEmail(
+        approver.email,
+        approverName,
+        employeeName,
+        dateLabel,
+        body.reason ?? ""
+      ).catch((e) => {
+        logger.error("Failed to send WFH request email", {
+          error: e instanceof Error ? e.message : "unknown",
+        });
+      });
+    }
+
+    void createNotification({
+      orgId: session.orgId!,
+      userId: body.approverId,
+      type: "WARNING",
+      title: "WFH request pending",
+      message: `${employeeName} requested work from home on ${dateLabel}.`,
+      link: "/hr/leaves",
+      metadata: { kind: "wfh", requestId: request.id },
+    }).catch((e) => {
+      logger.error("Failed to create WFH notification", {
+        error: e instanceof Error ? e.message : "unknown",
+      });
+    });
 
     return ok({ success: true });
   });
