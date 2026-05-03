@@ -132,56 +132,64 @@ export async function DELETE(
       return ok({ deleted: true, left: false });
     }
 
-    if (channel.type === "GROUP") {
-      const myMembership = await db.query.chatChannelMembers.findFirst({
-        where: and(
-          eq(chatChannelMembers.channelId, channelId),
-          eq(chatChannelMembers.userId, session.user.id)
-        ),
-        columns: { role: true },
-      });
-      if (myMembership?.role === "ADMIN") {
-        const admins = await db.query.chatChannelMembers.findMany({
-          where: and(
-            eq(chatChannelMembers.channelId, channelId),
-            eq(chatChannelMembers.role, "ADMIN")
-          ),
-          columns: { id: true },
-        });
-        if (admins.length <= 1) {
-          return err(
-            "You are the only admin of this group. Promote another member to admin before leaving.",
-            400
-          );
-        }
-      }
-    }
-
     const leaverName =
       session.user.name ??
       session.user.email ??
       "Someone";
 
-    const [systemMessage] = channel.type === "GROUP"
-      ? await db
-          .insert(chatMessages)
-          .values({
-            channelId,
-            senderId: session.user.id,
-            content: `${leaverName} left the group`,
-            messageType: "system",
-          })
-          .returning()
-      : [null];
+    // Transaction makes the admin-count check, system message insert, and member delete atomic.
+    // Without it: two concurrent admins can both pass the count check and both leave,
+    // orphaning the group. Also prevents a "left the group" message persisting if the
+    // member delete fails.
+    let systemMessage: { id: number; content: string | null; createdAt: Date | null } | null = null;
+    try {
+      systemMessage = await db.transaction(async (tx) => {
+        if (channel.type === "GROUP" && membership.role === "ADMIN") {
+          const admins = await tx.query.chatChannelMembers.findMany({
+            where: and(
+              eq(chatChannelMembers.channelId, channelId),
+              eq(chatChannelMembers.role, "ADMIN")
+            ),
+            columns: { id: true },
+          });
+          if (admins.length <= 1) {
+            throw Object.assign(new Error("LAST_ADMIN"), { statusCode: 400 });
+          }
+        }
 
-    await db
-      .delete(chatChannelMembers)
-      .where(
-        and(
-          eq(chatChannelMembers.channelId, channelId),
-          eq(chatChannelMembers.userId, session.user.id)
-        )
-      );
+        const [msg] = channel.type === "GROUP"
+          ? await tx
+              .insert(chatMessages)
+              .values({
+                channelId,
+                senderId: session.user.id,
+                content: `${leaverName} left the group`,
+                messageType: "system",
+              })
+              .returning()
+          : [null];
+
+        await tx
+          .delete(chatChannelMembers)
+          .where(
+            and(
+              eq(chatChannelMembers.channelId, channelId),
+              eq(chatChannelMembers.userId, session.user.id)
+            )
+          );
+
+        return msg ?? null;
+      });
+    } catch (e) {
+      const code = (e as { statusCode?: number }).statusCode;
+      if (code === 400) {
+        return err(
+          "You are the only admin of this group. Promote another member to admin before leaving.",
+          400
+        );
+      }
+      throw e;
+    }
 
     if (systemMessage) {
       await db

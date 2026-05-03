@@ -1,34 +1,112 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { withAuth, ok, err, parseBody, type AuthSession } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { z } from "zod";
+import { and, eq } from "drizzle-orm";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isManagerOf } from "@/lib/rbac/manager";
+import { patchPIPSchema } from "@/lib/validations/hr-pip";
 import type { NextRequest } from "next/server";
 
-const updateSchema = z.object({
-  status: z.enum(["ACTIVE", "EXTENDED", "COMPLETED", "TERMINATED"]).optional(),
-  outcome: z.string().max(1000).optional(),
-  notes: z.string().max(2000).optional(),
-  endDate: z.string().optional(),
-});
+async function canAccessPip(
+  session: AuthSession,
+  pip: {
+    orgId: string;
+    userId: string;
+    managerId: string;
+    hrRepId: string | null;
+    mentorId: string | null;
+  }
+) {
+  if (pip.orgId !== session.orgId) return false;
+  if (isAdminOrOwner(session.user.role) || session.user.role === "ADMIN") return true;
+  if (
+    pip.userId === session.user.id ||
+    pip.managerId === session.user.id ||
+    pip.hrRepId === session.user.id ||
+    pip.mentorId === session.user.id
+  )
+    return true;
+  return isManagerOf(session.user.id, pip.userId);
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ pipId: string }> }
+) {
+  return withAuth(async (session) => {
+    const { pipId: raw } = await params;
+    const pipId = Number(raw);
+    if (!pipId) return err("Invalid id.", 400);
+
+    const row = await db.query.performanceImprovementPlans.findFirst({
+      where: and(eq(performanceImprovementPlans.id, pipId), eq(performanceImprovementPlans.orgId, session.orgId)),
+      with: {
+        user: { columns: { id: true, name: true, image: true, email: true, designation: true, employeeId: true } },
+        manager: { columns: { id: true, name: true, image: true } },
+        hrRep: { columns: { id: true, name: true } },
+        mentor: { columns: { id: true, name: true } },
+        goals: { orderBy: (g, { asc }) => [asc(g.sortOrder), asc(g.id)] },
+        checkIns: {
+          orderBy: (c, { desc }) => [desc(c.checkInDate)],
+          with: { goalProgressRows: { with: { goal: true } } },
+        },
+        linkedAppraisal: true,
+      },
+    });
+    if (!row) return err("Not found.", 404);
+    if (!(await canAccessPip(session, row))) return err("Forbidden.", 403);
+    return ok(row);
+  });
+}
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ pipId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
-    const { pipId: id } = await params;
-    const pipId = Number(id);
-    if (!pipId) return err("Invalid ID.", 400);
+    const { pipId: raw } = await params;
+    const pipId = Number(raw);
+    if (!pipId) return err("Invalid id.", 400);
 
-    const body = updateSchema.parse(await req.json());
-    await db.update(performanceImprovementPlans).set({
-      ...body,
-      updatedAt: new Date(),
-    }).where(and(eq(performanceImprovementPlans.id, pipId), eq(performanceImprovementPlans.orgId, session.orgId)));
+    const row = await db.query.performanceImprovementPlans.findFirst({
+      where: and(eq(performanceImprovementPlans.id, pipId), eq(performanceImprovementPlans.orgId, session.orgId)),
+    });
+    if (!row) return err("Not found.", 404);
+    if (!(await canAccessPip(session, row))) return err("Forbidden.", 403);
 
-    return ok({ success: true });
+    const body = await parseBody(req, patchPIPSchema);
+    const admin = isAdminOrOwner(session.user.role) || session.user.role === "ADMIN";
+
+    if (body.finalOutcome && !admin) {
+      return err("Only HR or CEO can set final PIP outcome.", 403);
+    }
+
+    if (body.status === "ACTIVE" && !admin && row.managerId !== session.user.id && row.hrRepId !== session.user.id) {
+      return err("Only HR, CEO, or PIP owner can activate.", 403);
+    }
+
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (body.status !== undefined) patch.status = body.status;
+    if (body.outcome !== undefined) patch.outcome = body.outcome;
+    if (body.notes !== undefined) patch.notes = body.notes;
+    if (body.endDate !== undefined) patch.endDate = body.endDate;
+    if (body.finalOutcome !== undefined) patch.finalOutcome = body.finalOutcome;
+
+    await db
+      .update(performanceImprovementPlans)
+      .set(patch as typeof performanceImprovementPlans.$inferInsert)
+      .where(eq(performanceImprovementPlans.id, pipId));
+
+    const updated = await db.query.performanceImprovementPlans.findFirst({
+      where: eq(performanceImprovementPlans.id, pipId),
+      with: {
+        user: { columns: { id: true, name: true, image: true, email: true } },
+        manager: { columns: { id: true, name: true } },
+        hrRep: { columns: { id: true, name: true } },
+        goals: true,
+        checkIns: { with: { goalProgressRows: true } },
+      },
+    });
+    return ok(updated);
   });
 }

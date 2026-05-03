@@ -36,6 +36,23 @@ export async function POST(req: NextRequest) {
       return err("No active salary structure found for this employee.", 400);
     }
 
+    // Idempotency guard — no unique DB constraint yet; block duplicate generation
+    const existingPayroll = await db.query.payrolls.findFirst({
+      where: and(
+        eq(payrolls.orgId, session.orgId),
+        eq(payrolls.userId, body.userId),
+        eq(payrolls.month, body.month)
+      ),
+      columns: { id: true, status: true },
+    });
+    if (existingPayroll) {
+      return err(
+        `Payroll for this employee already exists for ${body.month} (id: ${existingPayroll.id}, status: ${existingPayroll.status}). ` +
+        `Delete the existing DRAFT first or approve it.`,
+        409
+      );
+    }
+
     const employee = await db.query.users.findFirst({
       where: eq(users.id, body.userId),
       columns: { monthlySalary: true },

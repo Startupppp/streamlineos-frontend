@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 
 const biometricSchema = z.object({
   orgId: z.string().min(1),
@@ -32,6 +33,13 @@ export async function POST(req: NextRequest) {
   if (!keyValid) return err("Invalid API key.", 401);
 
   const body = biometricSchema.parse(await req.json());
+
+  logger.warn("biometric: orgId is caller-supplied — ensure device registration table before multi-tenant rollout", {
+    orgId: body.orgId,
+    employeeId: body.employeeId,
+    deviceId: body.deviceId,
+    type: body.type,
+  });
 
   const row = await db
     .select({ userId: users.id })

@@ -18,6 +18,7 @@ export * from "./certifications";
 export * from "./background-verification";
 export * from "./celebrations";
 export * from "./pip";
+export * from "./appraisals";
 export * from "./skills";
 export * from "./surveys";
 export * from "./key-results";

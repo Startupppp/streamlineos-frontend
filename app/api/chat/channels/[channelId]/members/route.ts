@@ -93,10 +93,10 @@ export async function POST(
       columns: { userId: true },
     });
     const orgUserIds = new Set(orgMembers.map((m) => m.userId));
-    const invalid = uniqueIds.filter((u) => !orgUserIds.has(u));
-    if (invalid.length > 0) {
+    const invalidCount = uniqueIds.filter((u) => !orgUserIds.has(u)).length;
+    if (invalidCount > 0) {
       return err(
-        `User(s) not in this organization: ${invalid.join(", ")}`,
+        `${invalidCount} user(s) could not be added because they are not members of this organization`,
         400
       );
     }

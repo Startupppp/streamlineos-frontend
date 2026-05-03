@@ -45,32 +45,47 @@ export async function DELETE(
     });
     if (!target) return err("User is not a member of this channel", 404);
 
-    if (target.role === "ADMIN") {
-      const admins = await db.query.chatChannelMembers.findMany({
-        where: and(
-          eq(chatChannelMembers.channelId, channelId),
-          eq(chatChannelMembers.role, "ADMIN")
-        ),
-        columns: { id: true },
+    // Transaction makes the admin-count check and the delete atomic —
+    // prevents two concurrent requests from both passing the "last admin?" guard.
+    try {
+      await db.transaction(async (tx) => {
+        if (target.role === "ADMIN") {
+          const admins = await tx.query.chatChannelMembers.findMany({
+            where: and(
+              eq(chatChannelMembers.channelId, channelId),
+              eq(chatChannelMembers.role, "ADMIN")
+            ),
+            columns: { id: true },
+          });
+          if (admins.length <= 1) {
+            throw Object.assign(new Error("LAST_ADMIN"), {
+              isSelfLeave,
+              statusCode: 400,
+            });
+          }
+        }
+
+        await tx
+          .delete(chatChannelMembers)
+          .where(
+            and(
+              eq(chatChannelMembers.channelId, channelId),
+              eq(chatChannelMembers.userId, targetUserId)
+            )
+          );
       });
-      if (admins.length <= 1) {
+    } catch (e) {
+      const typed = e as { statusCode?: number; isSelfLeave?: boolean };
+      if (typed.statusCode === 400) {
         return err(
-          isSelfLeave
+          typed.isSelfLeave
             ? "You are the only admin of this group. Promote another member to admin before leaving."
             : "Cannot remove the last admin of the channel",
           400
         );
       }
+      throw e;
     }
-
-    await db
-      .delete(chatChannelMembers)
-      .where(
-        and(
-          eq(chatChannelMembers.channelId, channelId),
-          eq(chatChannelMembers.userId, targetUserId)
-        )
-      );
 
     if (process.env.ABLY_API_KEY) {
       try {

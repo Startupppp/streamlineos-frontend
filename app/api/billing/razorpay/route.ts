@@ -114,14 +114,27 @@ export async function PATCH(req: NextRequest) {
 
     const amount = PLAN_PRICES[input.plan];
 
-    const orderRes = await fetch(
-      `https://api.razorpay.com/v1/orders/${input.razorpay_order_id}`,
-      {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`,
-        },
+    const razorpayController = new AbortController();
+    const razorpayTimeout = setTimeout(() => razorpayController.abort(), 8000);
+    let orderRes: Response;
+    try {
+      orderRes = await fetch(
+        `https://api.razorpay.com/v1/orders/${input.razorpay_order_id}`,
+        {
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`,
+          },
+          signal: razorpayController.signal,
+        }
+      );
+    } catch (e) {
+      if ((e as Error).name === "AbortError") {
+        return err("Payment verification timed out — please retry", 504);
       }
-    );
+      return err("Payment verification failed: could not reach payment gateway", 502);
+    } finally {
+      clearTimeout(razorpayTimeout);
+    }
     if (!orderRes.ok) {
       return err("Payment verification failed: could not verify order", 400);
     }

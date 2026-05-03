@@ -7,6 +7,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
 import { invalidateUserSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 const PASSWORD_HISTORY_LIMIT = 5;
 
@@ -77,7 +78,22 @@ export async function PATCH(req: NextRequest) {
       }
     });
 
-    await invalidateUserSession(session.user.id);
+    const MAX_INVALIDATE_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_INVALIDATE_RETRIES; attempt++) {
+      try {
+        await invalidateUserSession(session.user.id);
+        break;
+      } catch (e) {
+        if (attempt < MAX_INVALIDATE_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+        } else {
+          logger.error("change-password: session invalidation failed after retries — user sessions remain active", {
+            userId: session.user.id,
+            error: e,
+          });
+        }
+      }
+    }
 
     return ok({ success: true });
   });

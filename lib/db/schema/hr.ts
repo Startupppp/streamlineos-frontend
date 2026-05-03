@@ -12,6 +12,10 @@ import {
   resignationStatusEnum, terminationStatusEnum, exitChecklistStatusEnum,
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
   pipStatusEnum, surveyStatusEnum,
+  appraisalTypeEnum, appraisalStageEnum, appraisalRatingTypeEnum,
+  appraisalStageRowStatusEnum, appraisalCycleStatusEnum,
+  pipReasonEnum, pipReviewFrequencyEnum, pipProgressStatusEnum,
+  pipFinalOutcomeEnum, pipRiskLevelEnum, pipImprovementSinceEnum,
   feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
   onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
 } from "./enums";
@@ -542,6 +546,93 @@ export const backgroundVerifications = pgTable("background_verifications", {
   index("idx_bgv_user").on(table.userId),
 ]);
 
+/** Master list of competency categories (Q3); seeded via migration */
+export const appraisalCategories = pgTable("appraisal_categories", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  ratingType: appraisalRatingTypeEnum("rating_type").notNull(),
+  /** Relative weight for weighted overall score (default equal) */
+  weight: decimal("weight", { precision: 6, scale: 4 }).default("0.0833").notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+/** Per-employee anniversary-based appraisal window (Q2) */
+export const appraisalCycles = pgTable("appraisal_cycles", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  type: appraisalTypeEnum("type").notNull(),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  dueDate: date("due_date"),
+  anchorJoiningDate: date("anchor_joining_date"),
+  status: appraisalCycleStatusEnum("status").default("OPEN"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_appraisal_cycles_org_user").on(table.orgId, table.userId),
+  index("idx_appraisal_cycles_period").on(table.periodStart, table.periodEnd),
+]);
+
+/** Formal appraisal instance (workflow Q10–Q15) */
+export const appraisals = pgTable("appraisals", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  cycleId: integer("cycle_id").references(() => appraisalCycles.id),
+  userId: text("user_id").references(() => users.id).notNull(),
+  reviewerId: text("reviewer_id").references(() => users.id),
+  currentStage: appraisalStageEnum("current_stage").default("CYCLE_INITIATION").notNull(),
+  overallRating: decimal("overall_rating", { precision: 4, scale: 2 }),
+  outcomeNotes: text("outcome_notes"),
+  confidentialityNote: text("confidentiality_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_appraisals_org_user").on(table.orgId, table.userId),
+  index("idx_appraisals_stage").on(table.orgId, table.currentStage),
+]);
+
+export const appraisalCategoryRatings = pgTable("appraisal_category_ratings", {
+  id: serial("id").primaryKey(),
+  appraisalId: integer("appraisal_id").references(() => appraisals.id, { onDelete: "cascade" }).notNull(),
+  categoryId: integer("category_id").references(() => appraisalCategories.id).notNull(),
+  selfScore: decimal("self_score", { precision: 4, scale: 2 }),
+  selfText: text("self_text"),
+  managerScore: decimal("manager_score", { precision: 4, scale: 2 }),
+  managerComment: text("manager_comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_appraisal_category_rating").on(table.appraisalId, table.categoryId),
+  index("idx_appraisal_cat_ratings_appraisal").on(table.appraisalId),
+]);
+
+export const appraisalStages = pgTable("appraisal_stages", {
+  id: serial("id").primaryKey(),
+  appraisalId: integer("appraisal_id").references(() => appraisals.id, { onDelete: "cascade" }).notNull(),
+  stage: appraisalStageEnum("stage").notNull(),
+  assigneeId: text("assignee_id").references(() => users.id),
+  status: appraisalStageRowStatusEnum("status").default("PENDING").notNull(),
+  startedAt: timestamp("started_at").defaultNow(),
+  dueAt: timestamp("due_at"),
+  completedAt: timestamp("completed_at"),
+  comment: text("comment"),
+}, (table) => [
+  index("idx_appraisal_stages_appraisal").on(table.appraisalId),
+  index("idx_appraisal_stages_due").on(table.dueAt),
+]);
+
+export const appraisalAcknowledgements = pgTable("appraisal_acknowledgements", {
+  id: serial("id").primaryKey(),
+  appraisalId: integer("appraisal_id").references(() => appraisals.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_appraisal_ack").on(table.appraisalId),
+]);
+
 export const performanceImprovementPlans = pgTable("performance_improvement_plans", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -554,10 +645,82 @@ export const performanceImprovementPlans = pgTable("performance_improvement_plan
   status: pipStatusEnum("status").default("ACTIVE"),
   outcome: text("outcome"),
   notes: text("notes"),
+  reasonCategory: pipReasonEnum("reason_category"),
+  description: text("description"),
+  areasOfConcern: text("areas_of_concern").array(),
+  evidence: text("evidence"),
+  reviewFrequency: pipReviewFrequencyEnum("review_frequency"),
+  reviewMethod: text("review_method"),
+  mentorId: text("mentor_id").references(() => users.id),
+  hrRepId: text("hr_rep_id").references(() => users.id),
+  expectedImprovement: text("expected_improvement"),
+  consequencesIfNotMet: text("consequences_if_not_met"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  acknowledgedComment: text("acknowledged_comment"),
+  managerApprovedAt: timestamp("manager_approved_at"),
+  hrApprovedAt: timestamp("hr_approved_at"),
+  linkedAppraisalId: integer("linked_appraisal_id").references(() => appraisals.id),
+  finalOutcome: pipFinalOutcomeEnum("final_outcome"),
+  initiatedBy: text("initiated_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_pip_user").on(table.userId),
+  index("idx_pip_org_status").on(table.orgId, table.status),
+  index("idx_pip_linked_appraisal").on(table.linkedAppraisalId),
+]);
+
+export const pipGoals = pgTable("pip_goals", {
+  id: serial("id").primaryKey(),
+  pipId: integer("pip_id").references(() => performanceImprovementPlans.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  successCriteria: text("success_criteria").notNull(),
+  deadline: date("deadline").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pip_goals_pip").on(table.pipId),
+]);
+
+export const pipCheckIns = pgTable("pip_check_ins", {
+  id: serial("id").primaryKey(),
+  pipId: integer("pip_id").references(() => performanceImprovementPlans.id, { onDelete: "cascade" }).notNull(),
+  checkInDate: date("check_in_date").notNull(),
+  checkInType: pipReviewFrequencyEnum("check_in_type").notNull(),
+  periodStart: date("period_start"),
+  periodEnd: date("period_end"),
+  overallStatus: pipProgressStatusEnum("overall_status"),
+  summaryCommentsManager: text("summary_comments_manager"),
+  summaryCommentsEmployee: text("summary_comments_employee"),
+  managerRating: integer("manager_rating"),
+  managerFeedback: text("manager_feedback"),
+  improvementSinceLast: pipImprovementSinceEnum("improvement_since_last"),
+  employeeSelfComments: text("employee_self_comments"),
+  supportRequired: text("support_required"),
+  riskLevel: pipRiskLevelEnum("risk_level"),
+  escalationRequired: boolean("escalation_required").default(false),
+  escalationNotes: text("escalation_notes"),
+  managerAckAt: timestamp("manager_ack_at"),
+  employeeAckAt: timestamp("employee_ack_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_pip_check_ins_pip").on(table.pipId),
+  index("idx_pip_check_ins_date").on(table.checkInDate),
+]);
+
+export const pipCheckInGoalProgress = pgTable("pip_check_in_goal_progress", {
+  id: serial("id").primaryKey(),
+  checkInId: integer("check_in_id").references(() => pipCheckIns.id, { onDelete: "cascade" }).notNull(),
+  pipGoalId: integer("pip_goal_id").references(() => pipGoals.id, { onDelete: "cascade" }).notNull(),
+  progressStatus: pipProgressStatusEnum("progress_status").notNull(),
+  percentComplete: integer("percent_complete").notNull(),
+  workDone: text("work_done").notNull(),
+  blockers: text("blockers").notNull(),
+  nextSteps: text("next_steps").notNull(),
+}, (table) => [
+  uniqueIndex("uniq_pip_check_in_goal").on(table.checkInId, table.pipGoalId),
 ]);
 
 export const keyResults = pgTable("key_results", {
@@ -1399,9 +1562,66 @@ export const backgroundVerificationsRelations = relations(backgroundVerification
   user: one(users, { fields: [backgroundVerifications.userId], references: [users.id] }),
 }));
 
-export const pipRelations = relations(performanceImprovementPlans, ({ one }) => ({
+export const appraisalCategoriesRelations = relations(appraisalCategories, ({ many }) => ({
+  ratings: many(appraisalCategoryRatings),
+}));
+
+export const appraisalCyclesRelations = relations(appraisalCycles, ({ one, many }) => ({
+  organization: one(organizations, { fields: [appraisalCycles.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [appraisalCycles.userId], references: [users.id] }),
+  appraisals: many(appraisals),
+}));
+
+export const appraisalsRelations = relations(appraisals, ({ one, many }) => ({
+  organization: one(organizations, { fields: [appraisals.orgId], references: [organizations.id] }),
+  cycle: one(appraisalCycles, { fields: [appraisals.cycleId], references: [appraisalCycles.id] }),
+  user: one(users, { fields: [appraisals.userId], references: [users.id], relationName: "appraisalSubject" }),
+  reviewer: one(users, { fields: [appraisals.reviewerId], references: [users.id], relationName: "appraisalReviewer" }),
+  categoryRatings: many(appraisalCategoryRatings),
+  stages: many(appraisalStages),
+  acknowledgement: one(appraisalAcknowledgements, { fields: [appraisals.id], references: [appraisalAcknowledgements.appraisalId] }),
+  linkedPIPs: many(performanceImprovementPlans),
+}));
+
+export const appraisalCategoryRatingsRelations = relations(appraisalCategoryRatings, ({ one }) => ({
+  appraisal: one(appraisals, { fields: [appraisalCategoryRatings.appraisalId], references: [appraisals.id] }),
+  category: one(appraisalCategories, { fields: [appraisalCategoryRatings.categoryId], references: [appraisalCategories.id] }),
+}));
+
+export const appraisalStagesRelations = relations(appraisalStages, ({ one }) => ({
+  appraisal: one(appraisals, { fields: [appraisalStages.appraisalId], references: [appraisals.id] }),
+  assignee: one(users, { fields: [appraisalStages.assigneeId], references: [users.id], relationName: "appraisalStageAssignee" }),
+}));
+
+export const appraisalAcknowledgementsRelations = relations(appraisalAcknowledgements, ({ one }) => ({
+  appraisal: one(appraisals, { fields: [appraisalAcknowledgements.appraisalId], references: [appraisals.id] }),
+  user: one(users, { fields: [appraisalAcknowledgements.userId], references: [users.id] }),
+}));
+
+export const pipRelations = relations(performanceImprovementPlans, ({ one, many }) => ({
   user: one(users, { fields: [performanceImprovementPlans.userId], references: [users.id] }),
   manager: one(users, { fields: [performanceImprovementPlans.managerId], references: [users.id], relationName: "pipManager" }),
+  mentor: one(users, { fields: [performanceImprovementPlans.mentorId], references: [users.id], relationName: "pipMentor" }),
+  hrRep: one(users, { fields: [performanceImprovementPlans.hrRepId], references: [users.id], relationName: "pipHrRep" }),
+  initiator: one(users, { fields: [performanceImprovementPlans.initiatedBy], references: [users.id], relationName: "pipInitiator" }),
+  linkedAppraisal: one(appraisals, { fields: [performanceImprovementPlans.linkedAppraisalId], references: [appraisals.id] }),
+  goals: many(pipGoals),
+  checkIns: many(pipCheckIns),
+}));
+
+export const pipGoalsRelations = relations(pipGoals, ({ one, many }) => ({
+  pip: one(performanceImprovementPlans, { fields: [pipGoals.pipId], references: [performanceImprovementPlans.id] }),
+  checkInProgress: many(pipCheckInGoalProgress),
+}));
+
+export const pipCheckInsRelations = relations(pipCheckIns, ({ one, many }) => ({
+  pip: one(performanceImprovementPlans, { fields: [pipCheckIns.pipId], references: [performanceImprovementPlans.id] }),
+  goalProgressRows: many(pipCheckInGoalProgress),
+}));
+
+export const pipCheckInGoalProgressRelations = relations(pipCheckInGoalProgress, ({ one }) => ({
+  checkIn: one(pipCheckIns, { fields: [pipCheckInGoalProgress.checkInId], references: [pipCheckIns.id] }),
+  goal: one(pipGoals, { fields: [pipCheckInGoalProgress.pipGoalId], references: [pipGoals.id] }),
 }));
 
 export const keyResultsRelations = relations(keyResults, ({ one }) => ({

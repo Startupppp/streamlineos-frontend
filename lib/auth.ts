@@ -36,9 +36,15 @@ function userSessionKey(userId: string): string {
 }
 
 export async function invalidateUserSession(userId: string): Promise<void> {
-  if (redis) {
-    await redis.del(userSessionKey(userId));
+  if (!redis) {
+    logger.error(
+      "invalidateUserSession: Redis unavailable — session NOT revoked after password change. " +
+      "Existing sessions for this user remain valid.",
+      { userId }
+    );
+    return;
   }
+  await redis.del(userSessionKey(userId));
 }
 
 const credentialsProvider = Credentials({

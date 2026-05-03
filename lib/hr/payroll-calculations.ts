@@ -89,6 +89,13 @@ export interface PayslipPreviewInput {
   overtimeType: string;
   overtimeDays: number;
   overtimeHours: number;
+  /**
+   * When provided (from salary_structures), component breakdown matches the generate route exactly.
+   * When absent, fallback ratios are used: Basic=50%, HRA=50% of Basic, Allowance=remainder.
+   */
+  basicSalary?: number;
+  hraPercentage?: number;
+  allowances?: number;
   /** Optional recurring deductions from salary structure (PF, etc.) */
   salaryStructureDeductions?: number;
 }
@@ -96,12 +103,28 @@ export interface PayslipPreviewInput {
 /** Same numbers shown in Generate sheet preview — use for payroll page `useMemo` */
 export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
   const monthlySalary = input.monthlySalary;
-  const workingDays = calendarDaysInMonth(input.month);
-  const basicPay = monthlySalary * 0.5;
-  const hra = monthlySalary * 0.25;
+  const calendarDays = calendarDaysInMonth(input.month);
   const otAmt = input.overtimeAmount || 0;
-  const grossSalary = monthlySalary + (input.bonus || 0) + otAmt;
+  const bonusAmt = input.bonus || 0;
   const structDed = input.salaryStructureDeductions ?? 0;
+
+  let basicPay: number;
+  let hra: number;
+  let allowances: number;
+  let grossSalary: number;
+
+  if (input.basicSalary !== undefined) {
+    basicPay = input.basicSalary;
+    const hraPercentage = input.hraPercentage ?? 50;
+    hra = (basicPay * hraPercentage) / 100;
+    allowances = input.allowances ?? 0;
+    grossSalary = basicPay + hra + allowances + bonusAmt + otAmt;
+  } else {
+    basicPay = monthlySalary * 0.5;
+    hra = basicPay * 0.5;
+    allowances = monthlySalary - basicPay - hra;
+    grossSalary = monthlySalary + bonusAmt + otAmt;
+  }
 
   const { lopDeduction, halfDayDeduction, totalDeductions, netSalary } = computeTotalDeductionsAndNet({
     month: input.month,
@@ -116,12 +139,13 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
   return {
     basicPay,
     hra,
+    allowances,
     grossSalary,
     lopDeduction,
     halfDayDeduction,
     professionalTax: PROFESSIONAL_TAX_INR,
     otherDeductions: input.otherDeductions || 0,
-    bonus: input.bonus || 0,
+    bonus: bonusAmt,
     overtimeAmount: otAmt,
     overtimeType: input.overtimeType,
     overtimeDays: input.overtimeDays,
@@ -130,7 +154,8 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
     netSalary,
     lopDays: input.lopDays,
     halfDays: input.halfDays,
-    workingDays,
-    effectiveDays: workingDays - input.lopDays - input.halfDays * 0.5,
+    calendarDays,
+    workingDays: calendarDays,
+    effectiveDays: calendarDays - input.lopDays - input.halfDays * 0.5,
   };
 }

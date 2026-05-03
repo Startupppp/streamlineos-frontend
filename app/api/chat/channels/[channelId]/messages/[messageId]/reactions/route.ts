@@ -83,7 +83,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
           })
           .catch(() => {});
       } catch {
-
+        // ignore ably errors
       }
     }
 

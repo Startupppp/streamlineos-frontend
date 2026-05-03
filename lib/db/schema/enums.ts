@@ -32,7 +32,61 @@ export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING
 export const ackStatusEnum = pgEnum("ack_status", ["PENDING", "ACKNOWLEDGED", "DECLINED"]);
 export const reimbursementStatusEnum = pgEnum("reimbursement_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
 export const loanStatusEnum = pgEnum("loan_status", ["PENDING", "APPROVED", "ACTIVE", "REPAID", "REJECTED"]);
-export const pipStatusEnum = pgEnum("pip_status", ["ACTIVE", "EXTENDED", "COMPLETED", "TERMINATED"]);
+export const pipStatusEnum = pgEnum("pip_status", ["DRAFT", "ACTIVE", "EXTENDED", "COMPLETED", "TERMINATED"]);
+
+/** Formal appraisal workflow (questionnaire Q1–Q15) — distinct from legacy performance_reviews */
+export const appraisalTypeEnum = pgEnum("appraisal_type", [
+  "ANNUAL",
+  "MID_YEAR",
+  "QUARTERLY",
+  "MONTHLY",
+  "SEMI_ANNUAL",
+  "PROBATION_COMPLETION",
+  "CONFIRMATION",
+  "ONBOARDING",
+  "EXIT",
+  "PROMOTION",
+  "ROLE_CHANGE",
+  "SALARY_REVISION",
+  "PROJECT_COMPLETION",
+  "CRITICAL_INCIDENT",
+  "GOAL_BASED",
+  "TARGET_ACHIEVEMENT",
+]);
+
+export const appraisalStageEnum = pgEnum("appraisal_stage", [
+  "CYCLE_INITIATION",
+  "SELF_REVIEW",
+  "MANAGER_REVIEW",
+  "CEO_REVIEW",
+  "COMPENSATION_REVIEW",
+  "FINAL_APPROVAL",
+  "EMPLOYEE_ACK",
+  "CLOSED",
+]);
+
+export const appraisalRatingTypeEnum = pgEnum("appraisal_rating_type", ["NUMERIC", "TEXT", "BOTH"]);
+
+export const appraisalStageRowStatusEnum = pgEnum("appraisal_stage_row_status", ["PENDING", "COMPLETED"]);
+
+export const appraisalCycleStatusEnum = pgEnum("appraisal_cycle_status", ["OPEN", "CLOSED"]);
+
+export const pipReasonEnum = pgEnum("pip_reason", [
+  "POOR_PERFORMANCE",
+  "BEHAVIORAL",
+  "POLICY_VIOLATION",
+  "MISSED_KPIS",
+]);
+
+export const pipReviewFrequencyEnum = pgEnum("pip_review_frequency", ["WEEKLY", "BI_WEEKLY", "MONTHLY"]);
+
+export const pipProgressStatusEnum = pgEnum("pip_progress_status", ["ON_TRACK", "AT_RISK", "NOT_MEETING"]);
+
+export const pipFinalOutcomeEnum = pgEnum("pip_final_outcome", ["SUCCESS", "EXTENDED", "FAILED"]);
+
+export const pipRiskLevelEnum = pgEnum("pip_risk_level", ["LOW", "MEDIUM", "HIGH"]);
+
+export const pipImprovementSinceEnum = pgEnum("pip_improvement_since", ["IMPROVED", "NO_CHANGE", "DECLINED"]);
 export const surveyStatusEnum = pgEnum("survey_status", ["DRAFT", "ACTIVE", "CLOSED"]);
 export const feedbackTypeEnum = pgEnum("feedback_type", ["SELF", "PEER", "MANAGER", "SKIP_LEVEL"]);
 export const bonusTypeEnum = pgEnum("bonus_type", ["PERFORMANCE", "FESTIVAL", "REFERRAL", "SPOT", "ANNUAL"]);
