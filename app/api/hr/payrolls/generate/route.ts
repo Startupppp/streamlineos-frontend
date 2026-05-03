@@ -1,7 +1,8 @@
 import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { payrolls, salaryStructures } from "@/lib/db/schema";
+import { payrolls, salaryStructures, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { computeTotalDeductionsAndNet, roundInr } from "@/lib/hr/payroll-calculations";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
       return err("No active salary structure found for this employee.", 400);
     }
 
+    const employee = await db.query.users.findFirst({
+      where: eq(users.id, body.userId),
+      columns: { monthlySalary: true },
+    });
+    const monthlySalary = parseFloat(employee?.monthlySalary || "0") || 0;
+
     const basicSalary = Number(salary.basicSalary);
     const hraPercentage = Number(salary.hraPercentage || 50);
     const allowances = Number(salary.allowances || 0);
@@ -43,15 +50,15 @@ export async function POST(req: NextRequest) {
     const hra = (basicSalary * hraPercentage) / 100;
     const grossSalary = basicSalary + hra + allowances + (body.bonus || 0) + (body.overtimeAmount || 0);
 
-    const [payYear, payMonth] = body.month.split("-").map(Number);
-    const daysInMonth = new Date(payYear, payMonth, 0).getDate();
-
-    const PROFESSIONAL_TAX = 200;
-    const lopDeduction = body.lopDays ? (basicSalary / daysInMonth) * body.lopDays : 0;
-    const halfDayDeduction = body.halfDays ? ((basicSalary / daysInMonth) * body.halfDays) / 2 : 0;
-    const totalDeductions = deductions + lopDeduction + halfDayDeduction + (body.otherDeductions || 0) + PROFESSIONAL_TAX;
-
-    const netSalary = grossSalary - totalDeductions;
+    const { totalDeductions, netSalary } = computeTotalDeductionsAndNet({
+      month: body.month,
+      monthlySalary,
+      grossSalary,
+      salaryStructureDeductions: deductions,
+      lopDays: body.lopDays ?? 0,
+      halfDays: body.halfDays ?? 0,
+      otherDeductions: body.otherDeductions ?? 0,
+    });
 
     const [payroll] = await db
       .insert(payrolls)
@@ -62,9 +69,9 @@ export async function POST(req: NextRequest) {
         basicSalary: basicSalary.toString(),
         hra: hra.toString(),
         allowances: (allowances + (body.bonus || 0)).toString(),
-        deductions: totalDeductions.toString(),
-        grossSalary: grossSalary.toString(),
-        netSalary: netSalary.toString(),
+        deductions: String(totalDeductions),
+        grossSalary: String(roundInr(grossSalary)),
+        netSalary: String(netSalary),
         status: "DRAFT",
         generatedBy: session.user.id,
         overtimeType: body.overtimeType,
@@ -80,7 +87,7 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       targetId: String(payroll.id),
       targetType: "payroll",
-      metadata: { employeeId: body.userId, month: body.month, netSalary: netSalary },
+      metadata: { employeeId: body.userId, month: body.month, netSalary: roundInr(netSalary) },
     }).catch(() => {});
 
     return ok({ success: true });

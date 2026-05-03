@@ -24,6 +24,11 @@ import { format } from "date-fns";
 import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 import type { PayrollWithUser } from "@/types/hr";
 
+function fmtInr(value: string | number | null | undefined): string {
+  const n = Math.round(parseFloat(String(value ?? "0")) || 0);
+  return n.toLocaleString("en-IN");
+}
+
 interface PayrollTableProps {
   payrolls: PayrollWithUser[];
   selectedMonth: string;
@@ -83,13 +88,13 @@ export function PayrollTable({
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        ₹{parseFloat(payroll.grossSalary || "0").toLocaleString()}
+                        ₹{fmtInr(payroll.grossSalary)}
                       </TableCell>
                       <TableCell className="text-destructive whitespace-nowrap">
-                        -₹{parseFloat(payroll.deductions || "0").toLocaleString()}
+                        -₹{fmtInr(payroll.deductions)}
                       </TableCell>
                       <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                        ₹{parseFloat(payroll.netSalary || "0").toLocaleString()}
+                        ₹{fmtInr(payroll.netSalary)}
                       </TableCell>
                       <TableCell>
                         <Badge

@@ -38,6 +38,7 @@ import type { Employee } from "@/types/hr";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
 import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
+import { buildPayslipPreviewFromEmployee } from "@/lib/hr/payroll-calculations";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);
@@ -97,47 +98,20 @@ export default function PayrollPage() {
     if (!selectedEmployeeData) return null;
 
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
-    const [payYear, payMonthNum] = selectedMonth.split("-").map(Number);
-    const workingDays = new Date(payYear, payMonthNum, 0).getDate();
-    const perDaySalary = monthlySalary / workingDays;
-    const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
-    const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;
-    const basicPay = monthlySalary * 0.5;
-    const hra = monthlySalary * 0.25;
-    const professionalTax = 200;
 
-    const otAmt = parseFloat(overtimeAmount) || 0;
-    const grossSalary = monthlySalary + (parseFloat(bonus) || 0) + otAmt;
-    const totalDeductions =
-      lopDeduction +
-      halfDayDeduction +
-      professionalTax +
-      (parseFloat(otherDeductions) || 0);
-    const netSalary = grossSalary - totalDeductions;
-
-    return {
-      basicPay,
-      hra,
-      grossSalary,
-      lopDeduction,
-      halfDayDeduction,
-      professionalTax,
+    return buildPayslipPreviewFromEmployee({
+      monthlySalary,
+      month: selectedMonth,
+      lopDays: parseFloat(lopDays) || 0,
+      halfDays: parseFloat(halfDays) || 0,
       otherDeductions: parseFloat(otherDeductions) || 0,
       bonus: parseFloat(bonus) || 0,
-      overtimeAmount: otAmt,
+      overtimeAmount: parseFloat(overtimeAmount) || 0,
       overtimeType,
       overtimeDays: parseFloat(overtimeDays) || 0,
       overtimeHours: parseFloat(overtimeHours) || 0,
-      totalDeductions,
-      netSalary,
-      lopDays: parseFloat(lopDays) || 0,
-      halfDays: parseFloat(halfDays) || 0,
-      workingDays,
-      effectiveDays:
-        workingDays -
-        (parseFloat(lopDays) || 0) -
-        (parseFloat(halfDays) || 0) * 0.5,
-    };
+      salaryStructureDeductions: 0,
+    });
   }, [
     selectedEmployeeData,
     lopDays,
