@@ -1,12 +1,28 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, MessageSquare } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Send, Loader2, MessageSquare, Pencil, Trash2, Check, X } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useAddComment } from "@/lib/api/hooks/projects";
+import {
+  useAddComment,
+  useUpdateTicketComment,
+  useDeleteTicketComment,
+} from "@/lib/api/hooks/projects";
+import { isExpenseAdmin } from "@/lib/auth-helpers";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
@@ -33,7 +49,7 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
     const content = newComment.trim();
     if (!content) return;
     addComment.mutate({ ticketId, projectId, content });
-  }, [newComment, ticketId, addComment]);
+  }, [newComment, ticketId, projectId, addComment]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -44,6 +60,10 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
     },
     [handleSubmit]
   );
+
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+  const canModerate = isExpenseAdmin(session?.user?.role);
 
   return (
     <div className="space-y-4">
@@ -88,7 +108,14 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
                 new Date(a.createdAt || 0).getTime()
             )
             .map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                ticketId={ticketId}
+                projectId={projectId}
+                currentUserId={currentUserId}
+                canModerate={canModerate}
+              />
             ))}
         </div>
       )}
@@ -102,32 +129,179 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
   );
 }
 
-function CommentItem({ comment }: { comment: TicketComment }) {
+function CommentItem({
+  comment,
+  ticketId,
+  projectId,
+  currentUserId,
+  canModerate,
+}: {
+  comment: TicketComment;
+  ticketId: number;
+  projectId?: number;
+  currentUserId?: string;
+  canModerate: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   const user = comment.user as TicketUser | undefined;
   const timeAgo = comment.createdAt
     ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
     : "";
 
+  const isOwner = currentUserId && comment.userId === currentUserId;
+  const showActions = isOwner || canModerate;
+
+  const updateComment = useUpdateTicketComment({
+    onSuccess: () => {
+      setEditing(false);
+      toast.success("Comment updated");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const deleteComment = useDeleteTicketComment({
+    onSuccess: () => {
+      setDeleteOpen(false);
+      toast.success("Comment deleted");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const handleSaveEdit = () => {
+    const trimmed = editContent.trim();
+    if (!trimmed) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+    updateComment.mutate({
+      ticketId,
+      projectId,
+      commentId: comment.id,
+      content: trimmed,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditContent(comment.content);
+    setEditing(false);
+  };
+
   return (
-    <div className="flex gap-2.5 group">
-      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-        <AvatarImage src={resolveImageUrl(user?.image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-          {user?.firstName?.[0]}
-          {user?.lastName?.[0]}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium">
-            {user?.firstName} {user?.lastName}
-          </span>
-          <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+    <>
+      <div className="flex gap-2.5 group">
+        <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+          <AvatarImage src={resolveImageUrl(user?.image)} />
+          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+            {user?.firstName?.[0]}
+            {user?.lastName?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium">
+              {user?.firstName} {user?.lastName}
+            </span>
+            <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+            {showActions && !editing && (
+              <span className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  aria-label="Edit comment"
+                  onClick={() => {
+                    setEditContent(comment.content);
+                    setEditing(true);
+                  }}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  aria-label="Delete comment"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </span>
+            )}
+          </div>
+          {editing ? (
+            <div className="mt-2 space-y-2">
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[72px] text-sm resize-none"
+                autoFocus
+              />
+              <div className="flex justify-end gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={updateComment.isPending}
+                >
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  disabled={updateComment.isPending}
+                >
+                  {updateComment.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
+              {comment.content}
+            </p>
+          )}
         </div>
-        <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
-          {comment.content}
-        </p>
       </div>
-    </div>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The comment will be removed from the ticket activity.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteComment.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                deleteComment.mutate({
+                  ticketId,
+                  projectId,
+                  commentId: comment.id,
+                });
+              }}
+              disabled={deleteComment.isPending}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

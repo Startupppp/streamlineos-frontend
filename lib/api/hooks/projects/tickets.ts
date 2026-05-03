@@ -159,6 +159,65 @@ export function useAddComment(
   });
 }
 
+export function useUpdateTicketComment(
+  options?: Omit<
+    UseMutationOptions<
+      { id: number; content: string; updatedAt: string | Date | null },
+      Error,
+      { ticketId: number; projectId?: number; commentId: number; content: string }
+    >,
+    "mutationFn"
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { id: number; content: string; updatedAt: string | Date | null },
+    Error,
+    { ticketId: number; projectId?: number; commentId: number; content: string }
+  >({
+    mutationFn: ({ ticketId, projectId = 0, commentId, content }) =>
+      apiClient.patch<{ id: number; content: string; updatedAt: string | Date | null }>(
+        `/projects/${projectId}/tickets/${ticketId}/comments/${commentId}`,
+        { content }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+    ...options,
+  });
+}
+
+export function useDeleteTicketComment(
+  options?: Omit<
+    UseMutationOptions<
+      { success: boolean },
+      Error,
+      { ticketId: number; projectId?: number; commentId: number }
+    >,
+    "mutationFn"
+  >
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: boolean },
+    Error,
+    { ticketId: number; projectId?: number; commentId: number }
+  >({
+    mutationFn: ({ ticketId, projectId = 0, commentId }) =>
+      apiClient.delete<{ success: boolean }>(
+        `/projects/${projectId}/tickets/${ticketId}/comments/${commentId}`
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+    ...options,
+  });
+}
+
 export function useAddLabelToTicket(
   options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
