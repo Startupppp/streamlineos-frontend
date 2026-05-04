@@ -115,7 +115,7 @@ export async function resolveStageAssignee(
     case "SELF_REVIEW":
       return appraisal.userId;
     case "MANAGER_REVIEW":
-      return appraisal.reviewerId;
+      return appraisal.reviewerId ?? (await getHrUserId(orgId)) ?? (await getCeoUserId(orgId));
     case "CEO_REVIEW":
       return (await getCeoUserId(orgId)) ?? (await getHrUserId(orgId));
     case "COMPENSATION_REVIEW":

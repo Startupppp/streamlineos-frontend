@@ -21,6 +21,7 @@ export const appraisalTypeSchema = z.enum([
 
 export const createAppraisalSchema = z.object({
   userId: z.string().min(1),
+  reviewerId: z.string().min(1).optional().nullable(),
   cycleId: z.number().int().positive().optional(),
   type: appraisalTypeSchema,
   periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

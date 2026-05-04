@@ -16,6 +16,7 @@ type AppraisalType = InferInsertModel<typeof appraisalCycles>["type"];
 export async function createAppraisalBundle(input: {
   orgId: string;
   userId: string;
+  reviewerId?: string | null;
   cycleId?: number | null;
   type: AppraisalType;
   periodStart: string;
@@ -29,6 +30,8 @@ export async function createAppraisalBundle(input: {
     where: eq(users.id, input.userId),
     columns: { reportingTo: true },
   });
+
+  const resolvedReviewerId = input.reviewerId ?? subject?.reportingTo ?? null;
 
   return db.transaction(async (tx) => {
     let cycleId = input.cycleId ?? null;
@@ -55,8 +58,8 @@ export async function createAppraisalBundle(input: {
         orgId: input.orgId,
         cycleId,
         userId: input.userId,
-        reviewerId: subject?.reportingTo ?? null,
-        currentStage: "CYCLE_INITIATION",
+        reviewerId: resolvedReviewerId,
+        currentStage: "SELF_REVIEW",
         confidentialityNote: input.confidentialityNote ?? null,
       })
       .returning({ id: appraisals.id });
@@ -77,6 +80,16 @@ export async function createAppraisalBundle(input: {
       appraisalId,
       stage: "CYCLE_INITIATION" satisfies AppraisalStage,
       assigneeId: input.initiatorId,
+      status: "COMPLETED",
+      startedAt: new Date(),
+      completedAt: new Date(),
+      dueAt: new Date(),
+    });
+
+    await tx.insert(appraisalStages).values({
+      appraisalId,
+      stage: "SELF_REVIEW" satisfies AppraisalStage,
+      assigneeId: input.userId,
       status: "PENDING",
       startedAt: new Date(),
       dueAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

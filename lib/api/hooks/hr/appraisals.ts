@@ -51,6 +51,7 @@ export function useCreateAppraisal() {
   return useMutation({
     mutationFn: (data: {
       userId: string;
+      reviewerId?: string | null;
       cycleId?: number;
       type: string;
       periodStart: string;
