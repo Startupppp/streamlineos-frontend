@@ -17,6 +17,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
+    "backfill:converted-leads": "tsx --env-file=.env scripts/backfill-converted-leads.ts",
     "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
     "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts",
     "send:all-emails-test": "npx tsx --env-file=.env scripts/send-all-emails-test.ts"
