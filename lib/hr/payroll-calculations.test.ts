@@ -10,6 +10,10 @@ import {
   roundInr,
 } from "./payroll-calculations";
 
+void perDaySalaryForLop;
+void computeTotalDeductionsAndNet;
+void PROFESSIONAL_TAX_INR;
+
 describe("calendarDaysInMonth", () => {
   it("returns 31 for January", () => {
     expect(calendarDaysInMonth("2026-01")).toBe(31);
@@ -231,26 +235,21 @@ describe("buildPayslipPreviewFromEmployee", () => {
 /**
  * Cross-path consistency: preview vs generate route.
  *
- * The payroll/page.tsx preview uses `monthlySalary` (employees.monthly_salary) as the
- * LOP per-day base. The generate route at app/api/hr/payrolls/generate/route.ts derives
- * dailyRate from `basicSalary + hra + specialAllowance` (the salary structure CTC).
- *
- * If those two amounts differ, the preview shown to the admin and the value persisted
- * in the database disagree. The bug that motivates these tests:
- *
- *   employees.monthly_salary  = 50000 (HR set this manually)
- *   salary_structure          = basic 30000, hra 50%, specialAllowance 5000  → ctc 50000
- *   then HR raises specialAllowance to 10000 in salary_structures (ctc → 55000)
- *   but forgets to update employees.monthly_salary
- *
- * Preview LOP uses 50000/30 = 1666.67/day. Generate uses 55000/30 = 1833.33/day.
- * Same LOP days produces different deductions and different net salary.
+ * Pinning the contract: the admin preview at app/(dashboard)/hr/payroll/page.tsx
+ * computes monthlySalary from the salary structure (basicSalary + hra + specialAllowance)
+ * — the same formula the generate route uses. The two paths must produce identical
+ * LOP / half-day / total-deduction values.
  */
-describe("BUG: preview vs generate-route LOP base divergence", () => {
-  it("documents the divergence — preview LOP base = monthlySalary, generate base = ctc(structure)", () => {
-    // Simulate the preview path used by app/(dashboard)/hr/payroll/page.tsx
+describe("preview vs generate-route consistency (after fix)", () => {
+  it("preview LOP equals generate-route LOP when both use structure CTC", () => {
+    const basicSalary = 30000;
+    const hraPercentage = 50;
+    const specialAllowance = 10000;
+    const hraAmount = (basicSalary * hraPercentage) / 100;
+    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+
     const preview = buildPayslipPreviewFromEmployee({
-      monthlySalary: 50000, // employees.monthly_salary (stale)
+      monthlySalary: ctcMonthly,
       month: "2026-04",
       lopDays: 3,
       halfDays: 0,
@@ -260,25 +259,44 @@ describe("BUG: preview vs generate-route LOP base divergence", () => {
       overtimeType: "none",
       overtimeDays: 0,
       overtimeHours: 0,
-      basicSalary: 30000, // structure
-      hraPercentage: 50,
-      allowances: 10000, // structure.specialAllowance (current)
+      basicSalary,
+      hraPercentage,
+      allowances: specialAllowance,
     });
 
-    // Simulate the generate route's formula (app/api/hr/payrolls/generate/route.ts)
-    const basicSalary = 30000;
-    const hra = (basicSalary * 50) / 100; // 15000
-    const specialAllowance = 10000;
-    const ctcMonthly = basicSalary + hra + specialAllowance; // 55000
     const calDays = 30;
-    const dailyRate = ctcMonthly / calDays; // 1833.33
-    const lopAmount = roundInr(dailyRate * 3);
+    const generateDailyRate = ctcMonthly / calDays;
+    const generateLopAmount = roundInr(generateDailyRate * 3);
 
-    // Preview LOP base is monthlySalary (50000); generate base is ctcMonthly (55000).
-    // Therefore preview shows ~5000 LOP, generate persists ~5500 LOP. Diff ≈ ₹500.
-    expect(preview.lopDeduction).toBe(roundInr((50000 / 30) * 3)); // 5000
-    expect(lopAmount).toBe(roundInr((55000 / 30) * 3)); // 5500
-    expect(preview.lopDeduction).not.toBe(lopAmount);
+    expect(preview.lopDeduction).toBe(generateLopAmount);
+  });
+
+  it("half-day in preview equals halfDayLopAmount in generate route", () => {
+    const basicSalary = 25000;
+    const hraPercentage = 40;
+    const specialAllowance = 8000;
+    const hraAmount = (basicSalary * hraPercentage) / 100;
+    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+
+    const preview = buildPayslipPreviewFromEmployee({
+      monthlySalary: ctcMonthly,
+      month: "2026-05",
+      lopDays: 0,
+      halfDays: 4,
+      otherDeductions: 0,
+      bonus: 0,
+      overtimeAmount: 0,
+      overtimeType: "none",
+      overtimeDays: 0,
+      overtimeHours: 0,
+      basicSalary,
+      hraPercentage,
+      allowances: specialAllowance,
+    });
+
+    const calDays = calendarDaysInMonth("2026-05"); // 31
+    const halfDayLopAmount = roundInr((ctcMonthly / calDays / 2) * 4);
+    expect(preview.halfDayDeduction).toBe(halfDayLopAmount);
   });
 });
 

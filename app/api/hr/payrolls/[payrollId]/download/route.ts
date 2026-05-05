@@ -61,9 +61,16 @@ export async function GET(
     const overtime = parseFloat(payroll.overtimeAmount || "0");
     const gross = parseFloat(payroll.grossSalary || "0");
     const lopAmount = parseFloat(payroll.lopAmount ?? "0");
+    const halfDayAmount = parseFloat(payroll.halfDayAmount ?? "0");
+    const lopDays = parseFloat(payroll.lopDays ?? "0");
+    const halfDays = parseFloat(payroll.halfDays ?? "0");
     const ptAmount = parseFloat(payroll.ptAmount ?? "200");
     const advanceRecovery = parseFloat(payroll.advanceRecoveryAmount ?? "0");
+    const otherDeductions = parseFloat(payroll.otherDeductions ?? "0");
+    const structureDeductions = parseFloat(payroll.structureDeductions ?? "0");
+    const totalDeductions = parseFloat(payroll.deductions ?? "0");
     const net = parseFloat(payroll.netSalary || "0");
+    const effectiveDays = daysInPayMonth - lopDays - halfDays * 0.5;
 
     const orgAddress = org?.address;
     const addressLine = [orgAddress?.city, orgAddress?.state, orgAddress?.country]
@@ -222,41 +229,71 @@ export async function GET(
         <h3>Payroll Information</h3>
         <div class="dl"><span class="dk">Pay Period</span><span class="dv">${monthLabel}</span></div>
         <div class="dl"><span class="dk">Payment Mode</span><span class="dv">Bank Transfer</span></div>
-        <div class="dl"><span class="dk">Working Days</span><span class="dv">${daysInPayMonth}</span></div>
+        <div class="dl"><span class="dk">Calendar Days</span><span class="dv">${daysInPayMonth}</span></div>
+        <div class="dl"><span class="dk">Effective Days</span><span class="dv">${effectiveDays}</span></div>
+        ${lopDays > 0 ? `<div class="dl"><span class="dk">LOP Days</span><span class="dv">${lopDays}</span></div>` : ""}
+        ${halfDays > 0 ? `<div class="dl"><span class="dk">Half Days</span><span class="dv">${halfDays}</span></div>` : ""}
       </div>
     </div>
 
     <!-- Salary breakdown -->
     <div class="salary-section">
       <div class="salary-title">Salary Breakdown</div>
-      <table class="salary">
-        <thead>
-          <tr>
-            <th>Earnings</th>
-            <th>Amount (₹)</th>
-            <th>Deductions</th>
-            <th>Amount (₹)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Basic Salary</td>
-            <td>${fmt(payroll.basicSalary)}</td>
-            <td>Professional Tax</td>
-            <td class="deduction">${ptAmount > 0 ? fmt(String(ptAmount)) : "—"}</td>
-          </tr>
-          ${hra > 0 ? `<tr><td>House Rent Allowance (HRA)</td><td>${fmt(payroll.hra)}</td><td>${lopAmount > 0 ? "Loss of Pay" : ""}</td><td class="deduction">${lopAmount > 0 ? fmt(String(lopAmount)) : ""}</td></tr>` : ""}
-          ${specialAllowance > 0 ? `<tr><td>Special Allowance</td><td>${fmt(String(specialAllowance))}</td><td>${advanceRecovery > 0 ? "Advance Recovery" : ""}</td><td class="deduction">${advanceRecovery > 0 ? fmt(String(advanceRecovery)) : ""}</td></tr>` : ""}
-          ${bonus > 0 ? `<tr><td>Bonus</td><td>${fmt(payroll.allowances)}</td><td></td><td></td></tr>` : ""}
-          ${overtime > 0 ? `<tr><td>Overtime (${payroll.overtimeDays ?? 0} days)</td><td>${fmt(payroll.overtimeAmount)}</td><td></td><td></td></tr>` : ""}
-          <tr class="subtotal">
-            <td>Gross Earnings</td>
-            <td>${fmt(payroll.grossSalary)}</td>
-            <td>Total Deductions</td>
-            <td>${fmt(payroll.deductions)}</td>
-          </tr>
-        </tbody>
-      </table>
+      ${(() => {
+        const earnings: { label: string; amount: number }[] = [];
+        earnings.push({ label: "Basic Salary", amount: basic });
+        if (hra > 0) earnings.push({ label: "House Rent Allowance (HRA)", amount: hra });
+        if (specialAllowance > 0) earnings.push({ label: "Special Allowance", amount: specialAllowance });
+        if (bonus > 0) earnings.push({ label: "Bonus / Incentive", amount: bonus });
+        if (overtime > 0) {
+          const otDaysVal = parseFloat(payroll.overtimeDays ?? "0");
+          const otHoursVal = parseFloat(payroll.overtimeHours ?? "0");
+          const otLabel =
+            payroll.overtimeType === "days"
+              ? `Overtime Pay (${otDaysVal} days)`
+              : payroll.overtimeType === "hours"
+              ? `Overtime Pay (${otHoursVal} hours)`
+              : "Overtime Pay";
+          earnings.push({ label: otLabel, amount: overtime });
+        }
+
+        const ded: { label: string; amount: number }[] = [];
+        if (ptAmount > 0) ded.push({ label: "Professional Tax", amount: ptAmount });
+        if (lopAmount > 0) ded.push({ label: `Loss of Pay (${lopDays} day${lopDays === 1 ? "" : "s"})`, amount: lopAmount });
+        if (halfDayAmount > 0) ded.push({ label: `Half-Day Deduction (${halfDays} day${halfDays === 1 ? "" : "s"})`, amount: halfDayAmount });
+        if (advanceRecovery > 0) ded.push({ label: "Advance Recovery", amount: advanceRecovery });
+        if (structureDeductions > 0) ded.push({ label: "Recurring Deductions", amount: structureDeductions });
+        if (otherDeductions > 0) ded.push({ label: "Other Deductions", amount: otherDeductions });
+
+        const rows = Math.max(earnings.length, ded.length);
+        const lines: string[] = [];
+        for (let i = 0; i < rows; i++) {
+          const e = earnings[i];
+          const d = ded[i];
+          lines.push(
+            `<tr><td>${e?.label ?? ""}</td><td>${e ? fmt(String(e.amount)) : ""}</td><td>${d?.label ?? ""}</td><td class="deduction">${d ? fmt(String(d.amount)) : ""}</td></tr>`
+          );
+        }
+        return `<table class="salary">
+          <thead>
+            <tr>
+              <th>Earnings</th>
+              <th>Amount (₹)</th>
+              <th>Deductions</th>
+              <th>Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lines.join("\n")}
+            <tr class="subtotal">
+              <td>Gross Earnings</td>
+              <td>${fmt(String(gross))}</td>
+              <td>Total Deductions</td>
+              <td>${fmt(String(totalDeductions))}</td>
+            </tr>
+          </tbody>
+        </table>`;
+      })()}
     </div>
 
     <!-- Net pay bar -->

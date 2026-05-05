@@ -16,6 +16,7 @@ import type { Employee } from "@/types/hr";
 export interface PayslipPreview {
   basicPay: number;
   hra: number;
+  allowances: number;
   grossSalary: number;
   lopDeduction: number;
   halfDayDeduction: number;
@@ -105,6 +106,12 @@ export function PayslipDetailSheet({
                 <span className="text-muted-foreground">HRA</span>
                 <span className="tabular-nums">₹{payslipPreview?.hra.toLocaleString("en-IN")}</span>
               </div>
+              {(payslipPreview?.allowances || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Special Allowance</span>
+                  <span className="tabular-nums">₹{payslipPreview?.allowances.toLocaleString("en-IN")}</span>
+                </div>
+              )}
               {(payslipPreview?.bonus || 0) > 0 && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Bonus / Incentive</span>
