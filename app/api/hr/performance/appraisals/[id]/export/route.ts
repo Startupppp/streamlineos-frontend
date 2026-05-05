@@ -5,7 +5,6 @@ import { appraisals } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
-import { jsPDF } from "jspdf";
 import type { NextRequest } from "next/server";
 import type { AuthSession } from "@/lib/api/helpers";
 
@@ -39,6 +38,7 @@ export async function POST(
     if (!row) return err("Not found.", 404);
     if (!(await canExport(session, row))) return err("Only HR, management, or the reporting manager may export.", 403);
 
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     let y = 12;
     doc.setFontSize(14);
