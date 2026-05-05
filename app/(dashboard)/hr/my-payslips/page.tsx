@@ -139,7 +139,8 @@ export default function MyPayslipsPage() {
 
   const basicSalary = parseFloat(selectedPayslip?.basicSalary || "0");
   const hra = parseFloat(selectedPayslip?.hra || "0");
-  const allowances = parseFloat(selectedPayslip?.allowances || "0");
+  const specialAllowance = parseFloat(selectedPayslip?.specialAllowance || "0");
+  const bonusAmount = parseFloat(selectedPayslip?.allowances || "0");
   const grossSalary = parseFloat(selectedPayslip?.grossSalary || "0");
   const deductions = parseFloat(selectedPayslip?.deductions || "0");
   const netSalary = parseFloat(selectedPayslip?.netSalary || "0");
@@ -147,6 +148,21 @@ export default function MyPayslipsPage() {
   const overtimeType = selectedPayslip?.overtimeType;
   const overtimeDays = parseFloat(selectedPayslip?.overtimeDays || "0");
   const overtimeHoursVal = parseFloat(selectedPayslip?.overtimeHours || "0");
+  const lopDaysCount = parseFloat(selectedPayslip?.lopDays || "0");
+  const lopAmount = parseFloat(selectedPayslip?.lopAmount || "0");
+  const halfDaysCount = parseFloat(selectedPayslip?.halfDays || "0");
+  const halfDayAmount = parseFloat(selectedPayslip?.halfDayAmount || "0");
+  const ptAmount = parseFloat(selectedPayslip?.ptAmount || "200");
+  const advanceRecovery = parseFloat(selectedPayslip?.advanceRecoveryAmount || "0");
+  const otherDeductionsAmount = parseFloat(selectedPayslip?.otherDeductions || "0");
+  const structureDeductionsAmount = parseFloat(selectedPayslip?.structureDeductions || "0");
+  const calendarDaysInPayMonth = selectedPayslip?.month
+    ? (() => {
+        const [yr, mo] = selectedPayslip.month.split("-").map(Number);
+        return new Date(yr, mo, 0).getDate();
+      })()
+    : 30;
+  const effectiveDaysWorked = calendarDaysInPayMonth - lopDaysCount - halfDaysCount * 0.5;
 
   const getBankDetail = (key: string): string => {
     const details = selectedPayslip?.user?.bankDetails;
@@ -284,12 +300,16 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>No of Days:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>31 Days</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{calendarDaysInPayMonth} Days</span>
+                </div>
+                <div style={{ display: "flex" }}>
+                  <span style={{ color: "#374151", width: "160px" }}>Effective Days:</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{effectiveDaysWorked}</span>
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>EMP ID:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>
-                    VC{selectedPayslip.user?.employeeId || "25001"}
+                    {selectedPayslip.user?.employeeId || "—"}
                   </span>
                 </div>
                 <div style={{ display: "flex" }}>
@@ -304,7 +324,10 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>LOP:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>00 Day</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>
+                    {lopDaysCount} Day{lopDaysCount === 1 ? "" : "s"}
+                    {halfDaysCount > 0 ? ` + ${halfDaysCount} half-day${halfDaysCount === 1 ? "" : "s"}` : ""}
+                  </span>
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Acc Number:</span>
@@ -312,63 +335,73 @@ export default function MyPayslipsPage() {
                 </div>
               </div>
 
-              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px", fontSize: "14px" }}>
-                <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
-                <thead>
-                  <tr style={{ backgroundColor: "#f3f4f6" }}>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>Basic Pay</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{basicSalary.toLocaleString()}/-</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>Professional Tax</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹200/-</td>
-                  </tr>
-                  <tr>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>House Rent Allowance</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{hra.toLocaleString()}/-</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                  </tr>
-                  <tr>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>Special Allowance</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{allowances.toLocaleString()}/-</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                  </tr>
-                  {overtimeAmount > 0 && (
-                    <tr>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>
-                        {overtimeType === "days"
-                          ? `Overtime Pay (${overtimeDays} days)`
-                          : overtimeType === "hours"
-                          ? `Overtime Pay (${overtimeHoursVal} hours)`
-                          : "Overtime Pay"}
-                      </td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{overtimeAmount.toLocaleString()}/-</td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    </tr>
-                  )}
-                  <tr style={{ backgroundColor: "#f9fafb" }}>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", fontWeight: 600, color: "#111827" }}>Total Earnings</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{grossSalary.toLocaleString()}/-</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", fontWeight: 600, color: "#111827" }}>Total Deductions</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{deductions.toLocaleString()}/-</td>
-                  </tr>
-                  <tr style={{ backgroundColor: "#f3f4f6" }}>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", fontWeight: "bold", color: "#111827" }}>Net Salary</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: "bold", color: "#111827" }}>₹{netSalary.toLocaleString()}/-</td>
-                  </tr>
-                </tbody>
-              </table>
+              {(() => {
+                const earnings: { label: string; amount: number }[] = [];
+                earnings.push({ label: "Basic Pay", amount: basicSalary });
+                if (hra > 0) earnings.push({ label: "House Rent Allowance", amount: hra });
+                if (specialAllowance > 0) earnings.push({ label: "Special Allowance", amount: specialAllowance });
+                if (bonusAmount > 0) earnings.push({ label: "Bonus / Incentive", amount: bonusAmount });
+                if (overtimeAmount > 0) {
+                  earnings.push({
+                    label:
+                      overtimeType === "days"
+                        ? `Overtime Pay (${overtimeDays} days)`
+                        : overtimeType === "hours"
+                        ? `Overtime Pay (${overtimeHoursVal} hours)`
+                        : "Overtime Pay",
+                    amount: overtimeAmount,
+                  });
+                }
+
+                const deductionRows: { label: string; amount: number }[] = [];
+                if (ptAmount > 0) deductionRows.push({ label: "Professional Tax", amount: ptAmount });
+                if (lopAmount > 0) deductionRows.push({ label: `Loss of Pay (${lopDaysCount} day${lopDaysCount === 1 ? "" : "s"})`, amount: lopAmount });
+                if (halfDayAmount > 0) deductionRows.push({ label: `Half-Day Deduction (${halfDaysCount} day${halfDaysCount === 1 ? "" : "s"})`, amount: halfDayAmount });
+                if (advanceRecovery > 0) deductionRows.push({ label: "Advance Recovery", amount: advanceRecovery });
+                if (structureDeductionsAmount > 0) deductionRows.push({ label: "Recurring Deductions", amount: structureDeductionsAmount });
+                if (otherDeductionsAmount > 0) deductionRows.push({ label: "Other Deductions", amount: otherDeductionsAmount });
+
+                const rowCount = Math.max(earnings.length, deductionRows.length);
+                const cellStyle = { border: "1px solid #9ca3af", padding: "8px 16px" } as const;
+                const labelStyle = { ...cellStyle, color: "#374151" };
+                const amountStyle = { ...cellStyle, textAlign: "center" as const, color: "#111827" };
+
+                return (
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px", fontSize: "14px" }}>
+                    <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f3f4f6" }}>
+                        <th scope="col" style={{ ...cellStyle, textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
+                        <th scope="col" style={{ ...cellStyle, textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                        <th scope="col" style={{ ...cellStyle, textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
+                        <th scope="col" style={{ ...cellStyle, textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: rowCount }).map((_, i) => (
+                        <tr key={i}>
+                          <td style={labelStyle}>{earnings[i]?.label ?? ""}</td>
+                          <td style={amountStyle}>{earnings[i] ? `₹${earnings[i].amount.toLocaleString("en-IN")}/-` : ""}</td>
+                          <td style={labelStyle}>{deductionRows[i]?.label ?? ""}</td>
+                          <td style={amountStyle}>{deductionRows[i] ? `₹${deductionRows[i].amount.toLocaleString("en-IN")}/-` : ""}</td>
+                        </tr>
+                      ))}
+                      <tr style={{ backgroundColor: "#f9fafb" }}>
+                        <td style={{ ...cellStyle, fontWeight: 600, color: "#111827" }}>Total Earnings</td>
+                        <td style={{ ...cellStyle, textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{grossSalary.toLocaleString("en-IN")}/-</td>
+                        <td style={{ ...cellStyle, fontWeight: 600, color: "#111827" }}>Total Deductions</td>
+                        <td style={{ ...cellStyle, textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{deductions.toLocaleString("en-IN")}/-</td>
+                      </tr>
+                      <tr style={{ backgroundColor: "#f3f4f6" }}>
+                        <td style={cellStyle}></td>
+                        <td style={cellStyle}></td>
+                        <td style={{ ...cellStyle, fontWeight: "bold", color: "#111827" }}>Net Salary</td>
+                        <td style={{ ...cellStyle, textAlign: "center", fontWeight: "bold", color: "#111827" }}>₹{netSalary.toLocaleString("en-IN")}/-</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                );
+              })()}
 
               <p style={{ marginBottom: "24px", fontSize: "14px", color: "#111827" }}>
                 <span style={{ fontWeight: "bold" }}>In Words:</span> {numberToWords(Math.round(netSalary))} Rupees Only
