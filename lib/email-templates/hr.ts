@@ -538,11 +538,22 @@ export function getPayslipEmailTemplate(params: {
   month: string;
   netSalary: string;
   orgName: string;
+  passwordProtected?: boolean;
 }): { subject: string; html: string } {
   const sName = escapeHtml(params.employeeName);
   const sMonth = escapeHtml(params.month);
   const sNet = escapeHtml(params.netSalary);
   const sOrg = escapeHtml(params.orgName);
+
+  const passwordHint = params.passwordProtected
+    ? `
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;color:#78350f;">
+        <strong>🔒 Password-protected PDF.</strong>
+        Your password is <strong>the first 4 characters of your PAN (uppercase) followed by DDMM of your date of birth</strong>.
+        Example: PAN ABCDE1234F + DOB 5 Oct 1995 → password <code>ABCD0510</code>.
+      </div>
+    `
+    : "";
 
   const content = `
     <p class="email-text">Dear <strong>${sName}</strong>,</p>
@@ -555,6 +566,7 @@ export function getPayslipEmailTemplate(params: {
       <p style="margin:0;color:#166534;font-size:13px;">Net Salary — ${sMonth}</p>
       <p style="margin:6px 0 0 0;color:#166534;font-size:26px;font-weight:700;">₹${sNet}</p>
     </div>
+    ${passwordHint}
     <p class="email-text">
       The PDF attachment contains your full salary breakdown including earnings, deductions, and bank
       transfer details. If you have any questions, please contact the HR department.

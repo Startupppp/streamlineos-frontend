@@ -5,6 +5,40 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
 import { format } from "date-fns";
+import { logger } from "@/lib/logger";
+
+/**
+ * Best-effort PDF encryption. pdf-lib does not natively support encryption,
+ * so we rely on the `qpdf` system binary if it's installed (Vercel: not by
+ * default; self-hosted: usually yes). If unavailable, returns the original
+ * unencrypted buffer and logs a warning. Callers should clearly indicate to
+ * the recipient whether the PDF is encrypted.
+ */
+async function tryEncryptPdf(buffer: Buffer, password: string): Promise<{ buffer: Buffer; encrypted: boolean }> {
+  if (!password) return { buffer, encrypted: false };
+  try {
+    const { execFile } = await import("node:child_process");
+    const os = await import("node:os");
+    const { promisify } = await import("node:util");
+    const exec = promisify(execFile);
+
+    const tmpIn = path.join(os.tmpdir(), `payslip-in-${process.pid}-${Date.now()}.pdf`);
+    const tmpOut = path.join(os.tmpdir(), `payslip-out-${process.pid}-${Date.now()}.pdf`);
+    await fs.writeFile(tmpIn, buffer);
+    try {
+      await exec("qpdf", ["--encrypt", password, password, "256", "--", tmpIn, tmpOut]);
+      const encrypted = await fs.readFile(tmpOut);
+      return { buffer: encrypted, encrypted: true };
+    } finally {
+      await Promise.allSettled([fs.unlink(tmpIn), fs.unlink(tmpOut)]);
+    }
+  } catch (e) {
+    logger.warn("Payslip PDF encryption skipped — qpdf unavailable", {
+      err: e instanceof Error ? e.message : String(e),
+    });
+    return { buffer, encrypted: false };
+  }
+}
 
 
 export interface PayslipPdfData {
@@ -16,6 +50,8 @@ export interface PayslipPdfData {
   department?: string;
   panNumber?: string;
   pfUan?: string;
+  /** Optional. When set, the generated PDF is encrypted with this password if qpdf is available. */
+  password?: string;
   bankName?: string;
   maskedAccount?: string;
   ifsc?: string;
@@ -308,5 +344,18 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   void y;
 
   const bytes = await doc.save();
-  return Buffer.from(bytes);
+  const buffer = Buffer.from(bytes);
+  if (data.password) {
+    const result = await tryEncryptPdf(buffer, data.password);
+    return result.buffer;
+  }
+  return buffer;
+}
+
+export async function generatePayslipPdfWithEncryptionStatus(
+  data: PayslipPdfData
+): Promise<{ buffer: Buffer; encrypted: boolean }> {
+  const unencrypted = await generatePayslipPdf({ ...data, password: undefined });
+  if (!data.password) return { buffer: unencrypted, encrypted: false };
+  return tryEncryptPdf(unencrypted, data.password);
 }

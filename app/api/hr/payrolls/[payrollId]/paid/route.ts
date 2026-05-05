@@ -5,7 +5,8 @@ import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { format } from "date-fns";
 import { sendEmail } from "@/lib/email";
-import { generatePayslipPdf } from "@/lib/payslip-pdf";
+import { generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
+import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
@@ -74,43 +75,48 @@ export async function PATCH(
           ? "XXXX" + bank.accountNumber.slice(-4)
           : "—";
 
-        const professionalTax = 200;
+        const professionalTax = parseFloat(existing.ptAmount ?? "200");
+        const password = derivePayslipPassword({
+          panNumber: employee.taxId,
+          dateOfBirth: employee.dateOfBirth,
+          employeeName: employee.name,
+          joiningDate: employee.joiningDate,
+        });
 
-        const [pdfBuffer, emailContent] = await Promise.all([
-          generatePayslipPdf({
-            orgName: org?.name ?? "Company",
-            orgAddress: addressLine || undefined,
-            employeeName: employee.name ?? "Employee",
-            employeeId: employee.employeeId ?? undefined,
-            designation: employee.designation ?? undefined,
-            department: employee.team ?? employee.role ?? undefined,
-            panNumber: employee.taxId ?? undefined,
-            pfUan: bank?.pfUanNumber || undefined,
-            bankName: bank?.bankName ?? undefined,
-            maskedAccount,
-            ifsc: bank?.ifsc ?? undefined,
-            joiningDate: employee.joiningDate
-              ? format(new Date(employee.joiningDate), "dd MMM yyyy")
-              : undefined,
-            monthLabel,
-            basicSalary: basic,
-            hra,
-            allowances,
-            overtimeAmount,
-            grossSalary,
-            deductions,
-            professionalTax,
-            netSalary,
-          }),
-          Promise.resolve(
-            getPayslipEmailTemplate({
-              employeeName: employee.name ?? "Employee",
-              month: monthLabel,
-              netSalary: netSalary.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
-              orgName: org?.name ?? "Company",
-            })
-          ),
-        ]);
+        const { buffer: pdfBuffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
+          orgName: org?.name ?? "Company",
+          orgAddress: addressLine || undefined,
+          employeeName: employee.name ?? "Employee",
+          employeeId: employee.employeeId ?? undefined,
+          designation: employee.designation ?? undefined,
+          department: employee.team ?? employee.role ?? undefined,
+          panNumber: employee.taxId ?? undefined,
+          pfUan: bank?.pfUanNumber || undefined,
+          password: password ?? undefined,
+          bankName: bank?.bankName ?? undefined,
+          maskedAccount,
+          ifsc: bank?.ifsc ?? undefined,
+          joiningDate: employee.joiningDate
+            ? format(new Date(employee.joiningDate), "dd MMM yyyy")
+            : undefined,
+          monthLabel,
+          basicSalary: basic,
+          hra,
+          allowances,
+          overtimeAmount,
+          grossSalary,
+          deductions,
+          professionalTax,
+          netSalary,
+        });
+
+        const emailContent = getPayslipEmailTemplate({
+          employeeName: employee.name ?? "Employee",
+          month: monthLabel,
+          netSalary: netSalary.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
+          orgName: org?.name ?? "Company",
+          passwordProtected: encrypted,
+        });
 
         await sendEmail({
           to: employee.email,
