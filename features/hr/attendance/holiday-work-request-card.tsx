@@ -215,7 +215,7 @@ export function HolidayWorkRequestCard({ isAdmin }: HolidayWorkRequestCardProps)
                 <div className="space-y-2">
                   {(requests ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4 rounded-lg border border-dashed border-border">
-                      No requests yet. Click "+ Request" to submit one.
+                      No requests yet. Click &quot;+ Request&quot; to submit one.
                     </p>
                   ) : (
                     (requests ?? []).slice(0, 6).map((r) => (
