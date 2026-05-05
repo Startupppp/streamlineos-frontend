@@ -3,6 +3,7 @@ import {
   PROFESSIONAL_TAX_INR,
   buildPayslipPreviewFromEmployee,
   calendarDaysInMonth,
+  computeStatutory,
   computeTotalDeductionsAndNet,
   perDaySalaryForLop,
   rawHalfDayDeduction,
@@ -316,5 +317,65 @@ describe("half-day deduction is folded into lopAmount in storage", () => {
     const oneFull = rawLopDeduction("2026-04", 30000, 30000, 1);
     const twoHalves = rawHalfDayDeduction("2026-04", 30000, 30000, 2);
     expect(oneFull).toBe(twoHalves);
+  });
+});
+
+describe("computeStatutory (PF / ESI)", () => {
+  const baseParams = {
+    pfApplicable: true,
+    pfEmployeeRate: 12,
+    pfEmployerRate: 12,
+    pfWageCeiling: 15000,
+    esiApplicable: true,
+    esiEmployeeRate: 0.75,
+    esiEmployerRate: 3.25,
+    esiWageCeiling: 21000,
+  };
+
+  it("PF caps at the wage ceiling", () => {
+    const { pfEmployee, pfEmployer } = computeStatutory(40000, 80000, baseParams);
+    expect(pfEmployee).toBe(1800);
+    expect(pfEmployer).toBe(1800);
+  });
+
+  it("PF uses basicSalary when below the ceiling", () => {
+    const { pfEmployee, pfEmployer } = computeStatutory(12000, 25000, baseParams);
+    expect(pfEmployee).toBe(1440);
+    expect(pfEmployer).toBe(1440);
+  });
+
+  it("PF zero when not applicable", () => {
+    const { pfEmployee, pfEmployer } = computeStatutory(40000, 80000, {
+      ...baseParams,
+      pfApplicable: false,
+    });
+    expect(pfEmployee).toBe(0);
+    expect(pfEmployer).toBe(0);
+  });
+
+  it("ESI applies only when gross ≤ ceiling", () => {
+    const inEsi = computeStatutory(15000, 20000, baseParams);
+    expect(inEsi.esiEmployee).toBe(150);
+    expect(inEsi.esiEmployer).toBe(650);
+
+    const outOfEsi = computeStatutory(15000, 25000, baseParams);
+    expect(outOfEsi.esiEmployee).toBe(0);
+    expect(outOfEsi.esiEmployer).toBe(0);
+  });
+
+  it("ESI zero when not applicable", () => {
+    const r = computeStatutory(15000, 20000, { ...baseParams, esiApplicable: false });
+    expect(r.esiEmployee).toBe(0);
+    expect(r.esiEmployer).toBe(0);
+  });
+
+  it("custom rates respected (e.g. tenured PF reduction)", () => {
+    const { pfEmployee, pfEmployer } = computeStatutory(40000, 80000, {
+      ...baseParams,
+      pfEmployeeRate: 10,
+      pfEmployerRate: 12,
+    });
+    expect(pfEmployee).toBe(1500);
+    expect(pfEmployer).toBe(1800);
   });
 });

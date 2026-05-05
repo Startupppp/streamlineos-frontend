@@ -400,6 +400,13 @@
       "when": 1774390011000,
       "tag": "0113_payroll_itemized_deductions",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1774390012000,
+      "tag": "0114_pf_esi_statutory",
+      "breakpoints": true
     }
   ]
 }

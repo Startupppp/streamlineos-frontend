@@ -65,6 +65,8 @@ export async function GET(
     const lopDays = parseFloat(payroll.lopDays ?? "0");
     const halfDays = parseFloat(payroll.halfDays ?? "0");
     const ptAmount = parseFloat(payroll.ptAmount ?? "200");
+    const pfEmployee = parseFloat(payroll.pfEmployee ?? "0");
+    const esiEmployee = parseFloat(payroll.esiEmployee ?? "0");
     const advanceRecovery = parseFloat(payroll.advanceRecoveryAmount ?? "0");
     const otherDeductions = parseFloat(payroll.otherDeductions ?? "0");
     const structureDeductions = parseFloat(payroll.structureDeductions ?? "0");
@@ -259,6 +261,8 @@ export async function GET(
 
         const ded: { label: string; amount: number }[] = [];
         if (ptAmount > 0) ded.push({ label: "Professional Tax", amount: ptAmount });
+        if (pfEmployee > 0) ded.push({ label: "Provident Fund (PF)", amount: pfEmployee });
+        if (esiEmployee > 0) ded.push({ label: "ESI", amount: esiEmployee });
         if (lopAmount > 0) ded.push({ label: `Loss of Pay (${lopDays} day${lopDays === 1 ? "" : "s"})`, amount: lopAmount });
         if (halfDayAmount > 0) ded.push({ label: `Half-Day Deduction (${halfDays} day${halfDays === 1 ? "" : "s"})`, amount: halfDayAmount });
         if (advanceRecovery > 0) ded.push({ label: "Advance Recovery", amount: advanceRecovery });

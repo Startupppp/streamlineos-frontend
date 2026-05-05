@@ -50,6 +50,10 @@ export interface EmployeePayslip {
   halfDays: string | null;
   halfDayAmount: string | null;
   ptAmount: string | null;
+  pfEmployee: string | null;
+  pfEmployer: string | null;
+  esiEmployee: string | null;
+  esiEmployer: string | null;
   advanceRecoveryAmount: string | null;
   otherDeductions: string | null;
   structureDeductions: string | null;

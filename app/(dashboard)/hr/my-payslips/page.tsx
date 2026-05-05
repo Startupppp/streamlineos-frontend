@@ -153,6 +153,8 @@ export default function MyPayslipsPage() {
   const halfDaysCount = parseFloat(selectedPayslip?.halfDays || "0");
   const halfDayAmount = parseFloat(selectedPayslip?.halfDayAmount || "0");
   const ptAmount = parseFloat(selectedPayslip?.ptAmount || "200");
+  const pfEmployee = parseFloat(selectedPayslip?.pfEmployee || "0");
+  const esiEmployee = parseFloat(selectedPayslip?.esiEmployee || "0");
   const advanceRecovery = parseFloat(selectedPayslip?.advanceRecoveryAmount || "0");
   const otherDeductionsAmount = parseFloat(selectedPayslip?.otherDeductions || "0");
   const structureDeductionsAmount = parseFloat(selectedPayslip?.structureDeductions || "0");
@@ -355,6 +357,8 @@ export default function MyPayslipsPage() {
 
                 const deductionRows: { label: string; amount: number }[] = [];
                 if (ptAmount > 0) deductionRows.push({ label: "Professional Tax", amount: ptAmount });
+                if (pfEmployee > 0) deductionRows.push({ label: "Provident Fund (PF)", amount: pfEmployee });
+                if (esiEmployee > 0) deductionRows.push({ label: "ESI", amount: esiEmployee });
                 if (lopAmount > 0) deductionRows.push({ label: `Loss of Pay (${lopDaysCount} day${lopDaysCount === 1 ? "" : "s"})`, amount: lopAmount });
                 if (halfDayAmount > 0) deductionRows.push({ label: `Half-Day Deduction (${halfDaysCount} day${halfDaysCount === 1 ? "" : "s"})`, amount: halfDayAmount });
                 if (advanceRecovery > 0) deductionRows.push({ label: "Advance Recovery", amount: advanceRecovery });

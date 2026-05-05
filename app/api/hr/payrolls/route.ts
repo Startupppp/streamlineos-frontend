@@ -11,7 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
-import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR } from "@/lib/hr/payroll-calculations";
+import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR, computeStatutory } from "@/lib/hr/payroll-calculations";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -199,12 +199,25 @@ export async function POST(req: NextRequest) {
 
         const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount);
 
+        const statutory = computeStatutory(basicSalary, grossSalary, {
+          pfApplicable: salary.pfApplicable ?? false,
+          pfEmployeeRate: parseFloat(salary.pfEmployeeRate ?? "12"),
+          pfEmployerRate: parseFloat(salary.pfEmployerRate ?? "12"),
+          pfWageCeiling: parseFloat(salary.pfWageCeiling ?? "15000"),
+          esiApplicable: salary.esiApplicable ?? false,
+          esiEmployeeRate: parseFloat(salary.esiEmployeeRate ?? "0.75"),
+          esiEmployerRate: parseFloat(salary.esiEmployerRate ?? "3.25"),
+          esiWageCeiling: parseFloat(salary.esiWageCeiling ?? "21000"),
+        });
+
         const totalDeductions = roundInr(
           lopAmount +
             halfDayAmount +
             ptAmount +
             structureDeductions +
-            advanceRecoveryAmount
+            advanceRecoveryAmount +
+            statutory.pfEmployee +
+            statutory.esiEmployee
         );
         const netSalary = roundInr(grossSalary - totalDeductions);
 
@@ -221,6 +234,10 @@ export async function POST(req: NextRequest) {
           halfDays: halfDaysCount.toString(),
           halfDayAmount: halfDayAmount.toString(),
           ptAmount: ptAmount.toString(),
+          pfEmployee: statutory.pfEmployee.toString(),
+          pfEmployer: statutory.pfEmployer.toString(),
+          esiEmployee: statutory.esiEmployee.toString(),
+          esiEmployer: statutory.esiEmployer.toString(),
           advanceRecoveryAmount: advanceRecoveryAmount.toString(),
           otherDeductions: "0",
           structureDeductions: structureDeductions.toString(),

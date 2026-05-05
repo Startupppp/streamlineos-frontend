@@ -2,6 +2,57 @@
 
 export const PROFESSIONAL_TAX_INR = 200;
 
+export interface StatutoryParams {
+  pfApplicable: boolean;
+  pfEmployeeRate: number;
+  pfEmployerRate: number;
+  pfWageCeiling: number;
+  esiApplicable: boolean;
+  esiEmployeeRate: number;
+  esiEmployerRate: number;
+  esiWageCeiling: number;
+}
+
+export interface StatutoryComputed {
+  pfEmployee: number;
+  pfEmployer: number;
+  esiEmployee: number;
+  esiEmployer: number;
+}
+
+/**
+ * Compute PF and ESI for one payroll cycle.
+ *
+ * PF base = min(basicSalary, pfWageCeiling). Standard Indian rule: 12% of basic,
+ * capped at the wage ceiling (₹15,000 default). Both employee + employer contribute.
+ *
+ * ESI base = grossSalary. Applies only when gross ≤ esiWageCeiling (₹21,000 default).
+ * Employee 0.75%, employer 3.25%. If gross > ceiling on the entry month the employee
+ * stays out of ESI for the cycle.
+ */
+export function computeStatutory(
+  basicSalary: number,
+  grossSalary: number,
+  params: StatutoryParams
+): StatutoryComputed {
+  let pfEmployee = 0;
+  let pfEmployer = 0;
+  if (params.pfApplicable) {
+    const pfBase = Math.min(basicSalary, params.pfWageCeiling);
+    pfEmployee = roundInr((pfBase * params.pfEmployeeRate) / 100);
+    pfEmployer = roundInr((pfBase * params.pfEmployerRate) / 100);
+  }
+
+  let esiEmployee = 0;
+  let esiEmployer = 0;
+  if (params.esiApplicable && grossSalary <= params.esiWageCeiling) {
+    esiEmployee = roundInr((grossSalary * params.esiEmployeeRate) / 100);
+    esiEmployer = roundInr((grossSalary * params.esiEmployerRate) / 100);
+  }
+
+  return { pfEmployee, pfEmployer, esiEmployee, esiEmployer };
+}
+
 export function calendarDaysInMonth(monthYyyyMm: string): number {
   const [y, m] = monthYyyyMm.split("-").map(Number);
   if (!y || !m) return 30;
