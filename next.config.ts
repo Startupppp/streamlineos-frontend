@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 function isLocalOrLoopbackAppUrl(): boolean {
   for (const raw of [process.env.NEXT_PUBLIC_APP_URL, process.env.NEXTAUTH_URL]) {
@@ -111,4 +112,16 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryEnabled = !!process.env.SENTRY_AUTH_TOKEN;
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      silent: !process.env.CI,
+      widenClientFileUpload: true,
+      tunnelRoute: "/monitoring",
+      disableLogger: true,
+      automaticVercelMonitors: false,
+    })
+  : nextConfig;
