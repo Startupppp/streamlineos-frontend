@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.18.0",
   "scripts": {
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "dev": "next dev",
     "start": "next start",
     "build": "next build",

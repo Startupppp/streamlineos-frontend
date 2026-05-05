@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
       "react-hooks/purity": "warn",
       "react-hooks/immutability": "warn",
       "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
     },
   },
   globalIgnores([
