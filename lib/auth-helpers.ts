@@ -4,19 +4,9 @@ import { organizationMembers, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import type { AuthResult } from "@/lib/auth-types";
-import { ADMIN_ROLES, EXPENSE_ADMIN_ROLES, ROLES } from "@/lib/constants/roles";
+import { ADMIN_ROLES } from "@/lib/constants/roles";
 
-export function isAdminOrOwner(role: string | undefined | null): boolean {
-  return !!role && ADMIN_ROLES.includes(role);
-}
-
-export function isCEO(role: string | undefined | null): boolean {
-  return role === ROLES.CEO;
-}
-
-export function isExpenseAdmin(role: string | undefined | null): boolean {
-  return !!role && EXPENSE_ADMIN_ROLES.includes(role);
-}
+export { isAdminOrOwner, isCEO, isExpenseAdmin } from "./auth-role-guards";
 
 export async function ensureOrgMembership(
   userId: string,

@@ -100,3 +100,19 @@ Each one is a **build blocker** for the feature listed. Do not implement the cor
 **Current assumption**: ≥ 8 hours work logged on holiday/Sunday = qualifies for holiday pay or comp off.
 **Action required**: Confirm the hour threshold for "full day" (likely = standard shift duration = 9 hours or ≥ 8 hours).
 **Blocks**: Feature 4 (Holiday Work Request eligibility check) and Feature 7 (Comp Off grant logic).
+
+---
+
+## Appraisal & PIP module (performance)
+
+### OPEN-12 · Appraisal / PIP record retention duration (Q36)
+**Questionnaire**: Q36 — automatic archival / purge duration not finalized (red).
+**Why blocked**: No scheduled purge or archive job until HR defines retention.
+**Current approach**: **No automatic purge**; all `appraisals` and `performance_improvement_plans` rows are retained until product rules exist.
+**Blocks**: Automated retention / compliance purge only.
+
+### OPEN-13 · Exited employees — appraisal & PIP access (Q37 / Q38)
+**Questionnaire**: Q37/Q38 — records for exited staff must remain available to HR.
+**HR direction**: Soft deactivation (`users.is_active = false`) is used instead of hard delete; appraisal and PIP rows are **not** cascaded away.
+**Current approach**: HR and authorized roles can still open appraisals/PIPs by id / employee filter; list endpoints do **not** filter out inactive users for these tables.
+**Blocks**: Nothing — policy is “retain and allow HR access”; any future `deleted_at` on users must keep FK rows visible to HR (no hard delete of appraisal/PIP history).
