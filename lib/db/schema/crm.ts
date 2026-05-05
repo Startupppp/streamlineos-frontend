@@ -385,7 +385,11 @@ export const crmPeople = pgTable("crm_people", {
   bio: text("bio"),
   skills: text("skills").array(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_people_org").on(table.orgId),
+  index("idx_crm_people_org_slug").on(table.orgId, table.slug),
+  index("idx_crm_people_email").on(table.email),
+]);
 
 export const crmCompanies = pgTable("crm_companies", {
   id: serial("id").primaryKey(),
@@ -398,7 +402,10 @@ export const crmCompanies = pgTable("crm_companies", {
   customerSince: text("customer_since"),
   csmId: integer("csm_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_companies_org").on(table.orgId),
+  index("idx_crm_companies_csm").on(table.csmId),
+]);
 
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
@@ -411,7 +418,10 @@ export const crmDeals = pgTable("crm_deals", {
   salesRepId: integer("sales_rep_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_deals_org_stage").on(table.orgId, table.stage),
+  index("idx_crm_deals_sales_rep").on(table.salesRepId),
+]);
 
 export const crmLeads = pgTable("crm_leads", {
   id: serial("id").primaryKey(),
@@ -422,7 +432,10 @@ export const crmLeads = pgTable("crm_leads", {
   status: crmLeadStatusEnum("status").default("lead"),
   channel: text("channel"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_leads_org_status").on(table.orgId, table.status),
+  index("idx_crm_leads_campaign").on(table.campaignId),
+]);
 
 export const crmContent = pgTable("crm_content", {
   id: serial("id").primaryKey(),
@@ -433,7 +446,9 @@ export const crmContent = pgTable("crm_content", {
   leads: integer("leads").default(0),
   convRate: decimal("conv_rate").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_content_org").on(table.orgId),
+]);
 
 export const crmEvents = pgTable("crm_events", {
   id: serial("id").primaryKey(),
@@ -443,7 +458,9 @@ export const crmEvents = pgTable("crm_events", {
   type: text("type").notNull(),
   status: crmEventStatusEnum("status").default("planning"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_events_org").on(table.orgId),
+]);
 
 export const crmActivities = pgTable("crm_activities", {
   id: serial("id").primaryKey(),
@@ -455,7 +472,10 @@ export const crmActivities = pgTable("crm_activities", {
   personId: integer("person_id").references(() => crmPeople.id),
   category: text("category").notNull().default("sales"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_activities_org_created").on(table.orgId, table.createdAt),
+  index("idx_crm_activities_person").on(table.personId),
+]);
 
 export const crmSupportTickets = pgTable("crm_support_tickets", {
   id: serial("id").primaryKey(),
@@ -466,7 +486,10 @@ export const crmSupportTickets = pgTable("crm_support_tickets", {
   assigneeId: integer("assignee_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow(),
   resolvedAt: timestamp("resolved_at"),
-});
+}, (table) => [
+  index("idx_crm_support_tickets_org_status").on(table.orgId, table.status),
+  index("idx_crm_support_tickets_assignee").on(table.assigneeId),
+]);
 
 export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   id: serial("id").primaryKey(),
@@ -478,7 +501,9 @@ export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   csat: decimal("csat").default("0"),
   ticketVolume: integer("ticket_volume").default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_crm_monthly_metrics_org_month").on(table.orgId, table.month),
+]);
 
 export const crmTeamPerformance = pgTable("crm_team_performance", {
   id: serial("id").primaryKey(),
@@ -672,6 +697,7 @@ export const clientAccounts = pgTable("client_accounts", {
   index("idx_client_accounts_org").on(table.orgId),
   index("idx_client_accounts_sales_rep").on(table.salesRepId),
   index("idx_client_accounts_status").on(table.orgId, table.status),
+  index("idx_client_accounts_assigned_crm").on(table.assignedCrmId),
 ]);
 
 export const clientAccountActivities = pgTable("client_account_activities", {
