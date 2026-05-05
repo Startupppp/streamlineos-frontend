@@ -43,7 +43,16 @@ export interface EmployeePayslip {
   month: string;
   basicSalary: string;
   hra: string | null;
+  specialAllowance: string | null;
   allowances: string | null;
+  lopDays: string | null;
+  lopAmount: string | null;
+  halfDays: string | null;
+  halfDayAmount: string | null;
+  ptAmount: string | null;
+  advanceRecoveryAmount: string | null;
+  otherDeductions: string | null;
+  structureDeductions: string | null;
   deductions: string | null;
   grossSalary: string;
   netSalary: string;
