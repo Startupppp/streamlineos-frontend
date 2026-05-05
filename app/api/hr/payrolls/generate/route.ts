@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
     const ctcMonthly = basicSalary + hra + specialAllowance;
     const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
-    // Auto-compute overtime from approved EXTRA_PAY holiday work requests
+    const saturdayMult = parseFloat(salary.saturdayOtMultiplier ?? "1.00");
+    const sundayMult = parseFloat(salary.sundayOtMultiplier ?? "2.00");
+    const holidayMult = parseFloat(salary.holidayOtMultiplier ?? "2.00");
+
+    // Auto-compute overtime from approved EXTRA_PAY holiday work requests.
+    // OT amount per day = dailyRate × (multiplier for that day's type).
     const approvedHwrs = await db.query.holidayWorkRequests.findMany({
       where: and(
         eq(holidayWorkRequests.orgId, session.orgId),
@@ -81,10 +86,11 @@ export async function POST(req: NextRequest) {
         gte(holidayWorkRequests.requestDate, monthStart),
         lte(holidayWorkRequests.requestDate, monthEnd)
       ),
-      columns: { id: true, requestDate: true },
+      columns: { id: true, requestDate: true, type: true },
     });
 
     let overtimeDays = 0;
+    let overtimeAmountUnrounded = 0;
     for (const hwr of approvedHwrs) {
       const att = await db.query.attendance.findFirst({
         where: and(
@@ -96,9 +102,12 @@ export async function POST(req: NextRequest) {
       });
       if (parseFloat(att?.workHours ?? "0") >= FULL_DAY_HOURS) {
         overtimeDays++;
+        const mult =
+          hwr.type === "HOLIDAY" ? holidayMult : hwr.type === "SUNDAY" ? sundayMult : saturdayMult;
+        overtimeAmountUnrounded += dailyRate * mult;
       }
     }
-    const overtimeAmount = roundInr(dailyRate * overtimeDays);
+    const overtimeAmount = roundInr(overtimeAmountUnrounded);
 
     // Auto-pull advance recovery from active salary loan (oldest active first)
     const activeLoan = await db.query.salaryLoans.findFirst({

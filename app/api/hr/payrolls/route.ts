@@ -105,14 +105,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Approved EXTRA_PAY holiday work requests in this month, joined with attendance
-    // to confirm the employee actually worked ≥ FULL_DAY_HOURS that day. Single grouped
-    // query — no per-user loop.
-    const overtimeMap = new Map<string, number>();
+    // Approved EXTRA_PAY holiday work requests in this month, grouped by user + type
+    // so we can apply the right multiplier (Saturday/Sunday/Holiday) per day count.
+    // Joined with attendance to confirm the employee worked ≥ FULL_DAY_HOURS.
+    const overtimeMap = new Map<string, { saturday: number; sunday: number; holiday: number }>();
     try {
       const otRows = await db
         .select({
           userId: holidayWorkRequests.userId,
+          type: holidayWorkRequests.type,
           eligibleDays: sql<number>`count(*) FILTER (WHERE COALESCE(${attendance.workHours}::numeric, 0) >= ${FULL_DAY_HOURS})`.as("eligible_days"),
         })
         .from(holidayWorkRequests)
@@ -134,8 +135,15 @@ export async function POST(req: NextRequest) {
             lte(holidayWorkRequests.requestDate, monthEnd)
           )
         )
-        .groupBy(holidayWorkRequests.userId);
-      for (const r of otRows) overtimeMap.set(r.userId, Number(r.eligibleDays) || 0);
+        .groupBy(holidayWorkRequests.userId, holidayWorkRequests.type);
+      for (const r of otRows) {
+        const days = Number(r.eligibleDays) || 0;
+        const current = overtimeMap.get(r.userId) ?? { saturday: 0, sunday: 0, holiday: 0 };
+        if (r.type === "HOLIDAY") current.holiday += days;
+        else if (r.type === "SUNDAY") current.sunday += days;
+        else if (r.type === "SATURDAY") current.saturday += days;
+        overtimeMap.set(r.userId, current);
+      }
     } catch (e) {
       logger.warn("Failed to fetch overtime data for payroll", {
         error: e instanceof Error ? e.message : "Unknown",
@@ -192,8 +200,14 @@ export async function POST(req: NextRequest) {
         const lopAmount = roundInr(dailyRate * lopDays);
         const halfDayAmount = roundInr((dailyRate / 2) * halfDaysCount);
 
-        const overtimeDays = overtimeMap.get(uId) ?? 0;
-        const overtimeAmount = roundInr(dailyRate * overtimeDays);
+        const saturdayMult = parseFloat(salary.saturdayOtMultiplier ?? "1.00");
+        const sundayMult = parseFloat(salary.sundayOtMultiplier ?? "2.00");
+        const holidayMult = parseFloat(salary.holidayOtMultiplier ?? "2.00");
+        const otBuckets = overtimeMap.get(uId) ?? { saturday: 0, sunday: 0, holiday: 0 };
+        const overtimeDays = otBuckets.saturday + otBuckets.sunday + otBuckets.holiday;
+        const overtimeAmount = roundInr(
+          dailyRate * (otBuckets.saturday * saturdayMult + otBuckets.sunday * sundayMult + otBuckets.holiday * holidayMult)
+        );
 
         const advanceRecoveryAmount = activeLoanMap.get(uId) ?? 0;
 

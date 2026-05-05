@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     const requestDate = new Date(body.requestDate + "T00:00:00");
     const dayOfWeek = requestDate.getDay();
     const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
 
     const holiday = await db.query.holidays.findFirst({
       where: and(
@@ -60,11 +61,11 @@ export async function POST(req: NextRequest) {
       columns: { id: true, name: true },
     });
 
-    if (!holiday && !isSunday) {
-      return err("The selected date is not a holiday or Sunday.", 400);
+    if (!holiday && !isSunday && !isSaturday) {
+      return err("The selected date is not a Saturday, Sunday, or holiday.", 400);
     }
 
-    const type = holiday ? "HOLIDAY" : "SUNDAY";
+    const type = holiday ? "HOLIDAY" : isSunday ? "SUNDAY" : "SATURDAY";
 
     const existing = await db.query.holidayWorkRequests.findFirst({
       where: and(
@@ -91,7 +92,9 @@ export async function POST(req: NextRequest) {
 
     void notifyByRoles(session.orgId, [ROLES.CEO, ROLES.HR], {
       title: "Holiday work request submitted",
-      message: `${session.user.name ?? session.user.email} requested to work on ${type === "HOLIDAY" ? `holiday (${holiday?.name})` : "Sunday"} on ${body.requestDate}. Preference: ${body.compensationPreference.replace("_", " ")}.`,
+      message: `${session.user.name ?? session.user.email} requested to work on ${
+        type === "HOLIDAY" ? `holiday (${holiday?.name})` : type === "SUNDAY" ? "Sunday" : "Saturday"
+      } on ${body.requestDate}. Preference: ${body.compensationPreference.replace("_", " ")}.`,
       link: "/hr/attendance",
       metadata: { requestId: request.id, userId: session.user.id },
     }).catch(() => {});
