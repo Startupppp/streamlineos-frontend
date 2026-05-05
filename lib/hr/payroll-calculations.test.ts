@@ -227,3 +227,76 @@ describe("buildPayslipPreviewFromEmployee", () => {
     expect(preview.netSalary).toBe(preview.grossSalary - preview.totalDeductions);
   });
 });
+
+/**
+ * Cross-path consistency: preview vs generate route.
+ *
+ * The payroll/page.tsx preview uses `monthlySalary` (employees.monthly_salary) as the
+ * LOP per-day base. The generate route at app/api/hr/payrolls/generate/route.ts derives
+ * dailyRate from `basicSalary + hra + specialAllowance` (the salary structure CTC).
+ *
+ * If those two amounts differ, the preview shown to the admin and the value persisted
+ * in the database disagree. The bug that motivates these tests:
+ *
+ *   employees.monthly_salary  = 50000 (HR set this manually)
+ *   salary_structure          = basic 30000, hra 50%, specialAllowance 5000  → ctc 50000
+ *   then HR raises specialAllowance to 10000 in salary_structures (ctc → 55000)
+ *   but forgets to update employees.monthly_salary
+ *
+ * Preview LOP uses 50000/30 = 1666.67/day. Generate uses 55000/30 = 1833.33/day.
+ * Same LOP days produces different deductions and different net salary.
+ */
+describe("BUG: preview vs generate-route LOP base divergence", () => {
+  it("documents the divergence — preview LOP base = monthlySalary, generate base = ctc(structure)", () => {
+    // Simulate the preview path used by app/(dashboard)/hr/payroll/page.tsx
+    const preview = buildPayslipPreviewFromEmployee({
+      monthlySalary: 50000, // employees.monthly_salary (stale)
+      month: "2026-04",
+      lopDays: 3,
+      halfDays: 0,
+      otherDeductions: 0,
+      bonus: 0,
+      overtimeAmount: 0,
+      overtimeType: "none",
+      overtimeDays: 0,
+      overtimeHours: 0,
+      basicSalary: 30000, // structure
+      hraPercentage: 50,
+      allowances: 10000, // structure.specialAllowance (current)
+    });
+
+    // Simulate the generate route's formula (app/api/hr/payrolls/generate/route.ts)
+    const basicSalary = 30000;
+    const hra = (basicSalary * 50) / 100; // 15000
+    const specialAllowance = 10000;
+    const ctcMonthly = basicSalary + hra + specialAllowance; // 55000
+    const calDays = 30;
+    const dailyRate = ctcMonthly / calDays; // 1833.33
+    const lopAmount = roundInr(dailyRate * 3);
+
+    // Preview LOP base is monthlySalary (50000); generate base is ctcMonthly (55000).
+    // Therefore preview shows ~5000 LOP, generate persists ~5500 LOP. Diff ≈ ₹500.
+    expect(preview.lopDeduction).toBe(roundInr((50000 / 30) * 3)); // 5000
+    expect(lopAmount).toBe(roundInr((55000 / 30) * 3)); // 5500
+    expect(preview.lopDeduction).not.toBe(lopAmount);
+  });
+});
+
+/**
+ * Half-day persistence.
+ *
+ * payrolls schema (lib/db/schema/hr.ts:113-141) does not have a halfDays column.
+ * The generate route folds half-day-deduction into lopAmount (line 138):
+ *   lopAmount: (lopAmount + halfDayLopAmount).toString()
+ *
+ * Outcome: the database cannot tell how many half-days a payroll covered, and the
+ * payslip cannot itemize half-day vs full LOP. This test pins the math so a future
+ * schema fix that splits halfDayAmount out doesn't silently change net salary.
+ */
+describe("half-day deduction is folded into lopAmount in storage", () => {
+  it("half-day = (perDay/2) per half-day; identical to two half-days = one full day", () => {
+    const oneFull = rawLopDeduction("2026-04", 30000, 30000, 1);
+    const twoHalves = rawHalfDayDeduction("2026-04", 30000, 30000, 2);
+    expect(oneFull).toBe(twoHalves);
+  });
+});
