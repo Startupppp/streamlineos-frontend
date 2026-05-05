@@ -105,11 +105,20 @@ export default function PayrollPage() {
   const payslipPreview = useMemo(() => {
     if (!selectedEmployeeData) return null;
 
-    const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
     const otAmt = overtimePreview?.overtimeAmount ?? 0;
 
+    // CTC must be derived from the active salary structure, not employees.monthly_salary.
+    // The generate route uses basicSalary + hra + specialAllowance as the LOP per-day base;
+    // the preview must agree or HR will see one number and the system will persist another.
+    const basicSalary = activeSalary ? parseFloat(activeSalary.basicSalary) : 0;
+    const hraPercentage = activeSalary ? parseFloat(activeSalary.hraPercentage ?? "50") : 50;
+    const specialAllowance = activeSalary ? parseFloat(activeSalary.specialAllowance ?? "0") : 0;
+    const structureDeductions = activeSalary ? parseFloat(activeSalary.deductions ?? "0") : 0;
+    const hraAmount = (basicSalary * hraPercentage) / 100;
+    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+
     return buildPayslipPreviewFromEmployee({
-      monthlySalary,
+      monthlySalary: ctcMonthly,
       month: selectedMonth,
       lopDays: parseFloat(lopDays) || 0,
       halfDays: parseFloat(halfDays) || 0,
@@ -119,10 +128,10 @@ export default function PayrollPage() {
       overtimeType: otAmt > 0 ? "days" : "",
       overtimeDays: overtimePreview?.overtimeDays ?? 0,
       overtimeHours: 0,
-      basicSalary: activeSalary ? parseFloat(activeSalary.basicSalary) : undefined,
-      hraPercentage: activeSalary ? parseFloat(activeSalary.hraPercentage ?? "50") : undefined,
-      allowances: activeSalary ? parseFloat(activeSalary.specialAllowance ?? "0") : undefined,
-      salaryStructureDeductions: 0,
+      basicSalary: activeSalary ? basicSalary : undefined,
+      hraPercentage: activeSalary ? hraPercentage : undefined,
+      allowances: activeSalary ? specialAllowance : undefined,
+      salaryStructureDeductions: structureDeductions,
     });
   }, [
     selectedEmployeeData,
