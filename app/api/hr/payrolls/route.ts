@@ -5,14 +5,18 @@ import {
   payrolls,
   salaryStructures,
   organizationMembers,
-  users,
   attendance,
+  holidayWorkRequests,
+  salaryLoans,
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR } from "@/lib/hr/payroll-calculations";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+
+const FULL_DAY_HOURS = 8;
 
 const generatePayrollSchema = z.object({
   month: z.string().optional(),
@@ -39,11 +43,10 @@ export async function POST(req: NextRequest) {
     const memberships = await db.query.organizationMembers.findMany({
       where: eq(organizationMembers.orgId, session.orgId),
     });
-
     const memberUserIds = memberships.map((m) => m.userId).filter(Boolean) as string[];
     if (memberUserIds.length === 0) return ok({ generated: 0 });
 
-    const [allSalaryStructures, existingPayrolls, allUsers] = await Promise.all([
+    const [allSalaryStructures, existingPayrolls] = await Promise.all([
       db.query.salaryStructures.findMany({
         where: and(
           inArray(salaryStructures.userId, memberUserIds),
@@ -57,37 +60,29 @@ export async function POST(req: NextRequest) {
           eq(payrolls.month, body.month),
           eq(payrolls.orgId, session.orgId)
         ),
-      }),
-      db.query.users.findMany({
-        where: inArray(users.id, memberUserIds),
-        columns: { id: true, monthlySalary: true },
+        columns: { userId: true },
       }),
     ]);
 
     const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
-    const userMap = new Map(allUsers.map((u) => [u.id, u.monthlySalary]));
     const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
 
-    const [yearStr, monthStr] = body.month.split("-");
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10);
-    const daysInMonth = new Date(year, month, 0).getDate();
-    let totalBusinessDays = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const day = new Date(year, month - 1, d).getDay();
-      if (day !== 0 && day !== 6) totalBusinessDays++;
-    }
-    if (totalBusinessDays <= 0) totalBusinessDays = 22;
-
+    const calDays = calendarDaysInMonth(body.month);
+    const lastDay = calDays;
     const monthStart = `${body.month}-01`;
-    const monthEnd = `${body.month}-${String(daysInMonth).padStart(2, "0")}`;
+    const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
-    const attendanceMap = new Map<string, number>();
+    // Per-user attendance aggregation: split full-day vs half-day so LOP and half-day
+    // deductions can be computed separately. A user with 3 absent days and 2 half-days
+    // should see both line items, not a conflated 4-day deduction.
+    const fullPresentMap = new Map<string, number>();
+    const halfDaysAttendanceMap = new Map<string, number>();
     try {
-      const attendanceRecords = await db
+      const aggregated = await db
         .select({
           userId: attendance.userId,
-          daysPresent: sql<number>`count(*)`.as("days_present"),
+          fullPresent: sql<number>`count(*) FILTER (WHERE ${attendance.status} IN ('PRESENT', 'LATE'))`.as("full_present"),
+          halfDays: sql<number>`count(*) FILTER (WHERE ${attendance.status} = 'HALF_DAY')`.as("half_days"),
         })
         .from(attendance)
         .where(
@@ -95,13 +90,13 @@ export async function POST(req: NextRequest) {
             eq(attendance.orgId, session.orgId),
             inArray(attendance.userId, memberUserIds),
             gte(attendance.date, monthStart),
-            lte(attendance.date, monthEnd),
-            sql`${attendance.status} IN ('PRESENT', 'HALF_DAY', 'LATE')`
+            lte(attendance.date, monthEnd)
           )
         )
         .groupBy(attendance.userId);
-      for (const rec of attendanceRecords) {
-        attendanceMap.set(rec.userId, Number(rec.daysPresent));
+      for (const rec of aggregated) {
+        fullPresentMap.set(rec.userId, Number(rec.fullPresent) || 0);
+        halfDaysAttendanceMap.set(rec.userId, Number(rec.halfDays) || 0);
       }
     } catch (e) {
       logger.warn("Failed to fetch attendance data for payroll", {
@@ -110,58 +105,133 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const newPayrolls = memberUserIds
-      .filter((uId) => {
-        if (existingPayrollUserIds.has(uId)) return false;
-        const hasSalaryStructure = salaryMap.has(uId);
-        const hasMonthlySalary =
-          userMap.has(uId) && parseFloat(userMap.get(uId) || "0") > 0;
-        return hasSalaryStructure || hasMonthlySalary;
-      })
-      .map((uId) => {
-        const salaryStructure = salaryMap.get(uId);
-        const monthlySalaryStr = userMap.get(uId);
-        const monthlySalary = monthlySalaryStr ? parseFloat(monthlySalaryStr) : 0;
+    // Approved EXTRA_PAY holiday work requests in this month, joined with attendance
+    // to confirm the employee actually worked ≥ FULL_DAY_HOURS that day. Single grouped
+    // query — no per-user loop.
+    const overtimeMap = new Map<string, number>();
+    try {
+      const otRows = await db
+        .select({
+          userId: holidayWorkRequests.userId,
+          eligibleDays: sql<number>`count(*) FILTER (WHERE COALESCE(${attendance.workHours}::numeric, 0) >= ${FULL_DAY_HOURS})`.as("eligible_days"),
+        })
+        .from(holidayWorkRequests)
+        .leftJoin(
+          attendance,
+          and(
+            eq(attendance.userId, holidayWorkRequests.userId),
+            eq(attendance.orgId, holidayWorkRequests.orgId),
+            eq(attendance.date, holidayWorkRequests.requestDate)
+          )
+        )
+        .where(
+          and(
+            eq(holidayWorkRequests.orgId, session.orgId),
+            inArray(holidayWorkRequests.userId, memberUserIds),
+            eq(holidayWorkRequests.status, "APPROVED"),
+            eq(holidayWorkRequests.compensationPreference, "EXTRA_PAY"),
+            gte(holidayWorkRequests.requestDate, monthStart),
+            lte(holidayWorkRequests.requestDate, monthEnd)
+          )
+        )
+        .groupBy(holidayWorkRequests.userId);
+      for (const r of otRows) overtimeMap.set(r.userId, Number(r.eligibleDays) || 0);
+    } catch (e) {
+      logger.warn("Failed to fetch overtime data for payroll", {
+        error: e instanceof Error ? e.message : "Unknown",
+      });
+    }
 
-        const basic = salaryStructure
-          ? parseFloat(salaryStructure.basicSalary)
-          : monthlySalary * 0.5;
-        const hraPercentage = salaryStructure
-          ? parseFloat(salaryStructure.hraPercentage || "50")
-          : 50;
-        const hra = salaryStructure ? basic * (hraPercentage / 100) : monthlySalary * 0.25;
-        const allowances = salaryStructure
-          ? parseFloat(salaryStructure.allowances || "0")
-          : monthlySalary * 0.25;
-        const deductions = salaryStructure
-          ? parseFloat(salaryStructure.deductions || "0")
-          : 0;
-        const gross = basic + hra + allowances;
-
-        let lopDeduction = 0;
-        const daysAttended = attendanceMap.get(uId);
-        if (daysAttended !== undefined && daysAttended < totalBusinessDays) {
-          const dailySalary = gross / totalBusinessDays;
-          const absentDays = totalBusinessDays - daysAttended;
-          lopDeduction = Math.round(dailySalary * absentDays * 100) / 100;
+    // Active loans with remaining balance — pull oldest-first per user
+    const activeLoanMap = new Map<string, number>();
+    try {
+      const loans = await db.query.salaryLoans.findMany({
+        where: and(
+          eq(salaryLoans.orgId, session.orgId),
+          inArray(salaryLoans.userId, memberUserIds),
+          eq(salaryLoans.status, "ACTIVE")
+        ),
+        orderBy: (t, { asc }) => [asc(t.userId), asc(t.createdAt)],
+      });
+      for (const loan of loans) {
+        if (activeLoanMap.has(loan.userId)) continue;
+        const total = loan.totalEmis ?? 0;
+        const paid = loan.paidEmis ?? 0;
+        if (total > 0 && paid < total) {
+          activeLoanMap.set(loan.userId, parseFloat(loan.emiAmount ?? "0"));
         }
+      }
+    } catch (e) {
+      logger.warn("Failed to fetch loan data for payroll", {
+        error: e instanceof Error ? e.message : "Unknown",
+      });
+    }
 
-        const PROFESSIONAL_TAX = 200;
-        const totalDeductions = deductions + lopDeduction + PROFESSIONAL_TAX;
-        const net = gross - totalDeductions;
+    const newPayrolls = memberUserIds
+      .filter((uId) => !existingPayrollUserIds.has(uId) && salaryMap.has(uId))
+      .map((uId) => {
+        const salary = salaryMap.get(uId)!;
+
+        const basicSalary = parseFloat(salary.basicSalary ?? "0");
+        const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
+        const specialAllowance = parseFloat(salary.specialAllowance ?? "0");
+        const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+        const structureDeductions = parseFloat(salary.deductions ?? "0");
+
+        const hra = roundInr((basicSalary * hraPercentage) / 100);
+        const ctcMonthly = basicSalary + hra + specialAllowance;
+        const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
+
+        // Bulk path infers LOP from attendance gap. Days a user neither punched in nor
+        // marked half-day are treated as absent. Half-days deduct at half rate.
+        const fullPresent = fullPresentMap.get(uId) ?? 0;
+        const halfDaysCount = halfDaysAttendanceMap.get(uId) ?? 0;
+        const accountedDays = fullPresent + halfDaysCount;
+        const lopDays = Math.max(0, calDays - accountedDays - halfDaysCount);
+
+        const lopAmount = roundInr(dailyRate * lopDays);
+        const halfDayAmount = roundInr((dailyRate / 2) * halfDaysCount);
+
+        const overtimeDays = overtimeMap.get(uId) ?? 0;
+        const overtimeAmount = roundInr(dailyRate * overtimeDays);
+
+        const advanceRecoveryAmount = activeLoanMap.get(uId) ?? 0;
+
+        const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount);
+
+        const totalDeductions = roundInr(
+          lopAmount +
+            halfDayAmount +
+            ptAmount +
+            structureDeductions +
+            advanceRecoveryAmount
+        );
+        const netSalary = roundInr(grossSalary - totalDeductions);
 
         return {
           orgId: session.orgId,
           userId: uId,
           month: body.month!,
-          basicSalary: basic.toString(),
+          basicSalary: basicSalary.toString(),
           hra: hra.toString(),
-          allowances: allowances.toString(),
+          specialAllowance: specialAllowance.toString(),
+          allowances: "0",
+          lopDays: lopDays.toString(),
+          lopAmount: lopAmount.toString(),
+          halfDays: halfDaysCount.toString(),
+          halfDayAmount: halfDayAmount.toString(),
+          ptAmount: ptAmount.toString(),
+          advanceRecoveryAmount: advanceRecoveryAmount.toString(),
+          otherDeductions: "0",
+          structureDeductions: structureDeductions.toString(),
           deductions: totalDeductions.toString(),
-          grossSalary: gross.toString(),
-          netSalary: net.toString(),
+          grossSalary: grossSalary.toString(),
+          netSalary: netSalary.toString(),
           status: "DRAFT" as const,
           generatedBy: session.user.id,
+          overtimeType: overtimeDays > 0 ? "days" : null,
+          overtimeDays: overtimeDays.toString(),
+          overtimeAmount: overtimeAmount.toString(),
         };
       });
 
