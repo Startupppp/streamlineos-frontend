@@ -11,7 +11,14 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
-import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR, computeStatutory } from "@/lib/hr/payroll-calculations";
+import {
+  calendarDaysInMonth,
+  roundInr,
+  PROFESSIONAL_TAX_INR,
+  computeStatutory,
+  computeProratedSalary,
+  type ProrationSegment,
+} from "@/lib/hr/payroll-calculations";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -46,13 +53,27 @@ export async function POST(req: NextRequest) {
     const memberUserIds = memberships.map((m) => m.userId).filter(Boolean) as string[];
     if (memberUserIds.length === 0) return ok({ generated: 0 });
 
-    const [allSalaryStructures, existingPayrolls] = await Promise.all([
+    const calDays = calendarDaysInMonth(body.month);
+    const lastDay = calDays;
+    const monthStart = `${body.month}-01`;
+    const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
+
+    const [allSalaryStructures, overlappingSalaryStructures, existingPayrolls] = await Promise.all([
       db.query.salaryStructures.findMany({
         where: and(
           inArray(salaryStructures.userId, memberUserIds),
           eq(salaryStructures.orgId, session.orgId),
           eq(salaryStructures.isActive, true)
         ),
+      }),
+      db.query.salaryStructures.findMany({
+        where: and(
+          inArray(salaryStructures.userId, memberUserIds),
+          eq(salaryStructures.orgId, session.orgId),
+          sql`${salaryStructures.effectiveFrom} <= ${monthEnd}`,
+          sql`(${salaryStructures.effectiveTo} IS NULL OR ${salaryStructures.effectiveTo} >= ${monthStart})`
+        ),
+        orderBy: [salaryStructures.effectiveFrom],
       }),
       db.query.payrolls.findMany({
         where: and(
@@ -65,12 +86,20 @@ export async function POST(req: NextRequest) {
     ]);
 
     const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
+    const segmentsByUser = new Map<string, ProrationSegment[]>();
+    for (const s of overlappingSalaryStructures) {
+      const seg: ProrationSegment = {
+        basicSalary: parseFloat(s.basicSalary),
+        hraPercentage: parseFloat(s.hraPercentage ?? "50"),
+        specialAllowance: parseFloat(s.specialAllowance ?? "0"),
+        effectiveFrom: s.effectiveFrom,
+        effectiveTo: s.effectiveTo,
+      };
+      const existing = segmentsByUser.get(s.userId);
+      if (existing) existing.push(seg);
+      else segmentsByUser.set(s.userId, [seg]);
+    }
     const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
-
-    const calDays = calendarDaysInMonth(body.month);
-    const lastDay = calDays;
-    const monthStart = `${body.month}-01`;
-    const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
     // Per-user attendance aggregation: split full-day vs half-day so LOP and half-day
     // deductions can be computed separately. A user with 3 absent days and 2 half-days
@@ -180,14 +209,15 @@ export async function POST(req: NextRequest) {
       .map((uId) => {
         const salary = salaryMap.get(uId)!;
 
-        const basicSalary = parseFloat(salary.basicSalary ?? "0");
-        const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
-        const specialAllowance = parseFloat(salary.specialAllowance ?? "0");
         const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
         const structureDeductions = parseFloat(salary.deductions ?? "0");
 
-        const hra = roundInr((basicSalary * hraPercentage) / 100);
-        const ctcMonthly = basicSalary + hra + specialAllowance;
+        const segments = segmentsByUser.get(uId) ?? [];
+        const prorated = computeProratedSalary(body.month!, segments);
+        const basicSalary = prorated.basicSalary;
+        const hra = prorated.hra;
+        const specialAllowance = prorated.specialAllowance;
+        const ctcMonthly = prorated.ctcMonthly;
         const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
         // Bulk path infers LOP from attendance gap. Days a user neither punched in nor

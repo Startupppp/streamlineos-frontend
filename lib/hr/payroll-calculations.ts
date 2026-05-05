@@ -2,6 +2,86 @@
 
 export const PROFESSIONAL_TAX_INR = 200;
 
+export interface ProrationSegment {
+  basicSalary: number;
+  hraPercentage: number;
+  specialAllowance: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+}
+
+export interface ProratedComponents {
+  basicSalary: number;
+  hra: number;
+  specialAllowance: number;
+  ctcMonthly: number;
+  segmentDays: { from: string; to: string; days: number; ctc: number }[];
+}
+
+/**
+ * Compute pro-rated salary components when one or more salary structures span
+ * the payroll month. Each segment is the portion of the month its structure is
+ * active; per-segment CTC is `(basic + hra + specialAllowance) × days_in_segment / calendar_days`.
+ *
+ * Inputs: structures sorted by effectiveFrom asc. Each must have effectiveFrom ≤ monthEnd
+ * and effectiveTo null OR effectiveTo ≥ monthStart. The caller is responsible for that
+ * overlap filter (typically a database query).
+ *
+ * Returns the sum of per-segment components plus a debug breakdown.
+ */
+export function computeProratedSalary(
+  monthYyyyMm: string,
+  structures: ProrationSegment[]
+): ProratedComponents {
+  const calDays = calendarDaysInMonth(monthYyyyMm);
+  const [yr, mo] = monthYyyyMm.split("-").map(Number);
+  const monthStartDay = 1;
+  const monthEndDay = calDays;
+
+  const dayOfMonth = (s: string): number => {
+    const parts = s.slice(0, 10).split("-").map(Number);
+    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return monthStartDay;
+    const [py, pm, pd] = parts;
+    if (py < yr || (py === yr && pm < mo)) return monthStartDay;
+    if (py > yr || (py === yr && pm > mo)) return monthEndDay + 1;
+    return pd;
+  };
+
+  const breakdown: { from: string; to: string; days: number; ctc: number }[] = [];
+  let basicSum = 0;
+  let hraSum = 0;
+  let specialSum = 0;
+
+  for (const s of structures) {
+    const fromDay = Math.max(monthStartDay, dayOfMonth(s.effectiveFrom));
+    const toDay = Math.min(monthEndDay, s.effectiveTo ? dayOfMonth(s.effectiveTo) : monthEndDay);
+    if (fromDay > toDay) continue;
+
+    const days = toDay - fromDay + 1;
+    const fraction = days / calDays;
+    const hra = (s.basicSalary * s.hraPercentage) / 100;
+    const segCtc = s.basicSalary + hra + s.specialAllowance;
+
+    basicSum += s.basicSalary * fraction;
+    hraSum += hra * fraction;
+    specialSum += s.specialAllowance * fraction;
+    breakdown.push({
+      from: `${monthYyyyMm}-${String(fromDay).padStart(2, "0")}`,
+      to: `${monthYyyyMm}-${String(toDay).padStart(2, "0")}`,
+      days,
+      ctc: segCtc * fraction,
+    });
+  }
+
+  return {
+    basicSalary: roundInr(basicSum),
+    hra: roundInr(hraSum),
+    specialAllowance: roundInr(specialSum),
+    ctcMonthly: roundInr(basicSum + hraSum + specialSum),
+    segmentDays: breakdown,
+  };
+}
+
 export interface StatutoryParams {
   pfApplicable: boolean;
   pfEmployeeRate: number;

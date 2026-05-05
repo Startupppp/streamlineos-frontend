@@ -7,8 +7,14 @@ import {
   attendance,
   salaryLoans,
 } from "@/lib/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
-import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR, computeStatutory } from "@/lib/hr/payroll-calculations";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
+import {
+  calendarDaysInMonth,
+  roundInr,
+  PROFESSIONAL_TAX_INR,
+  computeStatutory,
+  computeProratedSalary,
+} from "@/lib/hr/payroll-calculations";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
@@ -40,6 +46,21 @@ export async function POST(req: NextRequest) {
       return err("No active salary structure found for this employee.", 400);
     }
 
+    // Pull every salary structure that overlaps the payroll month so a mid-month
+    // revision (OPEN-02 to OPEN-04) is pro-rated correctly.
+    const monthLastDay = calendarDaysInMonth(body.month);
+    const monthEndStr = `${body.month}-${String(monthLastDay).padStart(2, "0")}`;
+    const monthStartStr = `${body.month}-01`;
+    const overlappingStructures = await db.query.salaryStructures.findMany({
+      where: and(
+        eq(salaryStructures.userId, body.userId),
+        eq(salaryStructures.orgId, session.orgId),
+        sql`${salaryStructures.effectiveFrom} <= ${monthEndStr}`,
+        sql`(${salaryStructures.effectiveTo} IS NULL OR ${salaryStructures.effectiveTo} >= ${monthStartStr})`
+      ),
+      orderBy: [salaryStructures.effectiveFrom],
+    });
+
     const existingPayroll = await db.query.payrolls.findFirst({
       where: and(
         eq(payrolls.orgId, session.orgId),
@@ -60,15 +81,24 @@ export async function POST(req: NextRequest) {
     const lastDay = new Date(yr, mo, 0).getDate();
     const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
-    const basicSalary = parseFloat(salary.basicSalary ?? "0");
-    const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
-    const specialAllowance = parseFloat(salary.specialAllowance ?? "0");
     const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
     const structureDeductions = parseFloat(salary.deductions ?? "0");
 
-    const hra = roundInr((basicSalary * hraPercentage) / 100);
     const calDays = calendarDaysInMonth(body.month);
-    const ctcMonthly = basicSalary + hra + specialAllowance;
+    const prorated = computeProratedSalary(
+      body.month,
+      overlappingStructures.map((s) => ({
+        basicSalary: parseFloat(s.basicSalary),
+        hraPercentage: parseFloat(s.hraPercentage ?? "50"),
+        specialAllowance: parseFloat(s.specialAllowance ?? "0"),
+        effectiveFrom: s.effectiveFrom,
+        effectiveTo: s.effectiveTo,
+      }))
+    );
+    const basicSalary = prorated.basicSalary;
+    const hra = prorated.hra;
+    const specialAllowance = prorated.specialAllowance;
+    const ctcMonthly = prorated.ctcMonthly;
     const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
     const saturdayMult = parseFloat(salary.saturdayOtMultiplier ?? "1.00");

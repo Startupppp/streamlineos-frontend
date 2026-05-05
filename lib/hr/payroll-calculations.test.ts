@@ -3,6 +3,7 @@ import {
   PROFESSIONAL_TAX_INR,
   buildPayslipPreviewFromEmployee,
   calendarDaysInMonth,
+  computeProratedSalary,
   computeStatutory,
   computeTotalDeductionsAndNet,
   perDaySalaryForLop,
@@ -317,6 +318,73 @@ describe("half-day deduction is folded into lopAmount in storage", () => {
     const oneFull = rawLopDeduction("2026-04", 30000, 30000, 1);
     const twoHalves = rawHalfDayDeduction("2026-04", 30000, 30000, 2);
     expect(oneFull).toBe(twoHalves);
+  });
+});
+
+describe("computeProratedSalary (mid-month revision)", () => {
+  it("single full-month structure → identical to non-prorated", () => {
+    const r = computeProratedSalary("2026-04", [
+      {
+        basicSalary: 30000,
+        hraPercentage: 50,
+        specialAllowance: 5000,
+        effectiveFrom: "2026-01-01",
+        effectiveTo: null,
+      },
+    ]);
+    expect(r.basicSalary).toBe(30000);
+    expect(r.hra).toBe(15000);
+    expect(r.specialAllowance).toBe(5000);
+    expect(r.ctcMonthly).toBe(50000);
+    expect(r.segmentDays).toHaveLength(1);
+    expect(r.segmentDays[0]?.days).toBe(30);
+  });
+
+  it("structure starts mid-month → only days from effectiveFrom paid", () => {
+    const r = computeProratedSalary("2026-04", [
+      {
+        basicSalary: 30000,
+        hraPercentage: 50,
+        specialAllowance: 0,
+        effectiveFrom: "2026-04-15",
+        effectiveTo: null,
+      },
+    ]);
+    expect(r.segmentDays[0]?.days).toBe(16);
+    expect(r.basicSalary).toBe(roundInr((30000 * 16) / 30));
+    expect(r.hra).toBe(roundInr((15000 * 16) / 30));
+  });
+
+  it("two structures with mid-month switch (raise) → weighted average", () => {
+    const r = computeProratedSalary("2026-04", [
+      {
+        basicSalary: 30000,
+        hraPercentage: 50,
+        specialAllowance: 0,
+        effectiveFrom: "2026-01-01",
+        effectiveTo: "2026-04-14",
+      },
+      {
+        basicSalary: 40000,
+        hraPercentage: 50,
+        specialAllowance: 0,
+        effectiveFrom: "2026-04-15",
+        effectiveTo: null,
+      },
+    ]);
+    expect(r.segmentDays).toHaveLength(2);
+    expect(r.segmentDays[0]?.days).toBe(14);
+    expect(r.segmentDays[1]?.days).toBe(16);
+    expect(r.basicSalary).toBe(roundInr((30000 * 14) / 30 + (40000 * 16) / 30));
+    expect(r.hra).toBe(roundInr((15000 * 14) / 30 + (20000 * 16) / 30));
+  });
+
+  it("zero structures → all zeros", () => {
+    const r = computeProratedSalary("2026-04", []);
+    expect(r.basicSalary).toBe(0);
+    expect(r.hra).toBe(0);
+    expect(r.ctcMonthly).toBe(0);
+    expect(r.segmentDays).toHaveLength(0);
   });
 });
 
