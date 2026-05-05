@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
     const hraPercentage = parseFloat(salary.hraPercentage ?? "50");
     const specialAllowance = parseFloat(salary.specialAllowance ?? "0");
     const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+    const structureDeductions = parseFloat(salary.deductions ?? "0");
 
     const hra = roundInr((basicSalary * hraPercentage) / 100);
     const calDays = calendarDaysInMonth(body.month);
@@ -120,7 +121,12 @@ export async function POST(req: NextRequest) {
     const lopAmount = roundInr(dailyRate * (body.lopDays || 0));
     const halfDayLopAmount = roundInr((dailyRate / 2) * (body.halfDays || 0));
     const totalDeductions = roundInr(
-      lopAmount + halfDayLopAmount + ptAmount + advanceRecoveryAmount + (body.otherDeductions || 0)
+      lopAmount +
+        halfDayLopAmount +
+        ptAmount +
+        structureDeductions +
+        advanceRecoveryAmount +
+        (body.otherDeductions || 0)
     );
     const netSalary = roundInr(grossSalary - totalDeductions);
 
@@ -135,9 +141,13 @@ export async function POST(req: NextRequest) {
         specialAllowance: specialAllowance.toString(),
         allowances: (body.bonus || 0).toString(),
         lopDays: (body.lopDays || 0).toString(),
-        lopAmount: (lopAmount + halfDayLopAmount).toString(),
+        lopAmount: lopAmount.toString(),
+        halfDays: (body.halfDays || 0).toString(),
+        halfDayAmount: halfDayLopAmount.toString(),
         ptAmount: ptAmount.toString(),
         advanceRecoveryAmount: advanceRecoveryAmount.toString(),
+        otherDeductions: (body.otherDeductions || 0).toString(),
+        structureDeductions: structureDeductions.toString(),
         deductions: totalDeductions.toString(),
         grossSalary: grossSalary.toString(),
         netSalary: netSalary.toString(),
