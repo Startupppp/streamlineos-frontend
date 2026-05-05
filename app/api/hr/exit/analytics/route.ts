@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { db } from "@/lib/db";
 import { resignations, users, organizationMembers, departmentMembers, departments } from "@/lib/db/schema";
 import { eq, and, sql, gte, count } from "drizzle-orm";

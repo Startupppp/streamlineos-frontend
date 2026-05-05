@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { aiAnalyzeAttritionRisk } from "@/lib/ai/attrition-risk";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { z } from "zod";
 
 const schema = z.object({

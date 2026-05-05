@@ -11,7 +11,7 @@ import {
 } from "@/lib/api/hooks/hr/pip";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isAdminOrOwner } from "@/lib/auth-role-guards";
+import { isAdminOrOwner } from "@/lib/auth/role-guards";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -5,7 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets, workItemRelations, users } from "@/lib/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
 import { z } from "zod";

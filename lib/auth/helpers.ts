@@ -3,10 +3,10 @@ import { db } from "@/lib/db";
 import { organizationMembers, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import type { AuthResult } from "@/lib/auth-types";
+import type { AuthResult } from "@/lib/auth/types";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 
-export { isAdminOrOwner, isCEO, isExpenseAdmin } from "./auth-role-guards";
+export { isAdminOrOwner, isCEO, isExpenseAdmin } from "./role-guards";
 
 export async function ensureOrgMembership(
   userId: string,

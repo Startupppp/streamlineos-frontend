@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { ensureOrgMembership } from "@/lib/auth-helpers";
+import { ensureOrgMembership } from "@/lib/auth/helpers";
 
 export async function getExpenseMember() {
   const session = await auth();

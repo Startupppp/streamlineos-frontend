@@ -6,7 +6,7 @@ import { eq, and, desc, or, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
-import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth-helpers";
+import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth/helpers";
 
 type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
 

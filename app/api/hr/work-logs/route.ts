@@ -3,7 +3,7 @@ import { getWorkLogs } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";

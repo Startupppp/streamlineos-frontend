@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody, type AuthSession } from "@/lib/api/helper
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
 import { patchPIPSchema } from "@/lib/validations/hr-pip";
 import { notifyPIPOutcome, scheduleAppraisalPipEmails } from "@/lib/email/hr-appraisal-pip";

@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { invitations, organizations, users } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 

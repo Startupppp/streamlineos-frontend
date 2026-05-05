@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { appraisals, appraisalCategoryRatings } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { patchAppraisalRatingsSchema } from "@/lib/validations/hr-appraisals";
 import { refreshOverallRating } from "@/lib/hr/appraisal-workflow";
 import type { NextRequest } from "next/server";

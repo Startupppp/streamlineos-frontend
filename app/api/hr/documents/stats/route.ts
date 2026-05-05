@@ -2,7 +2,7 @@ import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { addDays } from "date-fns";
 
 export const dynamic = "force-dynamic";

@@ -3,7 +3,7 @@ import { getAssets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { assets, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";

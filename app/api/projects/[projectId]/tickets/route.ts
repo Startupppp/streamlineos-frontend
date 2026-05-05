@@ -7,7 +7,7 @@ import { tickets, ticketAssignees, ticketWatchers, users, projects, projectMembe
 import { eq, and, desc, or, sql, count } from "drizzle-orm";
 import { sendTicketAssignmentEmail } from "@/lib/email";
 import { createNotification } from "@/server/actions/create-notification";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 

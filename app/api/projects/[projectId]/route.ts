@@ -17,7 +17,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { eq, and, desc, asc, inArray, ne } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";

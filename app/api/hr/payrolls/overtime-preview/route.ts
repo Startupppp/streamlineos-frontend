@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { holidayWorkRequests, attendance, salaryStructures } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { calendarDaysInMonth } from "@/lib/hr/payroll-calculations";
 import type { NextRequest } from "next/server";
 

@@ -4,7 +4,7 @@ import { getInvitations } from "@/server/queries/organization";
 import { db } from "@/lib/db";
 import { invitations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { z } from "zod";
 
 const cancelSchema = z.object({

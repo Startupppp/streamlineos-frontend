@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { appraisals, appraisalStages, organizationMembers } from "@/lib/db/schema";
 import { and, desc, eq, inArray, or } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 
 function isHrOrPlatformAdmin(role: string | undefined): boolean {
   return isAdminOrOwner(role) || role === "ADMIN";

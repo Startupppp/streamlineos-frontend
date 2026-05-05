@@ -3,7 +3,7 @@ import { getEmployee } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { users, organizationMembers, onboardingTasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { invalidateUserSession } from "@/lib/auth";
 import { sendTerminationEmail } from "@/lib/email";
 import { format, differenceInDays, addDays } from "date-fns";

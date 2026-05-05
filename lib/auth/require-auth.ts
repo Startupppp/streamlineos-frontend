@@ -1,7 +1,7 @@
 import "server-only";
 
-import { getAuthenticatedMember } from "@/lib/auth-helpers";
-import type { AuthResult } from "@/lib/auth-types";
+import { getAuthenticatedMember } from "@/lib/auth/helpers";
+import type { AuthResult } from "@/lib/auth/types";
 
 type AuthContext = Exclude<AuthResult, { error: string }>;
 

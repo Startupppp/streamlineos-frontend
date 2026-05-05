@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { appraisals, appraisalStages } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { isManagerOf } from "@/lib/rbac/manager";
 import { patchAppraisalMetaSchema } from "@/lib/validations/hr-appraisals";
 import type { NextRequest } from "next/server";

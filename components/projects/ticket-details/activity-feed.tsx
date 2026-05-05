@@ -22,7 +22,7 @@ import {
   useUpdateTicketComment,
   useDeleteTicketComment,
 } from "@/lib/api/hooks/projects";
-import { isExpenseAdmin } from "@/lib/auth-role-guards";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";

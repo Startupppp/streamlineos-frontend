@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { aiUsageLogs } from "@/lib/db/schema";
 import { eq, gte, sum, sql, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { subDays } from "date-fns";
 
 export async function GET() {

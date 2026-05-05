@@ -10,7 +10,7 @@ import {
   salaryLoans,
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { calendarDaysInMonth, roundInr, PROFESSIONAL_TAX_INR } from "@/lib/hr/payroll-calculations";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";

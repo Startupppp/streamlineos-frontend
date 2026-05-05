@@ -9,7 +9,7 @@ import {
   organizations,
 } from "@/lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { sendInvitationEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
 import { nanoid } from "nanoid";

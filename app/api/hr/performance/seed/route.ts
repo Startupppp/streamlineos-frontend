@@ -7,7 +7,7 @@ import {
   organizationMembers,
 } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAppraisalBundle } from "@/lib/hr/create-appraisal";
 
 const DEFAULT_CATEGORIES = [

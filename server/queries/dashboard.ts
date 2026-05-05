@@ -25,7 +25,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, desc, or, inArray, count, sql, gte, lt, isNull, gt, sum } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 
 export async function getDashboardStats(orgId: string, _userId: string) {
   const today = getTodayString();

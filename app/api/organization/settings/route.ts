@@ -4,7 +4,7 @@ import { getOrgSettings } from "@/server/queries/organization";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 import { redis } from "@/lib/redis";

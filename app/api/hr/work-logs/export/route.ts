@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { users } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 
 export async function GET(req: NextRequest) {
