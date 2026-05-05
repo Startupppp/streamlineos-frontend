@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "warn",
       "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/no-explicit-any": "error",
+      "max-lines": ["warn", { max: 800, skipBlankLines: true, skipComments: true }],
     },
   },
   globalIgnores([
