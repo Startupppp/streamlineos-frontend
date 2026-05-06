@@ -111,6 +111,21 @@ export async function withAdmin<T>(
   });
 }
 
+export const HR_EMAIL_TEMPLATE_ROLES = new Set(["CEO", "HR", "ADMIN", "BRANCH_HR"]);
+
+/** HR org-scoped email templates (CRUD + send) — CEO, HR, ADMIN, branch HR */
+export async function withHrEmailTemplateAccess<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>
+): Promise<NextResponse<T>> {
+  return withAuth(async (session) => {
+    const role = session.user.role;
+    if (!role || !HR_EMAIL_TEMPLATE_ROLES.has(role)) {
+      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+    }
+    return handler(session);
+  });
+}
+
 export function parseQuery<T>(req: NextRequest, schema: ZodSchema<T>): T {
   const raw = Object.fromEntries(req.nextUrl.searchParams.entries());
   return schema.parse(raw);
