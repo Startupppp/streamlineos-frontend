@@ -6,6 +6,7 @@ import {
   holidayWorkRequests,
   attendance,
   salaryLoans,
+  users,
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import {
@@ -42,8 +43,23 @@ export async function POST(req: NextRequest) {
       ),
     });
 
+    // Fall back to employees.monthly_salary with the calculator's implicit 50/25/25
+    // split when no explicit salary structure exists. HR can later attach a structure
+    // and the next month's payroll will use it.
+    let employeeMonthlySalary = 0;
     if (!salary) {
-      return err("No active salary structure found for this employee.", 400);
+      const userRow = await db.query.users.findFirst({
+        where: eq(users.id, body.userId),
+        columns: { monthlySalary: true },
+      });
+      employeeMonthlySalary = parseFloat(userRow?.monthlySalary ?? "0");
+      if (employeeMonthlySalary <= 0) {
+        return err(
+          "No active salary structure and no monthly salary set for this employee. " +
+            "Add a salary structure or set monthlySalary on the employee record before generating payroll.",
+          400
+        );
+      }
     }
 
     // Pull every salary structure that overlaps the payroll month so a mid-month
@@ -81,29 +97,40 @@ export async function POST(req: NextRequest) {
     const lastDay = new Date(yr, mo, 0).getDate();
     const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
-    const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
-    const structureDeductions = parseFloat(salary.deductions ?? "0");
+    const ptAmount = parseFloat(salary?.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+    const structureDeductions = parseFloat(salary?.deductions ?? "0");
 
     const calDays = calendarDaysInMonth(body.month);
-    const prorated = computeProratedSalary(
-      body.month,
-      overlappingStructures.map((s) => ({
-        basicSalary: parseFloat(s.basicSalary),
-        hraPercentage: parseFloat(s.hraPercentage ?? "50"),
-        specialAllowance: parseFloat(s.specialAllowance ?? "0"),
-        effectiveFrom: s.effectiveFrom,
-        effectiveTo: s.effectiveTo,
-      }))
-    );
-    const basicSalary = prorated.basicSalary;
-    const hra = prorated.hra;
-    const specialAllowance = prorated.specialAllowance;
-    const ctcMonthly = prorated.ctcMonthly;
+    let basicSalary: number;
+    let hra: number;
+    let specialAllowance: number;
+    let ctcMonthly: number;
+    if (overlappingStructures.length > 0) {
+      const prorated = computeProratedSalary(
+        body.month,
+        overlappingStructures.map((s) => ({
+          basicSalary: parseFloat(s.basicSalary),
+          hraPercentage: parseFloat(s.hraPercentage ?? "50"),
+          specialAllowance: parseFloat(s.specialAllowance ?? "0"),
+          effectiveFrom: s.effectiveFrom,
+          effectiveTo: s.effectiveTo,
+        }))
+      );
+      basicSalary = prorated.basicSalary;
+      hra = prorated.hra;
+      specialAllowance = prorated.specialAllowance;
+      ctcMonthly = prorated.ctcMonthly;
+    } else {
+      basicSalary = roundInr(employeeMonthlySalary * 0.5);
+      hra = roundInr(employeeMonthlySalary * 0.25);
+      specialAllowance = employeeMonthlySalary - basicSalary - hra;
+      ctcMonthly = employeeMonthlySalary;
+    }
     const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
-    const saturdayMult = parseFloat(salary.saturdayOtMultiplier ?? "1.00");
-    const sundayMult = parseFloat(salary.sundayOtMultiplier ?? "2.00");
-    const holidayMult = parseFloat(salary.holidayOtMultiplier ?? "2.00");
+    const saturdayMult = parseFloat(salary?.saturdayOtMultiplier ?? "1.00");
+    const sundayMult = parseFloat(salary?.sundayOtMultiplier ?? "2.00");
+    const holidayMult = parseFloat(salary?.holidayOtMultiplier ?? "2.00");
 
     // Auto-compute overtime from approved EXTRA_PAY holiday work requests.
     // OT amount per day = dailyRate × (multiplier for that day's type).
@@ -161,14 +188,14 @@ export async function POST(req: NextRequest) {
     const halfDayLopAmount = roundInr((dailyRate / 2) * (body.halfDays || 0));
 
     const statutory = computeStatutory(basicSalary, grossSalary, {
-      pfApplicable: salary.pfApplicable ?? false,
-      pfEmployeeRate: parseFloat(salary.pfEmployeeRate ?? "12"),
-      pfEmployerRate: parseFloat(salary.pfEmployerRate ?? "12"),
-      pfWageCeiling: parseFloat(salary.pfWageCeiling ?? "15000"),
-      esiApplicable: salary.esiApplicable ?? false,
-      esiEmployeeRate: parseFloat(salary.esiEmployeeRate ?? "0.75"),
-      esiEmployerRate: parseFloat(salary.esiEmployerRate ?? "3.25"),
-      esiWageCeiling: parseFloat(salary.esiWageCeiling ?? "21000"),
+      pfApplicable: salary?.pfApplicable ?? false,
+      pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
+      pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
+      pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
+      esiApplicable: salary?.esiApplicable ?? false,
+      esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
+      esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
+      esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
     });
 
     const totalDeductions = roundInr(

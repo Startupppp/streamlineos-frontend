@@ -121,6 +121,60 @@ export function getGoalSettingReminderEmail(
   });
 }
 
+/**
+ * Formal notice: under-performance over a review window, salary revision to a basic amount,
+ * warning of PIP / further discipline, and daily monitoring. Used when HR triggers this letter
+ * (e.g. after a probation / evaluation period).
+ *
+ * Variables (pass pre-formatted date strings for your locale):
+ * - employeeName, periodStartLabel, periodEndLabel, performanceAreaLabel, revisedMonthlySalary
+ */
+export function getUnsatisfactoryPerformanceNoticeEmail(
+  employeeName: string,
+  periodStartLabel: string,
+  periodEndLabel: string,
+  performanceAreaLabel: string,
+  revisedMonthlySalary: string
+): string {
+  const n = escapeHtml(employeeName);
+  const ps = escapeHtml(periodStartLabel);
+  const pe = escapeHtml(periodEndLabel);
+  const area = escapeHtml(performanceAreaLabel);
+  const salary = escapeHtml(revisedMonthlySalary);
+  const content = `
+    <h2 class="email-title">Notice regarding unsatisfactory performance</h2>
+    <p class="email-text">Dear <strong>${n}</strong>,</p>
+    <p class="email-text">
+      This is to formally notify you that your performance over the past period
+      (from <strong>${ps}</strong> to <strong>${pe}</strong>) has been below the expected standards.
+    </p>
+    <p class="email-text">
+      Despite being provided with adequate time, support, and clear targets, you have not met
+      <strong>${area}</strong>. This is a matter of serious concern and cannot be overlooked.
+    </p>
+    <p class="email-text">
+      As per the terms discussed at the time of your joining, the initial evaluation period was
+      considered a full salary period. Upon completion of this period, due to your failure to meet
+      the required performance benchmarks, your compensation will now be revised to a basic salary of
+      <strong>${salary}</strong> per month, effective immediately.
+    </p>
+    <p class="email-text">
+      You are hereby advised to show immediate and measurable improvement in your performance.
+      Failure to meet targets going forward may result in further strict action, which may include a
+      Performance Improvement Plan (PIP) or other disciplinary measures.
+    </p>
+    <p class="email-text">
+      Consider this an official warning. Your performance will be closely monitored on a daily basis.
+    </p>
+    <p class="email-text">For any clarification, you may contact your reporting manager.</p>
+  `;
+  return getEmailTemplate({
+    title: "Notice regarding unsatisfactory performance",
+    preheader: `Formal notice — performance and compensation revision for ${employeeName}`,
+    content,
+  });
+}
+
 export function getAppraisalStageAssignedEmail(
   recipientName: string,
   stageLabel: string,

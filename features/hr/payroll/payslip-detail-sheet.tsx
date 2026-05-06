@@ -151,7 +151,7 @@ export function PayslipDetailSheet({
               {(payslipPreview?.lopDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    LOP Deduction ({payslipPreview?.lopDays} days)
+                    LOP Deduction ({payslipPreview?.lopDays} {payslipPreview?.lopDays === 1 ? "day" : "days"})
                   </span>
                   <span className="text-red-600 tabular-nums">
                     -₹{Math.round(payslipPreview?.lopDeduction || 0).toLocaleString("en-IN")}
@@ -161,7 +161,7 @@ export function PayslipDetailSheet({
               {(payslipPreview?.halfDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    Half Day ({payslipPreview?.halfDays} days)
+                    Half Day ({payslipPreview?.halfDays} {payslipPreview?.halfDays === 1 ? "day" : "days"})
                   </span>
                   <span className="text-red-600 tabular-nums">
                     -₹{Math.round(payslipPreview?.halfDayDeduction || 0).toLocaleString("en-IN")}

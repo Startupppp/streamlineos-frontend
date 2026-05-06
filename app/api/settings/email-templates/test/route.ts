@@ -35,6 +35,7 @@ import {
   getManagerReviewReminderEmail,
   getReviewPublishedEmail,
   getGoalSettingReminderEmail,
+  getUnsatisfactoryPerformanceNoticeEmail,
 } from "@/lib/email-templates/appraisal";
 
 import {
@@ -285,6 +286,17 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
         "Q2 FY2026",
         "15 May 2026",
         `${BASE_URL}/hr/appraisals/goals`
+      ),
+  },
+  "appraisal.unsatisfactory_performance_notice": {
+    subject: "Notice Regarding Unsatisfactory Performance",
+    generateHtml: () =>
+      getUnsatisfactoryPerformanceNoticeEmail(
+        "Test Employee",
+        "17th February",
+        "17th April",
+        "the assigned sales expectations",
+        "₹7,000"
       ),
   },
 

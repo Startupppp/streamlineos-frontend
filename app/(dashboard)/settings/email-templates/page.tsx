@@ -50,6 +50,7 @@ import {
   getManagerReviewReminderEmail,
   getReviewPublishedEmail,
   getGoalSettingReminderEmail,
+  getUnsatisfactoryPerformanceNoticeEmail,
 } from "@/lib/email-templates/appraisal";
 
 import {
@@ -422,6 +423,21 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
         "Q2 FY2026",
         "15 May 2026",
         `${BASE_URL}/hr/appraisals/goals`
+      ),
+    }),
+  },
+  {
+    id: "appraisal.unsatisfactory_performance_notice",
+    category: "Appraisal",
+    name: "Unsatisfactory Performance — Salary Revision & Warning",
+    generate: () => ({
+      subject: "Notice Regarding Unsatisfactory Performance",
+      html: getUnsatisfactoryPerformanceNoticeEmail(
+        "Priya Sharma",
+        "17th February",
+        "17th April",
+        "the assigned sales expectations",
+        "₹7,000"
       ),
     }),
   },

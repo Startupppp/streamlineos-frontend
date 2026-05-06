@@ -56,7 +56,10 @@ export function LandingPage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#080a14] text-white">
+    <div
+      className="flex min-h-screen flex-col bg-[#080a14] text-white"
+      style={{ backgroundColor: "#080a14", color: "#fff" }}
+    >
       <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#080a14]/95 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-3">
@@ -133,7 +136,7 @@ export function LandingPage() {
             style={{ y: heroY, opacity: heroOpacity }}
           >
             <motion.div
-              initial="hidden"
+              initial={false}
               animate="visible"
               variants={stagger}
               className="max-w-4xl mx-auto"

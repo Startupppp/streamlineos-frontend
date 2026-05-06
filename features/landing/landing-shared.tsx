@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Users, LayoutGrid, TrendingUp, Calendar, MessageSquare, BarChart3 } from "lucide-react";
 
 export const fadeUp: Variants = {
@@ -28,14 +27,12 @@ export function SectionReveal({
   className?: string;
   delay?: number;
 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-10% 0px" });
   return (
     <motion.div
-      ref={ref}
       className={className}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial={false}
+      whileInView="visible"
+      viewport={{ once: true, margin: "-10% 0px" }}
       variants={fadeUp}
       style={{ transitionDelay: `${delay}ms` }}
     >
@@ -51,15 +48,13 @@ export function StaggerReveal({
   children: React.ReactNode;
   className?: string;
 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-10% 0px" });
   return (
     <motion.div
-      ref={ref}
       className={className}
       variants={stagger}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial={false}
+      whileInView="visible"
+      viewport={{ once: true, margin: "-10% 0px" }}
     >
       {children}
     </motion.div>

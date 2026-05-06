@@ -8,6 +8,7 @@ import {
   attendance,
   holidayWorkRequests,
   salaryLoans,
+  users,
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     const monthStart = `${body.month}-01`;
     const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
-    const [allSalaryStructures, overlappingSalaryStructures, existingPayrolls] = await Promise.all([
+    const [allSalaryStructures, overlappingSalaryStructures, allUsers, existingPayrolls] = await Promise.all([
       db.query.salaryStructures.findMany({
         where: and(
           inArray(salaryStructures.userId, memberUserIds),
@@ -75,6 +76,10 @@ export async function POST(req: NextRequest) {
         ),
         orderBy: [salaryStructures.effectiveFrom],
       }),
+      db.query.users.findMany({
+        where: inArray(users.id, memberUserIds),
+        columns: { id: true, monthlySalary: true },
+      }),
       db.query.payrolls.findMany({
         where: and(
           inArray(payrolls.userId, memberUserIds),
@@ -84,6 +89,7 @@ export async function POST(req: NextRequest) {
         columns: { userId: true },
       }),
     ]);
+    const monthlySalaryMap = new Map(allUsers.map((u) => [u.id, parseFloat(u.monthlySalary ?? "0")]));
 
     const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
     const segmentsByUser = new Map<string, ProrationSegment[]>();
@@ -205,19 +211,35 @@ export async function POST(req: NextRequest) {
     }
 
     const newPayrolls = memberUserIds
-      .filter((uId) => !existingPayrollUserIds.has(uId) && salaryMap.has(uId))
+      .filter((uId) => {
+        if (existingPayrollUserIds.has(uId)) return false;
+        if (salaryMap.has(uId)) return true;
+        return (monthlySalaryMap.get(uId) ?? 0) > 0;
+      })
       .map((uId) => {
-        const salary = salaryMap.get(uId)!;
+        const salary = salaryMap.get(uId);
 
-        const ptAmount = parseFloat(salary.professionalTax ?? String(PROFESSIONAL_TAX_INR));
-        const structureDeductions = parseFloat(salary.deductions ?? "0");
+        const ptAmount = parseFloat(salary?.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+        const structureDeductions = parseFloat(salary?.deductions ?? "0");
 
         const segments = segmentsByUser.get(uId) ?? [];
-        const prorated = computeProratedSalary(body.month!, segments);
-        const basicSalary = prorated.basicSalary;
-        const hra = prorated.hra;
-        const specialAllowance = prorated.specialAllowance;
-        const ctcMonthly = prorated.ctcMonthly;
+        let basicSalary: number;
+        let hra: number;
+        let specialAllowance: number;
+        let ctcMonthly: number;
+        if (segments.length > 0) {
+          const prorated = computeProratedSalary(body.month!, segments);
+          basicSalary = prorated.basicSalary;
+          hra = prorated.hra;
+          specialAllowance = prorated.specialAllowance;
+          ctcMonthly = prorated.ctcMonthly;
+        } else {
+          const monthly = monthlySalaryMap.get(uId) ?? 0;
+          basicSalary = roundInr(monthly * 0.5);
+          hra = roundInr(monthly * 0.25);
+          specialAllowance = monthly - basicSalary - hra;
+          ctcMonthly = monthly;
+        }
         const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
         // Bulk path infers LOP from attendance gap. Days a user neither punched in nor
@@ -230,9 +252,9 @@ export async function POST(req: NextRequest) {
         const lopAmount = roundInr(dailyRate * lopDays);
         const halfDayAmount = roundInr((dailyRate / 2) * halfDaysCount);
 
-        const saturdayMult = parseFloat(salary.saturdayOtMultiplier ?? "1.00");
-        const sundayMult = parseFloat(salary.sundayOtMultiplier ?? "2.00");
-        const holidayMult = parseFloat(salary.holidayOtMultiplier ?? "2.00");
+        const saturdayMult = parseFloat(salary?.saturdayOtMultiplier ?? "1.00");
+        const sundayMult = parseFloat(salary?.sundayOtMultiplier ?? "2.00");
+        const holidayMult = parseFloat(salary?.holidayOtMultiplier ?? "2.00");
         const otBuckets = overtimeMap.get(uId) ?? { saturday: 0, sunday: 0, holiday: 0 };
         const overtimeDays = otBuckets.saturday + otBuckets.sunday + otBuckets.holiday;
         const overtimeAmount = roundInr(
@@ -244,14 +266,14 @@ export async function POST(req: NextRequest) {
         const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount);
 
         const statutory = computeStatutory(basicSalary, grossSalary, {
-          pfApplicable: salary.pfApplicable ?? false,
-          pfEmployeeRate: parseFloat(salary.pfEmployeeRate ?? "12"),
-          pfEmployerRate: parseFloat(salary.pfEmployerRate ?? "12"),
-          pfWageCeiling: parseFloat(salary.pfWageCeiling ?? "15000"),
-          esiApplicable: salary.esiApplicable ?? false,
-          esiEmployeeRate: parseFloat(salary.esiEmployeeRate ?? "0.75"),
-          esiEmployerRate: parseFloat(salary.esiEmployerRate ?? "3.25"),
-          esiWageCeiling: parseFloat(salary.esiWageCeiling ?? "21000"),
+          pfApplicable: salary?.pfApplicable ?? false,
+          pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
+          pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
+          pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
+          esiApplicable: salary?.esiApplicable ?? false,
+          esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
+          esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
+          esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
         });
 
         const totalDeductions = roundInr(

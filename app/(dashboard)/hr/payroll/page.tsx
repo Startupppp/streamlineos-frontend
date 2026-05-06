@@ -106,19 +106,41 @@ export default function PayrollPage() {
     if (!selectedEmployeeData) return null;
 
     const otAmt = overtimePreview?.overtimeAmount ?? 0;
+    const employeeMonthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
 
-    // CTC must be derived from the active salary structure, not employees.monthly_salary.
-    // The generate route uses basicSalary + hra + specialAllowance as the LOP per-day base;
-    // the preview must agree or HR will see one number and the system will persist another.
-    const basicSalary = activeSalary ? parseFloat(activeSalary.basicSalary) : 0;
-    const hraPercentage = activeSalary ? parseFloat(activeSalary.hraPercentage ?? "50") : 50;
-    const specialAllowance = activeSalary ? parseFloat(activeSalary.specialAllowance ?? "0") : 0;
-    const structureDeductions = activeSalary ? parseFloat(activeSalary.deductions ?? "0") : 0;
-    const hraAmount = (basicSalary * hraPercentage) / 100;
-    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+    if (activeSalary) {
+      // Salary structure exists — preview matches the generate route formula exactly.
+      // CTC = basicSalary + hra + specialAllowance, used as the LOP per-day base.
+      const basicSalary = parseFloat(activeSalary.basicSalary);
+      const hraPercentage = parseFloat(activeSalary.hraPercentage ?? "50");
+      const specialAllowance = parseFloat(activeSalary.specialAllowance ?? "0");
+      const structureDeductions = parseFloat(activeSalary.deductions ?? "0");
+      const hraAmount = (basicSalary * hraPercentage) / 100;
+      const ctcMonthly = basicSalary + hraAmount + specialAllowance;
 
+      return buildPayslipPreviewFromEmployee({
+        monthlySalary: ctcMonthly,
+        month: selectedMonth,
+        lopDays: parseFloat(lopDays) || 0,
+        halfDays: parseFloat(halfDays) || 0,
+        otherDeductions: parseFloat(otherDeductions) || 0,
+        bonus: parseFloat(bonus) || 0,
+        overtimeAmount: otAmt,
+        overtimeType: otAmt > 0 ? "days" : "",
+        overtimeDays: overtimePreview?.overtimeDays ?? 0,
+        overtimeHours: 0,
+        basicSalary,
+        hraPercentage,
+        allowances: specialAllowance,
+        salaryStructureDeductions: structureDeductions,
+      });
+    }
+
+    // No salary structure — fall back to the employee's monthly_salary field with the
+    // calculator's implicit 50/25/25 split. The generate route will refuse to run in
+    // this state, but the preview shows reasonable numbers so HR knows what's needed.
     return buildPayslipPreviewFromEmployee({
-      monthlySalary: ctcMonthly,
+      monthlySalary: employeeMonthlySalary,
       month: selectedMonth,
       lopDays: parseFloat(lopDays) || 0,
       halfDays: parseFloat(halfDays) || 0,
@@ -128,10 +150,7 @@ export default function PayrollPage() {
       overtimeType: otAmt > 0 ? "days" : "",
       overtimeDays: overtimePreview?.overtimeDays ?? 0,
       overtimeHours: 0,
-      basicSalary: activeSalary ? basicSalary : undefined,
-      hraPercentage: activeSalary ? hraPercentage : undefined,
-      allowances: activeSalary ? specialAllowance : undefined,
-      salaryStructureDeductions: structureDeductions,
+      salaryStructureDeductions: 0,
     });
   }, [
     selectedEmployeeData,

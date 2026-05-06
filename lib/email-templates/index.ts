@@ -56,6 +56,7 @@ export {
   getManagerReviewReminderEmail,
   getReviewPublishedEmail,
   getGoalSettingReminderEmail,
+  getUnsatisfactoryPerformanceNoticeEmail,
   getAppraisalStageAssignedEmail,
   getAppraisalFinalApprovedEmail,
   getAppraisalDueReminderEmail,
