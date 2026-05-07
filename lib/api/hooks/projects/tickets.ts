@@ -6,7 +6,9 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   Ticket,
+  TicketComment,
   TicketLabel,
+  TicketUser,
   CustomState,
   PaginatedResponse,
   TicketFilters,
@@ -15,6 +17,30 @@ import type {
   MoveTicketInput,
   CreateLabelInput,
 } from "@/types/projects";
+
+export type AddCommentActor = Pick<
+  TicketUser,
+  "id" | "name" | "firstName" | "lastName" | "email" | "image"
+>;
+
+export type AddCommentVariables = {
+  ticketId: number;
+  projectId: number;
+  content: string;
+  actor?: AddCommentActor;
+};
+
+type NewCommentResponse = Pick<
+  TicketComment,
+  | "id"
+  | "orgId"
+  | "ticketId"
+  | "userId"
+  | "content"
+  | "parentCommentId"
+  | "createdAt"
+  | "updatedAt"
+>;
 import { useProjectLabels } from "./projects";
 
 export function useTickets(
@@ -141,21 +167,93 @@ export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryK
 }
 
 export function useAddComment(
-  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<NewCommentResponse, Error, AddCommentVariables, { previous: Ticket | null | undefined; tempId: number }>,
+    "mutationFn" | "onMutate" | "onError" | "onSuccess"
+  > &
+    Pick<
+      UseMutationOptions<NewCommentResponse, Error, AddCommentVariables, { previous: Ticket | null | undefined; tempId: number }>,
+      "onSuccess" | "onError"
+    >
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>({
-    mutationFn: ({ ticketId, projectId = 0, content }) =>
-      apiClient.post<{ id: number; content: string; createdAt: string }>(
+  const { onSuccess: userOnSuccess, onError: userOnError, ...rest } = options ?? {};
+  return useMutation<
+    NewCommentResponse,
+    Error,
+    AddCommentVariables,
+    { previous: Ticket | null | undefined; tempId: number }
+  >({
+    ...rest,
+    mutationFn: ({ ticketId, projectId, content }) =>
+      apiClient.post<NewCommentResponse>(
         `/projects/${projectId}/tickets/${ticketId}/comments`,
         { content }
       ),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+    onMutate: async (variables) => {
+      const { ticketId, content, actor } = variables;
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.projects.ticket(ticketId),
       });
+      const previous = queryClient.getQueryData<Ticket | null>(
+        queryKeys.projects.ticket(ticketId)
+      );
+      const tempId = -Math.abs(Date.now());
+      if (previous) {
+        const optimistic: TicketComment = {
+          id: tempId,
+          orgId: previous.orgId,
+          ticketId,
+          userId: actor?.id ?? "",
+          content,
+          parentCommentId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          user: actor,
+        };
+        queryClient.setQueryData<Ticket | null>(queryKeys.projects.ticket(ticketId), {
+          ...previous,
+          comments: [...(previous.comments ?? []), optimistic],
+        });
+      }
+      return { previous, tempId };
     },
-    ...options,
+    onError: (err, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          queryKeys.projects.ticket(variables.ticketId),
+          context.previous
+        );
+      }
+      userOnError?.(err, variables, context);
+    },
+    onSuccess: (data, variables, context) => {
+      const actor = variables.actor;
+      const merged: TicketComment = {
+        ...data,
+        user: actor
+          ? {
+              id: actor.id,
+              name: actor.name,
+              firstName: actor.firstName,
+              lastName: actor.lastName,
+              email: actor.email,
+              image: actor.image,
+            }
+          : undefined,
+      };
+      queryClient.setQueryData<Ticket | null>(
+        queryKeys.projects.ticket(variables.ticketId),
+        (old) => {
+          if (!old) return old;
+          const comments = (old.comments ?? []).map((c) =>
+            c.id === context?.tempId ? merged : c
+          );
+          return { ...old, comments };
+        }
+      );
+      userOnSuccess?.(data, variables, context);
+    },
   });
 }
 
