@@ -414,6 +414,13 @@
       "when": 1774390013000,
       "tag": "0115_overtime_multipliers",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1774390014000,
+      "tag": "0116_chat_channel_pins",
+      "breakpoints": true
     }
   ]
 }
