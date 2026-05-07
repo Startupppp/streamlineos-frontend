@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, count, sql } from "drizzle-orm";
 import { cached, CACHE_TTL } from "@/lib/hr-cache";
+import { daysUntilNextBirthday } from "@/lib/hr/upcoming-birthdays";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +105,6 @@ export async function GET() {
             and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)),
           );
 
-        const today = new Date();
         const upcomingBirthdays: {
           id: string;
           name: string | null;
@@ -117,18 +117,8 @@ export async function GET() {
 
         for (const m of allMembersForBirthdays) {
           if (!m.dateOfBirth) continue;
-          const dob = new Date(m.dateOfBirth);
-          const nextBirthday = new Date(
-            today.getFullYear(),
-            dob.getMonth(),
-            dob.getDate(),
-          );
-          if (nextBirthday < today) {
-            nextBirthday.setFullYear(today.getFullYear() + 1);
-          }
-          const diffMs = nextBirthday.getTime() - today.getTime();
-          const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-          if (daysUntil <= 7) {
+          const daysUntil = daysUntilNextBirthday(m.dateOfBirth, now);
+          if (daysUntil !== null && daysUntil <= 7) {
             upcomingBirthdays.push({ ...m, dateOfBirth: m.dateOfBirth, daysUntil });
           }
         }
