@@ -7,9 +7,11 @@ import { format } from "date-fns";
 import fs from "fs/promises";
 import path from "path";
 import type { NextRequest } from "next/server";
+import { buildPayslipPdfDataFromPayroll, generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
+import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ payrollId: string }> }
 ) {
   return withAuth(async (session) => {
@@ -87,6 +89,28 @@ export async function GET(
     const joiningDate = employee?.joiningDate
       ? format(new Date(employee.joiningDate), "dd MMM yyyy")
       : "—";
+
+    if (req.nextUrl.searchParams.get("format") === "pdf") {
+      if (!employee) return err("Employee not found.", 404);
+      const pdfData = buildPayslipPdfDataFromPayroll(payroll, employee, org ?? { name: null, address: null });
+      const password = derivePayslipPassword({
+        panNumber: employee.taxId,
+        dateOfBirth: employee.dateOfBirth,
+        employeeName: employee.name,
+        joiningDate: employee.joiningDate,
+      });
+      const { buffer } = await generatePayslipPdfWithEncryptionStatus({
+        ...pdfData,
+        password: password ?? undefined,
+      });
+      const safeName = (employee.name ?? "employee").replace(/\s+/g, "-");
+      return new NextResponse(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="Payslip-${safeName}-${payroll.month ?? "unknown"}.pdf"`,
+        },
+      });
+    }
 
     let logoSvg = "";
     try {

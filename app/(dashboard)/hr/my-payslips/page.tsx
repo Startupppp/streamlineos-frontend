@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHrEmployeePayslips } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ import { numberToWords } from "@/lib/format-utils";
 export default function MyPayslipsPage() {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const payslipRef = useRef<HTMLDivElement>(null);
 
   const { data: payslips, isLoading } = useHrEmployeePayslips({});
 
@@ -39,93 +38,35 @@ export default function MyPayslipsPage() {
   })) || [];
 
   const handleDownload = async () => {
-    if (!payslipRef.current || !selectedPayslip) return;
+    if (!selectedPayslip) return;
 
-    toast.loading("Generating PDF...", { id: "pdf-download" });
+    toast.loading("Downloading PDF…", { id: "pdf-download" });
 
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
-      const convertLabColors = (element: HTMLElement) => {
-        const unsupportedColorPattern = /lab\(|oklch\(|oklab\(|lch\(/;
-        const allElements = element.querySelectorAll('*');
-        allElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          const computedStyle = window.getComputedStyle(htmlEl);
-
-          const color = computedStyle.color;
-          const bgColor = computedStyle.backgroundColor;
-          const borderColor = computedStyle.borderColor;
-
-          if (color && unsupportedColorPattern.test(color)) {
-            htmlEl.style.color = '#1f2937';
-          }
-          if (bgColor && unsupportedColorPattern.test(bgColor)) {
-            htmlEl.style.backgroundColor = 'transparent';
-          }
-          if (borderColor && unsupportedColorPattern.test(borderColor)) {
-            htmlEl.style.borderColor = '#e5e7eb';
-          }
-        });
-        const rootStyle = window.getComputedStyle(element);
-        if (rootStyle.color && unsupportedColorPattern.test(rootStyle.color)) {
-          element.style.color = '#1f2937';
-        }
-        if (rootStyle.backgroundColor && unsupportedColorPattern.test(rootStyle.backgroundColor)) {
-          element.style.backgroundColor = '#ffffff';
-        }
-      };
-
-      const canvas = await html2canvas(payslipRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-        allowTaint: true,
-        foreignObjectRendering: false,
-        onclone: (_clonedDoc, clonedElement) => {
-          clonedElement.style.transform = 'none';
-          convertLabColors(clonedElement);
-          const watermark = clonedElement.querySelector('[data-watermark]');
-          if (watermark instanceof HTMLElement) {
-            watermark.style.display = 'none';
-          }
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true,
-      });
-
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      const res = await fetch(
+        `/api/hr/payrolls/${selectedPayslip.id}/download?format=pdf`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(errText || res.statusText || "Download failed");
       }
-
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
       const employeeName = `${selectedPayslip.user?.firstName || ""}_${selectedPayslip.user?.lastName || ""}`.replace(/\s+/g, "_");
       const monthYear = format(parseISO(selectedMonth + "-01"), "MMM_yyyy");
-      const fileName = `Payslip_${employeeName}_${monthYear}.pdf`;
-
-      pdf.save(fileName);
+      a.download = `Payslip_${employeeName || "employee"}_${monthYear}.pdf`;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
       toast.success("Payslip downloaded successfully!", { id: "pdf-download" });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to generate PDF: ${errorMessage}`, { id: "pdf-download" });
+      toast.error(`Failed to download PDF: ${errorMessage}`, { id: "pdf-download" });
     }
   };
 
@@ -228,7 +169,6 @@ export default function MyPayslipsPage() {
           </div>
 
           <div
-            ref={payslipRef}
             data-payslip-content
             className="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto relative overflow-hidden"
             style={{ fontFamily: "Arial, sans-serif" }}

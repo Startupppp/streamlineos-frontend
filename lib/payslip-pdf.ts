@@ -61,10 +61,120 @@ export interface PayslipPdfData {
   hra: number;
   allowances: number;
   overtimeAmount: number;
+  /** When set with overtimeAmount, label includes days or hours (matches HTML payslip). */
+  overtimeType?: string | null;
+  overtimeDays?: number;
+  overtimeHours?: number;
+  /** Days in calendar month (payslip header; public holidays are not shown as a separate line). */
+  calendarDaysInMonth?: number;
+  effectiveDaysWorked?: number;
   grossSalary: number;
   deductions: number;
   professionalTax?: number;
   netSalary: number;
+}
+
+type PayrollLike = {
+  month: string | null;
+  basicSalary: string | null;
+  hra: string | null;
+  specialAllowance?: string | null;
+  allowances: string | null;
+  overtimeType: string | null;
+  overtimeDays: string | null;
+  overtimeHours: string | null;
+  overtimeAmount: string | null;
+  grossSalary: string | null;
+  deductions: string | null;
+  netSalary: string | null;
+  ptAmount: string | null;
+  lopDays: string | null;
+  halfDays: string | null;
+};
+
+type UserLike = {
+  name: string | null;
+  employeeId: string | null;
+  designation: string | null;
+  team: string | null;
+  role: string | null;
+  taxId: string | null;
+  joiningDate: Date | string | null;
+  bankDetails?: {
+    accountNumber?: string | null;
+    bankName?: string | null;
+    ifsc?: string | null;
+    pfUanNumber?: string | null;
+  } | null;
+};
+
+type OrgLike = {
+  name: string | null;
+  address?: { city?: string | null; state?: string | null; country?: string | null } | null;
+};
+
+/** Shared by mark-paid email and download?format=pdf */
+export function buildPayslipPdfDataFromPayroll(
+  payroll: PayrollLike,
+  employee: UserLike,
+  org: OrgLike
+): PayslipPdfData {
+  const monthLabel = payroll.month
+    ? format(new Date(payroll.month + "-01"), "MMMM yyyy")
+    : "Unknown Month";
+
+  const daysInPayMonth = payroll.month
+    ? (() => {
+        const [yr, mo] = payroll.month.split("-").map(Number);
+        return new Date(yr, mo, 0).getDate();
+      })()
+    : 30;
+
+  const lopDays = parseFloat(payroll.lopDays ?? "0");
+  const halfDays = parseFloat(payroll.halfDays ?? "0");
+  const effectiveDays = daysInPayMonth - lopDays - halfDays * 0.5;
+
+  const bank = employee.bankDetails;
+  const maskedAccount = bank?.accountNumber
+    ? "XXXX" + String(bank.accountNumber).slice(-4)
+    : "—";
+
+  const orgAddress = org?.address;
+  const addressLine = [orgAddress?.city, orgAddress?.state, orgAddress?.country]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    orgName: org?.name ?? "Company",
+    orgAddress: addressLine || undefined,
+    employeeName: employee.name ?? "Employee",
+    employeeId: employee.employeeId ?? undefined,
+    designation: employee.designation ?? undefined,
+    department: employee.team ?? employee.role ?? undefined,
+    panNumber: employee.taxId ?? undefined,
+    pfUan: bank?.pfUanNumber || undefined,
+    bankName: bank?.bankName ?? undefined,
+    maskedAccount,
+    ifsc: bank?.ifsc ?? undefined,
+    joiningDate: employee.joiningDate
+      ? format(new Date(employee.joiningDate), "dd MMM yyyy")
+      : undefined,
+    monthLabel,
+    basicSalary: parseFloat(payroll.basicSalary || "0"),
+    hra: parseFloat(payroll.hra || "0"),
+    allowances:
+      parseFloat(payroll.specialAllowance ?? "0") + parseFloat(payroll.allowances ?? "0"),
+    overtimeAmount: parseFloat(payroll.overtimeAmount || "0"),
+    overtimeType: payroll.overtimeType,
+    overtimeDays: parseFloat(payroll.overtimeDays ?? "0"),
+    overtimeHours: parseFloat(payroll.overtimeHours ?? "0"),
+    calendarDaysInMonth: daysInPayMonth,
+    effectiveDaysWorked: effectiveDays,
+    grossSalary: parseFloat(payroll.grossSalary || "0"),
+    deductions: parseFloat(payroll.deductions || "0"),
+    professionalTax: parseFloat(payroll.ptAmount ?? "200"),
+    netSalary: parseFloat(payroll.netSalary || "0"),
+  };
 }
 
 
@@ -234,7 +344,12 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   rowY2 = drawSectionHeader(col2X, rowY2, "PAYROLL INFORMATION");
   rowY2 = drawRow(col2X, rowY2, "Pay Period", data.monthLabel);
   rowY2 = drawRow(col2X, rowY2, "Payment Mode", "Bank Transfer");
-  rowY2 = drawRow(col2X, rowY2, "Working Days", "30");
+  const calDays =
+    data.calendarDaysInMonth != null ? String(data.calendarDaysInMonth) : "—";
+  rowY2 = drawRow(col2X, rowY2, "Calendar Days", calDays);
+  const effDays =
+    data.effectiveDaysWorked != null ? String(data.effectiveDaysWorked) : "—";
+  rowY2 = drawRow(col2X, rowY2, "Effective Days", effDays);
 
   y = Math.min(rowY, rowY2) - 10;
   drawLine(page, margin, y, pageW - margin, y);
@@ -254,11 +369,20 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, "Amount", margin + contentW - 4, y + 4, bold, 8, NAVY);
   y -= 18;
 
+  let overtimeLabel = "Overtime Pay";
+  if (data.overtimeAmount > 0) {
+    if (data.overtimeType === "days") {
+      overtimeLabel = `Overtime Pay (${data.overtimeDays ?? 0} days)`;
+    } else if (data.overtimeType === "hours") {
+      overtimeLabel = `Overtime Pay (${data.overtimeHours ?? 0} hours)`;
+    }
+  }
+
   const earningsRows: [string, number][] = [
     ["Basic Salary", data.basicSalary],
     ...(data.hra > 0 ? [["HRA", data.hra] as [string, number]] : []),
     ...(data.allowances > 0 ? [["Special Allowance", data.allowances] as [string, number]] : []),
-    ...(data.overtimeAmount > 0 ? [["Overtime", data.overtimeAmount] as [string, number]] : []),
+    ...(data.overtimeAmount > 0 ? [[overtimeLabel, data.overtimeAmount] as [string, number]] : []),
   ];
 
   const professionalTax = data.professionalTax ?? 200;

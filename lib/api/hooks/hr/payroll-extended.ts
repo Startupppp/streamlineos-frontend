@@ -49,7 +49,7 @@ export interface HolidayWorkRequest {
   orgId: string;
   userId: string;
   requestDate: string;
-  type: "HOLIDAY" | "SUNDAY";
+  type: "HOLIDAY" | "SUNDAY" | "SATURDAY";
   reason: string | null;
   compensationPreference: "COMP_OFF" | "EXTRA_PAY";
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -72,7 +72,7 @@ export function useHolidayWorkRequests(params?: { userId?: string; status?: stri
 export function useSubmitHolidayWorkRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { requestDate: string; reason?: string; compensationPreference: "COMP_OFF" | "EXTRA_PAY" }) =>
+    mutationFn: (data: { requestDate: string; reason: string; compensationPreference: "COMP_OFF" | "EXTRA_PAY" }) =>
       apiClient.post<HolidayWorkRequest>("/hr/holiday-work-requests", data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.holidayWorkRequests() }),

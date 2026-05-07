@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { format } from "date-fns";
 import { sendEmail } from "@/lib/email";
-import { generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
+import { buildPayslipPdfDataFromPayroll, generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
 import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
 import { logger } from "@/lib/logger";
@@ -57,25 +57,8 @@ export async function PATCH(
           ? format(new Date(existing.month + "-01"), "MMMM yyyy")
           : "Unknown Month";
 
-        const basic = parseFloat(existing.basicSalary || "0");
-        const hra = parseFloat(existing.hra || "0");
-        const allowances = parseFloat(existing.allowances || "0");
-        const overtimeAmount = parseFloat(existing.overtimeAmount || "0");
-        const grossSalary = parseFloat(existing.grossSalary || "0");
-        const deductions = parseFloat(existing.deductions || "0");
         const netSalary = parseFloat(existing.netSalary || "0");
 
-        const orgAddress = org?.address;
-        const addressLine = [orgAddress?.city, orgAddress?.state, orgAddress?.country]
-          .filter(Boolean)
-          .join(", ");
-
-        const bank = employee.bankDetails;
-        const maskedAccount = bank?.accountNumber
-          ? "XXXX" + bank.accountNumber.slice(-4)
-          : "—";
-
-        const professionalTax = parseFloat(existing.ptAmount ?? "200");
         const password = derivePayslipPassword({
           panNumber: employee.taxId,
           dateOfBirth: employee.dateOfBirth,
@@ -83,31 +66,10 @@ export async function PATCH(
           joiningDate: employee.joiningDate,
         });
 
+        const pdfBase = buildPayslipPdfDataFromPayroll(existing, employee, org ?? { name: null, address: null });
         const { buffer: pdfBuffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
-          orgName: org?.name ?? "Company",
-          orgAddress: addressLine || undefined,
-          employeeName: employee.name ?? "Employee",
-          employeeId: employee.employeeId ?? undefined,
-          designation: employee.designation ?? undefined,
-          department: employee.team ?? employee.role ?? undefined,
-          panNumber: employee.taxId ?? undefined,
-          pfUan: bank?.pfUanNumber || undefined,
+          ...pdfBase,
           password: password ?? undefined,
-          bankName: bank?.bankName ?? undefined,
-          maskedAccount,
-          ifsc: bank?.ifsc ?? undefined,
-          joiningDate: employee.joiningDate
-            ? format(new Date(employee.joiningDate), "dd MMM yyyy")
-            : undefined,
-          monthLabel,
-          basicSalary: basic,
-          hra,
-          allowances,
-          overtimeAmount,
-          grossSalary,
-          deductions,
-          professionalTax,
-          netSalary,
         });
 
         const emailContent = getPayslipEmailTemplate({
