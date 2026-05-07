@@ -8,6 +8,7 @@ import {
   Package,
   CheckCircle2,
   Wrench,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,10 +135,23 @@ export default function HrAssetsPage() {
       title="Assets"
       subtitle="Manage company assets and assignments"
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
-          Add Asset
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            type="button"
+            onClick={() => {
+              window.open("/api/hr/assets/export", "_blank", "noopener,noreferrer");
+            }}
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export CSV
+          </Button>
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Add Asset
+          </Button>
+        </div>
       }
       filters={
         <Tabs value={statusFilter ?? "all"} onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}>
