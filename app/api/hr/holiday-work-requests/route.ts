@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
 
 const submitSchema = z.object({
   requestDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  reason: z.string().min(1).optional(),
+  reason: z.string().min(5, "Reason must be at least 5 characters."),
   compensationPreference: z.enum(["EXTRA_PAY", "COMP_OFF"]),
 });
 
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       requestDate: body.requestDate,
       type,
       holidayId: holiday?.id ?? null,
-      reason: body.reason ?? null,
+      reason: body.reason,
       compensationPreference: body.compensationPreference,
       status: "PENDING",
     }).returning();

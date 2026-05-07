@@ -5,6 +5,11 @@ import { eq, and, desc } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 import { notifyByRoles } from "@/server/actions/create-notification";
 import { ROLES } from "@/lib/constants/roles";
+import {
+  getLateCutoffMinutesIst,
+  handleLateArrivalAfterCheckIn,
+  minutesSinceMidnightIst,
+} from "@/lib/hr/late-arrival-after-check-in";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -28,6 +33,11 @@ export async function POST(req: NextRequest) {
 
     try {
       let attendanceId: number | undefined;
+      let isFreshInsert = false;
+      const checkInAt = new Date();
+      const workdayForLateRule = !holiday && !isSunday;
+      const lateCutoff = getLateCutoffMinutesIst();
+      const isLateFirstPunch = workdayForLateRule && minutesSinceMidnightIst(checkInAt) > lateCutoff;
 
       await db.transaction(async (tx) => {
         const result = await tx
@@ -84,8 +94,8 @@ export async function POST(req: NextRequest) {
           orgId: session.orgId,
           userId: session.user.id,
           date: today,
-          checkIn: new Date(),
-          status: "PRESENT",
+          checkIn: checkInAt,
+          status: isLateFirstPunch ? "LATE" : "PRESENT",
           locationData: body.location ?? null,
           isHolidayWork: !!holiday,
           isSundayWork: isSunday && !holiday,
@@ -93,6 +103,7 @@ export async function POST(req: NextRequest) {
         }).returning({ id: attendance.id });
 
         attendanceId = inserted.id;
+        isFreshInsert = true;
       });
 
       if (holiday || isSunday) {
@@ -102,6 +113,18 @@ export async function POST(req: NextRequest) {
           message: `${session.user.name ?? session.user.email} clocked in on ${whatDay} (${today}). An approved holiday work request is required for compensation.`,
           link: "/hr/attendance",
           metadata: { userId: session.user.id, date: today, type: holiday ? "HOLIDAY" : "SUNDAY" },
+        }).catch(() => {});
+      }
+
+      if (isFreshInsert && attendanceId && workdayForLateRule) {
+        void handleLateArrivalAfterCheckIn({
+          orgId: session.orgId,
+          userId: session.user.id,
+          userName: session.user.name ?? null,
+          userEmail: session.user.email ?? null,
+          date: today,
+          checkIn: checkInAt,
+          attendanceId,
         }).catch(() => {});
       }
 
