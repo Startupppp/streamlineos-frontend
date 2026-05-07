@@ -356,8 +356,12 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       </td>
       <td className="py-3.5 px-3 text-sm text-foreground text-center">
         {request.isHalfDay ? (
-          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">½</span>
-        ) : days}
+          <span className="text-xs font-medium text-muted-foreground">
+            {request.halfDayPeriod === "AM" ? "Morning" : "Afternoon"}
+          </span>
+        ) : (
+          days
+        )}
       </td>
       <td className="py-3.5 px-3">
         <div className="flex items-center gap-1.5">
