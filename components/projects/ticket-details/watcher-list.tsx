@@ -3,9 +3,16 @@
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Plus, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Plus, Loader2, X } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useWatchers, useToggleWatch, useAddWatcher } from "@/lib/api/hooks/projects";
+import {
+  useWatchers,
+  useToggleWatch,
+  useAddWatcher,
+  useRemoveWatcher,
+} from "@/lib/api/hooks/projects";
+import { getApiError } from "@/lib/api-client";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -19,13 +26,21 @@ interface WatcherListProps {
   projectId: number;
   ticketId: number;
   members: ProjectMember[];
+  /** When true, current user may remove watchers other than themselves (server enforces too). */
+  canRemoveOtherWatchers?: boolean;
 }
 
-export function WatcherList({ projectId, ticketId, members }: WatcherListProps) {
+export function WatcherList({
+  projectId,
+  ticketId,
+  members,
+  canRemoveOtherWatchers = false,
+}: WatcherListProps) {
   const { data: session } = useSession();
   const { data: watchers = [], isLoading } = useWatchers(projectId, ticketId);
   const toggleWatch = useToggleWatch(projectId);
   const addWatcher = useAddWatcher(projectId);
+  const removeWatcher = useRemoveWatcher(projectId);
 
   const currentUserId = session?.user?.id;
   const isWatching = watchers.some((w) => w.userId === currentUserId);
@@ -68,16 +83,48 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
       </div>
 
       {watchers.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {watchers.map((w) => (
-            <Avatar key={w.userId} className="h-6 w-6" title={w.user?.firstName ?? w.userId}>
-              <AvatarImage src={resolveImageUrl(w.user?.image)} />
-              <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
-                {w.user?.firstName?.[0]}
-                {w.user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-          ))}
+        <div className="flex flex-wrap gap-1.5">
+          {watchers.map((w) => {
+            const canRemove =
+              w.userId === currentUserId || canRemoveOtherWatchers;
+            return (
+              <div
+                key={w.userId}
+                className="relative group inline-flex"
+                title={
+                  [w.user?.firstName, w.user?.lastName].filter(Boolean).join(" ") ||
+                  w.userId
+                }
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={resolveImageUrl(w.user?.image)} />
+                  <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                    {w.user?.firstName?.[0]}
+                    {w.user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                {canRemove && (
+                  <button
+                    type="button"
+                    aria-label="Remove watcher"
+                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-muted text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100 focus:opacity-100"
+                    disabled={removeWatcher.isPending}
+                    onClick={() =>
+                      removeWatcher.mutate(
+                        { ticketId, userId: w.userId },
+                        {
+                          onError: (e) =>
+                            toast.error(getApiError(e)),
+                        }
+                      )
+                    }
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

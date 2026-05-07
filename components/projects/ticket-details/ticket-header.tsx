@@ -23,6 +23,8 @@ interface TicketHeaderProps {
   saving: boolean;
   isDeleting: boolean;
   onDelete: () => void;
+  /** When set, shows an explicit Close control (helps when default sheet close is hard to reach). */
+  onRequestClose?: () => void;
 }
 
 export function TicketHeader({
@@ -35,6 +37,7 @@ export function TicketHeader({
   saving,
   isDeleting,
   onDelete,
+  onRequestClose,
 }: TicketHeaderProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -42,7 +45,6 @@ export function TicketHeader({
     <div className="shrink-0 border-b px-4 py-3">
       <SheetHeader className="space-y-0">
         <div className="flex items-center justify-between gap-2">
-
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
               #{ticketNumber ?? ticketId}
@@ -61,6 +63,19 @@ export function TicketHeader({
             )}
           </div>
 
+          <div className="flex items-center gap-1 shrink-0">
+            {onRequestClose && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground"
+                aria-label="Close"
+                onClick={onRequestClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           {!isLoading && ticketId && (
             <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
               <PopoverTrigger asChild>
@@ -89,6 +104,7 @@ export function TicketHeader({
               </PopoverContent>
             </Popover>
           )}
+          </div>
         </div>
 
         <SheetTitle className="text-base font-semibold leading-snug mt-1.5 line-clamp-2">

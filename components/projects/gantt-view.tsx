@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -25,6 +24,7 @@ interface Ticket {
   type: string;
   startDate?: string | null;
   dueDate?: string | null;
+  createdAt?: string | Date | null;
   ticketNumber?: number;
   sequenceId?: string | null;
   assignee?: { id: string; firstName?: string | null; lastName?: string | null } | null;
@@ -45,10 +45,22 @@ const statusColors: Record<string, string> = {
 export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const [weekOffset, setWeekOffset] = useState(0);
 
-  const datedTickets = useMemo(
-    () => tickets.filter((t) => t.startDate || t.dueDate),
-    [tickets]
-  );
+  const datedTickets = useMemo(() => {
+    const normalized = tickets.map((t) => {
+      let start = t.startDate ?? null;
+      let due = t.dueDate ?? null;
+      if (!start && !due && t.createdAt) {
+        const raw = typeof t.createdAt === "string" ? t.createdAt : (t.createdAt as Date).toISOString();
+        const day = raw.slice(0, 10);
+        start = day;
+        due = day;
+      }
+      if (start && !due) due = start;
+      if (!start && due) start = due;
+      return { ...t, startDate: start, dueDate: due };
+    });
+    return normalized.filter((t) => t.startDate || t.dueDate);
+  }, [tickets]);
 
   const startOfWeek = useMemo(() => {
     const d = new Date();

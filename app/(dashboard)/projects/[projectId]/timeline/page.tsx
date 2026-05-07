@@ -25,6 +25,7 @@ export default function TimelinePage({ params }: PageProps) {
       type: t.type ?? "TASK",
       startDate: t.startDate ?? null,
       dueDate: t.dueDate ?? null,
+      createdAt: t.createdAt ?? null,
       ticketNumber: t.ticketNumber,
       sequenceId: t.sequenceId ?? null,
       assignee: t.assignee
