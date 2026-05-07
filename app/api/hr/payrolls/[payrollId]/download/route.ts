@@ -215,7 +215,7 @@ export async function GET(
 <body>
   <div class="no-print" style="text-align:center;padding:12px;background:#e8edf7;">
     <button onclick="window.print()" style="padding:8px 22px;background:#0f2b7f;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;">
-      ⬇ Print / Save as PDF
+      Print / Save as PDF
     </button>
   </div>
 
@@ -256,9 +256,9 @@ export async function GET(
         <div class="dl"><span class="dk">Pay Period</span><span class="dv">${monthLabel}</span></div>
         <div class="dl"><span class="dk">Payment Mode</span><span class="dv">Bank Transfer</span></div>
         <div class="dl"><span class="dk">Calendar Days</span><span class="dv">${daysInPayMonth}</span></div>
-        <div class="dl"><span class="dk">Effective Days</span><span class="dv">${effectiveDays}</span></div>
-        ${lopDays > 0 ? `<div class="dl"><span class="dk">LOP Days</span><span class="dv">${lopDays}</span></div>` : ""}
-        ${halfDays > 0 ? `<div class="dl"><span class="dk">Half Days</span><span class="dv">${halfDays}</span></div>` : ""}
+        <div class="dl"><span class="dk">Days worked</span><span class="dv">${effectiveDays}</span></div>
+        <div class="dl"><span class="dk">LOP days</span><span class="dv">${lopDays}</span></div>
+        <div class="dl"><span class="dk">Half days</span><span class="dv">${halfDays}</span></div>
       </div>
     </div>
 

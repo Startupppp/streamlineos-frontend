@@ -94,11 +94,17 @@ export function useApprovePayroll() {
   });
 }
 
+export type MarkPayrollPaidResult = {
+  success: boolean;
+  emailSent: boolean;
+  emailError?: "no_email" | "send_failed";
+};
+
 export function useMarkPayrollPaid() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ payrollId }: MarkPayrollPaidInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/payrolls/${payrollId}/paid`),
+      apiClient.patch<MarkPayrollPaidResult>(`/hr/payrolls/${payrollId}/paid`),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
   });

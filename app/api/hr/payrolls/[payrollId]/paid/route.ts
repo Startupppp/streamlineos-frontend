@@ -45,14 +45,18 @@ export async function PATCH(
       });
     } catch {  }
 
+    let emailSent = false;
+    let emailError: "no_email" | "send_failed" | null = null;
+
     try {
-        const [employee, org] = await Promise.all([
-          db.query.users.findFirst({ where: eq(users.id, existing.userId) }),
-          db.query.organizations.findFirst({ where: eq(organizations.id, session.orgId) }),
-        ]);
+      const [employee, org] = await Promise.all([
+        db.query.users.findFirst({ where: eq(users.id, existing.userId) }),
+        db.query.organizations.findFirst({ where: eq(organizations.id, session.orgId) }),
+      ]);
 
-        if (!employee?.email) return ok({ success: true });
-
+      if (!employee?.email) {
+        emailError = "no_email";
+      } else {
         const monthLabel = existing.month
           ? format(new Date(existing.month + "-01"), "MMMM yyyy")
           : "Unknown Month";
@@ -66,16 +70,23 @@ export async function PATCH(
           joiningDate: employee.joiningDate,
         });
 
-        const pdfBase = buildPayslipPdfDataFromPayroll(existing, employee, org ?? { name: null, address: null });
-        const { buffer: pdfBuffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
-          ...pdfBase,
-          password: password ?? undefined,
-        });
+        const pdfBase = buildPayslipPdfDataFromPayroll(
+          existing,
+          employee,
+          org ?? { name: null, address: null }
+        );
+        const { buffer: pdfBuffer, encrypted } =
+          await generatePayslipPdfWithEncryptionStatus({
+            ...pdfBase,
+            password: password ?? undefined,
+          });
 
         const emailContent = getPayslipEmailTemplate({
           employeeName: employee.name ?? "Employee",
           month: monthLabel,
-          netSalary: netSalary.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
+          netSalary: netSalary.toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+          }),
           orgName: org?.name ?? "Company",
           passwordProtected: encrypted,
         });
@@ -92,10 +103,17 @@ export async function PATCH(
             },
           ],
         });
+        emailSent = true;
+      }
     } catch (e) {
       logger.error("Failed to send payslip email", { payrollId, error: e });
+      emailError = "send_failed";
     }
 
-    return ok({ success: true });
+    return ok({
+      success: true,
+      emailSent,
+      ...(emailError ? { emailError } : {}),
+    });
   });
 }

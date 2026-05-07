@@ -233,9 +233,18 @@ export default function PayrollPage() {
     markPaidMutation.mutate(
       { payrollId },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll marked as paid");
+          if (!data.emailSent) {
+            const msg =
+              data.emailError === "no_email"
+                ? "Payslip email was not sent: employee has no email on file."
+                : data.emailError === "send_failed"
+                  ? "Payslip email could not be sent. Check logs or try resend from your email provider."
+                  : "Payslip email was not sent.";
+            toast.warning(msg);
+          }
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       }

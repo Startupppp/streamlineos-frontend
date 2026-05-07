@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHrEmployeePayslips } from "@/lib/api/hooks/hr";
+import type { EmployeePayslip } from "@/types/hr";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { format, parseISO } from "date-fns";
-import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { Download, FileText, Loader2, ArrowLeft, Globe, Mail, MapPin } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { numberToWords } from "@/lib/format-utils";
@@ -37,14 +38,15 @@ export default function MyPayslipsPage() {
     label: format(parseISO(p.month + "-01"), "MMMM yyyy"),
   })) || [];
 
-  const handleDownload = async () => {
-    if (!selectedPayslip) return;
+  const handleDownload = async (payslipOverride?: EmployeePayslip) => {
+    const payslip = payslipOverride ?? selectedPayslip;
+    if (!payslip) return;
 
     toast.loading("Downloading PDF…", { id: "pdf-download" });
 
     try {
       const res = await fetch(
-        `/api/hr/payrolls/${selectedPayslip.id}/download?format=pdf`,
+        `/api/hr/payrolls/${payslip.id}/download?format=pdf`,
         { credentials: "include" }
       );
       if (!res.ok) {
@@ -55,8 +57,9 @@ export default function MyPayslipsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const employeeName = `${selectedPayslip.user?.firstName || ""}_${selectedPayslip.user?.lastName || ""}`.replace(/\s+/g, "_");
-      const monthYear = format(parseISO(selectedMonth + "-01"), "MMM_yyyy");
+      const employeeName = `${payslip.user?.firstName || ""}_${payslip.user?.lastName || ""}`.replace(/\s+/g, "_");
+      const monthKey = payslip.month;
+      const monthYear = format(parseISO(monthKey + "-01"), "MMM_yyyy");
       a.download = `Payslip_${employeeName || "employee"}_${monthYear}.pdf`;
       a.rel = "noopener";
       document.body.appendChild(a);
@@ -154,15 +157,24 @@ export default function MyPayslipsPage() {
 
       {!selectedMonth ? (
         <Card>
-          <CardContent className="py-12 text-center">
+          <CardContent className="py-12 text-center space-y-2">
             <EmptyDocumentsIllustration className="mb-3 mx-auto" />
-            <p className="text-muted-foreground">Select a month to view your payslip</p>
+            <p className="text-muted-foreground font-medium">Select a month to view your payslip</p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Choose a month from the dropdown above, or open a recent payslip below. Only finalized
+              (PAID) payrolls can be downloaded.
+            </p>
           </CardContent>
         </Card>
       ) : selectedPayslip ? (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={handleDownload} aria-label="Download payslip as PDF">
+            <Button
+              onClick={() => {
+                void handleDownload();
+              }}
+              aria-label="Download payslip as PDF"
+            >
               <Download className="mr-2 h-4 w-4" />
               Download Payslip
             </Button>
@@ -245,7 +257,7 @@ export default function MyPayslipsPage() {
                   <span style={{ fontWeight: 500, color: "#111827" }}>{calendarDaysInPayMonth} Days</span>
                 </div>
                 <div style={{ display: "flex" }}>
-                  <span style={{ color: "#374151", width: "160px" }}>Effective Days:</span>
+                  <span style={{ color: "#374151", width: "160px" }}>Days worked:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>{effectiveDaysWorked}</span>
                 </div>
                 <div style={{ display: "flex" }}>
@@ -265,16 +277,22 @@ export default function MyPayslipsPage() {
                   <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("bankName")}</span>
                 </div>
                 <div style={{ display: "flex" }}>
-                  <span style={{ color: "#374151", width: "160px" }}>LOP:</span>
+                  <span style={{ color: "#374151", width: "160px" }}>LOP days:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>
-                    {lopDaysCount} Day{lopDaysCount === 1 ? "" : "s"}
-                    {halfDaysCount > 0 ? ` + ${halfDaysCount} half-day${halfDaysCount === 1 ? "" : "s"}` : ""}
+                    {lopDaysCount} day{lopDaysCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <div style={{ display: "flex" }}>
+                  <span style={{ color: "#374151", width: "160px" }}>Half days:</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>
+                    {halfDaysCount} day{halfDaysCount === 1 ? "" : "s"}
                   </span>
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Acc Number:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("accountNumber")}</span>
                 </div>
+                <div aria-hidden style={{ minHeight: "1px" }} />
               </div>
 
               {(() => {
@@ -365,20 +383,20 @@ export default function MyPayslipsPage() {
                 <p style={{ fontSize: "14px", color: "#111827", marginTop: "16px" }}>Employee Signature:</p>
               </div>
 
-              <div style={{ backgroundColor: "#0f2b7f", color: "#ffffff", padding: "16px", borderRadius: "0 0 8px 8px", margin: "-32px -32px -32px -32px", marginTop: "32px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                      <span>🌐</span>
+              <div className="bg-[#0f2b7f] text-white p-4 rounded-b-lg -mx-8 -mb-8 mt-8 text-xs">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
                       <span>www.vaivammcapital.com</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span>✉</span>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
                       <span>support@vaivammcapital.com</span>
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", textAlign: "right" }}>
-                    <span>📍</span>
+                  <div className="flex items-start gap-2 text-right sm:max-w-[55%]">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 opacity-90" aria-hidden />
                     <span>
                       Vijay Tech Park, 3rd floor, Plot No 25, Madhapur,
                       <br />
@@ -392,9 +410,13 @@ export default function MyPayslipsPage() {
         </div>
       ) : (
         <Card>
-          <CardContent className="py-12 text-center">
+          <CardContent className="py-12 text-center space-y-2">
             <EmptyDocumentsIllustration className="mb-3 mx-auto" />
-            <p className="text-muted-foreground">No payslip found for this month</p>
+            <p className="text-muted-foreground font-medium">No finalized payslip for this month</p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Your payslip appears here only after payroll for that month has been marked PAID. If you
+              expected a slip, confirm with HR that processing is complete.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -409,7 +431,7 @@ export default function MyPayslipsPage() {
               {payslips.slice(0, 6).map((payslip) => (
                 <div
                   key={payslip.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between gap-3 p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
                   role="button"
                   tabIndex={0}
                   aria-label={`View payslip for ${format(parseISO(payslip.month + "-01"), "MMMM yyyy")}`}
@@ -421,11 +443,11 @@ export default function MyPayslipsPage() {
                     }
                   }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium">
                         {format(parseISO(payslip.month + "-01"), "MMMM yyyy")}
                       </p>
@@ -434,11 +456,29 @@ export default function MyPayslipsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">
-                      ₹{parseFloat(payslip.netSalary || "0").toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Net Salary</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right hidden sm:block">
+                      <p className="font-semibold text-green-600">
+                        ₹{parseFloat(payslip.netSalary || "0").toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Net Salary</p>
+                    </div>
+                    {payslip.status === "PAID" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1 text-xs"
+                        aria-label={`Download PDF for ${format(parseISO(payslip.month + "-01"), "MMMM yyyy")}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleDownload(payslip);
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        PDF
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -67,7 +67,12 @@ export interface PayslipPdfData {
   overtimeHours?: number;
   /** Days in calendar month (payslip header; public holidays are not shown as a separate line). */
   calendarDaysInMonth?: number;
+  /** Same as effective calendar days worked (after LOP / half-day adjustments). */
   effectiveDaysWorked?: number;
+  /** Loss-of-pay days in the pay month (shown even when 0). */
+  lopDays?: number;
+  /** Half-day count in the pay month (shown even when 0). */
+  halfDays?: number;
   grossSalary: number;
   deductions: number;
   professionalTax?: number;
@@ -170,6 +175,8 @@ export function buildPayslipPdfDataFromPayroll(
     overtimeHours: parseFloat(payroll.overtimeHours ?? "0"),
     calendarDaysInMonth: daysInPayMonth,
     effectiveDaysWorked: effectiveDays,
+    lopDays,
+    halfDays,
     grossSalary: parseFloat(payroll.grossSalary || "0"),
     deductions: parseFloat(payroll.deductions || "0"),
     professionalTax: parseFloat(payroll.ptAmount ?? "200"),
@@ -347,9 +354,21 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   const calDays =
     data.calendarDaysInMonth != null ? String(data.calendarDaysInMonth) : "—";
   rowY2 = drawRow(col2X, rowY2, "Calendar Days", calDays);
-  const effDays =
+  const daysWorked =
     data.effectiveDaysWorked != null ? String(data.effectiveDaysWorked) : "—";
-  rowY2 = drawRow(col2X, rowY2, "Effective Days", effDays);
+  rowY2 = drawRow(col2X, rowY2, "Days worked", daysWorked);
+  rowY2 = drawRow(
+    col2X,
+    rowY2,
+    "LOP days",
+    String(data.lopDays ?? 0)
+  );
+  rowY2 = drawRow(
+    col2X,
+    rowY2,
+    "Half days",
+    String(data.halfDays ?? 0)
+  );
 
   y = Math.min(rowY, rowY2) - 10;
   drawLine(page, margin, y, pageW - margin, y);

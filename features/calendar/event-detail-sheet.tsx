@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Download, Users, Check, X, HelpCircle } from "lucide-react";
+import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Users, Check, X, HelpCircle } from "lucide-react";
 import {
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
@@ -81,13 +81,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     },
     [event, numericEventId, rsvpMutation]
   );
-
-  const handleExportIcs = useCallback(() => {
-    if (!event) return;
-    const from = format(new Date(event.start), "yyyy-MM-dd");
-    const to = format(new Date(event.end), "yyyy-MM-dd");
-    window.open(`/api/calendar/export?from=${from}&to=${to}`, "_blank");
-  }, [event]);
 
   const colorHex = event
     ? (EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue)
@@ -255,15 +248,6 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <div />
             )}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportIcs}
-                aria-label="Export as .ics"
-              >
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                .ics
-              </Button>
               {isCalendarEvent && (
                 <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                   <Pencil className="h-3.5 w-3.5 mr-1.5" />

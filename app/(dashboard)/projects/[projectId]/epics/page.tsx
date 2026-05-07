@@ -103,9 +103,9 @@ export default function EpicsPage({ params }: PageProps) {
       subtitle={`${epics.length} epic${epics.length !== 1 ? "s" : ""} — ${stories.length} stories, ${tickets.filter(t => t.status === "DONE").length} completed`}
       actions={<CreateEpicDialog projectId={projectId} />}
     >
-      <div className="space-y-8" aria-live="polite" aria-atomic="true">
+      <div className="space-y-6" aria-live="polite" aria-atomic="true">
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-border/60">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function EpicsPage({ params }: PageProps) {
         </Card>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 mt-6">
         {epics.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -193,8 +193,8 @@ export default function EpicsPage({ params }: PageProps) {
       </div>
 
       {stories.filter(s => !s.epicId).length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <section className="mt-8 pt-2 space-y-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-yellow-500" />
             Stories without Epic
           </h2>

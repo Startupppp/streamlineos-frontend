@@ -166,15 +166,27 @@ export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryK
   return useProjectLabels(undefined, options);
 }
 
+type AddCommentMutationContext = {
+  previous: Ticket | null | undefined;
+  tempId: number;
+};
+
 export function useAddComment(
   options?: Omit<
-    UseMutationOptions<NewCommentResponse, Error, AddCommentVariables, { previous: Ticket | null | undefined; tempId: number }>,
+    UseMutationOptions<NewCommentResponse, Error, AddCommentVariables, AddCommentMutationContext>,
     "mutationFn" | "onMutate" | "onError" | "onSuccess"
-  > &
-    Pick<
-      UseMutationOptions<NewCommentResponse, Error, AddCommentVariables, { previous: Ticket | null | undefined; tempId: number }>,
-      "onSuccess" | "onError"
-    >
+  > & {
+    onSuccess?: (
+      data: NewCommentResponse,
+      variables: AddCommentVariables,
+      context: AddCommentMutationContext | undefined
+    ) => void;
+    onError?: (
+      err: Error,
+      variables: AddCommentVariables,
+      context: AddCommentMutationContext | undefined
+    ) => void;
+  }
 ) {
   const queryClient = useQueryClient();
   const { onSuccess: userOnSuccess, onError: userOnError, ...rest } = options ?? {};
@@ -182,7 +194,7 @@ export function useAddComment(
     NewCommentResponse,
     Error,
     AddCommentVariables,
-    { previous: Ticket | null | undefined; tempId: number }
+    AddCommentMutationContext
   >({
     ...rest,
     mutationFn: ({ ticketId, projectId, content }) =>

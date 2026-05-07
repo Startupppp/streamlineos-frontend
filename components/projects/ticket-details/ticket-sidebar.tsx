@@ -80,6 +80,8 @@ interface TicketSidebarProps {
   projectId?: number;
   members: ProjectMember[];
   sprints: Array<{ id: number; name: string; status?: string | null }>;
+  /** Project epics (EPIC-type tickets) for linking this work item. */
+  epics?: Array<{ id: number; title: string }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
 }
@@ -108,6 +110,7 @@ export function TicketSidebar({
   projectId,
   members,
   sprints,
+  epics = [],
   statuses,
   onAutoSave,
 }: TicketSidebarProps) {
@@ -304,6 +307,11 @@ export function TicketSidebar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
+              {epics.map((epic) => (
+                <SelectItem key={epic.id} value={String(epic.id)}>
+                  {epic.title || `Epic #${epic.id}`}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
