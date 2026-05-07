@@ -1,12 +1,15 @@
 // Shared docx-js style helpers used by every documentation generator.
 // Single source of truth for fonts, colors, table widths, footer layout.
 
+const fs = require("fs");
+const path = require("path");
 const {
   AlignmentType,
   BorderStyle,
   Footer,
   Header,
   HeadingLevel,
+  ImageRun,
   LevelFormat,
   PageBreak,
   PageNumber,
@@ -21,6 +24,8 @@ const {
   WidthType,
   PageOrientation,
 } = require("docx");
+
+const ASSETS_DIR = path.join(__dirname, "..", "..", "docs", "word-docs", "_assets");
 
 // ── Page sizing (US Letter, 1 inch margins) ─────────────────────────────────
 const PAGE_WIDTH = 12240;
@@ -352,69 +357,183 @@ function buildFooter(docNumber) {
   });
 }
 
-// ── Cover-page helper ────────────────────────────────────────────────────────
+// ── Image helpers ────────────────────────────────────────────────────────────
+
+function image(name, opts = {}) {
+  const filePath = path.join(ASSETS_DIR, name);
+  const data = fs.readFileSync(filePath);
+  const ext = name.split(".").pop().toLowerCase();
+  const width = opts.width || 540;   // default 540px ≈ full content width
+  const height = opts.height || Math.round((width * 2) / 3);
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 200, after: 80 },
+    children: [
+      new ImageRun({
+        type: ext === "jpg" ? "jpeg" : ext,
+        data,
+        transformation: { width, height },
+        altText: { title: opts.title || name, description: opts.description || name, name },
+      }),
+    ],
+  });
+}
+
+function figure(imageName, captionText, opts = {}) {
+  return [image(imageName, opts), new Paragraph({ style: "Caption", alignment: AlignmentType.CENTER, children: [new TextRun(captionText)] })];
+}
+
+// ── Info-box callouts (Note / Warning / Tip) ────────────────────────────────
+
+function infoBox(kind, text) {
+  const styles = {
+    note: { fill: "E0E8FF", stroke: NAVY, label: "NOTE", labelColor: NAVY },
+    tip: { fill: "DCFCE7", stroke: "15803D", label: "TIP", labelColor: "15803D" },
+    warning: { fill: "FEF3C7", stroke: "B45309", label: "WARNING", labelColor: "B45309" },
+    caution: { fill: "FEE2E2", stroke: "B91C1C", label: "CAUTION", labelColor: "B91C1C" },
+  };
+  const cfg = styles[kind] || styles.note;
+  const cell = new TableCell({
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: cfg.stroke },
+      bottom: { style: BorderStyle.SINGLE, size: 4, color: cfg.stroke },
+      left: { style: BorderStyle.SINGLE, size: 24, color: cfg.stroke },
+      right: { style: BorderStyle.SINGLE, size: 4, color: cfg.stroke },
+    },
+    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    shading: { fill: cfg.fill, type: ShadingType.CLEAR },
+    margins: { top: 120, bottom: 120, left: 200, right: 200 },
+    children: [
+      new Paragraph({
+        children: [
+          new TextRun({ text: cfg.label, bold: true, color: cfg.labelColor, size: 18 }),
+        ],
+        spacing: { after: 80 },
+      }),
+      new Paragraph({ children: [new TextRun({ text, size: 22 })] }),
+    ],
+  });
+  return new Table({
+    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    columnWidths: [CONTENT_WIDTH],
+    rows: [new TableRow({ children: [cell] })],
+  });
+}
+
+// ── Decorative section divider ──────────────────────────────────────────────
+
+function divider() {
+  return new Paragraph({
+    border: {
+      bottom: { style: BorderStyle.SINGLE, size: 12, color: GOLD, space: 4 },
+    },
+    spacing: { before: 200, after: 200 },
+    children: [new TextRun(" ")],
+  });
+}
+
+// ── Cover-page helper (now with logo) ───────────────────────────────────────
 
 function coverPage({ docNumber, title, subtitle, audience, version, repoSha, date }) {
-  return [
+  const out = [];
+  // Logo top-left
+  try {
+    const logoPath = path.join(ASSETS_DIR, "logo.png");
+    if (fs.existsSync(logoPath)) {
+      out.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 800, after: 80 },
+          children: [
+            new ImageRun({
+              type: "png",
+              data: fs.readFileSync(logoPath),
+              transformation: { width: 110, height: 110 },
+              altText: { title: "Vaivamm Capital logo", description: "Vaivamm Capital logo", name: "logo" },
+            }),
+          ],
+        })
+      );
+    }
+  } catch {}
+  out.push(
     new Paragraph({
-      children: [new TextRun({ text: " ", size: 80 })], // top spacer
-      spacing: { before: 1200 },
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: "VAIVAMM CAPITAL", bold: true, size: 36, color: NAVY, characterSpacing: 60 })],
+      spacing: { after: 40 },
     }),
     new Paragraph({
-      children: [new TextRun({ text: "VAIVAMM CAPITAL CRM", bold: true, size: 32, color: NAVY })],
-      spacing: { after: 60 },
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: "ENGINEERING DOCUMENTATION", size: 20, color: GOLD, bold: true, characterSpacing: 80 })],
+      spacing: { after: 800 },
+    }),
+    // Gold divider band
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: GOLD, space: 1 } },
+      children: [new TextRun(" ")],
+      spacing: { after: 240 },
     }),
     new Paragraph({
-      children: [new TextRun({ text: "Engineering Documentation", size: 22, color: GRAY })],
-      spacing: { after: 1200 },
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: `DOCUMENT ${docNumber}`, size: 22, color: GOLD, bold: true, characterSpacing: 100 })],
+      spacing: { after: 120 },
     }),
     new Paragraph({
-      children: [new TextRun({ text: `Document ${docNumber}`, size: 24, color: GOLD, bold: true })],
-      spacing: { after: 60 },
-    }),
-    new Paragraph({ style: "Title", children: [new TextRun(title)] }),
-    new Paragraph({ style: "Subtitle", children: [new TextRun(subtitle)] }),
-    new Paragraph({
-      children: [new TextRun({ text: " ", size: 40 })],
-      spacing: { before: 800 },
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: title, size: 56, bold: true, color: NAVY })],
+      spacing: { after: 120 },
     }),
     new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: subtitle, size: 26, color: GRAY, italics: true })],
+      spacing: { after: 240 },
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      border: { bottom: { style: BorderStyle.SINGLE, size: 24, color: GOLD, space: 1 } },
+      children: [new TextRun(" ")],
+      spacing: { after: 1000 },
+    }),
+  );
+
+  // Metadata block
+  const metaCell = (label, value, mono = false) =>
+    new TableCell({
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+        right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      },
+      width: { size: 4680, type: WidthType.DXA },
+      margins: { top: 80, bottom: 80, left: 120, right: 120 },
       children: [
-        new TextRun({ text: "Audience: ", bold: true, size: 22 }),
-        new TextRun({ text: audience, size: 22 }),
+        new Paragraph({ children: [new TextRun({ text: label, color: GRAY, bold: true, size: 18 })] }),
+        new Paragraph({
+          children: [new TextRun({ text: value, bold: true, size: 22, font: mono ? "Consolas" : undefined })],
+        }),
       ],
-      spacing: { after: 80 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Version: ", bold: true, size: 22 }),
-        new TextRun({ text: version, size: 22 }),
+    });
+
+  out.push(
+    new Table({
+      width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+      columnWidths: [4680, 4680],
+      rows: [
+        new TableRow({ children: [metaCell("AUDIENCE", audience), metaCell("VERSION", version)] }),
+        new TableRow({ children: [metaCell("DATE", date), metaCell("SOURCE REVISION", repoSha, true)] }),
+        new TableRow({
+          children: [
+            metaCell("STATUS", "Internal — Engineering team only"),
+            metaCell("AUTHOR", "Vaivamm Capital — Engineering"),
+          ],
+        }),
       ],
-      spacing: { after: 80 },
     }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Source revision: ", bold: true, size: 22 }),
-        new TextRun({ text: repoSha, size: 22, font: "Consolas" }),
-      ],
-      spacing: { after: 80 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Date: ", bold: true, size: 22 }),
-        new TextRun({ text: date, size: 22 }),
-      ],
-      spacing: { after: 80 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Status: ", bold: true, size: 22 }),
-        new TextRun({ text: "Internal — Engineering team only", size: 22, color: "AA0000" }),
-      ],
-      spacing: { after: 80 },
-    }),
-    new Paragraph({ children: [new PageBreak()] }),
-  ];
+    new Paragraph({ children: [new PageBreak()] })
+  );
+  return out;
 }
 
 // ── Section meta ─────────────────────────────────────────────────────────────
@@ -432,11 +551,12 @@ module.exports = {
   // constants
   PAGE_WIDTH, PAGE_HEIGHT, MARGIN, CONTENT_WIDTH,
   NAVY, GOLD, GRAY, LIGHT_GRAY, CODE_BG, BORDER_GRAY,
+  ASSETS_DIR,
   // doc setup
   styles, numbering, sectionProps,
   buildHeader, buildFooter, coverPage,
   // builders
   p, body, bodyMixed, h1, h2, h3, h4, bullet, bulletMixed, num,
   code, inlineCode, bold, plain, pageBreak, caption, quote,
-  buildTable,
+  buildTable, image, figure, infoBox, divider,
 };

@@ -138,6 +138,7 @@ const productOverview = [
       "group of database tables, a server query module, and a TanStack Query hook bundle. The " +
       "table below names them and points to the dedicated documentation in this set."
   ),
+  ...S.figure("diag-modules.png", "Figure 2-1 — Top-level modules and the dedicated documents that cover each."),
   S.buildTable(
     [2400, 4960, 2000],
     ["Module", "Scope", "See document"],
@@ -391,6 +392,8 @@ const layers = [
     "Most ambiguity in code review reduces to: which layer should this code live in? The decision " +
       "tree below is the canonical answer. Layers are listed in the order a request flows through them."
   ),
+  ...S.figure("diag-layers.png", "Figure 5-1 — The seven layers a request crosses, top to bottom. Color groups: yellow = client, navy = HTTP/auth, green = data, gray = storage."),
+  S.infoBox("note", "The repository layer is opt-in today. New resources should adopt the repo pattern from day one; existing resources migrate opportunistically."),
 
   S.h2("5.1 Edge: middleware"),
   S.body(
@@ -468,6 +471,7 @@ const lifecycle = [
     "Three canonical request paths exist: server-rendered page, JSON API, and server action. The " +
       "next sections trace each one end-to-end with the file each step lives in."
   ),
+  ...S.figure("diag-lifecycle.png", "Figure 6-1 — Sequence diagram for a typical leave-request submission. Same shape applies to most JSON API mutations."),
 
   S.h2("6.1 Server-rendered page"),
   ...S.code(
@@ -541,6 +545,7 @@ inngest function:        receives event
 const auth = [
   S.pageBreak(),
   S.h1("7. Authentication"),
+  ...S.figure("diag-auth-flow.png", "Figure 7-1 — Authentication state machine. Failure paths (5 wrong attempts → lock-out) lead to the operations runbook for unlock procedure."),
 
   S.h2("7.1 NextAuth configuration"),
   S.bodyMixed([
@@ -632,6 +637,7 @@ const authz = [
       "single most-common security regression in this codebase. Every server/queries/* function " +
       "takes orgId as its first argument as a forcing function."
   ),
+  S.infoBox("caution", "If a code review finds a db query without an orgId filter, treat it as a P1 bug, not a style nit. Past incidents tracing to this exact mistake account for every cross-tenant data exposure we have remediated."),
 
   S.h2("8.5 Resource ownership"),
   S.body(
@@ -663,6 +669,7 @@ const dataLayer = [
       "subsets for navigation. Cross-namespace foreign keys (e.g. expenses.projectId → projects.id) " +
       "are imported by name."
   ),
+  ...S.figure("diag-schema-overview.png", "Figure 9-1 — Schema namespaces. Doc 3 covers each table individually."),
   S.buildTable(
     [3000, 6360],
     ["Schema namespace", "Major tables"],
