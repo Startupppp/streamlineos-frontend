@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Hash, MoreHorizontal, LogOut, Trash2 } from "lucide-react";
+import { Hash, MoreHorizontal, LogOut, Pin, Trash2 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials, formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
@@ -44,6 +44,8 @@ export function ChannelItem({
       : false;
 
   const hasUnread = channel.unreadCount > 0;
+
+  const pinActive = Boolean(channel.isPinned && channel.pinnedUntil);
 
   const isAdmin = Boolean(
     channel.members?.some(
@@ -101,11 +103,14 @@ export function ChannelItem({
           <div className="flex items-center justify-between gap-1.5">
             <p
               className={cn(
-                "text-[13px] truncate leading-tight",
+                "text-[13px] truncate leading-tight flex items-center gap-1 min-w-0",
                 hasUnread || isActive ? "font-bold text-foreground" : "font-medium text-muted-foreground"
               )}
             >
-              {displayName}
+              {pinActive ? (
+                <Pin className="h-3 w-3 text-gold shrink-0" aria-hidden />
+              ) : null}
+              <span className="truncate">{displayName}</span>
             </p>
             {channel.lastMessage?.createdAt && (
               <span className="text-[11px] text-muted-foreground shrink-0">

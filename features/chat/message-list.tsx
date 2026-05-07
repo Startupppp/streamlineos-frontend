@@ -21,6 +21,7 @@ interface MessageItemProps {
   editingMessageId: number | undefined;
   editInput: string;
   currentUserId: string;
+  channelId: number;
   onEditInputChange: (value: string) => void;
   onStartEdit: (msg: Message) => void;
   onCancelEdit: () => void;
@@ -37,6 +38,7 @@ function MessageItem({
   editingMessageId,
   editInput,
   currentUserId,
+  channelId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -58,6 +60,7 @@ function MessageItem({
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
       currentUserId={currentUserId}
+      channelId={channelId}
       onEditInputChange={onEditInputChange}
       onStartEdit={handleStartEdit}
       onCancelEdit={onCancelEdit}
@@ -208,6 +211,7 @@ export function MessageList({
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
                     currentUserId={currentUserId}
+                    channelId={channelId}
                     onEditInputChange={onEditInputChange}
                     onStartEdit={onStartEdit}
                     onCancelEdit={onCancelEdit}

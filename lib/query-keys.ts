@@ -144,6 +144,8 @@ export const queryKeys = {
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
+    messageReaders: (channelId: number, messageId: number) =>
+      [...base, "chat", "messageReaders", channelId, messageId] as const,
   },
 
   dashboard: {

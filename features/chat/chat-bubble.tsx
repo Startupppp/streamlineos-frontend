@@ -2,12 +2,37 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, SmilePlus, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  CheckCheck,
+  Copy,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Reply,
+  SmilePlus,
+  Trash2,
+  Eye,
+} from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { resolveImageUrl } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useMessageReaders } from "@/lib/api/hooks/chat";
 import {
   getInitials,
   formatMessageTime,
@@ -24,6 +49,43 @@ import {
 import { EmojiGrid } from "./emoji-grid";
 import type { Message } from "./chat-types";
 
+function MessageReadReceipts({
+  channelId,
+  messageId,
+}: {
+  channelId: number;
+  messageId: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const { data, isFetching } = useMessageReaders(channelId, messageId, open);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 text-[10px] font-medium text-white/75 hover:text-white mt-0.5"
+          aria-label="Read receipts"
+        >
+          <Eye className="h-3 w-3" />
+          Seen
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3 text-xs" align="end">
+        {isFetching ? (
+          <p className="text-muted-foreground">Loading…</p>
+        ) : data?.readerNames?.length ? (
+          <p className="text-foreground">
+            <span className="text-muted-foreground">Read by: </span>
+            {data.readerNames.join(", ")}
+          </p>
+        ) : (
+          <p className="text-muted-foreground">No other members have read this yet.</p>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function ChatBubble({
   message,
   isOwn,
@@ -31,6 +93,7 @@ export function ChatBubble({
   isEditing,
   editInput,
   currentUserId,
+  channelId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
@@ -45,6 +108,7 @@ export function ChatBubble({
   isEditing: boolean;
   editInput: string;
   currentUserId: string;
+  channelId: number;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
@@ -53,11 +117,11 @@ export function ChatBubble({
   onDelete: () => void;
   onReact: (emoji: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       onReact(emoji);
-      setPickerOpen(false);
+      setMenuOpen(false);
     },
     [onReact]
   );
@@ -295,7 +359,12 @@ export function ChatBubble({
               </div>
             )}
 
-            <div className={cn("flex items-center gap-1.5 mt-1", isOwn ? "justify-end" : "justify-start")}>
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1",
+                isOwn ? "justify-end" : "justify-start"
+              )}
+            >
               <span
                 className={cn("text-[11px] font-medium", isOwn ? "text-white/80" : "text-muted-foreground")}
                 title={formatMessageTimeFull(message.createdAt)}
@@ -308,6 +377,12 @@ export function ChatBubble({
                 </span>
               )}
               {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/70")} />}
+              {isOwn &&
+                message.content &&
+                message.messageType === "text" &&
+                channelId > 0 && (
+                  <MessageReadReceipts channelId={channelId} messageId={message.id} />
+                )}
             </div>
           </div>
         )}
@@ -344,58 +419,85 @@ export function ChatBubble({
         {!isEditing && (
           <div
             className={cn(
-              "absolute -top-3 opacity-0 group-hover:opacity-100 transition-all z-10",
+              "absolute -top-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-20",
               isOwn ? "left-0" : "right-0"
             )}
           >
-            <div className="flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-hidden">
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                    title="Add reaction"
-                    aria-label="Add reaction"
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border/60 bg-background shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  aria-label="Message actions"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                align={isOwn ? "start" : "end"}
+                className="w-48"
+              >
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="text-xs">
+                    <SmilePlus className="h-3.5 w-3.5 mr-2" />
+                    React
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="p-0 border-0 bg-transparent shadow-none">
+                    <div className="rounded-md border bg-popover p-1 shadow-md">
+                      <EmojiGrid onSelect={handleEmojiSelect} />
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReply();
+                  }}
+                >
+                  <Reply className="h-3.5 w-3.5 mr-2" />
+                  Reply
+                </DropdownMenuItem>
+                {message.content ? (
+                  <DropdownMenuItem
+                    className="text-xs"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleCopy();
+                    }}
                   >
-                    <SmilePlus className="h-3.5 w-3.5" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align={isOwn ? "start" : "end"}
-                  className="p-0 border-0 bg-transparent shadow-none w-auto"
-                >
-                  <EmojiGrid onSelect={handleEmojiSelect} />
-                </PopoverContent>
-              </Popover>
-              <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
-                <Reply className="h-3.5 w-3.5" />
-              </button>
-              {message.content && (
-                <button
-                  onClick={handleCopy}
-                  className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                  title="Copy"
-                  aria-label="Copy"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              )}
-              {isOwn && (
-                <button onClick={onStartEdit} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Edit" aria-label="Edit">
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-              )}
-              {isOwn && (
-                <button
-                  onClick={onDelete}
-                  className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400"
-                  title="Delete message"
-                  aria-label="Delete message"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+                    <Copy className="h-3.5 w-3.5 mr-2" />
+                    Copy
+                  </DropdownMenuItem>
+                ) : null}
+                {isOwn ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-xs"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onStartEdit();
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-xs text-destructive focus:text-destructive"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onDelete();
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

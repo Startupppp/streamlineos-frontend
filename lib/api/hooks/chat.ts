@@ -274,6 +274,22 @@ export function useUpdateChannel() {
   });
 }
 
+export function useMessageReaders(
+  channelId: number,
+  messageId: number,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: queryKeys.chat.messageReaders(channelId, messageId),
+    queryFn: () =>
+      apiClient.get<{ readerNames: string[]; readerCount: number }>(
+        `/chat/channels/${channelId}/messages/${messageId}/readers`
+      ),
+    enabled: enabled && channelId > 0 && messageId > 0,
+    staleTime: 15_000,
+  });
+}
+
 export function useAddChannelMembers() {
   const queryClient = useQueryClient();
   return useMutation({

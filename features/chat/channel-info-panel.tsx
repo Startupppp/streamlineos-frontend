@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Hash, ImageIcon, Loader2, Pencil, UserPlus, X } from "lucide-react";
+import { Camera, Hash, ImageIcon, Loader2, Pencil, Pin, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
@@ -18,7 +18,7 @@ import {
   useUpdateChannel,
   useRemoveChannelMember,
 } from "@/lib/hooks/trpc-hooks";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 import { AddMembersDialog } from "./add-members-dialog";
 
@@ -72,6 +72,32 @@ export function ChannelInfoPanel({
   );
 
   const handleOpenAddMembers = useCallback(() => setAddMembersOpen(true), []);
+
+  const pinnedUntil = channel?.pinnedUntil
+    ? new Date(channel.pinnedUntil as string | Date)
+    : null;
+  const isPinnedActive = Boolean(channel?.isPinned && pinnedUntil);
+
+  const handlePinDays = useCallback(
+    async (days: 1 | 7 | 14 | 30) => {
+      try {
+        await updateChannel.mutateAsync({ channelId, pinForDays: days });
+        toast.success(`Channel pinned for ${days} day${days > 1 ? "s" : ""}`);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [updateChannel, channelId]
+  );
+
+  const handleUnpinChannel = useCallback(async () => {
+    try {
+      await updateChannel.mutateAsync({ channelId, unpin: true });
+      toast.success("Channel unpinned");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [updateChannel, channelId]);
 
   const handleRemoveMember = useCallback(
     async (userId: string) => {
@@ -223,6 +249,51 @@ export function ChannelInfoPanel({
                   </p>
                 )
               )}
+            </div>
+          )}
+
+          {isGroup && isAdmin && (
+            <div className="mb-5 px-1 rounded-lg border border-border/40 bg-muted/15 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Pin className="h-3.5 w-3.5 text-gold shrink-0" />
+                <p className="text-[11px] font-semibold text-foreground">Pin channel</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Pinned channels appear at the top of the list until the pin expires.
+              </p>
+              {isPinnedActive && pinnedUntil && (
+                <p className="text-[10px] text-muted-foreground">
+                  Active until{" "}
+                  <span className="font-medium text-foreground">
+                    {pinnedUntil.toLocaleString()}
+                  </span>
+                </p>
+              )}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {([1, 7, 14, 30] as const).map((d) => (
+                  <Button
+                    key={d}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[11px] px-2"
+                    disabled={updateChannel.isPending}
+                    onClick={() => void handlePinDays(d)}
+                  >
+                    {d}d
+                  </Button>
+                ))}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px]"
+                  disabled={updateChannel.isPending || !channel?.isPinned}
+                  onClick={() => void handleUnpinChannel()}
+                >
+                  Unpin
+                </Button>
+              </div>
             </div>
           )}
 

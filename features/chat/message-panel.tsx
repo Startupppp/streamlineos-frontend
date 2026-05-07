@@ -406,7 +406,18 @@ export function MessagePanel({
         editingMessage={editingMessage}
         editInput={editInput}
         onEditInputChange={setEditInput}
-        onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
+        onStartEdit={(msg) => {
+          const created = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+          const windowMs =
+            Number(process.env.NEXT_PUBLIC_CHAT_MESSAGE_EDIT_WINDOW_MS) ||
+            3_600_000;
+          if (Date.now() - created > windowMs) {
+            toast.error("This message can no longer be edited.");
+            return;
+          }
+          setEditingMessage(msg);
+          setEditInput(msg.content ?? "");
+        }}
         onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}

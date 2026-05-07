@@ -7,6 +7,7 @@ import {
   chatMessages,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { addDays } from "date-fns";
 import { getChannel } from "@/server/queries/chat";
 import { z } from "zod";
 import Ably from "ably";
@@ -15,6 +16,8 @@ const updateChannelSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   avatarUrl: z.string().optional(),
+  pinForDays: z.union([z.literal(1), z.literal(7), z.literal(14), z.literal(30)]).optional(),
+  unpin: z.boolean().optional(),
 });
 
 export async function GET(
@@ -71,6 +74,17 @@ export async function PATCH(
     if (body.name !== undefined) updateData.name = body.name;
     if (body.description !== undefined) updateData.description = body.description;
     if (body.avatarUrl !== undefined) updateData.avatarUrl = body.avatarUrl;
+
+    if (body.unpin) {
+      updateData.isPinned = false;
+      updateData.pinnedAt = null;
+      updateData.pinnedUntil = null;
+    } else if (body.pinForDays !== undefined) {
+      const now = new Date();
+      updateData.isPinned = true;
+      updateData.pinnedAt = now;
+      updateData.pinnedUntil = addDays(now, body.pinForDays);
+    }
 
     await db
       .update(chatChannels)
