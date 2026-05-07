@@ -35,6 +35,7 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProps) {
+  const { data: session } = useSession();
   const [newComment, setNewComment] = useState("");
   const addComment = useAddComment({
     onSuccess: () => {
@@ -47,9 +48,26 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
 
   const handleSubmit = useCallback(() => {
     const content = newComment.trim();
-    if (!content) return;
-    addComment.mutate({ ticketId, projectId, content });
-  }, [newComment, ticketId, projectId, addComment]);
+    if (!content || addComment.isPending) return;
+    if (projectId == null || projectId <= 0) {
+      toast.error("Missing project");
+      return;
+    }
+    const u = session?.user;
+    const actor =
+      u?.id != null
+        ? {
+            id: u.id,
+            name: u.name ?? null,
+            firstName: u.name?.trim().split(/\s+/)[0] ?? null,
+            lastName:
+              u.name?.trim().split(/\s+/).slice(1).join(" ") || null,
+            email: (u as { email?: string | null }).email ?? null,
+            image: u.image ?? null,
+          }
+        : undefined;
+    addComment.mutate({ ticketId, projectId, content, actor });
+  }, [newComment, ticketId, projectId, addComment, session?.user]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -61,7 +79,6 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
     [handleSubmit]
   );
 
-  const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const canModerate = isExpenseAdmin(session?.user?.role);
 
@@ -88,13 +105,19 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
             size="sm"
             onClick={handleSubmit}
             disabled={!newComment.trim() || addComment.isPending}
+            aria-busy={addComment.isPending}
           >
             {addComment.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              <>
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                Sending…
+              </>
             ) : (
-              <Send className="h-3.5 w-3.5 mr-1" />
+              <>
+                <Send className="h-3.5 w-3.5 mr-1" />
+                Comment
+              </>
             )}
-            Comment
           </Button>
         </div>
       </div>
