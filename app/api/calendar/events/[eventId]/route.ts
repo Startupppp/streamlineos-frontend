@@ -4,6 +4,7 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from "@/server/queries/calendar";
+import { sendCalendarEventAttendeeEmails } from "@/lib/calendar-event-notifications";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -60,6 +61,30 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
 
     const event = await updateCalendarEvent(id, session.orgId, session.user.id, updateData);
     if (!event) return err("Event not found or not authorized", 404);
+
+    const attendeeIds = event.attendeeIds ?? [];
+    const notify =
+      attendeeIds.length > 0 &&
+      (input.title !== undefined ||
+        input.startDate !== undefined ||
+        input.endDate !== undefined ||
+        input.allDay !== undefined ||
+        input.attendeeIds !== undefined ||
+        input.description !== undefined);
+
+    if (notify) {
+      void sendCalendarEventAttendeeEmails({
+        creatorUserId: session.user.id,
+        attendeeIds,
+        title: event.title,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        allDay: Boolean(event.allDay),
+        location: event.location,
+        variant: "updated",
+      }).catch(() => {});
+    }
+
     return ok(event);
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { format, parseISO, addHours } from "date-fns";
+import { format, parseISO, addHours, endOfDay } from "date-fns";
 import {
   Sheet,
   SheetContent,
@@ -245,15 +245,27 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       return;
     }
     setTitleError(null);
-    const startDate = form.allDay
-      ? parseISO(`${form.startDate}T12:00:00`)
-      : parseISO(`${form.startDate}T${form.startTime}`);
-    const endDate = form.allDay
-      ? parseISO(`${form.endDate}T12:00:00`)
-      : parseISO(`${form.endDate}T${form.endTime}`);
-    if (endDate <= startDate) {
-      toast.error("End time must be after start time");
-      return;
+    let startDate: Date;
+    let endDate: Date;
+    if (form.allDay) {
+      const startDay = parseISO(`${form.startDate}T00:00:00`);
+      const endDay = parseISO(`${form.endDate}T00:00:00`);
+      if (endDay < startDay) {
+        toast.error("End date cannot be before start date");
+        return;
+      }
+      startDate = parseISO(`${form.startDate}T00:00:00`);
+      endDate =
+        form.startDate === form.endDate
+          ? endOfDay(startDate)
+          : endOfDay(parseISO(`${form.endDate}T00:00:00`));
+    } else {
+      startDate = parseISO(`${form.startDate}T${form.startTime}`);
+      endDate = parseISO(`${form.endDate}T${form.endTime}`);
+      if (endDate <= startDate) {
+        toast.error("End time must be after start time");
+        return;
+      }
     }
     const payload = {
       title: trimmedTitle,

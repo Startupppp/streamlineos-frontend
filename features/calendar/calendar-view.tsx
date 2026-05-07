@@ -16,6 +16,7 @@ import {
   endOfWeek,
   startOfYear,
   endOfYear,
+  startOfDay,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -217,7 +218,7 @@ export function CalendarView() {
     });
   }, [view]);
 
-  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
+  const handleToday = useCallback(() => setCurrentDate(startOfDay(new Date())), []);
 
   const handleExport = useCallback(
     (range: "month" | "3months" | "year") => {
