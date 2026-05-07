@@ -47,6 +47,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
+import { HR_EMAIL_EMPLOYEE_AUTO_MERGE_KEY_SET } from "@/lib/hr/hr-email-auto-merge-keys";
 
 interface EmailTemplate {
   id: number;
@@ -70,9 +71,14 @@ const CATEGORIES = [
   "Offer letter",
   "Leave",
   "Attendance / discipline",
+  "Warning / Discipline & Attendance",
   "Performance",
+  "Performance Management",
   "Disciplinary",
   "Recruitment",
+  "Compensation",
+  "Appreciation / Recognition",
+  "Admin / Action Notices",
 ];
 
 /** Sample values for preview only (matches server merge + common aliases) */
@@ -101,6 +107,17 @@ const SAMPLE_PREVIEW_VARS: Record<string, string> = {
   review_end_date: "17 April 2026",
   performance_area: "the assigned sales expectations",
   revised_monthly_salary: "₹7,000",
+  due_date: "14 February 2026",
+  policy_name: "IT acceptable use",
+  incident_details: "a client meeting dispute",
+  meeting_agenda: "annual goals discussion",
+  occasion: "5th work anniversary",
+  effectiveDate: "1 March 2026",
+  newSalary: "₹12,00,000 p.a.",
+  assetList: "Laptop, monitor, headset",
+  meetingDate: "20 February 2026",
+  meetingTime: "15:00 IST",
+  lastWorkingDay: "28 February 2026",
 };
 
 function applyTemplateMerges(text: string, vars: Record<string, string>): string {
@@ -116,7 +133,7 @@ function mergePreviewText(text: string): string {
 
 const MERGE_VARIABLES_LINES = [
   "From employee profile (directory send, or custom send + “Merge fields from”): {{name}}, {{firstName}}, {{lastName}}, {{email}}, {{employeeCode}}, {{designation}}, {{department}}, {{joiningDate}}, {{phone}}, {{date}}, {{today}} — plus aliases {{employee_name}}, {{full_name}}.",
-  "Performance / discipline (fill in the form below or Extra variables): {{review_start_date}}, {{review_end_date}}, {{performance_area}}, {{revised_monthly_salary}}.",
+  "Template-specific placeholders appear as fields when you click Send (e.g. {{due_date}}, {{policy_name}}). You can still use Extra variables (key=value) to override.",
   "Recruitment (API / candidate): {{candidateName}}, {{candidate_name}}, {{candidateEmail}}, {{candidateFirstName}}, {{candidateLastName}}.",
   "Other: one line per key in Extra variables (key=value). Spaces inside {{ }} are OK.",
 ];
@@ -209,10 +226,7 @@ function EmailTemplatesContent() {
   const [sendExtraVars, setSendExtraVars] = useState("");
   const [customEmailsRaw, setCustomEmailsRaw] = useState("");
   const [mergeSourceUserId, setMergeSourceUserId] = useState<string>("");
-  const [perfReviewStart, setPerfReviewStart] = useState("");
-  const [perfReviewEnd, setPerfReviewEnd] = useState("");
-  const [perfArea, setPerfArea] = useState("");
-  const [perfSalary, setPerfSalary] = useState("");
+  const [templateVarValues, setTemplateVarValues] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
 
   const sendTemplateKeys = useMemo(() => {
@@ -220,15 +234,19 @@ function EmailTemplatesContent() {
     return extractMergeKeys(sendTemplate.subject, sendTemplate.body);
   }, [sendTemplate]);
 
-  const needsPerformanceFields = useMemo(() => {
-    const k = sendTemplateKeys;
-    return (
-      k.has("review_start_date") ||
-      k.has("review_end_date") ||
-      k.has("performance_area") ||
-      k.has("revised_monthly_salary")
-    );
-  }, [sendTemplateKeys]);
+  const mergeFilledFromEmployeeProfile = useMemo(
+    () => sendMode === "directory" || (sendMode === "custom" && mergeSourceUserId !== ""),
+    [sendMode, mergeSourceUserId]
+  );
+
+  const keysNeedingManualInput = useMemo(() => {
+    if (!sendTemplate) return [];
+    const keys = [...sendTemplateKeys];
+    const filtered = mergeFilledFromEmployeeProfile
+      ? keys.filter((k) => !HR_EMAIL_EMPLOYEE_AUTO_MERGE_KEY_SET.has(k))
+      : keys;
+    return filtered.sort((a, b) => a.localeCompare(b));
+  }, [sendTemplate, sendTemplateKeys, mergeFilledFromEmployeeProfile]);
 
   const handleCreate = useCallback(() => {
     if (!name.trim() || !subject.trim() || !body.trim()) {
@@ -313,10 +331,11 @@ function EmailTemplatesContent() {
     setSendExtraVars("");
     setCustomEmailsRaw("");
     setMergeSourceUserId("");
-    setPerfReviewStart("");
-    setPerfReviewEnd("");
-    setPerfArea("");
-    setPerfSalary("");
+    setTemplateVarValues({});
+  }, []);
+
+  const setTemplateVarField = useCallback((key: string, value: string) => {
+    setTemplateVarValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const parseExtraVariables = useCallback((): Record<string, string> => {
@@ -334,13 +353,9 @@ function EmailTemplatesContent() {
   }, [sendExtraVars]);
 
   const buildSendVariables = useCallback((): Record<string, string> => {
-    const out = { ...parseExtraVariables() };
-    if (perfReviewStart.trim()) out.review_start_date = perfReviewStart.trim();
-    if (perfReviewEnd.trim()) out.review_end_date = perfReviewEnd.trim();
-    if (perfArea.trim()) out.performance_area = perfArea.trim();
-    if (perfSalary.trim()) out.revised_monthly_salary = perfSalary.trim();
-    return out;
-  }, [parseExtraVariables, perfReviewStart, perfReviewEnd, perfArea, perfSalary]);
+    const fromLines = parseExtraVariables();
+    return { ...templateVarValues, ...fromLines };
+  }, [parseExtraVariables, templateVarValues]);
 
   const handleSendBatch = useCallback(async () => {
     if (!sendTemplate || selectedUserIds.size === 0) {
@@ -499,11 +514,23 @@ function EmailTemplatesContent() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((t: EmailTemplate) => (
-            <Card key={t.id} className="hover:shadow-sm transition-shadow">
+            <Card
+              key={t.id}
+              className="hover:shadow-sm transition-shadow cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => openSend(t)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openSend(t);
+                }
+              }}
+            >
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <div className="flex flex-wrap gap-0.5 justify-end">
+                  <div className="flex flex-wrap gap-0.5 justify-end" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -644,11 +671,8 @@ function EmailTemplatesContent() {
             setSendMode("directory");
             setCustomEmailsRaw("");
             setMergeSourceUserId("");
-            setPerfReviewStart("");
-            setPerfReviewEnd("");
-            setPerfArea("");
-            setPerfSalary("");
             setSendExtraVars("");
+            setTemplateVarValues({});
           }
         }}
         title={`Send: ${sendTemplate?.name ?? ""}`}
@@ -766,42 +790,31 @@ function EmailTemplatesContent() {
             </TabsContent>
           </Tabs>
 
-          {needsPerformanceFields && (
+          {keysNeedingManualInput.length > 0 && (
             <div className="space-y-2 border-t pt-3">
-              <p className="text-xs font-medium">Performance / salary fields</p>
+              <p className="text-xs font-medium">Template fields</p>
               <p className="text-[11px] text-muted-foreground">
-                This template uses{" "}
-                <code className="bg-muted px-1 rounded">{"{{review_start_date}}"}</code>{" "}
-                <code className="bg-muted px-1 rounded">{"{{review_end_date}}"}</code>{" "}
-                <code className="bg-muted px-1 rounded">{"{{performance_area}}"}</code>{" "}
-                <code className="bg-muted px-1 rounded">{"{{revised_monthly_salary}}"}</code>.
+                Fill placeholders not covered by the employee profile
+                {mergeFilledFromEmployeeProfile ? "" : " (custom send: pick “Merge fields from employee” or fill every field below)"}.
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  className="h-8 text-xs"
-                  placeholder="Review start (e.g. 17 Feb 2026)"
-                  value={perfReviewStart}
-                  onChange={(e) => setPerfReviewStart(e.target.value)}
-                />
-                <Input
-                  className="h-8 text-xs"
-                  placeholder="Review end"
-                  value={perfReviewEnd}
-                  onChange={(e) => setPerfReviewEnd(e.target.value)}
-                />
+              <div className="grid gap-2 max-h-[220px] overflow-y-auto pr-1">
+                {keysNeedingManualInput.map((key) => (
+                  <div key={key} className="space-y-0.5">
+                    <label className="text-[11px] font-medium text-muted-foreground" htmlFor={`tv-${key}`}>
+                      {"{{"}
+                      {key}
+                      {"}}"}
+                    </label>
+                    <Input
+                      id={`tv-${key}`}
+                      className="h-8 text-xs"
+                      value={templateVarValues[key] ?? ""}
+                      onChange={(e) => setTemplateVarField(key, e.target.value)}
+                      placeholder={key}
+                    />
+                  </div>
+                ))}
               </div>
-              <Input
-                className="h-8 text-xs"
-                placeholder="Performance area (e.g. sales targets)"
-                value={perfArea}
-                onChange={(e) => setPerfArea(e.target.value)}
-              />
-              <Input
-                className="h-8 text-xs"
-                placeholder="Revised salary (e.g. ₹7,000)"
-                value={perfSalary}
-                onChange={(e) => setPerfSalary(e.target.value)}
-              />
             </div>
           )}
 

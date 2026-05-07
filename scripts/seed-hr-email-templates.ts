@@ -1,5 +1,7 @@
 import * as dotenv from "dotenv";
 
+import { HR_EMAIL_CATALOG_TEMPLATES } from "./data/hr-email-catalog-templates";
+
 dotenv.config({ path: ".env" });
 
 type SeedTemplate = {
@@ -19,7 +21,8 @@ function extractMergeKeys(subject: string, body: string): string[] {
   return Array.from(keys).sort((a, b) => a.localeCompare(b));
 }
 
-const SEED_TEMPLATES: SeedTemplate[] = [
+/** Recruitment / onboarding extras (stable names; not part of the 01–31 discipline catalog). */
+const SEED_TEMPLATES_EXTRA: SeedTemplate[] = [
   {
     name: "Offer letter (basic)",
     category: "Offer letter",
@@ -30,27 +33,17 @@ const SEED_TEMPLATES: SeedTemplate[] = [
 <p>Regards,<br/>HR Team</p>`,
   },
   {
-    name: "Late coming — first warning",
-    category: "Attendance / discipline",
-    subject: "Formal reminder — punctuality ({{date}})",
-    body: `<p>Dear {{employee_name}},</p>
-<p>This is to record that on <strong>{{date}}</strong> you arrived late without prior approval. Punctuality is important for team coordination.</p>
-<p>Please ensure you are on time going forward. Repeated instances may lead to further action under company policy.</p>
-<p>Contact your reporting manager if you need support.</p>
-<p>Regards,<br/>HR</p>`,
-  },
-  {
     name: "Welcome — day one",
     category: "Onboarding",
     subject: "Welcome to the team, {{firstName}}",
     body: `<p>Hi {{firstName}},</p>
 <p>Welcome to <strong>{{department}}</strong>! Your employee code is <strong>{{employeeCode}}</strong>.</p>
 <p>On your first day, report to reception with ID proof. Your manager will walk you through tools and introductions.</p>
-<p>We’re glad you’re here.<br/>HR</p>`,
+<p>We're glad you're here.<br/>HR</p>`,
   },
   {
     name: "Probation confirmation",
-    category: "Performance",
+    category: "Performance Management",
     subject: "Probation period — confirmation",
     body: `<p>Dear {{employee_name}},</p>
 <p>Your probation ending <strong>{{today}}</strong> has been reviewed. We are happy to confirm continuation in your role as <strong>{{designation}}</strong>.</p>
@@ -76,15 +69,6 @@ const SEED_TEMPLATES: SeedTemplate[] = [
 <p>Thanks,<br/>HR</p>`,
   },
   {
-    name: "Salary revision (no review window)",
-    category: "Performance",
-    subject: "Compensation update — effective {{effectiveDate}}",
-    body: `<p>Dear {{employee_name}},</p>
-<p>Following your performance review, your compensation is revised to <strong>{{newSalary}}</strong>, effective <strong>{{effectiveDate}}</strong>.</p>
-<p>Details will appear in your next payslip. For questions, contact HR.</p>
-<p>Regards,<br/>HR</p>`,
-  },
-  {
     name: "IT assets assigned",
     category: "Onboarding",
     subject: "IT assets assigned — please confirm",
@@ -93,25 +77,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
 <p>Return all items in good condition on exit. Report loss or damage to IT immediately.</p>
 <p>Thanks,<br/>IT &amp; HR</p>`,
   },
-  {
-    name: "Meeting scheduled — performance discussion",
-    category: "Disciplinary",
-    subject: "Meeting scheduled — performance discussion",
-    body: `<p>Dear {{employee_name}},</p>
-<p>We need to discuss recent concerns regarding your performance / conduct. Please attend a meeting on <strong>{{meetingDate}}</strong> at <strong>{{meetingTime}}</strong>.</p>
-<p>You may bring a colleague where permitted by policy. Reply to confirm attendance.</p>
-<p>Regards,<br/>HR</p>`,
-  },
-  {
-    name: "Offboarding — thank you",
-    category: "Offboarding",
-    subject: "Thank you — {{employee_name}}",
-    body: `<p>Dear {{employee_name}},</p>
-<p>Thank you for your work with us in <strong>{{department}}</strong>. We wish you success in your next chapter.</p>
-<p>Exit formalities (assets, clearance, F&amp;F) are outlined in the portal. Complete them by <strong>{{lastWorkingDay}}</strong>.</p>
-<p>Best wishes,<br/>HR</p>`,
-  },
 ];
+
+const SEED_TEMPLATES: SeedTemplate[] = [...HR_EMAIL_CATALOG_TEMPLATES, ...SEED_TEMPLATES_EXTRA];
 
 async function main() {
   const { db, client } = await import("../lib/db");
@@ -178,7 +146,7 @@ async function main() {
 
     // eslint-disable-next-line no-console
     console.log(
-      `Seeded HR email templates for org=${org.slug ?? org.id}. inserted=${inserted} updated=${updated}`
+      `Seeded HR email templates for org=${org.slug ?? org.id}. inserted=${inserted} updated=${updated} (catalog=${HR_EMAIL_CATALOG_TEMPLATES.length})`
     );
   } finally {
     await client.end({ timeout: 5 });
@@ -190,4 +158,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
