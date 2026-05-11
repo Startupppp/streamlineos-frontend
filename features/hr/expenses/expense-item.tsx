@@ -1,7 +1,18 @@
 "use client";
 
 import { format } from "date-fns";
-import { Receipt, Download, Eye, Pencil, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import {
+  Receipt,
+  Download,
+  Eye,
+  Pencil,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  MessageSquare,
+  Mail,
+  Copy,
+} from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
@@ -21,6 +37,105 @@ import {
   STATUS_STYLES,
   STATUS_LABELS,
 } from "./expense-constants";
+
+function SubmitterContactPopover({ expense }: { expense: ExpenseWithRelations }) {
+  const email = expense.user?.email?.trim() || "";
+  const first = expense.user?.firstName ?? "";
+  const fullName =
+    `${first} ${expense.user?.lastName ?? ""}`.trim() || "Submitter";
+  const hasNote = !!expense.description?.trim();
+  const hasRejection =
+    expense.status === "REJECTED" && !!expense.rejectionReason?.trim();
+  if (!email && !hasNote && !hasRejection) return null;
+
+  const idLabel = `#EXP-${new Date(expense.expenseDate).getFullYear()}-${String(expense.id).padStart(3, "0")}`;
+  const subject = `Re: Expense ${idLabel}`;
+  const body = [
+    `Hi ${first || fullName},`,
+    "",
+    `About your expense ${idLabel}:`,
+    `- ${expense.merchant || expense.description || "Claim"}`,
+    `- Amount: ${formatINR(expense.amount)}`,
+    `- Date: ${format(new Date(expense.expenseDate), "dd MMM yyyy")}`,
+    "",
+  ].join("\n");
+
+  const mailHref = email
+    ? `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    : undefined;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs shrink-0"
+          type="button"
+          aria-label="View claim note and contact submitter"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Msg
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 space-y-3 text-left">
+        <p className="text-sm font-medium leading-none">Contact submitter</p>
+        <p className="text-xs text-muted-foreground break-all">
+          {fullName}
+          {email ? ` · ${email}` : ""}
+        </p>
+        {hasNote ? (
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Claim note
+            </p>
+            <p className="text-sm whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+              {expense.description}
+            </p>
+          </div>
+        ) : null}
+        {hasRejection ? (
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Rejection reason
+            </p>
+            <p className="text-sm whitespace-pre-wrap break-words text-destructive max-h-24 overflow-y-auto">
+              {expense.rejectionReason}
+            </p>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {mailHref ? (
+            <Button size="sm" className="gap-1.5" asChild>
+              <a href={mailHref}>
+                <Mail className="h-3.5 w-3.5" />
+                Email
+              </a>
+            </Button>
+          ) : null}
+          {email ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                void navigator.clipboard.writeText(email);
+                toast.success("Email copied");
+              }}
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+          ) : null}
+        </div>
+        {!email && (hasNote || hasRejection) ? (
+          <p className="text-xs text-muted-foreground">No email on file for this user.</p>
+        ) : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
@@ -178,7 +293,15 @@ export function AdminExpenseItem({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <p className="text-xs text-muted-foreground mb-3">INR</p>
+        <p className="text-xs text-muted-foreground mb-2">INR</p>
+
+        {(expense.user?.email?.trim() ||
+          expense.description?.trim() ||
+          (expense.status === "REJECTED" && expense.rejectionReason?.trim())) && (
+          <div className="flex justify-end mb-2">
+            <SubmitterContactPopover expense={expense} />
+          </div>
+        )}
 
         {isRejecting ? (
           <div className="space-y-2 text-left">

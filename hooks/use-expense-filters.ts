@@ -4,6 +4,10 @@ import { useState, useCallback, useMemo, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ExpenseFilters } from "@/server/actions/expense-query";
+import {
+  EXPENSE_PAGE_SIZE_DEFAULT,
+  clampExpensePageSize,
+} from "@/features/hr/expenses/expense-constants";
 
 export type DatePreset =
   | "today"
@@ -37,7 +41,7 @@ export interface UseExpenseFiltersReturn {
 
 const DEFAULT_FILTERS: ExpenseFilters = {
   page: 1,
-  pageSize: 50,
+  pageSize: EXPENSE_PAGE_SIZE_DEFAULT,
   sortBy: "date",
   sortOrder: "desc",
   includeStats: true,
@@ -104,14 +108,18 @@ function getDateRangeFromPreset(preset: DatePreset): { startDate?: string; endDa
 export function useExpenseFilters(
   options: UseExpenseFiltersOptions = {}
 ): UseExpenseFiltersReturn {
-  const { defaultPageSize = 50, syncToUrl = false, onFiltersChange } = options;
+  const { defaultPageSize = EXPENSE_PAGE_SIZE_DEFAULT, syncToUrl = false, onFiltersChange } =
+    options;
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const initialFilters = useMemo(() => {
-    const filters = { ...DEFAULT_FILTERS, pageSize: defaultPageSize };
+    const filters = {
+      ...DEFAULT_FILTERS,
+      pageSize: clampExpensePageSize(defaultPageSize),
+    };
 
     if (syncToUrl && searchParams) {
       const status = searchParams.get("status");
@@ -123,6 +131,11 @@ export function useExpenseFilters(
       const paymentMethod = searchParams.get("paymentMethod");
       const minAmount = searchParams.get("minAmount");
       const maxAmount = searchParams.get("maxAmount");
+      const pageSizeParam = searchParams.get("pageSize");
+      if (pageSizeParam) {
+        const parsed = parseInt(pageSizeParam, 10);
+        if (Number.isFinite(parsed)) filters.pageSize = clampExpensePageSize(parsed);
+      }
 
       if (status) filters.status = status;
       if (category) filters.category = category;
@@ -174,6 +187,12 @@ export function useExpenseFilters(
         if (newFilters.maxAmount) {
           params.set("maxAmount", String(newFilters.maxAmount));
         }
+        if (
+          newFilters.pageSize &&
+          newFilters.pageSize !== EXPENSE_PAGE_SIZE_DEFAULT
+        ) {
+          params.set("pageSize", String(newFilters.pageSize));
+        }
 
         const queryString = params.toString();
         router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, {
@@ -217,7 +236,10 @@ export function useExpenseFilters(
     [syncFiltersToUrl, onFiltersChange]
   );
   const resetFilters = useCallback(() => {
-    const resetState = { ...DEFAULT_FILTERS, pageSize: defaultPageSize };
+    const resetState = {
+      ...DEFAULT_FILTERS,
+      pageSize: clampExpensePageSize(defaultPageSize),
+    };
     setFiltersState(resetState);
     setDatePresetState("all");
     syncFiltersToUrl(resetState);
