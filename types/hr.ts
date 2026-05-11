@@ -955,6 +955,29 @@ export interface GetMonthlyAttendanceInput {
   month: number;
 }
 
+export type AttendanceSummaryPeriod = "month" | "quarter" | "year";
+
+export interface AttendancePeriodSummary {
+  period: AttendanceSummaryPeriod;
+  label: string;
+  rangeStart: string;
+  rangeEnd: string;
+  weekdaysInPeriod: number;
+  weekdaysElapsed: number;
+  presentWeekdays: number;
+  absentWeekdays: number;
+  attendanceRatePct: number;
+  totalWorkHours: number;
+  avgHoursPerWeekdayElapsed: number;
+  avgHoursPerPresentDay: number;
+  loggedDays: number;
+}
+
+export interface AttendanceSummaryApiResponse {
+  summary: AttendancePeriodSummary;
+  logs: AttendanceLog[];
+}
+
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
 export type CandidateStatus = "NEW" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED" | "REJECTED";
 export type InterviewType = "PHONE" | "VIDEO" | "ONSITE" | "TECHNICAL" | "HR" | "FINAL";

@@ -32,6 +32,13 @@ export const queryKeys = {
     holidaysCalendar: (params: { year: number; month: number }) => [...base, "hr", "holidaysCalendar", params] as const,
     devices: (params?: Record<string, unknown>) => [...base, "hr", "devices", params] as const,
     monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
+    attendanceSummary: (params: {
+      userId: string;
+      period: string;
+      year: number;
+      month?: number;
+      quarter?: number;
+    }) => [...base, "hr", "attendanceSummary", params] as const,
     attendanceHeatmap: (params: { userId: string; year: number }) => [...base, "hr", "attendanceHeatmap", params] as const,
     employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
     employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,

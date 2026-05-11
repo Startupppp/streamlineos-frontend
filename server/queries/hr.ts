@@ -26,10 +26,13 @@ import { incentives, incentiveConfig } from "@/lib/db/schema/crm";
 import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
+import { resolveAttendancePeriod, summarizeAttendanceLogs } from "@/lib/hr/attendance-summary";
 import type {
   Department,
   Employee,
   AttendanceLog,
+  AttendanceSummaryPeriod,
+  AttendancePeriodSummary,
   AttendanceStatusResult,
   LeavesResult,
   LeaveBalance,
@@ -1098,4 +1101,35 @@ export async function getMonthlyAttendance(
     ),
     orderBy: [asc(attendance.date)],
   }) as unknown as Promise<AttendanceLog[]>;
+}
+
+export async function getAttendanceInDateRange(
+  orgId: string,
+  userId: string,
+  startDate: string,
+  endDate: string,
+): Promise<AttendanceLog[]> {
+  return db.query.attendance.findMany({
+    where: and(
+      eq(attendance.userId, userId),
+      eq(attendance.orgId, orgId),
+      gte(attendance.date, startDate),
+      lte(attendance.date, endDate),
+    ),
+    orderBy: [asc(attendance.date)],
+  }) as unknown as Promise<AttendanceLog[]>;
+}
+
+export async function getAttendanceSummaryWithLogs(
+  orgId: string,
+  userId: string,
+  period: AttendanceSummaryPeriod,
+  year: number,
+  month0?: number,
+  quarter1?: number,
+): Promise<{ summary: AttendancePeriodSummary; logs: AttendanceLog[] }> {
+  const { start, end, label } = resolveAttendancePeriod(period, year, month0, quarter1);
+  const logs = await getAttendanceInDateRange(orgId, userId, start, end);
+  const summary = summarizeAttendanceLogs(logs, start, end, new Date(), period, label);
+  return { summary, logs };
 }
