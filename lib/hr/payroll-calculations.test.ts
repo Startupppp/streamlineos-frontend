@@ -86,6 +86,31 @@ describe("computeTotalDeductionsAndNet", () => {
     expect(result.netSalary).toBe(30000 - PROFESSIONAL_TAX_INR);
   });
 
+  it("₹27,000 gross → ₹26,800 net and ₹25,000 gross → ₹24,800 net when only PT applies", () => {
+    const r27 = computeTotalDeductionsAndNet({
+      month: "2026-05",
+      monthlySalary: 27000,
+      grossSalary: 27000,
+      salaryStructureDeductions: 0,
+      lopDays: 0,
+      halfDays: 0,
+      otherDeductions: 0,
+    });
+    expect(r27.totalDeductions).toBe(200);
+    expect(r27.netSalary).toBe(26800);
+
+    const r25 = computeTotalDeductionsAndNet({
+      month: "2026-05",
+      monthlySalary: 25000,
+      grossSalary: 25000,
+      salaryStructureDeductions: 0,
+      lopDays: 0,
+      halfDays: 0,
+      otherDeductions: 0,
+    });
+    expect(r25.netSalary).toBe(24800);
+  });
+
   it("applies LOP deduction proportional to days", () => {
     const result = computeTotalDeductionsAndNet({
       month: "2026-04",
@@ -143,6 +168,48 @@ describe("computeTotalDeductionsAndNet", () => {
 });
 
 describe("buildPayslipPreviewFromEmployee", () => {
+  it("matches typical payslip: ₹27k gross (Basic+HRA+Spl) − ₹200 PT = ₹26,800 net", () => {
+    const preview = buildPayslipPreviewFromEmployee({
+      monthlySalary: 27000,
+      month: "2026-05",
+      lopDays: 0,
+      halfDays: 0,
+      otherDeductions: 0,
+      bonus: 0,
+      overtimeAmount: 0,
+      overtimeType: "",
+      overtimeDays: 0,
+      overtimeHours: 0,
+      basicSalary: 13500,
+      hraPercentage: 50,
+      allowances: 6750,
+      salaryStructureDeductions: 0,
+    });
+    expect(preview.grossSalary).toBe(27000);
+    expect(preview.netSalary).toBe(26800);
+  });
+
+  it("₹25k gross with structure components − ₹200 PT = ₹24,800 net", () => {
+    const preview = buildPayslipPreviewFromEmployee({
+      monthlySalary: 25000,
+      month: "2026-05",
+      lopDays: 0,
+      halfDays: 0,
+      otherDeductions: 0,
+      bonus: 0,
+      overtimeAmount: 0,
+      overtimeType: "",
+      overtimeDays: 0,
+      overtimeHours: 0,
+      basicSalary: 12500,
+      hraPercentage: 50,
+      allowances: 6250,
+      salaryStructureDeductions: 0,
+    });
+    expect(preview.grossSalary).toBe(25000);
+    expect(preview.netSalary).toBe(24800);
+  });
+
   it("uses fallback 50/50 split when no salary structure provided", () => {
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: 30000,

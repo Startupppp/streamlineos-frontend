@@ -94,6 +94,8 @@ export function MessagePanel({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  /** Avoid jumping to bottom when loading older pages (message count still increases). */
+  const didInitialScrollRef = useRef(false);
   const [messageInput, setMessageInput] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -157,8 +159,17 @@ export function MessagePanel({
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    didInitialScrollRef.current = false;
+  }, [channelId]);
+
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return;
+    if (didInitialScrollRef.current) return;
+    didInitialScrollRef.current = true;
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    });
+  }, [channelId, isLoading, messages.length]);
 
   useEffect(() => {
     setLastPollTime(new Date().toISOString());
