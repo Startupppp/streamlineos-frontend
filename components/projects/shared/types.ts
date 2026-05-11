@@ -14,6 +14,10 @@ export interface KanbanTicket {
   sprintId?: number | null;
   order?: number | null;
   dueDate?: string | null;
+  startDate?: string | null;
+  /** Used by Gantt when start/due are unset */
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
   timeSpent?: string | null;
   assignee?: {
     id: string;

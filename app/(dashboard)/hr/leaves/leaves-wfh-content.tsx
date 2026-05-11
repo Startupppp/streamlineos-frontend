@@ -235,7 +235,6 @@ export function LeavesWfhContent() {
         open={leaveSheetOpen}
         onOpenChange={setLeaveSheetOpen}
         leaveTypes={leaveTypes}
-        approvers={approvers}
         joiningDate={joiningDate}
         balances={balances}
       />

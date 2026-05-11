@@ -21,7 +21,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { useRequestLeave } from "@/lib/api/hooks/hr";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
-import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import type { LeaveType, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const leaveFormSchema = z.object({
   leaveTypeId: z.string().min(1, "Leave type is required"),
@@ -31,7 +31,6 @@ const leaveFormSchema = z.object({
   halfDayPeriod: z.enum(["AM", "PM"]),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
   reason: z.string().min(1, "Reason is required"),
-  approverId: z.string().optional(),
 });
 type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
@@ -39,13 +38,12 @@ interface LeaveRequestSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   leaveTypes: LeaveType[];
-  approvers: Approver[];
   joiningDate: string | null;
   balances?: LeaveBalance[];
 }
 
 export function LeaveRequestSheet({
-  open, onOpenChange, leaveTypes, approvers, joiningDate, balances = [],
+  open, onOpenChange, leaveTypes, joiningDate, balances = [],
 }: LeaveRequestSheetProps) {
   const requestLeaveMutation = useRequestLeave();
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
@@ -67,7 +65,6 @@ export function LeaveRequestSheet({
       halfDayPeriod: "AM" as const,
       priority: "MEDIUM",
       reason: "",
-      approverId: "",
     },
   });
 
@@ -116,8 +113,6 @@ export function LeaveRequestSheet({
 
   const onSubmit = useCallback((data: LeaveFormValues) => {
     if (leaveDayLimitError) { toast.error(leaveDayLimitError); return; }
-    const approverId = data.approverId || approvers[0]?.id;
-    if (!approverId) { toast.error("No approver available"); return; }
 
     requestLeaveMutation.mutate(
       {
@@ -126,7 +121,6 @@ export function LeaveRequestSheet({
         endDate: data.endDate,
         reason: data.reason,
         priority: data.priority,
-        approverId,
         attachmentUrl: attachmentUrl || undefined,
         isHalfDay: data.halfDay,
         halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
@@ -141,14 +135,14 @@ export function LeaveRequestSheet({
         onError: (err) => toast.error(err.message || "Failed to submit request"),
       },
     );
-  }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
+  }, [leaveDayLimitError, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
       title="Request Leave"
-      description="Fill in the details to submit a leave request"
+      description="Requests are sent to HR automatically. You will be notified when they are reviewed."
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel="Submit Request"
       isPending={requestLeaveMutation.isPending}
@@ -290,33 +284,6 @@ export function LeaveRequestSheet({
               </FormItem>
             )}
           />
-
-          {approvers.length > 1 && (
-            <FormField
-              control={form.control}
-              name="approverId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Approver</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select approver" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {approvers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
 
           <FormField
             control={form.control}

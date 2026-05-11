@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useCallback } from "react";
 import { useProject } from "@/lib/hooks/trpc-hooks";
 import { GanttView } from "@/components/projects/gantt-view";
+import { TicketDetailsDialog } from "@/components/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { notFound } from "next/navigation";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -15,6 +16,43 @@ export default function TimelinePage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const ticketParam = searchParams.get("ticket");
+  const parsedTicketId = ticketParam ? parseInt(ticketParam, 10) : null;
+  const selectedTicketId =
+    parsedTicketId != null && !Number.isNaN(parsedTicketId)
+      ? parsedTicketId
+      : null;
+
+  const openTicket = useCallback(
+    (ticketId: number) => {
+      const p = new URLSearchParams(searchParams.toString());
+      p.set("ticket", String(ticketId));
+      router.replace(`/projects/${projectId}/timeline?${p.toString()}`, {
+        scroll: false,
+      });
+    },
+    [router, searchParams, projectId]
+  );
+
+  const handleTicketClose = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        const p = new URLSearchParams(searchParams.toString());
+        p.delete("ticket");
+        const qs = p.toString();
+        router.replace(
+          qs
+            ? `/projects/${projectId}/timeline?${qs}`
+            : `/projects/${projectId}/timeline`,
+          { scroll: false }
+        );
+      }
+    },
+    [router, searchParams, projectId]
+  );
 
   const tickets = useMemo(() => {
     if (!data?.tickets) return [];
@@ -26,6 +64,7 @@ export default function TimelinePage({ params }: PageProps) {
       startDate: t.startDate ?? null,
       dueDate: t.dueDate ?? null,
       createdAt: t.createdAt ?? null,
+      updatedAt: t.updatedAt ?? null,
       ticketNumber: t.ticketNumber,
       sequenceId: t.sequenceId ?? null,
       assignee: t.assignee
@@ -55,10 +94,19 @@ export default function TimelinePage({ params }: PageProps) {
     <PageWrapper title="Timeline" subtitle={`${tickets.length} tickets`}>
       <div className="h-full overflow-auto px-4 pb-4">
         <GanttView
+          key={projectId}
           tickets={tickets}
-          onTicketClick={() => {}}
+          onTicketClick={openTicket}
         />
       </div>
+
+      <TicketDetailsDialog
+        ticketId={selectedTicketId}
+        open={!!selectedTicketId}
+        onOpenChange={handleTicketClose}
+        projectId={projectId}
+        statuses={data.statuses?.map((s) => ({ id: s.id, name: s.name }))}
+      />
     </PageWrapper>
   );
 }

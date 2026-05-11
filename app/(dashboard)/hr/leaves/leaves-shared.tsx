@@ -124,6 +124,15 @@ export const balanceCardConfig: Record<string, { label: string; color: string; i
 
 export const DEFAULT_CARD_CONFIG = { label: "LEAVE", color: "bg-slate-400", icon: CalendarDays };
 
+/** Whole days as integers; fractional (e.g. half-day) as one decimal — same in cards and Balance Overview */
+export function formatLeaveBalanceDisplay(balance: string | number): string {
+  const n = typeof balance === "string" ? parseFloat(balance) || 0 : balance;
+  if (!Number.isFinite(n)) return "0";
+  const rounded = Math.round(n * 10) / 10;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-6) return String(Math.round(rounded));
+  return rounded.toFixed(1);
+}
+
 export const statusIconMap: Record<string, React.ElementType> = {
   PENDING: Clock,
   APPROVED: CheckCircle2,
@@ -148,6 +157,7 @@ export const BalanceCard = React.memo(function BalanceCard({
   const name = typeName ?? "Leave";
   const config = balanceCardConfig[name] ?? DEFAULT_CARD_CONFIG;
   const balanceNum = parseFloat(balance) || 0;
+  const balanceLabel = formatLeaveBalanceDisplay(balance);
   const total = daysPerYear ?? 0;
   const pct = total > 0 ? Math.min((balanceNum / total) * 100, 100) : 0;
   const isUnpaid = name.toLowerCase().includes("unpaid");
@@ -165,7 +175,7 @@ export const BalanceCard = React.memo(function BalanceCard({
         </div>
 
         <div className="mb-1">
-          <span className="text-3xl font-bold text-foreground">{Math.floor(balanceNum)}</span>
+          <span className="text-3xl font-bold text-foreground">{balanceLabel}</span>
           {total > 0 && (
             <span className="text-lg text-muted-foreground ml-1">/ {total}</span>
           )}
@@ -181,7 +191,7 @@ export const BalanceCard = React.memo(function BalanceCard({
           aria-valuemin={0}
           aria-valuemax={total}
           aria-label={`${name} balance`}
-          aria-valuetext={`${Math.floor(balanceNum)} of ${total} days available`}
+          aria-valuetext={`${balanceLabel} of ${total} days available`}
         >
           <div
             className={`h-full rounded-full transition-all duration-500 ${config.color}`}

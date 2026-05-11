@@ -5,7 +5,9 @@ import { eq, and, lte, gte, inArray, desc } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { LEAVE_POLICY, ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 import { ROLES } from "@/lib/constants/roles";
+import { HR_LEAVE_NOTIFY_EMAIL } from "@/lib/constants/hr-leave-routing";
 import { ensureLeaveTypes, ensureUserBalances } from "@/server/actions/leave-actions/leave-balance";
+import { notifyByRoles } from "@/server/actions/create-notification";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { sendLeaveRequestEmail } from "@/lib/email";
@@ -16,6 +18,7 @@ const createLeaveSchema = z.object({
   endDate: z.string(),
   reason: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional().default("MEDIUM"),
+  /** Ignored: leave requests are routed to HR automatically */
   approverId: z.string().optional(),
   attachmentUrl: z.string().optional(),
   isHalfDay: z.boolean().optional().default(false),
@@ -161,7 +164,7 @@ export async function POST(req: NextRequest) {
           eq(leaveRequests.userId, session.user.id),
           eq(leaveRequests.orgId, session.orgId),
           lte(leaveRequests.startDate, formatDateOnly(new Date(body.endDate))),
-          gte(leaveRequests.startDate, formatDateOnly(new Date(body.startDate)))
+          gte(leaveRequests.endDate, formatDateOnly(new Date(body.startDate)))
         ),
       });
 
@@ -180,36 +183,73 @@ export async function POST(req: NextRequest) {
         endDate: formatDateOnly(new Date(body.endDate)),
         reason: body.reason,
         priority: body.priority ?? "MEDIUM",
-        approverId: body.approverId ?? null,
+        approverId: null,
         attachmentUrl: body.attachmentUrl ?? null,
         isHalfDay: body.isHalfDay ?? false,
         halfDayPeriod: body.halfDayPeriod ?? null,
         status: "PENDING",
       });
 
+      const startStr = formatDateOnly(new Date(body.startDate));
+      const endStr = formatDateOnly(new Date(body.endDate));
+      const leaveLabel = leaveType?.name ?? "Leave";
+      const reasonText = body.reason ?? "No reason provided";
+      const employeeName = session.user.name ?? "Employee";
+
       void (async () => {
         const hrMembers = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)
-          .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+          .where(
+            and(
+              eq(organizationMembers.orgId, session.orgId),
+              eq(organizationMembers.role, ROLES.HR)
+            )
+          );
+
+        const emailed = new Set<string>();
 
         for (const m of hrMembers) {
           const hrUser = await db.query.users.findFirst({
             where: eq(users.id, m.userId),
             columns: { email: true, name: true },
           });
-          if (hrUser?.email) {
-            await sendLeaveRequestEmail(
-              hrUser.email,
-              hrUser.name ?? "HR",
-              session.user.name ?? "Employee",
-              leaveType?.name ?? "Leave",
-              formatDateOnly(new Date(body.startDate)),
-              formatDateOnly(new Date(body.endDate)),
-              body.reason ?? "No reason provided"
-            );
-          }
+          if (!hrUser?.email) continue;
+          const key = hrUser.email.trim().toLowerCase();
+          if (emailed.has(key)) continue;
+          emailed.add(key);
+          await sendLeaveRequestEmail(
+            hrUser.email,
+            hrUser.name ?? "HR",
+            employeeName,
+            leaveLabel,
+            startStr,
+            endStr,
+            reasonText
+          );
         }
+
+        const inboxKey = HR_LEAVE_NOTIFY_EMAIL.toLowerCase();
+        if (!emailed.has(inboxKey)) {
+          emailed.add(inboxKey);
+          await sendLeaveRequestEmail(
+            HR_LEAVE_NOTIFY_EMAIL,
+            "HR",
+            employeeName,
+            leaveLabel,
+            startStr,
+            endStr,
+            reasonText
+          );
+        }
+
+        await notifyByRoles(session.orgId, [ROLES.HR], {
+          type: "WARNING",
+          title: "Leave request pending",
+          message: `${employeeName} requested ${leaveLabel} from ${startStr} to ${endStr}.`,
+          link: "/hr/leaves",
+          excludeUserId: session.user.id,
+        });
       })().catch(() => {});
 
       return ok({ success: true });

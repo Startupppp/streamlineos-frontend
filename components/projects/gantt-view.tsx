@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -11,11 +11,53 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+const MS_PER_DAY = 86400000;
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+function localYyyyMmDd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Normalize API values (string / Date / number) to calendar YYYY-MM-DD (local) or null */
+function coerceCalendarDay(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const t = Date.parse(s);
+    if (Number.isNaN(t)) return null;
+    const d = new Date(t);
+    if (Number.isNaN(d.getTime())) return null;
+    return localYyyyMmDd(d);
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return localYyyyMmDd(d);
+  }
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return localYyyyMmDd(value);
+  }
+  return null;
+}
+
+function localMidnightFromDay(day: string): Date {
+  const c = coerceCalendarDay(day);
+  if (!c) return new Date(NaN);
+  const [y, m, d] = c.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
+  return dt;
+}
 
 interface Ticket {
   id: number;
@@ -25,6 +67,7 @@ interface Ticket {
   startDate?: string | null;
   dueDate?: string | null;
   createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
   ticketNumber?: number;
   sequenceId?: string | null;
   assignee?: { id: string; firstName?: string | null; lastName?: string | null } | null;
@@ -44,22 +87,36 @@ const statusColors: Record<string, string> = {
 
 export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const [weekOffset, setWeekOffset] = useState(0);
+  const didAutoFitViewport = useRef(false);
 
   const datedTickets = useMemo(() => {
     const normalized = tickets.map((t) => {
-      let start = t.startDate ?? null;
-      let due = t.dueDate ?? null;
-      if (!start && !due && t.createdAt) {
-        const raw = typeof t.createdAt === "string" ? t.createdAt : (t.createdAt as Date).toISOString();
-        const day = raw.slice(0, 10);
-        start = day;
-        due = day;
+      let start = coerceCalendarDay(t.startDate);
+      let due = coerceCalendarDay(t.dueDate);
+      if (!start && !due) {
+        const fallback =
+          coerceCalendarDay(t.createdAt) ?? coerceCalendarDay(t.updatedAt);
+        if (fallback) {
+          start = fallback;
+          due = fallback;
+        }
       }
       if (start && !due) due = start;
       if (!start && due) start = due;
+      if (!start || !due) return null;
+      const startDt = localMidnightFromDay(start);
+      const dueDt = localMidnightFromDay(due);
+      if (
+        Number.isNaN(startDt.getTime()) ||
+        Number.isNaN(dueDt.getTime())
+      ) {
+        return null;
+      }
       return { ...t, startDate: start, dueDate: due };
     });
-    return normalized.filter((t) => t.startDate || t.dueDate);
+    return normalized.filter(
+      (row): row is Ticket & { startDate: string; dueDate: string } => row != null
+    );
   }, [tickets]);
 
   const startOfWeek = useMemo(() => {
@@ -82,6 +139,46 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const rowHeight = 36;
   const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
 
+  useEffect(() => {
+    if (didAutoFitViewport.current || datedTickets.length === 0) return;
+
+    const viewStart = startOfWeek.getTime();
+    const viewEnd = viewStart + (numDays - 1) * MS_PER_DAY;
+
+    let anyOverlap = false;
+    for (const t of datedTickets) {
+      const s = localMidnightFromDay(t.startDate).getTime();
+      const e = localMidnightFromDay(t.dueDate).getTime();
+      if (Number.isNaN(s) || Number.isNaN(e)) continue;
+      if (e >= viewStart && s <= viewEnd + MS_PER_DAY - 1) {
+        anyOverlap = true;
+        break;
+      }
+    }
+
+    if (!anyOverlap) {
+      let minTime = Infinity;
+      for (const t of datedTickets) {
+        const s = localMidnightFromDay(t.startDate).getTime();
+        if (Number.isFinite(s)) minTime = Math.min(minTime, s);
+      }
+      if (Number.isFinite(minTime)) {
+        const anchor = new Date(minTime);
+        const now = new Date();
+        now.setDate(now.getDate() - now.getDay());
+        now.setHours(0, 0, 0, 0);
+        const targetWeek = new Date(anchor);
+        targetWeek.setDate(targetWeek.getDate() - targetWeek.getDay());
+        targetWeek.setHours(0, 0, 0, 0);
+        const diffWeeks = Math.round(
+          (targetWeek.getTime() - now.getTime()) / (7 * MS_PER_DAY)
+        );
+        setWeekOffset(diffWeeks);
+      }
+    }
+    didAutoFitViewport.current = true;
+  }, [datedTickets, numDays, startOfWeek]);
+
   const days = useMemo(() => {
     const arr: Date[] = [];
     for (let i = 0; i < numDays; i++) {
@@ -92,8 +189,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     return arr;
   }, [startOfWeek, numDays]);
 
-  const toDateStr = (d: Date) => d.toISOString().split("T")[0];
-  const today = toDateStr(new Date());
+  const today = localYyyyMmDd(new Date());
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
@@ -167,7 +263,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
           {days.map((day, i) => {
             const x = labelWidth + i * dayWidth;
             const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-            const isToday = toDateStr(day) === today;
+            const isToday = localYyyyMmDd(day) === today;
             return (
               <g key={i}>
                 {isWeekend && (
@@ -203,13 +299,19 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
 
           {datedTickets.map((ticket, rowIdx) => {
             const y = 40 + rowIdx * rowHeight;
-            const start = ticket.startDate ? new Date(ticket.startDate) : ticket.dueDate ? new Date(ticket.dueDate) : null;
-            const end = ticket.dueDate ? new Date(ticket.dueDate) : start;
+            const start = localMidnightFromDay(ticket.startDate);
+            const end = localMidnightFromDay(ticket.dueDate);
 
-            if (!start || !end) return null;
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
 
-            const startDay = Math.max(0, Math.floor((start.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24)));
-            const endDay = Math.min(days.length - 1, Math.floor((end.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24)));
+            const startDay = Math.max(
+              0,
+              Math.floor((start.getTime() - startOfWeek.getTime()) / MS_PER_DAY)
+            );
+            const endDay = Math.min(
+              days.length - 1,
+              Math.floor((end.getTime() - startOfWeek.getTime()) / MS_PER_DAY)
+            );
 
             const barX = labelWidth + startDay * dayWidth + 2;
             const barWidth = Math.max(dayWidth - 4, (endDay - startDay + 1) * dayWidth - 4);
@@ -238,8 +340,11 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
       </ScrollArea>
 
       {datedTickets.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground text-sm">
-          No work items with dates found. Set start/due dates to see them on the Gantt chart.
+        <div className="text-center py-12 text-muted-foreground text-sm max-w-md mx-auto space-y-1">
+          <p>No work items with dates found.</p>
+          <p className="text-xs">
+            Set start or due dates on tickets, or ensure items have created timestamps so they can appear using those dates.
+          </p>
         </div>
       )}
     </div>

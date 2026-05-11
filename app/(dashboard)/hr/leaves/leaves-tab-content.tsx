@@ -18,7 +18,7 @@ import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useR
 import { cn, resolveImageUrl } from "@/lib/utils";
 
 import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
-import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
+import { BalanceCard, RequestHistoryRow, formatLeaveBalanceDisplay } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 
 const DONUT_COLORS = ["#bd882c", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
@@ -95,7 +95,7 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
                     <span className="text-xs text-muted-foreground truncate">{item.name}</span>
                   </div>
                   <span className="text-xs font-semibold text-foreground shrink-0">
-                    {item.remaining}/{item.total}
+                    {formatLeaveBalanceDisplay(item.remaining)}/{item.total}
                   </span>
                 </div>
                 <div className="h-1 rounded-full bg-muted overflow-hidden ml-4">
