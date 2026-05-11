@@ -51,6 +51,7 @@ import {
   type AssetExportRow,
 } from "@/lib/hr/assets-export-format";
 import { AssetExportSheet } from "@/features/hr/assets/asset-export-sheet";
+import { EmployeeAssignCombobox } from "@/components/hr/employee-assign-combobox";
 
 function fmt(amount: string | number | null) {
   if (amount === null || amount === undefined) return "—";
@@ -339,14 +340,13 @@ export default function HrAssetsPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Assign To</label>
-          <Select value={assignedTo} onValueChange={setAssignedTo}>
-            <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-            <SelectContent>
-              {employeeList.map((emp) => (
-                <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <EmployeeAssignCombobox
+            employees={employeeList}
+            value={assignedTo}
+            onValueChange={setAssignedTo}
+            placeholder="Unassigned"
+            disabled={createAsset.isPending}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
