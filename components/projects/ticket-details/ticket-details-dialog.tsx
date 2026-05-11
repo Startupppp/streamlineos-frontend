@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { isAdminOrOwner } from "@/lib/auth/role-guards";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 import {
   useTicket,
   useUpdateTicket,
@@ -158,7 +158,7 @@ export function TicketDetailsDialog({
   const canRemoveOtherWatchers = useMemo(() => {
     const uid = session?.user?.id;
     if (!ticket || !uid) return false;
-    if (isAdminOrOwner(session?.user?.role)) return true;
+    if (isExpenseAdmin(session?.user?.role)) return true;
     if (projectData?.managerId === uid) return true;
     if (ticket.reporterId === uid) return true;
     if (ticket.assigneeId === uid) return true;

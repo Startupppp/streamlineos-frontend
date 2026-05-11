@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   ArrowDown,
@@ -13,6 +13,7 @@ import {
   SmilePlus,
   Trash2,
   Eye,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -32,7 +33,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useMessageReaders } from "@/lib/api/hooks/chat";
+import { useMessageReaders, useChatOrgUsers } from "@/lib/api/hooks/chat";
 import {
   getInitials,
   formatMessageTime,
@@ -86,6 +87,107 @@ function MessageReadReceipts({
   );
 }
 
+function ReactionWithWho({
+  emoji,
+  userIds,
+  reactedByMe,
+  currentUserId,
+  isOwnBubble,
+  profiles,
+  onToggle,
+}: {
+  emoji: string;
+  userIds: string[];
+  reactedByMe: boolean;
+  currentUserId: string;
+  isOwnBubble: boolean;
+  profiles: Map<string, { name: string; image: string | null }>;
+  onToggle: () => void;
+}) {
+  const [whoOpen, setWhoOpen] = useState(false);
+
+  const resolved = useMemo(() => {
+    const rows = userIds.map((id) => {
+      const p = profiles.get(id);
+      return {
+        id,
+        label: p?.name ?? "Member",
+        image: p?.image ?? null,
+        isMe: id === currentUserId,
+      };
+    });
+    rows.sort((a, b) => {
+      if (a.isMe !== b.isMe) return a.isMe ? -1 : 1;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+    });
+    return rows;
+  }, [userIds, profiles, currentUserId]);
+
+  const shellClass = cn(
+    "inline-flex items-stretch h-6 rounded-full border text-[11px] transition-colors overflow-hidden",
+    reactedByMe
+      ? "bg-gold/10 border-gold/40 text-foreground"
+      : "bg-background border-border/60 text-muted-foreground hover:bg-muted/40"
+  );
+
+  return (
+    <div className={shellClass}>
+      <button
+        type="button"
+        title={reactedByMe ? "Remove your reaction" : "React with this emoji"}
+        aria-label={reactedByMe ? "Remove reaction" : "Add reaction"}
+        onClick={onToggle}
+        className="inline-flex items-center gap-0.5 pl-1.5 pr-1 shrink-0 hover:bg-black/5 dark:hover:bg-white/5"
+      >
+        <span className="text-[13px] leading-none">{emoji}</span>
+      </button>
+      <Popover open={whoOpen} onOpenChange={setWhoOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            title="Who reacted"
+            aria-label={`Who reacted: ${userIds.length}`}
+            className={cn(
+              "inline-flex items-center gap-0.5 min-w-[1.25rem] px-1.5 border-l font-semibold tabular-nums hover:bg-black/5 dark:hover:bg-white/5",
+              isOwnBubble ? "border-white/20" : "border-border/50"
+            )}
+          >
+            <Users className="h-2.5 w-2.5 opacity-70 shrink-0" aria-hidden />
+            {userIds.length}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-0 text-xs" align={isOwnBubble ? "end" : "start"}>
+          <div className="px-3 py-2 border-b border-border/50 font-medium text-foreground flex items-center gap-1.5">
+            <span className="text-base leading-none">{emoji}</span>
+            <span>Reactions ({userIds.length})</span>
+          </div>
+          <ul className="max-h-48 overflow-y-auto py-1.5">
+            {resolved.map(({ id, label, image, isMe }) => (
+              <li
+                key={id}
+                className="px-3 py-1.5 flex items-center gap-2 text-foreground"
+              >
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarImage src={resolveImageUrl(image)} />
+                  <AvatarFallback className="text-[9px] bg-muted">
+                    {getInitials(label)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">
+                  {label}
+                  {isMe ? (
+                    <span className="text-muted-foreground font-normal"> (you)</span>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 export function ChatBubble({
   message,
   isOwn,
@@ -118,6 +220,27 @@ export function ChatBubble({
   onReact: (emoji: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: orgUsers } = useChatOrgUsers(channelId > 0);
+
+  const reactionProfiles = useMemo(() => {
+    const map = new Map<string, { name: string; image: string | null }>();
+    for (const u of orgUsers ?? []) {
+      const name =
+        (u.name && u.name.trim()) ||
+        (u.email && u.email.split("@")[0]) ||
+        "Member";
+      map.set(u.id, { name, image: u.image ?? null });
+    }
+    if (message.sender?.id) {
+      const name = message.sender.name?.trim() || "Member";
+      map.set(message.sender.id, {
+        name,
+        image: message.sender.image ?? null,
+      });
+    }
+    return map;
+  }, [orgUsers, message.sender]);
+
   const handleEmojiSelect = useCallback(
     (emoji: string) => {
       onReact(emoji);
@@ -397,20 +520,16 @@ export function ChatBubble({
             {reactionEntries.map(([emoji, userIds]) => {
               const reactedByMe = userIds.includes(currentUserId);
               return (
-                <button
+                <ReactionWithWho
                   key={emoji}
-                  onClick={() => onReact(emoji)}
-                  title={reactedByMe ? "Click to remove" : "Click to react"}
-                  className={cn(
-                    "inline-flex items-center gap-1 h-6 px-1.5 rounded-full border text-[11px] transition-colors",
-                    reactedByMe
-                      ? "bg-gold/10 border-gold/40 text-foreground"
-                      : "bg-background border-border/60 text-muted-foreground hover:bg-muted/40"
-                  )}
-                >
-                  <span className="text-[13px] leading-none">{emoji}</span>
-                  <span className="font-semibold tabular-nums">{userIds.length}</span>
-                </button>
+                  emoji={emoji}
+                  userIds={userIds}
+                  reactedByMe={reactedByMe}
+                  currentUserId={currentUserId}
+                  isOwnBubble={isOwn}
+                  profiles={reactionProfiles}
+                  onToggle={() => onReact(emoji)}
+                />
               );
             })}
           </div>

@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { buildPayslipPdfDataFromPayroll, generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
 import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
+import { countApprovedLeaveDaysInMonth } from "@/server/queries/hr/payslip-leave-days";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
 
@@ -46,7 +47,7 @@ export async function PATCH(
     } catch {  }
 
     let emailSent = false;
-    let emailError: "no_email" | "send_failed" | null = null;
+    let emailError: "no_email" | "send_failed" | "missing_dob" | "pdf_not_encrypted" | null = null;
 
     try {
       const [employee, org] = await Promise.all([
@@ -63,47 +64,54 @@ export async function PATCH(
 
         const netSalary = parseFloat(existing.netSalary || "0");
 
-        const password = derivePayslipPassword({
-          panNumber: employee.taxId,
-          dateOfBirth: employee.dateOfBirth,
-          employeeName: employee.name,
-          joiningDate: employee.joiningDate,
-        });
+        const password = derivePayslipPassword({ dateOfBirth: employee.dateOfBirth });
+        if (!password) {
+          emailError = "missing_dob";
+        } else {
+          const leaveDays =
+            existing.month && existing.userId
+              ? await countApprovedLeaveDaysInMonth(session.orgId, existing.userId, existing.month)
+              : 0;
 
-        const pdfBase = buildPayslipPdfDataFromPayroll(
-          existing,
-          employee,
-          org ?? { name: null, address: null }
-        );
-        const { buffer: pdfBuffer, encrypted } =
-          await generatePayslipPdfWithEncryptionStatus({
+          const pdfBase = buildPayslipPdfDataFromPayroll(
+            existing,
+            employee,
+            org ?? { name: null, address: null },
+            { leaveDaysInMonth: leaveDays }
+          );
+          const { buffer: pdfBuffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
             ...pdfBase,
-            password: password ?? undefined,
+            password,
           });
 
-        const emailContent = getPayslipEmailTemplate({
-          employeeName: employee.name ?? "Employee",
-          month: monthLabel,
-          netSalary: netSalary.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          }),
-          orgName: org?.name ?? "Company",
-          passwordProtected: encrypted,
-        });
+          if (!encrypted) {
+            emailError = "pdf_not_encrypted";
+          } else {
+            const emailContent = getPayslipEmailTemplate({
+              employeeName: employee.name ?? "Employee",
+              month: monthLabel,
+              netSalary: netSalary.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+              }),
+              orgName: org?.name ?? "Company",
+              passwordProtected: true,
+            });
 
-        await sendEmail({
-          to: employee.email,
-          subject: `Your Payslip for ${monthLabel} — ${org?.name ?? "Company"}`,
-          html: emailContent.html,
-          attachments: [
-            {
-              filename: `Payslip-${(employee.name ?? "employee").replace(/\s+/g, "-")}-${existing.month ?? "unknown"}.pdf`,
-              content: pdfBuffer,
-              type: "application/pdf",
-            },
-          ],
-        });
-        emailSent = true;
+            await sendEmail({
+              to: employee.email,
+              subject: `Your Payslip for ${monthLabel} — ${org?.name ?? "Company"}`,
+              html: emailContent.html,
+              attachments: [
+                {
+                  filename: `Payslip-${(employee.name ?? "employee").replace(/\s+/g, "-")}-${existing.month ?? "unknown"}.pdf`,
+                  content: pdfBuffer,
+                  type: "application/pdf",
+                },
+              ],
+            });
+            emailSent = true;
+          }
+        }
       }
     } catch (e) {
       logger.error("Failed to send payslip email", { payrollId, error: e });

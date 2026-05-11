@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { ticketWatchers, tickets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
-import { isAdminOrOwner } from "@/lib/auth/role-guards";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 
 type RouteParams = {
   params: Promise<{ projectId: string; ticketId: string }>;
@@ -42,7 +42,7 @@ function canRemoveWatcherForOthers(
   role: string | undefined,
   ticket: NonNullable<Awaited<ReturnType<typeof loadTicketForProject>>>
 ): boolean {
-  if (isAdminOrOwner(role)) return true;
+  if (isExpenseAdmin(role)) return true;
   if (ticket.project?.managerId === sessionUserId) return true;
   if (ticket.reporterId === sessionUserId) return true;
   if (ticket.assigneeId === sessionUserId) return true;

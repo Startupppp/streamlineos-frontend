@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PROFESSIONAL_TAX_INR,
+  HOLIDAY_WORK_FULL_DAY_HOURS,
   buildPayslipPreviewFromEmployee,
   calendarDaysInMonth,
   computeProratedSalary,
@@ -10,11 +11,33 @@ import {
   rawHalfDayDeduction,
   rawLopDeduction,
   roundInr,
+  splitMonthlyCtc505025,
 } from "./payroll-calculations";
 
 void perDaySalaryForLop;
 void computeTotalDeductionsAndNet;
 void PROFESSIONAL_TAX_INR;
+
+describe("splitMonthlyCtc505025", () => {
+  it("splits monthly CTC into 50% basic, 25% HRA, 25% special", () => {
+    expect(splitMonthlyCtc505025(40_000)).toEqual({
+      basicSalary: 20_000,
+      hra: 10_000,
+      specialAllowance: 10_000,
+    });
+  });
+
+  it("absorbs rounding in special so components sum to CTC", () => {
+    const s = splitMonthlyCtc505025(24_999);
+    expect(s.basicSalary + s.hra + s.specialAllowance).toBe(24_999);
+  });
+});
+
+describe("HOLIDAY_WORK_FULL_DAY_HOURS", () => {
+  it("is 9 (OPEN-11)", () => {
+    expect(HOLIDAY_WORK_FULL_DAY_HOURS).toBe(9);
+  });
+});
 
 describe("calendarDaysInMonth", () => {
   it("returns 31 for January", () => {
@@ -168,7 +191,7 @@ describe("computeTotalDeductionsAndNet", () => {
 });
 
 describe("buildPayslipPreviewFromEmployee", () => {
-  it("matches typical payslip: ₹27k gross (Basic+HRA+Spl) − ₹200 PT = ₹26,800 net", () => {
+  it("matches typical payslip: ₹27k gross (50/25/25) − ₹200 PT = ₹26,800 net", () => {
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: 27000,
       month: "2026-05",
@@ -180,16 +203,16 @@ describe("buildPayslipPreviewFromEmployee", () => {
       overtimeType: "",
       overtimeDays: 0,
       overtimeHours: 0,
-      basicSalary: 13500,
-      hraPercentage: 50,
-      allowances: 6750,
       salaryStructureDeductions: 0,
     });
+    expect(preview.basicPay).toBe(13500);
+    expect(preview.hra).toBe(6750);
+    expect(preview.allowances).toBe(6750);
     expect(preview.grossSalary).toBe(27000);
     expect(preview.netSalary).toBe(26800);
   });
 
-  it("₹25k gross with structure components − ₹200 PT = ₹24,800 net", () => {
+  it("₹25k gross (50/25/25) − ₹200 PT = ₹24,800 net", () => {
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: 25000,
       month: "2026-05",
@@ -201,16 +224,13 @@ describe("buildPayslipPreviewFromEmployee", () => {
       overtimeType: "",
       overtimeDays: 0,
       overtimeHours: 0,
-      basicSalary: 12500,
-      hraPercentage: 50,
-      allowances: 6250,
       salaryStructureDeductions: 0,
     });
     expect(preview.grossSalary).toBe(25000);
     expect(preview.netSalary).toBe(24800);
   });
 
-  it("uses fallback 50/50 split when no salary structure provided", () => {
+  it("uses default 50/25/25 split when no explicit components provided", () => {
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: 30000,
       month: "2026-04",
@@ -299,23 +319,32 @@ describe("buildPayslipPreviewFromEmployee", () => {
     });
     expect(preview.netSalary).toBe(preview.grossSalary - preview.totalDeductions);
   });
+
+  it("₹24,999 CTC (50/25/25) − ₹200 PT = ₹24,799 net", () => {
+    const preview = buildPayslipPreviewFromEmployee({
+      monthlySalary: 24999,
+      month: "2026-05",
+      lopDays: 0,
+      halfDays: 0,
+      otherDeductions: 0,
+      bonus: 0,
+      overtimeAmount: 0,
+      overtimeType: "",
+      overtimeDays: 0,
+      overtimeHours: 0,
+      salaryStructureDeductions: 0,
+    });
+    expect(preview.grossSalary).toBe(24999);
+    expect(preview.netSalary).toBe(24799);
+  });
 });
 
 /**
- * Cross-path consistency: preview vs generate route.
- *
- * Pinning the contract: the admin preview at app/(dashboard)/hr/payroll/page.tsx
- * computes monthlySalary from the salary structure (basicSalary + hra + specialAllowance)
- * — the same formula the generate route uses. The two paths must produce identical
- * LOP / half-day / total-deduction values.
+ * Cross-path consistency: preview vs generate route (same CTC and LOP/half-day base).
  */
 describe("preview vs generate-route consistency (after fix)", () => {
-  it("preview LOP equals generate-route LOP when both use structure CTC", () => {
-    const basicSalary = 30000;
-    const hraPercentage = 50;
-    const specialAllowance = 10000;
-    const hraAmount = (basicSalary * hraPercentage) / 100;
-    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+  it("preview LOP equals generate-route LOP when both use the same monthly CTC", () => {
+    const ctcMonthly = 60000;
 
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: ctcMonthly,
@@ -328,9 +357,6 @@ describe("preview vs generate-route consistency (after fix)", () => {
       overtimeType: "none",
       overtimeDays: 0,
       overtimeHours: 0,
-      basicSalary,
-      hraPercentage,
-      allowances: specialAllowance,
     });
 
     const calDays = 30;
@@ -341,11 +367,7 @@ describe("preview vs generate-route consistency (after fix)", () => {
   });
 
   it("half-day in preview equals halfDayLopAmount in generate route", () => {
-    const basicSalary = 25000;
-    const hraPercentage = 40;
-    const specialAllowance = 8000;
-    const hraAmount = (basicSalary * hraPercentage) / 100;
-    const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+    const ctcMonthly = 40000;
 
     const preview = buildPayslipPreviewFromEmployee({
       monthlySalary: ctcMonthly,
@@ -358,9 +380,6 @@ describe("preview vs generate-route consistency (after fix)", () => {
       overtimeType: "none",
       overtimeDays: 0,
       overtimeHours: 0,
-      basicSalary,
-      hraPercentage,
-      allowances: specialAllowance,
     });
 
     const calDays = calendarDaysInMonth("2026-05"); // 31

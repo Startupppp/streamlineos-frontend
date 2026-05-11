@@ -46,6 +46,9 @@ export function useToggleWatch(projectId: number) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
     },
   });
 }
@@ -68,6 +71,9 @@ export function useAddWatcher(projectId: number) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
     },
   });
 }
@@ -89,6 +95,9 @@ export function useRemoveWatcher(projectId: number) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
     },
   });

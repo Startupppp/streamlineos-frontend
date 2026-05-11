@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { attendance, holidays } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
-import { notifyByRoles } from "@/server/actions/create-notification";
-import { ROLES } from "@/lib/constants/roles";
+import { notifyHrEmployeeCheckIn } from "@/lib/hr/attendance-hr-notifications";
 import {
   getLateCutoffMinutesIst,
   handleLateArrivalAfterCheckIn,
@@ -35,6 +34,7 @@ export async function POST(req: NextRequest) {
       let attendanceId: number | undefined;
       let isFreshInsert = false;
       const checkInAt = new Date();
+      let punchAtForHr: Date = checkInAt;
       const workdayForLateRule = !holiday && !isSunday;
       const lateCutoff = getLateCutoffMinutesIst();
       const isLateFirstPunch = workdayForLateRule && minutesSinceMidnightIst(checkInAt) > lateCutoff;
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
           }
 
           const now = new Date();
+          punchAtForHr = now;
           const gapMs = now.getTime() - lastCheckOut.getTime();
           const gapHours = gapMs / (1000 * 60 * 60);
 
@@ -106,15 +107,17 @@ export async function POST(req: NextRequest) {
         isFreshInsert = true;
       });
 
-      if (holiday || isSunday) {
-        const whatDay = holiday ? `holiday (${holiday.name})` : "Sunday";
-        void notifyByRoles(session.orgId, [ROLES.CEO, ROLES.HR], {
-          title: "Employee clocked in on a day off",
-          message: `${session.user.name ?? session.user.email} clocked in on ${whatDay} (${today}). An approved holiday work request is required for compensation.`,
-          link: "/hr/attendance",
-          metadata: { userId: session.user.id, date: today, type: holiday ? "HOLIDAY" : "SUNDAY" },
-        }).catch(() => {});
-      }
+      notifyHrEmployeeCheckIn({
+        orgId: session.orgId,
+        employeeId: session.user.id,
+        employeeName: session.user.name ?? null,
+        employeeEmail: session.user.email ?? null,
+        date: today,
+        at: punchAtForHr,
+        isOrgHoliday: !!holiday,
+        holidayName: holiday?.name ?? null,
+        isSunday: isSunday && !holiday,
+      });
 
       if (isFreshInsert && attendanceId && workdayForLateRule) {
         void handleLateArrivalAfterCheckIn({

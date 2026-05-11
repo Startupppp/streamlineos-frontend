@@ -9,6 +9,7 @@ import path from "path";
 import type { NextRequest } from "next/server";
 import { buildPayslipPdfDataFromPayroll, generatePayslipPdfWithEncryptionStatus } from "@/lib/payslip-pdf";
 import { derivePayslipPassword } from "@/lib/hr/payslip-password";
+import { countApprovedLeaveDaysInMonth } from "@/server/queries/hr/payslip-leave-days";
 
 export async function GET(
   req: NextRequest,
@@ -36,6 +37,11 @@ export async function GET(
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, session.orgId),
     });
+
+    const leaveDays =
+      payroll.month && payroll.userId
+        ? await countApprovedLeaveDaysInMonth(session.orgId, payroll.userId, payroll.month)
+        : 0;
 
     const monthLabel = payroll.month
       ? format(new Date(payroll.month + "-01"), "MMMM yyyy")
@@ -74,35 +80,36 @@ export async function GET(
     const structureDeductions = parseFloat(payroll.structureDeductions ?? "0");
     const totalDeductions = parseFloat(payroll.deductions ?? "0");
     const net = parseFloat(payroll.netSalary || "0");
-    const effectiveDays = daysInPayMonth - lopDays - halfDays * 0.5;
-
     const orgAddress = org?.address;
     const addressLine = [orgAddress?.city, orgAddress?.state, orgAddress?.country]
       .filter(Boolean).join(", ");
 
     const pan = employee?.taxId ?? "—";
     const bank = employee?.bankDetails;
-    const maskedAccount = bank?.accountNumber
-      ? "XXXX" + bank.accountNumber.slice(-4)
-      : "—";
-    const pfUan = bank?.pfUanNumber || null;
+    const fullBankAccount = bank?.accountNumber ? String(bank.accountNumber) : "—";
     const joiningDate = employee?.joiningDate
-      ? format(new Date(employee.joiningDate), "dd MMM yyyy")
+      ? format(new Date(employee.joiningDate), "dd-MM-yyyy")
       : "—";
 
     if (req.nextUrl.searchParams.get("format") === "pdf") {
       if (!employee) return err("Employee not found.", 404);
-      const pdfData = buildPayslipPdfDataFromPayroll(payroll, employee, org ?? { name: null, address: null });
-      const password = derivePayslipPassword({
-        panNumber: employee.taxId,
-        dateOfBirth: employee.dateOfBirth,
-        employeeName: employee.name,
-        joiningDate: employee.joiningDate,
+      const password = derivePayslipPassword({ dateOfBirth: employee.dateOfBirth });
+      if (!password) {
+        return err("Set employee date of birth (HR onboarding) before downloading the payslip PDF.", 400);
+      }
+      const pdfData = buildPayslipPdfDataFromPayroll(payroll, employee, org ?? { name: null, address: null }, {
+        leaveDaysInMonth: leaveDays,
       });
-      const { buffer } = await generatePayslipPdfWithEncryptionStatus({
+      const { buffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
         ...pdfData,
-        password: password ?? undefined,
+        password,
       });
+      if (!encrypted) {
+        return err(
+          "Payslip PDF could not be password-protected (encryption tool unavailable). Contact IT or use Print from HTML payslip.",
+          503
+        );
+      }
       const safeName = (employee.name ?? "employee").replace(/\s+/g, "-");
       return new NextResponse(new Uint8Array(buffer), {
         headers: {
@@ -220,55 +227,42 @@ export async function GET(
   </div>
 
   <div class="page">
-    <!-- Header -->
-    <div class="header">
+    <div class="header" style="border-bottom:1px solid #ccc;padding-bottom:12px;">
       <div class="header-logo">${logoSvg || "V"}</div>
-      <div class="header-company">
-        <h1>${orgFullName}</h1>
-        ${addressLine ? `<p>${addressLine}</p>` : ""}
+      <div class="header-company" style="flex:1;text-align:center;">
+        <h1 style="font-size:15px;margin:0;text-decoration:underline;">PAYSLIP FOR THE MONTH OF ${monthLabel.toUpperCase()}</h1>
+        <p style="font-size:11px;color:#555;margin-top:6px;">${orgFullName}</p>
+        ${addressLine ? `<p style="font-size:10px;color:#666;">${addressLine}</p>` : ""}
       </div>
-      <div class="header-slip">
-        <h2>Salary Slip</h2>
-        <p>For the month of ${monthLabel}</p>
+      <div class="header-slip" style="min-width:72px;text-align:right;">
         <div class="paid-badge">PAID</div>
       </div>
     </div>
 
-    <!-- Employee blue bar -->
-    <div class="emp-bar">
-      <div class="ef"><span class="ef-label">Employee Name</span><span class="ef-val">${empName}</span></div>
-      <div class="ef"><span class="ef-label">Employee ID</span><span class="ef-val">${employee?.employeeId ?? "—"}</span></div>
-      <div class="ef"><span class="ef-label">Designation</span><span class="ef-val">${empDesignation}</span></div>
-      <div class="ef"><span class="ef-label">Department</span><span class="ef-val">${employee?.team ?? employee?.role ?? "—"}</span></div>
-    </div>
-
-    <!-- Employee details -->
     <div class="detail-section">
       <div class="detail-col">
-        <h3>Employee Information</h3>
-        <div class="dl"><span class="dk">Date of Joining</span><span class="dv">${joiningDate}</span></div>
-        <div class="dl"><span class="dk">PAN Number</span><span class="dv">${pan}</span></div>
-        ${pfUan ? `<div class="dl"><span class="dk">PF UAN</span><span class="dv">${pfUan}</span></div>` : ""}
-        <div class="dl"><span class="dk">Email</span><span class="dv">${employee?.email ?? "—"}</span></div>
+        <div class="dl"><span class="dk">Employee Name</span><span class="dv">${empName}</span></div>
+        <div class="dl"><span class="dk">Designation</span><span class="dv">${empDesignation}</span></div>
+        <div class="dl"><span class="dk">EMP ID</span><span class="dv">${employee?.employeeId ?? "—"}</span></div>
+        <div class="dl"><span class="dk">Bank Name</span><span class="dv">${bank?.bankName ?? "—"}</span></div>
+        <div class="dl"><span class="dk">Bank Acc Number</span><span class="dv">${fullBankAccount}</span></div>
       </div>
       <div class="detail-col">
-        <h3>Payroll Information</h3>
-        <div class="dl"><span class="dk">Pay Period</span><span class="dv">${monthLabel}</span></div>
-        <div class="dl"><span class="dk">Payment Mode</span><span class="dv">Bank Transfer</span></div>
-        <div class="dl"><span class="dk">Calendar Days</span><span class="dv">${daysInPayMonth}</span></div>
-        <div class="dl"><span class="dk">Days worked</span><span class="dv">${effectiveDays}</span></div>
-        <div class="dl"><span class="dk">LOP days</span><span class="dv">${lopDays}</span></div>
-        <div class="dl"><span class="dk">Half days</span><span class="dv">${halfDays}</span></div>
+        <div class="dl"><span class="dk">Date of Joining</span><span class="dv">${joiningDate}</span></div>
+        <div class="dl"><span class="dk">No of Days</span><span class="dv">${daysInPayMonth} Days</span></div>
+        <div class="dl"><span class="dk">PAN Number</span><span class="dv">${pan}</span></div>
+        <div class="dl"><span class="dk">LOP</span><span class="dv">${lopDays}</span></div>
+        <div class="dl"><span class="dk">Leaves</span><span class="dv">${leaveDays}</span></div>
       </div>
     </div>
 
     <!-- Salary breakdown -->
     <div class="salary-section">
-      <div class="salary-title">Salary Breakdown</div>
+      <div class="salary-title">Earnings &amp; Deductions</div>
       ${(() => {
         const earnings: { label: string; amount: number }[] = [];
-        earnings.push({ label: "Basic Salary", amount: basic });
-        if (hra > 0) earnings.push({ label: "House Rent Allowance (HRA)", amount: hra });
+        earnings.push({ label: "Basic Pay", amount: basic });
+        if (hra > 0) earnings.push({ label: "House Rent Allowance", amount: hra });
         if (specialAllowance > 0) earnings.push({ label: "Special Allowance", amount: specialAllowance });
         if (bonus > 0) earnings.push({ label: "Bonus / Incentive", amount: bonus });
         if (overtime > 0) {
@@ -286,7 +280,7 @@ export async function GET(
         const ded: { label: string; amount: number }[] = [];
         if (ptAmount > 0) ded.push({ label: "Professional Tax", amount: ptAmount });
         if (pfEmployee > 0) ded.push({ label: "Provident Fund (PF)", amount: pfEmployee });
-        if (esiEmployee > 0) ded.push({ label: "ESI", amount: esiEmployee });
+        if (esiEmployee > 0) ded.push({ label: "Employee State Insurance (ESI)", amount: esiEmployee });
         if (lopAmount > 0) ded.push({ label: `Loss of Pay (${lopDays} day${lopDays === 1 ? "" : "s"})`, amount: lopAmount });
         if (halfDayAmount > 0) ded.push({ label: `Half-Day Deduction (${halfDays} day${halfDays === 1 ? "" : "s"})`, amount: halfDayAmount });
         if (advanceRecovery > 0) ded.push({ label: "Advance Recovery", amount: advanceRecovery });
@@ -314,7 +308,7 @@ export async function GET(
           <tbody>
             ${lines.join("\n")}
             <tr class="subtotal">
-              <td>Gross Earnings</td>
+              <td>Total Earnings</td>
               <td>${fmt(String(gross))}</td>
               <td>Total Deductions</td>
               <td>${fmt(String(totalDeductions))}</td>
@@ -326,23 +320,23 @@ export async function GET(
 
     <!-- Net pay bar -->
     <div class="net-bar">
-      <div class="nb-label">Net Salary Payable</div>
+      <div class="nb-label">Net Salary</div>
       <div class="nb-amt">${fmt(payroll.netSalary)}</div>
     </div>
-    <div class="net-words">In words: <strong>${toWords(net)}</strong></div>
+    <div class="net-words">In Words: <strong>${toWords(net)}</strong></div>
 
     <!-- Bank + signature -->
     <div class="bottom-section">
       <div class="bottom-col">
         <h3>Bank Details</h3>
         <div class="dl"><span class="dk">Bank Name</span><span class="dv">${bank?.bankName ?? "—"}</span></div>
-        <div class="dl"><span class="dk">Account Number</span><span class="dv">${maskedAccount}</span></div>
+        <div class="dl"><span class="dk">Account Number</span><span class="dv">${fullBankAccount}</span></div>
         <div class="dl"><span class="dk">IFSC Code</span><span class="dv">${bank?.ifsc ?? "—"}</span></div>
         <div class="dl"><span class="dk">Branch</span><span class="dv">${bank?.branch ?? "—"}</span></div>
       </div>
       <div class="bottom-col">
         <h3>Authorisation</h3>
-        <p style="font-size:11px;color:#555;margin-bottom:8px;">This is a system-generated payslip and does not require a physical signature.</p>
+        <p style="font-size:11px;color:#555;margin-bottom:8px;">This is a system-generated Pay slip and does not require a physical signature</p>
         <div class="sign-area">Authorised Signatory</div>
       </div>
     </div>

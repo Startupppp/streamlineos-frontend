@@ -84,7 +84,7 @@ export function GeneratePayrollSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Generate Payslip"
-      description="Select an employee and adjust attendance and bonus before previewing."
+      description="Select an employee and adjust attendance and bonus before previewing. Salary changes are ad hoc with no suggested increment; a new salary always takes effect from the 1st of a calendar month (see HR policy / OPEN_QUESTIONS.md)."
       onSubmit={onShowPreview}
       submitLabel="Preview Payslip"
       isPending={false}

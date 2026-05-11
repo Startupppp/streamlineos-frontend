@@ -139,11 +139,22 @@ Feature 6  → Overtime Engine (depends on Features 3 + 4)
 Feature 7  → Comp Off Module (depends on Features 4 + 5)
 Feature 8  → Deductions Engine (LOP, PT, advance recovery, late-arrival warnings)
 Feature 9  → Payroll Run — monthly cycle (depends on all above)
-Feature 10 → Payslip Generation & Delivery [BLOCKED on OPEN-01, OPEN-07]
-Feature 11 → Salary Revision Workflow [BLOCKED on OPEN-02/03/04 for full logic]
+Feature 10 → Payslip Generation & Delivery (OPEN-01 / OPEN-07 resolved — see `OPEN_QUESTIONS.md`)
+Feature 11 → Salary Revision Workflow (OPEN-02/03/04 resolved — ad hoc revisions; effective 1st of month; no in-month proration)
 Feature 12 → Bonus & Incentives — DEFERRED
 Feature 13 → Reimbursements — DEFERRED
 ```
+
+### Implemented HR policy snapshot (May 2026)
+
+Source: resolved items in [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
+
+- **Payslip PDF**: Password = employee **DOB in DDMMYYYY** (onboarding `date_of_birth`). Layout matches approved HR sample (earnings/deductions table; no PF/ESI/TDS lines unless amounts are non-zero in data).
+- **Salary revision**: **Ad hoc** (no fixed cadence); **no suggested increment %**; new salary applies from the **first day of a calendar month** only (`effective_from` snapped; superseded row gets `effective_to` = last day before the new start).
+- **Saturday**: **No** EXTRA_PAY from Saturday holiday-work requests; Saturday remains visible in attendance/requests only.
+- **Holiday / Sunday pay threshold**: **≥ 9 hours** logged work for “full day” eligibility.
+- **PT**: Flat **₹200**/month unless structure overrides.
+- **Appraisal / PIP**: **No scheduled purge**; retain until manual deletion if ever supported.
 
 ---
 

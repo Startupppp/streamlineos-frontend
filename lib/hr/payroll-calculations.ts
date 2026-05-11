@@ -2,6 +2,9 @@
 
 export const PROFESSIONAL_TAX_INR = 200;
 
+/** OPEN-11: Minimum logged work hours for holiday/Sunday “full day” overtime or extra pay. */
+export const HOLIDAY_WORK_FULL_DAY_HOURS = 9;
+
 export interface ProrationSegment {
   basicSalary: number;
   hraPercentage: number;
@@ -169,6 +172,19 @@ export function roundInr(value: number): number {
   return Math.round(value);
 }
 
+/** Monthly CTC split: Basic 50%, HRA 25%, Special Allowance 25% (rupees rounded). */
+export function splitMonthlyCtc505025(ctcMonthly: number): {
+  basicSalary: number;
+  hra: number;
+  specialAllowance: number;
+} {
+  const ctc = roundInr(ctcMonthly);
+  const basicSalary = roundInr(ctc * 0.5);
+  const hra = roundInr(ctc * 0.25);
+  const specialAllowance = roundInr(ctc - basicSalary - hra);
+  return { basicSalary, hra, specialAllowance };
+}
+
 export function computeTotalDeductionsAndNet(params: {
   month: string;
   monthlySalary: number;
@@ -220,15 +236,14 @@ export interface PayslipPreviewInput {
   overtimeType: string;
   overtimeDays: number;
   overtimeHours: number;
-  /**
-   * When provided (from salary_structures), component breakdown matches the generate route exactly.
-   * When absent, fallback ratios are used: Basic=50%, HRA=50% of Basic, Allowance=remainder.
-   */
+  /** Optional non-standard breakdown (tests only). Default: {@link splitMonthlyCtc505025} on `monthlySalary`. */
   basicSalary?: number;
   hraPercentage?: number;
   allowances?: number;
   /** Optional recurring deductions from salary structure (PF, etc.) */
   salaryStructureDeductions?: number;
+  /** Defaults to {@link PROFESSIONAL_TAX_INR} when omitted. */
+  professionalTax?: number;
 }
 
 /** Same numbers shown in Generate sheet preview — use for payroll page `useMemo` */
@@ -238,6 +253,7 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
   const otAmt = input.overtimeAmount || 0;
   const bonusAmt = input.bonus || 0;
   const structDed = input.salaryStructureDeductions ?? 0;
+  const pt = input.professionalTax ?? PROFESSIONAL_TAX_INR;
 
   let basicPay: number;
   let hra: number;
@@ -247,14 +263,15 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
   if (input.basicSalary !== undefined) {
     basicPay = input.basicSalary;
     const hraPercentage = input.hraPercentage ?? 50;
-    hra = (basicPay * hraPercentage) / 100;
-    allowances = input.allowances ?? 0;
-    grossSalary = basicPay + hra + allowances + bonusAmt + otAmt;
+    hra = roundInr((basicPay * hraPercentage) / 100);
+    allowances = roundInr(input.allowances ?? 0);
+    grossSalary = roundInr(basicPay + hra + allowances + bonusAmt + otAmt);
   } else {
-    basicPay = monthlySalary * 0.5;
-    hra = basicPay * 0.5;
-    allowances = monthlySalary - basicPay - hra;
-    grossSalary = monthlySalary + bonusAmt + otAmt;
+    const split = splitMonthlyCtc505025(monthlySalary);
+    basicPay = split.basicSalary;
+    hra = split.hra;
+    allowances = split.specialAllowance;
+    grossSalary = roundInr(monthlySalary + bonusAmt + otAmt);
   }
 
   const { lopDeduction, halfDayDeduction, totalDeductions, netSalary } = computeTotalDeductionsAndNet({
@@ -265,6 +282,7 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
     lopDays: input.lopDays,
     halfDays: input.halfDays,
     otherDeductions: input.otherDeductions,
+    professionalTax: pt,
   });
 
   return {
@@ -274,7 +292,7 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
     grossSalary,
     lopDeduction,
     halfDayDeduction,
-    professionalTax: PROFESSIONAL_TAX_INR,
+    professionalTax: pt,
     otherDeductions: input.otherDeductions || 0,
     bonus: bonusAmt,
     overtimeAmount: otAmt,
@@ -288,5 +306,6 @@ export function buildPayslipPreviewFromEmployee(input: PayslipPreviewInput) {
     calendarDays,
     workingDays: calendarDays,
     effectiveDays: calendarDays - input.lopDays - input.halfDays * 0.5,
+    salaryStructureDeductions: structDed,
   };
 }

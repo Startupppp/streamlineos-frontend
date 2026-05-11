@@ -5,6 +5,7 @@ import { salaryStructures, salaryRevisionHistory } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
+import { snapSalaryEffectiveFrom, dayBeforeIsoDate } from "@/lib/hr/salary-effective-dates";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, createSalaryStructureSchema);
+    const effectiveFromSnapped = snapSalaryEffectiveFrom(body.effectiveFrom);
 
     const existing = await db.query.salaryStructures.findFirst({
       where: and(
@@ -60,7 +62,13 @@ export async function POST(req: NextRequest) {
 
     const [structure] = await db.transaction(async (tx) => {
       if (existing) {
-        await tx.update(salaryStructures).set({ isActive: false }).where(eq(salaryStructures.id, existing.id));
+        await tx
+          .update(salaryStructures)
+          .set({
+            isActive: false,
+            effectiveTo: dayBeforeIsoDate(effectiveFromSnapped),
+          })
+          .where(eq(salaryStructures.id, existing.id));
       }
 
       const [newStructure] = await tx
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest) {
           allowances: (body.allowances ?? 0).toString(),
           deductions: (body.deductions ?? 0).toString(),
           professionalTax: (body.professionalTax ?? 200).toString(),
-          effectiveFrom: formatDateOnly(new Date(body.effectiveFrom)),
+          effectiveFrom: effectiveFromSnapped,
           effectiveTo: body.effectiveTo ? formatDateOnly(new Date(body.effectiveTo)) : undefined,
           isActive: true,
           createdBy: session.user.id,
@@ -93,7 +101,7 @@ export async function POST(req: NextRequest) {
         newHraPct: (body.hraPercentage ?? 50).toString(),
         newSpecialAllowance: (body.specialAllowance ?? 0).toString(),
         newPt: (body.professionalTax ?? 200).toString(),
-        effectiveFrom: formatDateOnly(new Date(body.effectiveFrom)),
+        effectiveFrom: effectiveFromSnapped,
         reason: body.reason ?? null,
         changedBy: session.user.id,
       });
@@ -107,7 +115,7 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       targetId: body.userId,
       targetType: "salary_structure",
-      metadata: { basicSalary: body.basicSalary, effectiveFrom: body.effectiveFrom },
+      metadata: { basicSalary: body.basicSalary, effectiveFrom: effectiveFromSnapped },
     }).catch(() => {});
 
     return ok(structure);

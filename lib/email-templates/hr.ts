@@ -1,4 +1,5 @@
 import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
+import { PAYSLIP_PASSWORD_HINT } from "@/lib/hr/payslip-password";
 
 export function getLeaveRequestEmailTemplate(
   approverName: string,
@@ -548,9 +549,8 @@ export function getPayslipEmailTemplate(params: {
   const passwordHint = params.passwordProtected
     ? `
       <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;color:#78350f;">
-        <strong>🔒 Password-protected PDF.</strong>
-        Your password is <strong>the first 4 characters of your PAN (uppercase) followed by DDMM of your date of birth</strong>.
-        Example: PAN ABCDE1234F + DOB 5 Oct 1995 → password <code>ABCD0510</code>.
+        <strong>Password-protected PDF.</strong>
+        ${escapeHtml(PAYSLIP_PASSWORD_HINT)}
       </div>
     `
     : "";

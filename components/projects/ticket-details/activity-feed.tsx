@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -174,8 +174,18 @@ function CommentItem({
     ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
     : "";
 
-  const isOwner = currentUserId && comment.userId === currentUserId;
+  const commentAuthorId = String(
+    comment.userId ?? (comment.user as TicketUser | undefined)?.id ?? ""
+  );
+  const isOwner =
+    !!currentUserId &&
+    !!commentAuthorId &&
+    commentAuthorId === String(currentUserId);
   const showActions = isOwner || canModerate;
+
+  useEffect(() => {
+    if (!editing) setEditContent(comment.content);
+  }, [comment.content, editing]);
 
   const updateComment = useUpdateTicketComment({
     onSuccess: () => {
@@ -229,7 +239,7 @@ function CommentItem({
             </span>
             <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
             {showActions && !editing && (
-              <span className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="ml-auto flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <Button
                   type="button"
                   variant="ghost"

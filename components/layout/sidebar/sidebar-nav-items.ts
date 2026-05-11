@@ -8,8 +8,8 @@ import {
   TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
   Share2, Video, Globe,
 
-  Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award, Scale,
-  MailOpen, Smile, FileCheck, Coins, Map, Landmark, RefreshCcw, Zap,
+  Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award,
+  MailOpen, Smile, FileCheck, Coins, Map, RefreshCcw, Zap,
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
   GitBranch, Building2, UserCog, SlidersHorizontal, UserX,
   Activity, FlaskConical, Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
@@ -31,6 +31,12 @@ export interface NavGroup {
 
   defaultCollapsed?: boolean;
 }
+
+/**
+ * HR sidebar: these routes are intentionally omitted from all roles (CEO, HR, etc.).
+ * App routes under `app/(dashboard)/hr/*` still exist for direct access / future use:
+ * `/hr/loans`, `/hr/reimbursements`, `/hr/fnf`, `/hr/background-verification`, `/hr/compliance`.
+ */
 
 export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
   if (!role) return [];
@@ -106,11 +112,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Bonuses", icon: Gift, href: "/hr/bonuses" },
             { label: "Incentives", icon: Coins, href: "/hr/incentives" },
-            { label: "Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "Full & Final", icon: FileCheck, href: "/hr/fnf" },
-            { label: "Background Check", icon: ShieldCheck, href: "/hr/background-verification" },
-            { label: "Compliance", icon: Scale, href: "/hr/compliance" },
           ],
         },
         {
@@ -308,11 +309,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Bonuses", icon: Gift, href: "/hr/bonuses" },
             { label: "Incentives", icon: Coins, href: "/hr/incentives" },
-            { label: "Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "Full & Final", icon: FileCheck, href: "/hr/fnf" },
-            { label: "Background Check", icon: ShieldCheck, href: "/hr/background-verification" },
-            { label: "Compliance", icon: Scale, href: "/hr/compliance" },
           ],
         },
         {

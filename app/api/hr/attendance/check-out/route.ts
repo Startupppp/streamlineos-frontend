@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { attendance } from "@/lib/db/schema";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
+import { notifyHrEmployeeCheckOut } from "@/lib/hr/attendance-hr-notifications";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
       : getTodayString();
 
     try {
+      let checkoutAt = new Date();
       await db.transaction(async (tx) => {
         const result = await tx
           .select()
@@ -37,6 +39,7 @@ export async function POST(req: NextRequest) {
         if (!log.checkIn) throw new Error("Missing check-in time");
 
         const now = new Date();
+        checkoutAt = now;
         let totalBreakHours = Number(log.breakHours) || 0;
         const breaks =
           (log.breaks as unknown as { start: string; end?: string }[]) || [];
@@ -86,6 +89,15 @@ export async function POST(req: NextRequest) {
             isOvertime,
           })
           .where(eq(attendance.id, log.id));
+      });
+
+      notifyHrEmployeeCheckOut({
+        orgId: session.orgId,
+        employeeId: session.user.id,
+        employeeName: session.user.name ?? null,
+        employeeEmail: session.user.email ?? null,
+        date: today,
+        at: checkoutAt,
       });
 
       return ok({ success: true });

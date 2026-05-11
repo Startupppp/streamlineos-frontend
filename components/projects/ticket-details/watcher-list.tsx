@@ -43,8 +43,9 @@ export function WatcherList({
   const removeWatcher = useRemoveWatcher(projectId);
 
   const currentUserId = session?.user?.id;
-  const isWatching = watchers.some((w) => w.userId === currentUserId);
-  const watcherUserIds = new Set(watchers.map((w) => w.userId));
+  const currentIdStr = currentUserId != null ? String(currentUserId) : "";
+  const isWatching = watchers.some((w) => String(w.userId) === currentIdStr);
+  const watcherUserIds = new Set(watchers.map((w) => String(w.userId)));
 
   if (isLoading) {
     return (
@@ -85,15 +86,16 @@ export function WatcherList({
       {watchers.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {watchers.map((w) => {
-            const canRemove =
-              w.userId === currentUserId || canRemoveOtherWatchers;
+            const watcherIdStr = String(w.userId);
+            const canRemoveSelf = !!currentIdStr && watcherIdStr === currentIdStr;
+            const canRemove = canRemoveSelf || canRemoveOtherWatchers;
             return (
               <div
-                key={w.userId}
-                className="relative group inline-flex"
+                key={watcherIdStr}
+                className="relative group inline-flex items-center gap-0.5"
                 title={
                   [w.user?.firstName, w.user?.lastName].filter(Boolean).join(" ") ||
-                  w.userId
+                  watcherIdStr
                 }
               >
                 <Avatar className="h-6 w-6">
@@ -106,20 +108,25 @@ export function WatcherList({
                 {canRemove && (
                   <button
                     type="button"
-                    aria-label="Remove watcher"
-                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-muted text-muted-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100 focus:opacity-100"
+                    aria-label={
+                      canRemoveSelf
+                        ? "Remove yourself from watchers"
+                        : "Remove watcher from ticket"
+                    }
+                    title="Remove watcher"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                     disabled={removeWatcher.isPending}
                     onClick={() =>
                       removeWatcher.mutate(
-                        { ticketId, userId: w.userId },
+                        { ticketId, userId: watcherIdStr },
                         {
-                          onError: (e) =>
-                            toast.error(getApiError(e)),
+                          onSuccess: () => toast.success("Watcher removed"),
+                          onError: (e) => toast.error(getApiError(e)),
                         }
                       )
                     }
                   >
-                    <X className="h-2.5 w-2.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 )}
               </div>
@@ -140,7 +147,7 @@ export function WatcherList({
         </SelectTrigger>
         <SelectContent>
           {members
-            .filter((m) => !watcherUserIds.has(m.id))
+            .filter((m) => !watcherUserIds.has(String(m.id)))
             .map((m) => (
               <SelectItem key={m.id} value={m.id}>
                 <div className="flex items-center gap-2">

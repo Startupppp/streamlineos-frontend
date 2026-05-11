@@ -7,13 +7,12 @@ import {
   leaveTypes,
   leaveBalances,
 } from "@/lib/db/schema";
-import { eq, and, gte, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
+import { HOLIDAY_WORK_FULL_DAY_HOURS } from "@/lib/hr/payroll-calculations";
 import { createNotification } from "@/server/actions/create-notification";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
-
-const FULL_DAY_HOURS = 8;
 
 const grantSchema = z.object({
   holidayWorkRequestId: z.number().int().positive(),
@@ -76,8 +75,11 @@ export async function POST(req: NextRequest) {
 
     if (!attendanceRow) return err("No attendance record found for that day.", 400);
     const hoursWorked = parseFloat(attendanceRow.workHours ?? "0");
-    if (hoursWorked < FULL_DAY_HOURS) {
-      return err(`Employee worked ${hoursWorked.toFixed(1)} hours. Minimum ${FULL_DAY_HOURS} hours required for comp-off.`, 400);
+    if (hoursWorked < HOLIDAY_WORK_FULL_DAY_HOURS) {
+      return err(
+        `Employee worked ${hoursWorked.toFixed(1)} hours. Minimum ${HOLIDAY_WORK_FULL_DAY_HOURS} hours required for comp-off.`,
+        400
+      );
     }
 
     const existing = await db.query.compOffGrants.findFirst({

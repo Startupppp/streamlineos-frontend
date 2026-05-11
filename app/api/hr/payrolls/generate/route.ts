@@ -8,19 +8,21 @@ import {
   salaryLoans,
   users,
 } from "@/lib/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, ne, sql } from "drizzle-orm";
 import {
   calendarDaysInMonth,
   roundInr,
   PROFESSIONAL_TAX_INR,
-  computeStatutory,
-  computeProratedSalary,
+  HOLIDAY_WORK_FULL_DAY_HOURS,
+  splitMonthlyCtc505025,
 } from "@/lib/hr/payroll-calculations";
+import {
+  pickSalaryStructureForPayrollMonth,
+  resolvePayrollMonthlyCtc,
+} from "@/lib/hr/salary-effective-dates";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
-
-const FULL_DAY_HOURS = 8;
 
 const generateSinglePayrollSchema = z.object({
   userId: z.string(),
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = await parseBody(req, generateSinglePayrollSchema);
 
-    const salary = await db.query.salaryStructures.findFirst({
+    const activeSalary = await db.query.salaryStructures.findFirst({
       where: and(
         eq(salaryStructures.userId, body.userId),
         eq(salaryStructures.orgId, session.orgId),
@@ -43,27 +45,13 @@ export async function POST(req: NextRequest) {
       ),
     });
 
-    // Fall back to employees.monthly_salary with the calculator's implicit 50/25/25
-    // split when no explicit salary structure exists. HR can later attach a structure
-    // and the next month's payroll will use it.
     let employeeMonthlySalary = 0;
-    if (!salary) {
-      const userRow = await db.query.users.findFirst({
-        where: eq(users.id, body.userId),
-        columns: { monthlySalary: true },
-      });
-      employeeMonthlySalary = parseFloat(userRow?.monthlySalary ?? "0");
-      if (employeeMonthlySalary <= 0) {
-        return err(
-          "No active salary structure and no monthly salary set for this employee. " +
-            "Add a salary structure or set monthlySalary on the employee record before generating payroll.",
-          400
-        );
-      }
-    }
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.id, body.userId),
+      columns: { monthlySalary: true },
+    });
+    employeeMonthlySalary = parseFloat(userRow?.monthlySalary ?? "0");
 
-    // Pull every salary structure that overlaps the payroll month so a mid-month
-    // revision (OPEN-02 to OPEN-04) is pro-rated correctly.
     const monthLastDay = calendarDaysInMonth(body.month);
     const monthEndStr = `${body.month}-${String(monthLastDay).padStart(2, "0")}`;
     const monthStartStr = `${body.month}-01`;
@@ -76,6 +64,17 @@ export async function POST(req: NextRequest) {
       ),
       orderBy: [salaryStructures.effectiveFrom],
     });
+
+    const picked = pickSalaryStructureForPayrollMonth(overlappingStructures, body.month);
+    const salary = picked ?? activeSalary;
+
+    if (!picked && employeeMonthlySalary <= 0) {
+      return err(
+        "No salary structure applies to this month and no monthly salary is set. " +
+          "Add a salary structure with an effective date on or before this month, or set monthly salary on the employee.",
+        400
+      );
+    }
 
     const existingPayroll = await db.query.payrolls.findFirst({
       where: and(
@@ -97,49 +96,33 @@ export async function POST(req: NextRequest) {
     const lastDay = new Date(yr, mo, 0).getDate();
     const monthEnd = `${body.month}-${String(lastDay).padStart(2, "0")}`;
 
-    const ptAmount = parseFloat(salary?.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+    const ptAmount = PROFESSIONAL_TAX_INR;
     const structureDeductions = parseFloat(salary?.deductions ?? "0");
 
     const calDays = calendarDaysInMonth(body.month);
-    let basicSalary: number;
-    let hra: number;
-    let specialAllowance: number;
-    let ctcMonthly: number;
-    if (overlappingStructures.length > 0) {
-      const prorated = computeProratedSalary(
-        body.month,
-        overlappingStructures.map((s) => ({
-          basicSalary: parseFloat(s.basicSalary),
-          hraPercentage: parseFloat(s.hraPercentage ?? "50"),
-          specialAllowance: parseFloat(s.specialAllowance ?? "0"),
-          effectiveFrom: s.effectiveFrom,
-          effectiveTo: s.effectiveTo,
-        }))
-      );
-      basicSalary = prorated.basicSalary;
-      hra = prorated.hra;
-      specialAllowance = prorated.specialAllowance;
-      ctcMonthly = prorated.ctcMonthly;
-    } else {
-      basicSalary = roundInr(employeeMonthlySalary * 0.5);
-      hra = roundInr(employeeMonthlySalary * 0.25);
-      specialAllowance = employeeMonthlySalary - basicSalary - hra;
-      ctcMonthly = employeeMonthlySalary;
-    }
+    const targetCtc = resolvePayrollMonthlyCtc({
+      picked,
+      fallbackStructure: activeSalary ?? null,
+      employeeMonthlySalary,
+    });
+    const earnings = splitMonthlyCtc505025(targetCtc);
+    const basicSalary = earnings.basicSalary;
+    const hra = earnings.hra;
+    const specialAllowance = earnings.specialAllowance;
+    const ctcMonthly = roundInr(targetCtc);
     const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
     const saturdayMult = parseFloat(salary?.saturdayOtMultiplier ?? "1.00");
     const sundayMult = parseFloat(salary?.sundayOtMultiplier ?? "2.00");
     const holidayMult = parseFloat(salary?.holidayOtMultiplier ?? "2.00");
 
-    // Auto-compute overtime from approved EXTRA_PAY holiday work requests.
-    // OT amount per day = dailyRate × (multiplier for that day's type).
     const approvedHwrs = await db.query.holidayWorkRequests.findMany({
       where: and(
         eq(holidayWorkRequests.orgId, session.orgId),
         eq(holidayWorkRequests.userId, body.userId),
         eq(holidayWorkRequests.status, "APPROVED"),
         eq(holidayWorkRequests.compensationPreference, "EXTRA_PAY"),
+        ne(holidayWorkRequests.type, "SATURDAY"),
         gte(holidayWorkRequests.requestDate, monthStart),
         lte(holidayWorkRequests.requestDate, monthEnd)
       ),
@@ -157,7 +140,7 @@ export async function POST(req: NextRequest) {
         ),
         columns: { workHours: true },
       });
-      if (parseFloat(att?.workHours ?? "0") >= FULL_DAY_HOURS) {
+      if (parseFloat(att?.workHours ?? "0") >= HOLIDAY_WORK_FULL_DAY_HOURS) {
         overtimeDays++;
         const mult =
           hwr.type === "HOLIDAY" ? holidayMult : hwr.type === "SUNDAY" ? sundayMult : saturdayMult;
@@ -166,7 +149,6 @@ export async function POST(req: NextRequest) {
     }
     const overtimeAmount = roundInr(overtimeAmountUnrounded);
 
-    // Auto-pull advance recovery from active salary loan (oldest active first)
     const activeLoan = await db.query.salaryLoans.findFirst({
       where: and(
         eq(salaryLoans.orgId, session.orgId),
@@ -187,26 +169,13 @@ export async function POST(req: NextRequest) {
     const lopAmount = roundInr(dailyRate * (body.lopDays || 0));
     const halfDayLopAmount = roundInr((dailyRate / 2) * (body.halfDays || 0));
 
-    const statutory = computeStatutory(basicSalary, grossSalary, {
-      pfApplicable: salary?.pfApplicable ?? false,
-      pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
-      pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
-      pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
-      esiApplicable: salary?.esiApplicable ?? false,
-      esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
-      esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
-      esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
-    });
-
     const totalDeductions = roundInr(
       lopAmount +
         halfDayLopAmount +
         ptAmount +
         structureDeductions +
         advanceRecoveryAmount +
-        (body.otherDeductions || 0) +
-        statutory.pfEmployee +
-        statutory.esiEmployee
+        (body.otherDeductions || 0)
     );
     const netSalary = roundInr(grossSalary - totalDeductions);
 
@@ -225,10 +194,10 @@ export async function POST(req: NextRequest) {
         halfDays: (body.halfDays || 0).toString(),
         halfDayAmount: halfDayLopAmount.toString(),
         ptAmount: ptAmount.toString(),
-        pfEmployee: statutory.pfEmployee.toString(),
-        pfEmployer: statutory.pfEmployer.toString(),
-        esiEmployee: statutory.esiEmployee.toString(),
-        esiEmployer: statutory.esiEmployer.toString(),
+        pfEmployee: "0",
+        pfEmployer: "0",
+        esiEmployee: "0",
+        esiEmployer: "0",
         advanceRecoveryAmount: advanceRecoveryAmount.toString(),
         otherDeductions: (body.otherDeductions || 0).toString(),
         structureDeductions: structureDeductions.toString(),

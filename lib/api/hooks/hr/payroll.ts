@@ -97,7 +97,7 @@ export function useApprovePayroll() {
 export type MarkPayrollPaidResult = {
   success: boolean;
   emailSent: boolean;
-  emailError?: "no_email" | "send_failed";
+  emailError?: "no_email" | "send_failed" | "missing_dob" | "pdf_not_encrypted";
 };
 
 export function useMarkPayrollPaid() {

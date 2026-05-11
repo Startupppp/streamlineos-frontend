@@ -10,21 +10,22 @@ import {
   salaryLoans,
   users,
 } from "@/lib/db/schema";
-import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
+import { eq, and, inArray, gte, lte, sql, ne } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
 import {
   calendarDaysInMonth,
   roundInr,
   PROFESSIONAL_TAX_INR,
-  computeStatutory,
-  computeProratedSalary,
-  type ProrationSegment,
+  HOLIDAY_WORK_FULL_DAY_HOURS,
+  splitMonthlyCtc505025,
 } from "@/lib/hr/payroll-calculations";
+import {
+  pickSalaryStructureForPayrollMonth,
+  resolvePayrollMonthlyCtc,
+} from "@/lib/hr/salary-effective-dates";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
-
-const FULL_DAY_HOURS = 8;
 
 const generatePayrollSchema = z.object({
   month: z.string().optional(),
@@ -92,18 +93,11 @@ export async function POST(req: NextRequest) {
     const monthlySalaryMap = new Map(allUsers.map((u) => [u.id, parseFloat(u.monthlySalary ?? "0")]));
 
     const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
-    const segmentsByUser = new Map<string, ProrationSegment[]>();
+    const structuresByUser = new Map<string, typeof overlappingSalaryStructures>();
     for (const s of overlappingSalaryStructures) {
-      const seg: ProrationSegment = {
-        basicSalary: parseFloat(s.basicSalary),
-        hraPercentage: parseFloat(s.hraPercentage ?? "50"),
-        specialAllowance: parseFloat(s.specialAllowance ?? "0"),
-        effectiveFrom: s.effectiveFrom,
-        effectiveTo: s.effectiveTo,
-      };
-      const existing = segmentsByUser.get(s.userId);
-      if (existing) existing.push(seg);
-      else segmentsByUser.set(s.userId, [seg]);
+      const arr = structuresByUser.get(s.userId) ?? [];
+      arr.push(s);
+      structuresByUser.set(s.userId, arr);
     }
     const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
 
@@ -149,7 +143,7 @@ export async function POST(req: NextRequest) {
         .select({
           userId: holidayWorkRequests.userId,
           type: holidayWorkRequests.type,
-          eligibleDays: sql<number>`count(*) FILTER (WHERE COALESCE(${attendance.workHours}::numeric, 0) >= ${FULL_DAY_HOURS})`.as("eligible_days"),
+          eligibleDays: sql<number>`count(*) FILTER (WHERE COALESCE(${attendance.workHours}::numeric, 0) >= ${HOLIDAY_WORK_FULL_DAY_HOURS})`.as("eligible_days"),
         })
         .from(holidayWorkRequests)
         .leftJoin(
@@ -166,6 +160,7 @@ export async function POST(req: NextRequest) {
             inArray(holidayWorkRequests.userId, memberUserIds),
             eq(holidayWorkRequests.status, "APPROVED"),
             eq(holidayWorkRequests.compensationPreference, "EXTRA_PAY"),
+            ne(holidayWorkRequests.type, "SATURDAY"),
             gte(holidayWorkRequests.requestDate, monthStart),
             lte(holidayWorkRequests.requestDate, monthEnd)
           )
@@ -213,33 +208,28 @@ export async function POST(req: NextRequest) {
     const newPayrolls = memberUserIds
       .filter((uId) => {
         if (existingPayrollUserIds.has(uId)) return false;
-        if (salaryMap.has(uId)) return true;
-        return (monthlySalaryMap.get(uId) ?? 0) > 0;
+        const picked = pickSalaryStructureForPayrollMonth(structuresByUser.get(uId) ?? [], body.month!);
+        if (picked) return true;
+        if ((monthlySalaryMap.get(uId) ?? 0) > 0) return true;
+        return salaryMap.has(uId);
       })
       .map((uId) => {
-        const salary = salaryMap.get(uId);
+        const picked = pickSalaryStructureForPayrollMonth(structuresByUser.get(uId) ?? [], body.month!);
+        const salary = picked ?? salaryMap.get(uId);
 
-        const ptAmount = parseFloat(salary?.professionalTax ?? String(PROFESSIONAL_TAX_INR));
+        const ptAmount = PROFESSIONAL_TAX_INR;
         const structureDeductions = parseFloat(salary?.deductions ?? "0");
 
-        const segments = segmentsByUser.get(uId) ?? [];
-        let basicSalary: number;
-        let hra: number;
-        let specialAllowance: number;
-        let ctcMonthly: number;
-        if (segments.length > 0) {
-          const prorated = computeProratedSalary(body.month!, segments);
-          basicSalary = prorated.basicSalary;
-          hra = prorated.hra;
-          specialAllowance = prorated.specialAllowance;
-          ctcMonthly = prorated.ctcMonthly;
-        } else {
-          const monthly = monthlySalaryMap.get(uId) ?? 0;
-          basicSalary = roundInr(monthly * 0.5);
-          hra = roundInr(monthly * 0.25);
-          specialAllowance = monthly - basicSalary - hra;
-          ctcMonthly = monthly;
-        }
+        const targetCtc = resolvePayrollMonthlyCtc({
+          picked,
+          fallbackStructure: salaryMap.get(uId) ?? null,
+          employeeMonthlySalary: monthlySalaryMap.get(uId) ?? 0,
+        });
+        const earnings = splitMonthlyCtc505025(targetCtc);
+        const basicSalary = earnings.basicSalary;
+        const hra = earnings.hra;
+        const specialAllowance = earnings.specialAllowance;
+        const ctcMonthly = roundInr(targetCtc);
         const dailyRate = calDays > 0 ? ctcMonthly / calDays : 0;
 
         // Bulk path infers LOP from attendance gap. Days a user neither punched in nor
@@ -265,25 +255,12 @@ export async function POST(req: NextRequest) {
 
         const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount);
 
-        const statutory = computeStatutory(basicSalary, grossSalary, {
-          pfApplicable: salary?.pfApplicable ?? false,
-          pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
-          pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
-          pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
-          esiApplicable: salary?.esiApplicable ?? false,
-          esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
-          esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
-          esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
-        });
-
         const totalDeductions = roundInr(
           lopAmount +
             halfDayAmount +
             ptAmount +
             structureDeductions +
-            advanceRecoveryAmount +
-            statutory.pfEmployee +
-            statutory.esiEmployee
+            advanceRecoveryAmount
         );
         const netSalary = roundInr(grossSalary - totalDeductions);
 
@@ -300,10 +277,10 @@ export async function POST(req: NextRequest) {
           halfDays: halfDaysCount.toString(),
           halfDayAmount: halfDayAmount.toString(),
           ptAmount: ptAmount.toString(),
-          pfEmployee: statutory.pfEmployee.toString(),
-          pfEmployer: statutory.pfEmployer.toString(),
-          esiEmployee: statutory.esiEmployee.toString(),
-          esiEmployer: statutory.esiEmployer.toString(),
+          pfEmployee: "0",
+          pfEmployer: "0",
+          esiEmployee: "0",
+          esiEmployer: "0",
           advanceRecoveryAmount: advanceRecoveryAmount.toString(),
           otherDeductions: "0",
           structureDeductions: structureDeductions.toString(),

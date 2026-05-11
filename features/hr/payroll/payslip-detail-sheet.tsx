@@ -33,6 +33,8 @@ export interface PayslipPreview {
   halfDays: number;
   workingDays: number;
   effectiveDays: number;
+  /** Recurring amount from salary structure `deductions` (included in total deductions). */
+  salaryStructureDeductions?: number;
 }
 
 interface PayslipDetailSheetProps {
@@ -148,6 +150,14 @@ export function PayslipDetailSheet({
                   -₹{payslipPreview?.professionalTax.toLocaleString("en-IN")}
                 </span>
               </div>
+              {(payslipPreview?.salaryStructureDeductions || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Salary deductions</span>
+                  <span className="text-red-600 tabular-nums">
+                    -₹{Math.round(payslipPreview?.salaryStructureDeductions || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
               {(payslipPreview?.lopDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">

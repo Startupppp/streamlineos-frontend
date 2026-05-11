@@ -1,40 +1,36 @@
 /**
- * Standard Indian payslip PDF password convention.
- *
- *   first 4 letters of PAN (uppercase) + DDMM of date of birth
- *   e.g. PAN ABCDE1234F + DOB 1995-10-05  →  ABCD0510
- *
- * If PAN is missing → fall back to first 4 of employee name + DDMM.
- * If DOB is missing → fall back to PAN[0:4] + first-4 of joiningDate DDMM.
- * If both missing → null (caller should not encrypt).
- *
- * This is an industry convention used by every major Indian payroll system
- * (Razorpay, Zoho People, Keka, etc.). Employees are expected to know it.
+ * OPEN-01: Payslip PDF password = employee date of birth only (HR onboarding field `users.dateOfBirth`).
+ * Format: DDMMYYYY (e.g. 5 Oct 1995 → 05101995).
  */
-export function derivePayslipPassword(input: {
-  panNumber?: string | null;
-  dateOfBirth?: string | Date | null;
-  employeeName?: string | null;
-  joiningDate?: string | Date | null;
-}): string | null {
-  const dobPart = formatDDMM(input.dateOfBirth) ?? formatDDMM(input.joiningDate);
-  const namePart =
-    (input.panNumber ?? "").replace(/[^A-Z]/gi, "").slice(0, 4).toUpperCase() ||
-    (input.employeeName ?? "").replace(/[^A-Z]/gi, "").slice(0, 4).toUpperCase();
-
-  if (!dobPart || !namePart || namePart.length < 4) return null;
-  return `${namePart}${dobPart}`;
+export function derivePayslipPassword(input: { dateOfBirth?: string | Date | null }): string | null {
+  return formatDDMMYYYY(input.dateOfBirth);
 }
 
-function formatDDMM(value: string | Date | null | undefined): string | null {
+function formatDDMMYYYY(value: string | Date | null | undefined): string | null {
   if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  return `${dd}${mm}`;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    const dd = String(value.getUTCDate()).padStart(2, "0");
+    const mm = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const yyyy = String(value.getUTCFullYear());
+    return `${dd}${mm}${yyyy}`;
+  }
+  const head = value.slice(0, 10);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(head);
+  if (!m) {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const yyyy = String(d.getUTCFullYear());
+    return `${dd}${mm}${yyyy}`;
+  }
+  const yyyy = m[1];
+  const mm = m[2];
+  const dd = m[3];
+  return `${dd}${mm}${yyyy}`;
 }
 
 export const PAYSLIP_PASSWORD_HINT =
-  "First 4 characters of your PAN (uppercase) followed by DDMM of your date of birth. " +
-  "Example: PAN ABCDE1234F + DOB 5 Oct 1995 → password ABCD0510";
+  "Your payslip PDF password is your date of birth in DDMMYYYY format (as recorded in HR onboarding). " +
+  "Example: 5 October 1995 → 05101995.";

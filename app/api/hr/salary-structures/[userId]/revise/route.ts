@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { salaryStructures, salaryRevisionHistory } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
-import { formatDateOnly } from "@/lib/date-utils";
+import { snapSalaryEffectiveFrom, dayBeforeIsoDate } from "@/lib/hr/salary-effective-dates";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -29,6 +29,7 @@ export async function POST(
 
     const { userId } = await params;
     const body = await parseBody(req, reviseSchema);
+    const effectiveFromSnapped = snapSalaryEffectiveFrom(body.effectiveFrom);
 
     const existing = await db.query.salaryStructures.findFirst({
       where: and(
@@ -40,7 +41,13 @@ export async function POST(
 
     const [newStructure] = await db.transaction(async (tx) => {
       if (existing) {
-        await tx.update(salaryStructures).set({ isActive: false }).where(eq(salaryStructures.id, existing.id));
+        await tx
+          .update(salaryStructures)
+          .set({
+            isActive: false,
+            effectiveTo: dayBeforeIsoDate(effectiveFromSnapped),
+          })
+          .where(eq(salaryStructures.id, existing.id));
       }
 
       const [s] = await tx
@@ -54,7 +61,7 @@ export async function POST(
           allowances: "0",
           deductions: body.deductions.toString(),
           professionalTax: body.professionalTax.toString(),
-          effectiveFrom: formatDateOnly(new Date(body.effectiveFrom)),
+          effectiveFrom: effectiveFromSnapped,
           isActive: true,
           createdBy: session.user.id,
         })
@@ -72,7 +79,7 @@ export async function POST(
         newHraPct: body.hraPercentage.toString(),
         newSpecialAllowance: body.specialAllowance.toString(),
         newPt: body.professionalTax.toString(),
-        effectiveFrom: formatDateOnly(new Date(body.effectiveFrom)),
+        effectiveFrom: effectiveFromSnapped,
         reason: body.reason ?? null,
         changedBy: session.user.id,
       });
@@ -86,7 +93,7 @@ export async function POST(
       orgId: session.orgId,
       targetId: userId,
       targetType: "salary_structure",
-      metadata: { newBasic: body.basicSalary, effectiveFrom: body.effectiveFrom, reason: body.reason },
+      metadata: { newBasic: body.basicSalary, effectiveFrom: effectiveFromSnapped, reason: body.reason },
     }).catch(() => {});
 
     return ok(newStructure);

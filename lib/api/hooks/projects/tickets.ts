@@ -258,12 +258,23 @@ export function useAddComment(
         queryKeys.projects.ticket(variables.ticketId),
         (old) => {
           if (!old) return old;
-          const comments = (old.comments ?? []).map((c) =>
-            c.id === context?.tempId ? merged : c
-          );
-          return { ...old, comments };
+          const list = [...(old.comments ?? [])];
+          const tempId = context?.tempId;
+          const tempIdx = tempId != null ? list.findIndex((c) => c.id === tempId) : -1;
+          if (tempIdx >= 0) {
+            list[tempIdx] = merged;
+          } else if (!list.some((c) => c.id === merged.id)) {
+            list.push(merged);
+          }
+          return { ...old, comments: list };
         }
       );
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+      });
       userOnSuccess?.(data, variables, context);
     },
   });
@@ -290,8 +301,22 @@ export function useUpdateTicketComment(
         `/projects/${projectId}/tickets/${ticketId}/comments/${commentId}`,
         { content }
       ),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<Ticket | null>(
+        queryKeys.projects.ticket(variables.ticketId),
+        (old) => {
+          if (!old?.comments) return old;
+          return {
+            ...old,
+            comments: old.comments.map((c) =>
+              c.id === variables.commentId
+                ? { ...c, content: data.content, updatedAt: data.updatedAt }
+                : c
+            ),
+          };
+        }
+      );
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
     },
@@ -320,7 +345,17 @@ export function useDeleteTicketComment(
         `/projects/${projectId}/tickets/${ticketId}/comments/${commentId}`
       ),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+      queryClient.setQueryData<Ticket | null>(
+        queryKeys.projects.ticket(variables.ticketId),
+        (old) => {
+          if (!old?.comments) return old;
+          return {
+            ...old,
+            comments: old.comments.filter((c) => c.id !== variables.commentId),
+          };
+        }
+      );
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
     },

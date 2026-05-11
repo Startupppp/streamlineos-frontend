@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { ticketComments, tickets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth/helpers";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 import { z } from "zod";
 
 const updateCommentSchema = z.object({
@@ -20,7 +20,7 @@ function canModifyComment(
   commentUserId: string
 ): boolean {
   if (commentUserId === sessionUserId) return true;
-  return isAdminOrOwner(sessionRole);
+  return isExpenseAdmin(sessionRole);
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {

@@ -40,7 +40,14 @@ import type { Employee } from "@/types/hr";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
 import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
-import { buildPayslipPreviewFromEmployee } from "@/lib/hr/payroll-calculations";
+import {
+  buildPayslipPreviewFromEmployee,
+  PROFESSIONAL_TAX_INR,
+} from "@/lib/hr/payroll-calculations";
+import {
+  pickSalaryStructureForPayrollMonth,
+  resolvePayrollMonthlyCtc,
+} from "@/lib/hr/salary-effective-dates";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);
@@ -86,11 +93,21 @@ export default function PayrollPage() {
     [employeesRaw]
   );
 
-  const activeSalary = useMemo(() => {
-    if (!salaryStructures) return null;
-    const list = Array.isArray(salaryStructures) ? salaryStructures : [];
-    return list.find((s) => s.isActive) ?? null;
+  const salaryStructureList = useMemo(() => {
+    if (!salaryStructures) return [];
+    return Array.isArray(salaryStructures) ? salaryStructures : [];
   }, [salaryStructures]);
+
+  const activeSalary = useMemo(() => {
+    return salaryStructureList.find((s) => s.isActive) ?? null;
+  }, [salaryStructureList]);
+
+  const pickedStructureForMonth = useMemo(
+    () => pickSalaryStructureForPayrollMonth(salaryStructureList, selectedMonth),
+    [salaryStructureList, selectedMonth]
+  );
+
+  const salaryRowForPreview = pickedStructureForMonth ?? activeSalary;
 
   const generatePayrollMutation = useGeneratePayroll();
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
@@ -107,40 +124,17 @@ export default function PayrollPage() {
 
     const otAmt = overtimePreview?.overtimeAmount ?? 0;
     const employeeMonthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
+    const structureDeductions = parseFloat(salaryRowForPreview?.deductions ?? "0");
 
-    if (activeSalary) {
-      // Salary structure exists — preview matches the generate route formula exactly.
-      // CTC = basicSalary + hra + specialAllowance, used as the LOP per-day base.
-      const basicSalary = parseFloat(activeSalary.basicSalary);
-      const hraPercentage = parseFloat(activeSalary.hraPercentage ?? "50");
-      const specialAllowance = parseFloat(activeSalary.specialAllowance ?? "0");
-      const structureDeductions = parseFloat(activeSalary.deductions ?? "0");
-      const hraAmount = (basicSalary * hraPercentage) / 100;
-      const ctcMonthly = basicSalary + hraAmount + specialAllowance;
+    const targetCtc = resolvePayrollMonthlyCtc({
+      picked: pickedStructureForMonth,
+      fallbackStructure: activeSalary,
+      employeeMonthlySalary,
+    });
+    if (targetCtc <= 0) return null;
 
-      return buildPayslipPreviewFromEmployee({
-        monthlySalary: ctcMonthly,
-        month: selectedMonth,
-        lopDays: parseFloat(lopDays) || 0,
-        halfDays: parseFloat(halfDays) || 0,
-        otherDeductions: parseFloat(otherDeductions) || 0,
-        bonus: parseFloat(bonus) || 0,
-        overtimeAmount: otAmt,
-        overtimeType: otAmt > 0 ? "days" : "",
-        overtimeDays: overtimePreview?.overtimeDays ?? 0,
-        overtimeHours: 0,
-        basicSalary,
-        hraPercentage,
-        allowances: specialAllowance,
-        salaryStructureDeductions: structureDeductions,
-      });
-    }
-
-    // No salary structure — fall back to the employee's monthly_salary field with the
-    // calculator's implicit 50/25/25 split. The generate route will refuse to run in
-    // this state, but the preview shows reasonable numbers so HR knows what's needed.
     return buildPayslipPreviewFromEmployee({
-      monthlySalary: employeeMonthlySalary,
+      monthlySalary: targetCtc,
       month: selectedMonth,
       lopDays: parseFloat(lopDays) || 0,
       halfDays: parseFloat(halfDays) || 0,
@@ -150,7 +144,8 @@ export default function PayrollPage() {
       overtimeType: otAmt > 0 ? "days" : "",
       overtimeDays: overtimePreview?.overtimeDays ?? 0,
       overtimeHours: 0,
-      salaryStructureDeductions: 0,
+      salaryStructureDeductions: structureDeductions,
+      professionalTax: PROFESSIONAL_TAX_INR,
     });
   }, [
     selectedEmployeeData,
@@ -160,6 +155,8 @@ export default function PayrollPage() {
     otherDeductions,
     bonus,
     overtimePreview,
+    pickedStructureForMonth,
+    salaryRowForPreview,
     activeSalary,
   ]);
 
@@ -191,8 +188,20 @@ export default function PayrollPage() {
       toast.error("Please select an employee");
       return;
     }
+    const monthly = parseFloat(selectedEmployeeData?.monthlySalary || "0");
+    const targetCtc = resolvePayrollMonthlyCtc({
+      picked: pickedStructureForMonth,
+      fallbackStructure: activeSalary,
+      employeeMonthlySalary: monthly,
+    });
+    if (targetCtc <= 0) {
+      toast.error(
+        "Set the employee’s monthly salary or add a salary structure before preview."
+      );
+      return;
+    }
     setShowPreview(true);
-  }, [selectedEmployee]);
+  }, [selectedEmployee, selectedEmployeeData, pickedStructureForMonth, activeSalary]);
 
   const handleGenerateForEmployee = useCallback(() => {
     if (!selectedEmployee) return;
@@ -242,7 +251,11 @@ export default function PayrollPage() {
                 ? "Payslip email was not sent: employee has no email on file."
                 : data.emailError === "send_failed"
                   ? "Payslip email could not be sent. Check logs or try resend from your email provider."
-                  : "Payslip email was not sent.";
+                  : data.emailError === "missing_dob"
+                    ? "Payslip email was not sent: add employee date of birth (onboarding) before emailing payslips."
+                    : data.emailError === "pdf_not_encrypted"
+                      ? "Payslip email was not sent: PDF encryption (qpdf) is unavailable on this server."
+                      : "Payslip email was not sent.";
             toast.warning(msg);
           }
         },
