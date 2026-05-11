@@ -26,6 +26,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeItemCard } from "@/features/projects/intake/intake-item-card";
+import {
+  projectMemberLabel,
+  projectMemberUserId,
+} from "@/lib/projects/project-member-select";
 
 const createIntakeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -35,7 +39,7 @@ type CreateIntakeForm = z.infer<typeof createIntakeSchema>;
 
 const acceptSchema = z.object({
   state: z.string().min(1, "State is required"),
-  assigneeId: z.number().optional(),
+  assigneeId: z.string().optional(),
   cycleId: z.number().optional(),
   moduleId: z.number().optional(),
 });
@@ -293,16 +297,25 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 name="assigneeId"
                 render={({ field }) => (
                   <Select
-                    value={field.value?.toString() ?? ""}
-                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v || undefined)}
                   >
                     <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
                     <SelectContent>
-                      {members?.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>
-                          {m.user?.name ?? m.user?.email ?? m.userId}
+                      {members && members.length === 0 ? (
+                        <SelectItem value="__no_members__" disabled className="cursor-default opacity-100">
+                          No project members
                         </SelectItem>
-                      ))}
+                      ) : (
+                        members?.map((m) => {
+                          const uid = projectMemberUserId(m);
+                          return (
+                            <SelectItem key={uid} value={uid}>
+                              {projectMemberLabel(m)}
+                            </SelectItem>
+                          );
+                        })
+                      )}
                     </SelectContent>
                   </Select>
                 )}

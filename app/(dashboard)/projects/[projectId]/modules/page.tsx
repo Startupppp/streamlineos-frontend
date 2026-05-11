@@ -1,7 +1,15 @@
 "use client";
 
 import { use, useState, useCallback } from "react";
-import { useModules, useCreateModule, useProjectMembers } from "@/lib/api/hooks/projects";
+import { useSession } from "next-auth/react";
+import {
+  useModules,
+  useCreateModule,
+  useProjectMembers,
+  useProject,
+  useUpdateModule,
+  useDeleteModule,
+} from "@/lib/api/hooks/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,14 +34,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Layers, Calendar, User, ArrowRight } from "lucide-react";
+import { Plus, Layers, Calendar, User, Eye, Pencil, Trash2 } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import Link from "next/link";
+import type { Module } from "@/types/projects";
+import type { ProjectMemberSelectRow } from "@/lib/projects/project-member-select";
+import { ProjectMemberCombobox } from "@/features/projects/project-member-combobox";
+import {
+  ModulePreviewSheet,
+  ModuleEditSheet,
+  DeleteModuleAlert,
+  canManageProjectModulesOnClient,
+} from "@/features/projects/module-management-dialogs";
+import { getApiError } from "@/lib/api-client";
 
-const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
+const MODULE_STATUSES = [
+  "backlog",
+  "planned",
+  "in-progress",
+  "paused",
+  "completed",
+  "cancelled",
+] as const;
 
 const createModuleSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -95,11 +119,25 @@ export default function ModulesPage({
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
+  const [previewModule, setPreviewModule] = useState<Module | null>(null);
+  const [editModule, setEditModule] = useState<Module | null>(null);
+  const [deleteModule, setDeleteModule] = useState<Module | null>(null);
 
+  const { data: session } = useSession();
   const { data: modules, isLoading } = useModules(projectId);
   const { data: members } = useProjectMembers(projectId);
+  const { data: project } = useProject(projectId);
 
   const createMutation = useCreateModule();
+  const updateMutation = useUpdateModule();
+  const deleteMutation = useDeleteModule();
+
+  const canManage = canManageProjectModulesOnClient({
+    userId: session?.user?.id,
+    orgRole: session?.user?.role,
+    managerId: project?.managerId,
+    members,
+  });
 
   const form = useForm<CreateModuleForm>({
     resolver: zodResolver(createModuleSchema) as unknown as Resolver<CreateModuleForm>,
@@ -108,11 +146,11 @@ export default function ModulesPage({
 
   const handleSetStartDate = useCallback(
     (v: string) => form.setValue("startDate", v),
-    [form]
+    [form],
   );
   const handleSetEndDate = useCallback(
     (v: string) => form.setValue("endDate", v),
-    [form]
+    [form],
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
@@ -125,8 +163,52 @@ export default function ModulesPage({
           form.reset();
           toast.success("Module created");
         },
-        onError: (err) => toast.error((err as Error).message),
-      }
+        onError: (err) => toast.error(getApiError(err)),
+      },
+    );
+  };
+
+  const handleEditSubmit = (data: {
+    id: number;
+    name: string;
+    description?: string;
+    status: (typeof MODULE_STATUSES)[number];
+    startDate?: string;
+    endDate?: string;
+    leadId?: string;
+  }) => {
+    updateMutation.mutate(
+      {
+        projectId,
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        status: data.status,
+        startDate: data.startDate || null,
+        endDate: data.endDate || null,
+        leadId: data.leadId ? data.leadId : null,
+      },
+      {
+        onSuccess: () => {
+          setEditModule(null);
+          toast.success("Module updated");
+        },
+        onError: (err) => toast.error(getApiError(err)),
+      },
+    );
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deleteModule) return;
+    deleteMutation.mutate(
+      { projectId, moduleId: deleteModule.id },
+      {
+        onSuccess: () => {
+          setDeleteModule(null);
+          toast.success("Module deleted");
+        },
+        onError: (err) => toast.error(getApiError(err)),
+      },
     );
   };
 
@@ -146,109 +228,141 @@ export default function ModulesPage({
     <PageWrapper
       title="Modules"
       actions={
-        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-          <SheetTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" /> New Module
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Create Module</SheetTitle>
-            </SheetHeader>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 p-4"
-            >
-              <div>
-                <Label htmlFor="mod-name">Name</Label>
-                <Input id="mod-name" {...form.register("name")} />
-                {form.formState.errors.name && (
-                  <p className="text-xs text-destructive mt-1">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="mod-desc">Description</Label>
-                <Textarea id="mod-desc" {...form.register("description")} />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Controller
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MODULE_STATUSES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="mod-start">Start Date</Label>
-                  <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
-                </div>
-                <div>
-                  <Label htmlFor="mod-end">End Date</Label>
-                  <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
-                </div>
-              </div>
-              <div>
-                <Label>Lead</Label>
-                <Controller
-                  control={form.control}
-                  name="leadId"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value?.toString() ?? ""}
-                      onValueChange={(v) =>
-                        field.onChange(v || undefined)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select lead..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {members?.map((m) => (
-                          <SelectItem
-                            key={m.userId}
-                            value={m.userId}
-                          >
-                            {m.user?.name ?? m.user?.email ?? m.userId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="w-full"
-              >
-                {createMutation.isPending ? "Creating..." : "Create Module"}
+        canManage ? (
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" /> New Module
               </Button>
-            </form>
-          </SheetContent>
-        </Sheet>
+            </SheetTrigger>
+            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Create Module</SheetTitle>
+              </SheetHeader>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex flex-col gap-5"
+              >
+                <div className="space-y-1.5">
+                  <Label htmlFor="mod-name">Name</Label>
+                  <Input id="mod-name" {...form.register("name")} />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="mod-desc">Description</Label>
+                  <Textarea
+                    id="mod-desc"
+                    rows={3}
+                    className="min-h-[4.5rem] resize-y"
+                    {...form.register("description")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="mod-status">Status</Label>
+                  <Controller
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="mod-status" className="h-9 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODULE_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-3 sm:gap-y-0">
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="mod-start">Start Date</Label>
+                    <DatePicker
+                      id="mod-start"
+                      value={form.watch("startDate") || ""}
+                      onChange={handleSetStartDate}
+                      placeholder="Start date"
+                    />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <Label htmlFor="mod-end">End Date</Label>
+                    <DatePicker
+                      id="mod-end"
+                      value={form.watch("endDate") || ""}
+                      onChange={handleSetEndDate}
+                      placeholder="End date"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="mod-lead">Lead</Label>
+                  <Controller
+                    control={form.control}
+                    name="leadId"
+                    render={({ field }) => (
+                      <ProjectMemberCombobox
+                        id="mod-lead"
+                        members={(members ?? []) as ProjectMemberSelectRow[]}
+                        value={field.value ?? ""}
+                        onValueChange={field.onChange}
+                        placeholder="Select lead..."
+                        disabled={createMutation.isPending}
+                        clearLabel="No lead"
+                      />
+                    )}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="mt-1 h-9 w-full"
+                >
+                  {createMutation.isPending ? "Creating..." : "Create Module"}
+                </Button>
+              </form>
+            </SheetContent>
+          </Sheet>
+        ) : null
       }
     >
       <div>
+        <ModulePreviewSheet
+          module={previewModule}
+          projectId={projectId}
+          members={members}
+          open={!!previewModule}
+          onOpenChange={(open) => {
+            if (!open) setPreviewModule(null);
+          }}
+        />
+        <ModuleEditSheet
+          module={editModule}
+          members={members}
+          open={!!editModule}
+          onOpenChange={(open) => {
+            if (!open) setEditModule(null);
+          }}
+          isPending={updateMutation.isPending}
+          onSubmit={handleEditSubmit}
+        />
+        <DeleteModuleAlert
+          module={deleteModule}
+          open={!!deleteModule}
+          onOpenChange={(open) => {
+            if (!open) setDeleteModule(null);
+          }}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleDeleteConfirm}
+        />
+
         {!modules?.length ? (
           <div className="text-center py-16">
             <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
@@ -256,66 +370,110 @@ export default function ModulesPage({
             <p className="text-sm text-muted-foreground mb-4">
               Create your first module to organize work into feature areas.
             </p>
-            <Button onClick={handleOpenCreate}>
-              <Plus className="h-4 w-4 mr-1" /> Create First Module
-            </Button>
+            {canManage ? (
+              <Button onClick={handleOpenCreate}>
+                <Plus className="h-4 w-4 mr-1" /> Create First Module
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Ask a project admin to create a module.
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {modules.map((mod) => (
-              <Link
-                key={mod.id}
-                href={`/projects/${projectId}/modules/${mod.id}`}
-              >
-                <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base truncate">
-                        {mod.name}
-                      </CardTitle>
-                      <Badge
-                        className={
-                          statusColors[mod.status ?? "backlog"] ??
-                          statusColors.backlog
-                        }
+              <Card key={mod.id} className="h-full flex flex-col">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base leading-snug line-clamp-2">
+                      {mod.name}
+                    </CardTitle>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        aria-label="Preview module"
+                        onClick={() => setPreviewModule(mod)}
                       >
-                        {(mod.status ?? "backlog")
-                          .replace(/_/g, " ")
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </Badge>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      {canManage && (
+                        <>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Edit module"
+                            onClick={() => setEditModule(mod)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            aria-label="Delete module"
+                            onClick={() => setDeleteModule(mod)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4">
-                      <ProgressRing value={mod.progress ?? 0} />
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-xs text-muted-foreground">
-                          {mod.progress ?? 0}% complete
+                  </div>
+                  <Badge
+                    className={
+                      statusColors[mod.status ?? "backlog"] ?? statusColors.backlog
+                    }
+                  >
+                    {(mod.status ?? "backlog")
+                      .replace(/-/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </Badge>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="flex items-center gap-4 flex-1">
+                    <ProgressRing value={mod.progress ?? 0} />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        {mod.progress ?? 0}% complete
+                      </p>
+                      {(mod.startDate || mod.endDate) && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3 shrink-0" />
+                          {mod.startDate
+                            ? new Date(
+                                typeof mod.startDate === "string"
+                                  ? mod.startDate.slice(0, 10)
+                                  : mod.startDate,
+                              ).toLocaleDateString()
+                            : "TBD"}{" "}
+                          —{" "}
+                          {mod.endDate
+                            ? new Date(
+                                typeof mod.endDate === "string"
+                                  ? mod.endDate.slice(0, 10)
+                                  : mod.endDate,
+                              ).toLocaleDateString()
+                            : "TBD"}
                         </p>
-                        {(mod.startDate || mod.endDate) && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {mod.startDate
-                              ? new Date(mod.startDate).toLocaleDateString()
-                              : "TBD"}{" "}
-                            —{" "}
-                            {mod.endDate
-                              ? new Date(mod.endDate).toLocaleDateString()
-                              : "TBD"}
-                          </p>
-                        )}
-                        {mod.leadId && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                            <User className="h-3 w-3" />
-                            Lead assigned
-                          </p>
-                        )}
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      )}
+                      {mod.leadId && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <User className="h-3 w-3 shrink-0" />
+                          Lead assigned
+                        </p>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
