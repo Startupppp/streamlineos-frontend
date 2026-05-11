@@ -1,51 +1,123 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { assetReturns } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import {
+  canSeeAllAssetReturns,
+  getAssetReturnById,
+} from "@/server/queries/hr/asset-returns";
 
 const patchSchema = z.object({
-  status: z.enum(["RETURNED", "DAMAGED", "LOST"]).default("RETURNED"),
-  condition: z.string().optional(),
-  notes: z.string().optional(),
+  assetName: z.string().min(1).optional(),
+  userId: z.string().min(1).optional(),
+  notes: z.string().nullable().optional(),
+  condition: z.string().nullable().optional(),
+  status: z.enum(["PENDING", "RETURNED", "DAMAGED", "LOST", "MISSING"]).optional(),
+  returnedAt: z.string().nullable().optional(),
 });
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ returnId: string }> }
-) {
+function isTerminalStatus(s: string | null | undefined): boolean {
+  return (
+    s === "RETURNED" || s === "DAMAGED" || s === "LOST" || s === "MISSING"
+  );
+}
+
+type RouteParams = { params: Promise<{ returnId: string }> };
+
+export async function GET(_req: NextRequest, { params }: RouteParams) {
+  return withAuth(async (session) => {
+    const { returnId: id } = await params;
+    const returnId = Number(id);
+    if (!Number.isFinite(returnId)) return err("Invalid asset return ID.", 400);
+
+    const row = await getAssetReturnById({ orgId: session.orgId, id: returnId });
+    if (!row) return err("Asset return record not found.", 404);
+
+    const allowed =
+      canSeeAllAssetReturns(session.user.role) || row.userId === session.user.id;
+    if (!allowed) {
+      return err("Forbidden", 403);
+    }
+
+    return ok(row);
+  });
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   return withAdmin(async (session) => {
     const { returnId: id } = await params;
     const returnId = Number(id);
-    if (isNaN(returnId)) return err("Invalid asset return ID.", 400);
+    if (!Number.isFinite(returnId)) return err("Invalid asset return ID.", 400);
 
-    const body = patchSchema.parse(await req.json());
+    const body = await parseBody(req, patchSchema);
+    if (Object.keys(body).length === 0) {
+      return err("No fields to update.", 400);
+    }
 
     const [existing] = await db
       .select()
       .from(assetReturns)
       .where(
-        and(
-          eq(assetReturns.id, returnId),
-          eq(assetReturns.orgId, session.orgId)
-        )
+        and(eq(assetReturns.id, returnId), eq(assetReturns.orgId, session.orgId)),
       );
 
     if (!existing) return err("Asset return record not found.", 404);
-    if (existing.status === "RETURNED") return err("Asset already marked as returned.", 400);
+
+    const updates: Record<string, unknown> = {};
+
+    if (body.assetName !== undefined) updates.assetName = body.assetName;
+    if (body.userId !== undefined) updates.userId = body.userId;
+    if (body.notes !== undefined) updates.notes = body.notes === "" ? null : body.notes;
+    if (body.condition !== undefined) {
+      updates.condition = body.condition === "" ? null : body.condition;
+    }
+    if (body.status !== undefined) updates.status = body.status;
+
+    if (body.returnedAt !== undefined) {
+      updates.returnedAt = body.returnedAt ? new Date(body.returnedAt) : null;
+    } else if (body.status !== undefined) {
+      if (body.status === "PENDING") {
+        updates.returnedAt = null;
+      } else if (isTerminalStatus(body.status) && !isTerminalStatus(existing.status)) {
+        updates.returnedAt = new Date();
+      }
+    }
 
     const [updated] = await db
       .update(assetReturns)
-      .set({
-        status: body.status,
-        condition: body.condition ?? existing.condition,
-        notes: body.notes ?? existing.notes,
-        returnedAt: new Date(),
-      })
-      .where(eq(assetReturns.id, returnId))
+      .set(updates)
+      .where(
+        and(eq(assetReturns.id, returnId), eq(assetReturns.orgId, session.orgId)),
+      )
       .returning();
 
     return ok(updated);
+  });
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  return withAdmin(async (session) => {
+    const { returnId: id } = await params;
+    const returnId = Number(id);
+    if (!Number.isFinite(returnId)) return err("Invalid asset return ID.", 400);
+
+    const [existing] = await db
+      .select({ id: assetReturns.id })
+      .from(assetReturns)
+      .where(
+        and(eq(assetReturns.id, returnId), eq(assetReturns.orgId, session.orgId)),
+      );
+
+    if (!existing) return err("Asset return record not found.", 404);
+
+    await db
+      .delete(assetReturns)
+      .where(
+        and(eq(assetReturns.id, returnId), eq(assetReturns.orgId, session.orgId)),
+      );
+
+    return ok({ success: true });
   });
 }

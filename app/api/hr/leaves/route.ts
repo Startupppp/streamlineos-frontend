@@ -1,7 +1,7 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveBalances, leaveTypes, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, lte, gte, inArray, desc } from "drizzle-orm";
+import { eq, and, lte, gte, inArray, desc, notInArray } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { LEAVE_POLICY, ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 import { ROLES } from "@/lib/constants/roles";
@@ -164,11 +164,12 @@ export async function POST(req: NextRequest) {
           eq(leaveRequests.userId, session.user.id),
           eq(leaveRequests.orgId, session.orgId),
           lte(leaveRequests.startDate, formatDateOnly(new Date(body.endDate))),
-          gte(leaveRequests.endDate, formatDateOnly(new Date(body.startDate)))
+          gte(leaveRequests.endDate, formatDateOnly(new Date(body.startDate))),
+          notInArray(leaveRequests.status, ["REJECTED", "CANCELLED"]),
         ),
       });
 
-      if (overlapping && overlapping.status !== "REJECTED") {
+      if (overlapping) {
         return err(
           "You already have a leave request for overlapping dates.",
           400
