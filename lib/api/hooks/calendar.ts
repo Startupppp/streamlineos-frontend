@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface CalendarOrgMember {
   id: string;
@@ -38,6 +39,15 @@ export function useCreateMeetLink() {
   });
 }
 
+export interface CalendarEventNotifyResult {
+  attendeeCount: number;
+  emailsSent: number;
+  emailsSkippedNoAddress: number;
+  emailFailures: number;
+  mailerConfigured: boolean;
+  inAppNotifications: number;
+}
+
 export interface CalendarEvent {
   id: number;
   orgId: string;
@@ -59,6 +69,19 @@ export interface CalendarEvent {
   updatedAt?: string | null;
   creator?: { name: string | null } | null;
 }
+
+export interface CalendarOooConflict {
+  userId: string;
+  userName: string | null;
+  leaveStart: string;
+  leaveEnd: string;
+}
+
+export type CreateCalendarEventResponse = {
+  event: CalendarEvent;
+  oooConflicts: CalendarOooConflict[];
+  notify: CalendarEventNotifyResult;
+};
 
 
 export interface CalendarListItem {
@@ -123,9 +146,11 @@ export function useCreateCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateCalendarEventPayload) =>
-      apiClient.post<CalendarEvent>("/calendar/events", payload),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
+      apiClient.post<CreateCalendarEventResponse>("/calendar/events", payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false });
+      qc.invalidateQueries({ queryKey: queryKeys.notifications.all, exact: false });
+    },
   });
 }
 
@@ -133,9 +158,11 @@ export function useUpdateCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
-      apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
+      apiClient.put<CalendarEvent & { notify?: CalendarEventNotifyResult }>(`/calendar/events/${id}`, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false });
+      qc.invalidateQueries({ queryKey: queryKeys.notifications.all, exact: false });
+    },
   });
 }
 

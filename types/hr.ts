@@ -147,6 +147,7 @@ export interface Payroll {
   month: string;
   basicSalary: string;
   hra: string | null;
+  /** Stored bonus / variable pay for individually generated payslips (bulk generate uses 0). */
   allowances: string | null;
   deductions: string | null;
   grossSalary: string;
@@ -160,6 +161,20 @@ export interface Payroll {
   overtimeAmount: string | null;
   payslipUrl: string | null;
   createdAt: Date | string | null;
+  /** Populated on admin list/export queries for payslip preview. */
+  specialAllowance?: string | null;
+  lopDays?: string | null;
+  lopAmount?: string | null;
+  halfDays?: string | null;
+  halfDayAmount?: string | null;
+  ptAmount?: string | null;
+  otherDeductions?: string | null;
+  structureDeductions?: string | null;
+  advanceRecoveryAmount?: string | null;
+}
+
+export interface DeletePayrollInput {
+  payrollId: number;
 }
 
 export interface SalaryStructure {

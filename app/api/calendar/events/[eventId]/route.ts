@@ -63,7 +63,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
     if (!event) return err("Event not found or not authorized", 404);
 
     const attendeeIds = event.attendeeIds ?? [];
-    const notify =
+    const shouldNotifyAttendees =
       attendeeIds.length > 0 &&
       (input.title !== undefined ||
         input.startDate !== undefined ||
@@ -72,20 +72,22 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
         input.attendeeIds !== undefined ||
         input.description !== undefined);
 
-    if (notify) {
-      void sendCalendarEventAttendeeEmails({
-        creatorUserId: session.user.id,
-        attendeeIds,
-        title: event.title,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        allDay: Boolean(event.allDay),
-        location: event.location,
-        variant: "updated",
-      }).catch(() => {});
-    }
+    const notifyResult = shouldNotifyAttendees
+      ? await sendCalendarEventAttendeeEmails({
+          orgId: session.orgId,
+          creatorUserId: session.user.id,
+          attendeeIds,
+          title: event.title,
+          description: event.description,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          allDay: Boolean(event.allDay),
+          location: event.location,
+          variant: "updated",
+        })
+      : undefined;
 
-    return ok(event);
+    return notifyResult !== undefined ? ok({ ...event, notify: notifyResult }) : ok(event);
   });
 }
 

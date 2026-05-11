@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 const fileUrlSchema = z.string().min(1).refine(
   (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
   { message: "Must be a valid URL or a relative path starting with /" }
@@ -169,16 +170,19 @@ export const onboardEmployeeInputSchema = z.object({
   lastName: z.string().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z.string().min(1, "Phone number is required").refine((val) => {
-    const digits = val.replace(/\D/g, "");
-    return digits.length >= 10 && digits.length <= 15;
-  }, "Phone number must be at least 10 digits"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), {
+      message: "Enter a valid phone number with the correct length for the selected country (e.g. 10-digit mobile for India).",
+    }),
   whatsappSameAsPhone: z.boolean().default(true),
-  whatsappNumber: z.string().refine((val) => {
-    if (!val) return true;
-    const digits = val.replace(/\D/g, "");
-    return digits.length >= 10 && digits.length <= 15;
-  }, "WhatsApp number must be at least 10 digits").optional(),
+  whatsappNumber: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidPhoneNumber(val), {
+      message: "Enter a valid WhatsApp number with the correct length for the selected country.",
+    }),
   password: z.string().max(128, "Password must be at most 128 characters").refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),

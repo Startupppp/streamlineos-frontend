@@ -6,10 +6,14 @@ import { formatDateOnly } from "@/lib/date-utils";
 import { addDays } from "date-fns";
 import type { NextRequest } from "next/server";
 
+/** Approved leaves that overlap the next 30 days (includes in-progress leaves). */
+const UPCOMING_LEAVE_WINDOW_DAYS = 30;
+const UPCOMING_LEAVE_MAX_ROWS = 20;
+
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const today = formatDateOnly(new Date());
-    const horizon = formatDateOnly(addDays(new Date(), 30));
+    const horizon = formatDateOnly(addDays(new Date(), UPCOMING_LEAVE_WINDOW_DAYS));
 
     const rows = await db
       .select({
@@ -21,6 +25,9 @@ export async function GET(_req: NextRequest) {
         userName: users.name,
         userDesignation: users.designation,
         userImage: users.image,
+        reason: leaveRequests.reason,
+        isHalfDay: leaveRequests.isHalfDay,
+        halfDayPeriod: leaveRequests.halfDayPeriod,
       })
       .from(leaveRequests)
       .innerJoin(users, eq(leaveRequests.userId, users.id))
@@ -29,11 +36,12 @@ export async function GET(_req: NextRequest) {
         and(
           eq(leaveRequests.orgId, session.orgId),
           eq(leaveRequests.status, "APPROVED"),
-          gte(leaveRequests.startDate, today),
-          lte(leaveRequests.startDate, horizon)
-        )
+          lte(leaveRequests.startDate, horizon),
+          gte(leaveRequests.endDate, today),
+        ),
       )
-      .orderBy(asc(leaveRequests.startDate));
+      .orderBy(asc(leaveRequests.startDate), asc(leaveRequests.id))
+      .limit(UPCOMING_LEAVE_MAX_ROWS);
 
     return ok(rows);
   });

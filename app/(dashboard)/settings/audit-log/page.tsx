@@ -49,6 +49,7 @@ const ACTION_COLORS: Record<string, string> = {
   "hr.leave_approved": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
   "hr.leave_rejected": "bg-red-500/10 text-red-600 border-red-200",
   "hr.payroll_generated": "bg-blue-500/10 text-blue-600 border-blue-200",
+  "hr.payroll_deleted": "bg-red-500/10 text-red-600 border-red-200",
   "settings.updated": "bg-amber-500/10 text-amber-700 border-amber-200",
   "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200",
 };

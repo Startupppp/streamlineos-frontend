@@ -24,6 +24,8 @@ export interface EmailOptions {
   html: string;
   text?: string;
   attachments?: EmailAttachment[];
+  cc?: string | string[];
+  bcc?: string | string[];
 }
 
 function isTransientError(error: unknown): boolean {
@@ -62,6 +64,13 @@ export async function sendEmail(options: EmailOptions) {
     disposition: "attachment" as const,
   }));
 
+  const ccList = options.cc
+    ? (Array.isArray(options.cc) ? options.cc : [options.cc]).filter(Boolean)
+    : undefined;
+  const bccList = options.bcc
+    ? (Array.isArray(options.bcc) ? options.bcc : [options.bcc]).filter(Boolean)
+    : undefined;
+
   const msg: sgMail.MailDataRequired = {
     to: toList,
     from: fromEmail,
@@ -69,6 +78,8 @@ export async function sendEmail(options: EmailOptions) {
     html: options.html,
     text: options.text || options.html.replace(/<[^>]*>/g, ""),
     ...(attachments?.length ? { attachments } : {}),
+    ...(ccList?.length ? { cc: ccList } : {}),
+    ...(bccList?.length ? { bcc: bccList } : {}),
   };
 
   let lastError: unknown;

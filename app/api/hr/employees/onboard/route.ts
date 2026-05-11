@@ -9,6 +9,7 @@ import type { NextRequest } from "next/server";
 import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 import { inngest } from "@/lib/inngest/client";
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
@@ -17,9 +18,15 @@ const onboardSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.string(),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), { message: "Invalid phone number" }),
   whatsappSameAsPhone: z.boolean().optional(),
-  whatsappNumber: z.string().optional(),
+  whatsappNumber: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidPhoneNumber(val), { message: "Invalid WhatsApp number" }),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   password: z.string().optional(),
   designation: z.string(),

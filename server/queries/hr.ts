@@ -27,6 +27,7 @@ import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "dri
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
 import { resolveAttendancePeriod, summarizeAttendanceLogs } from "@/lib/hr/attendance-summary";
+import type { DocumentExportFilters } from "@/lib/hr/documents-export-filters";
 import type {
   Department,
   Employee,
@@ -542,6 +543,48 @@ export async function getDocuments(
   }) as unknown as Promise<Document[]>;
 }
 
+export async function getDocumentsForExport(
+  orgId: string,
+  sessionUserId: string,
+  isAdmin: boolean,
+  filters: DocumentExportFilters,
+): Promise<Document[]> {
+  const conditions = [eq(documents.orgId, orgId), eq(documents.isActive, true)];
+
+  if (filters.filterUserId) {
+    conditions.push(eq(documents.userId, filters.filterUserId));
+  } else if (!isAdmin) {
+    conditions.push(eq(documents.userId, sessionUserId));
+  }
+
+  if (filters.type) {
+    conditions.push(eq(documents.type, filters.type as import("@/types/hr").DocumentType));
+  }
+  if (filters.category?.trim()) {
+    conditions.push(ilike(documents.category, `%${filters.category.trim()}%`));
+  }
+  if (filters.uploadedBy?.trim()) {
+    conditions.push(eq(documents.uploadedBy, filters.uploadedBy.trim()));
+  }
+  if (filters.createdFrom) {
+    conditions.push(gte(documents.createdAt, new Date(`${filters.createdFrom}T00:00:00.000Z`)));
+  }
+  if (filters.createdTo) {
+    conditions.push(lte(documents.createdAt, new Date(`${filters.createdTo}T23:59:59.999Z`)));
+  }
+
+  const rows = (await db.query.documents.findMany({
+    where: and(...conditions),
+    orderBy: [desc(documents.createdAt)],
+  })) as unknown as Document[];
+
+  const tag = filters.tag?.trim().toLowerCase();
+  if (!tag) return rows;
+  return rows.filter((d) =>
+    d.tags?.some((t) => t.toLowerCase().includes(tag) || t.toLowerCase() === tag),
+  );
+}
+
 export async function getPerformanceReviews(
   orgId: string,
   userId: string,
@@ -1004,7 +1047,16 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
       month: payrolls.month,
       basicSalary: payrolls.basicSalary,
       hra: payrolls.hra,
+      specialAllowance: payrolls.specialAllowance,
       allowances: payrolls.allowances,
+      lopDays: payrolls.lopDays,
+      lopAmount: payrolls.lopAmount,
+      halfDays: payrolls.halfDays,
+      halfDayAmount: payrolls.halfDayAmount,
+      ptAmount: payrolls.ptAmount,
+      otherDeductions: payrolls.otherDeductions,
+      structureDeductions: payrolls.structureDeductions,
+      advanceRecoveryAmount: payrolls.advanceRecoveryAmount,
       deductions: payrolls.deductions,
       grossSalary: payrolls.grossSalary,
       netSalary: payrolls.netSalary,
@@ -1034,7 +1086,16 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
     month: r.month,
     basicSalary: r.basicSalary,
     hra: r.hra,
+    specialAllowance: r.specialAllowance,
     allowances: r.allowances,
+    lopDays: r.lopDays,
+    lopAmount: r.lopAmount,
+    halfDays: r.halfDays,
+    halfDayAmount: r.halfDayAmount,
+    ptAmount: r.ptAmount,
+    otherDeductions: r.otherDeductions,
+    structureDeductions: r.structureDeductions,
+    advanceRecoveryAmount: r.advanceRecoveryAmount,
     deductions: r.deductions,
     grossSalary: r.grossSalary,
     netSalary: r.netSalary,

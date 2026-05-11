@@ -10,6 +10,7 @@ import {
   useGenerateEmployeePayslip,
   useApprovePayroll,
   useMarkPayrollPaid,
+  useDeletePayroll,
   useHrSalaryStructures,
 } from "@/lib/api/hooks/hr";
 import { useOvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
@@ -36,9 +37,10 @@ import { toast } from "sonner";
 import { Users, Loader2, DollarSign, CreditCard, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import type { Employee } from "@/types/hr";
+import type { Employee, PayrollWithUser } from "@/types/hr";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
+import { PayrollRecordPreviewSheet } from "@/features/hr/payroll/payroll-record-preview-sheet";
 import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
 import {
   buildPayslipPreviewFromEmployee,
@@ -70,6 +72,7 @@ export default function PayrollPage() {
     },
     [searchParams, router]
   );
+  const [previewPayroll, setPreviewPayroll] = useState<PayrollWithUser | null>(null);
   const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
@@ -113,6 +116,7 @@ export default function PayrollPage() {
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
   const approvePayrollMutation = useApprovePayroll();
   const markPaidMutation = useMarkPayrollPaid();
+  const deletePayrollMutation = useDeletePayroll();
 
   const selectedEmployeeData = useMemo(() => {
     if (!selectedEmployee || !employees.length) return null;
@@ -267,6 +271,22 @@ export default function PayrollPage() {
   const handleDownloadPayslip = useCallback((payrollId: number) => {
     window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
   }, []);
+
+  const handleDeletePayroll = useCallback(
+    (payrollId: number) => {
+      deletePayrollMutation.mutate(
+        { payrollId },
+        {
+          onSuccess: () => {
+            qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+            toast.success("Draft payroll deleted");
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        }
+      );
+    },
+    [deletePayrollMutation, selectedMonth, qc]
+  );
 
   const totalGross =
     allPayrolls?.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
@@ -425,13 +445,24 @@ export default function PayrollPage() {
           <PayrollTable
             payrolls={allPayrolls ?? []}
             selectedMonth={selectedMonth}
+            onPreview={setPreviewPayroll}
             onApprove={handleApprovePayroll}
             onMarkPaid={handleMarkPaid}
+            onDelete={handleDeletePayroll}
             isApprovePending={approvePayrollMutation.isPending}
             isMarkPaidPending={markPaidMutation.isPending}
+            isDeletePending={deletePayrollMutation.isPending}
             onDownload={handleDownloadPayslip}
           />
         )}
+
+        <PayrollRecordPreviewSheet
+          open={!!previewPayroll}
+          onOpenChange={(open) => {
+            if (!open) setPreviewPayroll(null);
+          }}
+          payroll={previewPayroll}
+        />
       </div>
     </PageWrapper>
   );

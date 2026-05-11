@@ -151,6 +151,10 @@ export interface UpcomingLeave {
   userName: string | null;
   userImage: string | null;
   userDesignation: string | null;
+  /** Present when API returns leave request details */
+  reason?: string | null;
+  isHalfDay?: boolean | null;
+  halfDayPeriod?: string | null;
 }
 
 export interface UpcomingHoliday {

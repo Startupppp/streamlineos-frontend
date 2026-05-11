@@ -94,17 +94,19 @@ export async function POST(req: NextRequest) {
       getOooConflicts(session.orgId, input.attendeeIds ?? [], startDate, endDate),
     ]);
 
-    void sendCalendarEventAttendeeEmails({
+    const notify = await sendCalendarEventAttendeeEmails({
+      orgId: session.orgId,
       creatorUserId: session.user.id,
       attendeeIds: input.attendeeIds ?? [],
       title: input.title,
+      description: input.description ?? null,
       startDate,
       endDate,
       allDay: input.allDay ?? false,
       location: input.location ?? null,
       variant: "created",
-    }).catch(() => {});
+    });
 
-    return ok({ event, oooConflicts }, 201);
+    return ok({ event, oooConflicts, notify }, 201);
   });
 }

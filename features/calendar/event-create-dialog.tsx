@@ -33,6 +33,7 @@ import {
   useGoogleMeetStatus,
   useCreateMeetLink,
   extractEventNumericId,
+  type CalendarEventNotifyResult,
 } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
 import { toast } from "sonner";
@@ -125,6 +126,21 @@ interface EventCreateDialogProps {
 }
 
 const TITLE_MIN = 5;
+
+function calendarNotifyDescription(n: CalendarEventNotifyResult): string {
+  const parts: string[] = [];
+  if (n.inAppNotifications > 0) {
+    parts.push(`In-app alert for ${n.inAppNotifications} attendee(s)`);
+  }
+  if (n.mailerConfigured) {
+    if (n.emailsSent > 0) parts.push(`Email sent to ${n.emailsSent}`);
+    if (n.emailFailures > 0) parts.push(`${n.emailFailures} email(s) failed — check logs`);
+    if (n.emailsSkippedNoAddress > 0) parts.push(`${n.emailsSkippedNoAddress} without email on file`);
+  } else if (n.attendeeCount > 0) {
+    parts.push("Outbound email not configured (SENDGRID_API_KEY)");
+  }
+  return parts.join(" · ");
+}
 
 export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: EventCreateDialogProps) {
   const isEdit = !!event;
@@ -285,11 +301,19 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
           toast.error("Cannot edit this event type");
           return;
         }
-        await updateEvent.mutateAsync({ id: numericId, ...payload });
-        toast.success("Event updated");
+        const updated = await updateEvent.mutateAsync({ id: numericId, ...payload });
+        if (updated.notify && updated.notify.attendeeCount > 0) {
+          toast.success("Event updated", { description: calendarNotifyDescription(updated.notify) });
+        } else {
+          toast.success("Event updated");
+        }
       } else {
-        await createEvent.mutateAsync(payload);
-        toast.success("Event created");
+        const created = await createEvent.mutateAsync(payload);
+        if (created.notify && created.notify.attendeeCount > 0) {
+          toast.success("Event created", { description: calendarNotifyDescription(created.notify) });
+        } else {
+          toast.success("Event created");
+        }
       }
       handleClose();
     } catch {

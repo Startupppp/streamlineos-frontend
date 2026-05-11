@@ -15,6 +15,7 @@ import type {
   GenerateEmployeePayslipInput,
   ApprovePayrollInput,
   MarkPayrollPaidInput,
+  DeletePayrollInput,
 } from "@/types/hr";
 
 export function useHrPayrolls() {
@@ -107,5 +108,12 @@ export function useMarkPayrollPaid() {
       apiClient.patch<MarkPayrollPaidResult>(`/hr/payrolls/${payrollId}/paid`),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
+  });
+}
+
+export function useDeletePayroll() {
+  return useMutation({
+    mutationFn: ({ payrollId }: DeletePayrollInput) =>
+      apiClient.delete<{ success: boolean }>(`/hr/payrolls/${payrollId}`),
   });
 }

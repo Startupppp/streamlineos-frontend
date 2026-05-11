@@ -24,6 +24,7 @@ export type AuditAction =
   | "hr.payroll_generated"
   | "hr.payroll_approved"
   | "hr.payroll_paid"
+  | "hr.payroll_deleted"
   | "hr.document_uploaded"
   | "project.created"
   | "project.updated"

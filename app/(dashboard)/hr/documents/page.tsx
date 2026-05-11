@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
+import { FolderPlus, Upload, FilePlus2, FileText, Eye, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { Document } from "@/types/hr";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
+import { DocumentExportSheet } from "@/features/hr/documents/document-export-sheet";
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -168,6 +169,12 @@ export default function DocumentsPage() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
+      <DocumentExportSheet
+        isDocumentsAdmin={!!isAdmin}
+        canEmailPack={!!isAdmin}
+        initialType={selectedType}
+        initialCategory={selectedCategory}
+      />
       <Button variant="outline" size="sm" className="gap-2" asChild>
         <Link href="/hr/documents/templates"><LayoutTemplate className="h-4 w-4" /><span className="hidden sm:inline">Templates</span></Link>
       </Button>
@@ -298,18 +305,24 @@ function RichDocumentsSection() {
         </div>
         <div className="space-y-2">
           {richDocs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
+            <div
+              key={doc.id}
+              className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <FileText className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <p className="truncate text-sm font-medium">{doc.title}</p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
                     {doc.templateType && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{doc.templateType}</Badge>
+                      <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                        {doc.templateType}
+                      </Badge>
                     )}
                     {doc.isPublished && (
-                      <Badge variant="default" className="text-[10px] px-1.5 py-0 gap-0.5">
-                        <Globe className="h-2.5 w-2.5" />Published
+                      <Badge variant="default" className="gap-0.5 px-1.5 py-0 text-[10px]">
+                        <Globe className="h-2.5 w-2.5" aria-hidden />
+                        Published
                       </Badge>
                     )}
                     {doc.updatedAt && (
@@ -320,16 +333,23 @@ function RichDocumentsSection() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                  <Link href={`/hr/documents/editor/${doc.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
+              <div className="flex shrink-0 items-center justify-end gap-2 sm:pl-2">
+                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                  <Link href={`/hr/documents/editor/${doc.id}`} aria-label={`View ${doc.title}`}>
+                    <Eye className="h-3.5 w-3.5" aria-hidden />
+                    View
+                  </Link>
                 </Button>
                 <Button
-                  variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => handleDelete(doc.id)}
                   disabled={deleteMutation.isPending}
+                  aria-label={`Delete ${doc.title}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5 sm:mr-1" aria-hidden />
+                  <span className="hidden sm:inline">Delete</span>
                 </Button>
               </div>
             </div>
