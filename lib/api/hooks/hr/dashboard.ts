@@ -18,6 +18,7 @@ export interface HrDashboardMetrics {
     image: string | null;
     dateOfBirth: string;
     daysUntil: number;
+    birthdayMonthDay: string | null;
   }[];
 }
 

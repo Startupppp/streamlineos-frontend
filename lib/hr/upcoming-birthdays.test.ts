@@ -4,11 +4,28 @@ import {
   parseDobMonthDay,
   isBirthdayToday,
   isUpcomingBirthdaySoon,
+  normalizeDobToYmd,
 } from "./upcoming-birthdays";
 
 describe("parseDobMonthDay", () => {
   it("reads YYYY-MM-DD without shifting", () => {
     expect(parseDobMonthDay("1990-05-07")).toEqual({ month: 4, day: 7 });
+  });
+
+  it("returns null for invalid input", () => {
+    expect(parseDobMonthDay("not-a-date")).toBeNull();
+    expect(parseDobMonthDay(null)).toBeNull();
+  });
+
+  it("handles Date values (UTC calendar day)", () => {
+    const dob = new Date(Date.UTC(1990, 4, 8));
+    expect(parseDobMonthDay(dob)).toEqual({ month: 4, day: 8 });
+  });
+});
+
+describe("normalizeDobToYmd", () => {
+  it("strips time from ISO strings", () => {
+    expect(normalizeDobToYmd("1990-05-08T12:00:00.000Z")).toBe("1990-05-08");
   });
 });
 
@@ -31,6 +48,12 @@ describe("daysUntilNextBirthday", () => {
   it("includes birthdays within 7 days across month boundary", () => {
     const today = new Date(2026, 4, 28, 12, 0, 0); // May 28
     expect(daysUntilNextBirthday("1990-06-01", today)).toBe(4);
+  });
+
+  it("works with Date DOB same as YYYY-MM-DD string", () => {
+    const today = new Date(2026, 4, 7, 10, 0, 0);
+    const dob = new Date(Date.UTC(1990, 4, 8));
+    expect(daysUntilNextBirthday(dob, today)).toBe(1);
   });
 });
 

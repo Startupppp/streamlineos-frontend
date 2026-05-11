@@ -4,6 +4,8 @@ import { users, onboardingSteps, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { formatDateOnly } from "@/lib/date-utils";
+import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 
 const schema = z.object({
   phone: z.string().min(1),
@@ -49,12 +51,18 @@ export async function PATCH(req: NextRequest) {
     await db.update(users).set({
       phone: body.phone,
       ...(body.gender ? { gender: body.gender } : {}),
-      ...(body.dateOfBirth ? { dateOfBirth: body.dateOfBirth } : {}),
+      ...(body.dateOfBirth
+        ? { dateOfBirth: formatDateOnly(new Date(body.dateOfBirth)) }
+        : {}),
       ...(body.experienceYears ? { experienceYears: body.experienceYears } : {}),
       ...(skillsArray ? { skills: skillsArray } : {}),
     }).where(eq(users.id, session.user.id));
 
     await upsertOnboardingStep(session.user.id, session.orgId, "Personal Details");
+
+    if (body.dateOfBirth) {
+      await invalidateHrDashboardCache(session.orgId);
+    }
 
     return ok({ success: true });
   });

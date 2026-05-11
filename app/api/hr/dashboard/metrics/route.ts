@@ -8,7 +8,11 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, count, sql } from "drizzle-orm";
 import { cached, CACHE_TTL } from "@/lib/hr-cache";
-import { daysUntilNextBirthday } from "@/lib/hr/upcoming-birthdays";
+import {
+  daysUntilNextBirthday,
+  formatBirthdayMonthDayLabel,
+  normalizeDobToYmd,
+} from "@/lib/hr/upcoming-birthdays";
 
 export const dynamic = "force-dynamic";
 
@@ -113,13 +117,20 @@ export async function GET() {
           image: string | null;
           dateOfBirth: string;
           daysUntil: number;
+          birthdayMonthDay: string | null;
         }[] = [];
 
         for (const m of allMembersForBirthdays) {
-          if (!m.dateOfBirth) continue;
-          const daysUntil = daysUntilNextBirthday(m.dateOfBirth, now);
+          const ymd = normalizeDobToYmd(m.dateOfBirth);
+          if (!ymd) continue;
+          const daysUntil = daysUntilNextBirthday(ymd, now);
           if (daysUntil !== null && daysUntil <= 7) {
-            upcomingBirthdays.push({ ...m, dateOfBirth: m.dateOfBirth, daysUntil });
+            upcomingBirthdays.push({
+              ...m,
+              dateOfBirth: ymd,
+              daysUntil,
+              birthdayMonthDay: formatBirthdayMonthDayLabel(ymd),
+            });
           }
         }
         upcomingBirthdays.sort((a, b) => a.daysUntil - b.daysUntil);
