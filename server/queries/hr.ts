@@ -63,16 +63,30 @@ export async function getDepartments(orgId: string): Promise<Department[]> {
   }) as Promise<Department[]>;
 }
 
+function departmentFromId(
+  departmentId: number | null | undefined,
+  deptNameById: Map<number, string>,
+): { id: number; name: string } | null {
+  if (departmentId == null) return null;
+  const name = deptNameById.get(departmentId);
+  if (name) return { id: departmentId, name };
+  return { id: departmentId, name: "Unknown" };
+}
+
 export async function getEmployees(
   orgId: string,
   branch?: BranchContext
 ): Promise<Employee[]> {
-  const members = await db.query.organizationMembers.findMany({
-    where: eq(organizationMembers.orgId, orgId),
-    with: {
-      user: true,
-    },
-  });
+  const [members, deptRows] = await Promise.all([
+    db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: {
+        user: true,
+      },
+    }),
+    getDepartments(orgId),
+  ]);
+  const deptNameById = new Map(deptRows.map((d) => [d.id, d.name]));
 
   return members
     .map((m) => m.user)
@@ -95,6 +109,7 @@ export async function getEmployees(
       designation: u.designation,
       employeeId: u.employeeId,
       departmentId: u.departmentId,
+      department: departmentFromId(u.departmentId, deptNameById),
       image: u.image,
       isActive: u.isActive ?? true,
       joiningDate: u.joiningDate,
@@ -152,6 +167,7 @@ export async function getEmployeesPaginated(
         designation: users.designation,
         employeeId: users.employeeId,
         departmentId: users.departmentId,
+        departmentName: departments.name,
         image: users.image,
         isActive: users.isActive,
         joiningDate: users.joiningDate,
@@ -161,6 +177,10 @@ export async function getEmployeesPaginated(
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
+      .leftJoin(
+        departments,
+        and(eq(users.departmentId, departments.id), eq(departments.orgId, orgId)),
+      )
       .where(and(...searchConditions))
       .orderBy(users.name)
       .limit(limit)
@@ -174,8 +194,29 @@ export async function getEmployeesPaginated(
 
   const total = countResult[0]?.total ?? 0;
 
+  const data: Employee[] = dataResult.map((row) => {
+    const { departmentName, ...rest } = row;
+    const department =
+      rest.departmentId != null && departmentName
+        ? { id: rest.departmentId, name: departmentName }
+        : rest.departmentId != null
+          ? { id: rest.departmentId, name: "Unknown" }
+          : null;
+    return {
+      ...rest,
+      department,
+      bio: null,
+      linkedinUrl: null,
+      twitterUrl: null,
+      githubUrl: null,
+      websiteUrl: null,
+      skills: null,
+      phone: null,
+    };
+  });
+
   return {
-    data: dataResult as Employee[],
+    data,
     pagination: {
       page,
       limit,
@@ -196,6 +237,18 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
 
   if (!member) return null;
   const u = member.user;
+
+  let department: { id: number; name: string } | null = null;
+  if (u.departmentId != null) {
+    const dept = await db.query.departments.findFirst({
+      where: and(eq(departments.id, u.departmentId), eq(departments.orgId, orgId)),
+      columns: { name: true },
+    });
+    department = dept
+      ? { id: u.departmentId, name: dept.name }
+      : { id: u.departmentId, name: "Unknown" };
+  }
+
   return {
     id: u.id,
     name: u.name,
@@ -206,6 +259,7 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
     designation: u.designation,
     employeeId: u.employeeId,
     departmentId: u.departmentId,
+    department,
     image: u.image,
     isActive: u.isActive,
     joiningDate: u.joiningDate,

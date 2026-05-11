@@ -39,6 +39,8 @@ export interface Employee {
   designation: string | null;
   employeeId: string | null;
   departmentId: number | null;
+  /** Resolved from `departmentId` + org departments; null if unassigned or missing row. */
+  department: { id: number; name: string } | null;
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
