@@ -77,7 +77,11 @@ export async function PATCH(
             existing,
             employee,
             org ?? { name: null, address: null },
-            { leaveDaysInMonth: leaveDays }
+            {
+              leaveDaysInMonth: leaveDays,
+              showPaidBadge: true,
+              orgFullNameOverride: "Vaivamm Capital Advisors LLP",
+            }
           );
           const { buffer: pdfBuffer, encrypted } = await generatePayslipPdfWithEncryptionStatus({
             ...pdfBase,

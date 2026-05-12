@@ -21,7 +21,8 @@
     "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
     "seed:hr-email-templates": "npx tsx --env-file=.env scripts/seed-hr-email-templates.ts",
     "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts",
-    "send:all-emails-test": "npx tsx --env-file=.env scripts/send-all-emails-test.ts"
+    "send:all-emails-test": "npx tsx --env-file=.env scripts/send-all-emails-test.ts",
+    "gen:sample-payslip": "tsx scripts/generate-sample-payslip.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -49,6 +50,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-visually-hidden": "^1.2.4",
+    "@react-pdf/renderer": "^4.5.1",
     "@sendgrid/mail": "^8.1.6",
     "@sentry/nextjs": "^10.51.0",
     "@tanstack/react-query": "^5.90.12",
