@@ -3,23 +3,14 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   format,
-  parseISO,
   eachWeekOfInterval,
   startOfYear,
   endOfYear,
   addDays,
-  getDay,
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAttendanceHeatmap } from "@/lib/api/hooks/hr";
 
@@ -99,9 +90,6 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
     return { weeks: weeksData, monthPositions: positions };
   }, [year, data]);
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
-
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
@@ -180,27 +168,32 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         ) : (
           <div className="overflow-x-auto">
             <div className="inline-block min-w-max">
-              <div className="flex mb-1 ml-8">
-                {monthPositions.map(({ month, col }) => (
-                  <div
-                    key={month}
-                    className="text-[10px] text-muted-foreground"
-                    style={{
-                      position: "absolute",
-                      marginLeft: `${col * 14 + 32}px`,
-                    }}
-                  >
-                    {MONTH_LABELS[month]}
-                  </div>
-                ))}
+              {/* Month row: same column widths as week grid so labels stay on one baseline */}
+              <div className="mb-1.5 flex gap-0.5">
+                <div className="mr-1.5 w-8 shrink-0" aria-hidden />
+                {weeks.map((_, colIdx) => {
+                  const monthStart = monthPositions.find((p) => p.col === colIdx);
+                  return (
+                    <div
+                      key={`mh-${colIdx}`}
+                      className="relative h-4 w-3 shrink-0 overflow-visible"
+                    >
+                      {monthStart ? (
+                        <span className="absolute left-0 top-0 z-10 whitespace-nowrap text-[10px] leading-none text-muted-foreground">
+                          {MONTH_LABELS[monthStart.month]}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
-              <div className="relative mt-4">
+              <div className="relative">
                 <div className="flex gap-0.5">
-                  <div className="flex flex-col gap-0.5 mr-1.5">
+                  <div className="mr-1.5 flex w-8 shrink-0 flex-col gap-0.5">
                     {DAY_LABELS.map((d, i) => (
                       <div
                         key={d}
-                        className={`text-[10px] text-muted-foreground h-3 leading-3 ${i % 2 === 0 ? "invisible" : ""}`}
+                        className={`h-3 text-[10px] leading-3 text-muted-foreground ${i % 2 === 0 ? "invisible" : ""}`}
                       >
                         {d}
                       </div>

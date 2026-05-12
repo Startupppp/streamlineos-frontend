@@ -89,37 +89,47 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/10">
               <CalendarDays className="h-4 w-4 text-gold" />
             </div>
             Attendance Calendar
           </CardTitle>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 flex-wrap items-stretch gap-2 sm:justify-end">
             <Select
               value={String(month)}
-              onValueChange={(v) => setCurrentMonth(new Date(year, parseInt(v), 1))}
+              onValueChange={(v) => setCurrentMonth(new Date(year, parseInt(v, 10), 1))}
             >
-              <SelectTrigger className="h-8 w-[110px] text-xs border-border">
+              <SelectTrigger
+                size="sm"
+                className="h-9 w-auto min-w-[10.5rem] max-w-[12rem] border-border text-xs font-medium shadow-xs sm:min-w-[11rem]"
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="end" className="min-w-[var(--radix-select-trigger-width)]">
                 {MONTH_NAMES.map((m, i) => (
-                  <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
+                  <SelectItem key={m} value={String(i)} className="text-xs">
+                    {m}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select
               value={String(year)}
-              onValueChange={(v) => setCurrentMonth(new Date(parseInt(v), month, 1))}
+              onValueChange={(v) => setCurrentMonth(new Date(parseInt(v, 10), month, 1))}
             >
-              <SelectTrigger className="h-8 w-[72px] text-xs border-border">
+              <SelectTrigger
+                size="sm"
+                className="h-9 w-auto min-w-[5.5rem] border-border text-xs font-medium tabular-nums shadow-xs sm:min-w-[5.75rem]"
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="end" className="min-w-[var(--radix-select-trigger-width)]">
                 {yearOptions.map((y) => (
-                  <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                  <SelectItem key={y} value={String(y)} className="text-xs tabular-nums">
+                    {y}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

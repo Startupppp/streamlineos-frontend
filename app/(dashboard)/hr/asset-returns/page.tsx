@@ -398,169 +398,22 @@ export default function AssetReturnsPage() {
         </div>
       }
     >
-      <Sheet open={detailAr !== null} onOpenChange={(open) => !open && setDetailAr(null)}>
-        <SheetContent
-          side="right"
-          className="flex h-full w-full flex-col gap-0 border-l p-0 sm:max-w-md"
-        >
-          {detailAr && (
-            <>
-              <SheetHeader className="shrink-0 space-y-3 border-b bg-muted/20 px-6 py-5 text-left">
-                <div className="flex items-start justify-between gap-3 pr-2">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Asset return
-                    </p>
-                    <SheetTitle className="text-left text-lg font-semibold leading-snug tracking-tight">
-                      {detailAr.assetName}
-                    </SheetTitle>
-                    <SheetDescription className="text-left text-xs text-muted-foreground">
-                      Record #{detailAr.id}
-                    </SheetDescription>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <Badge
-                      variant={statusBadge(detailAr.status)}
-                      className="text-[10px] font-medium tabular-nums"
-                    >
-                      {detailAr.status ?? "PENDING"}
-                    </Badge>
-                    {detailAr.assetType && (
-                      <Badge variant="outline" className="text-[10px] font-normal">
-                        {detailAr.assetType}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </SheetHeader>
-
-              <ScrollArea className="min-h-0 flex-1">
-                <div className="space-y-6 px-6 py-5">
-                  <section className="rounded-lg border bg-card p-4 shadow-sm">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <User className="h-3.5 w-3.5" aria-hidden />
-                      Assigned to
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-base font-semibold leading-tight">
-                        {detailAr.employeeName ?? detailAr.userId}
-                      </p>
-                      {detailAr.employeeName ? (
-                        <p className="break-all font-mono text-[11px] leading-relaxed text-muted-foreground">
-                          {detailAr.userId}
-                        </p>
-                      ) : null}
-                    </div>
-                  </section>
-
-                  <section className="rounded-lg border bg-card p-4 shadow-sm">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <Package className="h-3.5 w-3.5" aria-hidden />
-                      Asset
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <DetailBlock label="Name">{detailAr.assetName}</DetailBlock>
-                      <DetailBlock label="Condition">
-                        <span className="font-medium">{detailAr.condition ?? "—"}</span>
-                      </DetailBlock>
-                      {detailAr.serialNumber ? (
-                        <DetailBlock label="Serial number" className="sm:col-span-2">
-                          <span className="font-mono text-[13px]">{detailAr.serialNumber}</span>
-                        </DetailBlock>
-                      ) : null}
-                    </div>
-                  </section>
-
-                  <section>
-                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <ClipboardList className="h-3.5 w-3.5" aria-hidden />
-                      Remarks
-                    </div>
-                    <div className="rounded-md border border-dashed bg-muted/30 px-3 py-3 text-sm leading-relaxed text-muted-foreground">
-                      {detailAr.notes?.trim() ? (
-                        <p className="whitespace-pre-wrap text-foreground">{detailAr.notes}</p>
-                      ) : (
-                        <p className="italic">No remarks</p>
-                      )}
-                    </div>
-                  </section>
-
-                  <Separator />
-
-                  <section>
-                    <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <CalendarClock className="h-3.5 w-3.5" aria-hidden />
-                      Timeline
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {(["returnedAt", "createdAt"] as const).map((key) => {
-                        const raw = key === "returnedAt" ? detailAr.returnedAt : detailAr.createdAt;
-                        const label = key === "returnedAt" ? "Returned" : "Logged";
-                        const { date, time } = formatDetailDateTime(raw);
-                        return (
-                          <div
-                            key={key}
-                            className="rounded-lg border bg-muted/20 px-3 py-3"
-                          >
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                              {label}
-                            </p>
-                            <p className="mt-1 text-sm font-semibold tabular-nums">{date}</p>
-                            {time ? (
-                              <p className="text-xs text-muted-foreground tabular-nums">{time}</p>
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                </div>
-              </ScrollArea>
-
-              <SheetFooter className="shrink-0 flex-col gap-2 border-t bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => setDetailAr(null)}
-                >
-                  Close
-                </Button>
-                {isAdmin ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="w-full sm:w-auto"
-                      onClick={() => {
-                        const ar = detailAr;
-                        setDetailAr(null);
-                        setEditAr(ar);
-                      }}
-                    >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 sm:w-auto"
-                      onClick={() => {
-                        const ar = detailAr;
-                        setDetailAr(null);
-                        setDeleteAr(ar);
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </>
-                ) : null}
-              </SheetFooter>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <AssetReturnDetailSheet
+        record={detailAr}
+        open={detailAr !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailAr(null);
+        }}
+        isAdmin={isAdmin}
+        onEdit={(ar) => {
+          setDetailAr(null);
+          setEditAr(ar);
+        }}
+        onDelete={(ar) => {
+          setDetailAr(null);
+          setDeleteAr(ar);
+        }}
+      />
 
       <HrSheet
         open={editAr !== null}
