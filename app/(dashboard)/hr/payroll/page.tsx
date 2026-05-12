@@ -12,6 +12,7 @@ import {
   useMarkPayrollPaid,
   useDeletePayroll,
   useHrSalaryStructures,
+  useResendPayslipEmail,
 } from "@/lib/api/hooks/hr";
 import { useOvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,7 @@ export default function PayrollPage() {
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
   const approvePayrollMutation = useApprovePayroll();
   const markPaidMutation = useMarkPayrollPaid();
+  const resendPayslipEmailMutation = useResendPayslipEmail();
   const deletePayrollMutation = useDeletePayroll();
 
   const selectedEmployeeData = useMemo(() => {
@@ -248,6 +250,27 @@ export default function PayrollPage() {
     );
   }, [approvePayrollMutation, selectedMonth, qc]);
 
+  const reportEmailOutcome = useCallback(
+    (data: { emailSent: boolean; emailError?: string }, opts: { onSuccessText: string }) => {
+      if (data.emailSent) {
+        toast.success(opts.onSuccessText);
+        return;
+      }
+      const msg =
+        data.emailError === "no_email"
+          ? "Payslip email was not sent: employee has no email on file."
+          : data.emailError === "send_failed"
+            ? "Payslip email could not be sent. Check server logs and use Resend once the issue is fixed."
+            : data.emailError === "missing_dob"
+              ? "Payslip email was not sent: add employee date of birth (onboarding) before emailing payslips."
+              : data.emailError === "pdf_not_encrypted"
+                ? "Payslip email was not sent: PDF encryption (qpdf) is unavailable on this server."
+                : "Payslip email was not sent.";
+      toast.warning(msg);
+    },
+    []
+  );
+
   const handleMarkPaid = useCallback((payrollId: number) => {
     markPaidMutation.mutate(
       { payrollId },
@@ -256,23 +279,25 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll marked as paid");
           if (!data.emailSent) {
-            const msg =
-              data.emailError === "no_email"
-                ? "Payslip email was not sent: employee has no email on file."
-                : data.emailError === "send_failed"
-                  ? "Payslip email could not be sent. Check logs or try resend from your email provider."
-                  : data.emailError === "missing_dob"
-                    ? "Payslip email was not sent: add employee date of birth (onboarding) before emailing payslips."
-                    : data.emailError === "pdf_not_encrypted"
-                      ? "Payslip email was not sent: PDF encryption (qpdf) is unavailable on this server."
-                      : "Payslip email was not sent.";
-            toast.warning(msg);
+            reportEmailOutcome(data, { onSuccessText: "" });
           }
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
-  }, [markPaidMutation, selectedMonth, qc]);
+  }, [markPaidMutation, selectedMonth, qc, reportEmailOutcome]);
+
+  const handleResendEmail = useCallback((payrollId: number) => {
+    resendPayslipEmailMutation.mutate(
+      { payrollId },
+      {
+        onSuccess: (data) => {
+          reportEmailOutcome(data, { onSuccessText: "Payslip email resent." });
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      }
+    );
+  }, [resendPayslipEmailMutation, reportEmailOutcome]);
 
   const handleDownloadPayslip = useCallback((payrollId: number) => {
     window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
@@ -461,6 +486,8 @@ export default function PayrollPage() {
             isMarkPaidPending={markPaidMutation.isPending}
             isDeletePending={deletePayrollMutation.isPending}
             onDownload={handleDownloadPayslip}
+            onResendEmail={handleResendEmail}
+            isResendPending={resendPayslipEmailMutation.isPending}
           />
         )}
 

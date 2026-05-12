@@ -111,6 +111,13 @@ export function useMarkPayrollPaid() {
   });
 }
 
+export function useResendPayslipEmail() {
+  return useMutation({
+    mutationFn: ({ payrollId }: { payrollId: number }) =>
+      apiClient.post<MarkPayrollPaidResult>(`/hr/payrolls/${payrollId}/email-payslip`),
+  });
+}
+
 export function useDeletePayroll() {
   return useMutation({
     mutationFn: ({ payrollId }: DeletePayrollInput) =>

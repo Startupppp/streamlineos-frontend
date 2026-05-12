@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { Check, CreditCard, Download, Eye, Trash2 } from "lucide-react";
+import { Check, CreditCard, Download, Eye, Mail, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 import type { PayrollWithUser } from "@/types/hr";
@@ -51,6 +51,8 @@ interface PayrollTableProps {
   isMarkPaidPending: boolean;
   isDeletePending: boolean;
   onDownload?: (payrollId: number) => void;
+  onResendEmail?: (payrollId: number) => void;
+  isResendPending?: boolean;
 }
 
 export function PayrollTable({
@@ -64,6 +66,8 @@ export function PayrollTable({
   isMarkPaidPending,
   isDeletePending,
   onDownload,
+  onResendEmail,
+  isResendPending,
 }: PayrollTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<PayrollWithUser | null>(null);
 
@@ -179,6 +183,19 @@ export function PayrollTable({
                               >
                                 <Download className="h-3 w-3 shrink-0" aria-hidden />
                                 Download
+                              </Button>
+                            )}
+                            {payroll.status === "PAID" && onResendEmail && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1"
+                                onClick={() => onResendEmail(payroll.id)}
+                                disabled={isResendPending}
+                                title="Resend the payslip email to this employee"
+                              >
+                                <Mail className="h-3 w-3 shrink-0" aria-hidden />
+                                Resend
                               </Button>
                             )}
                           </div>

@@ -6,7 +6,13 @@ import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendPayslipEmailForPayroll } from "@/lib/hr/send-payslip-email";
 
-export async function PATCH(
+/**
+ * Manual retry for the payslip email. Used when auto-dispatch from mark-paid
+ * failed (no DOB at the time, transient SMTP error, etc.) or when an employee
+ * loses the original mail. Only PAID payrolls are eligible — sending a
+ * payslip for a non-finalised row would leak draft figures.
+ */
+export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ payrollId: string }> }
 ) {
@@ -20,14 +26,11 @@ export async function PATCH(
     });
 
     if (!existing) return err("Payroll not found.", 404);
-    if (existing.status !== "APPROVED") {
-      return err("Payroll must be approved before marking as paid.", 400);
+    if (existing.status !== "PAID") {
+      return err("Payslip email can only be sent for PAID payrolls.", 400);
     }
 
-    await db
-      .update(payrolls)
-      .set({ status: "PAID" })
-      .where(eq(payrolls.id, payrollId));
+    const { emailSent, emailError } = await sendPayslipEmailForPayroll(session.orgId, existing);
 
     try {
       await createAuditLog({
@@ -36,11 +39,15 @@ export async function PATCH(
         orgId: session.orgId,
         targetId: String(payrollId),
         targetType: "payroll",
-        metadata: { employeeId: existing.userId, month: existing.month, netSalary: existing.netSalary },
+        metadata: {
+          employeeId: existing.userId,
+          month: existing.month,
+          action: "resend_email",
+          emailSent,
+          emailError: emailError ?? null,
+        },
       });
     } catch {  }
-
-    const { emailSent, emailError } = await sendPayslipEmailForPayroll(session.orgId, existing);
 
     return ok({
       success: true,
