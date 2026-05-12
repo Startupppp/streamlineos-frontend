@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
-import { leaveRequests } from "@/lib/db/schema";
+import { leaveRequests, leaveTypes } from "@/lib/db/schema";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { leaveDaysOverlappingMonth } from "@/lib/hr/leave-days-overlap";
 
 export { leaveDaysOverlappingMonth } from "@/lib/hr/leave-days-overlap";
+
+const COMP_OFF_TYPE_NAME = "Compensatory Off";
 
 export async function countApprovedLeaveDaysInMonth(
   orgId: string,
@@ -23,11 +25,17 @@ export async function countApprovedLeaveDaysInMonth(
       lte(leaveRequests.startDate, monthEndStr),
       gte(leaveRequests.endDate, monthStartStr)
     ),
-    columns: { startDate: true, endDate: true, isHalfDay: true },
+    columns: { startDate: true, endDate: true, isHalfDay: true, leaveTypeId: true },
+  });
+
+  const compOffType = await db.query.leaveTypes.findFirst({
+    where: and(eq(leaveTypes.orgId, orgId), eq(leaveTypes.name, COMP_OFF_TYPE_NAME)),
+    columns: { id: true },
   });
 
   let total = 0;
   for (const r of rows) {
+    if (compOffType && r.leaveTypeId === compOffType.id) continue;
     total += leaveDaysOverlappingMonth(r.startDate, r.endDate, monthYyyyMm, r.isHalfDay);
   }
   return Math.round(total * 100) / 100;
