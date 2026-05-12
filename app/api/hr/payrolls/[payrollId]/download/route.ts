@@ -8,6 +8,7 @@ import { buildPayslipPdfDataFromPayroll, generatePayslipPdfWithEncryptionStatus 
 import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 import { countApprovedLeaveDaysInMonth } from "@/server/queries/hr/payslip-leave-days";
 import { buildPayslipHtml, loadLogoSvgForPayslip } from "@/lib/hr/payslip-html";
+import { isAdminOrOwner } from "@/lib/auth/role-guards";
 
 const ORG_FULL_NAME_HEADER = "Vaivamm Capital Advisors LLP";
 
@@ -26,7 +27,7 @@ export async function GET(
     if (!payroll) return err("Payroll not found.", 404);
     if (payroll.status !== "PAID") return err("Payslip only available for PAID payrolls.", 400);
 
-    const isAdmin = session.user.role === "CEO" || session.user.role === "HR";
+    const isAdmin = isAdminOrOwner(session.user.role);
     if (!isAdmin && payroll.userId !== session.user.id) {
       return err("Access denied.", 403);
     }

@@ -1117,7 +1117,14 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
   })) as PayrollWithUser[];
 }
 
-export async function getEmployeePayslips(orgId: string, userId: string): Promise<EmployeePayslip[]> {
+export async function getEmployeePayslips(
+  orgId: string,
+  userId: string,
+  opts?: { paidOnly?: boolean }
+): Promise<EmployeePayslip[]> {
+  const whereClauses = [eq(payrolls.orgId, orgId), eq(payrolls.userId, userId)];
+  if (opts?.paidOnly) whereClauses.push(eq(payrolls.status, "PAID"));
+
   const rows = await db
     .select({
       id: payrolls.id,
@@ -1125,7 +1132,20 @@ export async function getEmployeePayslips(orgId: string, userId: string): Promis
       month: payrolls.month,
       basicSalary: payrolls.basicSalary,
       hra: payrolls.hra,
+      specialAllowance: payrolls.specialAllowance,
       allowances: payrolls.allowances,
+      lopDays: payrolls.lopDays,
+      lopAmount: payrolls.lopAmount,
+      halfDays: payrolls.halfDays,
+      halfDayAmount: payrolls.halfDayAmount,
+      ptAmount: payrolls.ptAmount,
+      pfEmployee: payrolls.pfEmployee,
+      pfEmployer: payrolls.pfEmployer,
+      esiEmployee: payrolls.esiEmployee,
+      esiEmployer: payrolls.esiEmployer,
+      advanceRecoveryAmount: payrolls.advanceRecoveryAmount,
+      otherDeductions: payrolls.otherDeductions,
+      structureDeductions: payrolls.structureDeductions,
       deductions: payrolls.deductions,
       grossSalary: payrolls.grossSalary,
       netSalary: payrolls.netSalary,
@@ -1134,12 +1154,59 @@ export async function getEmployeePayslips(orgId: string, userId: string): Promis
       overtimeDays: payrolls.overtimeDays,
       overtimeHours: payrolls.overtimeHours,
       overtimeAmount: payrolls.overtimeAmount,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userDesignation: users.designation,
+      userJoiningDate: users.joiningDate,
+      userEmployeeId: users.employeeId,
+      userTaxId: users.taxId,
+      userBankDetails: users.bankDetails,
     })
     .from(payrolls)
-    .where(and(eq(payrolls.orgId, orgId), eq(payrolls.userId, userId)))
+    .leftJoin(users, eq(payrolls.userId, users.id))
+    .where(and(...whereClauses))
     .orderBy(desc(payrolls.month));
 
-  return rows as unknown as EmployeePayslip[];
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    month: r.month,
+    basicSalary: r.basicSalary,
+    hra: r.hra,
+    specialAllowance: r.specialAllowance,
+    allowances: r.allowances,
+    lopDays: r.lopDays,
+    lopAmount: r.lopAmount,
+    halfDays: r.halfDays,
+    halfDayAmount: r.halfDayAmount,
+    ptAmount: r.ptAmount,
+    pfEmployee: r.pfEmployee,
+    pfEmployer: r.pfEmployer,
+    esiEmployee: r.esiEmployee,
+    esiEmployer: r.esiEmployer,
+    advanceRecoveryAmount: r.advanceRecoveryAmount,
+    otherDeductions: r.otherDeductions,
+    structureDeductions: r.structureDeductions,
+    deductions: r.deductions,
+    grossSalary: r.grossSalary,
+    netSalary: r.netSalary,
+    status: r.status,
+    overtimeType: r.overtimeType,
+    overtimeDays: r.overtimeDays,
+    overtimeHours: r.overtimeHours,
+    overtimeAmount: r.overtimeAmount,
+    user: r.userFirstName != null || r.userLastName != null
+      ? {
+          firstName: r.userFirstName,
+          lastName: r.userLastName,
+          designation: r.userDesignation,
+          joiningDate: r.userJoiningDate,
+          employeeId: r.userEmployeeId,
+          taxId: r.userTaxId,
+          bankDetails: r.userBankDetails,
+        }
+      : null,
+  })) as unknown as EmployeePayslip[];
 }
 
 export async function getMonthlyAttendance(

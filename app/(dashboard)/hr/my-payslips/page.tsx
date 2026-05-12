@@ -169,15 +169,21 @@ export default function MyPayslipsPage() {
       ) : selectedPayslip ? (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <Button
-              onClick={() => {
-                void handleDownload();
-              }}
-              aria-label="Download payslip as PDF"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download Payslip
-            </Button>
+            {selectedPayslip.status === "PAID" ? (
+              <Button
+                onClick={() => {
+                  void handleDownload();
+                }}
+                aria-label="Download payslip as PDF"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Payslip
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Download will be available once HR finalises this payslip.
+              </p>
+            )}
           </div>
 
           <div
