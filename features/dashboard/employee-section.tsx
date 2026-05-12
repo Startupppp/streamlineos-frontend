@@ -9,11 +9,14 @@ import { TimesheetWidget } from "@/components/dashboard/widgets/timesheet-widget
 import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/widgets/leave-balance-widget";
 import { UpcomingEventsWidget } from "@/components/dashboard/widgets/upcoming-events-widget";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/quick-actions-widget";
+import { InformHrTodayWidget } from "@/components/dashboard/widgets/inform-hr-today-widget";
 import { WidgetSkeleton } from "@/components/dashboard/widgets/widget-skeleton";
 
 export function EmployeeSection() {
   return (
     <>
+      <InformHrTodayWidget />
+
       <motion.div
         variants={fadeUp}
         initial="hidden"
