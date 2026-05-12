@@ -691,3 +691,63 @@ export function getInterviewInviteEmail(params: {
   };
 }
 
+export function getHolidayWorkRequestEmailToHr(params: {
+  employeeName: string;
+  employeeEmail: string | null;
+  requestDate: string;
+  dayLabel: string;
+  reason: string;
+  compensationPreference: "COMP_OFF" | "EXTRA_PAY";
+  submittedAt: Date | string;
+  orgName: string;
+}): { subject: string; html: string } {
+  const sName = escapeHtml(params.employeeName);
+  const sEmail = params.employeeEmail ? escapeHtml(params.employeeEmail) : "—";
+  const sDate = escapeHtml(params.requestDate);
+  const sDay = escapeHtml(params.dayLabel);
+  const sReason = escapeHtml(params.reason);
+  const sComp = params.compensationPreference === "COMP_OFF" ? "Compensatory off" : "Extra pay";
+  const submittedAtStr =
+    typeof params.submittedAt === "string"
+      ? params.submittedAt
+      : params.submittedAt.toISOString();
+  const sSubmitted = escapeHtml(submittedAtStr);
+  const sOrg = escapeHtml(params.orgName);
+  const reviewUrl = `${baseUrl}/hr/attendance#holiday-work`;
+
+  const content = `
+    <p class="email-text">A team member has informed HR that they are working on a non-working day.</p>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;">
+      <table style="width:100%;font-size:13px;color:#0f172a;border-collapse:collapse;">
+        <tr><td style="padding:4px 8px;color:#64748b;width:40%;">Employee</td><td style="padding:4px 8px;font-weight:600;">${sName}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Email</td><td style="padding:4px 8px;">${sEmail}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Date</td><td style="padding:4px 8px;font-weight:600;">${sDate} (${sDay})</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Compensation</td><td style="padding:4px 8px;">${sComp}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;vertical-align:top;">Reason</td><td style="padding:4px 8px;">${sReason}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Submitted at</td><td style="padding:4px 8px;font-family:monospace;font-size:12px;">${sSubmitted}</td></tr>
+      </table>
+    </div>
+
+    <p class="email-text" style="margin-top:16px;">
+      <a href="${reviewUrl}" style="background:#0f2b7f;color:#ffffff;padding:10px 16px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;display:inline-block;">
+        Review request
+      </a>
+    </p>
+
+    <p class="email-text" style="font-size:12px;color:#64748b;margin-top:16px;">
+      Status is <strong>PENDING</strong> until you approve or reject from the HR Attendance page.
+    </p>
+    <p class="email-text" style="font-size:12px;color:#64748b;">— ${sOrg}</p>
+  `;
+
+  return {
+    subject: `[Holiday Work] ${params.employeeName} — ${params.requestDate} (${params.dayLabel})`,
+    html: getEmailTemplate({
+      title: "Holiday work request",
+      preheader: `${params.employeeName} requested to work on ${params.requestDate}`,
+      content,
+    }),
+  };
+}
+

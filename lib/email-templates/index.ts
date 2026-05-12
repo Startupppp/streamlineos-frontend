@@ -36,6 +36,7 @@ export {
   getTerminationEmailTemplate,
   getCandidateRejectionEmail,
   getPayslipEmailTemplate,
+  getHolidayWorkRequestEmailToHr,
 } from "./hr";
 
 export {
