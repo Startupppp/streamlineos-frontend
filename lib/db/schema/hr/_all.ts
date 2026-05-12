@@ -141,6 +141,7 @@ export const payrolls = pgTable("payrolls", {
   overtimeDays: decimal("overtime_days").default("0"),
   overtimeHours: decimal("overtime_hours").default("0"),
   overtimeAmount: decimal("overtime_amount").default("0"),
+  leaveDaysDisplay: decimal("leave_days_display"),
   payslipUrl: text("payslip_url"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [

@@ -325,4 +325,5 @@ export const generateEmployeePayslipInputSchema = z.object({
   overtimeDays: z.number().min(0).optional().default(0),
   overtimeHours: z.number().min(0).optional().default(0),
   overtimeAmount: z.number().min(0).optional().default(0),
+  leaveDays: z.number().min(0).optional(),
 });

@@ -80,6 +80,7 @@ export default function PayrollPage() {
   const [halfDays, setHalfDays] = useState<string>("");
   const [otherDeductions, setOtherDeductions] = useState<string>("");
   const [bonus, setBonus] = useState<string>("");
+  const [leaves, setLeaves] = useState<string>("");
 
   const { data: allPayrolls, isLoading } = useHrAllPayrolls({ month: selectedMonth });
   const { data: employeesRaw } = useHrEmployees();
@@ -172,6 +173,7 @@ export default function PayrollPage() {
     setHalfDays("");
     setOtherDeductions("");
     setBonus("");
+    setLeaves("");
   };
 
   const handleGenerateAll = useCallback(() => {
@@ -209,6 +211,7 @@ export default function PayrollPage() {
 
   const handleGenerateForEmployee = useCallback(() => {
     if (!selectedEmployee) return;
+    const leavesTrimmed = leaves.trim();
     generateEmployeePayslipMutation.mutate(
       {
         userId: selectedEmployee,
@@ -217,6 +220,9 @@ export default function PayrollPage() {
         halfDays: parseFloat(halfDays) || 0,
         otherDeductions: parseFloat(otherDeductions) || 0,
         bonus: parseFloat(bonus) || 0,
+        ...(leavesTrimmed !== "" && !Number.isNaN(parseFloat(leavesTrimmed))
+          ? { leaveDays: parseFloat(leavesTrimmed) }
+          : {}),
       },
       {
         onSuccess: () => {
@@ -227,7 +233,7 @@ export default function PayrollPage() {
         onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
-  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, qc]);
+  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, leaves, qc]);
 
   const handleApprovePayroll = useCallback((payrollId: number) => {
     approvePayrollMutation.mutate(
@@ -394,6 +400,8 @@ export default function PayrollPage() {
             onBonusChange={setBonus}
             otherDeductions={otherDeductions}
             onOtherDeductionsChange={setOtherDeductions}
+            leaves={leaves}
+            onLeavesChange={setLeaves}
             overtimePreview={selectedEmployee ? overtimePreview : null}
             payslipPreview={payslipPreview}
             selectedEmployeeData={selectedEmployeeData}

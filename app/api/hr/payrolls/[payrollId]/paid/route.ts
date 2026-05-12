@@ -69,9 +69,11 @@ export async function PATCH(
           emailError = "missing_dob";
         } else {
           const leaveDays =
-            existing.month && existing.userId
-              ? await countApprovedLeaveDaysInMonth(session.orgId, existing.userId, existing.month)
-              : 0;
+            existing.leaveDaysDisplay != null
+              ? parseFloat(existing.leaveDaysDisplay)
+              : existing.month && existing.userId
+                ? await countApprovedLeaveDaysInMonth(session.orgId, existing.userId, existing.month)
+                : 0;
 
           const pdfBase = buildPayslipPdfDataFromPayroll(
             existing,

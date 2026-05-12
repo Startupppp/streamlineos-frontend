@@ -31,6 +31,7 @@ const generateSinglePayrollSchema = z.object({
   halfDays: z.number().min(0).default(0),
   bonus: z.number().min(0).default(0),
   otherDeductions: z.number().min(0).default(0),
+  leaveDays: z.number().min(0).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -209,6 +210,7 @@ export async function POST(req: NextRequest) {
         overtimeType: overtimeDays > 0 ? "days" : undefined,
         overtimeDays: overtimeDays.toString(),
         overtimeAmount: overtimeAmount.toString(),
+        leaveDaysDisplay: body.leaveDays != null ? body.leaveDays.toString() : undefined,
       })
       .returning();
 

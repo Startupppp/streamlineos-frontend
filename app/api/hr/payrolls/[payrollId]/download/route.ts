@@ -39,9 +39,11 @@ export async function GET(
     });
 
     const leaveDays =
-      payroll.month && payroll.userId
-        ? await countApprovedLeaveDaysInMonth(session.orgId, payroll.userId, payroll.month)
-        : 0;
+      payroll.leaveDaysDisplay != null
+        ? parseFloat(payroll.leaveDaysDisplay)
+        : payroll.month && payroll.userId
+          ? await countApprovedLeaveDaysInMonth(session.orgId, payroll.userId, payroll.month)
+          : 0;
 
     const vmOpts = {
       leaveDaysInMonth: leaveDays,

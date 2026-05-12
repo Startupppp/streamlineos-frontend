@@ -31,6 +31,8 @@ interface GeneratePayrollSheetProps {
   onBonusChange: (value: string) => void;
   otherDeductions: string;
   onOtherDeductionsChange: (value: string) => void;
+  leaves: string;
+  onLeavesChange: (value: string) => void;
   overtimePreview: OvertimePreview | null | undefined;
   payslipPreview: PayslipPreview | null;
   selectedEmployeeData: Employee | null;
@@ -56,6 +58,8 @@ export function GeneratePayrollSheet({
   onBonusChange,
   otherDeductions,
   onOtherDeductionsChange,
+  leaves,
+  onLeavesChange,
   overtimePreview,
   payslipPreview,
   selectedEmployeeData,
@@ -136,6 +140,20 @@ export function GeneratePayrollSheet({
                   placeholder="0"
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Leaves</label>
+              <Input
+                type="number"
+                min="0"
+                max="31"
+                value={leaves}
+                onChange={(e) => onLeavesChange(e.target.value)}
+                placeholder="Auto from approved leaves"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Display-only on the payslip. Leave blank to use the auto-counted approved leaves for the month.
+              </p>
             </div>
           </div>
 
