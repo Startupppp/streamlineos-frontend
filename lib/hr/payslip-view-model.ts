@@ -169,12 +169,12 @@ export function buildPayslipViewModelFromPayroll(
   if (overtime > 0) {
     const otDaysVal = parseFloat(payroll.overtimeDays ?? "0");
     const otHoursVal = parseFloat(payroll.overtimeHours ?? "0");
-    const otLabel =
-      payroll.overtimeType === "days"
-        ? `Overtime Pay (${otDaysVal} days)`
-        : payroll.overtimeType === "hours"
-          ? `Overtime Pay (${otHoursVal} hours)`
-          : "Overtime Pay";
+    let otLabel = "Overtime Pay";
+    if (payroll.overtimeType === "hours" || (!payroll.overtimeType && otHoursVal > 0)) {
+      otLabel = `Overtime Pay (${otHoursVal} ${otHoursVal === 1 ? "hour" : "hours"})`;
+    } else if (payroll.overtimeType === "days" || (!payroll.overtimeType && otDaysVal > 0)) {
+      otLabel = `Overtime Pay (${otDaysVal} ${otDaysVal === 1 ? "day" : "days"})`;
+    }
     earnings.push({ label: otLabel, amount: overtime });
   }
 

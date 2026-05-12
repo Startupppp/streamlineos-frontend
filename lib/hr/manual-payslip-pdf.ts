@@ -71,11 +71,13 @@ export function manualPayslipBodyToPdfData(body: ManualPayslipPdfBody): PayslipP
   if (body.hra > 0) earnings.push({ label: "House Rent Allowance", amount: body.hra });
   if (body.allowances > 0) earnings.push({ label: "Special Allowance", amount: body.allowances });
   if (body.overtimeAmount > 0) {
+    const otHoursVal = body.overtimeHours ?? 0;
+    const otDaysVal = body.overtimeDays ?? 0;
     let otLabel = "Overtime Pay";
-    if (body.overtimeType === "days") {
-      otLabel = `Overtime Pay (${body.overtimeDays ?? 0} days)`;
-    } else if (body.overtimeType === "hours") {
-      otLabel = `Overtime Pay (${body.overtimeHours ?? 0} hours)`;
+    if (body.overtimeType === "hours" || (!body.overtimeType && otHoursVal > 0)) {
+      otLabel = `Overtime Pay (${otHoursVal} ${otHoursVal === 1 ? "hour" : "hours"})`;
+    } else if (body.overtimeType === "days" || (!body.overtimeType && otDaysVal > 0)) {
+      otLabel = `Overtime Pay (${otDaysVal} ${otDaysVal === 1 ? "day" : "days"})`;
     }
     earnings.push({ label: otLabel, amount: body.overtimeAmount });
   }
