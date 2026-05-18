@@ -12,6 +12,7 @@ import {
   CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
 import { apiClient } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
@@ -42,6 +43,9 @@ const ENTITY_LABELS = {
   client: "Clients",
   ticket: "Tickets",
 } as const;
+
+const SEARCH_DEBOUNCE_MS = 400;
+const MIN_ENTITY_SEARCH_LENGTH = 3;
 
 
 function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
@@ -94,22 +98,39 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const debouncedQuery = useDebouncedValue(query, 280);
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
+  const normalizedDebouncedQuery = debouncedQuery.trim();
+  const searchSettled = query.trim() === normalizedDebouncedQuery;
 
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
+    if (!normalizedDebouncedQuery || normalizedDebouncedQuery.length < MIN_ENTITY_SEARCH_LENGTH) {
       setEntityResults([]);
+      setIsSearching(false);
       return;
     }
-    let cancelled = false;
+
+    const controller = new AbortController();
     setIsSearching(true);
+
     apiClient
-      .get<{ results: SearchResult[] }>("/search", { q: debouncedQuery })
-      .then((data) => { if (!cancelled) setEntityResults(data.results); })
-      .catch(() => { if (!cancelled) setEntityResults([]); })
-      .finally(() => { if (!cancelled) setIsSearching(false); });
-    return () => { cancelled = true; };
-  }, [debouncedQuery]);
+      .get<{ results: SearchResult[] }>(
+        "/search",
+        { q: normalizedDebouncedQuery },
+        { signal: controller.signal },
+      )
+      .then((data) => {
+        if (!controller.signal.aborted) setEntityResults(data.results);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || axios.isCancel(error)) return;
+        setEntityResults([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsSearching(false);
+      });
+
+    return () => controller.abort();
+  }, [normalizedDebouncedQuery]);
 
   const handleSelect = useCallback((href: string) => {
     setOpen(false);
@@ -166,17 +187,24 @@ export function CommandPalette() {
   }, [role]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
-  const showEmpty = !isSearching && query.length >= 2 && !hasResults;
+  const isPendingEntitySearch =
+    query.trim().length >= MIN_ENTITY_SEARCH_LENGTH && !searchSettled;
+  const showEntityLoading = isSearching || isPendingEntitySearch;
+  const showEmpty =
+    searchSettled &&
+    normalizedDebouncedQuery.length >= MIN_ENTITY_SEARCH_LENGTH &&
+    !showEntityLoading &&
+    !hasResults;
 
   return (
-    <CommandDialog open={open} onOpenChange={handleOpenChange}>
+    <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
       <div className="relative">
         <CommandInput
           placeholder="Search pages, leads, deals, contacts…"
           value={query}
           onValueChange={setQuery}
         />
-        {isSearching && (
+        {showEntityLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground pointer-events-none" />
         )}
       </div>
@@ -279,10 +307,10 @@ export function CommandPalette() {
             <Hash className="h-3 w-3" />
             {pages.length} pages
           </span>
-          {query.length >= 2 && (
+          {query.trim().length >= MIN_ENTITY_SEARCH_LENGTH && (
             <span className="flex items-center gap-1">
               <Search className="h-3 w-3" />
-              {isSearching ? "Searching…" : `${entityResults.length} records`}
+              {showEntityLoading ? "Searching…" : `${entityResults.length} records`}
             </span>
           )}
         </div>

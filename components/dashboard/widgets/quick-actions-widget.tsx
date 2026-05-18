@@ -25,7 +25,7 @@ function getActionsForRole(role: string | undefined): QuickAction[] {
       return [
         { label: "Approve Leaves", icon: CalendarCheck, href: "/hr/leaves" },
         { label: "Run Payroll", icon: Receipt, href: "/hr/payroll" },
-        { label: "Add Employee", icon: Users, href: "/hr/onboarding" },
+        { label: "Add Employee", icon: Users, href: "/hr/onboarding?tab=wizard" },
       ];
     case "BRANCH_MANAGER":
     case "BRANCH_HR":
