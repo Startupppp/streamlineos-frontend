@@ -25,6 +25,7 @@ interface HrSheetProps {
   isPending?: boolean;
   side?: "right" | "left";
   showSubmit?: boolean;
+  submitDisabled?: boolean;
 }
 
 export function HrSheet({
@@ -40,6 +41,7 @@ export function HrSheet({
   isPending = false,
   side = "right",
   showSubmit = true,
+  submitDisabled = false,
 }: HrSheetProps) {
   const handleSubmit = () => {
     if (onSubmit) onSubmit();
@@ -77,7 +79,7 @@ export function HrSheet({
             >
               {cancelLabel}
             </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={isPending || !onSubmit}>
+            <Button className="flex-1" onClick={handleSubmit} disabled={isPending || !onSubmit || submitDisabled}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {submitLabel}
             </Button>

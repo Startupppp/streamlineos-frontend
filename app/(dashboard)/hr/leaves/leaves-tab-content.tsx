@@ -413,7 +413,7 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
               description="You haven't submitted any leave requests yet."
             />
           ) : (
-            <ScrollArea className="w-full" type="auto">
+            <ScrollArea className="w-full max-w-full" type="auto">
               <div className="min-w-[600px]">
                 <table className="w-full">
                   <caption className="sr-only">Your leave request history</caption>

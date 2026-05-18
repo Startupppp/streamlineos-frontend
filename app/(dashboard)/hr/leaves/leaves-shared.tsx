@@ -81,6 +81,8 @@ export interface LeaveRequest {
   leaveType: { name: string } | null;
   approver?: { name: string | null } | null;
   user?: {
+    id?: string;
+    role?: string | null;
     firstName: string | null;
     lastName: string | null;
     email: string;
@@ -300,6 +302,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request,
   isAdmin = false,
   isSelf = false,
+  canManage = true,
   onApprove,
   onReject,
   onRevert,
@@ -308,6 +311,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request: LeaveRequest;
   isAdmin?: boolean;
   isSelf?: boolean;
+  canManage?: boolean;
   onApprove?: (id: number) => void;
   onReject?: (id: number, reason?: string) => void;
   onRevert?: (id: number) => void;
@@ -433,7 +437,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                 </DropdownMenuItem>
               </>
             )}
-            {isAdmin && (
+            {isAdmin && canManage && (
               <>
                 <DropdownMenuSeparator />
                 {status !== "APPROVED" && status !== "CANCELLED" && (

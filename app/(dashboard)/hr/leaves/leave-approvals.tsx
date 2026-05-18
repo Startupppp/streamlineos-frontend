@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { useHrPendingWfhRequests, useProcessWfhRequest, useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,7 +22,27 @@ import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
-import { WfhRequestItem, priorityConfig } from "./leaves-shared";
+import { RequestHistoryRow, WfhRequestItem, priorityConfig } from "./leaves-shared";
+
+function getRolePriority(role: string | null | undefined): number {
+  switch ((role ?? "").toUpperCase()) {
+    case "CEO":
+      return 4;
+    case "HR":
+      return 3;
+    case "ADMIN":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function resolveApproverChainLabel(role: string | null | undefined): string {
+  const normalized = (role ?? "").toUpperCase();
+  if (normalized === "CEO") return "CEO";
+  if (normalized === "HR" || normalized === "ADMIN") return "HR Manager";
+  return "HR Executive";
+}
 
 function LeaveStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ElementType }> = {
@@ -142,10 +162,13 @@ function LeaveApprovalItem({
 }
 
 function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
+  const { data: session } = useSession();
   const approveMutation = useApproveLeaveDedicated();
   const rejectMutation = useRejectLeaveDedicated();
   const processingId = approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
   const isPending = approveMutation.isPending || rejectMutation.isPending;
+  const currentUserId = session?.user?.id ?? null;
+  const currentRole = session?.user?.role ?? null;
 
   const handleProcess = useCallback((requestId: number, status: "APPROVED" | "REJECTED") => {
     if (status === "APPROVED") {
@@ -167,9 +190,23 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
     }
   }, [approveMutation, rejectMutation]);
 
+  const actionableRequests = useMemo(
+    () =>
+      requests.filter((req) => {
+        if (req.status !== "PENDING") return false;
+        if (currentUserId && req.user?.id === currentUserId) return false;
+
+        const requesterRole = req.user?.role ?? null;
+        const approverPriority = getRolePriority(currentRole);
+        const requesterPriority = getRolePriority(requesterRole);
+        return approverPriority >= requesterPriority;
+      }),
+    [requests, currentUserId, currentRole],
+  );
+
   return (
     <div className="space-y-4" role="list" aria-label="Leave approvals">
-      {requests.map((req) => (
+      {actionableRequests.map((req) => (
         <LeaveApprovalItem
           key={req.id}
           req={req}
@@ -177,6 +214,13 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
           onProcess={handleProcess}
         />
       ))}
+      {actionableRequests.length === 0 && (
+        <EmptyState
+          illustration={<EmptyApprovalIllustration />}
+          title="No actionable leave requests"
+          description="Requests are routed by approver chain (CEO → HR Manager → HR Executive → Employee)."
+        />
+      )}
     </div>
   );
 }
@@ -191,12 +235,17 @@ export function LeaveApprovalsContent({
   incomingLeaveRequests,
   allIncomingLeaveRequests,
 }: LeaveApprovalsContentProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? null;
+  const currentRole = session?.user?.role ?? null;
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
   const { data: pendingWfhRequests } = useHrPendingWfhRequests();
   const processWfhRequestMutation = useProcessWfhRequest();
+  const approveMutation = useApproveLeaveDedicated();
+  const rejectMutation = useRejectLeaveDedicated();
 
   const handleRejectionReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setRejectionReason(e.target.value);
@@ -244,6 +293,25 @@ export function LeaveApprovalsContent({
     setRejectionReason("");
     setRejectingId(null);
   }, []);
+  const handleProcess = useCallback((requestId: number, status: "APPROVED" | "REJECTED") => {
+    if (status === "APPROVED") {
+      approveMutation.mutate(
+        { leaveId: requestId },
+        {
+          onSuccess: () => toast.success("Request approved successfully"),
+          onError: (err) => toast.error(err.message || "Failed to approve"),
+        },
+      );
+      return;
+    }
+    rejectMutation.mutate(
+      { leaveId: requestId, reason: "" },
+      {
+        onSuccess: () => toast.success("Request rejected successfully"),
+        onError: (err) => toast.error(err.message || "Failed to reject"),
+      },
+    );
+  }, [approveMutation, rejectMutation]);
 
   const approvedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
@@ -252,6 +320,16 @@ export function LeaveApprovalsContent({
   const rejectedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "REJECTED"),
     [allIncomingLeaveRequests]
+  );
+  const actionablePendingRequests = useMemo(
+    () =>
+      incomingLeaveRequests.filter((req) => {
+        if (currentUserId && req.user?.id === currentUserId) return false;
+        const requesterPriority = getRolePriority(req.user?.role ?? null);
+        const approverPriority = getRolePriority(currentRole);
+        return approverPriority >= requesterPriority;
+      }),
+    [incomingLeaveRequests, currentRole, currentUserId],
   );
 
   return (
@@ -284,9 +362,9 @@ export function LeaveApprovalsContent({
                   className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   Pending
-                  {incomingLeaveRequests.length > 0 && (
+                  {actionablePendingRequests.length > 0 && (
                     <Badge className="ml-1.5 h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-bold border-0">
-                      {incomingLeaveRequests.length}
+                      {actionablePendingRequests.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -322,27 +400,78 @@ export function LeaveApprovalsContent({
                 )}
               </TabsContent>
               <TabsContent value="pending">
-                {incomingLeaveRequests.length === 0 ? (
+                {actionablePendingRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No pending leave requests" description="All leave requests have been processed." />
                 ) : (
-                  <LeaveApprovalsList requests={incomingLeaveRequests} />
+                  <LeaveApprovalsList requests={actionablePendingRequests} />
                 )}
               </TabsContent>
               <TabsContent value="approved">
                 {approvedRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No approved leave requests" description="No leave requests have been approved yet." />
                 ) : (
-                  <LeaveApprovalsList requests={approvedRequests} />
+                  <div className="space-y-3">
+                    {approvedRequests.map((req) => (
+                      <div key={req.id} className="rounded-xl border border-border bg-muted/20 px-3 py-2">
+                        <p className="text-sm text-foreground">
+                          {req.user?.firstName} {req.user?.lastName} · {req.leaveType?.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Approved by {req.approver?.name ?? resolveApproverChainLabel(currentRole)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </TabsContent>
               <TabsContent value="rejected">
                 {rejectedRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No rejected leave requests" description="No leave requests have been rejected." />
                 ) : (
-                  <LeaveApprovalsList requests={rejectedRequests} />
+                  <div className="space-y-3">
+                    {rejectedRequests.map((req) => (
+                      <div key={req.id} className="rounded-xl border border-border bg-muted/20 px-3 py-2">
+                        <p className="text-sm text-foreground">
+                          {req.user?.firstName} {req.user?.lastName} · {req.leaveType?.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Rejected by {req.approver?.name ?? resolveApproverChainLabel(currentRole)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
+            <div className="pt-4">
+              <h4 className="text-sm font-medium text-foreground mb-2">View Details</h4>
+              <div className="rounded-md border border-border overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40">
+                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Type</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Date Requested</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Period</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Priority</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Status</th>
+                      <th className="text-right text-xs font-medium text-muted-foreground py-2.5 px-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allIncomingLeaveRequests.map((req) => (
+                      <RequestHistoryRow
+                        key={req.id}
+                        request={req}
+                        isAdmin
+                        canManage={!currentUserId || req.user?.id !== currentUserId}
+                        onApprove={(id) => handleProcess(id, "APPROVED")}
+                        onReject={(id) => handleProcess(id, "REJECTED")}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
