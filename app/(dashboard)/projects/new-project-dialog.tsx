@@ -193,8 +193,12 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                             <User className="h-4 w-4 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[450px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
-                                        <div className="p-3 border-b bg-muted/40 space-y-2">
+                                    <PopoverContent
+                                        className="w-[450px] max-w-[calc(100vw-2rem)] p-0 max-h-[70vh] overflow-hidden flex flex-col"
+                                        align="start"
+                                        onOpenAutoFocus={(e) => e.preventDefault()}
+                                    >
+                                        <div className="p-3 border-b bg-muted/40 space-y-2 shrink-0">
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
                                             <div className="relative">
                                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -208,7 +212,10 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                                 />
                                             </div>
                                         </div>
-                                        <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
+                                        <div
+                                            className="p-2 space-y-1 flex-1 overflow-y-auto overscroll-contain"
+                                            onWheelCapture={(e) => e.stopPropagation()}
+                                        >
                                             {(employees ?? [])
                                                 .filter((emp) => {
                                                     if (!memberSearch.trim()) return true;

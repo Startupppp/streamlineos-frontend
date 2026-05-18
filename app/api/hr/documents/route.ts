@@ -3,36 +3,10 @@ import { getDocuments } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { documents, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
-import { z } from "zod";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
-
-const DOCUMENT_TYPES = [
-  "CONTRACT",
-  "CERTIFICATE",
-  "ID_PROOF",
-  "PAYSLIP",
-  "POLICY",
-  "OFFER_LETTER",
-  "RESUME",
-  "OTHER",
-] as const;
-
-const createDocumentSchema = z.object({
-  name: z.string().min(1).max(255),
-  type: z.enum(DOCUMENT_TYPES),
-  fileUrl: z.string().url(),
-  fileName: z.string().optional(),
-  fileSize: z.number().int().positive().optional(),
-  mimeType: z.string().optional(),
-  userId: z.string().optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-  isPublic: z.boolean().optional().default(false),
-  expiryDate: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-});
+import { createDocumentBodySchema } from "@/lib/validations/hr-documents";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -58,7 +32,7 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin = isAdminOrOwner(session.user.role);
 
-    const body = await parseBody(req, createDocumentSchema);
+    const body = await parseBody(req, createDocumentBodySchema);
 
     const targetUserId =
       body.userId && isAdmin ? body.userId : session.user.id;

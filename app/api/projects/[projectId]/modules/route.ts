@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { modules, tickets } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { z } from "zod";
+import { canUserManageProjectModules } from "@/lib/projects/module-access";
 
 const createModuleSchema = z.object({
   name: z.string().min(1).max(100),
@@ -40,6 +41,9 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
         moduleId: tickets.moduleId,
         total: count(),
         completed: count(sql`CASE WHEN ${tickets.status} = 'DONE' THEN 1 END`),
+        activeTickets: count(
+          sql`CASE WHEN ${tickets.status} NOT IN ('DONE', 'CANCELLED', 'CLOSED') THEN 1 END`
+        ),
       })
       .from(tickets)
       .where(
@@ -53,10 +57,12 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       const stats = statsMap.get(mod.id);
       const total = Number(stats?.total ?? 0);
       const completed = Number(stats?.completed ?? 0);
+      const activeTickets = Number(stats?.activeTickets ?? 0);
       return {
         ...mod,
         totalItems: total,
         completedItems: completed,
+        activeTicketCount: activeTickets,
         progress: total > 0 ? Math.round((completed / total) * 100) : 0,
       };
     });
@@ -70,6 +76,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const { projectId: id } = await params;
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);
+
+    const allowed = await canUserManageProjectModules({
+      orgId: session.orgId!,
+      projectId,
+      userId: session.user.id,
+      orgRole: session.user.role,
+    });
+    if (!allowed) {
+      return err("You do not have permission to create modules for this project.", 403);
+    }
 
     const body = await parseBody(req, createModuleSchema);
 

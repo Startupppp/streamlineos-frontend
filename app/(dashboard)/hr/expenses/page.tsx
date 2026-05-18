@@ -24,6 +24,8 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
+  EXPENSE_PAGE_SIZE_DEFAULT,
+  clampExpensePageSize,
   type StatusFilter,
 } from "@/features/hr/expenses/expense-constants";
 import {
@@ -58,10 +60,7 @@ export default function ExpensesPage() {
     session?.user?.role === "HR";
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =
-    useExpenseFilters({
-      defaultPageSize: isAdmin ? 4 : 5,
-      syncToUrl: true,
-    });
+    useExpenseFilters({ syncToUrl: true });
 
   const debouncedSearch = useDebouncedValue(filters.search, 300);
 
@@ -79,7 +78,7 @@ export default function ExpensesPage() {
     refetch,
   } = useExpensePageData({
     page: filters.page,
-    pageSize: filters.pageSize,
+    pageSize: clampExpensePageSize(filters.pageSize ?? EXPENSE_PAGE_SIZE_DEFAULT),
     sortBy: filters.sortBy,
     sortOrder: filters.sortOrder as "asc" | "desc" | undefined,
     startDate: filters.startDate,
@@ -178,7 +177,12 @@ export default function ExpensesPage() {
     expenses = [],
     pendingExpenses = [],
     stats = null,
-    pagination = { page: 1, pageSize: 5, total: 0, totalPages: 0 },
+    pagination = {
+      page: 1,
+      pageSize: EXPENSE_PAGE_SIZE_DEFAULT,
+      total: 0,
+      totalPages: 0,
+    },
     categories: rawCategories = [],
   } = pageData ?? {};
 
@@ -256,7 +260,7 @@ export default function ExpensesPage() {
             />
             <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4" />
-              New Policy
+              New Expense
             </Button>
           </div>
         }
@@ -300,6 +304,9 @@ export default function ExpensesPage() {
               }}
               onRejectionReasonChange={setRejectionReason}
               onPageChange={(page) => setFilter("page", page)}
+              onPageSizeChange={(size) =>
+                setFilter("pageSize", clampExpensePageSize(size))
+              }
               onShowAll={() => setStatusFilter("ALL")}
             />
           </motion.div>
@@ -376,6 +383,9 @@ export default function ExpensesPage() {
             onShowAll={() => setStatusFilter("ALL")}
             onCreateNew={() => setIsCreateOpen(true)}
             onPageChange={(page) => setFilter("page", page)}
+            onPageSizeChange={(size) =>
+              setFilter("pageSize", clampExpensePageSize(size))
+            }
           />
         </motion.div>
       </motion.div>

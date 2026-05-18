@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { logger } from "@/lib/logger";
@@ -22,6 +23,7 @@ export function RouteErrorBoundary({
 }: RouteErrorBoundaryProps) {
   useEffect(() => {
     logger.error("Route error boundary caught error", { error: error.message, digest: error.digest });
+    Sentry.captureException(error);
   }, [error]);
   const displayMessage = error.digest
     ? fallbackMessage

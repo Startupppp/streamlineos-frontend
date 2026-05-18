@@ -30,14 +30,14 @@ export function getQuickActionsForRole(role: string | undefined): QuickAction[] 
     case "CEO":
       return [
         { label: "New Project", icon: Plus, href: "/projects" },
-        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
+        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding?tab=wizard" },
         { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
         { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
         { label: "Settings", icon: Settings, href: "/settings" },
       ];
     case "HR":
       return [
-        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
+        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding?tab=wizard" },
         { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
         { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
         { label: "Org Chart", icon: Network, href: "/hr/org-chart" },

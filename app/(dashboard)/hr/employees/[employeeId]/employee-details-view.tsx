@@ -256,9 +256,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         subtitle={employee.designation ?? employee.role ?? ""}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/hr"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
-            </Button>
             {(session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN" || session?.user?.role === "HR_MANAGER") && (
               <Button variant="outline" size="sm" asChild>
                 <a href={`/api/hr/employees/${employee.id}/profile-pdf`} download>
@@ -276,6 +273,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             >
               <UserX className="h-3.5 w-3.5 mr-1" />
               Terminate
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/hr"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
             </Button>
           </div>
         }

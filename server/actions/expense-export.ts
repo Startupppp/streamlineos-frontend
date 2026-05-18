@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { expenses, expenseStatusEnum } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or } from "drizzle-orm";
-import { getAuthenticatedMember, isAdminOrOwner } from "@/lib/auth-helpers";
-import { isAuthError } from "@/lib/auth-types";
+import { getAuthenticatedMember, isAdminOrOwner } from "@/lib/auth/helpers";
+import { isAuthError } from "@/lib/auth/types";
 import { format } from "date-fns";
 import { getTodayString } from "@/lib/date-utils";
 import { users, organizationMembers, organizations } from "@/lib/db/schema";
@@ -246,6 +246,7 @@ function generateCSVContent(
     csvContent += `Approved,${Number(stats.approvedAmount).toFixed(2)}\n`;
     csvContent += `Paid,${Number(stats.paidAmount).toFixed(2)}\n`;
     csvContent += `Rejected,${Number(stats.rejectedAmount).toFixed(2)}\n`;
+    csvContent += `Total Records,${Number(stats.totalCount)}\n`;
   }
 
   return csvContent;
@@ -309,23 +310,34 @@ function generateXLSXData(
     e.transactionRef || "",
   ]);
   const expensesSheet = [headers, ...rows];
-  const summarySheet = [
-    ["Expense Report Summary"],
-    [""],
-    ["Generated", format(new Date(), "yyyy-MM-dd HH:mm:ss")],
-    [
-      "Period",
-      `${options.filters.startDate || "Start"} to ${options.filters.endDate || "Present"}`,
-    ],
-    ["Total Records", expenseList.length],
-    [""],
-    ["Financial Summary"],
-    ["Total Amount", Number(stats?.totalAmount) || 0],
-    ["Pending", Number(stats?.pendingAmount) || 0],
-    ["Approved", Number(stats?.approvedAmount) || 0],
-    ["Paid", Number(stats?.paidAmount) || 0],
-    ["Rejected", Number(stats?.rejectedAmount) || 0],
-  ];
+  const summarySheet = options.includeTotals === false
+    ? [
+      ["Expense Report Summary"],
+      [""],
+      ["Generated", format(new Date(), "yyyy-MM-dd HH:mm:ss")],
+      [
+        "Period",
+        `${options.filters.startDate || "Start"} to ${options.filters.endDate || "Present"}`,
+      ],
+      ["Total Records", expenseList.length],
+    ]
+    : [
+      ["Expense Report Summary"],
+      [""],
+      ["Generated", format(new Date(), "yyyy-MM-dd HH:mm:ss")],
+      [
+        "Period",
+        `${options.filters.startDate || "Start"} to ${options.filters.endDate || "Present"}`,
+      ],
+      ["Total Records", expenseList.length],
+      [""],
+      ["Financial Summary"],
+      ["Total Amount", Number(stats?.totalAmount) || 0],
+      ["Pending", Number(stats?.pendingAmount) || 0],
+      ["Approved", Number(stats?.approvedAmount) || 0],
+      ["Paid", Number(stats?.paidAmount) || 0],
+      ["Rejected", Number(stats?.rejectedAmount) || 0],
+    ];
   const categoryMap = new Map<string, { count: number; amount: number }>();
   expenseList.forEach((e) => {
     const existing = categoryMap.get(e.category) || { count: 0, amount: 0 };
@@ -363,12 +375,16 @@ function generateXLSXData(
   ];
 
   return {
-    sheets: [
-      { name: "Expenses", data: expensesSheet },
-      { name: "Summary", data: summarySheet },
-      { name: "By Category", data: categorySheet },
-      { name: "By Status", data: statusSheet },
-    ],
+    sheets: options.includeTotals === false
+      ? [
+        { name: "Expenses", data: expensesSheet },
+      ]
+      : [
+        { name: "Expenses", data: expensesSheet },
+        { name: "Summary", data: summarySheet },
+        { name: "By Category", data: categorySheet },
+        { name: "By Status", data: statusSheet },
+      ],
     summary: {
       totalAmount: Number(stats?.totalAmount) || 0,
       pendingAmount: Number(stats?.pendingAmount) || 0,

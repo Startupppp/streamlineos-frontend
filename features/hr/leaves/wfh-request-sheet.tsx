@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/lib/api/hooks/hr";
 
@@ -19,6 +19,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Approver } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import { createWfhRequestSchema } from "@/lib/validations/leave-request";
 
 const WFH_REASONS = [
   "Personal commitment",
@@ -30,21 +31,7 @@ const WFH_REASONS = [
   "Other",
 ] as const;
 
-const wfhFormSchema = z
-  .object({
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().min(1, "End date is required"),
-    reason: z.string().min(1, "Reason is required"),
-    notes: z.string().optional(),
-    approverId: z.string().min(1, "Approver is required"),
-  })
-  .refine(
-    (data) => {
-      if (!data.startDate || !data.endDate) return true;
-      return !isBefore(new Date(data.endDate), new Date(data.startDate));
-    },
-    { message: "End date cannot be before start date", path: ["endDate"] }
-  );
+const wfhFormSchema = createWfhRequestSchema();
 type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
 interface WfhRequestSheetProps {
@@ -58,6 +45,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
 
   const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhFormSchema),
+    mode: "onChange",
     defaultValues: {
       startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
       endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
@@ -69,6 +57,29 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
 
   const watchedStartDate = form.watch("startDate");
 
+  useEffect(() => {
+    if (!open || approvers.length !== 1) return;
+    const sole = approvers[0];
+    if (sole?.id && form.getValues("approverId") !== sole.id) {
+      form.setValue("approverId", sole.id, { shouldValidate: true });
+    }
+  }, [open, approvers, form]);
+
+  const resetFormState = useCallback(() => {
+    form.reset({
+      startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+      endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+      reason: "",
+      notes: "",
+      approverId: "",
+    });
+  }, [form]);
+
+  const handleCancel = useCallback(() => {
+    resetFormState();
+    onOpenChange(false);
+  }, [onOpenChange, resetFormState]);
+
   const onSubmit = useCallback((data: WfhFormValues) => {
     createWfhRequest.mutate(
       {
@@ -79,13 +90,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
       {
         onSuccess: () => {
           toast.success("WFH request submitted successfully");
-          form.reset({
-            startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-            endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-            reason: "",
-            notes: "",
-            approverId: "",
-          });
+          resetFormState();
           onOpenChange(false);
         },
         onError: (error) => {
@@ -93,7 +98,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
         },
       }
     );
-  }, [createWfhRequest, form, onOpenChange]);
+  }, [createWfhRequest, onOpenChange, resetFormState]);
 
   return (
     <HrSheet
@@ -102,7 +107,9 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
       title="Request Work From Home"
       description="Submit a WFH request for approval"
       onSubmit={form.handleSubmit(onSubmit)}
+      onCancel={handleCancel}
       submitLabel="Submit Request"
+      submitDisabled={!form.formState.isValid || createWfhRequest.isPending}
       isPending={createWfhRequest.isPending}
     >
       <Form {...form}>

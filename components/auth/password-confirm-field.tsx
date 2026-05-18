@@ -41,7 +41,7 @@ export function PasswordConfirmField({
           onChange={(e) => onChange(e.target.value)}
           required
           disabled={disabled}
-          className={`${showIcon ? "pl-10" : ""} pr-10 focus-visible:ring-primary ${
+          className={`hide-native-password-reveal ${showIcon ? "pl-10" : ""} pr-10 focus-visible:ring-primary ${
             passwordsMatch ? "border-green-500 focus-visible:ring-green-500" :
             passwordsMismatch ? "border-red-500 focus-visible:ring-red-500" : ""
           }`}

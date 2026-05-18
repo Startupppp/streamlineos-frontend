@@ -1,4 +1,13 @@
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function substituteVariables(
   htmlContent: string,
   variables: Record<string, string>
@@ -12,11 +21,37 @@ export function substituteVariables(
       missing.push(trimmed);
       return _match;
     }
-    return val;
+    return escapeHtml(val);
   });
   return { result, missing };
 }
 
+
+/** Merge sample values with org registry defaults (registry wins when non-empty). */
+export function mergeVariableDefaults(
+  sampleVars: Record<string, string>,
+  registry: { slug: string; defaultValue: string }[],
+): Record<string, string> {
+  const merged = { ...sampleVars };
+  for (const entry of registry) {
+    if (entry.defaultValue.trim()) {
+      merged[entry.slug] = entry.defaultValue;
+    }
+  }
+  return merged;
+}
+
+export function registryDefaultsMap(
+  registry: { slug: string; defaultValue: string }[],
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const entry of registry) {
+    if (entry.defaultValue.trim()) {
+      map[entry.slug] = entry.defaultValue;
+    }
+  }
+  return map;
+}
 
 export function extractVariables(htmlContent: string): string[] {
   const tokenRegex = /\{\{([^}]+)\}\}/g;

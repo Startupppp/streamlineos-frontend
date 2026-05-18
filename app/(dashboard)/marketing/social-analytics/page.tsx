@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Image from "next/image";
 import {
   BarChart2,
   Trash2,
@@ -102,8 +103,16 @@ function BarChartViz({ metrics }: { metrics: SocialMetric[] }) {
 
   if (recent.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-        No data to display
+      <div className="flex flex-col items-center justify-center h-32 gap-2">
+        <Image
+          src="/illustrations/undraw-social-media-post.svg"
+          alt=""
+          width={72}
+          height={72}
+          className="opacity-70"
+          aria-hidden="true"
+        />
+        <p className="text-sm text-muted-foreground">No data to display</p>
       </div>
     );
   }
@@ -449,7 +458,14 @@ export default function SocialAnalyticsPage() {
             </div>
           ) : metrics.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-              <BarChart2 className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+              <Image
+                src="/illustrations/undraw-social-media-post.svg"
+                alt=""
+                width={140}
+                height={140}
+                className="opacity-80"
+                aria-hidden="true"
+              />
               <p className="text-sm text-muted-foreground">
                 No metrics logged yet. Click &quot;Log Metrics&quot; to add your first entry.
               </p>

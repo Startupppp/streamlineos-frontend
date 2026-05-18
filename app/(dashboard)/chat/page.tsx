@@ -13,24 +13,29 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
+import { useChatInboxRealtime } from "@/features/chat/chat-inbox-realtime";
 import type { Channel } from "@/types/chat";
 
 function ChatNotifications({
   activeChannelId,
   currentUserId,
+  orgId,
 }: {
   activeChannelId: number | null;
   currentUserId: string | undefined;
+  orgId: string | undefined;
 }) {
   const { data: rawChannels } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
   useChatGlobalNotifications(channels, activeChannelId, currentUserId);
+  useChatInboxRealtime(orgId);
   return null;
 }
 
 export default function ChatPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const orgId = session?.orgId ?? undefined;
   const [activeChannelId, setActiveChannelId] = useState<number | null>(null);
   const [showMobileList, setShowMobileList] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
@@ -73,11 +78,18 @@ export default function ChatPage() {
   const handleNewChannel = useCallback(() => setEmptyGroupOpen(true), []);
   const handleSearch = useCallback(() => { setShowMobileList(true); setShowSearchFocus(true); }, []);
   const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
+  const handleChannelLeft = useCallback((channelId: number) => {
+    if (activeChannelId === channelId) setActiveChannelId(null);
+  }, [activeChannelId]);
 
   return (
     <ChatAblyProvider>
-      <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
-    <div className="flex h-full overflow-hidden bg-background">
+      <ChatNotifications
+        activeChannelId={activeChannelId}
+        currentUserId={currentUserId}
+        orgId={orgId}
+      />
+    <div className="flex h-full w-full min-w-0 overflow-hidden bg-background">
 
       <div
         className={cn(
@@ -89,6 +101,7 @@ export default function ChatPage() {
         <ChannelSidebar
           activeChannelId={activeChannelId}
           onSelectChannel={handleSelectChannel}
+          onChannelLeft={handleChannelLeft}
           currentUserId={currentUserId ?? ""}
           autoFocusSearch={showSearchFocus}
           onSearchFocused={handleSearchFocused}
@@ -98,7 +111,7 @@ export default function ChatPage() {
 
       <div
         className={cn(
-          "flex-1 flex flex-col min-w-0 relative",
+          "flex-1 flex flex-col min-w-0 relative overflow-hidden",
           showMobileList && !sidebarCollapsed && "hidden md:flex"
         )}
       >

@@ -6,7 +6,7 @@ import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
-import { isAdminOrOwner, isExpenseAdmin } from "@/lib/auth-helpers";
+import { isAdminOrOwner, isExpenseAdmin } from "@/lib/auth/helpers";
 import { notifyByRoles } from "@/server/actions/create-notification";
 import { ROLES } from "@/lib/constants/roles";
 import { getExpenseMember } from "./_helpers";

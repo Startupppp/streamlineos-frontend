@@ -161,6 +161,7 @@ export function useSendMessage() {
           : null,
         attachments: [],
         replyTo: null,
+        reactions: {},
       };
 
       if (previousData) {
@@ -273,6 +274,91 @@ export function useUpdateChannel() {
   });
 }
 
+export function useMessageReaders(
+  channelId: number,
+  messageId: number,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: queryKeys.chat.messageReaders(channelId, messageId),
+    queryFn: () =>
+      apiClient.get<{ readerNames: string[]; readerCount: number }>(
+        `/chat/channels/${channelId}/messages/${messageId}/readers`
+      ),
+    enabled: enabled && channelId > 0 && messageId > 0,
+    staleTime: 15_000,
+  });
+}
+
+export function useAddChannelMembers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      channelId,
+      userIds,
+    }: {
+      channelId: number;
+      userIds: string[];
+    }) =>
+      apiClient.post<{ added: number; skipped: number }>(
+        `/chat/channels/${channelId}/members`,
+        { userIds }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useRemoveChannelMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      channelId,
+      userId,
+    }: {
+      channelId: number;
+      userId: string;
+    }) =>
+      apiClient.delete<{ removed: boolean }>(
+        `/chat/channels/${channelId}/members/${userId}`
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channel(variables.channelId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useLeaveChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.delete<{ left: boolean }>(`/chat/channels/${channelId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
+export function useDeleteChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (channelId: number) =>
+      apiClient.delete<{ deleted: boolean }>(
+        `/chat/channels/${channelId}?mode=delete`
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useChatHeartbeat() {
   return useMutation({
     mutationFn: () =>
@@ -321,17 +407,71 @@ export const useCreateDM = useCreateDMChannel;
 
 export const useChatSearch = useChatSearchMessages;
 
-export function useToggleReaction(channelId: number, messageId: number) {
+export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation({
-    mutationFn: ({ emoji }: { emoji: string }) =>
+    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
       apiClient.post<{ reactions: Record<string, string[]> }>(
         `/chat/channels/${channelId}/messages/${messageId}/reactions`,
         { emoji }
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(channelId),
+    onMutate: async ({ messageId, emoji }) => {
+      const userId = session?.user?.id;
+      if (!userId) return { previousData: undefined };
+
+      const cacheKey = queryKeys.chat.messages(channelId);
+      await queryClient.cancelQueries({ queryKey: cacheKey });
+
+      const previousData =
+        queryClient.getQueryData<InfiniteData<MessagesPage>>(cacheKey);
+
+      if (previousData) {
+        queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, {
+          ...previousData,
+          pages: previousData.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) => {
+              if (m.id !== messageId) return m;
+              const current = m.reactions ?? {};
+              const existing = current[emoji] ?? [];
+              const next: Record<string, string[]> = { ...current };
+              if (existing.includes(userId)) {
+                const filtered = existing.filter((id) => id !== userId);
+                if (filtered.length === 0) delete next[emoji];
+                else next[emoji] = filtered;
+              } else {
+                next[emoji] = [...existing, userId];
+              }
+              return { ...m, reactions: next };
+            }),
+          })),
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          queryKeys.chat.messages(channelId),
+          context.previousData
+        );
+      }
+    },
+    onSuccess: ({ reactions }, { messageId }) => {
+      const cacheKey = queryKeys.chat.messages(channelId);
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            messages: page.messages.map((m) =>
+              m.id === messageId ? { ...m, reactions } : m
+            ),
+          })),
+        };
       });
     },
   });

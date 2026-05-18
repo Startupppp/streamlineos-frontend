@@ -9,7 +9,17 @@ import {
   RefreshCw,
   ExternalLink,
   Eye,
+  Upload,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { HrSheet } from "@/features/hr/hr-sheet";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -210,6 +220,32 @@ export default function DocumentReviewPage() {
   const [reuploadRemarks, setReuploadRemarks] = useState("");
 
   const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
+  const [hrUploadOpen, setHrUploadOpen] = useState(false);
+  const [hrUploadTypeId, setHrUploadTypeId] = useState("");
+  const [hrUploadFileUrl, setHrUploadFileUrl] = useState("");
+  const [hrUploadFileName, setHrUploadFileName] = useState("");
+
+  const qc = useQueryClient();
+
+  const { data: docTypes } = useQuery({
+    queryKey: ["hr", "document-types"],
+    queryFn: () =>
+      apiClient.get<{ id: number; name: string; isActive: boolean | null }[]>(
+        "/hr/document-types",
+      ),
+  });
+
+  const hrUploadMutation = useMutation({
+    mutationFn: (body: {
+      userId: string;
+      documentTypeId: number;
+      fileUrl: string;
+      fileName: string;
+    }) => apiClient.post("/hr/onboarding-docs", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["hr", "onboarding-docs"] });
+    },
+  });
 
   const {
     data: employeeDocs,
@@ -263,6 +299,43 @@ export default function DocumentReviewPage() {
       }
     );
   }, [reuploadDoc, reuploadRemarks, reviewMutation]);
+
+  const handleHrUpload = useCallback(() => {
+    if (!reviewUserId) return;
+    const documentTypeId = Number(hrUploadTypeId);
+    if (!documentTypeId) {
+      toast.error("Select a document type");
+      return;
+    }
+    if (!hrUploadFileUrl.trim() || !hrUploadFileName.trim()) {
+      toast.error("File URL and name are required");
+      return;
+    }
+    hrUploadMutation.mutate(
+      {
+        userId: reviewUserId,
+        documentTypeId,
+        fileUrl: hrUploadFileUrl.trim(),
+        fileName: hrUploadFileName.trim(),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Document uploaded on behalf of employee");
+          setHrUploadOpen(false);
+          setHrUploadTypeId("");
+          setHrUploadFileUrl("");
+          setHrUploadFileName("");
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [
+    reviewUserId,
+    hrUploadTypeId,
+    hrUploadFileUrl,
+    hrUploadFileName,
+    hrUploadMutation,
+  ]);
 
 
   if (isLoading) {
@@ -369,13 +442,27 @@ export default function DocumentReviewPage() {
 
       <Sheet open={reviewUserId !== null} onOpenChange={(open) => { if (!open) handleCloseReview(); }}>
         <SheetContent side="right" className="flex flex-col p-0 gap-0 sm:max-w-lg w-full">
-          <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-            <SheetTitle className="text-base">
-              {reviewUserName ?? "Employee"} — Documents
-            </SheetTitle>
-            <SheetDescription className="text-xs">
-              Review and approve submitted onboarding documents.
-            </SheetDescription>
+          <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <SheetTitle className="text-base">
+                  {reviewUserName ?? "Employee"} — Documents
+                </SheetTitle>
+                <SheetDescription className="text-xs">
+                  Review and approve submitted onboarding documents.
+                </SheetDescription>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs shrink-0"
+                onClick={() => setHrUploadOpen(true)}
+              >
+                <Upload className="h-3.5 w-3.5 mr-1" />
+                Upload for employee
+              </Button>
+            </div>
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
@@ -562,6 +649,60 @@ export default function DocumentReviewPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <HrSheet
+        open={hrUploadOpen}
+        onOpenChange={(open) => {
+          setHrUploadOpen(open);
+          if (!open) {
+            setHrUploadTypeId("");
+            setHrUploadFileUrl("");
+            setHrUploadFileName("");
+          }
+        }}
+        title={`Upload for ${reviewUserName ?? "employee"}`}
+        description="Submit an onboarding document on behalf of this employee."
+        onSubmit={handleHrUpload}
+        submitLabel="Submit Document"
+        isPending={hrUploadMutation.isPending}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">Document type</Label>
+            <Select value={hrUploadTypeId} onValueChange={setHrUploadTypeId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {(docTypes ?? [])
+                  .filter((t) => t.isActive !== false)
+                  .map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">File URL</Label>
+            <Input
+              type="url"
+              value={hrUploadFileUrl}
+              onChange={(e) => setHrUploadFileUrl(e.target.value)}
+              placeholder="https://..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">File name</Label>
+            <Input
+              value={hrUploadFileName}
+              onChange={(e) => setHrUploadFileName(e.target.value)}
+              placeholder="document.pdf"
+            />
+          </div>
+        </div>
+      </HrSheet>
     </PageWrapper>
   );
 }

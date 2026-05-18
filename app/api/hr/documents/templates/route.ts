@@ -4,6 +4,7 @@ import { documentTemplates } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import { extractVariables } from "@/lib/utils/document-variables";
+import { findActiveTemplateDuplicate } from "@/lib/hr/document-template-uniqueness";
 import type { NextRequest } from "next/server";
 
 const listSchema = z.object({
@@ -40,6 +41,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = await parseBody(req, createSchema);
+
+    const duplicate = await findActiveTemplateDuplicate(
+      session.orgId,
+      body.title,
+      body.type,
+    );
+    if (duplicate) {
+      return err(
+        "A template with this title and type already exists. Use a different title or deactivate the existing template.",
+        409,
+      );
+    }
 
     const variables = body.variables ?? extractVariables(body.htmlContent);
 

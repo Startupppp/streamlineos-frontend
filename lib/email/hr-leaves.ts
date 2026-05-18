@@ -2,9 +2,31 @@ import { sendEmail } from "./sender";
 import { baseUrl } from "./sender";
 import {
   getLeaveRequestEmailTemplate,
+  getWfhRequestEmailTemplate,
   getLeaveStatusUpdateEmailTemplate,
   getLeaveCancellationEmailTemplate,
 } from "../email-templates";
+
+export async function sendWfhRequestEmail(
+  approverEmail: string,
+  approverName: string,
+  employeeName: string,
+  wfhDate: string,
+  reason: string
+) {
+  const reviewUrl = `${baseUrl}/hr/leaves`;
+  await sendEmail({
+    to: approverEmail,
+    subject: `WFH Request: ${employeeName} - Vaivamm Capital`,
+    html: getWfhRequestEmailTemplate(
+      approverName,
+      employeeName,
+      wfhDate,
+      reason,
+      reviewUrl
+    ),
+  });
+}
 
 export async function sendLeaveRequestEmail(
   email: string,

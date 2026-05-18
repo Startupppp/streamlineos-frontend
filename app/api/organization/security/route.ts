@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizations, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 import { invalidateUserSession } from "@/lib/auth";

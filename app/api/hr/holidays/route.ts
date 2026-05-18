@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getHolidays } from "@/server/queries/hr";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { db } from "@/lib/db";
 import { holidays, users, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,10 +10,12 @@ import { z } from "zod";
 import { sendBulkHolidayAnnouncement } from "@/lib/email";
 
 const postHolidaySchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   date: z.string(),
+  type: z.enum(["NATIONAL", "PUBLIC", "OPTIONAL"]).default("PUBLIC"),
   message: z.string().optional(),
   isPublic: z.boolean().optional().default(false),
+  isHalfDay: z.boolean().optional().default(false),
 });
 
 export async function GET(req: NextRequest) {
@@ -39,8 +41,10 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         name: body.name,
         date: formatDateOnly(body.date),
+        type: body.type ?? "PUBLIC",
         message: body.message,
         isPublic: body.isPublic ?? false,
+        isHalfDay: body.isHalfDay ?? false,
       })
       .returning();
 
@@ -69,6 +73,6 @@ export async function POST(req: NextRequest) {
       }
     })().catch(() => {});
 
-    return ok({ success: true });
+    return ok({ success: true, holiday });
   });
 }

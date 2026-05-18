@@ -1,15 +1,15 @@
 
 
 import {
-  LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
+  LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays, CalendarPlus,
   Receipt, FileText, Laptop, Timer, QrCode, DollarSign, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
   Share2, Video, Globe,
 
-  Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award, Scale,
-  MailOpen, Smile, FileCheck, Coins, Map, Landmark, RefreshCcw, Zap,
+  Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award,
+  MailOpen, Smile, FileCheck, Coins, Map, RefreshCcw, Zap,
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
   GitBranch, Building2, UserCog, SlidersHorizontal, UserX,
   Activity, FlaskConical, Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
@@ -31,6 +31,12 @@ export interface NavGroup {
 
   defaultCollapsed?: boolean;
 }
+
+/**
+ * HR sidebar: these routes are intentionally omitted from all roles (CEO, HR, etc.).
+ * App routes under `app/(dashboard)/hr/*` still exist for direct access / future use:
+ * `/hr/loans`, `/hr/reimbursements`, `/hr/fnf`, `/hr/background-verification`, `/hr/compliance`.
+ */
 
 export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
   if (!role) return [];
@@ -56,12 +62,14 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Skills Matrix", icon: Grid3X3, href: "/hr/employees/skills-matrix", isSubItem: true },
+            { label: "Terminated", icon: UserX, href: "/hr/employees/terminated", isSubItem: true },
             { label: "Find Expert", icon: Search, href: "/hr/employees/find-expert", isSubItem: true },
-            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding?tab=workflow", isSubItem: true },
             { label: "Doc Types", icon: FileCheck, href: "/hr/document-types", isSubItem: true },
             { label: "Doc Review", icon: FileText, href: "/hr/document-review", isSubItem: true },
             { label: "Org Chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
             { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work requests", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
             { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
             { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -105,11 +113,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Bonuses", icon: Gift, href: "/hr/bonuses" },
             { label: "Incentives", icon: Coins, href: "/hr/incentives" },
-            { label: "Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "Full & Final", icon: FileCheck, href: "/hr/fnf" },
-            { label: "Background Check", icon: ShieldCheck, href: "/hr/background-verification" },
-            { label: "Compliance", icon: Scale, href: "/hr/compliance" },
           ],
         },
         {
@@ -122,12 +125,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
             { label: "Scorecard Templates", icon: ClipboardList, href: "/hr/recruitment/scorecard-templates", isSubItem: true },
             { label: "SLA Config", icon: Clock, href: "/hr/recruitment/sla", isSubItem: true },
-            { label: "Training", icon: BookOpen, href: "/hr/training" },
-            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
-            { label: "Resignation", icon: UserMinus, href: "/hr/exit" },
-            { label: "Termination", icon: UserX, href: "/hr/termination", isSubItem: true },
-            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
-            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {
@@ -258,12 +255,14 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Skills Matrix", icon: Grid3X3, href: "/hr/employees/skills-matrix", isSubItem: true },
+            { label: "Terminated", icon: UserX, href: "/hr/employees/terminated", isSubItem: true },
             { label: "Find Expert", icon: Search, href: "/hr/employees/find-expert", isSubItem: true },
-            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding?tab=workflow", isSubItem: true },
             { label: "Doc Types", icon: FileCheck, href: "/hr/document-types", isSubItem: true },
             { label: "Doc Review", icon: FileText, href: "/hr/document-review", isSubItem: true },
             { label: "Org Chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
             { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work requests", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
             { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
             { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -306,11 +305,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Bonuses", icon: Gift, href: "/hr/bonuses" },
             { label: "Incentives", icon: Coins, href: "/hr/incentives" },
-            { label: "Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "Full & Final", icon: FileCheck, href: "/hr/fnf" },
-            { label: "Background Check", icon: ShieldCheck, href: "/hr/background-verification" },
-            { label: "Compliance", icon: Scale, href: "/hr/compliance" },
           ],
         },
         {
@@ -323,12 +317,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
             { label: "Scorecard Templates", icon: ClipboardList, href: "/hr/recruitment/scorecard-templates", isSubItem: true },
             { label: "SLA Config", icon: Clock, href: "/hr/recruitment/sla", isSubItem: true },
-            { label: "Training", icon: BookOpen, href: "/hr/training" },
-            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
-            { label: "Resignation", icon: UserMinus, href: "/hr/exit" },
-            { label: "Termination", icon: UserX, href: "/hr/termination", isSubItem: true },
-            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
-            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {
@@ -430,10 +418,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-            { label: "My Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
@@ -482,10 +468,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-            { label: "My Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
@@ -546,10 +530,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-            { label: "My Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
@@ -584,10 +566,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-            { label: "My Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
@@ -620,10 +600,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Holiday work", icon: CalendarPlus, href: "/hr/attendance#holiday-work", isSubItem: true },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-            { label: "My Loans", icon: Landmark, href: "/hr/loans" },
-            { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
-            { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],

@@ -1,7 +1,7 @@
 
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,12 +10,12 @@ import { logger } from "@/lib/logger";
 
 function verifyIndeedSignature(body: string, signature: string | null): boolean {
   const secret = process.env.INDEED_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) return false;
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("hex");
+  if (signature.length !== expected.length) return false;
   try {
-    return signature.length === expected.length &&
-      Buffer.from(signature, "hex").compare(Buffer.from(expected, "hex")) === 0;
+    return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
   } catch {
     return false;
   }
@@ -37,9 +37,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const orgId = req.nextUrl.searchParams.get("orgId");
+  const payloadObj = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+  const orgId =
+    (typeof payloadObj.orgId === "string" ? payloadObj.orgId : null) ??
+    (typeof payloadObj.org_id === "string" ? (payloadObj.org_id as string) : null);
   if (!orgId) {
-    return NextResponse.json({ error: "orgId query param required" }, { status: 400 });
+    logger.warn("Indeed webhook: missing orgId in signed payload");
+    return NextResponse.json(
+      { error: "orgId field required in signed payload body" },
+      { status: 400 }
+    );
   }
 
   const org = await db.query.organizations.findFirst({

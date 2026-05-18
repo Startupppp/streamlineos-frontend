@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { bankDetailsSchema } from "@/lib/validations/bank-details";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateBankDetails } from "@/server/actions/onboarding-actions";
@@ -11,21 +12,16 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useOnboardingSubmit } from "@/lib/hooks/use-onboarding-submit";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 
-const bankSchema = z.object({
-  accountHolder: z.string().min(2, "Account Holder Name is required"),
-  bankName: z.string().min(2, "Bank Name is required"),
-  accountNumber: z
-    .string()
-    .min(8, "Account Number must be at least 8 digits")
-    .max(18, "Account Number must be at most 18 digits")
-    .regex(/^\d+$/, "Account Number must contain only digits"),
-  ifsc: z
-    .string()
-    .min(11, "IFSC Code must be 11 characters")
-    .max(11, "IFSC Code must be 11 characters")
-    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Enter a valid IFSC Code (e.g. HDFC0001234)"),
-  taxId: z.string().optional(),
-});
+const bankSchema = bankDetailsSchema
+  .pick({
+    accountHolder: true,
+    bankName: true,
+    accountNumber: true,
+    ifsc: true,
+  })
+  .extend({
+    taxId: z.string().optional(),
+  });
 
 type BankFormValues = z.infer<typeof bankSchema>;
 

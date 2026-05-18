@@ -8,6 +8,7 @@ export const queryKeys = {
     all: [...base, "hr"] as const,
     departments: () => [...base, "hr", "departments"] as const,
     employees: (params?: Record<string, unknown>) => [...base, "hr", "employees", params] as const,
+    terminatedEmployees: () => [...base, "hr", "terminatedEmployees"] as const,
     employee: (id: string) => [...base, "hr", "employees", id] as const,
     attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
     attendanceLogs: (params?: Record<string, unknown>) => [...base, "hr", "attendanceLogs", params] as const,
@@ -32,6 +33,13 @@ export const queryKeys = {
     holidaysCalendar: (params: { year: number; month: number }) => [...base, "hr", "holidaysCalendar", params] as const,
     devices: (params?: Record<string, unknown>) => [...base, "hr", "devices", params] as const,
     monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
+    attendanceSummary: (params: {
+      userId: string;
+      period: string;
+      year: number;
+      month?: number;
+      quarter?: number;
+    }) => [...base, "hr", "attendanceSummary", params] as const,
     attendanceHeatmap: (params: { userId: string; year: number }) => [...base, "hr", "attendanceHeatmap", params] as const,
     employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
     employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,
@@ -50,13 +58,23 @@ export const queryKeys = {
     candidateVault: (candidateId: number) => [...base, "hr", "candidateVault", candidateId] as const,
     reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
     reviewCycle: (id: number) => [...base, "hr", "reviewCycle", id] as const,
+    appraisals: (params?: Record<string, unknown>) => [...base, "hr", "appraisals", params] as const,
+    appraisal: (id: number) => [...base, "hr", "appraisal", id] as const,
+    appraisalCategories: () => [...base, "hr", "appraisalCategories"] as const,
     oneOnOnes: (params?: Record<string, unknown>) => [...base, "hr", "oneOnOnes", params] as const,
     terminations: () => [...base, "hr", "terminations"] as const,
     termination: (id: number) => [...base, "hr", "termination", id] as const,
     documentTemplates: (params?: Record<string, unknown>) => [...base, "hr", "documentTemplates", params] as const,
     documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
+    documentFolders: () => [...base, "hr", "documentFolders"] as const,
+    orgDocumentVariables: () => [...base, "hr", "orgDocumentVariables"] as const,
     candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,
     rolloutDocuments: (candidateId: number) => [...base, "hr", "rolloutDocuments", candidateId] as const,
+    salaryRevisionHistory: (userId: string) => [...base, "hr", "salaryRevisionHistory", userId] as const,
+    holidayWorkRequests: (params?: Record<string, unknown>) => [...base, "hr", "holidayWorkRequests", params] as const,
+    compOffGrants: (userId?: string) => [...base, "hr", "compOffGrants", userId] as const,
+    lateArrivalWarnings: (userId?: string) => [...base, "hr", "lateArrivalWarnings", userId] as const,
+    overtimePreview: (params: { userId: string; month: string }) => [...base, "hr", "overtimePreview", params] as const,
   },
 
   leads: {
@@ -136,6 +154,8 @@ export const queryKeys = {
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
+    messageReaders: (channelId: number, messageId: number) =>
+      [...base, "chat", "messageReaders", channelId, messageId] as const,
   },
 
   dashboard: {

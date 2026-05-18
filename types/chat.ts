@@ -40,6 +40,9 @@ export interface Channel {
   avatarUrl: string | null;
   createdBy: string;
   isArchived: boolean;
+  isPinned?: boolean;
+  pinnedAt?: Date | string | null;
+  pinnedUntil?: Date | string | null;
   lastMessageAt: Date | string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
@@ -81,6 +84,7 @@ export interface Message {
   sender: { id: string; name: string | null; image: string | null } | null;
   attachments: MessageAttachment[];
   replyTo: MessageReplyTo | null;
+  reactions: Record<string, string[]>;
 }
 
 export interface MessageWithChannel extends Message {
@@ -128,6 +132,8 @@ export interface UpdateChannelInput {
   name?: string;
   description?: string;
   avatarUrl?: string;
+  pinForDays?: 1 | 7 | 14 | 30;
+  unpin?: boolean;
 }
 
 export interface AttachmentInput {

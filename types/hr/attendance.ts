@@ -30,6 +30,8 @@ export interface AttendanceStatusResult {
   todayLog: AttendanceLog | null | undefined;
   dailyStats: DailyStats;
   cooldownRemaining: number;
+  /** When set, new punch in/out is blocked (Sunday or org holiday). */
+  punchBlockedReason?: string | null;
 }
 
 export interface CheckInInput {

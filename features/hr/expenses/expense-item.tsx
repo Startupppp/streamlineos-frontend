@@ -1,13 +1,30 @@
 "use client";
 
 import { format } from "date-fns";
-import { Receipt, Download, Eye, Pencil, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import {
+  Receipt,
+  Download,
+  Eye,
+  Pencil,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  MessageSquare,
+  Mail,
+  Copy,
+} from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
@@ -20,6 +37,105 @@ import {
   STATUS_STYLES,
   STATUS_LABELS,
 } from "./expense-constants";
+
+function SubmitterContactPopover({ expense }: { expense: ExpenseWithRelations }) {
+  const email = expense.user?.email?.trim() || "";
+  const first = expense.user?.firstName ?? "";
+  const fullName =
+    `${first} ${expense.user?.lastName ?? ""}`.trim() || "Submitter";
+  const hasNote = !!expense.description?.trim();
+  const hasRejection =
+    expense.status === "REJECTED" && !!expense.rejectionReason?.trim();
+  if (!email && !hasNote && !hasRejection) return null;
+
+  const idLabel = `#EXP-${new Date(expense.expenseDate).getFullYear()}-${String(expense.id).padStart(3, "0")}`;
+  const subject = `Re: Expense ${idLabel}`;
+  const body = [
+    `Hi ${first || fullName},`,
+    "",
+    `About your expense ${idLabel}:`,
+    `- ${expense.merchant || expense.description || "Claim"}`,
+    `- Amount: ${formatINR(expense.amount)}`,
+    `- Date: ${format(new Date(expense.expenseDate), "dd MMM yyyy")}`,
+    "",
+  ].join("\n");
+
+  const mailHref = email
+    ? `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    : undefined;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs shrink-0"
+          type="button"
+          aria-label="View claim note and contact submitter"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Msg
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 space-y-3 text-left">
+        <p className="text-sm font-medium leading-none">Contact submitter</p>
+        <p className="text-xs text-muted-foreground break-all">
+          {fullName}
+          {email ? ` · ${email}` : ""}
+        </p>
+        {hasNote ? (
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Claim note
+            </p>
+            <p className="text-sm whitespace-pre-wrap break-words max-h-32 overflow-y-auto">
+              {expense.description}
+            </p>
+          </div>
+        ) : null}
+        {hasRejection ? (
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Rejection reason
+            </p>
+            <p className="text-sm whitespace-pre-wrap break-words text-destructive max-h-24 overflow-y-auto">
+              {expense.rejectionReason}
+            </p>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {mailHref ? (
+            <Button size="sm" className="gap-1.5" asChild>
+              <a href={mailHref}>
+                <Mail className="h-3.5 w-3.5" />
+                Email
+              </a>
+            </Button>
+          ) : null}
+          {email ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                void navigator.clipboard.writeText(email);
+                toast.success("Email copied");
+              }}
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+          ) : null}
+        </div>
+        {!email && (hasNote || hasRejection) ? (
+          <p className="text-xs text-muted-foreground">No email on file for this user.</p>
+        ) : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
@@ -98,17 +214,30 @@ export function AdminExpenseItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <Badge
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
-              status === "PENDING"
-                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                : status === "APPROVED"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-            }`}
-          >
-            {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
-          </Badge>
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  className={`cursor-help text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                    status === "PENDING"
+                      ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                      : status === "APPROVED"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                      : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                  }`}
+                >
+                  {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {status === "PENDING"
+                  ? "Waiting for HR/Admin approval."
+                  : status === "APPROVED"
+                  ? "Expense has been approved."
+                  : expense.rejectionReason?.trim() || "Expense was rejected."}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <span className="text-xs text-muted-foreground">
             #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
           </span>
@@ -150,8 +279,42 @@ export function AdminExpenseItem({
       </div>
 
       <div className="text-right min-w-[150px] flex-shrink-0">
-        <p className="text-2xl font-bold text-foreground">{formatINR(expense.amount)}</p>
-        <p className="text-xs text-muted-foreground mb-3">INR</p>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-2xl font-bold text-foreground cursor-help inline-block underline decoration-dotted decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground transition-colors">
+                {formatINR(expense.amount)}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="text-xs">
+              <div className="space-y-1">
+                <p>
+                  <span className="text-muted-foreground">Amount: </span>
+                  <span className="font-semibold tabular-nums">{formatINR(expense.amount)}</span>
+                </p>
+                {expense.paymentMethod && (
+                  <p>
+                    <span className="text-muted-foreground">Paid via: </span>
+                    <span className="font-medium capitalize">{expense.paymentMethod.toLowerCase()}</span>
+                  </p>
+                )}
+                <p>
+                  <span className="text-muted-foreground">Date: </span>
+                  <span className="font-medium">{format(new Date(expense.expenseDate), "dd MMM yyyy")}</span>
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <p className="text-xs text-muted-foreground mb-2">INR</p>
+
+        {(expense.user?.email?.trim() ||
+          expense.description?.trim() ||
+          (expense.status === "REJECTED" && expense.rejectionReason?.trim())) && (
+          <div className="flex justify-end mb-2">
+            <SubmitterContactPopover expense={expense} />
+          </div>
+        )}
 
         {isRejecting ? (
           <div className="space-y-2 text-left">
@@ -248,16 +411,31 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
         {formatINR(expense.amount)}
       </TableCell>
       <TableCell className="px-6 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
-          {status === "PAID" ? (
-            <CheckCircle2 className="h-3 w-3" />
-          ) : status === "REJECTED" ? (
-            <XCircle className="h-3 w-3" />
-          ) : (
-            <span className={`size-1.5 rounded-full ${statusStyle.dot}`} />
-          )}
-          {STATUS_LABELS[status] || status}
-        </span>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className={`inline-flex cursor-help items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
+                {status === "PAID" ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : status === "REJECTED" ? (
+                  <XCircle className="h-3 w-3" />
+                ) : (
+                  <span className={`size-1.5 rounded-full ${statusStyle.dot}`} />
+                )}
+                {STATUS_LABELS[status] || status}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {status === "PENDING"
+                ? "Submitted and awaiting review."
+                : status === "APPROVED"
+                ? "Approved and ready for reimbursement."
+                : status === "PAID"
+                ? "Reimbursement has been paid."
+                : expense.rejectionReason?.trim() || "Rejected by approver."}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TableCell>
       <TableCell className="px-6 py-4 text-right">
         {canResubmit ? (

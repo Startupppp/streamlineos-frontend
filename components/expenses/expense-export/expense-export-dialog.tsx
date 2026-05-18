@@ -109,6 +109,28 @@ export function ExpenseExportDialog({
 
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
+  const resetDialogState = () => {
+    setFormat("xlsx");
+    setIncludeHeader(true);
+    setIncludeTotals(true);
+    setIsExporting(false);
+    setIsSendingEmail(false);
+    setExportComplete(false);
+    setEmailTarget("BOTH");
+    setDateFrom(filters.startDate || "");
+    setDateTo(filters.endDate || "");
+    setExportCategory("all");
+    setExportPayment("all");
+    setExportStatus(filters.status && filters.status !== "all" ? String(filters.status) : "all");
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      resetDialogState();
+    }
+  };
+
   const exportFilters: ExportFilters = {
     startDate: dateFrom || filters.startDate,
     endDate: dateTo || filters.endDate,
@@ -124,6 +146,10 @@ export function ExpenseExportDialog({
   };
 
   const handleSendEmail = async () => {
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      toast.error("From date cannot be later than To date");
+      return;
+    }
     setIsSendingEmail(true);
     try {
       const result = await emailExpenseReport(exportFilters, emailTarget);
@@ -141,6 +167,10 @@ export function ExpenseExportDialog({
   };
 
   const handleExport = async () => {
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      toast.error("From date cannot be later than To date");
+      return;
+    }
     setIsExporting(true);
     setExportComplete(false);
 
@@ -173,8 +203,7 @@ export function ExpenseExportDialog({
       setExportComplete(true);
       toast.success("Export downloaded successfully!");
       setTimeout(() => {
-        setOpen(false);
-        setExportComplete(false);
+        handleOpenChange(false);
       }, 1500);
     } catch {
       toast.error("Failed to export expenses");
@@ -185,7 +214,7 @@ export function ExpenseExportDialog({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
           {trigger || (
             <Button variant="outline" className="gap-2">
@@ -323,6 +352,11 @@ export function ExpenseExportDialog({
                 </div>
                 <Switch checked={includeHeader} onCheckedChange={setIncludeHeader} />
               </div>
+              {!includeHeader && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Header metadata will be omitted from the exported file.
+                </p>
+              )}
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">Include Totals</Label>
@@ -359,7 +393,7 @@ export function ExpenseExportDialog({
 
           <div className="flex flex-col gap-3 pt-6 mt-2 border-t">
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setOpen(false)}>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
               <Button

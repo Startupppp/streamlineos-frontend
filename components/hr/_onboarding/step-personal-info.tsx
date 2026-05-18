@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
-import { format } from "date-fns";
+import { format, subYears } from "date-fns";
+import { isPersonNameInputCharValid, normalizePersonNameInput } from "@/lib/utils/person-name";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -21,7 +23,13 @@ interface StepPersonalInfoProps {
   form: UseFormReturn<FormValues>;
 }
 
+const EMAIL_MAX_LENGTH = 254;
+const PERSON_NAME_MAX_LENGTH = 50;
+
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
+  const maxDateOfBirth = useMemo(() => subYears(new Date(), 16), []);
+  const minDateOfBirth = useMemo(() => subYears(new Date(), 100), []);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <FormField
@@ -31,9 +39,17 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input
+                placeholder="John"
+                maxLength={PERSON_NAME_MAX_LENGTH}
+                {...field}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (!isPersonNameInputCharValid(next)) return;
+                  field.onChange(normalizePersonNameInput(next));
+                }}
+                onBlur={(e) => field.onChange(e.target.value.trim())}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,9 +62,17 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input
+                placeholder="Doe"
+                maxLength={PERSON_NAME_MAX_LENGTH}
+                {...field}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (!isPersonNameInputCharValid(next)) return;
+                  field.onChange(normalizePersonNameInput(next));
+                }}
+                onBlur={(e) => field.onChange(e.target.value.trim())}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -61,7 +85,14 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input type="email" placeholder="john@company.com" {...field} />
+              <Input
+                type="email"
+                placeholder="john@company.com"
+                maxLength={EMAIL_MAX_LENGTH}
+                {...field}
+                onChange={(e) => field.onChange(e.target.value.trimStart())}
+                onBlur={(e) => field.onChange(e.target.value.trim())}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -109,8 +140,9 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(v) => field.onChange(v ? new Date(v) : null)}
-                toDate={new Date()}
+                onChange={(v) => field.onChange(v ? new Date(v) : undefined)}
+                fromDate={minDateOfBirth}
+                toDate={maxDateOfBirth}
                 placeholder="Select DOB"
               />
             </FormControl>

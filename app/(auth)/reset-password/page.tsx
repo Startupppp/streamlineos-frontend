@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/auth/password-input";
 import {
   Form,
   FormControl,
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { resetPassword } from "@/server/actions/auth-actions";
-import { Loader2, Rocket, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Loader2, Rocket, ArrowRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { PASSWORD_REGEX } from "@/lib/password-utils";
@@ -64,9 +64,6 @@ export default function ResetPasswordPage() {
   const { update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { password: "", confirmPassword: "" },
@@ -74,9 +71,6 @@ export default function ResetPasswordPage() {
 
   const password = form.watch("password");
   const strength = password ? getPasswordStrength(password) : null;
-
-  const handleTogglePassword = () => setShowPassword((v) => !v);
-  const handleToggleConfirmPassword = () => setShowConfirmPassword((v) => !v);
 
   async function onSubmit(values: FormValues) {
     setLoading(true);
@@ -122,28 +116,12 @@ export default function ResetPasswordPage() {
                 <FormItem>
                   <FormLabel className="text-[13px] font-medium">New Password</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="8+ characters"
-                        className="pl-9 pr-9 h-9 text-sm"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleTogglePassword}
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
+                    <PasswordInput
+                      autoComplete="new-password"
+                      placeholder="8+ characters"
+                      className="h-9 text-sm"
+                      {...field}
+                    />
                   </FormControl>
                   {strength && (
                     <div className="space-y-1 mt-1">
@@ -184,28 +162,12 @@ export default function ResetPasswordPage() {
                 <FormItem>
                   <FormLabel className="text-[13px] font-medium">Confirm Password</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        className="pl-9 pr-9 h-9 text-sm"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleToggleConfirmPassword}
-                        tabIndex={-1}
-                        aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
+                    <PasswordInput
+                      autoComplete="new-password"
+                      placeholder="Confirm your password"
+                      className="h-9 text-sm"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[12px]" />
                 </FormItem>

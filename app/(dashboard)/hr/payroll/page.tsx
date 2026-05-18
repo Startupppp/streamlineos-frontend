@@ -10,7 +10,11 @@ import {
   useGenerateEmployeePayslip,
   useApprovePayroll,
   useMarkPayrollPaid,
+  useDeletePayroll,
+  useHrSalaryStructures,
+  useResendPayslipEmail,
 } from "@/lib/api/hooks/hr";
+import { useOvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -34,10 +38,20 @@ import { toast } from "sonner";
 import { Users, Loader2, DollarSign, CreditCard, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import type { Employee } from "@/types/hr";
+import type { Employee, PayrollWithUser } from "@/types/hr";
+import { isAxiosError } from "axios";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
+import { PayrollRecordPreviewSheet } from "@/features/hr/payroll/payroll-record-preview-sheet";
 import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
+import {
+  buildPayslipPreviewFromEmployee,
+  PROFESSIONAL_TAX_INR,
+} from "@/lib/hr/payroll-calculations";
+import {
+  pickSalaryStructureForPayrollMonth,
+  resolvePayrollMonthlyCtc,
+} from "@/lib/hr/salary-effective-dates";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);
@@ -52,6 +66,9 @@ export default function PayrollPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedMonth = searchParams.get("month") || format(new Date(), "yyyy-MM");
+  const selectedYear = selectedMonth.slice(0, 4);
+  const selectedMonthPart = selectedMonth.slice(5, 7);
+  const employeeFilter = searchParams.get("employee") || "all";
   const setSelectedMonth = useCallback(
     (month: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -60,6 +77,32 @@ export default function PayrollPage() {
     },
     [searchParams, router]
   );
+  const setSelectedYear = useCallback(
+    (year: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("month", `${year}-${selectedMonthPart}`);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, selectedMonthPart]
+  );
+  const setSelectedMonthPart = useCallback(
+    (monthPart: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("month", `${selectedYear}-${monthPart}`);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, selectedYear]
+  );
+  const setEmployeeFilter = useCallback(
+    (employeeName: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (employeeName === "all") params.delete("employee");
+      else params.set("employee", employeeName);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+  const [previewPayroll, setPreviewPayroll] = useState<PayrollWithUser | null>(null);
   const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
@@ -67,13 +110,14 @@ export default function PayrollPage() {
   const [halfDays, setHalfDays] = useState<string>("");
   const [otherDeductions, setOtherDeductions] = useState<string>("");
   const [bonus, setBonus] = useState<string>("");
-  const [overtimeType, setOvertimeType] = useState<string>("");
-  const [overtimeDays, setOvertimeDays] = useState<string>("");
-  const [overtimeHours, setOvertimeHours] = useState<string>("");
-  const [overtimeAmount, setOvertimeAmount] = useState<string>("");
+  const [leaves, setLeaves] = useState<string>("");
 
   const { data: allPayrolls, isLoading } = useHrAllPayrolls({ month: selectedMonth });
   const { data: employeesRaw } = useHrEmployees();
+  const { data: salaryStructures } = useHrSalaryStructures(selectedEmployee || undefined);
+  const { data: overtimePreview } = useOvertimePreview(
+    { userId: selectedEmployee, month: selectedMonth },
+  );
 
   const employees = useMemo(
     () =>
@@ -83,10 +127,28 @@ export default function PayrollPage() {
     [employeesRaw]
   );
 
+  const salaryStructureList = useMemo(() => {
+    if (!salaryStructures) return [];
+    return Array.isArray(salaryStructures) ? salaryStructures : [];
+  }, [salaryStructures]);
+
+  const activeSalary = useMemo(() => {
+    return salaryStructureList.find((s) => s.isActive) ?? null;
+  }, [salaryStructureList]);
+
+  const pickedStructureForMonth = useMemo(
+    () => pickSalaryStructureForPayrollMonth(salaryStructureList, selectedMonth),
+    [salaryStructureList, selectedMonth]
+  );
+
+  const salaryRowForPreview = pickedStructureForMonth ?? activeSalary;
+
   const generatePayrollMutation = useGeneratePayroll();
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
   const approvePayrollMutation = useApprovePayroll();
   const markPaidMutation = useMarkPayrollPaid();
+  const resendPayslipEmailMutation = useResendPayslipEmail();
+  const deletePayrollMutation = useDeletePayroll();
 
   const selectedEmployeeData = useMemo(() => {
     if (!selectedEmployee || !employees.length) return null;
@@ -96,58 +158,42 @@ export default function PayrollPage() {
   const payslipPreview = useMemo(() => {
     if (!selectedEmployeeData) return null;
 
-    const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
-    const [payYear, payMonthNum] = selectedMonth.split("-").map(Number);
-    const workingDays = new Date(payYear, payMonthNum, 0).getDate();
-    const perDaySalary = monthlySalary / workingDays;
-    const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
-    const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;
-    const basicPay = monthlySalary * 0.5;
-    const hra = monthlySalary * 0.25;
-    const professionalTax = 200;
+    const otAmt = overtimePreview?.overtimeAmount ?? 0;
+    const employeeMonthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
+    const structureDeductions = parseFloat(salaryRowForPreview?.deductions ?? "0");
 
-    const otAmt = parseFloat(overtimeAmount) || 0;
-    const grossSalary = monthlySalary + (parseFloat(bonus) || 0) + otAmt;
-    const totalDeductions =
-      lopDeduction +
-      halfDayDeduction +
-      professionalTax +
-      (parseFloat(otherDeductions) || 0);
-    const netSalary = grossSalary - totalDeductions;
+    const targetCtc = resolvePayrollMonthlyCtc({
+      picked: pickedStructureForMonth,
+      fallbackStructure: activeSalary,
+      employeeMonthlySalary,
+    });
+    if (targetCtc <= 0) return null;
 
-    return {
-      basicPay,
-      hra,
-      grossSalary,
-      lopDeduction,
-      halfDayDeduction,
-      professionalTax,
+    return buildPayslipPreviewFromEmployee({
+      monthlySalary: targetCtc,
+      month: selectedMonth,
+      lopDays: parseFloat(lopDays) || 0,
+      halfDays: parseFloat(halfDays) || 0,
       otherDeductions: parseFloat(otherDeductions) || 0,
       bonus: parseFloat(bonus) || 0,
       overtimeAmount: otAmt,
-      overtimeType,
-      overtimeDays: parseFloat(overtimeDays) || 0,
-      overtimeHours: parseFloat(overtimeHours) || 0,
-      totalDeductions,
-      netSalary,
-      lopDays: parseFloat(lopDays) || 0,
-      halfDays: parseFloat(halfDays) || 0,
-      workingDays,
-      effectiveDays:
-        workingDays -
-        (parseFloat(lopDays) || 0) -
-        (parseFloat(halfDays) || 0) * 0.5,
-    };
+      overtimeType: otAmt > 0 ? "days" : "",
+      overtimeDays: overtimePreview?.overtimeDays ?? 0,
+      overtimeHours: 0,
+      salaryStructureDeductions: structureDeductions,
+      professionalTax: PROFESSIONAL_TAX_INR,
+    });
   }, [
     selectedEmployeeData,
+    selectedMonth,
     lopDays,
     halfDays,
     otherDeductions,
     bonus,
-    overtimeType,
-    overtimeDays,
-    overtimeHours,
-    overtimeAmount,
+    overtimePreview,
+    pickedStructureForMonth,
+    salaryRowForPreview,
+    activeSalary,
   ]);
 
   const resetSheet = () => {
@@ -158,10 +204,7 @@ export default function PayrollPage() {
     setHalfDays("");
     setOtherDeductions("");
     setBonus("");
-    setOvertimeType("");
-    setOvertimeDays("");
-    setOvertimeHours("");
-    setOvertimeAmount("");
+    setLeaves("");
   };
 
   const handleGenerateAll = useCallback(() => {
@@ -172,7 +215,13 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll generated for all employees");
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) => {
+          if (isAxiosError(error) && error.response?.status === 409) {
+            toast.error("Payroll already exists for one or more employees in this month.");
+            return;
+          }
+          toast.error(getErrorMessage(error));
+        },
       }
     );
   }, [generatePayrollMutation, selectedMonth, qc]);
@@ -182,11 +231,24 @@ export default function PayrollPage() {
       toast.error("Please select an employee");
       return;
     }
+    const monthly = parseFloat(selectedEmployeeData?.monthlySalary || "0");
+    const targetCtc = resolvePayrollMonthlyCtc({
+      picked: pickedStructureForMonth,
+      fallbackStructure: activeSalary,
+      employeeMonthlySalary: monthly,
+    });
+    if (targetCtc <= 0) {
+      toast.error(
+        "Set the employee’s monthly salary or add a salary structure before preview."
+      );
+      return;
+    }
     setShowPreview(true);
-  }, [selectedEmployee]);
+  }, [selectedEmployee, selectedEmployeeData, pickedStructureForMonth, activeSalary]);
 
   const handleGenerateForEmployee = useCallback(() => {
     if (!selectedEmployee) return;
+    const leavesTrimmed = leaves.trim();
     generateEmployeePayslipMutation.mutate(
       {
         userId: selectedEmployee,
@@ -195,13 +257,9 @@ export default function PayrollPage() {
         halfDays: parseFloat(halfDays) || 0,
         otherDeductions: parseFloat(otherDeductions) || 0,
         bonus: parseFloat(bonus) || 0,
-        overtimeType:
-          overtimeType === "days" || overtimeType === "hours"
-            ? overtimeType
-            : undefined,
-        overtimeDays: parseFloat(overtimeDays) || 0,
-        overtimeHours: parseFloat(overtimeHours) || 0,
-        overtimeAmount: parseFloat(overtimeAmount) || 0,
+        ...(leavesTrimmed !== "" && !Number.isNaN(parseFloat(leavesTrimmed))
+          ? { leaveDays: parseFloat(leavesTrimmed) }
+          : {}),
       },
       {
         onSuccess: () => {
@@ -209,10 +267,16 @@ export default function PayrollPage() {
           toast.success("Payslip generated successfully");
           resetSheet();
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) => {
+          if (isAxiosError(error) && error.response?.status === 409) {
+            toast.error("Payroll already exists for this employee and month.");
+            return;
+          }
+          toast.error(getErrorMessage(error));
+        },
       }
     );
-  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount, qc]);
+  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, leaves, qc]);
 
   const handleApprovePayroll = useCallback((payrollId: number) => {
     approvePayrollMutation.mutate(
@@ -227,27 +291,88 @@ export default function PayrollPage() {
     );
   }, [approvePayrollMutation, selectedMonth, qc]);
 
+  const reportEmailOutcome = useCallback(
+    (data: { emailSent: boolean; emailError?: string }, opts: { onSuccessText: string }) => {
+      if (data.emailSent) {
+        toast.success(opts.onSuccessText);
+        return;
+      }
+      const msg =
+        data.emailError === "no_email"
+          ? "Payslip email was not sent: employee has no email on file."
+          : data.emailError === "send_failed"
+            ? "Payslip email could not be sent. Check server logs and use Resend once the issue is fixed."
+            : data.emailError === "missing_dob"
+              ? "Payslip email was not sent: add employee date of birth (onboarding) before emailing payslips."
+              : data.emailError === "pdf_not_encrypted"
+                ? "Payslip email was not sent: PDF encryption (qpdf) is unavailable on this server."
+                : "Payslip email was not sent.";
+      toast.warning(msg);
+    },
+    []
+  );
+
   const handleMarkPaid = useCallback((payrollId: number) => {
     markPaidMutation.mutate(
       { payrollId },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll marked as paid");
+          if (!data.emailSent) {
+            reportEmailOutcome(data, { onSuccessText: "" });
+          }
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
-  }, [markPaidMutation, selectedMonth, qc]);
+  }, [markPaidMutation, selectedMonth, qc, reportEmailOutcome]);
+
+  const handleResendEmail = useCallback((payrollId: number) => {
+    resendPayslipEmailMutation.mutate(
+      { payrollId },
+      {
+        onSuccess: (data) => {
+          reportEmailOutcome(data, { onSuccessText: "Payslip email resent." });
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      }
+    );
+  }, [resendPayslipEmailMutation, reportEmailOutcome]);
 
   const handleDownloadPayslip = useCallback((payrollId: number) => {
     window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
   }, []);
 
+  const handleDeletePayroll = useCallback(
+    (payrollId: number) => {
+      deletePayrollMutation.mutate(
+        { payrollId },
+        {
+          onSuccess: () => {
+            qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+            toast.success("Draft payroll deleted");
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        }
+      );
+    },
+    [deletePayrollMutation, selectedMonth, qc]
+  );
+
+  const filteredPayrolls = useMemo(() => {
+    const rows = allPayrolls ?? [];
+    if (employeeFilter === "all") return rows;
+    return rows.filter((p) => {
+      const fullName = `${p.user?.firstName ?? ""} ${p.user?.lastName ?? ""}`.trim();
+      return fullName === employeeFilter;
+    });
+  }, [allPayrolls, employeeFilter]);
+
   const totalGross =
-    allPayrolls?.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
+    filteredPayrolls.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
   const totalNet =
-    allPayrolls?.reduce((sum, p) => sum + parseFloat(p.netSalary || "0"), 0) || 0;
+    filteredPayrolls.reduce((sum, p) => sum + parseFloat(p.netSalary || "0"), 0) || 0;
 
   if (isLoading) {
     return (
@@ -350,14 +475,9 @@ export default function PayrollPage() {
             onBonusChange={setBonus}
             otherDeductions={otherDeductions}
             onOtherDeductionsChange={setOtherDeductions}
-            overtimeType={overtimeType}
-            onOvertimeTypeChange={setOvertimeType}
-            overtimeDays={overtimeDays}
-            onOvertimeDaysChange={setOvertimeDays}
-            overtimeHours={overtimeHours}
-            onOvertimeHoursChange={setOvertimeHours}
-            overtimeAmount={overtimeAmount}
-            onOvertimeAmountChange={setOvertimeAmount}
+            leaves={leaves}
+            onLeavesChange={setLeaves}
+            overtimePreview={selectedEmployee ? overtimePreview : null}
             payslipPreview={payslipPreview}
             selectedEmployeeData={selectedEmployeeData}
             selectedMonth={selectedMonth}
@@ -380,7 +500,7 @@ export default function PayrollPage() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
             label="Total Employees"
-            value={allPayrolls?.length || 0}
+            value={filteredPayrolls.length}
             icon={Users}
             color="blue"
           />
@@ -408,13 +528,39 @@ export default function PayrollPage() {
           <PayrollTable
             payrolls={allPayrolls ?? []}
             selectedMonth={selectedMonth}
+            year={selectedYear}
+            month={selectedMonthPart}
+            employeeFilter={employeeFilter}
+            onYearChange={setSelectedYear}
+            onMonthChange={setSelectedMonthPart}
+            onEmployeeFilterChange={setEmployeeFilter}
+            onPreview={setPreviewPayroll}
             onApprove={handleApprovePayroll}
             onMarkPaid={handleMarkPaid}
+            onDelete={handleDeletePayroll}
             isApprovePending={approvePayrollMutation.isPending}
             isMarkPaidPending={markPaidMutation.isPending}
+            isDeletePending={deletePayrollMutation.isPending}
             onDownload={handleDownloadPayslip}
+            onResendEmail={handleResendEmail}
+            isResendPending={resendPayslipEmailMutation.isPending}
           />
         )}
+        {(allPayrolls?.length ?? 0) > 0 && filteredPayrolls.length === 0 && (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration className="h-32 w-32" />}
+            title="No records for selected filters"
+            description="Try a different employee or month/year combination."
+          />
+        )}
+
+        <PayrollRecordPreviewSheet
+          open={!!previewPayroll}
+          onOpenChange={(open) => {
+            if (!open) setPreviewPayroll(null);
+          }}
+          payroll={previewPayroll}
+        />
       </div>
     </PageWrapper>
   );

@@ -331,6 +331,8 @@ export interface Module {
   updatedAt: string | Date | null;
   totalItems?: number;
   completedItems?: number;
+  /** Work items not in DONE, CANCELLED, or CLOSED (from list API). */
+  activeTicketCount?: number;
   progress?: number;
 }
 

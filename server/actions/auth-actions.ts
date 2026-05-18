@@ -3,15 +3,17 @@
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { invalidateUserSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth/require-auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { ROLES, ADMIN_ROLES } from "@/lib/constants/roles";
 
 export async function resetPassword(password: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await requireAuth();
+  if ("error" in ctx) return ctx;
+  const session = ctx.session;
 
   if (!password || password.length < 8) {
     return { error: "Password must be at least 8 characters" };
@@ -34,6 +36,8 @@ export async function resetPassword(password: string) {
         })
         .where(eq(users.id, session.user.id));
 
+     await invalidateUserSession(session.user.id);
+
      return { success: true };
   } catch (error) {
       logger.error("Failed to reset password", error);
@@ -49,10 +53,11 @@ export async function createEmployee(data: {
     role: string;
     initialPassword?: string;
 }) {
-    const session = await auth();
-    if (!session?.user?.id || !ADMIN_ROLES.includes(session.user.role ?? "")) {
+    const ctx = await requireAuth(ADMIN_ROLES);
+    if ("error" in ctx) {
         return { error: "Unauthorized: Insufficient permissions" };
     }
+    const session = ctx.session;
 
     try {
         const existing = await db.query.users.findFirst({

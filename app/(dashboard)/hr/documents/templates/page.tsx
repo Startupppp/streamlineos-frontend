@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   Eye,
+  ArrowLeft,
   FileCheck,
   FileLock,
   FileKey,
@@ -183,9 +184,10 @@ function DeleteConfirm({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete template?</AlertDialogTitle>
+          <AlertDialogTitle>Deactivate template?</AlertDialogTitle>
           <AlertDialogDescription>
-            &ldquo;{template.title}&rdquo; will be deactivated. This action cannot be undone.
+            &ldquo;{template.title}&rdquo; will be hidden from rollout and marked inactive.
+            Existing generated documents are not affected.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -195,7 +197,7 @@ function DeleteConfirm({
             onClick={() => onDelete(template.id)}
             disabled={isPending}
           >
-            Delete
+            Deactivate
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -257,7 +259,7 @@ export default function DocumentTemplatesPage() {
   const handleDelete = useCallback(
     (id: number) => {
       deleteMutation.mutate(id, {
-        onSuccess: () => toast.success("Template deleted"),
+        onSuccess: () => toast.success("Template deactivated"),
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
@@ -278,12 +280,20 @@ export default function DocumentTemplatesPage() {
       title="Document Templates"
       subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       actions={
-        <Button size="sm" className="gap-2" asChild>
-          <Link href="/hr/documents/templates/new">
-            <FilePlus2 className="h-4 w-4" />
-            Add Template
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/hr/documents">
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Back to Documents
+            </Link>
+          </Button>
+          <Button size="sm" className="gap-2" asChild>
+            <Link href="/hr/documents/templates/new">
+              <FilePlus2 className="h-4 w-4" />
+              Add Template
+            </Link>
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6">
@@ -308,6 +318,7 @@ export default function DocumentTemplatesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
+                      <TableHead className="w-[48px] text-center">#</TableHead>
                       <TableHead className="w-[220px]">Title</TableHead>
                       <TableHead className="w-[120px]">Type</TableHead>
                       <TableHead>Variables</TableHead>
@@ -318,11 +329,14 @@ export default function DocumentTemplatesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {list.map((template) => {
+                    {list.map((template, index) => {
                       const cfg = getTypeConfig(template.type);
                       const TypeIcon = cfg.icon;
                       return (
-                        <TableRow key={template.id} className="group">
+                        <TableRow key={template.id}>
+                          <TableCell className="text-center text-xs text-muted-foreground tabular-nums">
+                            {index + 1}
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2 min-w-0">
                               <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -360,13 +374,13 @@ export default function DocumentTemplatesPage() {
                               ? format(new Date(template.createdAt), "MMM d, yyyy")
                               : "—"}
                           </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
+                          <TableCell className="text-right">
+                            <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="h-7 w-7"
                                   aria-label="Template actions"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />

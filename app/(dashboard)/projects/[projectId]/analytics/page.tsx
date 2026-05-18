@@ -201,11 +201,11 @@ export default function AnalyticsPage({
   return (
     <PageWrapper title="Analytics">
       {healthScore != null && healthBreakdown && (
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Project Health Score</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-1 pb-8">
             <div className="flex items-center gap-6 flex-wrap">
               <div className="text-center">
                 <p className={`text-5xl font-bold tabular-nums ${healthColor}`}>{healthScore}</p>

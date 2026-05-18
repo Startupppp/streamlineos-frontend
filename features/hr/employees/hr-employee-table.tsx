@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Eye, Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { AIAttritionRiskButton } from "./ai-attrition-risk-button";
 import {
@@ -90,11 +90,12 @@ export function HrEmployeeTable({
     <Card className="border-border flex flex-col flex-1 min-h-0">
       <CardContent className="p-0 flex flex-col flex-1 min-h-0">
         <div className="overflow-auto flex-1 min-h-0" role="region" aria-label="Employee directory table">
-          <div className="min-w-[700px]">
+          <div className="min-w-[820px]">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Name</TableHead>
+                  <TableHead>Employee ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Department</TableHead>
@@ -135,6 +136,10 @@ export function HrEmployeeTable({
                             {displayName}
                           </span>
                         </Link>
+                      </TableCell>
+
+                      <TableCell className="text-sm font-mono text-muted-foreground whitespace-nowrap">
+                        {user.employeeId ?? "—"}
                       </TableCell>
 
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -206,7 +211,20 @@ export function HrEmployeeTable({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
+                            aria-label={`View ${displayName}`}
+                            title="View details"
+                            asChild
+                          >
+                            <Link href={`/hr/employees/${user.id}`}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
                             aria-label={`Edit ${displayName}`}
+                            title="Edit profile"
                             asChild
                           >
                             <Link href={`/hr/employees/${user.id}?tab=profile`}>

@@ -6,25 +6,59 @@ import { db } from "@/lib/db";
 import { ticketWatchers, tickets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 
 type RouteParams = {
   params: Promise<{ projectId: string; ticketId: string }>;
 };
 
-async function resolveTicketId(params: RouteParams["params"]) {
-  const { ticketId: tid } = await params;
-  return Number(tid);
+async function resolveIds(params: RouteParams["params"]) {
+  const { projectId: rawPid, ticketId: tid } = await params;
+  return { projectId: Number(rawPid), ticketId: Number(tid) };
+}
+
+async function loadTicketForProject(
+  projectId: number,
+  ticketId: number,
+  orgId: string
+) {
+  if (!projectId || !ticketId) return null;
+  return db.query.tickets.findFirst({
+    where: and(
+      eq(tickets.id, ticketId),
+      eq(tickets.orgId, orgId),
+      eq(tickets.projectId, projectId),
+    ),
+    columns: { id: true, reporterId: true, assigneeId: true },
+    with: {
+      project: { columns: { managerId: true } },
+      assignees: { columns: { userId: true } },
+    },
+  });
+}
+
+function canRemoveWatcherForOthers(
+  sessionUserId: string,
+  role: string | undefined,
+  ticket: NonNullable<Awaited<ReturnType<typeof loadTicketForProject>>>
+): boolean {
+  if (isExpenseAdmin(role)) return true;
+  if (ticket.project?.managerId === sessionUserId) return true;
+  if (ticket.reporterId === sessionUserId) return true;
+  if (ticket.assigneeId === sessionUserId) return true;
+  return ticket.assignees.some((a) => a.userId === sessionUserId);
 }
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    const ticketId = await resolveTicketId(params);
-    if (!ticketId) return err("Invalid ticket id", 400);
+    const { projectId, ticketId } = await resolveIds(params);
+    if (!ticketId || !projectId) return err("Invalid ticket id", 400);
 
-    const ticket = await db.query.tickets.findFirst({
-      where: and(eq(tickets.id, ticketId), eq(tickets.orgId, session.orgId!)),
-      columns: { id: true },
-    });
+    const ticket = await loadTicketForProject(
+      projectId,
+      ticketId,
+      session.orgId!
+    );
     if (!ticket) return err("Ticket not found", 404);
 
     const watchers = await db.query.ticketWatchers.findMany({
@@ -42,13 +76,14 @@ const addWatcherSchema = z.object({
 
 export async function POST(req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    const ticketId = await resolveTicketId(params);
-    if (!ticketId) return err("Invalid ticket id", 400);
+    const { projectId, ticketId } = await resolveIds(params);
+    if (!ticketId || !projectId) return err("Invalid ticket id", 400);
 
-    const ticket = await db.query.tickets.findFirst({
-      where: and(eq(tickets.id, ticketId), eq(tickets.orgId, session.orgId!)),
-      columns: { id: true },
-    });
+    const ticket = await loadTicketForProject(
+      projectId,
+      ticketId,
+      session.orgId!
+    );
     if (!ticket) return err("Ticket not found", 404);
 
     const body = await parseBody(req, addWatcherSchema);
@@ -63,18 +98,35 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   });
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    const ticketId = await resolveTicketId(params);
-    if (!ticketId) return err("Invalid ticket id", 400);
+    const { projectId, ticketId } = await resolveIds(params);
+    if (!ticketId || !projectId) return err("Invalid ticket id", 400);
+
+    const rawTarget = req.nextUrl.searchParams.get("userId");
+    const targetUserId = rawTarget?.trim() || session.user.id;
+
+    const ticket = await loadTicketForProject(
+      projectId,
+      ticketId,
+      session.orgId!
+    );
+    if (!ticket) return err("Ticket not found", 404);
+
+    if (
+      targetUserId !== session.user.id &&
+      !canRemoveWatcherForOthers(session.user.id, session.user.role, ticket)
+    ) {
+      return err("Forbidden", 403);
+    }
 
     await db
       .delete(ticketWatchers)
       .where(
         and(
           eq(ticketWatchers.ticketId, ticketId),
-          eq(ticketWatchers.userId, session.user.id)
-        )
+          eq(ticketWatchers.userId, targetUserId),
+        ),
       );
 
     return ok({ success: true });

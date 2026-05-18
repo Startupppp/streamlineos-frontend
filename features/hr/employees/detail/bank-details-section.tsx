@@ -2,11 +2,20 @@
 
 import { useFormContext } from "react-hook-form";
 import {
-  FormControl, FormField, FormItem, FormLabel, FormMessage,
+  FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreditCard } from "lucide-react";
 import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
+import {
+  ACCOUNT_HOLDER_MAX,
+  BANK_ACCOUNT_NUMBER_MAX,
+  BANK_NAME_MAX,
+  BRANCH_NAME_MAX,
+  IBAN_MAX_LENGTH,
+  IFSC_LENGTH,
+  SWIFT_CODE_MAX,
+} from "@/lib/validations/bank-details";
 
 export function BankDetailsSection() {
   const { control } = useFormContext<EmployeeFormValues>();
@@ -24,7 +33,16 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  maxLength={ACCOUNT_HOLDER_MAX}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value.replace(/[^A-Za-z\s.'-]/g, ""))}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -35,7 +53,19 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Number</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  inputMode="numeric"
+                  maxLength={BANK_ACCOUNT_NUMBER_MAX}
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(e.target.value.replace(/\D/g, "").slice(0, BANK_ACCOUNT_NUMBER_MAX))
+                  }
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -46,7 +76,16 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  maxLength={BANK_NAME_MAX}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value.replace(/[^A-Za-z0-9&.\s'-]/g, ""))}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -57,7 +96,21 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>IFSC Code</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  className="uppercase"
+                  maxLength={IFSC_LENGTH}
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, IFSC_LENGTH),
+                    )
+                  }
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -68,7 +121,68 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Branch</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  maxLength={BRANCH_NAME_MAX}
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value.replace(/[^A-Za-z0-9\s,'.-]/g, ""))}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="swiftCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SWIFT / BIC Code</FormLabel>
+              <FormControl>
+                <Input
+                  className="uppercase"
+                  maxLength={SWIFT_CODE_MAX}
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, SWIFT_CODE_MAX),
+                    )
+                  }
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">Optional</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="iban"
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>IBAN</FormLabel>
+              <FormControl>
+                <Input
+                  className="uppercase"
+                  maxLength={IBAN_MAX_LENGTH}
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, IBAN_MAX_LENGTH),
+                    )
+                  }
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">Optional</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -79,7 +193,21 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tax ID (PAN)</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  placeholder="ABCDE1234F"
+                  className="uppercase"
+                  maxLength={10}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const next = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+                    field.onChange(next);
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

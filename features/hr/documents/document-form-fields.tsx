@@ -2,6 +2,10 @@
 
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
+import {
+  DOCUMENT_DESCRIPTION_MAX,
+  DOCUMENT_NAME_MAX,
+} from "@/lib/validations/hr-documents";
 import { format } from "date-fns";
 import { CalendarIcon, X, Tags, Shield, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,8 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
+  name: z.string().max(DOCUMENT_NAME_MAX, `Name must be at most ${DOCUMENT_NAME_MAX} characters`),
+  description: z
+    .string()
+    .max(DOCUMENT_DESCRIPTION_MAX, `Description must be at most ${DOCUMENT_DESCRIPTION_MAX} characters`)
+    .optional(),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
   category: z.string().optional(),
   userId: z.string().optional(),
@@ -109,7 +116,7 @@ export function DocumentFormFields({
         name="category"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Category</FormLabel>
+            <FormLabel>Folder / category</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
@@ -141,8 +148,8 @@ export function DocumentFormFields({
                 value={field.value || "none"}
               >
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee (optional)" />
+                  <SelectTrigger className="min-w-0">
+                    <SelectValue placeholder="Select employee (optional)" className="truncate" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -168,8 +175,16 @@ export function DocumentFormFields({
           <FormItem className="col-span-2">
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea placeholder="Brief description of the document..." rows={2} {...field} />
+              <Textarea
+                placeholder="Brief description of the document..."
+                rows={3}
+                maxLength={DOCUMENT_DESCRIPTION_MAX}
+                {...field}
+              />
             </FormControl>
+            <p className="text-[10px] text-muted-foreground text-right">
+              {(field.value?.length ?? 0)}/{DOCUMENT_DESCRIPTION_MAX}
+            </p>
             <FormMessage />
           </FormItem>
         )}

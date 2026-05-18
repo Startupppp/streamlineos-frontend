@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert } from "@/lib/api/hooks/hr";
-import { Search } from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
 
@@ -30,6 +30,14 @@ export default function FindExpertPage() {
     <PageWrapper
       title="Find Expert"
       subtitle="Search across the org to find colleagues with specific skills"
+      actions={
+        <Button variant="outline" size="sm" className="gap-2" asChild>
+          <Link href="/hr">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Employees
+          </Link>
+        </Button>
+      }
     >
       <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
         <Input

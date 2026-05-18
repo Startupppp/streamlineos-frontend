@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import type { NextRequest } from "next/server";
 
 type Ctx = { params: Promise<{ keyId: string }> };

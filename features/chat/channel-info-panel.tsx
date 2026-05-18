@@ -8,13 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
+import { Camera, Hash, ImageIcon, Loader2, Pencil, Pin, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import { useChatChannel, useChatOnlineUsers, useUpdateChannel } from "@/lib/hooks/trpc-hooks";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import {
+  useChatChannel,
+  useChatOnlineUsers,
+  useUpdateChannel,
+  useRemoveChannelMember,
+} from "@/lib/hooks/trpc-hooks";
+import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
+import { AddMembersDialog } from "./add-members-dialog";
 
 export function ChannelInfoPanel({
   channelId,
@@ -43,7 +49,70 @@ export function ChannelInfoPanel({
   const [editDesc, setEditDesc] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [addMembersOpen, setAddMembersOpen] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const editAvatarRef = useRef<HTMLInputElement>(null);
+
+  const removeMember = useRemoveChannelMember();
+
+  const existingMemberIds = useMemo(
+    () =>
+      new Set(
+        (channel?.members ?? [])
+          .map((m) => m.user?.id)
+          .filter((id): id is string => Boolean(id))
+      ),
+    [channel?.members]
+  );
+
+  const adminCount = useMemo(
+    () =>
+      (channel?.members ?? []).filter((m) => m.role === "ADMIN").length,
+    [channel?.members]
+  );
+
+  const handleOpenAddMembers = useCallback(() => setAddMembersOpen(true), []);
+
+  const pinnedUntil = channel?.pinnedUntil
+    ? new Date(channel.pinnedUntil as string | Date)
+    : null;
+  const isPinnedActive = Boolean(channel?.isPinned && pinnedUntil);
+
+  const handlePinDays = useCallback(
+    async (days: 1 | 7 | 14 | 30) => {
+      try {
+        await updateChannel.mutateAsync({ channelId, pinForDays: days });
+        toast.success(`Channel pinned for ${days} day${days > 1 ? "s" : ""}`);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [updateChannel, channelId]
+  );
+
+  const handleUnpinChannel = useCallback(async () => {
+    try {
+      await updateChannel.mutateAsync({ channelId, unpin: true });
+      toast.success("Channel unpinned");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [updateChannel, channelId]);
+
+  const handleRemoveMember = useCallback(
+    async (userId: string) => {
+      setRemovingUserId(userId);
+      try {
+        await removeMember.mutateAsync({ channelId, userId });
+        toast.success("Member removed");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      } finally {
+        setRemovingUserId(null);
+      }
+    },
+    [removeMember, channelId]
+  );
 
   const handleOpenAvatarInput = useCallback(() => { editAvatarRef.current?.click(); }, []);
   const handleCancelEdit = useCallback(() => setEditing(false), []);
@@ -183,18 +252,85 @@ export function ChannelInfoPanel({
             </div>
           )}
 
+          {isGroup && isAdmin && (
+            <div className="mb-5 px-1 rounded-lg border border-border/40 bg-muted/15 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Pin className="h-3.5 w-3.5 text-gold shrink-0" />
+                <p className="text-[11px] font-semibold text-foreground">Pin channel</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Pinned channels appear at the top of the list until the pin expires.
+              </p>
+              {isPinnedActive && pinnedUntil && (
+                <p className="text-[10px] text-muted-foreground">
+                  Active until{" "}
+                  <span className="font-medium text-foreground">
+                    {pinnedUntil.toLocaleString()}
+                  </span>
+                </p>
+              )}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {([1, 7, 14, 30] as const).map((d) => (
+                  <Button
+                    key={d}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[11px] px-2"
+                    disabled={updateChannel.isPending}
+                    onClick={() => void handlePinDays(d)}
+                  >
+                    {d}d
+                  </Button>
+                ))}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px]"
+                  disabled={updateChannel.isPending || !channel?.isPinned}
+                  onClick={() => void handleUnpinChannel()}
+                >
+                  Unpin
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div>
-            <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-              Members ({channel?.members?.length ?? 0})
-            </h5>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Members ({channel?.members?.length ?? 0})
+              </h5>
+              {isGroup && isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleOpenAddMembers}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-gold hover:text-gold/80 transition-colors"
+                  title="Add people"
+                  aria-label="Add people to channel"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Add
+                </button>
+              )}
+            </div>
             <div className="space-y-0.5">
               {channel?.members?.map((m) => {
-                const isOnline = onlineUserIds.has(m.user?.id ?? "");
-                const isYou = m.user?.id === currentUserId;
+                const memberId = m.user?.id;
+                const isOnline = onlineUserIds.has(memberId ?? "");
+                const isYou = memberId === currentUserId;
+                const canRemove =
+                  isGroup &&
+                  isAdmin &&
+                  !isYou &&
+                  !!memberId &&
+                  !(m.role === "ADMIN" && adminCount <= 1);
+                const isRemoving = removingUserId === memberId;
                 return (
                   <div
-                    key={m.user?.id}
-                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors"
+                    key={memberId}
+                    className="group/member flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/30 transition-colors"
                   >
                     <div className="relative shrink-0">
                       <Avatar className="h-8 w-8">
@@ -219,6 +355,22 @@ export function ChannelInfoPanel({
                         Admin
                       </Badge>
                     )}
+                    {canRemove && memberId && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(memberId)}
+                        disabled={isRemoving}
+                        className="opacity-0 group-hover/member:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-50"
+                        title="Remove from channel"
+                        aria-label={`Remove ${m.user?.name ?? "member"} from channel`}
+                      >
+                        {isRemoving ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <X className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -236,6 +388,15 @@ export function ChannelInfoPanel({
           )}
         </div>
       </ScrollArea>
+
+      {isGroup && isAdmin && (
+        <AddMembersDialog
+          open={addMembersOpen}
+          onOpenChange={setAddMembersOpen}
+          channelId={channelId}
+          existingMemberIds={existingMemberIds}
+        />
+      )}
     </div>
   );
 }

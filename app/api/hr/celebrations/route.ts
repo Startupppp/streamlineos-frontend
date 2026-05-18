@@ -1,13 +1,15 @@
 import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizationMembers, users } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import {
+  isBirthdayToday,
+  isUpcomingBirthdaySoon,
+} from "@/lib/hr/upcoming-birthdays";
 
 export async function GET() {
   return withAuth(async (session) => {
     const now = new Date();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
 
     const members = await db
       .select({
@@ -29,14 +31,9 @@ export async function GET() {
 
     for (const m of members) {
       if (m.dateOfBirth) {
-        const dob = new Date(m.dateOfBirth);
-        const dobMonth = dob.getMonth() + 1;
-        const dobDay = dob.getDate();
-        if (dobMonth === month && dobDay === day) {
+        if (isBirthdayToday(m.dateOfBirth, now)) {
           birthdays.push(m);
-        } else if (
-          dobMonth === month && dobDay > day && dobDay <= day + 7
-        ) {
+        } else if (isUpcomingBirthdaySoon(m.dateOfBirth, now)) {
           upcomingBirthdays.push(m);
         }
       }
@@ -44,6 +41,8 @@ export async function GET() {
         const jd = new Date(m.joiningDate);
         const jdMonth = jd.getMonth() + 1;
         const jdDay = jd.getDate();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
         if (jdMonth === month && jdDay === day) {
           const years = now.getFullYear() - jd.getFullYear();
           if (years > 0) {

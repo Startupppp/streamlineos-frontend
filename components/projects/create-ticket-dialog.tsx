@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,16 +32,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Upload, Link as LinkIcon } from "lucide-react";
+import { Plus, Upload, Link as LinkIcon, ChevronsUpDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
   assigneeIds: z.array(z.string()).optional(),
@@ -51,41 +64,86 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function CreateTicketDialog({
   projectId,
-  variant = "default"
+  variant = "default",
+  open: controlledOpen,
+  onOpenChange,
+  defaultStatus,
+  hideTrigger = false,
 }: {
   projectId: number;
   variant?: "default" | "fab";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultStatus?: string;
+  hideTrigger?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [files, setFiles] = useState<File[]>([]);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [assigneePickerOpen, setAssigneePickerOpen] = useState(false);
+  const [assigneeSearch, setAssigneeSearch] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
   const { data: projectData } = useProject(projectId);
-  const projectMembersList = projectData?.members?.filter(m => !!m.user).map(m => ({
-    id: m.user!.id,
-    name: m.user!.name || `${m.user!.firstName || ''} ${m.user!.lastName || ''}`.trim(),
-    firstName: m.user!.firstName || undefined,
-    lastName: m.user!.lastName || undefined,
-    image: m.user!.image || null,
-    email: m.user!.email,
-  })) || [];
-  const manager = projectData && "manager" in projectData
-    ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
-    : undefined;
-  const members = manager && !projectMembersList.some(m => m.id === manager.id)
-    ? [
+  const members = useMemo(() => {
+    const projectMembersList =
+      projectData?.members
+        ?.filter((m) => !!m.user)
+        .map((m) => ({
+          id: m.user!.id,
+          name:
+            m.user!.name ||
+            `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
+          firstName: m.user!.firstName || undefined,
+          lastName: m.user!.lastName || undefined,
+          image: m.user!.image || null,
+          email: m.user!.email,
+        })) || [];
+    const manager =
+      projectData && "manager" in projectData
+        ? (
+            projectData as {
+              manager?: {
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                image?: string | null;
+                email?: string | null;
+              };
+            }
+          ).manager
+        : undefined;
+    if (manager && !projectMembersList.some((m) => m.id === manager.id)) {
+      return [
         {
           id: manager.id,
-          name: manager.name || `${manager.firstName || ''} ${manager.lastName || ''}`.trim(),
+          name:
+            manager.name ||
+            `${manager.firstName || ""} ${manager.lastName || ""}`.trim(),
           firstName: manager.firstName || undefined,
           lastName: manager.lastName || undefined,
           image: manager.image || null,
-          email: manager.email || '',
+          email: manager.email || "",
         },
-        ...projectMembersList
-      ]
-    : projectMembersList;
+        ...projectMembersList,
+      ];
+    }
+    return projectMembersList;
+  }, [projectData]);
+
+  const assigneeCandidates = useMemo(() => {
+    const q = assigneeSearch.trim().toLowerCase();
+    return (members ?? []).filter((m) => {
+      if (selectedAssignees.includes(m.id)) return false;
+      if (!q) return true;
+      const name = (m.name || "").toLowerCase();
+      const mail = (m.email || "").toLowerCase();
+      return name.includes(q) || mail.includes(q);
+    });
+  }, [members, selectedAssignees, assigneeSearch]);
 
   const addAttachmentMutation = useAddAttachment();
 
@@ -136,6 +194,8 @@ export function CreateTicketDialog({
     form.reset();
     setFiles([]);
     setSelectedAssignees([]);
+    setAssigneePickerOpen(false);
+    setAssigneeSearch("");
     queryClient.invalidateQueries({
       queryKey: queryKeys.projects.detail(projectId),
     });
@@ -151,8 +211,15 @@ export function CreateTicketDialog({
       link: "",
       assigneeId: undefined,
       assigneeIds: [],
+      status: defaultStatus as FormValues["status"],
     },
   });
+
+  useEffect(() => {
+    if (open && defaultStatus) {
+      form.setValue("status", defaultStatus as FormValues["status"]);
+    }
+  }, [open, defaultStatus, form]);
 
   const onSubmit = (values: FormValues) => {
     createTicketMutation.mutate({
@@ -162,26 +229,29 @@ export function CreateTicketDialog({
       link: values.link || undefined,
       assigneeId: selectedAssignees[0] || undefined,
       assigneeIds: selectedAssignees.length > 0 ? selectedAssignees : undefined,
+      status: values.status ?? defaultStatus,
     });
   };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {variant === "fab" ? (
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <Plus className="h-6 w-6" />
-            <span className="sr-only">Create Ticket</span>
-          </Button>
-        ) : (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create Ticket
-          </Button>
-        )}
-      </SheetTrigger>
+      {!hideTrigger && (
+        <SheetTrigger asChild>
+          {variant === "fab" ? (
+            <Button
+              size="lg"
+              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="sr-only">Create Ticket</span>
+            </Button>
+          ) : (
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Create Ticket
+            </Button>
+          )}
+        </SheetTrigger>
+      )}
       <SheetContent
         side="right"
         className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
@@ -306,31 +376,84 @@ export function CreateTicketDialog({
                       </div>
                     )}
 
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (!value || value === "unassigned") return;
-                        if (selectedAssignees.includes(value)) return;
-                        setSelectedAssignees((prev) => [...prev, value]);
+                    <Popover
+                      open={assigneePickerOpen}
+                      onOpenChange={(o) => {
+                        setAssigneePickerOpen(o);
+                        if (!o) setAssigneeSearch("");
                       }}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={selectedAssignees.length > 0 ? "+ Add another assignee" : "Select assignees"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {members?.filter((m) => !selectedAssignees.includes(m.id)).map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            <div className="flex items-center gap-2">
-                               <Avatar className="h-7 w-7">
-                                  <AvatarImage src={resolveImageUrl(member.image)} />
-                                  <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
-                               </Avatar>
-                               <span className="truncate">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={assigneePickerOpen}
+                          className="w-full justify-between h-10 font-normal text-muted-foreground"
+                        >
+                          <span className="truncate">
+                            {selectedAssignees.length > 0
+                              ? "Add another assignee…"
+                              : "Search assignees by name or email…"}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Search…"
+                            value={assigneeSearch}
+                            onValueChange={setAssigneeSearch}
+                            className="h-9"
+                          />
+                          <CommandList className="max-h-[220px]">
+                            <CommandEmpty className="text-xs py-3 text-center text-muted-foreground">
+                              No matching people
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {assigneeCandidates.map((member) => (
+                                <CommandItem
+                                  key={member.id}
+                                  value={member.id}
+                                  className="text-sm"
+                                  onSelect={() => {
+                                    if (selectedAssignees.includes(member.id)) return;
+                                    setSelectedAssignees((prev) => [...prev, member.id]);
+                                    setAssigneePickerOpen(false);
+                                    setAssigneeSearch("");
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4 shrink-0 opacity-0",
+                                      selectedAssignees.includes(member.id) && "opacity-100"
+                                    )}
+                                  />
+                                  <Avatar className="h-7 w-7 mr-2">
+                                    <AvatarImage src={resolveImageUrl(member.image)} />
+                                    <AvatarFallback className="text-[10px]">
+                                      {member.name?.[0] || "U"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="truncate">
+                                      {member.name ||
+                                        `${member.firstName || ""} ${member.lastName || ""}`.trim()}
+                                    </span>
+                                    {member.email ? (
+                                      <span className="text-[10px] text-muted-foreground truncate">
+                                        {member.email}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                <FormField

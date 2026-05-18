@@ -1,4 +1,5 @@
 import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
+import { PAYSLIP_PASSWORD_HINT } from "@/lib/hr/payslip-password";
 
 export function getLeaveRequestEmailTemplate(
   approverName: string,
@@ -54,6 +55,61 @@ export function getLeaveRequestEmailTemplate(
   return getEmailTemplate({
     title: `Leave Request: ${sEmployee} - Vaivamm Capital`,
     preheader: `${sEmployee} requested ${sLeaveType} from ${startDate} to ${endDate}`,
+    content,
+  });
+}
+
+export function getWfhRequestEmailTemplate(
+  approverName: string,
+  employeeName: string,
+  wfhDate: string,
+  reason: string,
+  reviewUrl: string
+): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sApprover = escapeHtml(approverName);
+  const sReason = escapeHtml(reason || "—");
+  const content = `
+    <h2 class="email-title">🏠 New Work From Home Request</h2>
+    <p class="email-text">
+      Hi <strong>${sApprover}</strong>,
+    </p>
+    <p class="email-text">
+      <strong>${sEmployee}</strong> has requested to work from home and selected you as the approver.
+    </p>
+
+    <div class="credential-box">
+      <div class="credential-item">
+        <span class="credential-label">Employee:</span>
+        <span class="credential-value">${sEmployee}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">WFH date:</span>
+        <span class="credential-value">${escapeHtml(wfhDate)}</span>
+      </div>
+    </div>
+
+    <div style="background: #f8fafc; border-left: 4px solid #0f2b7f; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b; font-size: 14px;">Reason</p>
+      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${sReason}</p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${reviewUrl}" class="email-button">
+        Review WFH Request
+      </a>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="email-text">
+      You can approve or reject this request from the Leaves &amp; WFH section in Vaivamm CRM.
+    </p>
+  `;
+
+  return getEmailTemplate({
+    title: `WFH Request: ${sEmployee} - Vaivamm Capital`,
+    preheader: `${sEmployee} requested WFH on ${wfhDate}`,
     content,
   });
 }
@@ -483,11 +539,22 @@ export function getPayslipEmailTemplate(params: {
   month: string;
   netSalary: string;
   orgName: string;
+  passwordProtected?: boolean;
+  payslipUrl?: string;
 }): { subject: string; html: string } {
   const sName = escapeHtml(params.employeeName);
   const sMonth = escapeHtml(params.month);
   const sNet = escapeHtml(params.netSalary);
   const sOrg = escapeHtml(params.orgName);
+
+  const passwordHint = params.passwordProtected
+    ? `
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;color:#78350f;">
+        <strong>Password-protected PDF.</strong>
+        ${escapeHtml(PAYSLIP_PASSWORD_HINT)}
+      </div>
+    `
+    : "";
 
   const content = `
     <p class="email-text">Dear <strong>${sName}</strong>,</p>
@@ -500,6 +567,12 @@ export function getPayslipEmailTemplate(params: {
       <p style="margin:0;color:#166534;font-size:13px;">Net Salary — ${sMonth}</p>
       <p style="margin:6px 0 0 0;color:#166534;font-size:26px;font-weight:700;">₹${sNet}</p>
     </div>
+    ${passwordHint}
+    ${
+      params.payslipUrl
+        ? `<p class="email-text"><a href="${escapeHtml(params.payslipUrl)}" class="email-button">View Payslip Online</a></p>`
+        : ""
+    }
     <p class="email-text">
       The PDF attachment contains your full salary breakdown including earnings, deductions, and bank
       transfer details. If you have any questions, please contact the HR department.
@@ -619,6 +692,66 @@ export function getInterviewInviteEmail(params: {
     html: getEmailTemplate({
       title: isCandidate ? "Interview Invitation" : "Interview Assigned",
       preheader: `${sFormat} interview on ${sDate} — ${durationLabel}`,
+      content,
+    }),
+  };
+}
+
+export function getHolidayWorkRequestEmailToHr(params: {
+  employeeName: string;
+  employeeEmail: string | null;
+  requestDate: string;
+  dayLabel: string;
+  reason: string;
+  compensationPreference: "COMP_OFF" | "EXTRA_PAY";
+  submittedAt: Date | string;
+  orgName: string;
+}): { subject: string; html: string } {
+  const sName = escapeHtml(params.employeeName);
+  const sEmail = params.employeeEmail ? escapeHtml(params.employeeEmail) : "—";
+  const sDate = escapeHtml(params.requestDate);
+  const sDay = escapeHtml(params.dayLabel);
+  const sReason = escapeHtml(params.reason);
+  const sComp = params.compensationPreference === "COMP_OFF" ? "Compensatory off" : "Extra pay";
+  const submittedAtStr =
+    typeof params.submittedAt === "string"
+      ? params.submittedAt
+      : params.submittedAt.toISOString();
+  const sSubmitted = escapeHtml(submittedAtStr);
+  const sOrg = escapeHtml(params.orgName);
+  const reviewUrl = `${baseUrl}/hr/attendance#holiday-work`;
+
+  const content = `
+    <p class="email-text">A team member has informed HR that they are working on a non-working day.</p>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;">
+      <table style="width:100%;font-size:13px;color:#0f172a;border-collapse:collapse;">
+        <tr><td style="padding:4px 8px;color:#64748b;width:40%;">Employee</td><td style="padding:4px 8px;font-weight:600;">${sName}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Email</td><td style="padding:4px 8px;">${sEmail}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Date</td><td style="padding:4px 8px;font-weight:600;">${sDate} (${sDay})</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Compensation</td><td style="padding:4px 8px;">${sComp}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;vertical-align:top;">Reason</td><td style="padding:4px 8px;">${sReason}</td></tr>
+        <tr><td style="padding:4px 8px;color:#64748b;">Submitted at</td><td style="padding:4px 8px;font-family:monospace;font-size:12px;">${sSubmitted}</td></tr>
+      </table>
+    </div>
+
+    <p class="email-text" style="margin-top:16px;">
+      <a href="${reviewUrl}" style="background:#0f2b7f;color:#ffffff;padding:10px 16px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;display:inline-block;">
+        Review request
+      </a>
+    </p>
+
+    <p class="email-text" style="font-size:12px;color:#64748b;margin-top:16px;">
+      Status is <strong>PENDING</strong> until you approve or reject from the HR Attendance page.
+    </p>
+    <p class="email-text" style="font-size:12px;color:#64748b;">— ${sOrg}</p>
+  `;
+
+  return {
+    subject: `[Holiday Work] ${params.employeeName} — ${params.requestDate} (${params.dayLabel})`,
+    html: getEmailTemplate({
+      title: "Holiday work request",
+      preheader: `${params.employeeName} requested to work on ${params.requestDate}`,
       content,
     }),
   };

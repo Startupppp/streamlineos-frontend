@@ -7,6 +7,8 @@ import { eq, and } from "drizzle-orm";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { formatDateOnly } from "@/lib/date-utils";
+import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
@@ -24,15 +26,24 @@ export async function updatePersonalDetails(formData: FormData) {
     : undefined;
 
   try {
+    const member = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, userId),
+    });
+
     await db.update(users).set({
       phone,
       skills,
       experienceYears: experienceYears ? experienceYears.toString() : undefined,
       ...(gender ? { gender } : {}),
-      ...(dateOfBirth ? { dateOfBirth } : {}),
+      ...(dateOfBirth ? { dateOfBirth: formatDateOnly(new Date(dateOfBirth)) } : {}),
     }).where(eq(users.id, userId));
 
     await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
+
+    if (dateOfBirth && member?.orgId) {
+      await invalidateHrDashboardCache(member.orgId);
+    }
+
     return { success: true };
   } catch {
     return { error: "Failed to update profile" };

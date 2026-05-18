@@ -7,6 +7,8 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   AttendanceStatusResult,
   AttendanceLog,
+  AttendanceSummaryApiResponse,
+  AttendanceSummaryPeriod,
   CheckInInput,
   GetMonthlyAttendanceInput,
   WorkLog,
@@ -117,6 +119,28 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
       apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+    enabled: !!params.userId,
+  });
+}
+
+export function useHrAttendanceSummary(params: {
+  userId: string;
+  period: AttendanceSummaryPeriod;
+  year: number;
+  month?: number;
+  quarter?: number;
+}) {
+  const q: Record<string, unknown> = {
+    userId: params.userId,
+    period: params.period,
+    year: params.year,
+  };
+  if (params.month !== undefined) q.month = params.month;
+  if (params.quarter !== undefined) q.quarter = params.quarter;
+
+  return useQuery({
+    queryKey: queryKeys.hr.attendanceSummary(params),
+    queryFn: () => apiClient.get<AttendanceSummaryApiResponse>("/hr/attendance/summary", q),
     enabled: !!params.userId,
   });
 }

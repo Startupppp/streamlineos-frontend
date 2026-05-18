@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormControl, FormField, FormItem, FormLabel, FormMessage,
@@ -11,19 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { User } from "lucide-react";
+import { isPersonNameInputCharValid, normalizePersonNameInput } from "@/lib/utils/person-name";
 import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
+
+const PERSON_NAME_MAX_LENGTH = 50;
 
 export function PersonalInfoSection() {
   const { control } = useFormContext<EmployeeFormValues>();
-
-  const handlePhoneChange = useCallback(
-    (onChange: (v: string) => void) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = e.target.value;
-        if (/^[\d+\s-]*$/.test(v)) onChange(v);
-      },
-    []
-  );
 
   return (
     <div className="space-y-4">
@@ -38,7 +31,21 @@ export function PersonalInfoSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>First Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  maxLength={PERSON_NAME_MAX_LENGTH}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (isPersonNameInputCharValid(next)) {
+                      field.onChange(normalizePersonNameInput(next));
+                    }
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -49,7 +56,21 @@ export function PersonalInfoSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Last Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input
+                  maxLength={PERSON_NAME_MAX_LENGTH}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (isPersonNameInputCharValid(next)) {
+                      field.onChange(normalizePersonNameInput(next));
+                    }
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -61,7 +82,14 @@ export function PersonalInfoSection() {
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
+                <PhoneInput
+                  defaultCountry="IN"
+                  placeholder="Enter phone number"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -73,7 +101,7 @@ export function PersonalInfoSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Gender</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select gender" />

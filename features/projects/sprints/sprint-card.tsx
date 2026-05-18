@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { format, differenceInDays } from "date-fns";
-import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight } from "lucide-react";
+import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight, CalendarDays, Timer, ListChecks, Gauge } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,22 +59,26 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
   const handleStart = useCallback(() => onStart?.(sprint.id), [sprint.id, onStart]);
   const handleComplete = useCallback(() => onComplete?.(sprint.id), [sprint.id, onComplete]);
   const handlePlan = useCallback(() => onPlan?.(sprint.id), [sprint.id, onPlan]);
+  const doneTickets = tickets.filter((t) => t.status === "DONE").length;
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
+    <Card className="rounded-xl border-border/80 bg-card/80 shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Link href={`/projects/${projectId}?sprint=${sprint.id}`} className="hover:text-primary transition-colors">
+          <div className="space-y-2 min-w-0">
+            <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+              <Link
+                href={`/projects/${projectId}?sprint=${sprint.id}`}
+                className="hover:text-primary transition-colors truncate"
+              >
                 {sprint.name}
               </Link>
               <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
             </CardTitle>
             {sprint.goal && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <Target className="h-3 w-3" />
-                {sprint.goal}
+                <span className="truncate">{sprint.goal}</span>
               </p>
             )}
           </div>
@@ -122,22 +126,32 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Start Date</p>
+      <CardContent className="space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+          <div className="rounded-md border bg-muted/20 p-3">
+            <p className="text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Start Date
+            </p>
             <p className="font-medium">{format(startDate, "MMM dd, yyyy")}</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">End Date</p>
+          <div className="rounded-md border bg-muted/20 p-3">
+            <p className="text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" />
+              End Date
+            </p>
             <p className="font-medium">{format(endDate, "MMM dd, yyyy")}</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">Duration</p>
+          <div className="rounded-md border bg-muted/20 p-3">
+            <p className="text-muted-foreground flex items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5" />
+              Duration
+            </p>
             <p className="font-medium">{totalDays} days</p>
           </div>
-          <div>
-            <p className="text-muted-foreground">
+          <div className="rounded-md border bg-muted/20 p-3">
+            <p className="text-muted-foreground flex items-center gap-1.5">
+              <Gauge className="h-3.5 w-3.5" />
               {sprint.status === "COMPLETED" ? "Completed" : "Remaining"}
             </p>
             <p className={cn("font-medium", sprint.status !== "COMPLETED" && daysRemaining < 0 && "text-red-500")}>
@@ -150,12 +164,17 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
           </div>
         </div>
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Progress: {completedPoints} / {totalPoints} points</span>
-            <span>{tickets.filter((t) => t.status === "DONE").length} / {tickets.length} tickets</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm mb-2">
+            <span className="text-muted-foreground">
+              Progress: <span className="font-medium text-foreground">{completedPoints} / {totalPoints}</span> points
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <ListChecks className="h-3.5 w-3.5" />
+              <span className="font-medium text-foreground">{doneTickets} / {tickets.length}</span> tickets
+            </span>
           </div>
           <div
-            className="w-full bg-secondary rounded-full h-2"
+            className="w-full bg-secondary rounded-full h-2.5"
             role="progressbar"
             aria-valuenow={Math.round(progress)}
             aria-valuemin={0}
@@ -163,7 +182,7 @@ export function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isU
             aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
             aria-valuetext={`${Math.round(progress)}% complete`}
           >
-            <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+            <div className="bg-primary h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </CardContent>

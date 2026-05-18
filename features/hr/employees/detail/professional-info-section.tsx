@@ -1,8 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import {
-  FormControl, FormField, FormItem, FormLabel, FormMessage,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -11,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { Briefcase } from "lucide-react";
+import { getVaivammEstablishedDate } from "@/lib/constants/company";
+import { EMPLOYMENT_FIELD_COPY } from "@/features/hr/employees/employment-field-copy";
 import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
 
 interface ProfessionalInfoSectionProps {
@@ -19,6 +27,7 @@ interface ProfessionalInfoSectionProps {
 
 export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSectionProps) {
   const { control } = useFormContext<EmployeeFormValues>();
+  const minJoiningDate = useMemo(() => getVaivammEstablishedDate().toISOString().split("T")[0], []);
 
   return (
     <div className="space-y-4">
@@ -26,14 +35,60 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
         <Briefcase className="h-4 w-4 text-muted-foreground" />
         <h3 className="text-sm font-semibold text-foreground">Professional Information</h3>
       </div>
+      <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground mb-1">How these fields differ</p>
+        <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm">
+          <li>
+            <span className="font-medium text-foreground">Department</span> — organizational team (not app permissions).
+          </li>
+          <li>
+            <span className="font-medium text-foreground">Job title</span> — official title on record.
+          </li>
+          <li>
+            <span className="font-medium text-foreground">System role</span> — CRM access and permissions.
+          </li>
+        </ul>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="departmentId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{EMPLOYMENT_FIELD_COPY.department.label}</FormLabel>
+              <FormControl>
+                <DepartmentCombobox
+                  value={field.value ?? null}
+                  onValueChange={(val) => field.onChange(val ?? undefined)}
+                  placeholder={EMPLOYMENT_FIELD_COPY.department.placeholder}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                {EMPLOYMENT_FIELD_COPY.department.description}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={control}
           name="designation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Designation</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormLabel>{EMPLOYMENT_FIELD_COPY.designation.label}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={EMPLOYMENT_FIELD_COPY.designation.placeholder}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                {EMPLOYMENT_FIELD_COPY.designation.description}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -43,11 +98,11 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>{EMPLOYMENT_FIELD_COPY.systemRole.label}</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={EMPLOYMENT_FIELD_COPY.systemRole.placeholder} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -67,23 +122,9 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   )}
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="departmentId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <FormControl>
-                <DepartmentCombobox
-                  value={field.value ?? null}
-                  onValueChange={(val) => field.onChange(val ?? undefined)}
-                  placeholder="Select Department"
-                />
-              </FormControl>
+              <FormDescription className="text-xs">
+                {EMPLOYMENT_FIELD_COPY.systemRole.description}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -98,6 +139,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                 <DatePicker
                   value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
                   onChange={(v) => field.onChange(v ? new Date(v) : undefined)}
+                  fromDate={new Date(minJoiningDate)}
                 />
               </FormControl>
               <FormMessage />
@@ -113,9 +155,25 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="0"
+                  inputMode="numeric"
+                  min={1}
+                  max={100_000_000}
+                  step={1}
+                  placeholder="25000"
                   value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      field.onChange(undefined);
+                      return;
+                    }
+                    const digitsOnly = raw.replace(/\D/g, "");
+                    if (!digitsOnly) return;
+                    field.onChange(Number(digitsOnly));
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                 />
               </FormControl>
               <FormMessage />
@@ -131,9 +189,25 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="0"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  inputMode="decimal"
+                  step="0.1"
+                  min={0}
+                  max={50}
+                  placeholder="e.g. 2.5"
+                  value={field.value != null ? field.value : ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") {
+                      field.onChange(undefined);
+                      return;
+                    }
+                    if (/^\d*\.?\d*$/.test(v)) {
+                      field.onChange(parseFloat(v));
+                    }
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                 />
               </FormControl>
               <FormMessage />
@@ -147,7 +221,15 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
             <FormItem className="md:col-span-2">
               <FormLabel>Skills</FormLabel>
               <FormControl>
-                <Input placeholder="React, TypeScript, Node.js" {...field} />
+                <Input
+                  placeholder="React, TypeScript, Node.js"
+                  maxLength={500}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

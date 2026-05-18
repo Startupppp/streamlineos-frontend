@@ -3,8 +3,8 @@
 import { db } from "@/lib/db";
 import { expenses, expenseCategories, users, expenseStatusEnum } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or, asc, count } from "drizzle-orm";
-import { getAuthenticatedMember } from "@/lib/auth-helpers";
-import { isAuthError } from "@/lib/auth-types";
+import { getAuthenticatedMember } from "@/lib/auth/helpers";
+import { isAuthError } from "@/lib/auth/types";
 
 export interface ExpenseFilters {
   startDate?: string;

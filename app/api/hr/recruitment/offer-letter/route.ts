@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { db } from "@/lib/db";
 import { candidates, jobPostings, richDocuments } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";

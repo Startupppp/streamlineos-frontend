@@ -77,6 +77,55 @@ export function resolveFileUrl(url: string, mime?: string): string {
   return `/api/storage/image?key=${encodeURIComponent(url)}`;
 }
 
+/** Word, Excel, PowerPoint — use explicit Open + Download instead of a single ambiguous link */
+export function isOfficeLikeFileName(fileName: string): boolean {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  return (
+    ext === "doc" ||
+    ext === "docx" ||
+    ext === "xls" ||
+    ext === "xlsx" ||
+    ext === "ppt" ||
+    ext === "pptx"
+  );
+}
+
+/** Same-origin path that streams the file as a download (Content-Disposition: attachment) */
+export function getAttachmentDownloadHref(fileUrl: string, mimeType: string): string {
+  if (!fileUrl) return "";
+  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) return fileUrl;
+  if (mimeType.startsWith("image/")) {
+    return `/api/storage/image?key=${encodeURIComponent(fileUrl)}`;
+  }
+  return `/api/storage/download?key=${encodeURIComponent(fileUrl)}&attachment=1`;
+}
+
+/**
+ * Fetches a short-lived signed URL for opening the file in a new tab (no attachment=1).
+ * Returns null on failure. For already-absolute URLs, returns the same string.
+ */
+export async function fetchSignedFileUrlForOpen(
+  fileUrl: string,
+  mimeType: string
+): Promise<string | null> {
+  if (!fileUrl) return null;
+  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+    return fileUrl;
+  }
+  if (mimeType.startsWith("image/")) {
+    return `/api/storage/image?key=${encodeURIComponent(fileUrl)}`;
+  }
+  const path = `/api/storage/download?key=${encodeURIComponent(fileUrl)}`;
+  try {
+    const res = await fetch(path);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { url?: string };
+    return data.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getDateLabel(date: Date | string | null) {
   const d = toDate(date);
   if (!d) return "";

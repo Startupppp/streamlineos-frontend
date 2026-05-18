@@ -127,6 +127,16 @@ export async function POST(
           createdAt: message.createdAt,
           replyToId: message.replyToId,
         }).catch(() => {});
+
+        const inboxChannel = `chat:${session.orgId}:inbox`;
+        rest.channels
+          .get(inboxChannel)
+          .publish("channel_message", {
+            channelId: message.channelId,
+            messageId: message.id,
+            senderId: message.senderId,
+          })
+          .catch(() => {});
       } catch {
 
       }

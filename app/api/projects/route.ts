@@ -11,7 +11,7 @@ import {
   tickets,
 } from "@/lib/db/schema";
 import { eq, and, desc, inArray, or, sql, count } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
 import { logger } from "@/lib/logger";

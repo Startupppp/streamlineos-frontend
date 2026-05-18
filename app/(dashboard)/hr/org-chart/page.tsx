@@ -254,6 +254,11 @@ export default function OrgChartPage() {
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [employees, deptMap]);
 
+  const deptMemberTotal = useMemo(
+    () => deptGroups.reduce((sum, [, members]) => sum + members.length, 0),
+    [deptGroups],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Organization" subtitle="Team structure and departments">
@@ -269,7 +274,7 @@ export default function OrgChartPage() {
   return (
     <PageWrapper
       title="Organization"
-      subtitle={`${employees.length} members across ${deptGroups.length} departments`}
+      subtitle={`${deptMemberTotal} members across ${deptGroups.length} departments`}
     >
       <Tabs defaultValue="tree">
         <TabsList className="h-9 mb-4">
@@ -315,10 +320,10 @@ export default function OrgChartPage() {
         </TabsContent>
 
         <TabsContent value="departments">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {deptGroups.map(([name, members]) => (
-              <Card key={name}>
-                <CardContent className="p-4">
+              <Card key={name} className="max-h-[min(420px,70vh)] flex flex-col">
+                <CardContent className="p-4 flex flex-col min-h-0 flex-1">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">{name}</h3>
                     <Badge variant="secondary" className="text-[10px] gap-1">
@@ -326,8 +331,9 @@ export default function OrgChartPage() {
                       {members.length}
                     </Badge>
                   </div>
+                  <ScrollArea className="flex-1 min-h-0 pr-2 max-h-[280px]" type="auto">
                   <div className="space-y-1.5">
-                    {members.slice(0, 6).map((emp) => (
+                    {members.map((emp) => (
                       <div key={emp.id} className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={resolveImageUrl(emp.image)} />
@@ -341,10 +347,8 @@ export default function OrgChartPage() {
                         <span className="text-[10px] text-muted-foreground">{emp.designation ?? emp.role}</span>
                       </div>
                     ))}
-                    {members.length > 6 && (
-                      <p className="text-[10px] text-muted-foreground text-center">+{members.length - 6} more</p>
-                    )}
                   </div>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             ))}

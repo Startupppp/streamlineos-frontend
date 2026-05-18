@@ -3,6 +3,13 @@
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -16,7 +23,7 @@ import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
 import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
-import type { StatusFilter } from "./expense-constants";
+import { EXPENSE_PAGE_SIZE_OPTIONS, type StatusFilter } from "./expense-constants";
 
 interface PaginationProps {
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
@@ -24,6 +31,7 @@ interface PaginationProps {
   endItem: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   variant?: "admin" | "member";
 }
 
@@ -33,89 +41,122 @@ function ExpensePagination({
   endItem,
   totalPages,
   onPageChange,
+  onPageSizeChange,
   variant = "member",
 }: PaginationProps) {
-  if (pagination.total === 0 || totalPages <= 1) return null;
+  if (pagination.total === 0) return null;
+
+  const pageSizeSelect =
+    onPageSizeChange != null ? (
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">Per page</span>
+        <Select
+          value={String(pagination.pageSize)}
+          onValueChange={(v) => onPageSizeChange(parseInt(v, 10))}
+        >
+          <SelectTrigger className="h-8 w-[72px] text-xs" aria-label="Rows per page">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EXPENSE_PAGE_SIZE_OPTIONS.map((n) => (
+              <SelectItem key={n} value={String(n)} className="text-xs">
+                {n}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    ) : null;
 
   if (variant === "admin") {
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t bg-muted/10">
         <span className="text-sm text-muted-foreground">
           Showing <strong className="text-foreground">{startItem}</strong> to{" "}
           <strong className="text-foreground">{endItem}</strong> of{" "}
           <strong className="text-foreground">{pagination.total}</strong> results
         </span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            disabled={pagination.page <= 1}
-            onClick={() => onPageChange(pagination.page - 1)}
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {(() => {
-            const maxVisible = 5;
-            let start = Math.max(1, pagination.page - Math.floor(maxVisible / 2));
-            const end = Math.min(totalPages, start + maxVisible - 1);
-            start = Math.max(1, end - maxVisible + 1);
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-          })().map((p) => (
-            <Button
-              key={p}
-              variant={p === pagination.page ? "default" : "outline"}
-              size="icon"
-              className="h-8 w-8 text-xs"
-              onClick={() => onPageChange(p)}
-            >
-              {p}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            disabled={pagination.page >= totalPages}
-            onClick={() => onPageChange(pagination.page + 1)}
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {pageSizeSelect}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={pagination.page <= 1}
+                onClick={() => onPageChange(pagination.page - 1)}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              {(() => {
+                const maxVisible = 5;
+                let start = Math.max(1, pagination.page - Math.floor(maxVisible / 2));
+                const end = Math.min(totalPages, start + maxVisible - 1);
+                start = Math.max(1, end - maxVisible + 1);
+                return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+              })().map((p) => (
+                <Button
+                  key={p}
+                  variant={p === pagination.page ? "default" : "outline"}
+                  size="icon"
+                  className="h-8 w-8 text-xs"
+                  onClick={() => onPageChange(p)}
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={pagination.page >= totalPages}
+                onClick={() => onPageChange(pagination.page + 1)}
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-t">
       <span className="text-sm text-muted-foreground">
         Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{" "}
         <strong>{pagination.total}</strong> claims
       </span>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs"
-          disabled={pagination.page <= 1}
-          onClick={() => onPageChange(pagination.page - 1)}
-        >
-          Previous
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          Page {pagination.page} of {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs"
-          disabled={pagination.page >= totalPages}
-          onClick={() => onPageChange(pagination.page + 1)}
-        >
-          Next
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {pageSizeSelect}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={pagination.page <= 1}
+              onClick={() => onPageChange(pagination.page - 1)}
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Page {pagination.page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={pagination.page >= totalPages}
+              onClick={() => onPageChange(pagination.page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -137,6 +178,7 @@ interface AdminExpenseListProps {
   onRejectCancel: () => void;
   onRejectionReasonChange: (reason: string) => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   onShowAll: () => void;
 }
 
@@ -156,6 +198,7 @@ export function AdminExpenseList({
   onRejectCancel,
   onRejectionReasonChange,
   onPageChange,
+  onPageSizeChange,
   onShowAll,
 }: AdminExpenseListProps) {
   return (
@@ -207,6 +250,7 @@ export function AdminExpenseList({
           endItem={endItem}
           totalPages={totalPages}
           onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
           variant="admin"
         />
       </CardContent>
@@ -227,6 +271,7 @@ interface MemberExpenseListProps {
   onShowAll: () => void;
   onCreateNew: () => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
 export function MemberExpenseList({
@@ -242,6 +287,7 @@ export function MemberExpenseList({
   onShowAll,
   onCreateNew,
   onPageChange,
+  onPageSizeChange,
 }: MemberExpenseListProps) {
   return (
     <Card className="overflow-hidden shadow-sm border">
@@ -303,6 +349,7 @@ export function MemberExpenseList({
               endItem={endItem}
               totalPages={totalPages}
               onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
               variant="member"
             />
           </>

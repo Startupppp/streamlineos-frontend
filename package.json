@@ -5,15 +5,25 @@
   "packageManager": "pnpm@10.18.0",
   "scripts": {
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dev": "next dev",
     "start": "next start",
     "build": "next build",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
+    "db:apply-pending": "tsx --env-file=.env scripts/apply-pending-migrations.ts",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
+    "backfill:converted-leads": "tsx --env-file=.env scripts/backfill-converted-leads.ts",
+    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
+    "seed:hr-email-templates": "npx tsx --env-file=.env scripts/seed-hr-email-templates.ts",
+    "send:perf-notice-test": "npx tsx --env-file=.env scripts/send-performance-notice-test.ts",
+    "send:all-emails-test": "npx tsx --env-file=.env scripts/send-all-emails-test.ts",
+    "gen:sample-payslip": "tsx scripts/generate-sample-payslip.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -41,7 +51,9 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-visually-hidden": "^1.2.4",
+    "@react-pdf/renderer": "^4.5.1",
     "@sendgrid/mail": "^8.1.6",
+    "@sentry/nextjs": "^10.51.0",
     "@tanstack/react-query": "^5.90.12",
     "@tiptap/extension-image": "^3.22.2",
     "@tiptap/extension-link": "^3.22.2",
@@ -68,6 +80,8 @@
     "html2canvas": "^1.4.1",
     "inngest": "^4.1.1",
     "jspdf": "^4.2.0",
+    "jszip": "^3.10.1",
+    "libphonenumber-js": "^1.13.2",
     "lucide-react": "^0.556.0",
     "nanoid": "^5.1.6",
     "next": "16.1.7",
@@ -120,12 +134,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "@vitest/coverage-v8": "^4.1.5",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }

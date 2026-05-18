@@ -1,6 +1,8 @@
-import { db } from "@/lib/db";
-import { jobPostings, departments } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  getJobPostingMetadata,
+  getJobPostingDetail,
+  getDepartmentName,
+} from "@/server/queries/public";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Clock, Briefcase, Building2, Users, CalendarDays, ArrowLeft } from "lucide-react";
@@ -25,12 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = Number(jobId);
   if (isNaN(id)) return { title: "Job Not Found" };
 
-  const [job] = await db
-    .select({ title: jobPostings.title, location: jobPostings.location })
-    .from(jobPostings)
-    .where(and(eq(jobPostings.id, id), eq(jobPostings.status, "OPEN")))
-    .limit(1);
-
+  const job = await getJobPostingMetadata(id);
   if (!job) return { title: "Job Not Found" };
   return {
     title: job.title,
@@ -43,37 +40,10 @@ export default async function JobDetailPage({ params }: Props) {
   const id = Number(jobId);
   if (isNaN(id)) notFound();
 
-  const [job] = await db
-    .select({
-      id: jobPostings.id,
-      title: jobPostings.title,
-      location: jobPostings.location,
-      type: jobPostings.type,
-      experience: jobPostings.experience,
-      description: jobPostings.description,
-      requirements: jobPostings.requirements,
-      benefits: jobPostings.benefits,
-      openings: jobPostings.openings,
-      applicationDeadline: jobPostings.applicationDeadline,
-      createdAt: jobPostings.createdAt,
-      salaryMin: jobPostings.salaryMin,
-      salaryMax: jobPostings.salaryMax,
-      departmentId: jobPostings.departmentId,
-    })
-    .from(jobPostings)
-    .where(and(eq(jobPostings.id, id), eq(jobPostings.status, "OPEN")))
-    .limit(1);
-
+  const job = await getJobPostingDetail(id);
   if (!job) notFound();
 
-  const deptName = job.departmentId
-    ? await db
-        .select({ name: departments.name })
-        .from(departments)
-        .where(eq(departments.id, job.departmentId))
-        .limit(1)
-        .then((rows) => rows[0]?.name ?? null)
-    : null;
+  const deptName = job.departmentId ? await getDepartmentName(job.departmentId) : null;
 
   const typeLabel = job.type ? (JOB_TYPE_LABELS[job.type] ?? job.type) : null;
   const hasSalary = job.salaryMin !== null || job.salaryMax !== null;

@@ -2,16 +2,17 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useChatOnlineUsers } from "@/lib/hooks/trpc-hooks";
+import { useLeaveChannel, useDeleteChannel } from "@/lib/api/hooks/chat";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
+import { toast } from "sonner";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -19,9 +20,11 @@ interface ChannelListEntryProps {
   currentUserId: string;
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
+  onLeave: (channelId: number) => void;
+  onDelete?: (channelId: number) => void;
 }
 
-function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineUserIds, onSelectChannel }: ChannelListEntryProps) {
+function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineUserIds, onSelectChannel, onLeave, onDelete }: ChannelListEntryProps) {
   const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
   return (
     <ChannelItem
@@ -30,6 +33,8 @@ function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineU
       onClick={handleClick}
       currentUserId={currentUserId}
       onlineUserIds={onlineUserIds}
+      onLeave={onLeave}
+      onDelete={onDelete}
     />
   );
 }
@@ -37,6 +42,7 @@ function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineU
 export function ChannelSidebar({
   activeChannelId,
   onSelectChannel,
+  onChannelLeft,
   currentUserId,
   autoFocusSearch,
   onSearchFocused,
@@ -44,12 +50,15 @@ export function ChannelSidebar({
 }: {
   activeChannelId: number | null;
   onSelectChannel: (id: number) => void;
+  onChannelLeft?: (channelId: number) => void;
   currentUserId: string;
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
   onCollapse?: () => void;
 }) {
   const { data: rawChannels, isLoading } = useChatChannels();
+  const leaveChannel = useLeaveChannel();
+  const deleteChannel = useDeleteChannel();
   const channels = rawChannels as Channel[] | undefined;
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
@@ -63,6 +72,33 @@ export function ChannelSidebar({
   const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
+
+  const handleLeave = useCallback((channelId: number) => {
+    leaveChannel.mutate(channelId, {
+      onSuccess: () => {
+        toast.success("Left conversation");
+        onChannelLeft?.(channelId);
+      },
+      onError: () => toast.error("Failed to leave conversation"),
+    });
+  }, [leaveChannel, onChannelLeft]);
+
+  const handleDelete = useCallback((channelId: number) => {
+    const ok = typeof window !== "undefined"
+      ? window.confirm("Delete this group for everyone? This cannot be undone.")
+      : true;
+    if (!ok) return;
+    deleteChannel.mutate(channelId, {
+      onSuccess: () => {
+        toast.success("Group deleted");
+        onChannelLeft?.(channelId);
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : "Failed to delete group";
+        toast.error(message);
+      },
+    });
+  }, [deleteChannel, onChannelLeft]);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -147,7 +183,7 @@ export function ChannelSidebar({
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-2">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2">
         {isLoading ? (
           <div className="p-3 space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -177,6 +213,8 @@ export function ChannelSidebar({
                     currentUserId={currentUserId}
                     onlineUserIds={onlineUserIds}
                     onSelectChannel={onSelectChannel}
+                    onLeave={handleLeave}
+                    onDelete={handleDelete}
                   />
                 ))}
               </ChannelSidebarSection>
@@ -197,6 +235,7 @@ export function ChannelSidebar({
                     currentUserId={currentUserId}
                     onlineUserIds={onlineUserIds}
                     onSelectChannel={onSelectChannel}
+                    onLeave={handleLeave}
                   />
                 ))}
               </ChannelSidebarSection>
@@ -215,7 +254,7 @@ export function ChannelSidebar({
             )}
           </div>
         )}
-      </ScrollArea>
+      </div>
     </>
   );
 }

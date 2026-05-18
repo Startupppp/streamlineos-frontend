@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { performanceReviews, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createPerformanceReviewSchema } from "@/lib/validations/hr";
 import type { NextRequest } from "next/server";
 import { sendReviewAssignedEmail } from "@/lib/email";

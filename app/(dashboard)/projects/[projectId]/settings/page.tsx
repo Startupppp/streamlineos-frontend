@@ -56,6 +56,7 @@ import {
   Users,
   Trash2,
   UserX,
+  Search,
 } from "lucide-react";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
@@ -209,10 +210,10 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       title="Settings"
       subtitle={project.name}
     >
-      <div className="max-w-xl mx-auto space-y-6 pb-8">
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-3 pb-8 sm:px-4 lg:px-0">
 
         <Card>
-          <CardContent className="pt-5 space-y-5">
+          <CardContent className="space-y-5 p-4 pt-5 sm:p-6 sm:pt-6">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Settings className="h-4 w-4 text-muted-foreground" />
               General
@@ -222,7 +223,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-4 sm:space-y-5"
               >
                 <FormField
                   control={form.control}
@@ -296,13 +297,15 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  className="w-full"
-                >
-                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                </Button>
+                <div className="pt-1">
+                  <Button
+                    type="submit"
+                    disabled={updateMutation.isPending}
+                    className="w-full sm:w-auto sm:min-w-40"
+                  >
+                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
               </form>
             </Form>
           </CardContent>
@@ -310,24 +313,27 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
         {isOwner && (
           <Card className="border-destructive/30">
-            <CardContent className="pt-5 space-y-4">
+            <CardContent className="space-y-4 p-4 pt-5 sm:p-6 sm:pt-6">
               <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                 <AlertTriangle className="h-4 w-4" />
                 Danger Zone
               </div>
               <Separator />
-              <p className="text-sm text-muted-foreground">
-                Deleting a project is irreversible. It will remove all
-                tickets, sprints, and associated data.
-              </p>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                Delete Project
-              </Button>
+              <div className="rounded-md border border-destructive/25 bg-destructive/5 p-4">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Deleting a project is irreversible. It will remove all
+                  tickets, sprints, and associated data.
+                </p>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="mt-4 w-full sm:w-auto"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Project
+                </Button>
+              </div>
               <ConfirmDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -469,7 +475,7 @@ function MembersSelector({
       render={({ field }) => (
         <FormItem>
           <FormControl>
-            <Popover>
+            <Popover onOpenChange={(open) => { if (!open) setSearchQuery(""); }}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -483,17 +489,25 @@ function MembersSelector({
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[var(--radix-popover-trigger-width)] p-2"
+                className="w-[var(--radix-popover-trigger-width)] p-2 max-h-[60vh] overflow-hidden flex flex-col"
                 align="start"
+                collisionPadding={16}
+                onOpenAutoFocus={(e) => e.preventDefault()}
               >
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 mb-2"
-                  aria-label="Search team members"
-                />
-                <div className="max-h-[200px] overflow-y-auto space-y-0.5">
+                <div className="relative mb-2">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-8 pl-8"
+                    aria-label="Search team members"
+                  />
+                </div>
+                <div
+                  className="flex-1 min-h-0 overflow-y-auto space-y-0.5 overscroll-contain"
+                  onWheelCapture={(e) => e.stopPropagation()}
+                >
                   {filteredEmployees?.map((emp) => {
                     const selected = field.value?.includes(emp.id);
                     return (

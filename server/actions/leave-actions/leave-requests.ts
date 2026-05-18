@@ -16,6 +16,7 @@ import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
 import { createNotification, notifyAllMembers, notifyByRoles } from "../create-notification";
 import { ROLES, EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
+import { HR_LEAVE_NOTIFY_EMAIL } from "@/lib/constants/hr-leave-routing";
 import { LEAVE_POLICY } from "@/lib/leave-policy";
 
 export async function getApprovers() {
@@ -52,7 +53,8 @@ export async function submitLeaveRequest(data: {
   endDate: Date;
   reason: string;
   priority?: string;
-  approverId: string;
+  /** @deprecated Ignored — leave is routed to HR */
+  approverId?: string | null;
   attachmentUrl?: string;
   isHalfDay?: boolean;
   halfDayPeriod?: "AM" | "PM";
@@ -92,7 +94,7 @@ export async function submitLeaveRequest(data: {
       endDate: data.endDate.toISOString(),
       reason: data.reason,
       priority,
-      approverId: isCeo ? session.user.id : data.approverId,
+      approverId: isCeo ? session.user.id : null,
       attachmentUrl: data.attachmentUrl || null,
       status: isCeo ? "APPROVED" : "PENDING",
       isHalfDay: data.isHalfDay ?? false,
@@ -142,34 +144,57 @@ export async function submitLeaveRequest(data: {
         excludeUserId: session.user.id,
       });
     } else {
-      const approver = await db.query.users.findFirst({ where: eq(users.id, data.approverId) });
+      const leaveLabel = leaveType?.name || "Leave";
+      const startStr = data.startDate.toLocaleDateString();
+      const endStr = data.endDate.toLocaleDateString();
+      const employeeName = session.user.name || "Employee";
 
-      if (approver?.email) {
+      const hrMembers = await db.query.organizationMembers.findMany({
+        where: and(
+          eq(organizationMembers.orgId, member.orgId),
+          eq(organizationMembers.role, ROLES.HR),
+        ),
+        columns: { userId: true },
+      });
+
+      const emailed = new Set<string>();
+      for (const m of hrMembers) {
+        const hrUser = await db.query.users.findFirst({
+          where: eq(users.id, m.userId),
+          columns: { email: true, name: true },
+        });
+        if (!hrUser?.email) continue;
+        const key = hrUser.email.trim().toLowerCase();
+        if (emailed.has(key)) continue;
+        emailed.add(key);
         await sendLeaveRequestEmail(
-          approver.email,
-          approver.name || "Approver",
-          session.user.name || "Employee",
-          leaveType?.name || "Leave",
-          data.startDate.toLocaleDateString(),
-          data.endDate.toLocaleDateString(),
+          hrUser.email,
+          hrUser.name || "HR",
+          employeeName,
+          leaveLabel,
+          startStr,
+          endStr,
           data.reason,
         );
       }
 
-      await createNotification({
-        orgId: member.orgId,
-        userId: data.approverId,
-        type: "WARNING",
-        title: "Leave Request Pending",
-        message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
-        link: "/hr/leaves",
-        metadata: { leaveType: leaveType?.name, reason: data.reason },
-      });
+      const inboxKey = HR_LEAVE_NOTIFY_EMAIL.toLowerCase();
+      if (!emailed.has(inboxKey)) {
+        await sendLeaveRequestEmail(
+          HR_LEAVE_NOTIFY_EMAIL,
+          "HR",
+          employeeName,
+          leaveLabel,
+          startStr,
+          endStr,
+          data.reason,
+        );
+      }
 
-      await notifyByRoles(member.orgId, [ROLES.CEO, ROLES.HR], {
-        type: "INFO",
-        title: "New Leave Request",
-        message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
+      await notifyByRoles(member.orgId, [ROLES.HR], {
+        type: "WARNING",
+        title: "Leave request pending",
+        message: `${employeeName} requested ${leaveLabel} from ${startStr} to ${endStr}.`,
         link: "/hr/leaves",
         excludeUserId: session.user.id,
       });
@@ -422,14 +447,18 @@ export async function getPendingApprovalCount() {
   });
   if (!member) return 0;
 
+  const isAdminRole = EXPENSE_ADMIN_ROLES.includes(member.role);
+
   const count = await db
     .select({ count: sql<number>`count(*)` })
     .from(leaveRequests)
     .where(
       and(
-        eq(leaveRequests.approverId, session.user.id),
         eq(leaveRequests.orgId, member.orgId),
         eq(leaveRequests.status, "PENDING"),
+        ...(isAdminRole
+          ? []
+          : [eq(leaveRequests.approverId, session.user.id)]),
       ),
     );
 

@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,7 +18,7 @@ import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useR
 import { cn, resolveImageUrl } from "@/lib/utils";
 
 import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
-import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
+import { BalanceCard, RequestHistoryRow, formatLeaveBalanceDisplay } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 
 const DONUT_COLORS = ["#bd882c", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
@@ -94,7 +95,7 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
                     <span className="text-xs text-muted-foreground truncate">{item.name}</span>
                   </div>
                   <span className="text-xs font-semibold text-foreground shrink-0">
-                    {item.remaining}/{item.total}
+                    {formatLeaveBalanceDisplay(item.remaining)}/{item.total}
                   </span>
                 </div>
                 <div className="h-1 rounded-full bg-muted overflow-hidden ml-4">
@@ -131,8 +132,21 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
           return isWithinInterval(day, { start, end });
         }),
       })),
-    [approvedLeaves],
+    [approvedLeaves, days],
   );
+
+  const sortedLeavesThisWeek = useMemo(() => {
+    return approvedLeaves
+      .filter((leave) => {
+        const start = new Date(leave.startDate);
+        const end = new Date(leave.endDate);
+        return start <= weekEnd && end >= weekStart;
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+      );
+  }, [approvedLeaves, weekStart, weekEnd]);
 
   const hasAnyLeave = leavesPerDay.some((d) => d.leaves.length > 0);
   if (!hasAnyLeave) return null;
@@ -193,6 +207,48 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
             );
           })}
         </div>
+
+        {sortedLeavesThisWeek.length > 0 && (
+          <>
+            <Separator className="my-4" />
+            <p className="text-xs font-medium text-muted-foreground mb-2">Details</p>
+            <ul className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+              {sortedLeavesThisWeek.map((leave) => {
+                const start = new Date(leave.startDate);
+                const end = new Date(leave.endDate);
+                const name =
+                  `${leave.user?.firstName ?? ""} ${leave.user?.lastName ?? ""}`.trim() ||
+                  "Team member";
+                const range =
+                  format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd")
+                    ? format(start, "EEE, MMM d")
+                    : `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+                const typeName = leave.leaveType?.name ?? "Leave";
+                return (
+                  <li
+                    key={leave.id}
+                    className="flex items-start gap-2.5 rounded-lg border border-border/60 bg-muted/20 px-2.5 py-2"
+                  >
+                    <Avatar className="h-8 w-8 shrink-0 mt-0.5">
+                      <AvatarImage src={resolveImageUrl(leave.user?.image)} />
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {leave.user?.firstName?.[0]}
+                        {leave.user?.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground leading-tight truncate">
+                        {name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{range}</p>
+                      <p className="text-[11px] text-primary/90 font-medium mt-1">{typeName}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -357,7 +413,7 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
               description="You haven't submitted any leave requests yet."
             />
           ) : (
-            <ScrollArea className="w-full" type="auto">
+            <ScrollArea className="w-full max-w-full" type="auto">
               <div className="min-w-[600px]">
                 <table className="w-full">
                   <caption className="sr-only">Your leave request history</caption>

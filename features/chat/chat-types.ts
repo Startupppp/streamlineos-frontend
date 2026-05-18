@@ -30,4 +30,5 @@ export type Message = {
     content: string | null;
     sender: { id: string; name: string | null } | null;
   } | null;
+  reactions: Record<string, string[]>;
 };

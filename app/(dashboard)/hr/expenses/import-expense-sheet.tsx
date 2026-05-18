@@ -13,6 +13,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  IMPORT_ALLOWED_EXTENSIONS,
+  IMPORT_ALLOWED_MIME_TYPES,
+  IMPORT_MAX_FILE_SIZE_BYTES,
+  validateFileTypeAndSize,
+} from "@/lib/files/expense-file-validation";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -24,6 +30,7 @@ const ALLOWED_CATEGORIES = [
 ];
 
 interface ParsedRow {
+  rowNumber: number;
   category: string;
   amount: number;
   description: string;
@@ -99,7 +106,8 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const allowedSet = new Set(ALLOWED_CATEGORIES.map((c) => c.toLowerCase()));
       const unmappedCategories = new Set<string>();
 
-      const parsed: ParsedRow[] = dataLines.map((line) => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const parsed: ParsedRow[] = dataLines.map((line, index) => {
         const values = line.split(",").map((v) => v.trim().replace(/^["']|["']$/g, ""));
         const record: Record<string, string> = {};
         headers.forEach((h, i) => { record[h] = values[i] || ""; });
@@ -116,8 +124,12 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         if (!rawCategory) errors.push("Missing category");
         if (!allowedSet.has(rawCategory.toLowerCase())) unmappedCategories.add(rawCategory);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(expenseDate)) errors.push("Invalid date (use YYYY-MM-DD)");
+        if (/^\d{4}-\d{2}-\d{2}$/.test(expenseDate) && expenseDate > today) {
+          errors.push("Expense date cannot be in the future");
+        }
 
         return {
+          rowNumber: index + 2,
           category: rawCategory,
           amount: isNaN(amount) ? 0 : amount,
           description,
@@ -149,23 +161,14 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    const validTypes = [
-      "text/csv",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    const validExtension =
-      selectedFile.name.endsWith(".csv") ||
-      selectedFile.name.endsWith(".xlsx") ||
-      selectedFile.name.endsWith(".xls");
-
-    if (!validTypes.includes(selectedFile.type) && !validExtension) {
-      toast.error("Please select a CSV or Excel (.xlsx) file");
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      toast.error("File too large (max 5MB)");
+    const validationError = validateFileTypeAndSize({
+      file: selectedFile,
+      allowedMimeTypes: IMPORT_ALLOWED_MIME_TYPES,
+      allowedExtensions: IMPORT_ALLOWED_EXTENSIONS,
+      maxSizeBytes: IMPORT_MAX_FILE_SIZE_BYTES,
+    });
+    if (validationError) {
+      toast.error(validationError === "File type not supported" ? "Please select a CSV or Excel file" : validationError);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -231,6 +234,35 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
 
   const validCount = parsedRows.filter((r) => r.valid).length;
 
+  const handleDownloadValidation = useCallback(() => {
+    if (parsedRows.length === 0) {
+      toast.error("No parsed rows to download");
+      return;
+    }
+    const header = ["row", "date", "category", "amount", "status", "issues"];
+    const rows = parsedRows.map((row) => [
+      row.rowNumber,
+      row.expenseDate || "",
+      row.category || "",
+      row.amount > 0 ? row.amount.toString() : "",
+      row.valid ? "valid" : "invalid",
+      row.error || "",
+    ]);
+    const csv = [header, ...rows]
+      .map((line) => line.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `expense-import-validation-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast.success("Validation report downloaded");
+  }, [parsedRows]);
+
   return (
     <HrSheet
       open={open}
@@ -278,13 +310,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
-              <Label className="text-sm font-semibold">Upload File</Label>
-            </div>
+          {!file ? (
+            <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
+                <Label className="text-sm font-semibold">Upload File</Label>
+              </div>
 
-            {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-gold/50 hover:bg-gold/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
@@ -292,49 +324,55 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                   <p className="text-xs text-muted-foreground mt-1">CSV or Excel (.xlsx, .xls) — Max 5MB</p>
                 </div>
               </div>
-            ) : (
-              <div className="pl-8 min-h-[92px]">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <FileText className="h-8 w-8 text-gold shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={resetState} aria-label="Remove file">
-                    <X className="h-4 w-4" />
-                  </Button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileChange}
+                aria-label="Upload expense file"
+              />
+            </div>
+          ) : (
+            <div className="sticky top-0 z-10 -mx-4 -mt-4 px-4 pt-4 pb-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <FileText className="h-8 w-8 text-gold shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB uploaded</p>
                 </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={resetState} aria-label="Remove file">
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileChange}
+                aria-label="Upload expense file"
+              />
+            </div>
+          )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx,.xls"
-              onChange={handleFileChange}
-              aria-label="Upload expense file"
-            />
-          </div>
-
-          <div className="rounded-lg border border-border p-4 space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold">Approval Setting</p>
-                <p className="text-xs text-muted-foreground">
-                  Choose whether imported expenses should be approved immediately.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="auto-approve-expenses"
-                  checked={autoApprove}
-                  onCheckedChange={(checked) => setAutoApprove(checked === true)}
-                />
-                <Label htmlFor="auto-approve-expenses" className="text-sm">
-                  Auto-approve imported expenses
-                </Label>
-              </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Approval Setting</p>
+              <p className="text-xs text-muted-foreground">
+                Choose whether imported expenses should be approved immediately.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="auto-approve-expenses"
+                checked={autoApprove}
+                onCheckedChange={(checked) => setAutoApprove(checked === true)}
+              />
+              <Label htmlFor="auto-approve-expenses" className="text-sm cursor-pointer">
+                Auto-approve imported expenses
+              </Label>
             </div>
           </div>
 
@@ -344,6 +382,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               isParsing={isParsing}
               categoryMapping={categoryMapping}
               onCategoryMappingChange={handleCategoryMappingChange}
+              onDownloadValidation={handleDownloadValidation}
             />
           )}
 

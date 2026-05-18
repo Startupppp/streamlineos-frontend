@@ -26,10 +26,16 @@ import { incentives, incentiveConfig } from "@/lib/db/schema/crm";
 import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
+import { resolveAttendancePeriod, summarizeAttendanceLogs } from "@/lib/hr/attendance-summary";
+import { getPunchDayBlockReason } from "@/lib/hr/punch-day-guard";
+import type { DocumentExportFilters } from "@/lib/hr/documents-export-filters";
 import type {
   Department,
   Employee,
+  TerminatedEmployee,
   AttendanceLog,
+  AttendanceSummaryPeriod,
+  AttendancePeriodSummary,
   AttendanceStatusResult,
   LeavesResult,
   LeaveBalance,
@@ -63,16 +69,30 @@ export async function getDepartments(orgId: string): Promise<Department[]> {
   }) as Promise<Department[]>;
 }
 
+function departmentFromId(
+  departmentId: number | null | undefined,
+  deptNameById: Map<number, string>,
+): { id: number; name: string } | null {
+  if (departmentId == null) return null;
+  const name = deptNameById.get(departmentId);
+  if (name) return { id: departmentId, name };
+  return { id: departmentId, name: "Unknown" };
+}
+
 export async function getEmployees(
   orgId: string,
   branch?: BranchContext
 ): Promise<Employee[]> {
-  const members = await db.query.organizationMembers.findMany({
-    where: eq(organizationMembers.orgId, orgId),
-    with: {
-      user: true,
-    },
-  });
+  const [members, deptRows] = await Promise.all([
+    db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: {
+        user: true,
+      },
+    }),
+    getDepartments(orgId),
+  ]);
+  const deptNameById = new Map(deptRows.map((d) => [d.id, d.name]));
 
   return members
     .map((m) => m.user)
@@ -95,6 +115,7 @@ export async function getEmployees(
       designation: u.designation,
       employeeId: u.employeeId,
       departmentId: u.departmentId,
+      department: departmentFromId(u.departmentId, deptNameById),
       image: u.image,
       isActive: u.isActive ?? true,
       joiningDate: u.joiningDate,
@@ -109,6 +130,66 @@ export async function getEmployees(
       skills: u.skills ?? null,
       phone: u.phone ?? null,
     }));
+}
+
+export async function getTerminatedEmployees(
+  orgId: string,
+  branch?: BranchContext,
+): Promise<TerminatedEmployee[]> {
+  const [members, deptRows] = await Promise.all([
+    db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: { user: true },
+    }),
+    getDepartments(orgId),
+  ]);
+  const deptNameById = new Map(deptRows.map((d) => [d.id, d.name]));
+
+  return members
+    .map((m) => m.user)
+    .filter((u) => {
+      if (u.isActive !== false) return false;
+
+      if (
+        branch?.branchId !== null &&
+        branch?.branchId !== undefined &&
+        ["BRANCH_MANAGER", "BRANCH_HR"].includes(branch.role)
+      ) {
+        return u.branchId === branch.branchId;
+      }
+      return true;
+    })
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      role: u.role ?? "EMPLOYEE",
+      designation: u.designation,
+      employeeId: u.employeeId,
+      departmentId: u.departmentId,
+      department: departmentFromId(u.departmentId, deptNameById),
+      image: u.image,
+      isActive: false,
+      joiningDate: u.joiningDate,
+      hasDashboardAccess: u.hasDashboardAccess ?? false,
+      reportingTo: u.reportingTo,
+      monthlySalary: u.monthlySalary,
+      bio: u.bio ?? null,
+      linkedinUrl: u.linkedinUrl ?? null,
+      twitterUrl: u.twitterUrl ?? null,
+      githubUrl: u.githubUrl ?? null,
+      websiteUrl: u.websiteUrl ?? null,
+      skills: u.skills ?? null,
+      phone: u.phone ?? null,
+      terminatedAt: u.updatedAt ? u.updatedAt.toISOString() : null,
+    }))
+    .sort((a, b) => {
+      const aTime = a.terminatedAt ? Date.parse(a.terminatedAt) : 0;
+      const bTime = b.terminatedAt ? Date.parse(b.terminatedAt) : 0;
+      return bTime - aTime;
+    });
 }
 
 export async function getEmployeesPaginated(
@@ -152,6 +233,7 @@ export async function getEmployeesPaginated(
         designation: users.designation,
         employeeId: users.employeeId,
         departmentId: users.departmentId,
+        departmentName: departments.name,
         image: users.image,
         isActive: users.isActive,
         joiningDate: users.joiningDate,
@@ -161,6 +243,10 @@ export async function getEmployeesPaginated(
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
+      .leftJoin(
+        departments,
+        and(eq(users.departmentId, departments.id), eq(departments.orgId, orgId)),
+      )
       .where(and(...searchConditions))
       .orderBy(users.name)
       .limit(limit)
@@ -174,8 +260,29 @@ export async function getEmployeesPaginated(
 
   const total = countResult[0]?.total ?? 0;
 
+  const data: Employee[] = dataResult.map((row) => {
+    const { departmentName, ...rest } = row;
+    const department =
+      rest.departmentId != null && departmentName
+        ? { id: rest.departmentId, name: departmentName }
+        : rest.departmentId != null
+          ? { id: rest.departmentId, name: "Unknown" }
+          : null;
+    return {
+      ...rest,
+      department,
+      bio: null,
+      linkedinUrl: null,
+      twitterUrl: null,
+      githubUrl: null,
+      websiteUrl: null,
+      skills: null,
+      phone: null,
+    };
+  });
+
   return {
-    data: dataResult as Employee[],
+    data,
     pagination: {
       page,
       limit,
@@ -196,6 +303,18 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
 
   if (!member) return null;
   const u = member.user;
+
+  let department: { id: number; name: string } | null = null;
+  if (u.departmentId != null) {
+    const dept = await db.query.departments.findFirst({
+      where: and(eq(departments.id, u.departmentId), eq(departments.orgId, orgId)),
+      columns: { name: true },
+    });
+    department = dept
+      ? { id: u.departmentId, name: dept.name }
+      : { id: u.departmentId, name: "Unknown" };
+  }
+
   return {
     id: u.id,
     name: u.name,
@@ -206,6 +325,7 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
     designation: u.designation,
     employeeId: u.employeeId,
     departmentId: u.departmentId,
+    department,
     image: u.image,
     isActive: u.isActive,
     joiningDate: u.joiningDate,
@@ -291,6 +411,9 @@ export async function getAttendanceStatus(
     }
   }
 
+  const punchBlockedReason =
+    status === "OFFLINE" ? await getPunchDayBlockReason(orgId, today) : null;
+
   return {
     status,
     logs: logs as unknown as AttendanceLog[],
@@ -301,6 +424,7 @@ export async function getAttendanceStatus(
       isOvertime: isDailyOvertime,
     },
     cooldownRemaining,
+    punchBlockedReason,
   };
 }
 
@@ -483,6 +607,48 @@ export async function getDocuments(
     where: and(...conditions),
     orderBy: [desc(documents.createdAt)],
   }) as unknown as Promise<Document[]>;
+}
+
+export async function getDocumentsForExport(
+  orgId: string,
+  sessionUserId: string,
+  isAdmin: boolean,
+  filters: DocumentExportFilters,
+): Promise<Document[]> {
+  const conditions = [eq(documents.orgId, orgId), eq(documents.isActive, true)];
+
+  if (filters.filterUserId) {
+    conditions.push(eq(documents.userId, filters.filterUserId));
+  } else if (!isAdmin) {
+    conditions.push(eq(documents.userId, sessionUserId));
+  }
+
+  if (filters.type) {
+    conditions.push(eq(documents.type, filters.type as import("@/types/hr").DocumentType));
+  }
+  if (filters.category?.trim()) {
+    conditions.push(ilike(documents.category, `%${filters.category.trim()}%`));
+  }
+  if (filters.uploadedBy?.trim()) {
+    conditions.push(eq(documents.uploadedBy, filters.uploadedBy.trim()));
+  }
+  if (filters.createdFrom) {
+    conditions.push(gte(documents.createdAt, new Date(`${filters.createdFrom}T00:00:00.000Z`)));
+  }
+  if (filters.createdTo) {
+    conditions.push(lte(documents.createdAt, new Date(`${filters.createdTo}T23:59:59.999Z`)));
+  }
+
+  const rows = (await db.query.documents.findMany({
+    where: and(...conditions),
+    orderBy: [desc(documents.createdAt)],
+  })) as unknown as Document[];
+
+  const tag = filters.tag?.trim().toLowerCase();
+  if (!tag) return rows;
+  return rows.filter((d) =>
+    d.tags?.some((t) => t.toLowerCase().includes(tag) || t.toLowerCase() === tag),
+  );
 }
 
 export async function getPerformanceReviews(
@@ -947,13 +1113,25 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
       month: payrolls.month,
       basicSalary: payrolls.basicSalary,
       hra: payrolls.hra,
+      specialAllowance: payrolls.specialAllowance,
       allowances: payrolls.allowances,
+      lopDays: payrolls.lopDays,
+      lopAmount: payrolls.lopAmount,
+      halfDays: payrolls.halfDays,
+      halfDayAmount: payrolls.halfDayAmount,
+      ptAmount: payrolls.ptAmount,
+      otherDeductions: payrolls.otherDeductions,
+      structureDeductions: payrolls.structureDeductions,
+      advanceRecoveryAmount: payrolls.advanceRecoveryAmount,
       deductions: payrolls.deductions,
       grossSalary: payrolls.grossSalary,
       netSalary: payrolls.netSalary,
       status: payrolls.status,
       generatedBy: payrolls.generatedBy,
       approvedBy: payrolls.approvedBy,
+      paidBy: payrolls.paidBy,
+      approvedAt: payrolls.approvedAt,
+      paidAt: payrolls.paidAt,
       overtimeType: payrolls.overtimeType,
       overtimeDays: payrolls.overtimeDays,
       overtimeHours: payrolls.overtimeHours,
@@ -977,13 +1155,25 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
     month: r.month,
     basicSalary: r.basicSalary,
     hra: r.hra,
+    specialAllowance: r.specialAllowance,
     allowances: r.allowances,
+    lopDays: r.lopDays,
+    lopAmount: r.lopAmount,
+    halfDays: r.halfDays,
+    halfDayAmount: r.halfDayAmount,
+    ptAmount: r.ptAmount,
+    otherDeductions: r.otherDeductions,
+    structureDeductions: r.structureDeductions,
+    advanceRecoveryAmount: r.advanceRecoveryAmount,
     deductions: r.deductions,
     grossSalary: r.grossSalary,
     netSalary: r.netSalary,
     status: r.status,
     generatedBy: r.generatedBy,
     approvedBy: r.approvedBy,
+    paidBy: r.paidBy,
+    approvedAt: r.approvedAt,
+    paidAt: r.paidAt,
     overtimeType: r.overtimeType,
     overtimeDays: r.overtimeDays,
     overtimeHours: r.overtimeHours,
@@ -999,7 +1189,14 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
   })) as PayrollWithUser[];
 }
 
-export async function getEmployeePayslips(orgId: string, userId: string): Promise<EmployeePayslip[]> {
+export async function getEmployeePayslips(
+  orgId: string,
+  userId: string,
+  opts?: { paidOnly?: boolean }
+): Promise<EmployeePayslip[]> {
+  const whereClauses = [eq(payrolls.orgId, orgId), eq(payrolls.userId, userId)];
+  if (opts?.paidOnly) whereClauses.push(eq(payrolls.status, "PAID"));
+
   const rows = await db
     .select({
       id: payrolls.id,
@@ -1007,7 +1204,20 @@ export async function getEmployeePayslips(orgId: string, userId: string): Promis
       month: payrolls.month,
       basicSalary: payrolls.basicSalary,
       hra: payrolls.hra,
+      specialAllowance: payrolls.specialAllowance,
       allowances: payrolls.allowances,
+      lopDays: payrolls.lopDays,
+      lopAmount: payrolls.lopAmount,
+      halfDays: payrolls.halfDays,
+      halfDayAmount: payrolls.halfDayAmount,
+      ptAmount: payrolls.ptAmount,
+      pfEmployee: payrolls.pfEmployee,
+      pfEmployer: payrolls.pfEmployer,
+      esiEmployee: payrolls.esiEmployee,
+      esiEmployer: payrolls.esiEmployer,
+      advanceRecoveryAmount: payrolls.advanceRecoveryAmount,
+      otherDeductions: payrolls.otherDeductions,
+      structureDeductions: payrolls.structureDeductions,
       deductions: payrolls.deductions,
       grossSalary: payrolls.grossSalary,
       netSalary: payrolls.netSalary,
@@ -1016,12 +1226,59 @@ export async function getEmployeePayslips(orgId: string, userId: string): Promis
       overtimeDays: payrolls.overtimeDays,
       overtimeHours: payrolls.overtimeHours,
       overtimeAmount: payrolls.overtimeAmount,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userDesignation: users.designation,
+      userJoiningDate: users.joiningDate,
+      userEmployeeId: users.employeeId,
+      userTaxId: users.taxId,
+      userBankDetails: users.bankDetails,
     })
     .from(payrolls)
-    .where(and(eq(payrolls.orgId, orgId), eq(payrolls.userId, userId)))
+    .leftJoin(users, eq(payrolls.userId, users.id))
+    .where(and(...whereClauses))
     .orderBy(desc(payrolls.month));
 
-  return rows as unknown as EmployeePayslip[];
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    month: r.month,
+    basicSalary: r.basicSalary,
+    hra: r.hra,
+    specialAllowance: r.specialAllowance,
+    allowances: r.allowances,
+    lopDays: r.lopDays,
+    lopAmount: r.lopAmount,
+    halfDays: r.halfDays,
+    halfDayAmount: r.halfDayAmount,
+    ptAmount: r.ptAmount,
+    pfEmployee: r.pfEmployee,
+    pfEmployer: r.pfEmployer,
+    esiEmployee: r.esiEmployee,
+    esiEmployer: r.esiEmployer,
+    advanceRecoveryAmount: r.advanceRecoveryAmount,
+    otherDeductions: r.otherDeductions,
+    structureDeductions: r.structureDeductions,
+    deductions: r.deductions,
+    grossSalary: r.grossSalary,
+    netSalary: r.netSalary,
+    status: r.status,
+    overtimeType: r.overtimeType,
+    overtimeDays: r.overtimeDays,
+    overtimeHours: r.overtimeHours,
+    overtimeAmount: r.overtimeAmount,
+    user: r.userFirstName != null || r.userLastName != null
+      ? {
+          firstName: r.userFirstName,
+          lastName: r.userLastName,
+          designation: r.userDesignation,
+          joiningDate: r.userJoiningDate,
+          employeeId: r.userEmployeeId,
+          taxId: r.userTaxId,
+          bankDetails: r.userBankDetails,
+        }
+      : null,
+  })) as unknown as EmployeePayslip[];
 }
 
 export async function getMonthlyAttendance(
@@ -1044,4 +1301,46 @@ export async function getMonthlyAttendance(
     ),
     orderBy: [asc(attendance.date)],
   }) as unknown as Promise<AttendanceLog[]>;
+}
+
+export async function getAttendanceInDateRange(
+  orgId: string,
+  userId: string,
+  startDate: string,
+  endDate: string,
+): Promise<AttendanceLog[]> {
+  return db.query.attendance.findMany({
+    where: and(
+      eq(attendance.userId, userId),
+      eq(attendance.orgId, orgId),
+      gte(attendance.date, startDate),
+      lte(attendance.date, endDate),
+    ),
+    orderBy: [asc(attendance.date)],
+  }) as unknown as Promise<AttendanceLog[]>;
+}
+
+export async function getAttendanceSummaryWithLogs(
+  orgId: string,
+  userId: string,
+  period: AttendanceSummaryPeriod,
+  year: number,
+  month0?: number,
+  quarter1?: number,
+): Promise<{ summary: AttendancePeriodSummary; logs: AttendanceLog[] }> {
+  const { start, end, label } = resolveAttendancePeriod(period, year, month0, quarter1);
+  const [logs, holidayRows] = await Promise.all([
+    getAttendanceInDateRange(orgId, userId, start, end),
+    db.query.holidays.findMany({
+      where: and(
+        eq(holidays.orgId, orgId),
+        gte(holidays.date, start),
+        lte(holidays.date, end),
+      ),
+      columns: { date: true },
+    }),
+  ]);
+  const holidayDates = new Set(holidayRows.map((h) => h.date));
+  const summary = summarizeAttendanceLogs(logs, start, end, new Date(), period, label, holidayDates);
+  return { summary, logs };
 }

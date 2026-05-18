@@ -27,6 +27,7 @@ export {
 
 export {
   getLeaveRequestEmailTemplate,
+  getWfhRequestEmailTemplate,
   getLeaveStatusUpdateEmailTemplate,
   getLeaveCancellationEmailTemplate,
   getDocumentExpiryReminderEmailTemplate,
@@ -35,6 +36,7 @@ export {
   getTerminationEmailTemplate,
   getCandidateRejectionEmail,
   getPayslipEmailTemplate,
+  getHolidayWorkRequestEmailToHr,
 } from "./hr";
 
 export {
@@ -55,6 +57,16 @@ export {
   getManagerReviewReminderEmail,
   getReviewPublishedEmail,
   getGoalSettingReminderEmail,
+  getUnsatisfactoryPerformanceNoticeEmail,
+  getAppraisalStageAssignedEmail,
+  getAppraisalFinalApprovedEmail,
+  getAppraisalDueReminderEmail,
+  getPIPCheckInDueReminderEmail,
+  getPIPInitiatedEmail,
+  getPIPManagerActivatedEmail,
+  getPIPSuccessEmail,
+  getPIPFailedEmail,
+  getPIPExtendedEmail,
 } from "./appraisal";
 
 export {

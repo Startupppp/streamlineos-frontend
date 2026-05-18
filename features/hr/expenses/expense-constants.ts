@@ -68,3 +68,18 @@ export const PAYMENT_METHODS = [
 ];
 
 export type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
+
+/** Default rows per page for expense lists (Recent Claims / My Expenses) */
+export const EXPENSE_PAGE_SIZE_DEFAULT = 10;
+
+export const EXPENSE_PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
+
+export type ExpensePageSizeOption = (typeof EXPENSE_PAGE_SIZE_OPTIONS)[number];
+
+const PAGE_SIZES_NUM = EXPENSE_PAGE_SIZE_OPTIONS as readonly number[];
+
+export function clampExpensePageSize(n: number): ExpensePageSizeOption {
+  const v = Number(n);
+  if (PAGE_SIZES_NUM.includes(v)) return v as ExpensePageSizeOption;
+  return EXPENSE_PAGE_SIZE_DEFAULT;
+}

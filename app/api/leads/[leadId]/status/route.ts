@@ -34,26 +34,33 @@ async function getNextCrmAssignee(orgId: string): Promise<string | null> {
 
   if (csMembers.length === 0) return null;
 
-  const counts: Record<string, number> = {};
-  for (const m of csMembers) {
-    const [result] = await db
-      .select({ count: count() })
-      .from(clientAccounts)
-      .where(
-        and(
-          eq(clientAccounts.orgId, orgId),
-          eq(clientAccounts.assignedCrmId, m.userId),
-          sql`${clientAccounts.status} != 'INVESTED'`
-        )
-      );
-    counts[m.userId] = result?.count ?? 0;
+  const grouped = await db
+    .select({
+      userId: clientAccounts.assignedCrmId,
+      count: count(),
+    })
+    .from(clientAccounts)
+    .where(
+      and(
+        eq(clientAccounts.orgId, orgId),
+        sql`${clientAccounts.status} != 'INVESTED'`,
+        sql`${clientAccounts.assignedCrmId} IS NOT NULL`
+      )
+    )
+    .groupBy(clientAccounts.assignedCrmId);
+
+  const counts = new Map<string, number>();
+  for (const m of csMembers) counts.set(m.userId, 0);
+  for (const row of grouped) {
+    if (row.userId) counts.set(row.userId, row.count);
   }
 
   let minCount = Infinity;
   let assignee: string | null = null;
   for (const m of csMembers) {
-    if (counts[m.userId] < minCount) {
-      minCount = counts[m.userId];
+    const c = counts.get(m.userId) ?? 0;
+    if (c < minCount) {
+      minCount = c;
       assignee = m.userId;
     }
   }

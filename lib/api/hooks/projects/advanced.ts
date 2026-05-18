@@ -168,6 +168,25 @@ export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
+export function useDeleteModule(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, moduleId }: { projectId: number; moduleId: number }) =>
+      apiClient.delete<{ success: boolean }>(
+        `/projects/${projectId}/modules/${moduleId}`,
+      ),
+    onSuccess: (_data: unknown, variables: { projectId: number; moduleId: number }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.modules(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
+      });
+    },
+    ...options,
+  });
+}
+
 export function usePages(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectPage[]>, "queryKey" | "queryFn" | "enabled">

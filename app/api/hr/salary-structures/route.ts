@@ -1,10 +1,11 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSalaryStructures } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { salaryStructures } from "@/lib/db/schema";
+import { salaryStructures, salaryRevisionHistory } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
+import { snapSalaryEffectiveFrom, dayBeforeIsoDate } from "@/lib/hr/salary-effective-dates";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -12,11 +13,14 @@ import { createAuditLog } from "@/lib/audit-log";
 const createSalaryStructureSchema = z.object({
   userId: z.string(),
   basicSalary: z.number(),
-  hraPercentage: z.number(),
-  allowances: z.number(),
-  deductions: z.number(),
+  hraPercentage: z.number().default(50),
+  specialAllowance: z.number().default(0),
+  allowances: z.number().default(0),
+  deductions: z.number().default(0),
+  professionalTax: z.number().default(200),
   effectiveFrom: z.string(),
   effectiveTo: z.string().optional(),
+  reason: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -46,39 +50,63 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, createSalaryStructureSchema);
+    const effectiveFromSnapped = snapSalaryEffectiveFrom(body.effectiveFrom);
 
-    if (!body.userId || body.basicSalary === undefined || !body.effectiveFrom) {
-      return err("userId, basicSalary, and effectiveFrom are required.", 400);
-    }
+    const existing = await db.query.salaryStructures.findFirst({
+      where: and(
+        eq(salaryStructures.userId, body.userId),
+        eq(salaryStructures.orgId, session.orgId),
+        eq(salaryStructures.isActive, true)
+      ),
+    });
 
     const [structure] = await db.transaction(async (tx) => {
-      await tx
-        .update(salaryStructures)
-        .set({ isActive: false })
-        .where(
-          and(
-            eq(salaryStructures.userId, body.userId),
-            eq(salaryStructures.orgId, session.orgId),
-            eq(salaryStructures.isActive, true)
-          )
-        );
+      if (existing) {
+        await tx
+          .update(salaryStructures)
+          .set({
+            isActive: false,
+            effectiveTo: dayBeforeIsoDate(effectiveFromSnapped),
+          })
+          .where(eq(salaryStructures.id, existing.id));
+      }
 
-      return await tx
+      const [newStructure] = await tx
         .insert(salaryStructures)
         .values({
           orgId: session.orgId,
           userId: body.userId,
           basicSalary: body.basicSalary.toString(),
-          hraPercentage: (body.hraPercentage ?? 40).toString(),
+          hraPercentage: (body.hraPercentage ?? 50).toString(),
+          specialAllowance: (body.specialAllowance ?? 0).toString(),
           allowances: (body.allowances ?? 0).toString(),
           deductions: (body.deductions ?? 0).toString(),
-          effectiveFrom: formatDateOnly(new Date(body.effectiveFrom)),
-          effectiveTo: body.effectiveTo
-            ? formatDateOnly(new Date(body.effectiveTo))
-            : undefined,
+          professionalTax: (body.professionalTax ?? 200).toString(),
+          effectiveFrom: effectiveFromSnapped,
+          effectiveTo: body.effectiveTo ? formatDateOnly(new Date(body.effectiveTo)) : undefined,
           isActive: true,
+          createdBy: session.user.id,
         })
         .returning();
+
+      await tx.insert(salaryRevisionHistory).values({
+        orgId: session.orgId,
+        userId: body.userId,
+        salaryStructureId: newStructure.id,
+        previousBasic: existing?.basicSalary ?? null,
+        previousHraPct: existing?.hraPercentage ?? null,
+        previousSpecialAllowance: existing?.specialAllowance ?? null,
+        previousPt: existing?.professionalTax ?? null,
+        newBasic: body.basicSalary.toString(),
+        newHraPct: (body.hraPercentage ?? 50).toString(),
+        newSpecialAllowance: (body.specialAllowance ?? 0).toString(),
+        newPt: (body.professionalTax ?? 200).toString(),
+        effectiveFrom: effectiveFromSnapped,
+        reason: body.reason ?? null,
+        changedBy: session.user.id,
+      });
+
+      return [newStructure];
     });
 
     void createAuditLog({
@@ -87,7 +115,7 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       targetId: body.userId,
       targetType: "salary_structure",
-      metadata: { basicSalary: body.basicSalary, effectiveFrom: body.effectiveFrom },
+      metadata: { basicSalary: body.basicSalary, effectiveFrom: effectiveFromSnapped },
     }).catch(() => {});
 
     return ok(structure);

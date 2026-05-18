@@ -5,7 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets, tickets } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { z } from "zod";
 
 const updateEntrySchema = z.object({

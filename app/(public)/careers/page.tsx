@@ -1,6 +1,4 @@
-import { db } from "@/lib/db";
-import { jobPostings, departments } from "@/lib/db/schema";
-import { eq, desc, inArray } from "drizzle-orm";
+import { listOpenJobPostings, listDepartmentsByIds, type PublicJobPosting } from "@/server/queries/public";
 import Link from "next/link";
 import { MapPin, Clock, Briefcase, Building2, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -21,48 +19,15 @@ const JOB_TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function CareersPage() {
-  let jobs: Array<{
-    id: number;
-    title: string;
-    location: string | null;
-    type: string | null;
-    experience: string | null;
-    openings: number | null;
-    applicationDeadline: string | null;
-    createdAt: Date | null;
-    salaryMin: string | null;
-    salaryMax: string | null;
-    departmentId: number | null;
-  }> = [];
+  let jobs: PublicJobPosting[] = [];
   let deptMap = new Map<number, string>();
 
   try {
-    jobs = await db
-      .select({
-        id: jobPostings.id,
-        title: jobPostings.title,
-        location: jobPostings.location,
-        type: jobPostings.type,
-        experience: jobPostings.experience,
-        openings: jobPostings.openings,
-        applicationDeadline: jobPostings.applicationDeadline,
-        createdAt: jobPostings.createdAt,
-        salaryMin: jobPostings.salaryMin,
-        salaryMax: jobPostings.salaryMax,
-        departmentId: jobPostings.departmentId,
-      })
-      .from(jobPostings)
-      .where(eq(jobPostings.status, "OPEN"))
-      .orderBy(desc(jobPostings.createdAt));
-
-    const departmentIds = [...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null))];
-    const deptRows = departmentIds.length > 0
-      ? await db
-          .select({ id: departments.id, name: departments.name })
-          .from(departments)
-          .where(inArray(departments.id, departmentIds))
-      : [];
-    deptMap = new Map(deptRows.map((d) => [d.id, d.name]));
+    jobs = await listOpenJobPostings();
+    const departmentIds = [
+      ...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null)),
+    ];
+    deptMap = await listDepartmentsByIds(departmentIds);
   } catch {
   }
 

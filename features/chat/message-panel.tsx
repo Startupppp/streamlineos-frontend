@@ -31,6 +31,7 @@ import {
   useSetTyping,
   useChatTyping,
   useChatOrgUsers,
+  useToggleReaction,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
@@ -70,6 +71,7 @@ export function MessagePanel({
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
+  const toggleReaction = useToggleReaction(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const setTyping = useSetTyping();
   const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
@@ -92,6 +94,8 @@ export function MessagePanel({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  /** Avoid jumping to bottom when loading older pages (message count still increases). */
+  const didInitialScrollRef = useRef(false);
   const [messageInput, setMessageInput] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -155,8 +159,17 @@ export function MessagePanel({
   }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    didInitialScrollRef.current = false;
+  }, [channelId]);
+
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return;
+    if (didInitialScrollRef.current) return;
+    didInitialScrollRef.current = true;
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    });
+  }, [channelId, isLoading, messages.length]);
 
   useEffect(() => {
     setLastPollTime(new Date().toISOString());
@@ -404,11 +417,23 @@ export function MessagePanel({
         editingMessage={editingMessage}
         editInput={editInput}
         onEditInputChange={setEditInput}
-        onStartEdit={(msg) => { setEditingMessage(msg); setEditInput(msg.content ?? ""); }}
+        onStartEdit={(msg) => {
+          const created = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+          const windowMs =
+            Number(process.env.NEXT_PUBLIC_CHAT_MESSAGE_EDIT_WINDOW_MS) ||
+            3_600_000;
+          if (Date.now() - created > windowMs) {
+            toast.error("This message can no longer be edited.");
+            return;
+          }
+          setEditingMessage(msg);
+          setEditInput(msg.content ?? "");
+        }}
         onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
+        onReact={(messageId, emoji) => toggleReaction.mutate({ messageId, emoji })}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}

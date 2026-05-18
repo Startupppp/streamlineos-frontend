@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
+import { isExpenseAdmin } from "@/lib/auth/role-guards";
 import {
   useTicket,
   useUpdateTicket,
@@ -10,6 +12,7 @@ import {
   useSprints,
   useSubtasks,
 } from "@/lib/hooks/trpc-hooks";
+import { useEpics } from "@/lib/api/hooks/projects";
 import { queryKeys } from "@/lib/query-keys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -82,6 +85,7 @@ export function TicketDetailsDialog({
   projectId,
   statuses,
 }: TicketDetailsDialogProps) {
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [localTitle, setLocalTitle] = useState("");
@@ -96,6 +100,16 @@ export function TicketDetailsDialog({
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId || 0, projectId);
+  const { data: epicsList = [] } = useEpics(projectId);
+
+  const epicOptions = useMemo(
+    () =>
+      epicsList.map((e) => ({
+        id: e.id,
+        title: (e.title && e.title.trim()) ? e.title : `Epic #${e.ticketNumber ?? e.id}`,
+      })),
+    [epicsList]
+  );
 
   const members: ProjectMember[] = (() => {
     if (!projectData?.members) return [];
@@ -140,6 +154,16 @@ export function TicketDetailsDialog({
     }
     return list;
   })();
+
+  const canRemoveOtherWatchers = useMemo(() => {
+    const uid = session?.user?.id;
+    if (!ticket || !uid) return false;
+    if (isExpenseAdmin(session?.user?.role)) return true;
+    if (projectData?.managerId === uid) return true;
+    if (ticket.reporterId === uid) return true;
+    if (ticket.assigneeId === uid) return true;
+    return (ticket.assignees ?? []).some((a) => a.userId === uid);
+  }, [session?.user?.id, session?.user?.role, ticket, projectData?.managerId]);
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({
@@ -224,6 +248,7 @@ export function TicketDetailsDialog({
           onDelete={() =>
             deleteTicketMutation.mutate({ ticketId: ticketId! })
           }
+          onRequestClose={() => onOpenChange(false)}
         />
 
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -253,6 +278,7 @@ export function TicketDetailsDialog({
                   projectId={projectId}
                   members={members}
                   sprints={sprints || []}
+                  epics={epicOptions}
                   statuses={statuses}
                   onAutoSave={autoSave}
                 />
@@ -330,6 +356,7 @@ export function TicketDetailsDialog({
                   projectId={projectId}
                   ticketId={ticketId!}
                   members={members}
+                  canRemoveOtherWatchers={canRemoveOtherWatchers}
                 />
 
                 <ActivityFeed

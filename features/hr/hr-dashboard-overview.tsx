@@ -137,6 +137,7 @@ function UpcomingBirthdaysWidget({
     image: string | null;
     dateOfBirth: string;
     daysUntil: number;
+    birthdayMonthDay: string | null;
   }[];
   isLoading: boolean;
 }) {
@@ -177,6 +178,9 @@ function UpcomingBirthdaysWidget({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{displayName}</p>
+                    {b.birthdayMonthDay ? (
+                      <p className="text-[10px] text-muted-foreground">{b.birthdayMonthDay}</p>
+                    ) : null}
                   </div>
                   <Badge variant={b.daysUntil === 0 ? "default" : "secondary"} className="text-[10px] shrink-0">
                     {b.daysUntil === 0 ? "Today!" : `in ${b.daysUntil}d`}
@@ -202,7 +206,7 @@ function OnboardingStatusWidget() {
           <CardTitle className="text-sm font-medium">Onboarding Status</CardTitle>
         </div>
         <Link
-          href="/hr/onboarding"
+          href="/hr/onboarding?tab=workflow"
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           View all

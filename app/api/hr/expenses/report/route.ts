@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, or } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";

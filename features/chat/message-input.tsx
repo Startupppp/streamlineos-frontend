@@ -211,13 +211,13 @@ export function MessageInput({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/30 overflow-hidden bg-muted/20"
+            className="border-t border-border/30 overflow-hidden bg-muted/20 w-full min-w-0"
           >
-            <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
+            <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto w-full min-w-0">
               <div className="w-1 h-9 rounded-full bg-gold shrink-0" />
               <Reply className="h-4 w-4 text-gold shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-gold">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-[12px] font-bold text-gold truncate">
                   Replying to {replyTo.sender?.name}
                 </p>
                 <p className="text-[12px] text-muted-foreground truncate">
@@ -226,7 +226,7 @@ export function MessageInput({
               </div>
               <button
                 onClick={handleCancelReply}
-                className="p-1 hover:bg-muted rounded-md"
+                className="p-1 hover:bg-muted rounded-md shrink-0"
                 aria-label="Cancel reply"
               >
                 <X className="h-4 w-4 text-muted-foreground" />

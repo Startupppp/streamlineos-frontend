@@ -574,3 +574,16 @@
 .calendar-container .rbc-current-time-indicator {
   background: color-mix(in srgb, var(--primary) 80%, transparent);
 }
+
+/* Hide browser password reveal/clear controls (avoids duplicate eye icons with custom toggles). */
+.hide-native-password-reveal::-ms-reveal,
+.hide-native-password-reveal::-ms-clear {
+  display: none;
+}
+
+.hide-native-password-reveal::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}

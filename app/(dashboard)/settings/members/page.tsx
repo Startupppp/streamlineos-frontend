@@ -212,7 +212,7 @@ export default function MembersSettingsPage() {
                   <CardDescription>Send an invitation to join your organization</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+                  <form onSubmit={handleInvite} className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                     <div className="flex-1 space-y-1.5">
                       <Label htmlFor="email" className="text-sm">Email</Label>
                       <Input
@@ -224,7 +224,7 @@ export default function MembersSettingsPage() {
                         required
                       />
                     </div>
-                    <div className="w-full sm:w-[180px] space-y-1.5">
+                    <div className="w-full space-y-1.5 sm:w-[180px]">
                       <Label className="text-sm">Role</Label>
                       <Select value={inviteRole} onValueChange={setInviteRole}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -235,9 +235,11 @@ export default function MembersSettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
-                      {inviteUser.isPending ? "Sending..." : "Send"}
-                    </Button>
+                    <div className="flex w-full flex-col justify-end sm:w-auto sm:shrink-0">
+                      <Button type="submit" disabled={inviteUser.isPending} className="h-9 w-full sm:w-auto">
+                        {inviteUser.isPending ? "Sending..." : "Send"}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
@@ -332,7 +334,7 @@ export default function MembersSettingsPage() {
                 <CardDescription>Send an invitation to join your organization</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <form onSubmit={handleInvite} className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
                   <div className="flex-1 space-y-1.5">
                     <Label htmlFor="inv-tab-email" className="text-sm">Email</Label>
                     <Input
@@ -344,7 +346,7 @@ export default function MembersSettingsPage() {
                       required
                     />
                   </div>
-                  <div className="w-full sm:w-[180px] space-y-1.5">
+                  <div className="w-full space-y-1.5 sm:w-[180px]">
                     <Label className="text-sm">Role</Label>
                     <Select value={inviteRole} onValueChange={setInviteRole}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -355,9 +357,11 @@ export default function MembersSettingsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
-                    {inviteUser.isPending ? "Sending..." : "Send Invite"}
-                  </Button>
+                  <div className="flex w-full flex-col justify-end sm:w-auto sm:shrink-0">
+                    <Button type="submit" disabled={inviteUser.isPending} className="h-9 w-full sm:w-auto">
+                      {inviteUser.isPending ? "Sending..." : "Send Invite"}
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>

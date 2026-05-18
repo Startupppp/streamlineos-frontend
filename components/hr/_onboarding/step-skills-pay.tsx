@@ -30,7 +30,15 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
           <FormItem>
             <FormLabel>Skills (Comma Separated)</FormLabel>
             <FormControl>
-              <Input placeholder="React, Node.js, Leadership..." {...field} />
+              <Input
+                placeholder="React, Node.js, Leadership..."
+                maxLength={500}
+                value={field.value ?? ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
+              />
             </FormControl>
             <FormDescription>Enter skills separated by commas.</FormDescription>
             <FormMessage />
@@ -108,9 +116,22 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                   <span className="absolute left-3 top-2.5 text-muted-foreground">&#8377;</span>
                   <Input
                     type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={100_000_000}
+                    step={1}
                     placeholder="25000"
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === "") {
+                        field.onChange(undefined);
+                        return;
+                      }
+                      const digitsOnly = raw.replace(/\D/g, "");
+                      if (!digitsOnly) return;
+                      field.onChange(Number(digitsOnly));
+                    }}
                     onBlur={field.onBlur}
                     name={field.name}
                     ref={field.ref}

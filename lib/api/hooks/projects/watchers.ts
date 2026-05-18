@@ -46,6 +46,9 @@ export function useToggleWatch(projectId: number) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
     },
   });
 }
@@ -67,6 +70,34 @@ export function useAddWatcher(projectId: number) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.watchers(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+  });
+}
+
+export function useRemoveWatcher(projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      ticketId,
+      userId,
+    }: {
+      ticketId: number;
+      userId: string;
+    }) =>
+      apiClient.delete<{ success: boolean }>(
+        `/projects/${projectId}/tickets/${ticketId}/watchers`,
+        { params: { userId } }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.watchers(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
     },
   });

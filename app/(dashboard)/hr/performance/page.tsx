@@ -37,13 +37,16 @@ import {
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
+import { AppraisalsTab } from "@/features/hr/performance/appraisals-tab";
+import { PipTab } from "@/features/hr/performance/pip-tab";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { ALL_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   Plus, Star, Target, Users, Calendar, Clock, MoreHorizontal,
-  CheckCircle2, Trash2, Pencil,
+  CheckCircle2, Trash2, Pencil, ClipboardList, AlertTriangle,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -53,7 +56,7 @@ import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
 export default function PerformancePage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate allowedRoles={[...ALL_ROLES]}>
       <PerformanceContent />
     </DashboardGate>
   );
@@ -74,9 +77,15 @@ function PerformanceContent() {
   return (
     <PageWrapper title="Performance" subtitle="Reviews, goals, and team development">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="h-9">
+        <TabsList className="h-9 flex-wrap">
           <TabsTrigger value="reviews" className="text-xs gap-1.5 px-3">
             <Star className="h-3.5 w-3.5" />Reviews
+          </TabsTrigger>
+          <TabsTrigger value="appraisals" className="text-xs gap-1.5 px-3">
+            <ClipboardList className="h-3.5 w-3.5" />Appraisals
+          </TabsTrigger>
+          <TabsTrigger value="pip" className="text-xs gap-1.5 px-3">
+            <AlertTriangle className="h-3.5 w-3.5" />PIP
           </TabsTrigger>
           <TabsTrigger value="goals" className="text-xs gap-1.5 px-3">
             <Target className="h-3.5 w-3.5" />Goals
@@ -90,6 +99,8 @@ function PerformanceContent() {
         </TabsList>
 
         <TabsContent value="reviews" className="mt-3"><ReviewsTab /></TabsContent>
+        <TabsContent value="appraisals" className="mt-3"><AppraisalsTab /></TabsContent>
+        <TabsContent value="pip" className="mt-3"><PipTab /></TabsContent>
         <TabsContent value="goals" className="mt-3"><GoalsTab /></TabsContent>
         <TabsContent value="one-on-ones" className="mt-3"><OneOnOnesTab /></TabsContent>
         <TabsContent value="cycles" className="mt-3"><CyclesTab /></TabsContent>

@@ -15,6 +15,7 @@ import type {
   GenerateEmployeePayslipInput,
   ApprovePayrollInput,
   MarkPayrollPaidInput,
+  DeletePayrollInput,
 } from "@/types/hr";
 
 export function useHrPayrolls() {
@@ -94,12 +95,32 @@ export function useApprovePayroll() {
   });
 }
 
+export type MarkPayrollPaidResult = {
+  success: boolean;
+  emailSent: boolean;
+  emailError?: "no_email" | "send_failed" | "missing_dob" | "pdf_not_encrypted";
+};
+
 export function useMarkPayrollPaid() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ payrollId }: MarkPayrollPaidInput) =>
-      apiClient.patch<{ success: boolean }>(`/hr/payrolls/${payrollId}/paid`),
+      apiClient.patch<MarkPayrollPaidResult>(`/hr/payrolls/${payrollId}/paid`),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
+  });
+}
+
+export function useResendPayslipEmail() {
+  return useMutation({
+    mutationFn: ({ payrollId }: { payrollId: number }) =>
+      apiClient.post<MarkPayrollPaidResult>(`/hr/payrolls/${payrollId}/email-payslip`),
+  });
+}
+
+export function useDeletePayroll() {
+  return useMutation({
+    mutationFn: ({ payrollId }: DeletePayrollInput) =>
+      apiClient.delete<{ success: boolean }>(`/hr/payrolls/${payrollId}`),
   });
 }

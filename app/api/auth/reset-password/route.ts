@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { sendPasswordChangeConfirmationEmail } from "@/lib/email";
+import { invalidateUserSession } from "@/lib/auth";
 
 const schema = z.object({
   token: z.string(),
@@ -36,14 +37,19 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(input.password, 12);
 
-  await db
+  const updatedUser = await db
     .update(users)
     .set({
       password: hashedPassword,
       isPasswordChangeRequired: false,
       emailVerified: new Date(),
     })
-    .where(eq(users.email, tokenRecord.email));
+    .where(eq(users.email, tokenRecord.email))
+    .returning({ id: users.id });
+
+  if (updatedUser[0]?.id) {
+    await invalidateUserSession(updatedUser[0].id);
+  }
 
   await db
     .delete(passwordResetTokens)

@@ -109,25 +109,32 @@ export async function backfillCrmAssignments(orgId: string) {
 
   if (unassigned.length === 0) return;
 
-  const counts: Record<string, number> = {};
-  for (const m of csMembers) {
-    const [result] = await db
-      .select({ count: count() })
-      .from(clientAccounts)
-      .where(and(
-        eq(clientAccounts.orgId, orgId),
-        eq(clientAccounts.assignedCrmId, m.userId),
-        sql`${clientAccounts.status} != 'INVESTED'`
-      ));
-    counts[m.userId] = result?.count ?? 0;
+  const activeCounts = await db
+    .select({
+      userId: clientAccounts.assignedCrmId,
+      count: count(),
+    })
+    .from(clientAccounts)
+    .where(and(
+      eq(clientAccounts.orgId, orgId),
+      sql`${clientAccounts.status} != 'INVESTED'`,
+      sql`${clientAccounts.assignedCrmId} IS NOT NULL`
+    ))
+    .groupBy(clientAccounts.assignedCrmId);
+
+  const counts = new Map<string, number>();
+  for (const m of csMembers) counts.set(m.userId, 0);
+  for (const row of activeCounts) {
+    if (row.userId) counts.set(row.userId, row.count);
   }
 
   for (const account of unassigned) {
     let minCount = Infinity;
     let assignee: string | null = null;
     for (const m of csMembers) {
-      if ((counts[m.userId] ?? 0) < minCount) {
-        minCount = counts[m.userId] ?? 0;
+      const c = counts.get(m.userId) ?? 0;
+      if (c < minCount) {
+        minCount = c;
         assignee = m.userId;
       }
     }
@@ -135,7 +142,7 @@ export async function backfillCrmAssignments(orgId: string) {
       await db.update(clientAccounts)
         .set({ assignedCrmId: assignee, updatedAt: new Date() })
         .where(eq(clientAccounts.id, account.id));
-      counts[assignee] = (counts[assignee] ?? 0) + 1;
+      counts.set(assignee, (counts.get(assignee) ?? 0) + 1);
     }
   }
 }
@@ -159,42 +166,41 @@ export async function getCrmAssignmentStats(orgId: string) {
       )
     );
 
-  const members: {
-    userId: string;
-    name: string | null;
-    image: string | null;
-    activeCount: number;
-    totalCount: number;
-  }[] = [];
+  const grouped = await db
+    .select({
+      userId: clientAccounts.assignedCrmId,
+      totalCount: count(),
+      activeCount: sql<number>`count(*) FILTER (WHERE ${clientAccounts.status} != 'INVESTED')`,
+    })
+    .from(clientAccounts)
+    .where(
+      and(
+        eq(clientAccounts.orgId, orgId),
+        sql`${clientAccounts.assignedCrmId} IS NOT NULL`
+      )
+    )
+    .groupBy(clientAccounts.assignedCrmId);
 
-  for (const m of csMembers) {
-    const [active] = await db
-      .select({ count: count() })
-      .from(clientAccounts)
-      .where(
-        and(
-          eq(clientAccounts.orgId, orgId),
-          eq(clientAccounts.assignedCrmId, m.userId),
-          sql`${clientAccounts.status} != 'INVESTED'`
-        )
-      );
-    const [total] = await db
-      .select({ count: count() })
-      .from(clientAccounts)
-      .where(
-        and(
-          eq(clientAccounts.orgId, orgId),
-          eq(clientAccounts.assignedCrmId, m.userId)
-        )
-      );
-    members.push({
+  const byUserId = new Map<string, { activeCount: number; totalCount: number }>();
+  for (const row of grouped) {
+    if (row.userId) {
+      byUserId.set(row.userId, {
+        activeCount: Number(row.activeCount) || 0,
+        totalCount: row.totalCount,
+      });
+    }
+  }
+
+  const members = csMembers.map((m) => {
+    const c = byUserId.get(m.userId) ?? { activeCount: 0, totalCount: 0 };
+    return {
       userId: m.userId,
       name: m.name,
       image: m.image,
-      activeCount: active?.count ?? 0,
-      totalCount: total?.count ?? 0,
-    });
-  }
+      activeCount: c.activeCount,
+      totalCount: c.totalCount,
+    };
+  });
 
   const [unassignedResult] = await db
     .select({ count: count() })

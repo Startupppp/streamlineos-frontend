@@ -5,6 +5,7 @@ import {
   createCalendarEvent,
   getOooConflicts,
 } from "@/server/queries/calendar";
+import { sendCalendarEventAttendeeEmails } from "@/lib/calendar-event-notifications";
 import { z } from "zod";
 
 const getSchema = z.object({
@@ -13,7 +14,7 @@ const getSchema = z.object({
 });
 
 const postSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().optional(),
   location: z.string().optional(),
   startDate: z.string(),
@@ -93,6 +94,19 @@ export async function POST(req: NextRequest) {
       getOooConflicts(session.orgId, input.attendeeIds ?? [], startDate, endDate),
     ]);
 
-    return ok({ event, oooConflicts }, 201);
+    const notify = await sendCalendarEventAttendeeEmails({
+      orgId: session.orgId,
+      creatorUserId: session.user.id,
+      attendeeIds: input.attendeeIds ?? [],
+      title: input.title,
+      description: input.description ?? null,
+      startDate,
+      endDate,
+      allDay: input.allDay ?? false,
+      location: input.location ?? null,
+      variant: "created",
+    });
+
+    return ok({ event, oooConflicts, notify }, 201);
   });
 }

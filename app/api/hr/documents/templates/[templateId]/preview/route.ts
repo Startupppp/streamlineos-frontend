@@ -1,8 +1,8 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { documentTemplates } from "@/lib/db/schema";
+import { documentTemplates, orgDocumentVariables } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { extractVariables } from "@/lib/utils/document-variables";
+import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
 import type { NextRequest } from "next/server";
 
 type Params = { params: Promise<{ templateId: string }> };
@@ -22,16 +22,26 @@ export async function GET(_req: NextRequest, { params }: Params) {
     if (!template) return err("Template not found", 404);
 
     const variables = extractVariables(template.htmlContent);
-    const placeholderMap: Record<string, string> = {};
+    const registryRows = await db
+      .select()
+      .from(orgDocumentVariables)
+      .where(eq(orgDocumentVariables.orgId, session.orgId));
+
+    const defaults: Record<string, string> = {};
+    for (const row of registryRows) {
+      if (row.defaultValue.trim()) defaults[row.slug] = row.defaultValue;
+    }
     for (const v of variables) {
-      placeholderMap[v] = `[${v}]`;
+      if (!defaults[v]) defaults[v] = `[${v}]`;
     }
 
-    const previewContent = template.htmlContent.replace(
-      /\{\{([^}]+)\}\}/g,
-      (_match, key: string) => `[${key.trim()}]`
-    );
+    const { result: previewContent, missing } = substituteVariables(template.htmlContent, defaults);
 
-    return ok({ ...template, htmlContent: previewContent, previewVariables: placeholderMap });
+    return ok({
+      ...template,
+      htmlContent: previewContent,
+      previewVariables: defaults,
+      missingVariables: missing,
+    });
   });
 }

@@ -16,6 +16,7 @@ import type { Employee } from "@/types/hr";
 export interface PayslipPreview {
   basicPay: number;
   hra: number;
+  allowances: number;
   grossSalary: number;
   lopDeduction: number;
   halfDayDeduction: number;
@@ -32,6 +33,8 @@ export interface PayslipPreview {
   halfDays: number;
   workingDays: number;
   effectiveDays: number;
+  /** Recurring amount from salary structure `deductions` (included in total deductions). */
+  salaryStructureDeductions?: number;
 }
 
 interface PayslipDetailSheetProps {
@@ -105,6 +108,12 @@ export function PayslipDetailSheet({
                 <span className="text-muted-foreground">HRA</span>
                 <span className="tabular-nums">₹{payslipPreview?.hra.toLocaleString("en-IN")}</span>
               </div>
+              {(payslipPreview?.allowances || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Special Allowance</span>
+                  <span className="tabular-nums">₹{payslipPreview?.allowances.toLocaleString("en-IN")}</span>
+                </div>
+              )}
               {(payslipPreview?.bonus || 0) > 0 && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Bonus / Incentive</span>
@@ -141,10 +150,18 @@ export function PayslipDetailSheet({
                   -₹{payslipPreview?.professionalTax.toLocaleString("en-IN")}
                 </span>
               </div>
+              {(payslipPreview?.salaryStructureDeductions || 0) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Salary deductions</span>
+                  <span className="text-red-600 tabular-nums">
+                    -₹{Math.round(payslipPreview?.salaryStructureDeductions || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
               {(payslipPreview?.lopDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    LOP Deduction ({payslipPreview?.lopDays} days)
+                    LOP Deduction ({payslipPreview?.lopDays} {payslipPreview?.lopDays === 1 ? "day" : "days"})
                   </span>
                   <span className="text-red-600 tabular-nums">
                     -₹{Math.round(payslipPreview?.lopDeduction || 0).toLocaleString("en-IN")}
@@ -154,7 +171,7 @@ export function PayslipDetailSheet({
               {(payslipPreview?.halfDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    Half Day ({payslipPreview?.halfDays} days)
+                    Half Day ({payslipPreview?.halfDays} {payslipPreview?.halfDays === 1 ? "day" : "days"})
                   </span>
                   <span className="text-red-600 tabular-nums">
                     -₹{Math.round(payslipPreview?.halfDayDeduction || 0).toLocaleString("en-IN")}

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, startOfDay, differenceInCalendarDays } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import {
@@ -21,50 +21,62 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { useRequestLeave } from "@/lib/api/hooks/hr";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
-import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import type { LeaveType, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import {
+  calculateLeaveDaysExcludingSundays,
+  createLeaveRequestSchema,
+} from "@/lib/validations/leave-request";
 
-const leaveFormSchema = z.object({
-  leaveTypeId: z.string().min(1, "Leave type is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  halfDay: z.boolean(),
-  halfDayPeriod: z.enum(["AM", "PM"]),
-  priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
-  reason: z.string().min(1, "Reason is required"),
-  approverId: z.string().optional(),
-});
-type LeaveFormValues = z.infer<typeof leaveFormSchema>;
+type LeaveFormValues = z.infer<ReturnType<typeof createLeaveRequestSchema>>;
 
 interface LeaveRequestSheetProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   leaveTypes: LeaveType[];
-  approvers: Approver[];
   joiningDate: string | null;
   balances?: LeaveBalance[];
 }
 
 export function LeaveRequestSheet({
-  open, onOpenChange, leaveTypes, approvers, joiningDate, balances = [],
+  open, onOpenChange, leaveTypes, joiningDate, balances = [],
 }: LeaveRequestSheetProps) {
   const requestLeaveMutation = useRequestLeave();
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  const [attachmentKey, setAttachmentKey] = useState<string | null>(null);
+  const leaveFormSchema = useMemo(
+    () =>
+      createLeaveRequestSchema({
+        getAvailableBalance: (leaveTypeId, requestedDays) => {
+          const selectedType = leaveTypes.find((t) => t.id.toString() === leaveTypeId);
+          if (!selectedType) return null;
+          const matchedBal = balances.find((b) => b.leaveTypeId === selectedType.id);
+          if (!matchedBal) return null;
+          const available = Number(matchedBal.balance ?? 0);
+          return Number.isFinite(available) ? available : null;
+        },
+      }),
+    [leaveTypes, balances],
+  );
 
-  const minDate = joiningDate
-    ? format(new Date(joiningDate), "yyyy-MM-dd")
-    : format(startOfDay(new Date()), "yyyy-MM-dd");
+  const minDate = (() => {
+    const today = startOfDay(new Date());
+    if (!joiningDate) return format(today, "yyyy-MM-dd");
+    const joining = new Date(joiningDate);
+    return format(joining > today ? joining : today, "yyyy-MM-dd");
+  })();
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
+    mode: "onChange",
     defaultValues: {
       leaveTypeId: "",
       startDate: "",
       endDate: "",
       halfDay: false,
-      halfDayPeriod: "AM" as const,
+      halfDayPeriod: undefined,
       priority: "MEDIUM",
       reason: "",
-      approverId: "",
+      attachments: [],
     },
   });
 
@@ -77,9 +89,11 @@ export function LeaveRequestSheet({
     if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) {
       return { requestedDays: 0, balancePreview: null };
     }
-    const days = watchedHalfDay
-      ? 0.5
-      : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
+    const days = calculateLeaveDaysExcludingSundays({
+      startDate: watchedStartDate,
+      endDate: watchedEndDate,
+      isHalfDay: watchedHalfDay,
+    });
     const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
     if (!selectedType) return { requestedDays: days, balancePreview: null };
 
@@ -109,12 +123,25 @@ export function LeaveRequestSheet({
     return null;
   }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, requestedDays, leaveTypes]);
 
-  const handleAttachmentUpload = useCallback((url: string) => setAttachmentUrl(url), []);
+  const resetFormState = useCallback(() => {
+    form.reset();
+    setAttachmentUrl(null);
+    setAttachmentKey(null);
+  }, [form]);
+
+  const handleAttachmentUpload = useCallback((url: string, key: string) => {
+    setAttachmentUrl(url);
+    setAttachmentKey(key);
+    form.setValue("attachments", [url], { shouldValidate: true });
+  }, [form]);
+
+  const handleCancel = useCallback(() => {
+    resetFormState();
+    onOpenChange(false);
+  }, [onOpenChange, resetFormState]);
 
   const onSubmit = useCallback((data: LeaveFormValues) => {
     if (leaveDayLimitError) { toast.error(leaveDayLimitError); return; }
-    const approverId = data.approverId || approvers[0]?.id;
-    if (!approverId) { toast.error("No approver available"); return; }
 
     requestLeaveMutation.mutate(
       {
@@ -123,7 +150,6 @@ export function LeaveRequestSheet({
         endDate: data.endDate,
         reason: data.reason,
         priority: data.priority,
-        approverId,
         attachmentUrl: attachmentUrl || undefined,
         isHalfDay: data.halfDay,
         halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
@@ -131,23 +157,24 @@ export function LeaveRequestSheet({
       {
         onSuccess: () => {
           toast.success("Leave requested successfully!");
-          form.reset();
-          setAttachmentUrl(null);
+          resetFormState();
           onOpenChange(false);
         },
         onError: (err) => toast.error(err.message || "Failed to submit request"),
       },
     );
-  }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
+  }, [leaveDayLimitError, attachmentUrl, onOpenChange, requestLeaveMutation, resetFormState]);
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
       title="Request Leave"
-      description="Fill in the details to submit a leave request"
+      description="Requests are sent to HR automatically. You will be notified when they are reviewed."
       onSubmit={form.handleSubmit(onSubmit)}
+      onCancel={handleCancel}
       submitLabel="Submit Request"
+      submitDisabled={!form.formState.isValid || requestLeaveMutation.isPending || !!leaveDayLimitError}
       isPending={requestLeaveMutation.isPending}
     >
       <Form {...form}>
@@ -288,33 +315,6 @@ export function LeaveRequestSheet({
             )}
           />
 
-          {approvers.length > 1 && (
-            <FormField
-              control={form.control}
-              name="approverId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Approver</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select approver" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {approvers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
           <FormField
             control={form.control}
             name="reason"
@@ -334,16 +334,31 @@ export function LeaveRequestSheet({
             )}
           />
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium mb-1 block">
-              Attach Document <span className="text-muted-foreground">(Optional)</span>
-            </label>
-            <FileUpload
-              folder="leave-attachments"
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              onUploadComplete={handleAttachmentUpload}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="attachments"
+            render={() => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium">
+                  Attach Document <span className="text-muted-foreground">(Optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <FileUpload
+                    folder="leave-attachments"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    multiple={false}
+                    onUploadComplete={handleAttachmentUpload}
+                  />
+                </FormControl>
+                {attachmentUrl && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    Uploaded: {attachmentKey ?? attachmentUrl}
+                  </p>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           {balancePreview && requestedDays > 0 && (
             <div className={`flex items-start gap-2 p-3 rounded-lg border text-xs ${

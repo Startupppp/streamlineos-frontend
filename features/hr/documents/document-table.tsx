@@ -110,6 +110,7 @@ export interface DocumentTableProps {
   onPageChange: (page: number) => void;
   onDelete: (documentId: number) => Promise<void>;
   onOpenUpload: () => void;
+  onFolderSelect?: (folderName: string) => void;
 }
 
 
@@ -122,8 +123,9 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
   const fileConfig = getFileIconConfig(doc.fileName || doc.name);
   const FileIcon = fileConfig.icon;
   const typeLabel =
-    DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "General";
-  const categoryColor = CATEGORY_COLORS[typeLabel] || CATEGORY_COLORS.General;
+    DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "Other";
+  const typeColor = CATEGORY_COLORS[typeLabel] || CATEGORY_COLORS.General;
+  const folderLabel = doc.category?.trim() || "—";
   const hasFileUrl = !!doc.fileUrl;
 
   const handleView = useCallback(
@@ -170,7 +172,7 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
             <FileIcon className={`h-5 w-5 ${fileConfig.text}`} />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-sm text-foreground truncate">
+            <p className="font-medium text-sm text-foreground truncate" title={doc.fileName || doc.name}>
               {doc.fileName || doc.name}
             </p>
             {doc.tags && doc.tags.length > 0 && (
@@ -193,12 +195,17 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
           </div>
         </div>
       </TableCell>
+      <TableCell className="px-6 py-4 text-sm text-muted-foreground max-w-[140px]">
+        <span className="truncate block" title={folderLabel}>
+          {folderLabel}
+        </span>
+      </TableCell>
       <TableCell className="px-6 py-4">
-        <Badge variant="outline" className={`text-xs font-medium ${categoryColor}`}>
+        <Badge variant="outline" className={`text-xs font-medium ${typeColor}`}>
           {typeLabel}
         </Badge>
       </TableCell>
-      <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+      <TableCell className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
         {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : "-"}
       </TableCell>
       <TableCell className="px-6 py-4 text-sm text-muted-foreground text-right">
@@ -278,6 +285,7 @@ export function DocumentTable({
   onPageChange,
   onDelete,
   onOpenUpload,
+  onFolderSelect,
 }: DocumentTableProps) {
   return (
     <Card className="shadow-sm border overflow-hidden">
@@ -301,7 +309,13 @@ export function DocumentTable({
                 scope="col"
                 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-3"
               >
-                Category
+                Folder
+              </TableHead>
+              <TableHead
+                scope="col"
+                className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-3"
+              >
+                Document type
               </TableHead>
               <TableHead
                 scope="col"
@@ -328,18 +342,20 @@ export function DocumentTable({
             {page === 1 && selectedCategory === "All Files" && searchTerm === "" && (
               <>
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-3">
+                  <TableCell colSpan={6} className="px-6 py-3">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Folders
                     </p>
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-0 pb-4">
+                  <TableCell colSpan={6} className="px-6 py-0 pb-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {folders.map((folder) => (
                         <button
                           key={folder.name}
+                          type="button"
+                          onClick={() => onFolderSelect?.(folder.name)}
                           className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background hover:bg-muted/30 transition-colors text-left"
                         >
                           <div className={`p-2 rounded-lg ${FOLDER_COLORS[folder.colorIdx]}`}>
@@ -359,7 +375,7 @@ export function DocumentTable({
 
             {paginatedDocuments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <div className="flex flex-col items-center justify-center py-16">
                     <EmptyDocumentsIllustration className="mb-3" />
                     <h3 className="text-lg font-medium text-foreground">No documents found</h3>

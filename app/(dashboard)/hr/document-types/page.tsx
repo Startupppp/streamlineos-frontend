@@ -38,6 +38,13 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { documentTypeFormSchema } from "@/lib/validations/document-types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 interface DocumentType {
@@ -162,6 +169,7 @@ export default function DocumentTypesPage() {
 
   const [deactivateTarget, setDeactivateTarget] = useState<DocumentType | null>(null);
   const [reactivateTarget, setReactivateTarget] = useState<DocumentType | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const setField = useCallback(
     <K extends keyof ReturnType<typeof blankForm>>(
@@ -208,17 +216,25 @@ export default function DocumentTypesPage() {
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!form.name.trim()) {
-      toast.error("Name is required");
+    const parsed = documentTypeFormSchema.safeParse(form);
+    if (!parsed.success) {
+      const next: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0];
+        if (typeof key === "string" && !next[key]) next[key] = issue.message;
+      }
+      setFormErrors(next);
+      toast.error(parsed.error.issues[0]?.message ?? "Please fix form errors");
       return;
     }
+    setFormErrors({});
 
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      isMandatory: form.isMandatory,
-      sortOrder: form.sortOrder ? Number(form.sortOrder) : undefined,
-      applicableRoles: form.applicableRoles,
+      name: parsed.data.name,
+      description: parsed.data.description?.trim() || undefined,
+      isMandatory: parsed.data.isMandatory,
+      sortOrder: parsed.data.sortOrder ? Number(parsed.data.sortOrder) : undefined,
+      applicableRoles: parsed.data.applicableRoles,
     };
 
     if (editTarget) {
@@ -312,6 +328,7 @@ export default function DocumentTypesPage() {
           }
         />
       ) : (
+        <TooltipProvider>
         <ScrollArea className="w-full" type="auto">
           <div className="min-w-[640px]">
             <Table>
@@ -424,6 +441,7 @@ export default function DocumentTypesPage() {
             </Table>
           </div>
         </ScrollArea>
+        </TooltipProvider>
       )}
 
       <HrSheet
@@ -451,7 +469,11 @@ export default function DocumentTypesPage() {
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             aria-label="Document type name"
+            aria-invalid={!!formErrors.name}
           />
+          {formErrors.name && (
+            <p className="text-[11px] text-destructive">{formErrors.name}</p>
+          )}
           {form.name && (
             <p className="text-[11px] text-muted-foreground">
               Slug: {slugify(form.name)}

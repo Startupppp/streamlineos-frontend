@@ -4,6 +4,7 @@ import { documentTemplates, documentTemplateVersions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { extractVariables } from "@/lib/utils/document-variables";
+import { findActiveTemplateDuplicate } from "@/lib/hr/document-template-uniqueness";
 import type { NextRequest } from "next/server";
 
 const updateSchema = z.object({
@@ -48,6 +49,21 @@ export async function PUT(req: NextRequest, { params }: Params) {
       .limit(1);
 
     if (!existing) return err("Template not found", 404);
+
+    const nextTitle = body.title ?? existing.title;
+    const nextType = body.type ?? existing.type;
+    const duplicate = await findActiveTemplateDuplicate(
+      session.orgId,
+      nextTitle,
+      nextType,
+      id,
+    );
+    if (duplicate) {
+      return err(
+        "A template with this title and type already exists. Use a different title or deactivate the existing template.",
+        409,
+      );
+    }
 
     const contentChanging =
       body.htmlContent !== undefined && body.htmlContent !== existing.htmlContent;

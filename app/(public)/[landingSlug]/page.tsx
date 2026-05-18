@@ -1,6 +1,7 @@
-import { db } from "@/lib/db";
-import { landingPages } from "@/lib/db/schema/marketing";
-import { eq, and } from "drizzle-orm";
+import {
+  getLandingPageMetadataBySlug,
+  getLandingPageBySlug,
+} from "@/server/queries/public";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { LandingForm } from "@/features/landing/landing-form";
@@ -12,11 +13,7 @@ type Props = { params: Promise<{ landingSlug: string }>; searchParams: Promise<R
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { landingSlug: slug } = await params;
-  const [page] = await db
-    .select({ title: landingPages.title, description: landingPages.description })
-    .from(landingPages)
-    .where(and(eq(landingPages.slug, slug), eq(landingPages.isPublished, true)));
-
+  const page = await getLandingPageMetadataBySlug(slug);
   if (!page) return { title: "Not Found" };
 
   const title = page.title ?? "Landing Page";
@@ -45,18 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LandingPageRoute({ params, searchParams }: Props) {
   const { landingSlug: slug } = await params;
 
-  const [page] = await db
-    .select({
-      id: landingPages.id,
-      orgId: landingPages.orgId,
-      title: landingPages.title,
-      content: landingPages.content,
-      description: landingPages.description,
-      settings: landingPages.settings,
-    })
-    .from(landingPages)
-    .where(and(eq(landingPages.slug, slug), eq(landingPages.isPublished, true)));
-
+  const page = await getLandingPageBySlug(slug);
   if (!page) notFound();
 
   const sp = await searchParams;

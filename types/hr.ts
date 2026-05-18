@@ -39,6 +39,8 @@ export interface Employee {
   designation: string | null;
   employeeId: string | null;
   departmentId: number | null;
+  /** Resolved from `departmentId` + org departments; null if unassigned or missing row. */
+  department: { id: number; name: string } | null;
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
@@ -57,6 +59,10 @@ export interface Employee {
 export interface PaginatedEmployees {
   data: Employee[];
   pagination: Pagination;
+}
+
+export interface TerminatedEmployee extends Employee {
+  terminatedAt: string | null;
 }
 
 export interface BreakEntry {
@@ -93,6 +99,7 @@ export interface AttendanceStatusResult {
   todayLog: AttendanceLog | null | undefined;
   dailyStats: DailyStats;
   cooldownRemaining: number;
+  punchBlockedReason?: string | null;
 }
 
 export interface LeaveType {
@@ -145,6 +152,7 @@ export interface Payroll {
   month: string;
   basicSalary: string;
   hra: string | null;
+  /** Stored bonus / variable pay for individually generated payslips (bulk generate uses 0). */
   allowances: string | null;
   deductions: string | null;
   grossSalary: string;
@@ -152,12 +160,29 @@ export interface Payroll {
   status: PayrollStatus | null;
   generatedBy: string | null;
   approvedBy: string | null;
+  paidBy?: string | null;
+  approvedAt?: Date | string | null;
+  paidAt?: Date | string | null;
   overtimeType: string | null;
   overtimeDays: string | null;
   overtimeHours: string | null;
   overtimeAmount: string | null;
   payslipUrl: string | null;
   createdAt: Date | string | null;
+  /** Populated on admin list/export queries for payslip preview. */
+  specialAllowance?: string | null;
+  lopDays?: string | null;
+  lopAmount?: string | null;
+  halfDays?: string | null;
+  halfDayAmount?: string | null;
+  ptAmount?: string | null;
+  otherDeductions?: string | null;
+  structureDeductions?: string | null;
+  advanceRecoveryAmount?: string | null;
+}
+
+export interface DeletePayrollInput {
+  payrollId: number;
 }
 
 export interface SalaryStructure {
@@ -166,8 +191,10 @@ export interface SalaryStructure {
   userId: string;
   basicSalary: string;
   hraPercentage: string | null;
+  specialAllowance: string | null;
   allowances: string | null;
   deductions: string | null;
+  professionalTax: string | null;
   effectiveFrom: string;
   effectiveTo: string | null;
   isActive: boolean | null;
@@ -433,6 +460,8 @@ export interface UpdateProfileInput {
     branch?: string;
     ifsc?: string;
     accountHolder?: string;
+    swiftCode?: string;
+    iban?: string;
   };
   joiningDate?: string;
   reportingTo?: string | null;
@@ -761,7 +790,20 @@ export interface EmployeePayslip {
   month: string;
   basicSalary: string;
   hra: string | null;
+  specialAllowance: string | null;
   allowances: string | null;
+  lopDays: string | null;
+  lopAmount: string | null;
+  halfDays: string | null;
+  halfDayAmount: string | null;
+  ptAmount: string | null;
+  pfEmployee: string | null;
+  pfEmployer: string | null;
+  esiEmployee: string | null;
+  esiEmployer: string | null;
+  advanceRecoveryAmount: string | null;
+  otherDeductions: string | null;
+  structureDeductions: string | null;
   deductions: string | null;
   grossSalary: string;
   netSalary: string;
@@ -786,6 +828,9 @@ export interface GetEmployeePayslipsInput {
 }
 
 export interface PayrollWithUser extends Payroll {
+  generatedByUser?: { id: string; name: string | null } | null;
+  approvedByUser?: { id: string; name: string | null } | null;
+  paidByUser?: { id: string; name: string | null } | null;
   user?: {
     firstName: string | null;
     lastName: string | null;
@@ -936,6 +981,29 @@ export interface GetMonthlyAttendanceInput {
   userId: string;
   year: number;
   month: number;
+}
+
+export type AttendanceSummaryPeriod = "month" | "quarter" | "year";
+
+export interface AttendancePeriodSummary {
+  period: AttendanceSummaryPeriod;
+  label: string;
+  rangeStart: string;
+  rangeEnd: string;
+  weekdaysInPeriod: number;
+  weekdaysElapsed: number;
+  presentWeekdays: number;
+  absentWeekdays: number;
+  attendanceRatePct: number;
+  totalWorkHours: number;
+  avgHoursPerWeekdayElapsed: number;
+  avgHoursPerPresentDay: number;
+  loggedDays: number;
+}
+
+export interface AttendanceSummaryApiResponse {
+  summary: AttendancePeriodSummary;
+  logs: AttendanceLog[];
 }
 
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";

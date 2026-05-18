@@ -24,7 +24,7 @@ function cleanExpiredTypers(channelId: number) {
   if (channel.size === 0) typingState.delete(channelId);
 }
 
-async function assertChannelMember(channelId: number, userId: string) {
+export async function assertChannelMember(channelId: number, userId: string) {
   const member = await db.query.chatChannelMembers.findFirst({
     where: and(
       eq(chatChannelMembers.channelId, channelId),
@@ -115,11 +115,31 @@ export async function getMyChannels(userId: string, orgId: string) {
       ])
     );
 
-    return channels.map((ch) => ({
+    const enriched = channels.map((ch) => ({
       ...ch,
       unreadCount: unreadMap.get(ch.id) ?? 0,
       lastMessage: lastMsgMap.get(ch.id) ?? null,
     }));
+
+    const now = Date.now();
+    const isEffectivelyPinned = (ch: (typeof enriched)[number]) =>
+      Boolean(
+        ch.pinnedUntil &&
+          new Date(ch.pinnedUntil as string | Date).getTime() > now
+      );
+
+    return enriched.sort((a, b) => {
+      const ap = isEffectivelyPinned(a);
+      const bp = isEffectivelyPinned(b);
+      if (ap !== bp) return ap ? -1 : 1;
+      const at = a.lastMessageAt
+        ? new Date(a.lastMessageAt as string | Date).getTime()
+        : 0;
+      const bt = b.lastMessageAt
+        ? new Date(b.lastMessageAt as string | Date).getTime()
+        : 0;
+      return bt - at;
+    });
   } catch (error) {
     logger.error("[chat.getMyChannels]", {
       error: error instanceof Error ? error.message : "Unknown error",

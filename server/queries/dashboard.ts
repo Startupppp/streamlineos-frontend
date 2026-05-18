@@ -10,6 +10,7 @@ import {
   projectMembers,
   sprints,
   tickets,
+  ticketAssignees,
   crmActivities,
   announcements,
   leaveBalances,
@@ -22,10 +23,28 @@ import {
   jobPostings,
   leads,
   expenses,
+  targets,
 } from "@/lib/db/schema";
-import { eq, and, desc, or, inArray, count, sql, gte, lt, isNull, gt, sum } from "drizzle-orm";
+import { eq, and, desc, or, inArray, count, sql, gte, lte, lt, isNull, gt, sum, ne } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
+
+async function coassignedTicketIdsForUser(userId: string): Promise<number[]> {
+  const rows = await db
+    .select({ ticketId: ticketAssignees.ticketId })
+    .from(ticketAssignees)
+    .where(eq(ticketAssignees.userId, userId));
+  return [...new Set(rows.map((r) => r.ticketId))];
+}
+
+/** Tickets where the user is primary assignee and/or listed in `ticket_assignees`. */
+function ticketsVisibleToAssignee(orgId: string, userId: string, coassignedIds: number[]) {
+  const byPrimary = eq(tickets.assigneeId, userId);
+  if (coassignedIds.length === 0) {
+    return and(eq(tickets.orgId, orgId), byPrimary);
+  }
+  return and(eq(tickets.orgId, orgId), or(byPrimary, inArray(tickets.id, coassignedIds)));
+}
 
 export async function getDashboardStats(orgId: string, _userId: string) {
   const today = getTodayString();
@@ -147,11 +166,9 @@ export async function getTeamAvailability(orgId: string) {
 }
 
 export async function getMyIssues(orgId: string, userId: string) {
+  const coIds = await coassignedTicketIdsForUser(userId);
   return db.query.tickets.findMany({
-    where: and(
-      eq(tickets.orgId, orgId),
-      eq(tickets.assigneeId, userId)
-    ),
+    where: ticketsVisibleToAssignee(orgId, userId, coIds),
     orderBy: [desc(tickets.updatedAt)],
     limit: 10,
     with: {
@@ -246,14 +263,117 @@ export async function getActiveSprintSummary(orgId: string, userId: string, role
   };
 }
 
-export async function getRoleStats(orgId: string): Promise<Record<string, number>> {
-  const rows = await db
-    .select({ role: users.role, cnt: sql<number>`count(*)::int` })
-    .from(organizationMembers)
-    .innerJoin(users, eq(organizationMembers.userId, users.id))
-    .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)))
-    .groupBy(users.role);
-  return Object.fromEntries(rows.map((r) => [r.role, r.cnt]));
+export async function getRoleStats(orgId: string, userId: string): Promise<Record<string, number>> {
+  const coIds = await coassignedTicketIdsForUser(userId);
+  const today = getTodayString();
+
+  const [
+    myProjectsRow,
+    myTicketsRow,
+    myTicketsDoneRow,
+    myTicketsInProgressRow,
+    myLeadsRow,
+    myConvertedRow,
+    myDealsRow,
+    activeTargets,
+  ] = await Promise.all([
+    db
+      .select({ c: sql<number>`count(distinct ${projects.id})::int` })
+      .from(projects)
+      .leftJoin(projectMembers, eq(projectMembers.projectId, projects.id))
+      .where(
+        and(
+          eq(projects.orgId, orgId),
+          or(eq(projects.managerId, userId), eq(projectMembers.userId, userId)),
+        ),
+      ),
+    db
+      .select({ c: count() })
+      .from(tickets)
+      .where(and(ticketsVisibleToAssignee(orgId, userId, coIds), ne(tickets.status, "DONE"))),
+    db
+      .select({ c: count() })
+      .from(tickets)
+      .where(and(ticketsVisibleToAssignee(orgId, userId, coIds), eq(tickets.status, "DONE"))),
+    db
+      .select({ c: count() })
+      .from(tickets)
+      .where(
+        and(
+          ticketsVisibleToAssignee(orgId, userId, coIds),
+          or(eq(tickets.status, "IN_PROGRESS"), eq(tickets.status, "IN_REVIEW")),
+        ),
+      ),
+    db
+      .select({ c: count() })
+      .from(leads)
+      .where(
+        and(
+          eq(leads.orgId, orgId),
+          eq(leads.assignedToId, userId),
+          isNull(leads.deletedAt),
+          ne(leads.status, "CONVERTED"),
+          ne(leads.status, "LOST"),
+        ),
+      ),
+    db
+      .select({ c: count() })
+      .from(leads)
+      .where(
+        and(
+          eq(leads.orgId, orgId),
+          eq(leads.assignedToId, userId),
+          isNull(leads.deletedAt),
+          eq(leads.status, "CONVERTED"),
+        ),
+      ),
+    db
+      .select({ c: count() })
+      .from(deals)
+      .where(
+        and(
+          eq(deals.orgId, orgId),
+          eq(deals.assignedToId, userId),
+          ne(deals.stage, "WON"),
+          ne(deals.stage, "LOST"),
+        ),
+      ),
+    db.query.targets.findMany({
+      where: and(
+        eq(targets.orgId, orgId),
+        eq(targets.userId, userId),
+        lte(targets.startDate, today),
+        gte(targets.endDate, today),
+      ),
+      columns: { targetValue: true, currentValue: true },
+    }),
+  ]);
+
+  let targetProgress = 0;
+  if (activeTargets.length > 0) {
+    let acc = 0;
+    let n = 0;
+    for (const t of activeTargets) {
+      const tv = Number(t.targetValue);
+      const cv = Number(t.currentValue ?? 0);
+      if (tv > 0) {
+        acc += Math.min(cv / tv, 1);
+        n += 1;
+      }
+    }
+    targetProgress = n > 0 ? Math.round((acc / n) * 100) : 0;
+  }
+
+  return {
+    myProjects: Number(myProjectsRow[0]?.c ?? 0),
+    myTickets: Number(myTicketsRow[0]?.c ?? 0),
+    myTicketsDone: Number(myTicketsDoneRow[0]?.c ?? 0),
+    myTicketsInProgress: Number(myTicketsInProgressRow[0]?.c ?? 0),
+    myLeads: Number(myLeadsRow[0]?.c ?? 0),
+    myConverted: Number(myConvertedRow[0]?.c ?? 0),
+    myDeals: Number(myDealsRow[0]?.c ?? 0),
+    targetProgress,
+  };
 }
 
 export async function getTodayActivities(orgId: string) {
@@ -335,12 +455,19 @@ export async function getPersonalDashboard(orgId: string, userId: string) {
   weekEnd.setDate(weekStart.getDate() + 6);
   weekEnd.setHours(23, 59, 59, 999);
 
+  const coIds = await coassignedTicketIdsForUser(userId);
+  const assignWhere = ticketsVisibleToAssignee(orgId, userId, coIds);
+
   const [myTasks, timesheetRows, leaveBalanceRows, upcomingEvents, unreadCount] = await Promise.all([
     db.query.tickets.findMany({
       where: and(
-        eq(tickets.orgId, orgId),
-        eq(tickets.assigneeId, userId),
-        or(eq(tickets.status, "TODO"), eq(tickets.status, "IN_PROGRESS"), eq(tickets.status, "IN_REVIEW"), eq(tickets.status, "BACKLOG"))
+        assignWhere,
+        or(
+          eq(tickets.status, "TODO"),
+          eq(tickets.status, "IN_PROGRESS"),
+          eq(tickets.status, "IN_REVIEW"),
+          eq(tickets.status, "BACKLOG"),
+        ),
       ),
       orderBy: [desc(tickets.updatedAt)],
       limit: 10,

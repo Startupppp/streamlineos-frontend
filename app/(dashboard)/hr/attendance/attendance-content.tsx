@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimerCard } from "@/features/hr/attendance/check-in-button";
 import { WfhBalancesCard } from "@/features/hr/attendance/wfh-balances-card";
@@ -7,8 +8,19 @@ import { AttendanceCalendar } from "@/features/hr/attendance/attendance-calendar
 import { AttendanceHeatmap } from "@/features/hr/attendance/attendance-heatmap";
 import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
+import { HolidayWorkRequestCard } from "@/features/hr/attendance/holiday-work-request-card";
 
 export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash !== "holiday-work") return;
+    const t = window.setTimeout(() => {
+      document.getElementById("holiday-work")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
 
     <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 overflow-y-auto lg:overflow-hidden">
@@ -24,6 +36,7 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
         <div className="space-y-5 pr-3 pb-6">
           <AttendanceCalendar userId={userId} />
           <AttendanceHeatmap userId={userId} />
+          <HolidayWorkRequestCard isAdmin={isAdmin} />
           {isAdmin && <ManageHolidaysCard />}
           <DailyHistoryTable />
         </div>

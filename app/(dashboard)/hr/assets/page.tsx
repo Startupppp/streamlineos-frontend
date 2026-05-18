@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Laptop,
@@ -43,10 +44,37 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { Asset } from "@/types/hr";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { apiClient } from "@/lib/api-client";
+import {
+  buildAssetsCsvString,
+  assetRowsToXlsxSheets,
+  type AssetExportRow,
+} from "@/lib/hr/assets-export-format";
+import { AssetExportSheet } from "@/features/hr/assets/asset-export-sheet";
+import { EmployeeAssignCombobox } from "@/components/hr/employee-assign-combobox";
 
 function fmt(amount: string | number | null) {
   if (amount === null || amount === undefined) return "—";
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0 })}`;
+}
+
+function assetsToExportRows(
+  list: Asset[],
+  employeeList: Array<{ id: string; name: string }>
+): AssetExportRow[] {
+  return list.map((a) => ({
+    name: a.name ?? "",
+    type: a.type ?? "",
+    serialNumber: a.serialNumber ?? "",
+    status: a.status ?? "",
+    assignedToName: a.assignedTo
+      ? employeeList.find((e) => e.id === a.assignedTo)?.name ?? a.assignedTo
+      : "",
+    purchaseCost: a.purchaseCost != null ? String(a.purchaseCost) : "",
+    purchaseDate: a.purchaseDate ?? "",
+    location: a.location ?? "",
+    notes: a.notes ?? "",
+  }));
 }
 
 const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -108,6 +136,65 @@ export default function HrAssetsPage() {
     setPurchaseDate(""); setPurchaseCost(""); setLocation(""); setNotes("");
   }, []);
 
+  const emailExport = useMutation({
+    mutationFn: (payload: {
+      format: "csv" | "xlsx";
+      status?: string;
+      recipients?: "CEO" | "HR" | "BOTH";
+    }) =>
+      apiClient.post<{
+        sent: boolean;
+        recipients: string[];
+        rowCount: number;
+        format: string;
+      }>("/hr/assets/export/email", payload),
+    onSuccess: (data) => {
+      toast.success(
+        `Sent ${data.format.toUpperCase()} to ${data.recipients.length} recipient(s): ${data.recipients.join(", ")}`
+      );
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const handleExportCsvLocal = useCallback(() => {
+    try {
+      const rows = assetsToExportRows(filteredItems, employeeList);
+      const csv = buildAssetsCsvString(rows);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `assets-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Export failed");
+    }
+  }, [filteredItems, employeeList]);
+
+  const handleExportExcelLocal = useCallback(async () => {
+    try {
+      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      const rows = assetsToExportRows(filteredItems, employeeList);
+      await downloadXlsx(`assets-export-${format(new Date(), "yyyy-MM-dd")}.xlsx`, assetRowsToXlsxSheets(rows));
+    } catch {
+      toast.error("Export failed");
+    }
+  }, [filteredItems, employeeList]);
+
+  const handleAssetEmail = useCallback(
+    (args: { format: "csv" | "xlsx"; recipients: "CEO" | "HR" | "BOTH" }) => {
+      emailExport.mutate({
+        format: args.format,
+        recipients: args.recipients,
+        ...(statusFilter && ["AVAILABLE", "ASSIGNED", "MAINTENANCE", "RETIRED"].includes(statusFilter)
+          ? { status: statusFilter }
+          : {}),
+      });
+    },
+    [emailExport, statusFilter]
+  );
+
   const handleCreate = useCallback(() => {
     if (!name.trim()) { toast.error("Asset name is required"); return; }
     createAsset.mutate(
@@ -134,10 +221,21 @@ export default function HrAssetsPage() {
       title="Assets"
       subtitle="Manage company assets and assignments"
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
-          Add Asset
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <AssetExportSheet
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            rowCount={filteredItems.length}
+            onExportCsv={handleExportCsvLocal}
+            onExportXlsx={() => void handleExportExcelLocal()}
+            onSendEmail={handleAssetEmail}
+            isSendingEmail={emailExport.isPending}
+          />
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Add Asset
+          </Button>
+        </div>
       }
       filters={
         <Tabs value={statusFilter ?? "all"} onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}>
@@ -242,14 +340,13 @@ export default function HrAssetsPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Assign To</label>
-          <Select value={assignedTo} onValueChange={setAssignedTo}>
-            <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-            <SelectContent>
-              {employeeList.map((emp) => (
-                <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <EmployeeAssignCombobox
+            employees={employeeList}
+            value={assignedTo}
+            onValueChange={setAssignedTo}
+            placeholder="Unassigned"
+            disabled={createAsset.isPending}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">

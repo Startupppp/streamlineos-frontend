@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { attendance } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, asc } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
+import { getPunchDayBlockReason } from "@/lib/hr/punch-day-guard";
 import type { AttendanceLog, AttendanceStatusResult } from "@/types/hr";
 
 export async function getAttendanceStatus(
@@ -75,6 +76,11 @@ export async function getAttendanceStatus(
     }
   }
 
+  const punchBlockedReason =
+    status === "OFFLINE"
+      ? await getPunchDayBlockReason(orgId, today)
+      : null;
+
   return {
     status,
     logs: logs as unknown as AttendanceLog[],
@@ -85,6 +91,7 @@ export async function getAttendanceStatus(
       isOvertime: isDailyOvertime,
     },
     cooldownRemaining,
+    punchBlockedReason,
   };
 }
 

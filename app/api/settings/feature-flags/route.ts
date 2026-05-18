@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getOrgFeatureFlags, setOrgFeatureFlag, type OrgFeatureFlags } from "@/lib/org-features";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { z } from "zod";
 
 const updateSchema = z.object({

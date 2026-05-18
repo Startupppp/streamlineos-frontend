@@ -330,6 +330,118 @@
       "when": 1774390001000,
       "tag": "0103_leave_lop_auto_convert",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1774390002000,
+      "tag": "0104_appraisal_pip_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1774390003000,
+      "tag": "0105_payroll_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1774390004000,
+      "tag": "0106_holiday_type_halfday",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1774390005000,
+      "tag": "0107_attendance_holiday_flags",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1774390006000,
+      "tag": "0108_holiday_work_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1774390007000,
+      "tag": "0109_comp_off_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1774390008000,
+      "tag": "0110_payroll_line_items_and_warnings",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1774390009000,
+      "tag": "0111_hwr_reason_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1774390010000,
+      "tag": "0112_crm_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1774390011000,
+      "tag": "0113_payroll_itemized_deductions",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1774390012000,
+      "tag": "0114_pf_esi_statutory",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1774390013000,
+      "tag": "0115_overtime_multipliers",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1774390014000,
+      "tag": "0116_chat_channel_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1774390014500,
+      "tag": "0117_payroll_leaves_display",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1774390014750,
+      "tag": "0118_document_folders_and_org_variables",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1774390015000,
+      "tag": "0119_payroll_paid_actor_timestamps",
+      "breakpoints": true
     }
   ]
 }

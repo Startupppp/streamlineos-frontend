@@ -9,7 +9,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatINR, formatINRCompact } from "@/lib/format-utils";
 import type { ExpensePageData } from "@/server/actions/expense-query";
 
 interface AdminExpenseStatsProps {
@@ -35,18 +35,21 @@ export function AdminExpenseStats({ stats, pendingCount }: AdminExpenseStatsProp
       <StatCard
         label="Approved Today"
         value={formatINRCompact(stats?.approvedAmount || 0)}
+        valueTooltip={formatINR(stats?.approvedAmount || 0)}
         icon={CheckCircle2}
         color="green"
       />
       <StatCard
         label="Rejected Today"
         value={formatINRCompact(stats?.rejectedAmount || 0)}
+        valueTooltip={formatINR(stats?.rejectedAmount || 0)}
         icon={XCircle}
         color="red"
       />
       <StatCard
         label="Total Claimed (Month)"
         value={formatINRCompact(totalClaimed)}
+        valueTooltip={formatINR(totalClaimed)}
         icon={BarChart3}
         color="blue"
       />
@@ -59,23 +62,27 @@ interface MemberExpenseStatsProps {
 }
 
 export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
+  const totalReimbursed = (stats?.approvedAmount || 0) + (stats?.paidAmount || 0);
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
       <StatCard
         label="Total Reimbursed (YTD)"
-        value={formatINRCompact((stats?.approvedAmount || 0) + (stats?.paidAmount || 0))}
+        value={formatINRCompact(totalReimbursed)}
+        valueTooltip={formatINR(totalReimbursed)}
         icon={DollarSign}
         color="green"
       />
       <StatCard
         label="Pending Approval"
         value={formatINRCompact(stats?.pendingAmount || 0)}
+        valueTooltip={formatINR(stats?.pendingAmount || 0)}
         icon={Clock}
         color="gold"
       />
       <StatCard
         label="Rejected (30d)"
         value={formatINRCompact(stats?.rejectedAmount || 0)}
+        valueTooltip={formatINR(stats?.rejectedAmount || 0)}
         icon={XCircle}
         color="red"
       />

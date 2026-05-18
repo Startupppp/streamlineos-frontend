@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
+import { FolderPlus, Upload, FilePlus2, FileText, Eye, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,7 +9,16 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useHrDocuments, useDeleteDocument, useHrDocumentStats, useRichDocuments, useDeleteRichDocument } from "@/lib/api/hooks/hr";
+import {
+  useHrDocuments,
+  useDeleteDocument,
+  useHrDocumentStats,
+  useRichDocuments,
+  useDeleteRichDocument,
+  useDocumentFolders,
+  useCreateDocumentFolder,
+} from "@/lib/api/hooks/hr";
+import { BUILT_IN_CATEGORY_TABS, isCustomFolderTab } from "@/lib/hr/document-library-constants";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +26,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { Document } from "@/types/hr";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
+import { DocumentExportSheet } from "@/features/hr/documents/document-export-sheet";
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -31,15 +41,6 @@ const DOCUMENT_CATEGORIES = [
   "Other",
 ];
 
-const DEFAULT_CATEGORY_TABS = [
-  "All Files",
-  "Contracts",
-  "Policies",
-  "Tax Forms",
-  "Templates",
-  "Payroll",
-];
-
 export default function DocumentsPage() {
   const { data: session } = useSession();
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -48,13 +49,19 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
+
+  const { data: folderRows = [], refetch: refetchFolders } = useDocumentFolders();
+  const createFolderMutation = useCreateDocumentFolder();
+  const customFolderNames = useMemo(
+    () => folderRows.map((f) => f.name),
+    [folderRows],
+  );
 
   const { data: rawDocuments = [], isLoading, refetch } = useHrDocuments(undefined, typeFilter);
   const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
@@ -64,10 +71,12 @@ export default function DocumentsPage() {
   const documents = rawDocuments as Document[];
   const policies = (rawPolicies as Document[]).filter((d) => d.isPublic);
 
-  const categoryTabs = useMemo(
-    () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
-    [customFolders],
-  );
+  const defaultUploadCategory = useMemo(() => {
+    if (isCustomFolderTab(selectedCategory, customFolderNames)) {
+      return selectedCategory;
+    }
+    return "";
+  }, [selectedCategory, customFolderNames]);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
@@ -86,7 +95,7 @@ export default function DocumentsPage() {
           (selectedCategory === "Payroll" && doc.type === "PAYSLIP");
 
         const customFolderMatch =
-          customFolders.includes(selectedCategory) &&
+          isCustomFolderTab(selectedCategory, customFolderNames) &&
           (doc.category?.toLowerCase() === selectedCategory.toLowerCase() ||
             doc.tags?.some((t) => t.toLowerCase() === selectedCategory.toLowerCase()));
 
@@ -95,7 +104,7 @@ export default function DocumentsPage() {
 
       return matchesSearch;
     });
-  }, [documents, searchTerm, selectedCategory, customFolders]);
+  }, [documents, searchTerm, selectedCategory, customFolderNames]);
 
   const totalFiltered = filteredDocuments.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
@@ -128,13 +137,24 @@ export default function DocumentsPage() {
   const handleTypeChange = (value: string) => { setSelectedType(value); setPage(1); };
   const handleCategoryChange = (value: string) => { setSelectedCategory(value); setPage(1); };
 
-  const handleNewFolder = (name: string) => {
-    setCustomFolders((prev) => [...prev, name]);
-    setSelectedCategory(name);
-    setNewFolderName("");
-    setIsNewFolderOpen(false);
-    toast.success(`Folder "${name}" created`);
-  };
+  const handleNewFolder = useCallback(
+    (name: string) => {
+      createFolderMutation.mutate(
+        { name },
+        {
+          onSuccess: (folder) => {
+            void refetchFolders();
+            setSelectedCategory(folder.name);
+            setNewFolderName("");
+            setIsNewFolderOpen(false);
+            toast.success(`Folder "${folder.name}" created`);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [createFolderMutation, refetchFolders],
+  );
 
   if (isLoading) {
     return (
@@ -153,7 +173,7 @@ export default function DocumentsPage() {
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-4">
               <Skeleton className="h-10 flex-1 min-w-[200px] max-w-md rounded-md" />
-              {DEFAULT_CATEGORY_TABS.map((tab) => (
+              {BUILT_IN_CATEGORY_TABS.map((tab) => (
                 <Skeleton key={tab} className="h-8 rounded-full" style={{ width: `${tab.length * 9 + 24}px` }} />
               ))}
             </div>
@@ -168,6 +188,12 @@ export default function DocumentsPage() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
+      <DocumentExportSheet
+        isDocumentsAdmin={!!isAdmin}
+        canEmailPack={!!isAdmin}
+        initialType={selectedType}
+        initialCategory={selectedCategory}
+      />
       <Button variant="outline" size="sm" className="gap-2" asChild>
         <Link href="/hr/documents/templates"><LayoutTemplate className="h-4 w-4" /><span className="hidden sm:inline">Templates</span></Link>
       </Button>
@@ -196,14 +222,14 @@ export default function DocumentsPage() {
           onTypeChange={handleTypeChange}
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
-          categoryTabs={categoryTabs}
+          customFolderNames={customFolderNames}
         />
       }
     >
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
-          <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="gold" />
+          <StatCard label="Folders" value={folders.length + customFolderNames.length} icon={FolderOpen} color="gold" />
           <StatCard
             label={`Storage (${maxStorageGB}GB)`}
             value={`${storagePercent}%`}
@@ -225,6 +251,7 @@ export default function DocumentsPage() {
           onPageChange={setPage}
           onDelete={handleDelete}
           onOpenUpload={() => setIsUploadOpen(true)}
+          onFolderSelect={handleCategoryChange}
         />
 
         <RichDocumentsSection />
@@ -244,7 +271,8 @@ export default function DocumentsPage() {
           onOpenChange={setIsUploadOpen}
           onSuccess={() => { void refetch(); setIsUploadOpen(false); }}
           documentTypes={DOCUMENT_TYPES}
-          categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
+          categories={[...DOCUMENT_CATEGORIES, ...customFolderNames]}
+          defaultCategory={defaultUploadCategory}
           isAdmin={isAdmin}
         />
         <NewFolderDialog
@@ -252,7 +280,7 @@ export default function DocumentsPage() {
           onOpenChange={setIsNewFolderOpen}
           folderName={newFolderName}
           onFolderNameChange={setNewFolderName}
-          existingTabs={categoryTabs}
+          existingTabs={[...BUILT_IN_CATEGORY_TABS, ...customFolderNames]}
           onConfirm={handleNewFolder}
         />
       </div>
@@ -298,18 +326,24 @@ function RichDocumentsSection() {
         </div>
         <div className="space-y-2">
           {richDocs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
+            <div
+              key={doc.id}
+              className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <FileText className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <p className="truncate text-sm font-medium">{doc.title}</p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
                     {doc.templateType && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{doc.templateType}</Badge>
+                      <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+                        {doc.templateType}
+                      </Badge>
                     )}
                     {doc.isPublished && (
-                      <Badge variant="default" className="text-[10px] px-1.5 py-0 gap-0.5">
-                        <Globe className="h-2.5 w-2.5" />Published
+                      <Badge variant="default" className="gap-0.5 px-1.5 py-0 text-[10px]">
+                        <Globe className="h-2.5 w-2.5" aria-hidden />
+                        Published
                       </Badge>
                     )}
                     {doc.updatedAt && (
@@ -320,16 +354,23 @@ function RichDocumentsSection() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                  <Link href={`/hr/documents/editor/${doc.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
+              <div className="flex shrink-0 items-center justify-end gap-2 sm:pl-2">
+                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                  <Link href={`/hr/documents/editor/${doc.id}`} aria-label={`View ${doc.title}`}>
+                    <Eye className="h-3.5 w-3.5" aria-hidden />
+                    View
+                  </Link>
                 </Button>
                 <Button
-                  variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => handleDelete(doc.id)}
                   disabled={deleteMutation.isPending}
+                  aria-label={`Delete ${doc.title}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5 sm:mr-1" aria-hidden />
+                  <span className="hidden sm:inline">Delete</span>
                 </Button>
               </div>
             </div>

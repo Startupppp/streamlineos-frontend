@@ -4,10 +4,11 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from "@/server/queries/calendar";
+import { sendCalendarEventAttendeeEmails } from "@/lib/calendar-event-notifications";
 import { z } from "zod";
 
 const updateSchema = z.object({
-  title: z.string().min(1).optional(),
+  title: z.string().min(5, "Title must be at least 5 characters").optional(),
   description: z.string().nullable().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -60,7 +61,33 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
 
     const event = await updateCalendarEvent(id, session.orgId, session.user.id, updateData);
     if (!event) return err("Event not found or not authorized", 404);
-    return ok(event);
+
+    const attendeeIds = event.attendeeIds ?? [];
+    const shouldNotifyAttendees =
+      attendeeIds.length > 0 &&
+      (input.title !== undefined ||
+        input.startDate !== undefined ||
+        input.endDate !== undefined ||
+        input.allDay !== undefined ||
+        input.attendeeIds !== undefined ||
+        input.description !== undefined);
+
+    const notifyResult = shouldNotifyAttendees
+      ? await sendCalendarEventAttendeeEmails({
+          orgId: session.orgId,
+          creatorUserId: session.user.id,
+          attendeeIds,
+          title: event.title,
+          description: event.description,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          allDay: Boolean(event.allDay),
+          location: event.location,
+          variant: "updated",
+        })
+      : undefined;
+
+    return notifyResult !== undefined ? ok({ ...event, notify: notifyResult }) : ok(event);
   });
 }
 

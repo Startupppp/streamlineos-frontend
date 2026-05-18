@@ -10,7 +10,7 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const bodySchema = z.object({
-  reason: z.string().min(1, "Rejection reason is required."),
+  reason: z.string().optional(),
   comment: z.string().optional(),
 });
 
@@ -30,7 +30,7 @@ export async function PUT(
       return err("Only HR, Admin, or CEO can reject leave requests.", 403);
     }
 
-    let reason: string;
+    let reason: string | undefined;
     let comment: string | undefined;
     try {
       const raw = await req.json() as unknown;
@@ -61,7 +61,7 @@ export async function PUT(
       .set({
         status: "REJECTED",
         approverId: session.user.id,
-        rejectionReason: reason,
+        rejectionReason: reason ?? null,
         managerComment: comment ?? null,
       })
       .where(eq(leaveRequests.id, leaveId));
@@ -85,7 +85,7 @@ export async function PUT(
         userId: existing.userId,
         type: "ERROR",
         title: "Leave Rejected",
-        message: `Your leave request has been rejected. Reason: ${reason}${comment ? ` — "${comment}"` : ""}`,
+        message: `Your leave request has been rejected.${reason ? ` Reason: ${reason}` : ""}${comment ? ` — "${comment}"` : ""}`,
         link: "/hr/leaves",
       }),
       writeAuditLog({
@@ -105,7 +105,7 @@ export async function PUT(
             existing.endDate,
             "REJECTED",
             session.user.name ?? "HR",
-            reason
+            reason ?? ""
           ).catch(() => undefined)
         : Promise.resolve(),
     ]);

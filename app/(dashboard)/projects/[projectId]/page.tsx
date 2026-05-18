@@ -87,6 +87,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
       sprintId: t.sprintId ?? undefined,
       dueDate: t.dueDate ?? null,
       startDate: t.startDate ?? null,
+      createdAt: t.createdAt ?? null,
+      updatedAt: t.updatedAt ?? null,
       sequenceId: t.sequenceId ?? null,
       assignee: t.assignee
         ? {

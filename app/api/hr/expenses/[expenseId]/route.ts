@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -22,6 +22,27 @@ const updateDetailsSchema = z.object({
   expenseDate: z.string().optional(),
   receiptUrl: z.string().optional(),
   receiptFileName: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (!data.expenseDate) return;
+  const parsed = new Date(data.expenseDate);
+  if (Number.isNaN(parsed.getTime())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date is invalid.",
+      path: ["expenseDate"],
+    });
+    return;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsed.setHours(0, 0, 0, 0);
+  if (parsed > today) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date cannot be in the future.",
+      path: ["expenseDate"],
+    });
+  }
 });
 
 export async function PATCH(

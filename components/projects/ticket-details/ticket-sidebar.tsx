@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -7,6 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -20,6 +31,7 @@ import {
   AlertCircle,
   Zap,
   Target,
+  ChevronsUpDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
@@ -68,6 +80,8 @@ interface TicketSidebarProps {
   projectId?: number;
   members: ProjectMember[];
   sprints: Array<{ id: number; name: string; status?: string | null }>;
+  /** Project epics (EPIC-type tickets) for linking this work item. */
+  epics?: Array<{ id: number; title: string }>;
   statuses?: Array<{ name: string; id: number }>;
   onAutoSave: (field: Record<string, unknown>) => void;
 }
@@ -96,9 +110,13 @@ export function TicketSidebar({
   projectId,
   members,
   sprints,
+  epics = [],
   statuses,
   onAutoSave,
 }: TicketSidebarProps) {
+  const [assigneeOpen, setAssigneeOpen] = useState(false);
+  const [assigneeSearch, setAssigneeSearch] = useState("");
+
   const timeSpent = ticket.timeSpent ? parseFloat(ticket.timeSpent) : 0;
   const originalEstimate = ticket.originalEstimate
     ? parseFloat(ticket.originalEstimate)
@@ -127,6 +145,18 @@ export function TicketSidebar({
       : ticket.assignee
         ? [ticket.assignee]
         : [];
+
+  const filteredMembers = useMemo(() => {
+    const q = assigneeSearch.trim().toLowerCase();
+    const pool = members.filter((m) => !currentAssigneeIds.includes(m.id));
+    if (!q) return pool;
+    return pool.filter(
+      (m) =>
+        `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.name ?? ""} ${m.email ?? ""}`
+          .toLowerCase()
+          .includes(q)
+    );
+  }, [members, currentAssigneeIds, assigneeSearch]);
 
   return (
     <div className="px-4 py-3 space-y-1 bg-muted/10">
@@ -277,6 +307,11 @@ export function TicketSidebar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
+              {epics.map((epic) => (
+                <SelectItem key={epic.id} value={String(epic.id)}>
+                  {epic.title || `Epic #${epic.id}`}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -324,37 +359,69 @@ export function TicketSidebar({
             )}
           </div>
         )}
-        <Select
-          value=""
-          onValueChange={(v) => {
-            if (!v || v === "unassigned") return;
-            if (currentAssigneeIds.includes(v)) return;
-            const newIds = [...currentAssigneeIds, v];
-            onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
+        <Popover
+          open={assigneeOpen}
+          onOpenChange={(o) => {
+            setAssigneeOpen(o);
+            if (!o) setAssigneeSearch("");
           }}
         >
-          <SelectTrigger className="h-8 text-xs bg-background w-full">
-            <SelectValue placeholder="+ Add assignee" />
-          </SelectTrigger>
-          <SelectContent>
-            {members
-              ?.filter((m) => !currentAssigneeIds.includes(m.id))
-              .map((member) => (
-                <SelectItem key={member.id} value={member.id}>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-5 w-5">
-                      <AvatarImage src={resolveImageUrl(member.image)} />
-                      <AvatarFallback className="text-[8px]">
-                        {member.firstName?.[0]}
-                        {member.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs">{member.firstName} {member.lastName}</span>
-                  </div>
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={assigneeOpen}
+              className="h-8 text-xs bg-background w-full justify-between font-normal px-2"
+            >
+              <span className="truncate text-muted-foreground">+ Add assignee</span>
+              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Search name or email…"
+                className="h-8 text-xs"
+                value={assigneeSearch}
+                onValueChange={setAssigneeSearch}
+              />
+              <CommandList className="max-h-[220px]">
+                <CommandEmpty className="text-xs py-3 text-center">No member found.</CommandEmpty>
+                <CommandGroup>
+                  {filteredMembers.map((member) => (
+                    <CommandItem
+                      key={member.id}
+                      value={member.id}
+                      className="text-xs"
+                      onSelect={() => {
+                        if (currentAssigneeIds.includes(member.id)) return;
+                        const newIds = [...currentAssigneeIds, member.id];
+                        onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
+                        setAssigneeOpen(false);
+                        setAssigneeSearch("");
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={resolveImageUrl(member.image)} />
+                          <AvatarFallback className="text-[8px]">
+                            {member.firstName?.[0]}
+                            {member.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate">
+                          {member.firstName} {member.lastName}
+                          <span className="block text-[10px] text-muted-foreground truncate">{member.email}</span>
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="pt-1">

@@ -58,6 +58,8 @@ export const users = pgTable("users", {
     ifsc: string;
     accountHolder: string;
     pfUanNumber?: string;
+    swiftCode?: string;
+    iban?: string;
   }>(),
   image: text("image"),
   role: text("role").default("ENGINEERING").notNull(),

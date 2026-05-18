@@ -2,17 +2,17 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions } from "./db/schema";
+import { db } from "../db";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions } from "../db/schema";
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
-import { logger } from "./logger";
-import { redis } from "./redis";
+import { logger } from "../logger";
+import { redis } from "../redis";
 import { randomUUID } from "crypto";
-import { getDeviceId } from "./device-fingerprint";
-import { sendAccountLockedEmail, sendNewDeviceLoginEmail } from "./email";
-import { createAuditLog } from "./audit-log";
+import { getDeviceId } from "../device-fingerprint";
+import { sendAccountLockedEmail, sendNewDeviceLoginEmail } from "../email";
+import { createAuditLog } from "../audit-log";
 
 interface UserSessionCache {
   isActive: boolean | null;
@@ -36,9 +36,15 @@ function userSessionKey(userId: string): string {
 }
 
 export async function invalidateUserSession(userId: string): Promise<void> {
-  if (redis) {
-    await redis.del(userSessionKey(userId));
+  if (!redis) {
+    logger.error(
+      "invalidateUserSession: Redis unavailable — session NOT revoked after password change. " +
+      "Existing sessions for this user remain valid.",
+      { userId }
+    );
+    return;
   }
+  await redis.del(userSessionKey(userId));
 }
 
 const credentialsProvider = Credentials({

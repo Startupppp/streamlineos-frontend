@@ -3,7 +3,7 @@ import { withAuth } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 
 export async function GET(req: NextRequest) {
@@ -52,8 +52,13 @@ export async function GET(req: NextRequest) {
       r.rejectionReason || "",
     ]);
 
+    const csvCell = (val: unknown): string => {
+      let s = String(val ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
     const csv = [headers, ...rows]
-      .map((row) => row.map((val) => `"${String(val ?? "").replace(/"/g, '""')}"`).join(","))
+      .map((row) => row.map(csvCell).join(","))
       .join("\n");
 
     void createAuditLog({
