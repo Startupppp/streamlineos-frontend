@@ -1,5 +1,10 @@
 import { calendarDaysInMonth } from "@/lib/hr/payroll-calculations";
 
+function utcDateOnly(ymd: string): number {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return Date.UTC(y, (m ?? 1) - 1, d ?? 1);
+}
+
 /** Count calendar days of approved leave overlapping `monthYyyyMm` (half-day = 0.5 when single day). */
 export function leaveDaysOverlappingMonth(
   startDate: string,
@@ -16,7 +21,5 @@ export function leaveDaysOverlappingMonth(
   const hi = e < monthEndStr ? e : monthEndStr;
   if (lo > hi) return 0;
   if (isHalfDay && lo === hi) return 0.5;
-  const d0 = new Date(`${lo}T12:00:00.000Z`);
-  const d1 = new Date(`${hi}T12:00:00.000Z`);
-  return (d1.getTime() - d0.getTime()) / 86_400_000 + 1;
+  return (utcDateOnly(hi) - utcDateOnly(lo)) / 86_400_000 + 1;
 }

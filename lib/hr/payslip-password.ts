@@ -10,9 +10,9 @@ function formatDDMMYYYY(value: string | Date | null | undefined): string | null 
   if (!value) return null;
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) return null;
-    const dd = String(value.getUTCDate()).padStart(2, "0");
-    const mm = String(value.getUTCMonth() + 1).padStart(2, "0");
-    const yyyy = String(value.getUTCFullYear());
+    const dd = String(value.getDate()).padStart(2, "0");
+    const mm = String(value.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(value.getFullYear());
     return `${dd}${mm}${yyyy}`;
   }
   const head = value.slice(0, 10);
@@ -20,9 +20,9 @@ function formatDDMMYYYY(value: string | Date | null | undefined): string | null 
   if (!m) {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
-    const dd = String(d.getUTCDate()).padStart(2, "0");
-    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const yyyy = String(d.getUTCFullYear());
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(d.getFullYear());
     return `${dd}${mm}${yyyy}`;
   }
   const yyyy = m[1];

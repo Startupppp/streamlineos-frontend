@@ -33,11 +33,11 @@ const createOrderSchema = z.object({
   plan: z.enum(["STARTER", "PROFESSIONAL", "ENTERPRISE"]),
 });
 
-const PLAN_PRICES: Record<string, number> = {
+const PLAN_PRICES = {
   STARTER: 99900,
   PROFESSIONAL: 249900,
   ENTERPRISE: 499900,
-};
+} as const;
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
@@ -88,8 +88,12 @@ const verifySchema = z.object({
   razorpay_order_id: z.string(),
   razorpay_payment_id: z.string(),
   razorpay_signature: z.string(),
-  plan: z.enum(["STARTER", "PROFESSIONAL", "ENTERPRISE"]),
 });
+
+type RazorpayPlan = keyof typeof PLAN_PRICES;
+function isPlan(value: unknown): value is RazorpayPlan {
+  return typeof value === "string" && value in PLAN_PRICES;
+}
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
@@ -111,8 +115,6 @@ export async function PATCH(req: NextRequest) {
     if (!sigValid) {
       return err("Payment verification failed: invalid signature", 400);
     }
-
-    const amount = PLAN_PRICES[input.plan];
 
     const razorpayController = new AbortController();
     const razorpayTimeout = setTimeout(() => razorpayController.abort(), 8000);
@@ -138,7 +140,21 @@ export async function PATCH(req: NextRequest) {
     if (!orderRes.ok) {
       return err("Payment verification failed: could not verify order", 400);
     }
-    const order = await orderRes.json() as { amount: number };
+    const order = await orderRes.json() as {
+      amount: number;
+      notes?: Record<string, unknown> | null;
+    };
+
+    const notesPlan = order.notes?.plan;
+    const notesOrgId = order.notes?.orgId;
+    if (!isPlan(notesPlan)) {
+      return err("Payment verification failed: order is missing plan metadata", 400);
+    }
+    if (notesOrgId !== session.orgId) {
+      return err("Payment verification failed: order belongs to another organization", 403);
+    }
+    const plan: RazorpayPlan = notesPlan;
+    const amount = PLAN_PRICES[plan];
     if (order.amount !== amount) {
       return err("Payment verification failed: plan/amount mismatch", 400);
     }
@@ -161,7 +177,7 @@ export async function PATCH(req: NextRequest) {
 
     if (existing) {
       await db.update(subscriptions).set({
-        plan: input.plan,
+        plan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
@@ -170,7 +186,7 @@ export async function PATCH(req: NextRequest) {
     } else {
       await db.insert(subscriptions).values({
         orgId: session.orgId,
-        plan: input.plan,
+        plan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
@@ -199,9 +215,9 @@ export async function PATCH(req: NextRequest) {
       userId: session.user.id,
       orgId: session.orgId,
       targetType: "subscription",
-      metadata: { plan: input.plan, paymentId: input.razorpay_payment_id },
+      metadata: { plan, paymentId: input.razorpay_payment_id },
     }).catch(() => {});
 
-    return ok({ success: true, plan: input.plan, status: "ACTIVE" });
+    return ok({ success: true, plan, status: "ACTIVE" });
   });
 }

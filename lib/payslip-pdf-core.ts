@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
+import { randomUUID } from "crypto";
 import { logger } from "@/lib/logger";
 import type { PayslipViewModel } from "@/lib/hr/payslip-view-model";
 import { buildPayslipViewModelFromPayroll } from "@/lib/hr/payslip-view-model";
@@ -19,8 +20,9 @@ async function tryEncryptPdf(buffer: Buffer, password: string): Promise<{ buffer
     const { promisify } = await import("node:util");
     const exec = promisify(execFile);
 
-    const tmpIn = path.join(os.tmpdir(), `payslip-in-${process.pid}-${Date.now()}.pdf`);
-    const tmpOut = path.join(os.tmpdir(), `payslip-out-${process.pid}-${Date.now()}.pdf`);
+    const unique = randomUUID();
+    const tmpIn = path.join(os.tmpdir(), `payslip-in-${process.pid}-${unique}.pdf`);
+    const tmpOut = path.join(os.tmpdir(), `payslip-out-${process.pid}-${unique}.pdf`);
     await fs.writeFile(tmpIn, buffer);
     try {
       await exec("qpdf", ["--encrypt", password, password, "256", "--", tmpIn, tmpOut]);

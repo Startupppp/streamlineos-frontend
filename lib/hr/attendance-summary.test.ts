@@ -31,6 +31,30 @@ describe("summarizeAttendanceLogs", () => {
     expect(s.totalWorkHours).toBe(16);
     expect(s.avgHoursPerPresentDay).toBe(8);
   });
+
+  it("excludes org holidays from elapsed and period weekday counts", () => {
+    const { start, end } = monthRangeYmd(2026, 0);
+    const today = new Date(2026, 0, 10);
+    const logs = [
+      { date: "2026-01-05", status: "PRESENT", workHours: "8" },
+      { date: "2026-01-06", status: "PRESENT", workHours: "8" },
+    ];
+    const holidays = new Set(["2026-01-07", "2026-01-08", "2026-01-09"]);
+    const s = summarizeAttendanceLogs(
+      logs,
+      start,
+      end,
+      today,
+      "month",
+      "January 2026",
+      holidays,
+    );
+    const baseline = summarizeAttendanceLogs(logs, start, end, today, "month", "January 2026");
+    expect(s.presentWeekdays).toBe(2);
+    expect(s.weekdaysElapsed).toBe(baseline.weekdaysElapsed - holidays.size);
+    expect(s.weekdaysInPeriod).toBe(baseline.weekdaysInPeriod - holidays.size);
+    expect(s.attendanceRatePct).toBeGreaterThan(baseline.attendanceRatePct);
+  });
 });
 
 describe("quarterRangeYmd", () => {

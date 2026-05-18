@@ -14,4 +14,14 @@ describe("derivePayslipPassword", () => {
     expect(derivePayslipPassword({})).toBeNull();
     expect(derivePayslipPassword({ dateOfBirth: null })).toBeNull();
   });
+
+  it("uses local-date components when DOB is a Date instance", () => {
+    const dob = new Date(1995, 9, 5);
+    expect(derivePayslipPassword({ dateOfBirth: dob })).toBe("05101995");
+  });
+
+  it("does not shift the day when DOB Date crosses midnight in IST", () => {
+    const dob = new Date(1995, 9, 5, 0, 30);
+    expect(derivePayslipPassword({ dateOfBirth: dob })).toBe("05101995");
+  });
 });

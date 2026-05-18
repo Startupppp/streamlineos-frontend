@@ -71,6 +71,7 @@ export function summarizeAttendanceLogs(
   today: Date = new Date(),
   period: AttendanceSummaryPeriod,
   label: string,
+  holidayDates: ReadonlySet<string> = new Set(),
 ): AttendancePeriodSummary {
   const start = fromISODateString(rangeStart);
   const end = fromISODateString(rangeEnd);
@@ -79,7 +80,9 @@ export function summarizeAttendanceLogs(
 
   let weekdaysInPeriod = 0;
   for (const d of eachDayOfInterval({ start, end })) {
-    if (!isWeekend(d)) weekdaysInPeriod++;
+    if (isWeekend(d)) continue;
+    if (holidayDates.has(formatDateOnly(d))) continue;
+    weekdaysInPeriod++;
   }
 
   const hoursByDate = new Map<string, number>();
@@ -98,8 +101,9 @@ export function summarizeAttendanceLogs(
   if (effectiveEnd >= start) {
     for (const d of eachDayOfInterval({ start, end: effectiveEnd })) {
       if (isWeekend(d)) continue;
-      weekdaysElapsed++;
       const ds = formatDateOnly(d);
+      if (holidayDates.has(ds)) continue;
+      weekdaysElapsed++;
       if (presentDates.has(ds)) presentWeekdays++;
     }
   }

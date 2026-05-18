@@ -1,10 +1,11 @@
 import { withAdmin, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { payrolls } from "@/lib/db/schema";
+import { payrolls, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendPayslipEmailForPayroll } from "@/lib/hr/send-payslip-email";
+import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 
 export async function PATCH(
   _req: NextRequest,
@@ -25,6 +26,17 @@ export async function PATCH(
     }
     if (existing.status !== "APPROVED") {
       return err("Payroll must be approved before marking as paid.", 400);
+    }
+
+    const employee = await db.query.users.findFirst({
+      where: eq(users.id, existing.userId),
+      columns: { dateOfBirth: true },
+    });
+    if (!derivePayslipPassword({ dateOfBirth: employee?.dateOfBirth })) {
+      return err(
+        "Set the employee's date of birth (HR onboarding) before marking this payroll as paid. The payslip PDF is password-protected with DOB and cannot be issued without it.",
+        400
+      );
     }
 
     await db

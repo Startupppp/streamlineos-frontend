@@ -34,12 +34,24 @@ export async function POST(req: NextRequest) {
 
   const body = biometricSchema.parse(await req.json());
 
-  logger.warn("biometric: orgId is caller-supplied — ensure device registration table before multi-tenant rollout", {
-    orgId: body.orgId,
-    employeeId: body.employeeId,
-    deviceId: body.deviceId,
-    type: body.type,
-  });
+  const allowedOrgId = process.env.BIOMETRIC_ORG_ID;
+  if (allowedOrgId) {
+    if (body.orgId !== allowedOrgId) {
+      logger.warn("biometric: org mismatch — caller-supplied orgId does not match BIOMETRIC_ORG_ID", {
+        suppliedOrgId: body.orgId,
+        employeeId: body.employeeId,
+        deviceId: body.deviceId,
+      });
+      return err("Forbidden: biometric API key is not authorized for this org.", 403);
+    }
+  } else {
+    logger.warn("biometric: orgId is caller-supplied and no BIOMETRIC_ORG_ID is set — set BIOMETRIC_ORG_ID to lock the API key to a single org until a device-registration table exists", {
+      orgId: body.orgId,
+      employeeId: body.employeeId,
+      deviceId: body.deviceId,
+      type: body.type,
+    });
+  }
 
   const row = await db
     .select({ userId: users.id })

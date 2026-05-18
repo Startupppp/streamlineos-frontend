@@ -23,6 +23,13 @@ export async function GET(
     const channelId = Number(id);
     if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
 
+    const channel = await db.query.chatChannels.findFirst({
+      where: eq(chatChannels.id, channelId),
+      columns: { id: true, orgId: true },
+    });
+    if (!channel) return err("Channel not found", 404);
+    if (channel.orgId !== session.orgId) return err("Forbidden", 403);
+
     const requesterMembership = await db.query.chatChannelMembers.findFirst({
       where: and(
         eq(chatChannelMembers.channelId, channelId),

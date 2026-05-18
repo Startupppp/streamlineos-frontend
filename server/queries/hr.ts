@@ -1329,7 +1329,18 @@ export async function getAttendanceSummaryWithLogs(
   quarter1?: number,
 ): Promise<{ summary: AttendancePeriodSummary; logs: AttendanceLog[] }> {
   const { start, end, label } = resolveAttendancePeriod(period, year, month0, quarter1);
-  const logs = await getAttendanceInDateRange(orgId, userId, start, end);
-  const summary = summarizeAttendanceLogs(logs, start, end, new Date(), period, label);
+  const [logs, holidayRows] = await Promise.all([
+    getAttendanceInDateRange(orgId, userId, start, end),
+    db.query.holidays.findMany({
+      where: and(
+        eq(holidays.orgId, orgId),
+        gte(holidays.date, start),
+        lte(holidays.date, end),
+      ),
+      columns: { date: true },
+    }),
+  ]);
+  const holidayDates = new Set(holidayRows.map((h) => h.date));
+  const summary = summarizeAttendanceLogs(logs, start, end, new Date(), period, label, holidayDates);
   return { summary, logs };
 }
