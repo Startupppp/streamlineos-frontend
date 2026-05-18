@@ -214,17 +214,30 @@ export function AdminExpenseItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <Badge
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
-              status === "PENDING"
-                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                : status === "APPROVED"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-            }`}
-          >
-            {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
-          </Badge>
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  className={`cursor-help text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                    status === "PENDING"
+                      ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                      : status === "APPROVED"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                      : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                  }`}
+                >
+                  {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {status === "PENDING"
+                  ? "Waiting for HR/Admin approval."
+                  : status === "APPROVED"
+                  ? "Expense has been approved."
+                  : expense.rejectionReason?.trim() || "Expense was rejected."}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <span className="text-xs text-muted-foreground">
             #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
           </span>
@@ -398,16 +411,31 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
         {formatINR(expense.amount)}
       </TableCell>
       <TableCell className="px-6 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
-          {status === "PAID" ? (
-            <CheckCircle2 className="h-3 w-3" />
-          ) : status === "REJECTED" ? (
-            <XCircle className="h-3 w-3" />
-          ) : (
-            <span className={`size-1.5 rounded-full ${statusStyle.dot}`} />
-          )}
-          {STATUS_LABELS[status] || status}
-        </span>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className={`inline-flex cursor-help items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
+                {status === "PAID" ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : status === "REJECTED" ? (
+                  <XCircle className="h-3 w-3" />
+                ) : (
+                  <span className={`size-1.5 rounded-full ${statusStyle.dot}`} />
+                )}
+                {STATUS_LABELS[status] || status}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {status === "PENDING"
+                ? "Submitted and awaiting review."
+                : status === "APPROVED"
+                ? "Approved and ready for reimbursement."
+                : status === "PAID"
+                ? "Reimbursement has been paid."
+                : expense.rejectionReason?.trim() || "Rejected by approver."}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TableCell>
       <TableCell className="px-6 py-4 text-right">
         {canResubmit ? (

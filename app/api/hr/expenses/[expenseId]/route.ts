@@ -22,6 +22,27 @@ const updateDetailsSchema = z.object({
   expenseDate: z.string().optional(),
   receiptUrl: z.string().optional(),
   receiptFileName: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (!data.expenseDate) return;
+  const parsed = new Date(data.expenseDate);
+  if (Number.isNaN(parsed.getTime())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date is invalid.",
+      path: ["expenseDate"],
+    });
+    return;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsed.setHours(0, 0, 0, 0);
+  if (parsed > today) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date cannot be in the future.",
+      path: ["expenseDate"],
+    });
+  }
 });
 
 export async function PATCH(

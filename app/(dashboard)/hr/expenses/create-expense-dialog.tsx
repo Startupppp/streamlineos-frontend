@@ -7,7 +7,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
 import Image from "next/image";
-import { Upload, Receipt, X } from "lucide-react";
+import { Upload, Receipt, X, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -31,14 +31,40 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  RECEIPT_ALLOWED_EXTENSIONS,
+  RECEIPT_ALLOWED_MIME_TYPES,
+  RECEIPT_MAX_FILE_SIZE_BYTES,
+  validateFileTypeAndSize,
+} from "@/lib/files/expense-file-validation";
 
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
+  categoryOther: z.string().optional(),
   amount: z.number().positive("Amount must be greater than 0"),
   description: z.string().optional(),
   merchant: z.string().optional(),
   paymentMethod: z.string().optional(),
+  paymentMethodOther: z.string().optional(),
   expenseDate: z.string().min(1, "Date is required"),
+}).superRefine((data, ctx) => {
+  const isOtherCategory = data.category.trim().toLowerCase() === "other";
+  if (isOtherCategory && !data.categoryOther?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please specify the other category",
+      path: ["categoryOther"],
+    });
+  }
+
+  const isOtherPayment = (data.paymentMethod || "").trim().toLowerCase() === "other";
+  if (isOtherPayment && !data.paymentMethodOther?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please specify the other payment method",
+      path: ["paymentMethodOther"],
+    });
+  }
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -73,28 +99,42 @@ function AmountInput({ value, onChange }: { value: number; onChange: (v: number)
     setDisplay(value ? String(value) : "");
   }
 
+  const adjustAmount = (delta: number) => {
+    const next = Math.max(0, Number((value + delta).toFixed(2)));
+    onChange(next);
+    setDisplay(next ? String(next) : "");
+  };
+
   return (
-    <Input
-      type="text"
-      inputMode="decimal"
-      placeholder="0.00"
-      value={display}
-      onChange={(e) => {
-        const raw = e.target.value;
-        if (raw === "" || /^\d*\.?\d{0,2}$/.test(raw)) {
-          setDisplay(raw);
-          const num = parseFloat(raw);
-          onChange(isNaN(num) ? 0 : num);
-        }
-      }}
-      onBlur={() => {
-        const num = parseFloat(display);
-        if (!isNaN(num) && num > 0) {
-          setDisplay(num % 1 === 0 ? String(num) : num.toFixed(2));
-        }
-      }}
-      className="text-right font-semibold"
-    />
+    <div className="flex items-center gap-1">
+      <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => adjustAmount(-100)}>
+        <Minus className="h-3.5 w-3.5" />
+      </Button>
+      <Input
+        type="text"
+        inputMode="decimal"
+        placeholder="0.00"
+        value={display}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (raw === "" || /^\d*\.?\d{0,2}$/.test(raw)) {
+            setDisplay(raw);
+            const num = parseFloat(raw);
+            onChange(isNaN(num) ? 0 : num);
+          }
+        }}
+        onBlur={() => {
+          const num = parseFloat(display);
+          if (!isNaN(num) && num > 0) {
+            setDisplay(num % 1 === 0 ? String(num) : num.toFixed(2));
+          }
+        }}
+        className="text-right font-semibold"
+      />
+      <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => adjustAmount(100)}>
+        <Plus className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }
 
@@ -119,10 +159,12 @@ export function CreateExpenseDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       category: editExpense?.category || "",
+      categoryOther: "",
       amount: editExpense ? Number(editExpense.amount) : 0,
       description: editExpense?.description || "",
       merchant: editExpense?.merchant || "",
       paymentMethod: editExpense?.paymentMethod || "",
+      paymentMethodOther: "",
       expenseDate: editExpense?.expenseDate
         ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
         : format(new Date(), "yyyy-MM-dd"),
@@ -133,10 +175,12 @@ export function CreateExpenseDialog({
     if (open) {
       form.reset({
         category: editExpense?.category || "",
+        categoryOther: "",
         amount: editExpense ? Number(editExpense.amount) : 0,
         description: editExpense?.description || "",
         merchant: editExpense?.merchant || "",
         paymentMethod: editExpense?.paymentMethod || "",
+        paymentMethodOther: "",
         expenseDate: editExpense?.expenseDate
           ? format(new Date(editExpense.expenseDate), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
@@ -153,6 +197,17 @@ export function CreateExpenseDialog({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const validationError = validateFileTypeAndSize({
+        file,
+        allowedMimeTypes: RECEIPT_ALLOWED_MIME_TYPES,
+        allowedExtensions: RECEIPT_ALLOWED_EXTENSIONS,
+        maxSizeBytes: RECEIPT_MAX_FILE_SIZE_BYTES,
+      });
+      if (validationError) {
+        toast.error(validationError);
+        e.target.value = "";
+        return;
+      }
       setReceiptFile(file);
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -216,11 +271,17 @@ export function CreateExpenseDialog({
         s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
       const expenseData = {
-        category: data.category,
+        category:
+          data.category.trim().toLowerCase() === "other" && data.categoryOther?.trim()
+            ? data.categoryOther.trim()
+            : data.category,
         amount: data.amount,
         description: capitalize(data.description),
         merchant: capitalize(data.merchant),
-        paymentMethod: data.paymentMethod,
+        paymentMethod:
+          data.paymentMethod?.trim().toLowerCase() === "other" && data.paymentMethodOther?.trim()
+            ? data.paymentMethodOther.trim()
+            : data.paymentMethod,
         expenseDate: formatDateOnly(new Date(data.expenseDate)),
         receiptUrl,
         receiptFileName,
@@ -277,6 +338,21 @@ export function CreateExpenseDialog({
                 </FormItem>
               )}
             />
+            {form.watch("category")?.trim().toLowerCase() === "other" && (
+              <FormField
+                control={form.control}
+                name="categoryOther"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Specify Category</FormLabel>
+                    <FormControl>
+                      <Input className="text-sm" placeholder="Enter category" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -335,6 +411,21 @@ export function CreateExpenseDialog({
                 </FormItem>
               )}
             />
+            {form.watch("paymentMethod")?.trim().toLowerCase() === "other" && (
+              <FormField
+                control={form.control}
+                name="paymentMethodOther"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium">Specify Payment Method</FormLabel>
+                    <FormControl>
+                      <Input className="text-sm" placeholder="Enter payment method" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
           <FormField
@@ -384,7 +475,7 @@ export function CreateExpenseDialog({
                 <input
                   type="file"
                   className="hidden"
-                  accept="image/*,.pdf"
+                  accept={RECEIPT_ALLOWED_EXTENSIONS.join(",")}
                   onChange={handleFileChange}
                   aria-label="Upload receipt"
                 />

@@ -21,6 +21,26 @@ const createExpenseSchema = z.object({
   paymentMethod: z.string().optional(),
   projectId: z.number().int().optional(),
   expenseDate: z.string(),
+}).superRefine((data, ctx) => {
+  const expenseDate = new Date(data.expenseDate);
+  if (Number.isNaN(expenseDate.getTime())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date is invalid.",
+      path: ["expenseDate"],
+    });
+    return;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  expenseDate.setHours(0, 0, 0, 0);
+  if (expenseDate > today) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Expense date cannot be in the future.",
+      path: ["expenseDate"],
+    });
+  }
 });
 
 export async function GET(req: NextRequest) {

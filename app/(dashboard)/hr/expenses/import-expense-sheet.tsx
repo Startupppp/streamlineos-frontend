@@ -13,6 +13,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  IMPORT_ALLOWED_EXTENSIONS,
+  IMPORT_ALLOWED_MIME_TYPES,
+  IMPORT_MAX_FILE_SIZE_BYTES,
+  validateFileTypeAndSize,
+} from "@/lib/files/expense-file-validation";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -24,6 +30,7 @@ const ALLOWED_CATEGORIES = [
 ];
 
 interface ParsedRow {
+  rowNumber: number;
   category: string;
   amount: number;
   description: string;
@@ -99,7 +106,8 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const allowedSet = new Set(ALLOWED_CATEGORIES.map((c) => c.toLowerCase()));
       const unmappedCategories = new Set<string>();
 
-      const parsed: ParsedRow[] = dataLines.map((line) => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const parsed: ParsedRow[] = dataLines.map((line, index) => {
         const values = line.split(",").map((v) => v.trim().replace(/^["']|["']$/g, ""));
         const record: Record<string, string> = {};
         headers.forEach((h, i) => { record[h] = values[i] || ""; });
@@ -116,8 +124,12 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         if (!rawCategory) errors.push("Missing category");
         if (!allowedSet.has(rawCategory.toLowerCase())) unmappedCategories.add(rawCategory);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(expenseDate)) errors.push("Invalid date (use YYYY-MM-DD)");
+        if (/^\d{4}-\d{2}-\d{2}$/.test(expenseDate) && expenseDate > today) {
+          errors.push("Expense date cannot be in the future");
+        }
 
         return {
+          rowNumber: index + 2,
           category: rawCategory,
           amount: isNaN(amount) ? 0 : amount,
           description,
@@ -149,23 +161,14 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    const validTypes = [
-      "text/csv",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    const validExtension =
-      selectedFile.name.endsWith(".csv") ||
-      selectedFile.name.endsWith(".xlsx") ||
-      selectedFile.name.endsWith(".xls");
-
-    if (!validTypes.includes(selectedFile.type) && !validExtension) {
-      toast.error("Please select a CSV or Excel (.xlsx) file");
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      toast.error("File too large (max 5MB)");
+    const validationError = validateFileTypeAndSize({
+      file: selectedFile,
+      allowedMimeTypes: IMPORT_ALLOWED_MIME_TYPES,
+      allowedExtensions: IMPORT_ALLOWED_EXTENSIONS,
+      maxSizeBytes: IMPORT_MAX_FILE_SIZE_BYTES,
+    });
+    if (validationError) {
+      toast.error(validationError === "File type not supported" ? "Please select a CSV or Excel file" : validationError);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -230,6 +233,35 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
   }, [file, categoryMapping, autoApprove, onSuccess]);
 
   const validCount = parsedRows.filter((r) => r.valid).length;
+
+  const handleDownloadValidation = useCallback(() => {
+    if (parsedRows.length === 0) {
+      toast.error("No parsed rows to download");
+      return;
+    }
+    const header = ["row", "date", "category", "amount", "status", "issues"];
+    const rows = parsedRows.map((row) => [
+      row.rowNumber,
+      row.expenseDate || "",
+      row.category || "",
+      row.amount > 0 ? row.amount.toString() : "",
+      row.valid ? "valid" : "invalid",
+      row.error || "",
+    ]);
+    const csv = [header, ...rows]
+      .map((line) => line.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `expense-import-validation-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast.success("Validation report downloaded");
+  }, [parsedRows]);
 
   return (
     <HrSheet
@@ -350,6 +382,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               isParsing={isParsing}
               categoryMapping={categoryMapping}
               onCategoryMappingChange={handleCategoryMappingChange}
+              onDownloadValidation={handleDownloadValidation}
             />
           )}
 

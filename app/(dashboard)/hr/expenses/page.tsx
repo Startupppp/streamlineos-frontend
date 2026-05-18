@@ -260,7 +260,7 @@ export default function ExpensesPage() {
             />
             <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4" />
-              New Policy
+              New Expense
             </Button>
           </div>
         }

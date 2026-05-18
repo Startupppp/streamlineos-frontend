@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import {
-  FileSpreadsheet, CheckCircle2, AlertCircle, Loader2,
+  FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, Download,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const ALLOWED_CATEGORIES = [
   "Travel", "Food", "Office Supplies", "Software", "Hardware", "Marketing",
@@ -18,6 +19,7 @@ const ALLOWED_CATEGORIES = [
 ];
 
 interface ParsedRow {
+  rowNumber: number;
   category: string;
   amount: number;
   description: string;
@@ -62,6 +64,7 @@ interface ImportValidationPreviewProps {
   isParsing: boolean;
   categoryMapping: Record<string, string>;
   onCategoryMappingChange: (original: string, value: string) => void;
+  onDownloadValidation: () => void;
 }
 
 export function ImportValidationPreview({
@@ -69,6 +72,7 @@ export function ImportValidationPreview({
   isParsing,
   categoryMapping,
   onCategoryMappingChange,
+  onDownloadValidation,
 }: ImportValidationPreviewProps) {
   const validCount = parsedRows.filter((r) => r.valid).length;
   const invalidCount = parsedRows.filter((r) => !r.valid).length;
@@ -104,6 +108,10 @@ export function ImportValidationPreview({
                 {invalidCount} invalid
               </Badge>
             )}
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={onDownloadValidation}>
+              <Download className="h-3.5 w-3.5" />
+              Download Validation
+            </Button>
           </div>
 
           {Object.keys(categoryMapping).length > 0 && (
@@ -138,7 +146,7 @@ export function ImportValidationPreview({
                 <tbody>
                   {parsedRows.slice(0, 50).map((row, idx) => (
                     <tr key={idx} className={cn("border-b", !row.valid && "bg-destructive/5")}>
-                      <td className="px-2 py-1 text-muted-foreground">{idx + 1}</td>
+                      <td className="px-2 py-1 text-muted-foreground">{row.rowNumber || idx + 1}</td>
                       <td className="px-2 py-1">{row.expenseDate || "—"}</td>
                       <td className="px-2 py-1">{row.category}</td>
                       <td className="px-2 py-1 text-right font-medium">

@@ -5,8 +5,13 @@ import { db } from "@/lib/db";
 import { expenses, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import {
+  IMPORT_ALLOWED_EXTENSIONS,
+  IMPORT_ALLOWED_MIME_TYPES,
+  IMPORT_MAX_FILE_SIZE_BYTES,
+  validateFileTypeAndSize,
+} from "@/lib/files/expense-file-validation";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_ROWS = 10_000;
 
 const ALLOWED_CATEGORIES = new Set([
@@ -30,12 +35,12 @@ function excelSerialToIsoDate(serial: number): string {
   return date.toISOString().split("T")[0];
 }
 
-function normalizeDate(value: string): string {
+function normalizeDate(value: string): string | null {
   const cleaned = sanitizeCell(value);
   if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
   const parsed = new Date(cleaned);
   if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
-  return new Date().toISOString().split("T")[0];
+  return null;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -152,13 +157,32 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const autoApproveRaw = formData.get("autoApprove");
+    const categoryMappingRaw = formData.get("categoryMapping");
     const autoApprove = autoApproveRaw === "true";
+    const categoryMapping: Record<string, string> =
+      typeof categoryMappingRaw === "string"
+        ? (() => {
+          try {
+            const parsed = JSON.parse(categoryMappingRaw) as Record<string, string>;
+            return parsed && typeof parsed === "object" ? parsed : {};
+          } catch {
+            return {};
+          }
+        })()
+        : {};
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
+    const fileError = validateFileTypeAndSize({
+      file,
+      allowedMimeTypes: IMPORT_ALLOWED_MIME_TYPES,
+      allowedExtensions: IMPORT_ALLOWED_EXTENSIONS,
+      maxSizeBytes: IMPORT_MAX_FILE_SIZE_BYTES,
+    });
+    if (fileError) {
+      const message = fileError === "File type not supported" ? "Only CSV or Excel files are allowed" : fileError;
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     const rows = await readRowsFromFile(file);
@@ -183,10 +207,12 @@ export async function POST(req: Request) {
     let skipped = 0;
     const skippedReasons: Array<{ row: number; reason: string }> = [];
 
+    const today = new Date().toISOString().split("T")[0];
     for (const parsedRow of rows) {
       const { rowNumber, record } = parsedRow;
       const rawCategory = sanitizeCell(record.category || "Other");
-      const category = ALLOWED_CATEGORIES.has(rawCategory) ? rawCategory : "Other";
+      const mappedCategory = sanitizeCell(categoryMapping[rawCategory] || rawCategory);
+      const category = ALLOWED_CATEGORIES.has(mappedCategory) ? mappedCategory : "Other";
       const amount = parseFloat(record.amount);
       if (isNaN(amount) || amount <= 0 || amount > 100_000_000) {
         skipped++;
@@ -204,6 +230,22 @@ export async function POST(req: Request) {
       );
       const expenseDate = record.expensedate || record.date || "";
       const validDate = normalizeDate(expenseDate);
+      if (!validDate) {
+        skipped++;
+        skippedReasons.push({
+          row: rowNumber,
+          reason: "Invalid date (expected YYYY-MM-DD or valid date value)",
+        });
+        continue;
+      }
+      if (validDate > today) {
+        skipped++;
+        skippedReasons.push({
+          row: rowNumber,
+          reason: "Expense date cannot be in the future",
+        });
+        continue;
+      }
 
       batchValues.push({
         orgId: member.orgId,
