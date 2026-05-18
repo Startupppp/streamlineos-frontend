@@ -62,8 +62,9 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Skills Matrix", icon: Grid3X3, href: "/hr/employees/skills-matrix", isSubItem: true },
+            { label: "Terminated", icon: UserX, href: "/hr/employees/terminated", isSubItem: true },
             { label: "Find Expert", icon: Search, href: "/hr/employees/find-expert", isSubItem: true },
-            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding?tab=workflow", isSubItem: true },
             { label: "Doc Types", icon: FileCheck, href: "/hr/document-types", isSubItem: true },
             { label: "Doc Review", icon: FileText, href: "/hr/document-review", isSubItem: true },
             { label: "Org Chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
@@ -260,8 +261,9 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Skills Matrix", icon: Grid3X3, href: "/hr/employees/skills-matrix", isSubItem: true },
+            { label: "Terminated", icon: UserX, href: "/hr/employees/terminated", isSubItem: true },
             { label: "Find Expert", icon: Search, href: "/hr/employees/find-expert", isSubItem: true },
-            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding?tab=workflow", isSubItem: true },
             { label: "Doc Types", icon: FileCheck, href: "/hr/document-types", isSubItem: true },
             { label: "Doc Review", icon: FileText, href: "/hr/document-review", isSubItem: true },
             { label: "Org Chart", icon: Network, href: "/hr/org-chart", isSubItem: true },

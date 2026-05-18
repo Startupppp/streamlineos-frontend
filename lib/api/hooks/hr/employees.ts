@@ -14,6 +14,7 @@ import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
 } from "@/types/hr";
+import type { TerminatedEmployee } from "@/types/hr/employees";
 
 export function useHrDepartments() {
   return useQuery({
@@ -44,6 +45,13 @@ export function useHrEmployees(params?: {
   });
 }
 
+export function useTerminatedEmployees() {
+  return useQuery({
+    queryKey: queryKeys.hr.terminatedEmployees(),
+    queryFn: () => apiClient.get<TerminatedEmployee[]>("/hr/employees/terminated"),
+  });
+}
+
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
@@ -59,8 +67,10 @@ export function useTerminateEmployee() {
   return useMutation({
     mutationFn: (userId: string) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, { isActive: false }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.terminatedEmployees() });
+    },
   });
 }
 

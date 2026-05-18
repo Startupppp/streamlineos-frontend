@@ -206,7 +206,7 @@ function OnboardingStatusWidget() {
           <CardTitle className="text-sm font-medium">Onboarding Status</CardTitle>
         </div>
         <Link
-          href="/hr/onboarding"
+          href="/hr/onboarding?tab=workflow"
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           View all

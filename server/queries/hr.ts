@@ -31,6 +31,7 @@ import type { DocumentExportFilters } from "@/lib/hr/documents-export-filters";
 import type {
   Department,
   Employee,
+  TerminatedEmployee,
   AttendanceLog,
   AttendanceSummaryPeriod,
   AttendancePeriodSummary,
@@ -128,6 +129,66 @@ export async function getEmployees(
       skills: u.skills ?? null,
       phone: u.phone ?? null,
     }));
+}
+
+export async function getTerminatedEmployees(
+  orgId: string,
+  branch?: BranchContext,
+): Promise<TerminatedEmployee[]> {
+  const [members, deptRows] = await Promise.all([
+    db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: { user: true },
+    }),
+    getDepartments(orgId),
+  ]);
+  const deptNameById = new Map(deptRows.map((d) => [d.id, d.name]));
+
+  return members
+    .map((m) => m.user)
+    .filter((u) => {
+      if (u.isActive !== false) return false;
+
+      if (
+        branch?.branchId !== null &&
+        branch?.branchId !== undefined &&
+        ["BRANCH_MANAGER", "BRANCH_HR"].includes(branch.role)
+      ) {
+        return u.branchId === branch.branchId;
+      }
+      return true;
+    })
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+      role: u.role ?? "EMPLOYEE",
+      designation: u.designation,
+      employeeId: u.employeeId,
+      departmentId: u.departmentId,
+      department: departmentFromId(u.departmentId, deptNameById),
+      image: u.image,
+      isActive: false,
+      joiningDate: u.joiningDate,
+      hasDashboardAccess: u.hasDashboardAccess ?? false,
+      reportingTo: u.reportingTo,
+      monthlySalary: u.monthlySalary,
+      bio: u.bio ?? null,
+      linkedinUrl: u.linkedinUrl ?? null,
+      twitterUrl: u.twitterUrl ?? null,
+      githubUrl: u.githubUrl ?? null,
+      websiteUrl: u.websiteUrl ?? null,
+      skills: u.skills ?? null,
+      phone: u.phone ?? null,
+      terminatedAt: u.updatedAt ? u.updatedAt.toISOString() : null,
+    }))
+    .sort((a, b) => {
+      const aTime = a.terminatedAt ? Date.parse(a.terminatedAt) : 0;
+      const bTime = b.terminatedAt ? Date.parse(b.terminatedAt) : 0;
+      return bTime - aTime;
+    });
 }
 
 export async function getEmployeesPaginated(

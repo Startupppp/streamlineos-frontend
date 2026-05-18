@@ -18,6 +18,7 @@ export interface Employee {
   designation: string | null;
   employeeId: string | null;
   departmentId: number | null;
+  department?: { id: number; name: string } | null;
   image: string | null;
   isActive: boolean;
   joiningDate: string | null;
@@ -31,6 +32,10 @@ export interface Employee {
   websiteUrl: string | null;
   skills: string[] | null;
   phone: string | null;
+}
+
+export interface TerminatedEmployee extends Employee {
+  terminatedAt: string | null;
 }
 
 export interface PaginatedEmployees {
