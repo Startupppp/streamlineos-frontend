@@ -45,6 +45,14 @@ import {
   useInitiateOnboarding,
   type OnboardingStatus,
 } from "@/lib/api/hooks/hr/onboarding";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 
 interface DocumentType {
@@ -440,10 +448,22 @@ function InitiateSheet({
 }) {
   const [userId, setUserId] = useState("");
   const initiate = useInitiateOnboarding();
+  const { data: onboardingRows } = useOnboardingStatus();
+  const { data: employees } = useHrEmployees(undefined);
+
+  const activeOnboardingIds = useMemo(
+    () => new Set((onboardingRows ?? []).map((r) => r.userId)),
+    [onboardingRows],
+  );
+
+  const eligibleEmployees = useMemo(() => {
+    if (!employees) return [];
+    return employees.filter((e) => e.isActive !== false && !activeOnboardingIds.has(e.id));
+  }, [employees, activeOnboardingIds]);
 
   const handleSubmit = useCallback(() => {
     if (!userId.trim()) {
-      toast.error("Please enter a user ID");
+      toast.error("Please select an employee");
       return;
     }
     initiate.mutate(userId.trim(), {
@@ -471,16 +491,29 @@ function InitiateSheet({
     >
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">
-          Employee User ID <span className="text-destructive">*</span>
+          Employee <span className="text-destructive">*</span>
         </Label>
-        <Input
-          placeholder="user_..."
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          aria-label="Employee user ID"
-        />
+        <Select value={userId} onValueChange={setUserId}>
+          <SelectTrigger aria-label="Select employee">
+            <SelectValue placeholder="Choose an employee…" />
+          </SelectTrigger>
+          <SelectContent>
+            {eligibleEmployees.length === 0 ? (
+              <SelectItem value="__none" disabled>
+                No eligible employees
+              </SelectItem>
+            ) : (
+              eligibleEmployees.map((emp) => (
+                <SelectItem key={emp.id} value={emp.id}>
+                  {[emp.firstName, emp.lastName].filter(Boolean).join(" ") || emp.email}
+                  {emp.employeeId ? ` (${emp.employeeId})` : ""}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
         <p className="text-[11px] text-muted-foreground">
-          Enter the internal user ID of the employee to onboard.
+          Only active employees without an existing onboarding checklist are listed.
         </p>
       </div>
     </HrSheet>
