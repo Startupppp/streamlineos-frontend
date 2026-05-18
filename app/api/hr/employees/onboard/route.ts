@@ -8,50 +8,15 @@ import { nanoid } from "nanoid";
 import type { NextRequest } from "next/server";
 import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 import { inngest } from "@/lib/inngest/client";
-import { z } from "zod";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
-
-const onboardSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string(),
-  phone: z
-    .string()
-    .min(1, "Phone number is required")
-    .refine((val) => isValidPhoneNumber(val), { message: "Invalid phone number" }),
-  whatsappSameAsPhone: z.boolean().optional(),
-  whatsappNumber: z
-    .string()
-    .optional()
-    .refine((val) => !val || isValidPhoneNumber(val), { message: "Invalid WhatsApp number" }),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  password: z.string().optional(),
-  designation: z.string(),
-  departmentId: z.number().optional(),
-  role: z.string().optional(),
-  employeeId: z.string().optional(),
-  joiningDate: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  skills: z.string().optional(),
-  experienceYears: z.number().optional(),
-  taxId: z.string().optional(),
-  monthlySalary: z.number().optional(),
-  bankDetails: z.object({
-    accountNumber: z.string().optional(),
-    bankName: z.string().optional(),
-    branch: z.string().optional(),
-    ifsc: z.string().optional(),
-    accountHolder: z.string().optional(),
-    pfUanNumber: z.string().optional(),
-  }).optional(),
-});
+import { generateNextEmployeeId, normalizeEmployeeIdInput } from "@/lib/hr/generate-employee-id";
+import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
-    const body = await parseBody(req, onboardSchema);
+    const body = await parseBody(req, onboardEmployeeInputSchema);
 
     const existing = await db.query.users.findFirst({
       where: (u, { eq }) => eq(u.email, body.email.toLowerCase()),
@@ -62,6 +27,19 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await hash(body.password || "Welcome@123", 12);
     const userId = randomUUID();
+
+    let employeeId = normalizeEmployeeIdInput(body.employeeId);
+    if (!employeeId) {
+      employeeId = await generateNextEmployeeId(body.joiningDate ?? new Date());
+    } else {
+      const existingId = await db.query.users.findFirst({
+        where: (u, { eq }) => eq(u.employeeId, employeeId!),
+        columns: { id: true },
+      });
+      if (existingId) {
+        return err("This employee ID is already in use.", 409);
+      }
+    }
 
     const [newUser] = await db
       .insert(users)
@@ -78,9 +56,9 @@ export async function POST(req: NextRequest) {
         designation: body.designation,
         departmentId: body.departmentId,
         role: body.role || "ENGINEERING",
-        employeeId: body.employeeId,
-        joiningDate: body.joiningDate ? formatDateOnly(new Date(body.joiningDate)) : undefined,
-        dateOfBirth: body.dateOfBirth ? formatDateOnly(new Date(body.dateOfBirth)) : undefined,
+        employeeId,
+        joiningDate: formatDateOnly(body.joiningDate),
+        dateOfBirth: formatDateOnly(body.dateOfBirth),
         skills: body.skills ? body.skills.split(",").map((s) => s.trim()) : undefined,
         experienceYears: body.experienceYears?.toString(),
         taxId: body.taxId,
@@ -108,9 +86,7 @@ export async function POST(req: NextRequest) {
         hraPercentage: "50",
         allowances: specialAllowance.toString(),
         deductions: "0",
-        effectiveFrom: body.joiningDate
-          ? formatDateOnly(new Date(body.joiningDate))
-          : formatDateOnly(new Date()),
+        effectiveFrom: formatDateOnly(body.joiningDate),
         isActive: true,
       });
     }
