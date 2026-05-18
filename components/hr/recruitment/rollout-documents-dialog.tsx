@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,10 +27,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, FileText, Send, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, FileText, Send, CheckCircle2, ExternalLink } from "lucide-react";
 import { useDocumentTemplates } from "@/lib/api/hooks/hr/document-templates";
 import { useGenerateAndRollout } from "@/lib/api/hooks/hr/recruitment";
-import { extractVariables } from "@/lib/utils/document-variables";
+import { extractVariables, registryDefaultsMap } from "@/lib/utils/document-variables";
+import { useOrgDocumentVariables } from "@/lib/api/hooks/hr/org-document-variables";
 
 
 export interface RolloutDocumentsDialogProps {
@@ -62,7 +64,9 @@ export function RolloutDocumentsDialog({
   const [resultCount, setResultCount] = useState(0);
 
   const { data: templates, isLoading: templatesLoading } = useDocumentTemplates();
+  const { data: orgVariables = [] } = useOrgDocumentVariables();
   const rollout = useGenerateAndRollout(candidateId);
+  const registryDefaults = useMemo(() => registryDefaultsMap(orgVariables), [orgVariables]);
 
   const form = useForm<RolloutFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,6 +92,29 @@ export function RolloutDocumentsDialog({
     const allVars = selected.flatMap((t) => extractVariables(t.htmlContent));
     return [...new Set(allVars)];
   }, [templates, selectedIds]);
+
+  useEffect(() => {
+    if (!open || requiredVariables.length === 0) return;
+    const current = form.getValues("variables");
+    const next = { ...current };
+    let changed = false;
+    for (const varName of requiredVariables) {
+      const registry = registryDefaults[varName];
+      if (registry && !next[varName]) {
+        next[varName] = registry;
+        changed = true;
+      }
+    }
+    if (changed) form.setValue("variables", next);
+  }, [open, requiredVariables, registryDefaults, form]);
+
+  const variableLabel = useCallback(
+    (slug: string) => {
+      const reg = orgVariables.find((v) => v.slug === slug);
+      return reg?.label ?? slug.replace(/_/g, " ");
+    },
+    [orgVariables],
+  );
 
   const toggleTemplate = useCallback(
     (id: number, checked: boolean) => {
@@ -164,7 +191,15 @@ export function RolloutDocumentsDialog({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Select Templates</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Select Templates</p>
+                  <Button variant="link" size="sm" className="h-auto p-0 text-xs" asChild>
+                    <Link href="/hr/documents/templates" target="_blank" rel="noopener noreferrer">
+                      Manage templates
+                      <ExternalLink className="ml-1 h-3 w-3" />
+                    </Link>
+                  </Button>
+                </div>
                 {templatesLoading ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -220,13 +255,20 @@ export function RolloutDocumentsDialog({
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-xs text-muted-foreground">
-                                  {varName.replace(/_/g, " ")}
+                                  {variableLabel(varName)}
+                                  <span className="font-mono text-[10px] ml-1 text-muted-foreground/80">
+                                    {`{{${varName}}}`}
+                                  </span>
                                 </FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
                                     value={field.value ?? ""}
-                                    placeholder={`Enter ${varName.replace(/_/g, " ").toLowerCase()}`}
+                                    placeholder={
+                                      registryDefaults[varName]
+                                        ? registryDefaults[varName]
+                                        : `Enter ${variableLabel(varName).toLowerCase()}`
+                                    }
                                     className="h-8 text-sm"
                                   />
                                 </FormControl>
