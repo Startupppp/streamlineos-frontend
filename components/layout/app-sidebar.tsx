@@ -177,7 +177,7 @@ export function AppSidebar({
       >
         <div
           className={cn(
-            "flex items-center h-14 shrink-0 border-b border-sidebar-border",
+            "relative flex items-center h-14 shrink-0 border-b border-sidebar-border",
             isCollapsed ? "justify-center px-0" : "justify-between px-4"
           )}
         >
@@ -229,28 +229,26 @@ export function AppSidebar({
             </Link>
           )}
 
-          {onToggleCollapse && !isCollapsed && (
+          {onToggleCollapse && (
             <button
               type="button"
               onClick={onToggleCollapse}
-              aria-label="Collapse sidebar"
-              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-white/5 transition-colors shrink-0"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={cn(
+                "z-50 flex h-6 w-6 shrink-0 items-center justify-center transition-colors",
+                isCollapsed
+                  ? "absolute top-1/2 -right-3 -translate-y-1/2 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-md hover:border-gold/40 hover:bg-sidebar hover:text-gold"
+                  : "rounded-md text-sidebar-foreground/30 hover:bg-white/5 hover:text-sidebar-foreground/70"
+              )}
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              {isCollapsed ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
             </button>
           )}
         </div>
-
-        {onToggleCollapse && isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
-            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-gold hover:border-gold/40 hover:bg-sidebar transition-colors"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        )}
 
         <ScrollArea className="flex-1 min-h-0">
           <nav
