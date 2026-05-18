@@ -173,18 +173,17 @@ export default function SignInPage() {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-[13px] font-medium">
-                Password
-              </Label>
-              <Link
-                href="/forgot-password"
-                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
+            <div
+              className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1.5"
+              style={{ gridTemplateAreas: '"label forgot" "input input"' }}
+            >
+            <Label
+              htmlFor="password"
+              className="text-[13px] font-medium [grid-area:label] self-center"
+            >
+              Password
+            </Label>
+            <div className="relative [grid-area:input]">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -214,6 +213,13 @@ export default function SignInPage() {
                   <Eye className="h-4 w-4" />
                 )}
               </button>
+            </div>
+            <Link
+              href="/forgot-password"
+              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors [grid-area:forgot] self-center justify-self-end"
+            >
+              Forgot password?
+            </Link>
             </div>
             {form.formState.errors.password && (
               <p id="pw-error" role="alert" className="text-[12px] text-destructive">
