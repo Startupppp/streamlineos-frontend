@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { PASSWORD_REGEX, getPasswordStrength } from "@/lib/password-utils";
+import { getPasswordStrength } from "@/lib/password-utils";
+import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { PasswordInput } from "@/components/auth/password-input";
 import { Loader2, ArrowRight, Rocket, AlertCircle } from "lucide-react";
@@ -21,10 +22,7 @@ export const dynamic = "force-dynamic";
 
 const setupSchema = z
   .object({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
+    password: PASSWORD_ZOD_SCHEMA,
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
