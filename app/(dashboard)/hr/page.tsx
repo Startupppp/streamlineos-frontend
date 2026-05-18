@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -27,6 +27,9 @@ import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 
+const MIN_SEARCH_LENGTH = 3;
+const SEARCH_DEBOUNCE_MS = 400;
+
 export default function HRDashboardPage() {
   const { data: session } = useSession();
   const currentUserRole = session?.user?.role;
@@ -39,19 +42,15 @@ export default function HRDashboardPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
-  const searchTerm = searchParams.get("q") || "";
-  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+  const searchFromUrl = searchParams.get("q") || "";
   const deptFilter = searchParams.get("dept") || "All";
   const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
   const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
   const page = Number(searchParams.get("page")) || 1;
   const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
 
-  const { data: rawEmployees, isLoading } = useHrEmployees();
-  const terminateMutation = useTerminateEmployee();
-  const toggleAccessMutation = useToggleDashboardAccess();
-
-  const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
+  const debouncedSearchInput = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -65,7 +64,32 @@ export default function HRDashboardPage() {
     [searchParams, router, pathname],
   );
 
-  const setSearchTerm = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);
+  useEffect(() => {
+    setSearchInput(searchFromUrl);
+  }, [searchFromUrl]);
+
+  useEffect(() => {
+    const trimmed = debouncedSearchInput.trim();
+    if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return;
+
+    const nextQ = trimmed.length >= MIN_SEARCH_LENGTH ? trimmed : "";
+    if (nextQ === searchFromUrl) return;
+
+    updateParams({ q: nextQ || null, page: null });
+  }, [debouncedSearchInput, searchFromUrl, updateParams]);
+
+  const effectiveSearchTerm = useMemo(() => {
+    const trimmed = debouncedSearchInput.trim();
+    return trimmed.length >= MIN_SEARCH_LENGTH ? trimmed : "";
+  }, [debouncedSearchInput]);
+
+  const { data: rawEmployees, isLoading } = useHrEmployees();
+  const terminateMutation = useTerminateEmployee();
+  const toggleAccessMutation = useToggleDashboardAccess();
+
+  const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
+
+  const setSearchTerm = useCallback((q: string) => setSearchInput(q), []);
   const setDeptFilter = useCallback((d: string) => updateParams({ dept: d === "All" ? null : d, page: null }), [updateParams]);
   const setStatusFilter = useCallback((s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }), [updateParams]);
   const setRoleFilter = useCallback((r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }), [updateParams]);
@@ -82,8 +106,8 @@ export default function HRDashboardPage() {
   const filteredEmployees = useMemo(() => {
     let result = employees;
 
-    if (debouncedSearchTerm) {
-      const term = debouncedSearchTerm.trim().toLowerCase();
+    if (effectiveSearchTerm) {
+      const term = effectiveSearchTerm.toLowerCase();
       if (term) {
         result = result.filter((e) => {
           const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim().toLowerCase();
@@ -91,12 +115,13 @@ export default function HRDashboardPage() {
           const first = e.firstName?.toLowerCase() ?? "";
           const last = e.lastName?.toLowerCase() ?? "";
           const designation = e.designation?.toLowerCase() ?? "";
+          const employeeId = e.employeeId?.toLowerCase() ?? "";
           const roleRaw = e.role.toLowerCase();
           const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
           return (
             name.includes(term) || email.includes(term) || first.includes(term) ||
-            last.includes(term) || designation.includes(term) || roleRaw.includes(term) ||
-            roleLabel.includes(term)
+            last.includes(term) || designation.includes(term) || employeeId.includes(term) ||
+            roleRaw.includes(term) || roleLabel.includes(term)
           );
         });
       }
@@ -110,7 +135,7 @@ export default function HRDashboardPage() {
     if (roleFilter !== "All") result = result.filter((e) => e.role === roleFilter);
 
     return result;
-  }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
+  }, [employees, effectiveSearchTerm, deptFilter, statusFilter, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
   const paginatedEmployees = useMemo(() => {
@@ -127,7 +152,12 @@ export default function HRDashboardPage() {
     if (!employeeToDelete) return;
     terminateMutation.mutate(employeeToDelete.id, {
       onSuccess: () => {
-        toast.success("Employee terminated");
+        toast.success("Employee terminated", {
+          action: {
+            label: "View terminated",
+            onClick: () => router.push("/hr/employees/terminated"),
+          },
+        });
         setDeleteDialogOpen(false);
         setEmployeeToDelete(null);
       },
@@ -152,6 +182,7 @@ export default function HRDashboardPage() {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
     const rows = filteredEmployees.map((e) => ({
       name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
+      employeeId: e.employeeId ?? "",
       email: e.email,
       role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
       department: e.department?.name ?? "",
@@ -162,6 +193,7 @@ export default function HRDashboardPage() {
         name: "Employees",
         columns: [
           { header: "Name", key: "name", width: 25 },
+          { header: "Employee ID", key: "employeeId", width: 16 },
           { header: "Email", key: "email", width: 30 },
           { header: "Role", key: "role", width: 20 },
           { header: "Department", key: "department", width: 20 },
@@ -187,7 +219,12 @@ export default function HRDashboardPage() {
 
   const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, filteredEmployees.length);
-  const hasActiveFilters = !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
+  const hasActiveFilters =
+    !!effectiveSearchTerm ||
+    !!searchInput.trim() ||
+    deptFilter !== "All" ||
+    statusFilter !== "Active" ||
+    roleFilter !== "All";
   const togglingAccess = toggleAccessMutation.isPending
     ? new Set([toggleAccessMutation.variables?.userId].filter(Boolean) as string[])
     : new Set<string>();
@@ -199,12 +236,15 @@ export default function HRDashboardPage() {
       badge={String(filteredEmployees.length)}
       actions={
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/employees/terminated">Terminated</Link>
+          </Button>
           <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
             <Download className="h-4 w-4" aria-hidden="true" />
             Export
           </Button>
           <Button size="sm" className="gap-2" asChild>
-            <Link href="/hr/onboarding">
+            <Link href="/hr/onboarding?tab=wizard">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Employee
             </Link>
@@ -213,7 +253,7 @@ export default function HRDashboardPage() {
       }
       filters={
         <HrFilterBar
-          searchTerm={searchTerm}
+          searchTerm={searchInput}
           onSearchChange={setSearchTerm}
           deptFilter={deptFilter}
           onDeptChange={setDeptFilter}
@@ -256,7 +296,7 @@ export default function HRDashboardPage() {
           illustration={<EmptyTeamIllustration className="mb-3" />}
           title="No employees found"
           description="Get started by adding your first team member."
-          action={{ label: "Add Employee", href: "/hr/onboarding" }}
+          action={{ label: "Add Employee", href: "/hr/onboarding?tab=wizard" }}
         />
       )}
 
