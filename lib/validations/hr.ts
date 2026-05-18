@@ -1,5 +1,280 @@
+import { format } from "date-fns";
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { getVaivammEstablishedDate } from "@/lib/constants/company";
+import { bankDetailsSchema } from "@/lib/validations/bank-details";
+
+const PERSON_NAME_MIN_LENGTH = 2;
+const PERSON_NAME_MAX_LENGTH = 50;
+const EMAIL_MAX_LENGTH = 254;
+const MIN_EMPLOYEE_AGE_YEARS = 16;
+const MAX_EMPLOYEE_AGE_YEARS = 100;
+const EMPLOYEE_ID_MIN_LENGTH = 2;
+const EMPLOYEE_ID_MAX_LENGTH = 20;
+const EMPLOYEE_ID_PATTERN = /^[A-Za-z0-9]+$/;
+const SKILL_ITEM_MIN_LENGTH = 1;
+const SKILL_ITEM_MAX_LENGTH = 50;
+const SKILLS_LIST_MAX_LENGTH = 500;
+const MAX_SKILLS_COUNT = 30;
+const SKILL_ITEM_PATTERN = /^[A-Za-z0-9+#.\-\s]+$/;
+const EXPERIENCE_MIN_YEARS = 0;
+const EXPERIENCE_MAX_YEARS = 50;
+const MONTHLY_SALARY_MIN = 1;
+const MONTHLY_SALARY_MAX = 100_000_000;
+
+const PERSON_NAME_PATTERN = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+
+function startOfCalendarDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function personNameSchema(label: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .min(PERSON_NAME_MIN_LENGTH, `${label} must be at least ${PERSON_NAME_MIN_LENGTH} characters`)
+    .max(PERSON_NAME_MAX_LENGTH, `${label} must be at most ${PERSON_NAME_MAX_LENGTH} characters`)
+    .regex(
+      PERSON_NAME_PATTERN,
+      `${label} may only contain letters with single spaces between words`,
+    );
+}
+
+function requiredPhoneSchema(label: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .refine((val) => isValidPhoneNumber(val), {
+      message:
+        "Enter a valid phone number with the correct length for the selected country (e.g. 10-digit mobile for India).",
+    })
+    .refine((val) => {
+      const digits = val.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15;
+    }, `${label} must contain 10 to 15 digits`);
+}
+
+function optionalPhoneSchema(label: string) {
+  return z
+    .string()
+    .optional()
+    .refine((val) => !val?.trim() || isValidPhoneNumber(val), {
+      message:
+        "Enter a valid phone number with the correct length for the selected country.",
+    })
+    .refine((val) => {
+      if (!val?.trim()) return true;
+      const digits = val.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15;
+    }, `${label} must contain 10 to 15 digits`);
+}
+
+function parseSkillsList(val: string): string[] {
+  return val
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function optionalEmployeeIdSchema() {
+  return z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (val) =>
+        !val ||
+        (val.length >= EMPLOYEE_ID_MIN_LENGTH &&
+          val.length <= EMPLOYEE_ID_MAX_LENGTH &&
+          EMPLOYEE_ID_PATTERN.test(val)),
+      `Employee ID must be ${EMPLOYEE_ID_MIN_LENGTH}–${EMPLOYEE_ID_MAX_LENGTH} letters or numbers only`,
+    );
+}
+
+function optionalSkillsSchema() {
+  return z
+    .string()
+    .trim()
+    .optional()
+    .refine((val) => !val || val.length <= SKILLS_LIST_MAX_LENGTH, {
+      message: `Skills list must be at most ${SKILLS_LIST_MAX_LENGTH} characters`,
+    })
+    .refine((val) => {
+      if (!val) return true;
+      const items = parseSkillsList(val);
+      if (items.length === 0 || items.length > MAX_SKILLS_COUNT) return false;
+      return items.every(
+        (item) =>
+          item.length >= SKILL_ITEM_MIN_LENGTH &&
+          item.length <= SKILL_ITEM_MAX_LENGTH &&
+          SKILL_ITEM_PATTERN.test(item),
+      );
+    }, {
+      message: `Enter up to ${MAX_SKILLS_COUNT} skills separated by commas (each ${SKILL_ITEM_MIN_LENGTH}–${SKILL_ITEM_MAX_LENGTH} characters; letters, numbers, spaces, + # . -)`,
+    });
+}
+
+function optionalExperienceYearsSchema() {
+  return z
+    .coerce
+    .number({ message: "Years of experience must be a number" })
+    .min(EXPERIENCE_MIN_YEARS, "Years of experience cannot be negative")
+    .max(EXPERIENCE_MAX_YEARS, `Years of experience cannot exceed ${EXPERIENCE_MAX_YEARS} years`)
+    .refine(
+      (val) => Math.round(val * 10) === val * 10,
+      "Use at most one decimal place for years of experience",
+    )
+    .optional();
+}
+
+function editExperienceYearsSchema() {
+  return z.preprocess(
+    (val) =>
+      val === "" || val === null || val === undefined || (typeof val === "number" && Number.isNaN(val))
+        ? undefined
+        : val,
+    z
+      .number({ message: "Years of experience must be a number" })
+      .min(EXPERIENCE_MIN_YEARS, "Years of experience cannot be negative")
+      .max(EXPERIENCE_MAX_YEARS, `Years of experience cannot exceed ${EXPERIENCE_MAX_YEARS} years`)
+      .refine(
+        (val) => Math.round(val * 10) === val * 10,
+        "Use at most one decimal place for years of experience",
+      )
+      .optional(),
+  );
+}
+
+function optionalPanSchema() {
+  return z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (val) => !val || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val.toUpperCase()),
+      "Invalid PAN format (e.g. ABCDE1234F)",
+    )
+    .or(z.literal(""));
+}
+
+function optionalMonthlySalaryForEditSchema() {
+  return z
+    .number({ message: "Monthly salary must be a number" })
+    .min(MONTHLY_SALARY_MIN, "Monthly salary must be greater than 0")
+    .max(
+      MONTHLY_SALARY_MAX,
+      `Monthly salary cannot exceed ₹${MONTHLY_SALARY_MAX.toLocaleString("en-IN")}`,
+    )
+    .refine((val) => Number.isInteger(val), "Monthly salary must be a whole number")
+    .optional();
+}
+
+function refineJoiningDateOptional(
+  joiningDate: Date | undefined,
+  ctx: z.RefinementCtx,
+  path: (string | number)[] = ["joiningDate"],
+) {
+  if (!joiningDate) return;
+
+  const established = startOfCalendarDay(getVaivammEstablishedDate());
+  const establishedLabel = format(established, "MMMM d, yyyy");
+  const joining = startOfCalendarDay(joiningDate);
+
+  if (joining < established) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Joining date cannot be before company establishment (${establishedLabel})`,
+      path,
+    });
+  }
+}
+
+type FlatBankFormValues = {
+  bankAccount?: string;
+  bankName?: string;
+  branch?: string;
+  ifsc?: string;
+  accountHolder?: string;
+  swiftCode?: string;
+  iban?: string;
+};
+
+const FLAT_BANK_FIELD_MAP: Record<string, keyof FlatBankFormValues> = {
+  accountNumber: "bankAccount",
+  bankName: "bankName",
+  branch: "branch",
+  ifsc: "ifsc",
+  accountHolder: "accountHolder",
+  swiftCode: "swiftCode",
+  iban: "iban",
+};
+
+function refineFlatBankDetails(values: FlatBankFormValues, ctx: z.RefinementCtx) {
+  const coreFields = [
+    values.bankAccount,
+    values.bankName,
+    values.branch,
+    values.ifsc,
+    values.accountHolder,
+  ];
+  const anyCoreFilled = coreFields.some((field) => !!field?.trim());
+  if (!anyCoreFilled) return;
+
+  const missing: Array<{ path: keyof FlatBankFormValues; message: string }> = [];
+  if (!values.bankAccount?.trim()) {
+    missing.push({ path: "bankAccount", message: "Account number is required" });
+  }
+  if (!values.bankName?.trim()) {
+    missing.push({ path: "bankName", message: "Bank name is required" });
+  }
+  if (!values.branch?.trim()) {
+    missing.push({ path: "branch", message: "Branch name is required" });
+  }
+  if (!values.ifsc?.trim()) {
+    missing.push({ path: "ifsc", message: "IFSC code is required" });
+  }
+  if (!values.accountHolder?.trim()) {
+    missing.push({ path: "accountHolder", message: "Account holder name is required" });
+  }
+
+  for (const item of missing) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: item.message,
+      path: [item.path],
+    });
+  }
+  if (missing.length > 0) return;
+
+  const parsed = bankDetailsSchema.safeParse({
+    accountNumber: values.bankAccount,
+    bankName: values.bankName,
+    branch: values.branch,
+    ifsc: values.ifsc,
+    accountHolder: values.accountHolder,
+    swiftCode: values.swiftCode,
+    iban: values.iban,
+  });
+
+  if (parsed.success) return;
+
+  for (const issue of parsed.error.issues) {
+    const key = issue.path[0];
+    if (typeof key !== "string") continue;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: issue.message,
+      path: [FLAT_BANK_FIELD_MAP[key] ?? key],
+    });
+  }
+}
+
+const requiredDateSchema = (label: string) =>
+  z.coerce.date({
+    message: `${label} is required`,
+  });
 const fileUrlSchema = z.string().min(1).refine(
   (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
   { message: "Must be a valid URL or a relative path starting with /" }
@@ -165,48 +440,214 @@ export const updateWorkLogStatusSchema = z.object({
   rejectionReason: z.string().max(500).optional(),
 });
 
-export const onboardEmployeeInputSchema = z.object({
-  firstName: z.string().min(1, "First name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
-  lastName: z.string().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
-  email: z.string().email("Invalid email address"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z
-    .string()
-    .min(1, "Phone number is required")
-    .refine((val) => isValidPhoneNumber(val), {
-      message: "Enter a valid phone number with the correct length for the selected country (e.g. 10-digit mobile for India).",
+export const onboardEmployeeInputSchema = z
+  .object({
+    firstName: personNameSchema("First name"),
+    lastName: personNameSchema("Last name"),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .email("Invalid email address")
+      .max(EMAIL_MAX_LENGTH, `Email must be at most ${EMAIL_MAX_LENGTH} characters`),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+    phone: requiredPhoneSchema("Phone number"),
+    whatsappSameAsPhone: z.boolean().default(true),
+    whatsappNumber: optionalPhoneSchema("WhatsApp number"),
+    password: z
+      .string()
+      .max(128, "Password must be at most 128 characters")
+      .refine((val) => !val || val.length >= 8, {
+        message: "Password must be at least 8 characters",
+      })
+      .optional(),
+    designation: z.string().trim().min(1, "Designation is required"),
+    departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
+      message: "Department is required",
     }),
-  whatsappSameAsPhone: z.boolean().default(true),
-  whatsappNumber: z
-    .string()
-    .optional()
-    .refine((val) => !val || isValidPhoneNumber(val), {
-      message: "Enter a valid WhatsApp number with the correct length for the selected country.",
+    role: z.string().default("ENGINEERING"),
+    employeeId: optionalEmployeeIdSchema().transform((val) => {
+      const trimmed = val?.trim();
+      return trimmed ? trimmed : undefined;
     }),
-  password: z.string().max(128, "Password must be at most 128 characters").refine((val) => !val || val.length >= 8, {
-    message: "Password must be at least 8 characters",
-  }).optional(),
-  designation: z.string().min(1, "Designation is required"),
-  departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
-    message: "Department is required",
-  }),
-  role: z.string().default("ENGINEERING"),
-  employeeId: z.string().optional(),
-  joiningDate: z.date(),
-  dateOfBirth: z.date(),
-  experienceYears: z.coerce.number().min(0).optional(),
-  skills: z.string().refine((val) => !val || val.includes(","), "Please separate skills with commas (e.g., React, Node.js)").optional(),
-  taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
-  monthlySalary: z.coerce.number().min(0).optional(),
-  bankDetails: z.object({
-    accountNumber: z.string().min(1, "Account number is required").regex(/^\d+$/, "Account number must contain only digits"),
-    bankName: z.string().min(1, "Bank name is required").regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters"),
-    branch: z.string().min(1, "Branch name is required").regex(/^[A-Za-z\s]+$/, "Branch must contain only letters"),
-    ifsc: z.string().min(1, "IFSC code is required").regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC format (e.g., SBIN0001234)"),
-    accountHolder: z.string().min(1, "Account holder name is required").regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters"),
-    pfUanNumber: z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits").optional().or(z.literal("")),
-  }),
-});
+    joiningDate: requiredDateSchema("Joining date"),
+    dateOfBirth: requiredDateSchema("Date of birth"),
+    experienceYears: optionalExperienceYearsSchema(),
+    skills: optionalSkillsSchema(),
+    taxId: z
+      .string()
+      .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)")
+      .optional()
+      .or(z.literal("")),
+    monthlySalary: z.coerce
+      .number({ message: "Monthly salary is required" })
+      .min(MONTHLY_SALARY_MIN, "Monthly salary must be greater than 0")
+      .max(
+        MONTHLY_SALARY_MAX,
+        `Monthly salary cannot exceed ₹${MONTHLY_SALARY_MAX.toLocaleString("en-IN")}`,
+      )
+      .refine((val) => Number.isInteger(val), "Monthly salary must be a whole number"),
+    bankDetails: bankDetailsSchema,
+  })
+  .superRefine((data, ctx) => {
+    const today = startOfCalendarDay(new Date());
+    const established = startOfCalendarDay(getVaivammEstablishedDate());
+    const establishedLabel = format(established, "MMMM d, yyyy");
+
+    if (data.joiningDate) {
+      const joining = startOfCalendarDay(data.joiningDate);
+      if (joining < established) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Joining date cannot be before company establishment (${establishedLabel})`,
+          path: ["joiningDate"],
+        });
+      }
+    }
+
+    if (data.dateOfBirth) {
+      const dob = startOfCalendarDay(data.dateOfBirth);
+
+      if (dob >= today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date of birth must be in the past",
+          path: ["dateOfBirth"],
+        });
+      }
+
+      const youngestAllowed = new Date(today);
+      youngestAllowed.setFullYear(today.getFullYear() - MIN_EMPLOYEE_AGE_YEARS);
+      if (dob > startOfCalendarDay(youngestAllowed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Employee must be at least ${MIN_EMPLOYEE_AGE_YEARS} years old`,
+          path: ["dateOfBirth"],
+        });
+      }
+
+      const oldestAllowed = new Date(today);
+      oldestAllowed.setFullYear(today.getFullYear() - MAX_EMPLOYEE_AGE_YEARS);
+      if (dob < startOfCalendarDay(oldestAllowed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date of birth is not valid",
+          path: ["dateOfBirth"],
+        });
+      }
+
+      if (data.joiningDate) {
+        const joining = startOfCalendarDay(data.joiningDate);
+        if (joining <= dob) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Joining date must be after date of birth",
+            path: ["joiningDate"],
+          });
+        }
+      }
+    }
+
+    if (!data.whatsappSameAsPhone && !data.whatsappNumber?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "WhatsApp number is required when it is not the same as phone",
+        path: ["whatsappNumber"],
+      });
+    }
+  });
+
+export const editEmployeeFormSchema = z
+  .object({
+    firstName: personNameSchema("First name"),
+    lastName: personNameSchema("Last name"),
+    role: z.string().min(1, "Role is required"),
+    designation: z.string().trim().min(1, "Designation is required"),
+    departmentId: z.number().int().positive().optional(),
+    phone: z
+      .string()
+      .refine((val) => !val.trim() || isValidPhoneNumber(val), {
+        message:
+          "Enter a valid phone number with the correct length for the selected country.",
+      })
+      .refine((val) => {
+        if (!val.trim()) return true;
+        const digits = val.replace(/\D/g, "");
+        return digits.length >= 10 && digits.length <= 15;
+      }, "Phone number must contain 10 to 15 digits"),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+    joiningDate: z.coerce.date().optional(),
+    experienceYears: editExperienceYearsSchema(),
+    skills: optionalSkillsSchema(),
+    taxId: optionalPanSchema(),
+    monthlySalary: optionalMonthlySalaryForEditSchema(),
+    bankAccount: z.string().optional(),
+    bankName: z.string().optional(),
+    branch: z.string().optional(),
+    ifsc: z.string().optional(),
+    accountHolder: z.string().optional(),
+    swiftCode: z.string().optional(),
+    iban: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    refineJoiningDateOptional(data.joiningDate, ctx);
+    refineFlatBankDetails(data, ctx);
+  });
+
+export type EditEmployeeFormValues = z.infer<typeof editEmployeeFormSchema>;
+
+export const updateEmployeeProfileBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(200).optional(),
+    firstName: personNameSchema("First name").optional(),
+    lastName: personNameSchema("Last name").optional(),
+    designation: z.string().trim().min(1, "Designation is required").optional(),
+    departmentId: z.number().int().positive().optional(),
+    phone: optionalPhoneSchema("Phone number").optional(),
+    image: z.string().optional(),
+    isActive: z.boolean().optional(),
+    hasDashboardAccess: z.boolean().optional(),
+    role: z.string().min(1).optional(),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+    experienceYears: z
+      .number()
+      .min(EXPERIENCE_MIN_YEARS)
+      .max(EXPERIENCE_MAX_YEARS)
+      .refine(
+        (val) => Math.round(val * 10) === val * 10,
+        "Use at most one decimal place for years of experience",
+      )
+      .optional(),
+    taxId: optionalPanSchema().optional(),
+    monthlySalary: optionalMonthlySalaryForEditSchema(),
+    bankDetails: bankDetailsSchema.optional(),
+    skills: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(SKILL_ITEM_MIN_LENGTH)
+          .max(SKILL_ITEM_MAX_LENGTH)
+          .regex(SKILL_ITEM_PATTERN, "Skill contains invalid characters"),
+      )
+      .max(MAX_SKILLS_COUNT)
+      .optional(),
+    bio: z.string().max(500).optional(),
+    linkedinUrl: z.string().url().optional().or(z.literal("")),
+    twitterUrl: z.string().url().optional().or(z.literal("")),
+    githubUrl: z.string().url().optional().or(z.literal("")),
+    websiteUrl: z.string().url().optional().or(z.literal("")),
+    joiningDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Joining date must be YYYY-MM-DD")
+      .optional(),
+    reportingTo: z.string().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.joiningDate) {
+      refineJoiningDateOptional(new Date(data.joiningDate), ctx, ["joiningDate"]);
+    }
+  });
 
 export const createWfhRequestInputSchema = z.object({
   date: z.date(),

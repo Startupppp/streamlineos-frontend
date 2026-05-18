@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,14 +26,23 @@ const STEPS = [
   { id: 2, label: "Job Details" },
   { id: 3, label: "Skills & Pay" },
   { id: 4, label: "Banking" },
-  { id: 5, label: "Review" },
+  { id: 5, label: "Confirm" },
 ];
 
 const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
   1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "role", "joiningDate"],
-  3: ["skills", "experienceYears", "taxId"],
-  4: ["bankDetails.accountNumber", "bankDetails.bankName", "bankDetails.branch", "bankDetails.ifsc", "bankDetails.accountHolder"],
+  2: ["designation", "departmentId", "role", "joiningDate", "employeeId"],
+  3: ["skills", "experienceYears", "taxId", "monthlySalary"],
+  4: [
+    "bankDetails.accountNumber",
+    "bankDetails.bankName",
+    "bankDetails.branch",
+    "bankDetails.ifsc",
+    "bankDetails.accountHolder",
+    "bankDetails.swiftCode",
+    "bankDetails.iban",
+    "bankDetails.pfUanNumber",
+  ],
 };
 
 const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
@@ -41,7 +50,12 @@ const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "D
 const KNOWN_ACRONYMS = new Set(["CEO", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
 
 function toTitleCase(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  return str
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function formatDesignation(str: string) {
@@ -53,6 +67,7 @@ function formatDesignation(str: string) {
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const router = useRouter();
   const { data: departments } = useHrDepartments();
   const { data: orgRoles } = useRolesList();
@@ -80,16 +95,35 @@ export function OnboardingWizard() {
       role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
       dateOfBirth: undefined, skills: "", experienceYears: undefined,
       taxId: "", monthlySalary: undefined,
-      bankDetails: { accountNumber: "", bankName: "", branch: "", ifsc: "", accountHolder: "", pfUanNumber: "" },
+      bankDetails: {
+        accountNumber: "",
+        bankName: "",
+        branch: "",
+        ifsc: "",
+        accountHolder: "",
+        pfUanNumber: "",
+        swiftCode: "",
+        iban: "",
+      },
     } as DefaultValues<FormValues>,
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (currentStep !== STEPS.length) {
+      setReviewConfirmed(false);
+    }
+  }, [currentStep]);
 
   const handleNext = useCallback(async () => {
     const fields = STEP_FIELDS[currentStep];
     if (fields) {
       const valid = await form.trigger(fields);
       if (!valid) return;
+    }
+    if (currentStep === 4) {
+      const fullValid = await form.trigger();
+      if (!fullValid) return;
     }
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
   }, [currentStep, form]);
@@ -106,13 +140,18 @@ export function OnboardingWizard() {
           ...data,
           firstName: toTitleCase(data.firstName),
           lastName: toTitleCase(data.lastName),
+          email: data.email.trim(),
+          phone: data.phone.trim(),
+          whatsappNumber: data.whatsappSameAsPhone
+            ? data.phone.trim()
+            : data.whatsappNumber?.trim(),
           designation: formatDesignation(data.designation),
           password: data.password ?? "",
         } as import("@/types/hr").OnboardEmployeeInput,
         {
           onSuccess: () => {
             toast.success("Employee onboarded successfully");
-            router.push("/hr");
+            router.push("/hr/onboarding?tab=workflow");
           },
           onError: (err) => toast.error(err.message || "Failed to onboard employee"),
         }
@@ -178,7 +217,15 @@ export function OnboardingWizard() {
             )}
             {currentStep === 3 && <StepSkillsPay form={form} />}
             {currentStep === 4 && <StepBanking form={form} />}
-            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
+            {currentStep === 5 && (
+              <StepReview
+                form={form}
+                allDepartmentOptions={allDepartmentOptions}
+                assignableRoles={assignableRoles}
+                confirmed={reviewConfirmed}
+                onConfirmedChange={setReviewConfirmed}
+              />
+            )}
           </div>
 
           <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
@@ -200,11 +247,16 @@ export function OnboardingWizard() {
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button type="submit" size="sm" disabled={onboardEmployee.isPending} className="gap-1 min-w-[100px]">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={onboardEmployee.isPending || !reviewConfirmed}
+                className="gap-1 min-w-[140px]"
+              >
                 {onboardEmployee.isPending ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</>
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Onboarding...</>
                 ) : (
-                  <><Check className="h-3.5 w-3.5" />Submit</>
+                  <><Check className="h-3.5 w-3.5" />Confirm & onboard</>
                 )}
               </Button>
             )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -462,8 +463,8 @@ function InitiateSheet({
         if (!v) setUserId("");
         onOpenChange(v);
       }}
-      title="Initiate Onboarding"
-      description="Create an onboarding checklist for an employee using the active template."
+      title="Initiate onboarding checklist"
+      description="Assign the onboarding task template to an employee who already exists in the directory. To create a new hire, use the Add Employee tab first."
       onSubmit={handleSubmit}
       submitLabel="Start Onboarding"
       isPending={initiate.isPending}
@@ -493,6 +494,13 @@ function stalledBadge(row: OnboardingStatus): boolean {
   return Date.now() - last > 48 * 60 * 60 * 1000;
 }
 
+const ONBOARDING_TABS = ["wizard", "workflow", "documents"] as const;
+type OnboardingTab = (typeof ONBOARDING_TABS)[number];
+
+function isOnboardingTab(value: string | null): value is OnboardingTab {
+  return value !== null && ONBOARDING_TABS.includes(value as OnboardingTab);
+}
+
 function HrWorkflowTab() {
   const { data, isLoading } = useOnboardingStatus();
   const [initiateOpen, setInitiateOpen] = useState(false);
@@ -511,15 +519,21 @@ function HrWorkflowTab() {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground rounded-md border bg-muted/30 px-3 py-2.5">
+        New hires are created under the <strong>Add Employee</strong> tab. Their onboarding
+        checklist starts automatically after you submit that form. Use the action below only
+        for an <strong>existing</strong> employee who still needs a checklist.
+      </p>
       <div className="flex items-center justify-center w-full gap-3">
         <Button
           size="sm"
+          variant="outline"
           className="h-8 gap-1.5"
           onClick={() => setInitiateOpen(true)}
-          aria-label="Initiate onboarding for an employee"
+          aria-label="Initiate onboarding checklist for an existing employee"
         >
           <UserPlus className="h-3.5 w-3.5" />
-          Initiate Onboarding
+          Initiate checklist (existing employee)
         </Button>
       </div>
 
@@ -527,7 +541,7 @@ function HrWorkflowTab() {
         <EmptyState
           illustration={<EmptyPersonIllustration className="h-24 w-24" />}
           title="No onboardings in progress"
-          description="Use the button above to start onboarding for a new hire."
+          description="Add a new employee first, or initiate a checklist for someone who already exists in the directory."
           compact
         />
       ) : (
@@ -635,13 +649,33 @@ export default function OnboardingPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
   const isHROrCEO = role === "HR" || role === "CEO";
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const activeTab = useMemo<OnboardingTab>(() => {
+    const tab = searchParams.get("tab");
+    return isOnboardingTab(tab) ? tab : "wizard";
+  }, [searchParams]);
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      if (!isOnboardingTab(tab)) return;
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "wizard") params.delete("tab");
+      else params.set("tab", tab);
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   return (
     <PageWrapper
       title="Onboarding"
       subtitle={
         isHROrCEO
-          ? "Onboard new team members and manage document requirements"
+          ? "Add new employees, then track onboarding checklists and documents"
           : "Complete your onboarding steps"
       }
       noInternalScroll={!isHROrCEO}
@@ -657,13 +691,13 @@ export default function OnboardingPage() {
       }
     >
       {isHROrCEO ? (
-        <Tabs defaultValue="workflow" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList>
-            <TabsTrigger value="workflow" className="text-xs h-7 px-3">
-              Workflow
-            </TabsTrigger>
             <TabsTrigger value="wizard" className="text-xs h-7 px-3">
-              New Employee
+              Add Employee
+            </TabsTrigger>
+            <TabsTrigger value="workflow" className="text-xs h-7 px-3">
+              Onboarding progress
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-xs h-7 px-3">
               Documents
