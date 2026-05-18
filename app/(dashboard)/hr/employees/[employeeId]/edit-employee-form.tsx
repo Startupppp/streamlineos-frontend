@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import {
+  editEmployeeFormSchema,
+  type EditEmployeeFormValues,
+} from "@/lib/validations/hr";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
@@ -15,27 +18,7 @@ import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-inf
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
 
-const formSchema = z.object({
-  firstName: z.string().min(2, "First name is required"),
-  lastName: z.string().min(2, "Last name is required"),
-  role: z.string(),
-  designation: z.string().optional(),
-  departmentId: z.number().optional(),
-  phone: z.string().optional(),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  joiningDate: z.date().optional(),
-  experienceYears: z.number().optional(),
-  skills: z.string().optional(),
-  taxId: z.string().optional(),
-  monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
-  bankAccount: z.string().optional(),
-  bankName: z.string().optional(),
-  branch: z.string().optional(),
-  ifsc: z.string().optional(),
-  accountHolder: z.string().optional(),
-});
-
-export type EmployeeFormValues = z.infer<typeof formSchema>;
+export type EmployeeFormValues = EditEmployeeFormValues;
 
 export interface EmployeeData {
   id: string;
@@ -58,6 +41,8 @@ export interface EmployeeData {
     branch?: string;
     ifsc?: string;
     accountHolder?: string;
+    swiftCode?: string;
+    iban?: string;
   } | null;
   [key: string]: unknown;
 }
@@ -72,11 +57,11 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const { data: orgRoles } = useRolesList();
   const assignableRoles = useMemo(
     () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
-    [orgRoles]
+    [orgRoles],
   );
 
   const form = useForm<EmployeeFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(editEmployeeFormSchema) as unknown as Resolver<EmployeeFormValues>,
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
@@ -86,7 +71,10 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       phone: employee.phone || "",
       gender: employee.gender || "MALE",
       joiningDate: employee.joiningDate ? new Date(employee.joiningDate) : undefined,
-      experienceYears: employee.experienceYears ? Number(employee.experienceYears) : 0,
+      experienceYears:
+        employee.experienceYears != null && employee.experienceYears !== ""
+          ? Number(employee.experienceYears)
+          : undefined,
       skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : (employee.skills || ""),
       taxId: employee.taxId || "",
       monthlySalary: employee.monthlySalary ? Number(employee.monthlySalary) : undefined,
@@ -95,56 +83,73 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       branch: employee.bankDetails?.branch || "",
       ifsc: employee.bankDetails?.ifsc || "",
       accountHolder: employee.bankDetails?.accountHolder || "",
+      swiftCode: employee.bankDetails?.swiftCode || "",
+      iban: employee.bankDetails?.iban || "",
     },
+    mode: "onTouched",
   });
 
-  const onSubmit = useCallback(async (values: EmployeeFormValues) => {
-    const skillsArray = values.skills
-      ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
-      : [];
+  const onSubmit = useCallback(
+    async (values: EmployeeFormValues) => {
+      const skillsArray = values.skills
+        ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
 
-    toast.promise(
-      updateProfileMutation.mutateAsync({
-        userId: employee.id,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        role: values.role as string,
-        designation: values.designation,
-        departmentId: values.departmentId,
-        phone: values.phone,
-        gender: values.gender,
-        joiningDate: values.joiningDate?.toISOString().slice(0, 10),
-        experienceYears: values.experienceYears,
-        skills: skillsArray,
-        taxId: values.taxId,
-        monthlySalary: values.monthlySalary,
-        bankDetails: values.bankAccount
-          ? {
-              accountNumber: values.bankAccount,
-              bankName: values.bankName || "",
-              branch: values.branch || "",
-              ifsc: values.ifsc || "",
-              accountHolder: values.accountHolder || "",
-            }
-          : undefined,
-      }),
-      {
-        loading: "Updating employee...",
-        success: () => {
-          router.push("/hr/employees");
-          router.refresh();
-          return "Employee updated successfully!";
+      toast.promise(
+        updateProfileMutation.mutateAsync({
+          userId: employee.id,
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim(),
+          role: values.role,
+          designation: values.designation.trim(),
+          departmentId: values.departmentId,
+          phone: values.phone?.trim() || undefined,
+          gender: values.gender,
+          joiningDate: values.joiningDate?.toISOString().slice(0, 10),
+          experienceYears: values.experienceYears,
+          skills: skillsArray,
+          taxId: values.taxId?.trim().toUpperCase() || undefined,
+          monthlySalary: values.monthlySalary,
+          bankDetails: values.bankAccount?.trim()
+            ? {
+                accountNumber: values.bankAccount.trim(),
+                bankName: values.bankName?.trim() || "",
+                branch: values.branch?.trim() || "",
+                ifsc: values.ifsc?.trim().toUpperCase() || "",
+                accountHolder: values.accountHolder?.trim() || "",
+                swiftCode: values.swiftCode?.trim().toUpperCase() || undefined,
+                iban: values.iban?.trim().toUpperCase() || undefined,
+              }
+            : undefined,
+        }),
+        {
+          loading: "Updating employee...",
+          success: () => {
+            router.push(`/hr/employees/${employee.id}`);
+            router.refresh();
+            return "Employee updated successfully!";
+          },
+          error: (err) =>
+            err instanceof Error ? err.message : "Failed to update employee",
         },
-        error: "Failed to update employee",
-      }
-    );
-  }, [employee.id, router, updateProfileMutation]);
+      );
+    },
+    [employee.id, router, updateProfileMutation],
+  );
+
+  const onInvalid = useCallback(() => {
+    toast.error("Please fix the highlighted fields before saving.");
+  }, []);
 
   const handleCancel = useCallback(() => router.back(), [router]);
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className="flex flex-col h-full min-h-0"
+        noValidate
+      >
         <div className="rounded-lg border bg-card overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-4">
@@ -155,17 +160,26 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
               <ProfessionalInfoSection assignableRoles={assignableRoles} />
             </div>
             <Separator />
+            
             <div className="p-4">
               <BankDetailsSection />
             </div>
           </div>
           <div className="shrink-0 flex justify-end gap-2 px-4 py-3 bg-muted/30 border-t">
-            <Button variant="outline" size="sm" type="button" onClick={handleCancel} disabled={updateProfileMutation.isPending}>
-              Cancel
-            </Button>
             <Button size="sm" type="submit" disabled={updateProfileMutation.isPending}>
-              {updateProfileMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              {updateProfileMutation.isPending && (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              )}
               Save Changes
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={handleCancel}
+              disabled={updateProfileMutation.isPending}
+            >
+              Back
             </Button>
           </div>
         </div>
