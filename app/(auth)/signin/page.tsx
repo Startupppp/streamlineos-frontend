@@ -194,7 +194,7 @@ export default function SignInPage() {
                 })}
                 disabled={isPending}
                 className={cn(
-                  "h-9 text-sm pr-9",
+                  "h-9 text-sm pr-9 hide-native-password-reveal",
                   form.formState.errors.password && "border-destructive focus-visible:ring-destructive/30"
                 )}
                 aria-invalid={!!form.formState.errors.password}

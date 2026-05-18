@@ -7,13 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { PASSWORD_REGEX, getPasswordStrength } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
-import { Loader2, Eye, EyeOff, ArrowRight, Shield, Rocket, AlertCircle } from "lucide-react";
+import { PasswordInput } from "@/components/auth/password-input";
+import { Loader2, ArrowRight, Rocket, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -38,8 +38,6 @@ function SetupPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token") ?? "";
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -129,24 +127,17 @@ function SetupPasswordContent() {
       <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6">
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-[13px] font-medium">Password</Label>
-            <div className="relative">
-              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a strong password"
-                className="pl-9 pr-9 h-9 text-sm"
-                {...form.register("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+            <Label htmlFor="password" className="text-[13px] font-medium">
+              Password
+            </Label>
+            <PasswordInput
+              id="password"
+              autoComplete="new-password"
+              placeholder="Create a strong password"
+              className="h-9 text-sm"
+              aria-invalid={!!form.formState.errors.password}
+              {...form.register("password")}
+            />
             {strength && <PasswordStrengthIndicator strength={strength} />}
             {form.formState.errors.password && (
               <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
@@ -154,24 +145,17 @@ function SetupPasswordContent() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[13px] font-medium">Confirm Password</Label>
-            <div className="relative">
-              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                type={showConfirm ? "text" : "password"}
-                placeholder="Confirm your password"
-                className="pl-9 pr-9 h-9 text-sm"
-                {...form.register("confirmPassword")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm((v) => !v)}
-                tabIndex={-1}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-              >
-                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+            <Label htmlFor="confirmPassword" className="text-[13px] font-medium">
+              Confirm Password
+            </Label>
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Confirm your password"
+              className="h-9 text-sm"
+              aria-invalid={!!form.formState.errors.confirmPassword}
+              {...form.register("confirmPassword")}
+            />
             {form.formState.errors.confirmPassword && (
               <p className="text-xs text-destructive">{form.formState.errors.confirmPassword.message}</p>
             )}
@@ -196,7 +180,13 @@ function SetupPasswordContent() {
 
 export default function SetupPasswordPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-sm text-center"><Loader2 className="h-8 w-8 animate-spin text-gold mx-auto" /></div>}>
+    <Suspense
+      fallback={
+        <div className="w-full max-w-sm text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gold mx-auto" />
+        </div>
+      }
+    >
       <SetupPasswordContent />
     </Suspense>
   );
