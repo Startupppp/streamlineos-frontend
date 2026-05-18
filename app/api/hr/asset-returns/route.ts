@@ -1,6 +1,7 @@
-import { withAuth, withAdmin, ok } from "@/lib/api/helpers";
+import { withAuth, withAdmin, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { assetReturns } from "@/lib/db/schema";
+import { assetReturns, organizationMembers } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { listAssetReturnsForSession } from "@/server/queries/hr/asset-returns";
@@ -26,6 +27,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
     const body = createSchema.parse(await req.json());
+
+    const targetMember = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, body.userId),
+        eq(organizationMembers.orgId, session.orgId),
+      ),
+      columns: { userId: true },
+    });
+    if (!targetMember) {
+      return err("Target user is not a member of your organization.", 403);
+    }
 
     const [record] = await db
       .insert(assetReturns)

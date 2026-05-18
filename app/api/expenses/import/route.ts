@@ -205,7 +205,9 @@ export async function POST(req: Request) {
     }> = [];
 
     let skipped = 0;
+    let duplicates = 0;
     const skippedReasons: Array<{ row: number; reason: string }> = [];
+    const seenKeys = new Set<string>();
 
     const today = new Date().toISOString().split("T")[0];
     for (const parsedRow of rows) {
@@ -247,6 +249,22 @@ export async function POST(req: Request) {
         continue;
       }
 
+      const dedupeKey = [
+        validDate,
+        amount.toFixed(2),
+        merchant.toLowerCase().slice(0, 200),
+        description.toLowerCase().slice(0, 500),
+      ].join("|");
+      if (seenKeys.has(dedupeKey)) {
+        duplicates++;
+        skippedReasons.push({
+          row: rowNumber,
+          reason: "Duplicate row in this import (same date, amount, merchant, description)",
+        });
+        continue;
+      }
+      seenKeys.add(dedupeKey);
+
       batchValues.push({
         orgId: member.orgId,
         userId: session.user.id,
@@ -273,6 +291,7 @@ export async function POST(req: Request) {
       success: true,
       count: batchValues.length,
       skipped,
+      duplicates,
       skippedReasons,
       ...(rows.length >= MAX_ROWS ? { warning: `Only first ${MAX_ROWS} rows were processed` } : {}),
     });

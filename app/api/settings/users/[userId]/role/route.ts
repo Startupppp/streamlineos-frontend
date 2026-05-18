@@ -5,6 +5,7 @@ import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { ALL_ROLES } from "@/lib/constants/roles";
+import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 
 const updateRoleSchema = z.object({
@@ -40,6 +41,8 @@ export async function POST(
       return err("You cannot change your own role", 403);
     }
 
+    const previousRole = member.role;
+
     await db
       .update(users)
       .set({ role: input.role })
@@ -54,6 +57,15 @@ export async function POST(
           eq(organizationMembers.orgId, session.orgId)
         )
       );
+
+    void createAuditLog({
+      action: "role.changed",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: userId,
+      targetType: "user",
+      metadata: { oldRole: previousRole, newRole: input.role },
+    }).catch(() => {});
 
     return ok({ success: true, userId, role: input.role });
   });

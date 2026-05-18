@@ -52,8 +52,13 @@ export async function GET(req: NextRequest) {
       r.rejectionReason || "",
     ]);
 
+    const csvCell = (val: unknown): string => {
+      let s = String(val ?? "");
+      if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
     const csv = [headers, ...rows]
-      .map((row) => row.map((val) => `"${String(val ?? "").replace(/"/g, '""')}"`).join(","))
+      .map((row) => row.map(csvCell).join(","))
       .join("\n");
 
     void createAuditLog({
