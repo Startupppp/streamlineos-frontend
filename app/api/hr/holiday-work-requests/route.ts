@@ -1,7 +1,7 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { holidayWorkRequests, holidays, organizationMembers, users, organizations } from "@/lib/db/schema";
-import { eq, and, or, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { notifyByRoles } from "@/server/actions/create-notification";
 import { ROLES } from "@/lib/constants/roles";
@@ -9,6 +9,7 @@ import { sendEmail } from "@/lib/email";
 import { getHolidayWorkRequestEmailToHr } from "@/lib/email-templates";
 import { logger } from "@/lib/logger";
 import { resolveHolidayWorkRequestType } from "@/lib/hr/holiday-work-request-type";
+import { getTodayString } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -51,6 +52,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, submitSchema);
+
+    if (body.requestDate < getTodayString()) {
+      return err("Cannot submit a holiday work request for a past date.", 400);
+    }
 
     const holiday = await db.query.holidays.findFirst({
       where: and(

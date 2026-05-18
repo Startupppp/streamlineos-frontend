@@ -18,6 +18,7 @@ import {
   PROFESSIONAL_TAX_INR,
   HOLIDAY_WORK_FULL_DAY_HOURS,
   splitMonthlyCtc505025,
+  computeStatutory,
 } from "@/lib/hr/payroll-calculations";
 import {
   pickSalaryStructureForPayrollMonth,
@@ -30,6 +31,15 @@ import { z } from "zod";
 
 const generatePayrollSchema = z.object({
   month: z.string().optional(),
+  overrides: z
+    .record(
+      z.string(),
+      z.object({
+        otherDeductions: z.number().min(0).optional(),
+        bonus: z.number().min(0).optional(),
+      })
+    )
+    .optional(),
 });
 
 export async function GET() {
@@ -254,14 +264,32 @@ export async function POST(req: NextRequest) {
 
         const advanceRecoveryAmount = activeLoanMap.get(uId) ?? 0;
 
-        const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount);
+        const override = body.overrides?.[uId];
+        const bonusAmount = override?.bonus ?? 0;
+        const otherDeductionsAmount = override?.otherDeductions ?? 0;
+
+        const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount + bonusAmount);
+
+        const statutory = computeStatutory(basicSalary, grossSalary, {
+          pfApplicable: salary?.pfApplicable ?? false,
+          pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
+          pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
+          pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
+          esiApplicable: salary?.esiApplicable ?? false,
+          esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
+          esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
+          esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
+        });
 
         const totalDeductions = roundInr(
           lopAmount +
             halfDayAmount +
             ptAmount +
             structureDeductions +
-            advanceRecoveryAmount
+            advanceRecoveryAmount +
+            statutory.pfEmployee +
+            statutory.esiEmployee +
+            otherDeductionsAmount
         );
         const netSalary = roundInr(grossSalary - totalDeductions);
 
@@ -272,18 +300,18 @@ export async function POST(req: NextRequest) {
           basicSalary: basicSalary.toString(),
           hra: hra.toString(),
           specialAllowance: specialAllowance.toString(),
-          allowances: "0",
+          allowances: bonusAmount.toString(),
           lopDays: lopDays.toString(),
           lopAmount: lopAmount.toString(),
           halfDays: halfDaysCount.toString(),
           halfDayAmount: halfDayAmount.toString(),
           ptAmount: ptAmount.toString(),
-          pfEmployee: "0",
-          pfEmployer: "0",
-          esiEmployee: "0",
-          esiEmployer: "0",
+          pfEmployee: statutory.pfEmployee.toString(),
+          pfEmployer: statutory.pfEmployer.toString(),
+          esiEmployee: statutory.esiEmployee.toString(),
+          esiEmployer: statutory.esiEmployer.toString(),
           advanceRecoveryAmount: advanceRecoveryAmount.toString(),
-          otherDeductions: "0",
+          otherDeductions: otherDeductionsAmount.toString(),
           structureDeductions: structureDeductions.toString(),
           deductions: totalDeductions.toString(),
           grossSalary: grossSalary.toString(),

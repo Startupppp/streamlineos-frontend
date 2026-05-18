@@ -1,7 +1,7 @@
 
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -13,9 +13,9 @@ function verifyLinkedInSignature(body: string, signature: string | null): boolea
   if (!secret) return false;
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("hex");
+  if (signature.length !== expected.length) return false;
   try {
-    return signature.length === expected.length &&
-      Buffer.from(signature, "hex").compare(Buffer.from(expected, "hex")) === 0;
+    return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
   } catch {
     return false;
   }
@@ -38,11 +38,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const orgId = req.nextUrl.searchParams.get("orgId");
+  const payloadObj = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+  const orgId =
+    (typeof payloadObj.orgId === "string" ? payloadObj.orgId : null) ??
+    (typeof payloadObj.org_id === "string" ? (payloadObj.org_id as string) : null);
   if (!orgId) {
-    logger.warn("LinkedIn webhook: missing orgId query param");
+    logger.warn("LinkedIn webhook: missing orgId in signed payload");
     return NextResponse.json(
-      { error: "orgId query param required" },
+      { error: "orgId field required in signed payload body" },
       { status: 400 }
     );
   }

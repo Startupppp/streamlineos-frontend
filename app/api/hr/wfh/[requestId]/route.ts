@@ -28,6 +28,17 @@ export async function PATCH(
 
     if (!existing) return err("WFH request not found.", 404);
 
+    if (session.user.id === existing.userId) {
+      return err("You cannot act on your own WFH request.", 403);
+    }
+
+    if (
+      session.user.id !== existing.approverId &&
+      !isAdminOrOwner(session.user.role)
+    ) {
+      return err("You are not authorized to act on this WFH request.", 403);
+    }
+
     await db
       .update(wfhRequests)
       .set({

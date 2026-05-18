@@ -4,7 +4,7 @@ import { ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { candidateDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
 import { NextResponse, type NextRequest } from "next/server";
@@ -39,9 +39,9 @@ function verifyDocumensoSignature(body: string, signature: string | null): boole
     .update(body)
     .digest("hex");
 
+  if (signature.length !== expected.length) return false;
   try {
-    return signature.length === expected.length &&
-      Buffer.from(signature, "hex").compare(Buffer.from(expected, "hex")) === 0;
+    return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
   } catch {
     return false;
   }

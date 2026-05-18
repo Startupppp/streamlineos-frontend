@@ -15,6 +15,7 @@ import {
   PROFESSIONAL_TAX_INR,
   HOLIDAY_WORK_FULL_DAY_HOURS,
   splitMonthlyCtc505025,
+  computeStatutory,
 } from "@/lib/hr/payroll-calculations";
 import {
   pickSalaryStructureForPayrollMonth,
@@ -168,6 +169,17 @@ export async function POST(req: NextRequest) {
 
     const grossSalary = roundInr(basicSalary + hra + specialAllowance + overtimeAmount + (body.bonus || 0));
 
+    const statutory = computeStatutory(basicSalary, grossSalary, {
+      pfApplicable: salary?.pfApplicable ?? false,
+      pfEmployeeRate: parseFloat(salary?.pfEmployeeRate ?? "12"),
+      pfEmployerRate: parseFloat(salary?.pfEmployerRate ?? "12"),
+      pfWageCeiling: parseFloat(salary?.pfWageCeiling ?? "15000"),
+      esiApplicable: salary?.esiApplicable ?? false,
+      esiEmployeeRate: parseFloat(salary?.esiEmployeeRate ?? "0.75"),
+      esiEmployerRate: parseFloat(salary?.esiEmployerRate ?? "3.25"),
+      esiWageCeiling: parseFloat(salary?.esiWageCeiling ?? "21000"),
+    });
+
     const lopAmount = roundInr(dailyRate * (body.lopDays || 0));
     const halfDayLopAmount = roundInr((dailyRate / 2) * (body.halfDays || 0));
 
@@ -177,6 +189,8 @@ export async function POST(req: NextRequest) {
         ptAmount +
         structureDeductions +
         advanceRecoveryAmount +
+        statutory.pfEmployee +
+        statutory.esiEmployee +
         (body.otherDeductions || 0)
     );
     const netSalary = roundInr(grossSalary - totalDeductions);
@@ -198,10 +212,10 @@ export async function POST(req: NextRequest) {
           halfDays: (body.halfDays || 0).toString(),
           halfDayAmount: halfDayLopAmount.toString(),
           ptAmount: ptAmount.toString(),
-          pfEmployee: "0",
-          pfEmployer: "0",
-          esiEmployee: "0",
-          esiEmployer: "0",
+          pfEmployee: statutory.pfEmployee.toString(),
+          pfEmployer: statutory.pfEmployer.toString(),
+          esiEmployee: statutory.esiEmployee.toString(),
+          esiEmployer: statutory.esiEmployer.toString(),
           advanceRecoveryAmount: advanceRecoveryAmount.toString(),
           otherDeductions: (body.otherDeductions || 0).toString(),
           structureDeductions: structureDeductions.toString(),

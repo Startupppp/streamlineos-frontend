@@ -36,6 +36,10 @@ export async function PATCH(
 
     if (!existing) return err("Leave request not found.", 404);
 
+    if (session.user.id === existing.userId && body.status !== "PENDING") {
+      return err("You cannot approve or reject your own leave request.", 403);
+    }
+
     await db.transaction(async (tx) => {
       await tx
         .update(leaveRequests)
@@ -46,7 +50,12 @@ export async function PATCH(
         })
         .where(eq(leaveRequests.id, requestId));
 
-      if (body.status === "PENDING" && existing.status === "APPROVED" && existing.leaveTypeId) {
+      const isRestoreTransition =
+        body.status === "PENDING" && existing.status === "APPROVED";
+      const isDebitTransition =
+        body.status === "APPROVED" && existing.status !== "APPROVED";
+
+      if ((isRestoreTransition || isDebitTransition) && existing.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, existing.leaveTypeId),
           columns: { name: true },
@@ -74,15 +83,28 @@ export async function PATCH(
           });
 
           if (balanceRecord) {
-            const prevLopDays = Number(existing.lopDays ?? 0);
-            const paidDays = diffDays - prevLopDays;
-            const restored = Number(balanceRecord.balance) + paidDays;
-            await tx.update(leaveBalances)
-              .set({ balance: restored.toString() })
-              .where(eq(leaveBalances.id, balanceRecord.id));
-            await tx.update(leaveRequests)
-              .set({ lopDays: "0" })
-              .where(eq(leaveRequests.id, requestId));
+            if (isRestoreTransition) {
+              const prevLopDays = Number(existing.lopDays ?? 0);
+              const paidDays = diffDays - prevLopDays;
+              const restored = Number(balanceRecord.balance) + paidDays;
+              await tx.update(leaveBalances)
+                .set({ balance: restored.toString() })
+                .where(eq(leaveBalances.id, balanceRecord.id));
+              await tx.update(leaveRequests)
+                .set({ lopDays: "0" })
+                .where(eq(leaveRequests.id, requestId));
+            } else {
+              const available = Number(balanceRecord.balance);
+              const lopDays = available <= 0 ? diffDays : Math.max(0, diffDays - available);
+              const paidDays = diffDays - lopDays;
+              const newBal = Math.max(0, available - paidDays);
+              await tx.update(leaveRequests)
+                .set({ lopDays: lopDays.toString() })
+                .where(eq(leaveRequests.id, requestId));
+              await tx.update(leaveBalances)
+                .set({ balance: newBal.toString() })
+                .where(eq(leaveBalances.id, balanceRecord.id));
+            }
           }
         }
       }

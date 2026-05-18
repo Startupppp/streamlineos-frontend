@@ -1,8 +1,8 @@
-import { withAuth, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getWfhRequests } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { wfhRequests, users } from "@/lib/db/schema";
-import { formatDateOnly } from "@/lib/date-utils";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
@@ -11,7 +11,7 @@ import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
 
 const createWfhSchema = z.object({
-  date: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD."),
   reason: z.string().optional(),
   approverId: z.string(),
 });
@@ -26,6 +26,18 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createWfhSchema);
+
+    if (body.date < getTodayString()) {
+      return err("Cannot submit a WFH request for a past date.", 400);
+    }
+
+    const approverMember = await db.query.users.findFirst({
+      where: eq(users.id, body.approverId),
+      columns: { id: true },
+    });
+    if (!approverMember) {
+      return err("Approver not found.", 400);
+    }
 
     const [request] = await db
       .insert(wfhRequests)
