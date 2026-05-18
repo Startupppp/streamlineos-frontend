@@ -11,6 +11,7 @@ import type { NextRequest } from "next/server";
 import { updateEmployeeProfileBodySchema } from "@/lib/validations/hr";
 import { inngest } from "@/lib/inngest/client";
 import { createAuditLog } from "@/lib/audit-log";
+import { syncEmployeeSkillsFromProfile } from "@/lib/hr/sync-employee-skills";
 
 export async function GET(
   _req: NextRequest,
@@ -117,6 +118,10 @@ export async function PATCH(
 
     if (Object.keys(updateData).length > 0) {
       await db.update(users).set(updateData).where(eq(users.id, targetUserId));
+    }
+
+    if (body.skills !== undefined) {
+      await syncEmployeeSkillsFromProfile(session.orgId, targetUserId, body.skills);
     }
 
     if (body.joiningDate && isOwnerOrAdmin) {

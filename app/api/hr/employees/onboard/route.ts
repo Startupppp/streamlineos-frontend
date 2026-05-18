@@ -13,6 +13,7 @@ import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
 import { generateNextEmployeeId, normalizeEmployeeIdInput } from "@/lib/hr/generate-employee-id";
 import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
+import { syncEmployeeSkillsFromProfile } from "@/lib/hr/sync-employee-skills";
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
@@ -75,6 +76,10 @@ export async function POST(req: NextRequest) {
       userId: newUser.id,
       role: body.role || "ENGINEERING",
     });
+
+    if (body.skills) {
+      await syncEmployeeSkillsFromProfile(session.orgId, newUser.id, body.skills);
+    }
 
     if (body.monthlySalary && body.monthlySalary > 0) {
       const basicSalary = body.monthlySalary * 0.5;
