@@ -55,7 +55,7 @@ export function HrSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={side} className="flex flex-col p-0 gap-0">
+      <SheetContent side={side} className="flex flex-col p-0 gap-0 max-h-[85vh] sm:max-w-lg w-full">
         <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
           <SheetTitle className="text-base">{title}</SheetTitle>
           {description && <SheetDescription className="text-xs">{description}</SheetDescription>}

@@ -15,12 +15,33 @@ import {
 } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".webp"];
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+function isAllowedFile(file: File): boolean {
+  const lower = file.name.toLowerCase();
+  if (ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
+  const allowedMimes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+  ];
+  return allowedMimes.includes(file.type);
+}
+
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  documentTypes: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  documentTypes: { value: string; label: string; icon?: React.ComponentType<{ className?: string }> }[];
   categories: string[];
+  defaultCategory?: string;
   isAdmin: boolean;
 }
 
@@ -30,10 +51,12 @@ export function UploadDocumentDialog({
   onSuccess,
   documentTypes,
   categories,
+  defaultCategory = "",
   isAdmin,
 }: UploadDocumentDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [fileErrors, setFileErrors] = useState<Record<number, string>>({});
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
@@ -73,6 +96,23 @@ export function UploadDocumentDialog({
   });
 
   useEffect(() => {
+    if (!open) return;
+    form.reset({
+      name: "",
+      description: "",
+      type: "OTHER",
+      category: defaultCategory || "",
+      userId: "",
+      isPublic: false,
+      tags: [],
+    });
+    setFiles([]);
+    setFileErrors({});
+    setTags([]);
+    setTagInput("");
+  }, [open, defaultCategory, form]);
+
+  useEffect(() => {
     if (files.length === 1) {
       form.setValue("name", files[0].name.replace(/\.[^/.]+$/, ""));
     } else if (files.length > 1) {
@@ -83,15 +123,30 @@ export function UploadDocumentDialog({
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles: File[] = [];
-    for (const f of selectedFiles) {
-      if (f.size > 10 * 1024 * 1024) {
-        toast.error(`"${f.name}" exceeds 10MB limit`);
-        continue;
+    const newErrors: Record<number, string> = {};
+    const baseIndex = files.length;
+
+    selectedFiles.forEach((f, i) => {
+      const idx = baseIndex + i;
+      if (!isAllowedFile(f)) {
+        newErrors[idx] = "File type not supported. Use PDF, DOC, XLS, or images.";
+        return;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        newErrors[idx] = "File exceeds 10MB limit.";
+        return;
       }
       validFiles.push(f);
+    });
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
     }
-    if (validFiles.length > 0) setFiles((prev) => [...prev, ...validFiles]);
-  }, []);
+    if (Object.keys(newErrors).length > 0) {
+      setFileErrors((prev) => ({ ...prev, ...newErrors }));
+    }
+    e.target.value = "";
+  }, [files.length]);
 
   const handleRemoveFileAtIndex = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const index = parseInt(e.currentTarget.dataset.index ?? "-1");
@@ -101,10 +156,20 @@ export function UploadDocumentDialog({
       if (updated.length === 0) form.setValue("name", "");
       return updated;
     });
+    setFileErrors((prev) => {
+      const next: Record<number, string> = {};
+      for (const [key, msg] of Object.entries(prev)) {
+        const k = Number(key);
+        if (k < index) next[k] = msg;
+        else if (k > index) next[k - 1] = msg;
+      }
+      return next;
+    });
   }, [form]);
 
   const handleClearAllFiles = useCallback(() => {
     setFiles([]);
+    setFileErrors({});
     form.setValue("name", "");
   }, [form]);
 
@@ -143,7 +208,7 @@ export function UploadDocumentDialog({
     }
   }, [handleAddTag]);
 
-  const uploadFileFn = useCallback(async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
+  const uploadFileFn = useCallback(async (file: File): Promise<{ url: string; size: number; mimeType: string } | { error: string }> => {
     try {
       setUploading(true);
       const formData = new FormData();
@@ -151,14 +216,16 @@ export function UploadDocumentDialog({
       formData.append("folder", "documents");
       const response = await fetch("/api/storage/upload", { method: "POST", body: formData });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
+        const errorData = await response.json().catch(() => ({}));
+        const status = response.status;
+        if (status === 413) return { error: "File is too large (max 10MB)." };
+        if (status === 415) return { error: "File type not supported." };
+        return { error: (errorData as { error?: string }).error || "Storage upload failed" };
       }
       const data = await response.json();
       return { url: data.url, size: file.size, mimeType: file.type };
     } catch (error) {
-      toast.error(getErrorMessage(error));
-      return null;
+      return { error: getErrorMessage(error) };
     } finally {
       setUploading(false);
     }
@@ -171,13 +238,24 @@ export function UploadDocumentDialog({
     setIsLoading(true);
     let successCount = 0;
     let failCount = 0;
+    const nextErrors: Record<number, string> = {};
+
+    const folderTag = data.category?.trim().toLowerCase();
+    const submitTags = [...data.tags];
+    if (folderTag && !submitTags.includes(folderTag)) {
+      submitTags.push(folderTag);
+    }
 
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}`);
         const uploaded = await uploadFileFn(file);
-        if (!uploaded) { failCount++; continue; }
+        if ("error" in uploaded) {
+          nextErrors[i] = uploaded.error;
+          failCount++;
+          continue;
+        }
         const docName = files.length === 1 ? data.name : file.name.replace(/\.[^/.]+$/, "");
         try {
           await createDocumentMutation.mutateAsync({
@@ -188,15 +266,20 @@ export function UploadDocumentDialog({
             userId: data.userId,
             isPublic: data.isPublic,
             expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
-            tags: data.tags,
+            tags: submitTags,
             fileUrl: uploaded.url,
             fileName: file.name,
             fileSize: uploaded.size,
             mimeType: uploaded.mimeType,
           });
           successCount++;
-        } catch { failCount++; }
+        } catch (err) {
+          nextErrors[i] = getErrorMessage(err);
+          failCount++;
+        }
       }
+
+      setFileErrors(nextErrors);
 
       if (successCount > 0) {
         toast.success(
@@ -204,12 +287,11 @@ export function UploadDocumentDialog({
             ? "Document uploaded successfully"
             : `${successCount} document${successCount > 1 ? "s" : ""} uploaded successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
         );
-        form.reset();
-        setFiles([]);
-        setTags([]);
-        onSuccess();
+        if (failCount === 0) {
+          onSuccess();
+        }
       } else {
-        toast.error("Failed to upload documents");
+        toast.error("Failed to upload documents. See errors below each file.");
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -217,7 +299,7 @@ export function UploadDocumentDialog({
       setIsLoading(false);
       setUploadProgress("");
     }
-  }, [files, uploadFileFn, form, onSuccess]);
+  }, [files, uploadFileFn, createDocumentMutation, onSuccess]);
 
   const getFileIcon = (f: File) => {
     if (f.type.startsWith("image/")) return <FileText className="h-5 w-5 text-amber-500" />;
@@ -274,26 +356,14 @@ export function UploadDocumentDialog({
               </div>
               <div className="max-h-[140px] overflow-y-auto space-y-1.5">
                 {files.map((f, i) => (
-                  <div key={`${f.name}-${i}`} className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border">
-                    {getFileIcon(f)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      data-index={i}
-                      onClick={handleRemoveFileAtIndex}
-                      aria-label="Remove file"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <UploadFileRow
+                    key={`${f.name}-${i}`}
+                    file={f}
+                    index={i}
+                    error={fileErrors[i]}
+                    getFileIcon={getFileIcon}
+                    onRemove={handleRemoveFileAtIndex}
+                  />
                 ))}
               </div>
             </div>
@@ -315,5 +385,47 @@ export function UploadDocumentDialog({
         </div>
       </Form>
     </HrSheet>
+  );
+}
+
+function UploadFileRow({
+  file,
+  index,
+  error,
+  getFileIcon,
+  onRemove,
+}: {
+  file: File;
+  index: number;
+  error?: string;
+  getFileIcon: (f: File) => React.ReactNode;
+  onRemove: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border min-w-0">
+      {getFileIcon(file)}
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-foreground truncate" title={file.name}>
+          {file.name}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {file.size < 1024 * 1024
+            ? `${(file.size / 1024).toFixed(0)} KB`
+            : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+        </p>
+        {error ? <p className="text-[10px] text-destructive mt-0.5">{error}</p> : null}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 shrink-0"
+        data-index={index}
+        onClick={onRemove}
+        aria-label="Remove file"
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
   );
 }

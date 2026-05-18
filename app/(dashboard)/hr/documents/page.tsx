@@ -9,7 +9,16 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useHrDocuments, useDeleteDocument, useHrDocumentStats, useRichDocuments, useDeleteRichDocument } from "@/lib/api/hooks/hr";
+import {
+  useHrDocuments,
+  useDeleteDocument,
+  useHrDocumentStats,
+  useRichDocuments,
+  useDeleteRichDocument,
+  useDocumentFolders,
+  useCreateDocumentFolder,
+} from "@/lib/api/hooks/hr";
+import { BUILT_IN_CATEGORY_TABS, isCustomFolderTab } from "@/lib/hr/document-library-constants";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
@@ -32,15 +41,6 @@ const DOCUMENT_CATEGORIES = [
   "Other",
 ];
 
-const DEFAULT_CATEGORY_TABS = [
-  "All Files",
-  "Contracts",
-  "Policies",
-  "Tax Forms",
-  "Templates",
-  "Payroll",
-];
-
 export default function DocumentsPage() {
   const { data: session } = useSession();
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -49,13 +49,19 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
+
+  const { data: folderRows = [], refetch: refetchFolders } = useDocumentFolders();
+  const createFolderMutation = useCreateDocumentFolder();
+  const customFolderNames = useMemo(
+    () => folderRows.map((f) => f.name),
+    [folderRows],
+  );
 
   const { data: rawDocuments = [], isLoading, refetch } = useHrDocuments(undefined, typeFilter);
   const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
@@ -65,10 +71,12 @@ export default function DocumentsPage() {
   const documents = rawDocuments as Document[];
   const policies = (rawPolicies as Document[]).filter((d) => d.isPublic);
 
-  const categoryTabs = useMemo(
-    () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
-    [customFolders],
-  );
+  const defaultUploadCategory = useMemo(() => {
+    if (isCustomFolderTab(selectedCategory, customFolderNames)) {
+      return selectedCategory;
+    }
+    return "";
+  }, [selectedCategory, customFolderNames]);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
@@ -87,7 +95,7 @@ export default function DocumentsPage() {
           (selectedCategory === "Payroll" && doc.type === "PAYSLIP");
 
         const customFolderMatch =
-          customFolders.includes(selectedCategory) &&
+          isCustomFolderTab(selectedCategory, customFolderNames) &&
           (doc.category?.toLowerCase() === selectedCategory.toLowerCase() ||
             doc.tags?.some((t) => t.toLowerCase() === selectedCategory.toLowerCase()));
 
@@ -96,7 +104,7 @@ export default function DocumentsPage() {
 
       return matchesSearch;
     });
-  }, [documents, searchTerm, selectedCategory, customFolders]);
+  }, [documents, searchTerm, selectedCategory, customFolderNames]);
 
   const totalFiltered = filteredDocuments.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
@@ -129,13 +137,24 @@ export default function DocumentsPage() {
   const handleTypeChange = (value: string) => { setSelectedType(value); setPage(1); };
   const handleCategoryChange = (value: string) => { setSelectedCategory(value); setPage(1); };
 
-  const handleNewFolder = (name: string) => {
-    setCustomFolders((prev) => [...prev, name]);
-    setSelectedCategory(name);
-    setNewFolderName("");
-    setIsNewFolderOpen(false);
-    toast.success(`Folder "${name}" created`);
-  };
+  const handleNewFolder = useCallback(
+    (name: string) => {
+      createFolderMutation.mutate(
+        { name },
+        {
+          onSuccess: (folder) => {
+            void refetchFolders();
+            setSelectedCategory(folder.name);
+            setNewFolderName("");
+            setIsNewFolderOpen(false);
+            toast.success(`Folder "${folder.name}" created`);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [createFolderMutation, refetchFolders],
+  );
 
   if (isLoading) {
     return (
@@ -154,7 +173,7 @@ export default function DocumentsPage() {
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-4">
               <Skeleton className="h-10 flex-1 min-w-[200px] max-w-md rounded-md" />
-              {DEFAULT_CATEGORY_TABS.map((tab) => (
+              {BUILT_IN_CATEGORY_TABS.map((tab) => (
                 <Skeleton key={tab} className="h-8 rounded-full" style={{ width: `${tab.length * 9 + 24}px` }} />
               ))}
             </div>
@@ -203,14 +222,14 @@ export default function DocumentsPage() {
           onTypeChange={handleTypeChange}
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
-          categoryTabs={categoryTabs}
+          customFolderNames={customFolderNames}
         />
       }
     >
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
-          <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="gold" />
+          <StatCard label="Folders" value={folders.length + customFolderNames.length} icon={FolderOpen} color="gold" />
           <StatCard
             label={`Storage (${maxStorageGB}GB)`}
             value={`${storagePercent}%`}
@@ -232,6 +251,7 @@ export default function DocumentsPage() {
           onPageChange={setPage}
           onDelete={handleDelete}
           onOpenUpload={() => setIsUploadOpen(true)}
+          onFolderSelect={handleCategoryChange}
         />
 
         <RichDocumentsSection />
@@ -251,7 +271,8 @@ export default function DocumentsPage() {
           onOpenChange={setIsUploadOpen}
           onSuccess={() => { void refetch(); setIsUploadOpen(false); }}
           documentTypes={DOCUMENT_TYPES}
-          categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
+          categories={[...DOCUMENT_CATEGORIES, ...customFolderNames]}
+          defaultCategory={defaultUploadCategory}
           isAdmin={isAdmin}
         />
         <NewFolderDialog
@@ -259,7 +280,7 @@ export default function DocumentsPage() {
           onOpenChange={setIsNewFolderOpen}
           folderName={newFolderName}
           onFolderNameChange={setNewFolderName}
-          existingTabs={categoryTabs}
+          existingTabs={[...BUILT_IN_CATEGORY_TABS, ...customFolderNames]}
           onConfirm={handleNewFolder}
         />
       </div>
