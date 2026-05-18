@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
 import type { Document } from "@/types/hr";
 
 export async function getDocuments(
@@ -22,7 +22,13 @@ export async function getDocuments(
   if (params?.filterUserId) {
     conditions.push(eq(documents.userId, params.filterUserId));
   } else if (!isAdmin) {
-    conditions.push(eq(documents.userId, userId));
+    conditions.push(
+      or(
+        eq(documents.userId, userId),
+        eq(documents.isPublic, true),
+        eq(documents.uploadedBy, userId),
+      )!,
+    );
   }
 
   if (params?.type) {

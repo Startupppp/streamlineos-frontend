@@ -1802,6 +1802,28 @@ export const onboardingTasksRelations = relations(onboardingTasks, ({ one }) => 
 }));
 
 
+export const documentFolders = pgTable("document_folders", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_document_folders_org").on(table.orgId),
+]);
+
+export const orgDocumentVariables = pgTable("org_document_variables", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  slug: text("slug").notNull(),
+  label: text("label").notNull(),
+  defaultValue: text("default_value").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_org_doc_vars_org").on(table.orgId),
+]);
+
 export const documentTemplates = pgTable("document_templates", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
