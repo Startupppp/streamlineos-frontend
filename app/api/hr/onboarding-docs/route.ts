@@ -1,7 +1,7 @@
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes, onboardingDocuments, documentAuditLogs } from "@/lib/db/schema/hr";
-import { users } from "@/lib/db/schema/auth";
+import { users, organizationMembers } from "@/lib/db/schema/auth";
 import { eq, and, desc } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm";
 import { z } from "zod";
@@ -204,9 +204,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.userId && body.userId !== session.user.id) {
-      const member = await db.query.users.findFirst({
-        where: and(eq(users.id, targetUserId), eq(users.orgId, session.orgId)),
-        columns: { id: true },
+      const member = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, targetUserId),
+          eq(organizationMembers.orgId, session.orgId),
+        ),
+        columns: { userId: true },
       });
       if (!member) return err("Employee not found.", 404);
     }

@@ -1,13 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
+import type { z } from "zod";
 import { generatePayslipPdf } from "@/lib/payslip-pdf-core";
 import {
   manualPayslipBodyToPdfData,
   manualPayslipPdfBodySchema,
-  type ManualPayslipPdfBody,
 } from "@/lib/hr/manual-payslip-pdf";
 
-type EmployeeInput = Omit<ManualPayslipPdfBody, "grossSalary" | "deductions" | "netSalary"> & {
+type ManualPayslipPdfInput = z.input<typeof manualPayslipPdfBodySchema>;
+type EmployeeInput = Omit<ManualPayslipPdfInput, "grossSalary" | "deductions" | "netSalary"> & {
   grossSalary?: number;
   deductions?: number;
   netSalary?: number;
@@ -250,7 +251,9 @@ async function main() {
   await fs.mkdir(dir, { recursive: true });
 
   const onlyIds = process.argv.slice(2).filter(Boolean);
-  const filtered = onlyIds.length > 0 ? employees.filter((e) => onlyIds.includes(e.employeeId)) : employees;
+  const filtered = onlyIds.length > 0
+    ? employees.filter((e) => e.employeeId !== undefined && onlyIds.includes(e.employeeId))
+    : employees;
 
   for (const emp of filtered) {
     const gross = emp.basicSalary + emp.hra + (emp.allowances ?? 0) + (emp.overtimeAmount ?? 0);

@@ -108,6 +108,8 @@ export interface UpdateProfileInput {
     branch?: string;
     ifsc?: string;
     accountHolder?: string;
+    swiftCode?: string;
+    iban?: string;
   };
   joiningDate?: string;
   reportingTo?: string | null;

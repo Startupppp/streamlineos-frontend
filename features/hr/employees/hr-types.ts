@@ -52,13 +52,15 @@ export function canDeleteEmployee(
   return false;
 }
 
-export function getDisplayName(employee: Employee): string {
+type EmployeeNameFields = Pick<Employee, "firstName" | "lastName" | "email">;
+
+export function getDisplayName(employee: EmployeeNameFields): string {
   if (employee.firstName)
     return `${employee.firstName} ${employee.lastName ?? ""}`.trim();
   return employee.email;
 }
 
-export function getInitials(employee: Employee): string {
+export function getInitials(employee: EmployeeNameFields): string {
   if (employee.firstName && employee.lastName) {
     return `${employee.firstName[0]}${employee.lastName[0]}`.toUpperCase();
   }

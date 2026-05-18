@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { z } from "zod";
-import { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { getVaivammEstablishedDate } from "@/lib/constants/company";
 import { bankDetailsSchema } from "@/lib/validations/bank-details";
 

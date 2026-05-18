@@ -458,7 +458,8 @@ function InitiateSheet({
 
   const eligibleEmployees = useMemo(() => {
     if (!employees) return [];
-    return employees.filter((e) => e.isActive !== false && !activeOnboardingIds.has(e.id));
+    const list = Array.isArray(employees) ? employees : employees.data;
+    return list.filter((e) => e.isActive !== false && !activeOnboardingIds.has(e.id));
   }, [employees, activeOnboardingIds]);
 
   const handleSubmit = useCallback(() => {

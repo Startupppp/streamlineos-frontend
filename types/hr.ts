@@ -61,6 +61,10 @@ export interface PaginatedEmployees {
   pagination: Pagination;
 }
 
+export interface TerminatedEmployee extends Employee {
+  terminatedAt: string | null;
+}
+
 export interface BreakEntry {
   start: string;
   end?: string;
@@ -456,6 +460,8 @@ export interface UpdateProfileInput {
     branch?: string;
     ifsc?: string;
     accountHolder?: string;
+    swiftCode?: string;
+    iban?: string;
   };
   joiningDate?: string;
   reportingTo?: string | null;
