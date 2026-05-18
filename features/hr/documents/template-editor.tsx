@@ -28,8 +28,14 @@ import {
   useDocumentTemplateVersions,
   type DocumentTemplate,
 } from "@/lib/api/hooks/hr/document-templates";
-import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
+import {
+  extractVariables,
+  substituteVariables,
+  mergeVariableDefaults,
+} from "@/lib/utils/document-variables";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { OrgVariablesPanel } from "@/features/hr/documents/org-variables-panel";
+import { useOrgDocumentVariables } from "@/lib/api/hooks/hr/org-document-variables";
 
 
 const TEMPLATE_TYPES = [
@@ -134,13 +140,19 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   const updateMutation = useUpdateDocumentTemplate();
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const { data: versionHistory } = useDocumentTemplateVersions(template?.id ?? 0);
+  const { data: orgVariables = [] } = useOrgDocumentVariables();
 
   const detectedVariables = useMemo(() => extractVariables(htmlContent), [htmlContent]);
 
+  const previewVars = useMemo(
+    () => mergeVariableDefaults(SAMPLE_VARS, orgVariables),
+    [orgVariables],
+  );
+
   const previewHtml = useMemo(() => {
-    const { result } = substituteVariables(htmlContent, SAMPLE_VARS);
+    const { result } = substituteVariables(htmlContent, previewVars);
     return result;
-  }, [htmlContent]);
+  }, [htmlContent, previewVars]);
 
   const prevTypeRef = useRef(type);
   useEffect(() => {
@@ -261,23 +273,13 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-3xl mx-auto"
         }`}
       >
-        <div className="space-y-5">
+        <div className="space-y-6 pb-2">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Template Details</CardTitle>
-              <CardDescription>Basic metadata for this template.</CardDescription>
+              <CardDescription>Choose a type first, then name your template.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="tmpl-title">Title</Label>
-                <Input
-                  id="tmpl-title"
-                  placeholder="e.g. Software Engineer Offer Letter"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  autoFocus
-                />
-              </div>
+            <CardContent className="space-y-4 pb-6">
               <div className="space-y-1.5">
                 <Label htmlFor="tmpl-type">Type</Label>
                 <Select value={type} onValueChange={setType}>
@@ -293,6 +295,16 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tmpl-title">Title</Label>
+                <Input
+                  id="tmpl-title"
+                  placeholder="e.g. Software Engineer Offer Letter"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  autoFocus={isEdit}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -303,7 +315,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                 Click a token to insert it at your cursor in the editor below.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
               <div className="flex flex-wrap gap-1.5">
                 {COMMON_TOKENS.map((token) => (
                   <button
@@ -342,6 +354,8 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             </CardContent>
           </Card>
 
+          <OrgVariablesPanel onInsertToken={insertToken} />
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">HTML Content</CardTitle>
@@ -350,7 +364,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                 as placeholders.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
               <Textarea
                 ref={textareaRef}
                 value={htmlContent}
@@ -371,7 +385,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                 </CardTitle>
                 <CardDescription>Previous saved versions of this template.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-6">
                 <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                   {versionHistory.map((v) => (
                     <div
@@ -405,7 +419,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                   Rendered with sample data. Tokens without a sample value remain as-is.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-6">
                 <div
                   className="max-h-[600px] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-5 text-sm prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: previewHtml }}
