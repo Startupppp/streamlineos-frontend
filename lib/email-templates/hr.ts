@@ -540,6 +540,7 @@ export function getPayslipEmailTemplate(params: {
   netSalary: string;
   orgName: string;
   passwordProtected?: boolean;
+  payslipUrl?: string;
 }): { subject: string; html: string } {
   const sName = escapeHtml(params.employeeName);
   const sMonth = escapeHtml(params.month);
@@ -567,6 +568,11 @@ export function getPayslipEmailTemplate(params: {
       <p style="margin:6px 0 0 0;color:#166534;font-size:26px;font-weight:700;">₹${sNet}</p>
     </div>
     ${passwordHint}
+    ${
+      params.payslipUrl
+        ? `<p class="email-text"><a href="${escapeHtml(params.payslipUrl)}" class="email-button">View Payslip Online</a></p>`
+        : ""
+    }
     <p class="email-text">
       The PDF attachment contains your full salary breakdown including earnings, deductions, and bank
       transfer details. If you have any questions, please contact the HR department.

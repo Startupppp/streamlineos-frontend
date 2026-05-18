@@ -20,13 +20,20 @@ export async function PATCH(
     });
 
     if (!existing) return err("Payroll not found.", 404);
+    if (existing.status === "PAID") {
+      return err("Payroll is already marked as paid.", 400);
+    }
     if (existing.status !== "APPROVED") {
       return err("Payroll must be approved before marking as paid.", 400);
     }
 
     await db
       .update(payrolls)
-      .set({ status: "PAID" })
+      .set({
+        status: "PAID",
+        paidBy: session.user.id,
+        paidAt: new Date(),
+      })
       .where(eq(payrolls.id, payrollId));
 
     try {

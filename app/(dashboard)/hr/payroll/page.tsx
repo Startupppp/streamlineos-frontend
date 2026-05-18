@@ -39,6 +39,7 @@ import { Users, Loader2, DollarSign, CreditCard, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Employee, PayrollWithUser } from "@/types/hr";
+import { isAxiosError } from "axios";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
 import { PayrollRecordPreviewSheet } from "@/features/hr/payroll/payroll-record-preview-sheet";
@@ -65,10 +66,38 @@ export default function PayrollPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedMonth = searchParams.get("month") || format(new Date(), "yyyy-MM");
+  const selectedYear = selectedMonth.slice(0, 4);
+  const selectedMonthPart = selectedMonth.slice(5, 7);
+  const employeeFilter = searchParams.get("employee") || "all";
   const setSelectedMonth = useCallback(
     (month: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set("month", month);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+  const setSelectedYear = useCallback(
+    (year: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("month", `${year}-${selectedMonthPart}`);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, selectedMonthPart]
+  );
+  const setSelectedMonthPart = useCallback(
+    (monthPart: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("month", `${selectedYear}-${monthPart}`);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, selectedYear]
+  );
+  const setEmployeeFilter = useCallback(
+    (employeeName: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (employeeName === "all") params.delete("employee");
+      else params.set("employee", employeeName);
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router]
@@ -186,7 +215,13 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll generated for all employees");
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) => {
+          if (isAxiosError(error) && error.response?.status === 409) {
+            toast.error("Payroll already exists for one or more employees in this month.");
+            return;
+          }
+          toast.error(getErrorMessage(error));
+        },
       }
     );
   }, [generatePayrollMutation, selectedMonth, qc]);
@@ -232,7 +267,13 @@ export default function PayrollPage() {
           toast.success("Payslip generated successfully");
           resetSheet();
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) => {
+          if (isAxiosError(error) && error.response?.status === 409) {
+            toast.error("Payroll already exists for this employee and month.");
+            return;
+          }
+          toast.error(getErrorMessage(error));
+        },
       }
     );
   }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, leaves, qc]);
@@ -319,10 +360,19 @@ export default function PayrollPage() {
     [deletePayrollMutation, selectedMonth, qc]
   );
 
+  const filteredPayrolls = useMemo(() => {
+    const rows = allPayrolls ?? [];
+    if (employeeFilter === "all") return rows;
+    return rows.filter((p) => {
+      const fullName = `${p.user?.firstName ?? ""} ${p.user?.lastName ?? ""}`.trim();
+      return fullName === employeeFilter;
+    });
+  }, [allPayrolls, employeeFilter]);
+
   const totalGross =
-    allPayrolls?.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
+    filteredPayrolls.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
   const totalNet =
-    allPayrolls?.reduce((sum, p) => sum + parseFloat(p.netSalary || "0"), 0) || 0;
+    filteredPayrolls.reduce((sum, p) => sum + parseFloat(p.netSalary || "0"), 0) || 0;
 
   if (isLoading) {
     return (
@@ -450,7 +500,7 @@ export default function PayrollPage() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
             label="Total Employees"
-            value={allPayrolls?.length || 0}
+            value={filteredPayrolls.length}
             icon={Users}
             color="blue"
           />
@@ -478,6 +528,12 @@ export default function PayrollPage() {
           <PayrollTable
             payrolls={allPayrolls ?? []}
             selectedMonth={selectedMonth}
+            year={selectedYear}
+            month={selectedMonthPart}
+            employeeFilter={employeeFilter}
+            onYearChange={setSelectedYear}
+            onMonthChange={setSelectedMonthPart}
+            onEmployeeFilterChange={setEmployeeFilter}
             onPreview={setPreviewPayroll}
             onApprove={handleApprovePayroll}
             onMarkPaid={handleMarkPaid}
@@ -488,6 +544,13 @@ export default function PayrollPage() {
             onDownload={handleDownloadPayslip}
             onResendEmail={handleResendEmail}
             isResendPending={resendPayslipEmailMutation.isPending}
+          />
+        )}
+        {(allPayrolls?.length ?? 0) > 0 && filteredPayrolls.length === 0 && (
+          <EmptyState
+            illustration={<EmptyExpensesIllustration className="h-32 w-32" />}
+            title="No records for selected filters"
+            description="Try a different employee or month/year combination."
           />
         )}
 

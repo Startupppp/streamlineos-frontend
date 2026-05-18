@@ -24,6 +24,7 @@ import {
   resolvePayrollMonthlyCtc,
 } from "@/lib/hr/salary-effective-dates";
 import { logger } from "@/lib/logger";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -237,7 +238,7 @@ export async function POST(req: NextRequest) {
         const fullPresent = fullPresentMap.get(uId) ?? 0;
         const halfDaysCount = halfDaysAttendanceMap.get(uId) ?? 0;
         const accountedDays = fullPresent + halfDaysCount;
-        const lopDays = Math.max(0, calDays - accountedDays - halfDaysCount);
+        const lopDays = Math.max(0, calDays - accountedDays);
 
         const lopAmount = roundInr(dailyRate * lopDays);
         const halfDayAmount = roundInr((dailyRate / 2) * halfDaysCount);
@@ -296,7 +297,15 @@ export async function POST(req: NextRequest) {
       });
 
     if (newPayrolls.length > 0) {
-      await db.insert(payrolls).values(newPayrolls);
+      try {
+        await db.insert(payrolls).values(newPayrolls);
+      } catch (error) {
+        const message = getErrorMessage(error).toLowerCase();
+        if (message.includes("uniq_payroll_org_user_month") || message.includes("duplicate key")) {
+          return err("One or more payroll records already exist for this month.", 409);
+        }
+        throw error;
+      }
     }
 
     return ok({ generated: newPayrolls.length });

@@ -40,9 +40,22 @@ function fmtInr(value: string | number | null | undefined): string {
   return n.toLocaleString("en-IN");
 }
 
+function fmtDateTime(value: Date | string | null | undefined): string {
+  if (!value) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return format(d, "dd MMM yyyy, hh:mm a");
+}
+
 interface PayrollTableProps {
   payrolls: PayrollWithUser[];
   selectedMonth: string;
+  year: string;
+  month: string;
+  employeeFilter: string;
+  onYearChange: (value: string) => void;
+  onMonthChange: (value: string) => void;
+  onEmployeeFilterChange: (value: string) => void;
   onPreview: (payroll: PayrollWithUser) => void;
   onApprove: (payrollId: number) => void;
   onMarkPaid: (payrollId: number) => void;
@@ -58,6 +71,12 @@ interface PayrollTableProps {
 export function PayrollTable({
   payrolls,
   selectedMonth,
+  year,
+  month,
+  employeeFilter,
+  onYearChange,
+  onMonthChange,
+  onEmployeeFilterChange,
   onPreview,
   onApprove,
   onMarkPaid,
@@ -70,20 +89,82 @@ export function PayrollTable({
   isResendPending,
 }: PayrollTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<PayrollWithUser | null>(null);
+  const selectedMonthKey = `${year}-${month}`;
+  const payrollRows = payrolls.filter((p) => {
+    if (p.month !== selectedMonthKey) return false;
+    if (employeeFilter === "all") return true;
+    const fullName = `${p.user?.firstName ?? ""} ${p.user?.lastName ?? ""}`.trim();
+    return fullName === employeeFilter;
+  });
+  const selectedMonthDate = new Date(`${selectedMonthKey}-01`);
+  const selectedMonthLabel = Number.isNaN(selectedMonthDate.getTime())
+    ? selectedMonth
+    : format(selectedMonthDate, "MMMM yyyy");
+  const createdYears = Array.from(
+    new Set(
+      payrolls
+        .map((p) => p.month?.slice(0, 4))
+        .filter((v): v is string => Boolean(v))
+    )
+  ).sort((a, b) => b.localeCompare(a));
+  const yearOptions = Array.from(new Set([year, ...createdYears]));
+  const employeeOptions = Array.from(
+    new Set(
+      payrolls
+        .map((p) => `${p.user?.firstName ?? ""} ${p.user?.lastName ?? ""}`.trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
 
   return (
     <>
       <Card>
         <CardHeader>
           <CardTitle>
-            Payroll for {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
+            Payroll for {selectedMonthLabel}
           </CardTitle>
           <CardDescription>
             Manage payroll status and generate payslips
           </CardDescription>
+          <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-3">
+            <select
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              value={year}
+              onChange={(e) => onYearChange(e.target.value)}
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <select
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              value={month}
+              onChange={(e) => onMonthChange(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <select
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              value={employeeFilter}
+              onChange={(e) => onEmployeeFilterChange(e.target.value)}
+            >
+              <option value="all">All employees</option>
+              {employeeOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
         </CardHeader>
         <CardContent aria-live="polite" className="px-0 pb-0 pt-0">
-          {payrolls.length > 0 ? (
+          {payrollRows.length > 0 ? (
             <ScrollArea className="w-full max-h-[60vh]" type="auto">
               <div className="min-w-[720px]">
                 <Table className="[&_th]:py-3 [&_td]:py-3">
@@ -99,7 +180,7 @@ export function PayrollTable({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payrolls.map((payroll) => (
+                    {payrollRows.map((payroll) => (
                       <TableRow key={payroll.id}>
                         <TableCell className="pl-4">
                           <div>
@@ -108,6 +189,12 @@ export function PayrollTable({
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {payroll.user?.designation}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Created: {fmtDateTime(payroll.createdAt)}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Approved: {fmtDateTime(payroll.approvedAt)} | Paid: {fmtDateTime(payroll.paidAt)}
                             </p>
                           </div>
                         </TableCell>
@@ -232,7 +319,7 @@ export function PayrollTable({
               <span className="font-medium text-foreground">
                 {deleteTarget?.user?.firstName} {deleteTarget?.user?.lastName}
               </span>{" "}
-              ({format(new Date(selectedMonth + "-01"), "MMMM yyyy")}). This cannot be undone.
+              ({selectedMonthLabel}). This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

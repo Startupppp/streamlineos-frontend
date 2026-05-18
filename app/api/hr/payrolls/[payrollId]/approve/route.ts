@@ -20,12 +20,15 @@ export async function PATCH(
     });
 
     if (!existing) return err("Payroll not found.", 404);
+    if (existing.status === "PAID") return err("Paid payroll cannot be re-approved.", 400);
+    if (existing.status === "APPROVED") return err("Payroll is already approved.", 400);
 
     await db
       .update(payrolls)
       .set({
         status: "APPROVED",
         approvedBy: session.user.id,
+        approvedAt: new Date(),
       })
       .where(eq(payrolls.id, payrollId));
 

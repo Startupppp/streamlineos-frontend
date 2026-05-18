@@ -14,6 +14,13 @@ import type { Employee } from "@/types/hr";
 import { PayslipDetailSheet, type PayslipPreview } from "./payslip-detail-sheet";
 import type { OvertimePreview } from "@/lib/api/hooks/hr/payroll-extended";
 
+function sanitizeNonNegative(value: string): string {
+  if (value.trim() === "") return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return Math.max(0, n).toString();
+}
+
 interface GeneratePayrollSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -96,7 +103,7 @@ export function GeneratePayrollSheet({
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Employee</label>
         <Select value={selectedEmployee} onValueChange={onSelectedEmployeeChange}>
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select employee" />
           </SelectTrigger>
           <SelectContent>
@@ -125,7 +132,7 @@ export function GeneratePayrollSheet({
                   min="0"
                   max="30"
                   value={lopDays}
-                  onChange={(e) => onLopDaysChange(e.target.value)}
+                  onChange={(e) => onLopDaysChange(sanitizeNonNegative(e.target.value))}
                   placeholder="0"
                 />
               </div>
@@ -136,7 +143,7 @@ export function GeneratePayrollSheet({
                   min="0"
                   max="30"
                   value={halfDays}
-                  onChange={(e) => onHalfDaysChange(e.target.value)}
+                  onChange={(e) => onHalfDaysChange(sanitizeNonNegative(e.target.value))}
                   placeholder="0"
                 />
               </div>
@@ -148,7 +155,7 @@ export function GeneratePayrollSheet({
                 min="0"
                 max="31"
                 value={leaves}
-                onChange={(e) => onLeavesChange(e.target.value)}
+                onChange={(e) => onLeavesChange(sanitizeNonNegative(e.target.value))}
                 placeholder="Auto from approved leaves"
               />
               <p className="text-[11px] text-muted-foreground">
@@ -170,7 +177,7 @@ export function GeneratePayrollSheet({
                   type="number"
                   min="0"
                   value={bonus}
-                  onChange={(e) => onBonusChange(e.target.value)}
+                  onChange={(e) => onBonusChange(sanitizeNonNegative(e.target.value))}
                   placeholder="0"
                 />
               </div>
@@ -180,7 +187,7 @@ export function GeneratePayrollSheet({
                   type="number"
                   min="0"
                   value={otherDeductions}
-                  onChange={(e) => onOtherDeductionsChange(e.target.value)}
+                  onChange={(e) => onOtherDeductionsChange(sanitizeNonNegative(e.target.value))}
                   placeholder="0"
                 />
               </div>

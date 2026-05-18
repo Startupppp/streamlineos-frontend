@@ -23,6 +23,7 @@ import {
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const generateSinglePayrollSchema = z.object({
   userId: z.string(),
@@ -180,39 +181,48 @@ export async function POST(req: NextRequest) {
     );
     const netSalary = roundInr(grossSalary - totalDeductions);
 
-    const [payroll] = await db
-      .insert(payrolls)
-      .values({
-        orgId: session.orgId,
-        userId: body.userId,
-        month: body.month,
-        basicSalary: basicSalary.toString(),
-        hra: hra.toString(),
-        specialAllowance: specialAllowance.toString(),
-        allowances: (body.bonus || 0).toString(),
-        lopDays: (body.lopDays || 0).toString(),
-        lopAmount: lopAmount.toString(),
-        halfDays: (body.halfDays || 0).toString(),
-        halfDayAmount: halfDayLopAmount.toString(),
-        ptAmount: ptAmount.toString(),
-        pfEmployee: "0",
-        pfEmployer: "0",
-        esiEmployee: "0",
-        esiEmployer: "0",
-        advanceRecoveryAmount: advanceRecoveryAmount.toString(),
-        otherDeductions: (body.otherDeductions || 0).toString(),
-        structureDeductions: structureDeductions.toString(),
-        deductions: totalDeductions.toString(),
-        grossSalary: grossSalary.toString(),
-        netSalary: netSalary.toString(),
-        status: "DRAFT",
-        generatedBy: session.user.id,
-        overtimeType: overtimeDays > 0 ? "days" : undefined,
-        overtimeDays: overtimeDays.toString(),
-        overtimeAmount: overtimeAmount.toString(),
-        leaveDaysDisplay: body.leaveDays != null ? body.leaveDays.toString() : undefined,
-      })
-      .returning();
+    let payroll;
+    try {
+      [payroll] = await db
+        .insert(payrolls)
+        .values({
+          orgId: session.orgId,
+          userId: body.userId,
+          month: body.month,
+          basicSalary: basicSalary.toString(),
+          hra: hra.toString(),
+          specialAllowance: specialAllowance.toString(),
+          allowances: (body.bonus || 0).toString(),
+          lopDays: (body.lopDays || 0).toString(),
+          lopAmount: lopAmount.toString(),
+          halfDays: (body.halfDays || 0).toString(),
+          halfDayAmount: halfDayLopAmount.toString(),
+          ptAmount: ptAmount.toString(),
+          pfEmployee: "0",
+          pfEmployer: "0",
+          esiEmployee: "0",
+          esiEmployer: "0",
+          advanceRecoveryAmount: advanceRecoveryAmount.toString(),
+          otherDeductions: (body.otherDeductions || 0).toString(),
+          structureDeductions: structureDeductions.toString(),
+          deductions: totalDeductions.toString(),
+          grossSalary: grossSalary.toString(),
+          netSalary: netSalary.toString(),
+          status: "DRAFT",
+          generatedBy: session.user.id,
+          overtimeType: overtimeDays > 0 ? "days" : undefined,
+          overtimeDays: overtimeDays.toString(),
+          overtimeAmount: overtimeAmount.toString(),
+          leaveDaysDisplay: body.leaveDays != null ? body.leaveDays.toString() : undefined,
+        })
+        .returning();
+    } catch (error) {
+      const message = getErrorMessage(error).toLowerCase();
+      if (message.includes("uniq_payroll_org_user_month") || message.includes("duplicate key")) {
+        return err("Payroll already exists for this employee and month.", 409);
+      }
+      throw error;
+    }
 
     void createAuditLog({
       action: "hr.payroll_generated",

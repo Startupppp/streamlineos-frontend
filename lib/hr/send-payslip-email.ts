@@ -8,6 +8,7 @@ import { derivePayslipPassword } from "@/lib/hr/payslip-password";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
 import { countApprovedLeaveDaysInMonth } from "@/server/queries/hr/payslip-leave-days";
 import { logger } from "@/lib/logger";
+import { appUrl } from "@/lib/app-url";
 
 export type PayslipEmailError =
   | "no_email"
@@ -95,6 +96,7 @@ export async function sendPayslipEmailForPayroll(
       netSalary: netSalary.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
       orgName: org?.name ?? "Company",
       passwordProtected: true,
+      payslipUrl: `${appUrl}/api/hr/payrolls/${payroll.id}/download`,
     });
 
     await sendEmail({

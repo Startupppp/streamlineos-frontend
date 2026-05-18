@@ -14,6 +14,9 @@ export interface Payroll {
   status: PayrollStatus | null;
   generatedBy: string | null;
   approvedBy: string | null;
+  paidBy?: string | null;
+  approvedAt?: Date | string | null;
+  paidAt?: Date | string | null;
   overtimeType: string | null;
   overtimeDays: string | null;
   overtimeHours: string | null;
@@ -77,6 +80,9 @@ export interface EmployeePayslip {
 }
 
 export interface PayrollWithUser extends Payroll {
+  generatedByUser?: { id: string; name: string | null } | null;
+  approvedByUser?: { id: string; name: string | null } | null;
+  paidByUser?: { id: string; name: string | null } | null;
   user?: {
     firstName: string | null;
     lastName: string | null;
