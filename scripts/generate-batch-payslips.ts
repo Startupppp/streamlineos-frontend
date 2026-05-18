@@ -136,8 +136,8 @@ const employees: EmployeeInput[] = [
     hra: 5000,
     allowances: 5000,
     professionalTax: 200,
-    lopDays: 2,
-    lopDeductionAmount: 1333,
+    lopDays: 1,
+    lopDeductionAmount: 667,
     leaveDaysInMonth: 3,
     showPaidBadge: true,
   },
@@ -157,8 +157,7 @@ const employees: EmployeeInput[] = [
     hra: 5500,
     allowances: 5500,
     professionalTax: 200,
-    lopDays: 1,
-    lopDeductionAmount: 733,
+    lopDays: 0,
     leaveDaysInMonth: 2,
     showPaidBadge: true,
   },
@@ -250,7 +249,10 @@ async function main() {
   const dir = path.join(process.cwd(), "generated", "payslips");
   await fs.mkdir(dir, { recursive: true });
 
-  for (const emp of employees) {
+  const onlyIds = process.argv.slice(2).filter(Boolean);
+  const filtered = onlyIds.length > 0 ? employees.filter((e) => onlyIds.includes(e.employeeId)) : employees;
+
+  for (const emp of filtered) {
     const gross = emp.basicSalary + emp.hra + (emp.allowances ?? 0) + (emp.overtimeAmount ?? 0);
     const totalDed =
       (emp.professionalTax ?? 200) +
