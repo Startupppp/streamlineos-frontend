@@ -95,6 +95,7 @@ export interface AttendanceStatusResult {
   todayLog: AttendanceLog | null | undefined;
   dailyStats: DailyStats;
   cooldownRemaining: number;
+  punchBlockedReason?: string | null;
 }
 
 export interface LeaveType {
@@ -155,6 +156,9 @@ export interface Payroll {
   status: PayrollStatus | null;
   generatedBy: string | null;
   approvedBy: string | null;
+  paidBy?: string | null;
+  approvedAt?: Date | string | null;
+  paidAt?: Date | string | null;
   overtimeType: string | null;
   overtimeDays: string | null;
   overtimeHours: string | null;
@@ -818,6 +822,9 @@ export interface GetEmployeePayslipsInput {
 }
 
 export interface PayrollWithUser extends Payroll {
+  generatedByUser?: { id: string; name: string | null } | null;
+  approvedByUser?: { id: string; name: string | null } | null;
+  paidByUser?: { id: string; name: string | null } | null;
   user?: {
     firstName: string | null;
     lastName: string | null;

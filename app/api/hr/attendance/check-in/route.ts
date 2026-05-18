@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { attendance, holidays } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
+import { getPunchDayBlockReason } from "@/lib/hr/punch-day-guard";
 import { notifyHrEmployeeCheckIn } from "@/lib/hr/attendance-hr-notifications";
 import {
   getLateCutoffMinutesIst,
@@ -31,6 +32,11 @@ export async function POST(req: NextRequest) {
     });
 
     try {
+      const punchBlock = await getPunchDayBlockReason(session.orgId, today);
+      if (punchBlock) {
+        return err(punchBlock, 400);
+      }
+
       let attendanceId: number | undefined;
       let isFreshInsert = false;
       const checkInAt = new Date();

@@ -27,6 +27,7 @@ import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "dri
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
 import { resolveAttendancePeriod, summarizeAttendanceLogs } from "@/lib/hr/attendance-summary";
+import { getPunchDayBlockReason } from "@/lib/hr/punch-day-guard";
 import type { DocumentExportFilters } from "@/lib/hr/documents-export-filters";
 import type {
   Department,
@@ -410,6 +411,9 @@ export async function getAttendanceStatus(
     }
   }
 
+  const punchBlockedReason =
+    status === "OFFLINE" ? await getPunchDayBlockReason(orgId, today) : null;
+
   return {
     status,
     logs: logs as unknown as AttendanceLog[],
@@ -420,6 +424,7 @@ export async function getAttendanceStatus(
       isOvertime: isDailyOvertime,
     },
     cooldownRemaining,
+    punchBlockedReason,
   };
 }
 
@@ -1124,6 +1129,9 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
       status: payrolls.status,
       generatedBy: payrolls.generatedBy,
       approvedBy: payrolls.approvedBy,
+      paidBy: payrolls.paidBy,
+      approvedAt: payrolls.approvedAt,
+      paidAt: payrolls.paidAt,
       overtimeType: payrolls.overtimeType,
       overtimeDays: payrolls.overtimeDays,
       overtimeHours: payrolls.overtimeHours,
@@ -1163,6 +1171,9 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
     status: r.status,
     generatedBy: r.generatedBy,
     approvedBy: r.approvedBy,
+    paidBy: r.paidBy,
+    approvedAt: r.approvedAt,
+    paidAt: r.paidAt,
     overtimeType: r.overtimeType,
     overtimeDays: r.overtimeDays,
     overtimeHours: r.overtimeHours,

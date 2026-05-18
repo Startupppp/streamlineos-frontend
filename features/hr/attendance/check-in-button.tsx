@@ -122,10 +122,10 @@ export const TimerCard = memo(function TimerCard() {
     const localDate = format(new Date(), "yyyy-MM-dd");
     if (isActive) {
       checkOutMutation.mutate({ localDate });
-    } else if (!isInCooldown) {
+    } else if (!isInCooldown && !statusData?.punchBlockedReason) {
       checkInMutation.mutate({ location: undefined, localDate });
     }
-  }, [isActive, isInCooldown, checkInMutation, checkOutMutation]);
+  }, [isActive, isInCooldown, checkInMutation, checkOutMutation, statusData?.punchBlockedReason]);
 
   const handleBreakToggle = useCallback(() => {
     const goingOnBreak = !isOnBreak;
@@ -138,6 +138,7 @@ export const TimerCard = memo(function TimerCard() {
 
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;
+  const punchBlockedReason = statusData?.punchBlockedReason;
 
   if (isLoading) {
     return (
@@ -205,10 +206,11 @@ export const TimerCard = memo(function TimerCard() {
         </div>
 
         <p className="text-sm text-muted-foreground text-center italic">
-          {isOnBreak && "On break"}
-          {isCheckedIn && checkInTime && `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
-          {!isActive && !isInCooldown && "Not clocked in"}
-          {!isActive && isInCooldown && `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
+          {punchBlockedReason && !isActive && punchBlockedReason}
+          {!punchBlockedReason && isOnBreak && "On break"}
+          {!punchBlockedReason && isCheckedIn && checkInTime && `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
+          {!punchBlockedReason && !isActive && !isInCooldown && "Not clocked in"}
+          {!punchBlockedReason && !isActive && isInCooldown && `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
         </p>
 
         {isOnBreak && (
@@ -222,7 +224,7 @@ export const TimerCard = memo(function TimerCard() {
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={handleCheckIn}
-            disabled={isActive || isPending || isInCooldown}
+            disabled={isActive || isPending || isInCooldown || !!punchBlockedReason}
             variant={isActive ? "secondary" : "default"}
             className={`font-semibold ${
               !isActive && !isInCooldown

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -149,7 +149,12 @@ export function HolidayWorkRequestCard({ isAdmin }: HolidayWorkRequestCardProps)
       >
         <div className="space-y-1.5">
           <Label>Date Worked</Label>
-          <DatePicker value={requestDate} onChange={setRequestDate} placeholder="Select date" />
+          <DatePicker
+            value={requestDate}
+            onChange={setRequestDate}
+            fromDate={startOfDay(new Date())}
+            placeholder="Select date"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Compensation Preference</Label>
