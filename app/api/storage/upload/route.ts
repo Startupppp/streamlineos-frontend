@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
 import { logger } from "../../../../lib/logger";
+import {
+  RECEIPT_ALLOWED_MIME_TYPES,
+  RECEIPT_MAX_FILE_SIZE_BYTES,
+} from "@/lib/files/expense-file-validation";
 
 const FILE_SIGNATURES: Record<string, number[][]> = {
   "image/jpeg": [[0xff, 0xd8, 0xff]],
@@ -61,15 +65,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > RECEIPT_MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
         { error: "File too large (max 10MB)" },
         { status: 400 }
       );
     }
 
-    const allowedTypes = [
+    const defaultAllowedTypes = [
       "image/jpeg",
       "image/png",
       "image/gif",
@@ -80,6 +83,7 @@ export async function POST(req: NextRequest) {
       "application/vnd.ms-excel",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ];
+    const allowedTypes = folder === "receipts" ? [...RECEIPT_ALLOWED_MIME_TYPES] : defaultAllowedTypes;
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
