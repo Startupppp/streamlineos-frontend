@@ -17,6 +17,8 @@ const createSchema = z.object({
   fileName: z.string().min(1, "fileName is required"),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
+  /** HR/CEO may upload on behalf of an employee. */
+  userId: z.string().optional(),
 });
 
 
@@ -193,13 +195,29 @@ export async function POST(req: NextRequest) {
     });
     if (!docType) return err("Document type not found or inactive.", 404);
 
+    const isHrOrCeo = session.user.role === "HR" || session.user.role === "CEO";
+    const targetUserId =
+      body.userId && isHrOrCeo ? body.userId : session.user.id;
+
+    if (body.userId && body.userId !== session.user.id && !isHrOrCeo) {
+      return err("Not allowed to upload documents for another user.", 403);
+    }
+
+    if (body.userId && body.userId !== session.user.id) {
+      const member = await db.query.users.findFirst({
+        where: and(eq(users.id, targetUserId), eq(users.orgId, session.orgId)),
+        columns: { id: true },
+      });
+      if (!member) return err("Employee not found.", 404);
+    }
+
     const existing = await db
       .select({ id: onboardingDocuments.id, version: onboardingDocuments.version })
       .from(onboardingDocuments)
       .where(
         and(
           eq(onboardingDocuments.orgId, session.orgId),
-          eq(onboardingDocuments.userId, session.user.id),
+          eq(onboardingDocuments.userId, targetUserId),
           eq(onboardingDocuments.documentTypeId, body.documentTypeId)
         )
       )
@@ -214,7 +232,7 @@ export async function POST(req: NextRequest) {
       .insert(onboardingDocuments)
       .values({
         orgId: session.orgId,
-        userId: session.user.id,
+        userId: targetUserId,
         documentTypeId: body.documentTypeId,
         fileUrl: body.fileUrl,
         fileName: body.fileName,
@@ -233,7 +251,7 @@ export async function POST(req: NextRequest) {
       metadata: { fileName: body.fileName, version: nextVersion },
     });
 
-    await recalcOnboardingStatus(session.orgId, session.user.id);
+    await recalcOnboardingStatus(session.orgId, targetUserId);
 
     return ok(record, 201);
   });
