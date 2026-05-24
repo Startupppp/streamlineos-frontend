@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
@@ -445,7 +446,8 @@ export function LeaveApprovalsContent({
             </Tabs>
             <div className="pt-4">
               <h4 className="text-sm font-medium text-foreground mb-2">View Details</h4>
-              <div className="rounded-md border border-border overflow-hidden">
+              <ScrollArea className="w-full max-w-full rounded-md border border-border" type="auto">
+                <div className="min-w-[640px]">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border bg-muted/40">
@@ -470,7 +472,8 @@ export function LeaveApprovalsContent({
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </ScrollArea>
             </div>
           </CardContent>
         </Card>

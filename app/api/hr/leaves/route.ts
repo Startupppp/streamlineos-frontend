@@ -11,6 +11,8 @@ import { notifyByRoles } from "@/server/actions/create-notification";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { sendLeaveRequestEmail } from "@/lib/email";
+import { calculateLeaveDaysExcludingSundays } from "@/lib/validations/leave-request";
+import { resolveLeaveApprovers } from "@/lib/hr/leave-approver-chain";
 
 const createLeaveSchema = z.object({
   leaveTypeId: z.number(),
@@ -83,27 +85,7 @@ export async function GET() {
       return true;
     });
 
-    let approvers: Array<Record<string, unknown>> = [];
-    if (member) {
-      const role = member.role;
-      const targetRoles =
-        role === ROLES.CEO
-          ? [ROLES.HR, ROLES.ADMIN]
-          : role === ROLES.HR
-          ? [ROLES.CEO, ROLES.ADMIN]
-          : [ROLES.ADMIN, ROLES.HR, ROLES.CEO];
-
-      const approverMembers = await db.query.organizationMembers.findMany({
-        where: and(
-          eq(organizationMembers.orgId, orgId),
-          inArray(organizationMembers.role, targetRoles),
-        ),
-        with: { user: true },
-      });
-      approvers = approverMembers
-        .filter((m) => m.userId !== userId && m.user)
-        .map((m) => m.user as Record<string, unknown>);
-    }
+    const approvers = await resolveLeaveApprovers(orgId, userId);
 
     return ok({
       balances,
@@ -128,13 +110,18 @@ export async function POST(req: NextRequest) {
         return err("Start date must be before or equal to end date.", 400);
       }
 
-      const requestedDays = body.isHalfDay
-        ? 0.5
-        : Math.round(
-            Math.abs(
-              new Date(body.endDate).getTime() - new Date(body.startDate).getTime()
-            ) / (1000 * 60 * 60 * 24)
-          ) + 1;
+      const requestedDays = calculateLeaveDaysExcludingSundays({
+        startDate: body.startDate,
+        endDate: body.endDate,
+        isHalfDay: body.isHalfDay ?? false,
+      });
+
+      if (!body.isHalfDay && requestedDays <= 0) {
+        return err(
+          "Leave cannot be requested for dates that are only Sundays. Select working days.",
+          400,
+        );
+      }
 
       const [balance, leaveType] = await Promise.all([
         db.query.leaveBalances.findFirst({

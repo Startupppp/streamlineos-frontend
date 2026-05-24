@@ -434,6 +434,7 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
                         request={req}
                         isAdmin={isAdmin}
                         isSelf
+                        canManage={false}
                         onApprove={handleApproveRequest}
                         onReject={handleRejectRequest}
                         onRevert={handleRevertRequest}
