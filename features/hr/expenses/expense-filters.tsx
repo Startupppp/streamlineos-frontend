@@ -32,6 +32,7 @@ export function AdminExpenseFilters({
         { key: "PENDING" as StatusFilter, label: "Pending", count: pendingCount },
         { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
         { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
+        { key: "PAID" as StatusFilter, label: "Paid", count: null },
       ]).map((item) => (
         <button
           key={item.key}
@@ -73,7 +74,7 @@ export function MemberExpenseFilters({
   onStatusChange,
   onDatePresetChange,
 }: MemberExpenseFiltersProps) {
-  const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED"] as const;
+  const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED", "PAID"] as const;
 
   return (
     <div className="flex flex-wrap gap-4 items-center justify-between">

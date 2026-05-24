@@ -67,7 +67,7 @@ export const PAYMENT_METHODS = [
   "Debit Card", "Credit Card", "Wallet", "Demand Draft", "Other",
 ];
 
-export type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED";
+export type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "PAID";
 
 /** Default rows per page for expense lists (Recent Claims / My Expenses) */
 export const EXPENSE_PAGE_SIZE_DEFAULT = 10;
