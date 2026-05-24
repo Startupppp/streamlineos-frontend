@@ -5,16 +5,11 @@ import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { deviceFormSchema } from "@/lib/validations/hr-assets";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
-const postDeviceSchema = z.object({
-  userId: z.string(),
-  deviceType: z.string(),
-  deviceName: z.string(),
-  serialNumber: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  notes: z.string().optional(),
+const postDeviceSchema = deviceFormSchema.extend({
   assignedDate: z.string().optional(),
 });
 
@@ -32,6 +27,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, postDeviceSchema);
+
+    if (body.serialNumber?.trim()) {
+      const dup = await db.query.employeeDevices.findFirst({
+        where: and(
+          eq(employeeDevices.orgId, session.orgId),
+          eq(employeeDevices.serialNumber, body.serialNumber.trim()),
+        ),
+      });
+      if (dup) {
+        return err("A device with this serial number already exists.", 409);
+      }
+    }
 
     const [device] = await db
       .insert(employeeDevices)

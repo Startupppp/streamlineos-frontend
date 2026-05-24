@@ -13,16 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
+import { EmployeeAssignCombobox } from "@/components/hr/employee-assign-combobox";
+import { deviceFormSchema } from "@/lib/validations/hr-assets";
 
-export const deviceSchema = z.object({
-  userId: z.string().min(1, "Employee is required"),
-  deviceType: z.string().min(1, "Device type is required"),
-  deviceName: z.string().min(1, "Device name is required"),
-  serialNumber: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  notes: z.string().optional(),
-});
+export const deviceSchema = deviceFormSchema;
 
 export type DeviceFormValues = z.infer<typeof deviceSchema>;
 
@@ -50,20 +44,18 @@ export function DeviceFormContent({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Assign to Employee</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.firstName} {emp.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <EmployeeAssignCombobox
+                  employees={employees.map((e) => ({
+                    id: e.id,
+                    name: [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email || e.id,
+                  }))}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select employee"
+                  disabled={isPending}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
