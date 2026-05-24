@@ -1,303 +1,134 @@
-"use client";
-
-import { useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { getJobPostingDetail, getDepartmentName } from "@/server/queries/public";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import { apiClient } from "@/lib/api-client";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import type { Metadata } from "next";
 import { CareersBrand } from "../../_components/careers-brand";
+import { ApplyForm } from "./apply-form";
 
-interface FormState {
-  name: string;
-  email: string;
-  phone: string;
-  linkedinUrl: string;
-  coverLetter: string;
-  resumeUrl: string;
-  resumeName: string;
-}
+export const revalidate = 300;
 
-const EMPTY_FORM: FormState = {
-  name: "",
-  email: "",
-  phone: "",
-  linkedinUrl: "",
-  coverLetter: "",
-  resumeUrl: "",
-  resumeName: "",
+type Props = { params: Promise<{ jobId: string }> };
+
+const JOB_TYPE_LABELS: Record<string, string> = {
+  FULL_TIME: "Full Time",
+  PART_TIME: "Part Time",
+  CONTRACT: "Contract",
+  INTERNSHIP: "Internship",
+  REMOTE: "Remote",
 };
 
-const RESUME_ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const RESUME_MAX_BYTES = 10 * 1024 * 1024;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { jobId } = await params;
+  const id = Number(jobId);
+  if (!Number.isFinite(id)) return { title: "Apply" };
+  const job = await getJobPostingDetail(id);
+  if (!job) return { title: "Apply" };
+  return { title: `Apply · ${job.title}` };
+}
 
-export default function ApplyPage() {
-  const params = useParams<{ jobId: string }>();
-  const jobId = Number(params.jobId);
+export default async function ApplyPage({ params }: Props) {
+  const { jobId } = await params;
+  const id = Number(jobId);
+  if (!Number.isFinite(id)) notFound();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [submitting, setSubmitting] = useState(false);
-  const [uploadingResume, setUploadingResume] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const job = await getJobPostingDetail(id);
+  if (!job) notFound();
 
-  const set = (field: keyof FormState) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  const handleResumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    setError(null);
-
-    if (file.size > RESUME_MAX_BYTES) {
-      setError("Resume is too large. Maximum size is 10 MB.");
-      return;
-    }
-
-    setUploadingResume(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/careers/upload-resume", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-
-      if (!res.ok || !data.url) {
-        setError(data.error ?? "Failed to upload resume. Please try again.");
-        return;
-      }
-
-      setForm((prev) => ({ ...prev, resumeUrl: data.url ?? "", resumeName: file.name }));
-    } catch {
-      setError("Failed to upload resume. Please try again.");
-    } finally {
-      setUploadingResume(false);
-    }
-  };
-
-  const clearResume = () => {
-    setForm((prev) => ({ ...prev, resumeUrl: "", resumeName: "" }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!form.name.trim() || !form.email.trim()) {
-      setError("Name and email are required.");
-      return;
-    }
-
-    if (uploadingResume) {
-      setError("Please wait for the resume upload to finish.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await apiClient.post("/api/careers/apply", {
-        jobPostingId: jobId,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim() || undefined,
-        linkedinUrl: form.linkedinUrl.trim() || undefined,
-        coverLetter: form.coverLetter.trim() || undefined,
-        resumeUrl: form.resumeUrl.trim() || undefined,
-      });
-      setSubmitted(true);
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setError(msg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const deptName = job.departmentId ? await getDepartmentName(job.departmentId) : null;
+  const typeLabel = job.type ? (JOB_TYPE_LABELS[job.type] ?? job.type) : null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <CareersBrand />
           <Link
-            href={`/careers/${jobId}`}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            href={`/careers/${id}`}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
             Back to job
           </Link>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-        {submitted ? (
-          <div className="text-center py-16">
-            <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Application Submitted!</h2>
-            <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-              Thank you for your interest. We&apos;ll review your application and get in touch if
-              there&apos;s a match.
-            </p>
-            <Link
-              href="/careers"
-              className="mt-6 inline-block text-sm text-primary hover:underline"
-            >
-              Browse other openings
-            </Link>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+        <div className="mb-6 lg:mb-8">
+          <p className="text-xs font-semibold tracking-widest uppercase text-primary mb-2">
+            Job Application
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif tracking-tight text-foreground">
+            {job.title}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            {deptName && <span>{deptName}</span>}
+            {deptName && (job.location || typeLabel) && <span aria-hidden>·</span>}
+            {job.location && <span>{job.location}</span>}
+            {job.location && typeLabel && <span aria-hidden>·</span>}
+            {typeLabel && <span>{typeLabel}</span>}
           </div>
-        ) : (
-          <>
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold tracking-tight">Apply for this position</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Fill out the form below and we&apos;ll get back to you soon.
-              </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+              <ApplyForm jobId={id} jobTitle={job.title} />
             </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <label htmlFor="name" className="block text-sm font-medium">
-                  Full Name <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={form.name}
-                  onChange={set("name")}
-                  required
-                  placeholder="John Doe"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-sm font-medium">
-                  Email Address <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={set("email")}
-                  required
-                  placeholder="you@example.com"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="phone" className="block text-sm font-medium">
-                  Phone Number
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={set("phone")}
-                  placeholder="+91 98765 43210"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="linkedinUrl" className="block text-sm font-medium">
-                  LinkedIn Profile URL
-                </label>
-                <input
-                  id="linkedinUrl"
-                  type="url"
-                  value={form.linkedinUrl}
-                  onChange={set("linkedinUrl")}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium">Resume</label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={RESUME_ACCEPT}
-                  onChange={handleResumeChange}
-                  className="sr-only"
-                  aria-label="Upload resume"
-                />
-                {form.resumeUrl ? (
-                  <div className="flex items-center justify-between gap-3 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <span className="truncate text-foreground">{form.resumeName || "Resume uploaded"}</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingResume}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Replace
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearResume}
-                        disabled={uploadingResume}
-                        className="text-xs text-destructive hover:underline"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingResume}
-                    className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-3 text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {uploadingResume ? "Uploading…" : "Click to upload resume (PDF, DOC, DOCX · 10 MB max)"}
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="coverLetter" className="block text-sm font-medium">
-                  Cover Letter
-                </label>
-                <textarea
-                  id="coverLetter"
-                  value={form.coverLetter}
-                  onChange={set("coverLetter")}
-                  rows={5}
-                  placeholder="Tell us why you'd be a great fit..."
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-destructive rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2">
-                  {error}
+          <aside className="lg:col-span-1">
+            <div className="lg:sticky lg:top-24 space-y-4">
+              <div className="rounded-2xl border bg-card p-5">
+                <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-3">
+                  What happens next
                 </p>
-              )}
+                <ol className="space-y-3 text-sm">
+                  <li className="flex gap-3">
+                    <span className="shrink-0 mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      1
+                    </span>
+                    <div>
+                      <p className="font-medium text-foreground">We review your profile</p>
+                      <p className="text-muted-foreground text-xs mt-0.5">Usually within 3–5 business days.</p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="shrink-0 mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      2
+                    </span>
+                    <div>
+                      <p className="font-medium text-foreground">Intro call</p>
+                      <p className="text-muted-foreground text-xs mt-0.5">A 20-minute chat with our recruiter.</p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="shrink-0 mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      3
+                    </span>
+                    <div>
+                      <p className="font-medium text-foreground">Meet the team</p>
+                      <p className="text-muted-foreground text-xs mt-0.5">Role-specific interviews with the hiring panel.</p>
+                    </div>
+                  </li>
+                </ol>
+              </div>
 
-              <button
-                type="submit"
-                disabled={submitting || uploadingResume}
-                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {submitting ? "Submitting..." : "Submit Application"}
-              </button>
-            </form>
-          </>
-        )}
+              <div className="rounded-2xl border border-dashed bg-muted/20 p-4">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your information is used only for this application and stored securely.
+                  We will not share your data with third parties.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
+      <footer className="border-t mt-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 text-center text-xs text-muted-foreground">
           &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
         </div>
       </footer>
