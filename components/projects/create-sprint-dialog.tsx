@@ -63,8 +63,8 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
       {
         projectId,
         name: data.name,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        startDate: data.startDate,
+        endDate: data.endDate,
         goal: data.goal || undefined,
       },
       {

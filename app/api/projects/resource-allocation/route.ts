@@ -19,7 +19,7 @@ export async function GET() {
         .select({
           assigneeId: tickets.assigneeId,
           projectId: tickets.projectId,
-          open: count(tickets.id),
+          ticketId: tickets.id,
         })
         .from(tickets)
         .where(
@@ -28,13 +28,12 @@ export async function GET() {
             inArray(tickets.projectId, projectIds),
             sql`${tickets.status} NOT IN ('DONE', 'CANCELLED', 'CLOSED')`,
           ),
-        )
-        .groupBy(tickets.assigneeId, tickets.projectId),
+        ),
       db
         .select({
           assigneeId: ticketAssignees.userId,
           projectId: tickets.projectId,
-          open: count(tickets.id),
+          ticketId: tickets.id,
         })
         .from(ticketAssignees)
         .innerJoin(tickets, eq(ticketAssignees.ticketId, tickets.id))
@@ -44,8 +43,7 @@ export async function GET() {
             inArray(tickets.projectId, projectIds),
             sql`${tickets.status} NOT IN ('DONE', 'CANCELLED', 'CLOSED')`,
           ),
-        )
-        .groupBy(ticketAssignees.userId, tickets.projectId),
+        ),
     ]);
 
     const allAssigneeIds = new Set<string>();
@@ -66,45 +64,60 @@ export async function GET() {
     const memberMap = new Map(members.map((m) => [m.id, m]));
     const projectMap = new Map(activeProjects.map((p) => [p.id, p]));
 
-    const byMember = new Map<string, {
-      user: { id: string; name: string | null; email: string; image: string | null };
-      totalOpen: number;
-      byProject: { projectId: number; projectName: string; projectKey: string; open: number }[];
-    }>();
+    const userProjectTickets = new Map<string, Map<number, Set<number>>>();
 
-    const addAllocation = (assigneeId: string | null, projectId: number | null, openCount: number) => {
-      if (!assigneeId) return;
-      const user = memberMap.get(assigneeId);
-      if (!user) return;
-      const project = projectId ? projectMap.get(projectId) : undefined;
-      if (!project) return;
-
-      if (!byMember.has(assigneeId)) {
-        byMember.set(assigneeId, { user, totalOpen: 0, byProject: [] });
+    const addTicket = (userId: string, projectId: number, ticketId: number) => {
+      if (!userProjectTickets.has(userId)) {
+        userProjectTickets.set(userId, new Map());
       }
-      const entry = byMember.get(assigneeId)!;
-      const existing = entry.byProject.find((p) => p.projectId === project.id);
-      if (existing) {
-        existing.open = Math.max(existing.open, openCount);
-      } else {
-        entry.byProject.push({
+      const projMap = userProjectTickets.get(userId)!;
+      if (!projMap.has(projectId)) {
+        projMap.set(projectId, new Set());
+      }
+      projMap.get(projectId)!.add(ticketId);
+    };
+
+    for (const r of primaryAllocation) {
+      if (r.assigneeId && r.projectId) {
+        addTicket(r.assigneeId, r.projectId, r.ticketId);
+      }
+    }
+    for (const r of multiAllocation) {
+      if (r.assigneeId && r.projectId) {
+        addTicket(r.assigneeId, r.projectId, r.ticketId);
+      }
+    }
+
+    const result = [];
+    for (const [userId, projMap] of userProjectTickets.entries()) {
+      const user = memberMap.get(userId);
+      if (!user) continue;
+
+      const byProject = [];
+      let totalOpen = 0;
+
+      for (const [projectId, ticketSet] of projMap.entries()) {
+        const project = projectMap.get(projectId);
+        if (!project) continue;
+
+        const openCount = ticketSet.size;
+        totalOpen += openCount;
+        byProject.push({
           projectId: project.id,
           projectName: project.name,
           projectKey: project.key,
           open: openCount,
         });
       }
-      entry.totalOpen = entry.byProject.reduce((s, p) => s + p.open, 0);
-    };
 
-    for (const row of primaryAllocation) {
-      addAllocation(row.assigneeId, row.projectId, Number(row.open));
-    }
-    for (const row of multiAllocation) {
-      addAllocation(row.assigneeId, row.projectId, Number(row.open));
+      result.push({
+        user,
+        totalOpen,
+        byProject,
+      });
     }
 
-    const result = [...byMember.values()].sort((a, b) => b.totalOpen - a.totalOpen);
+    result.sort((a, b) => b.totalOpen - a.totalOpen);
     return ok(result);
   });
 }
