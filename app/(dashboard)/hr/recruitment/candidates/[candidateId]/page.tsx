@@ -41,6 +41,7 @@ import { ReferenceChecksTab } from "@/features/hr/recruitment/candidate-detail/r
 import { OffersTab } from "@/features/hr/recruitment/candidate-detail/offers-tab";
 import { CalibrationTab } from "@/features/hr/recruitment/candidate-detail/calibration-tab";
 import { CandidateProfileCard } from "./_components/candidate-profile-card";
+import { CandidateResumeCard } from "./_components/candidate-resume-card";
 import { AiScoreCard } from "./_components/ai-score-card";
 import { CompositeScoreCard } from "./_components/composite-score-card";
 import { ApplicationsTab } from "./_components/applications-tab";
@@ -259,6 +260,8 @@ export default function CandidateDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1 space-y-4">
           <CandidateProfileCard
+            firstName={candidate.firstName}
+            lastName={candidate.lastName}
             status={candidate.status}
             rating={candidate.rating}
             email={candidate.email}
@@ -266,9 +269,16 @@ export default function CandidateDetailPage() {
             source={candidate.source}
             experienceYears={candidate.experienceYears}
             linkedinUrl={candidate.linkedinUrl}
+            currentRole={candidate.currentRole}
+            currentCompany={candidate.currentCompany}
             skills={candidate.skills}
             onStatusChange={handleStatusChange}
             isUpdating={updateCandidate.isPending}
+          />
+
+          <CandidateResumeCard
+            resumeUrl={candidate.resumeUrl}
+            candidateName={`${candidate.firstName} ${candidate.lastName}`}
           />
 
           <AiScoreCard
