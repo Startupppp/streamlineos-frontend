@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { apiClient } from "@/lib/api-client";
 import { Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import type { Employee } from "@/types/hr";
@@ -146,8 +148,8 @@ export default function WorkLogsPage() {
     onSuccess: () => {
       toast.success("Work log saved successfully");
     },
-    onError: () => {
-      toast.error("Failed to save log");
+    onError: (error) => {
+      toast.error(getErrorMessage(error) || "Failed to save log");
     },
   });
 
@@ -233,9 +235,50 @@ export default function WorkLogsPage() {
       sheet.columns = [
         { header: "Date", key: "date", width: 15 },
         { header: "Day", key: "day", width: 12 },
-        { header: "Description", key: "description", width: 50 },
+        { header: "Description", key: "description", width: 40 },
+        { header: "Work Link", key: "workLink", width: 28 },
+        { header: "Day Type", key: "dayType", width: 14 },
+        { header: "Leave / Holiday", key: "dayNote", width: 28 },
         { header: "Status", key: "status", width: 12 },
       ];
+
+      const targetUser = selectedUserId ?? session?.user?.id;
+      const startMonthIndex = (quarter - 1) * 3;
+      const rangeStart = format(new Date(year, startMonthIndex, 1), "yyyy-MM-dd");
+      const rangeEnd = format(new Date(year, startMonthIndex + 3, 0), "yyyy-MM-dd");
+
+      let holidayByDate = new Map<string, string>();
+      let leaveByDate = new Map<string, string>();
+      try {
+        const [holidayRows, leaveRows] = await Promise.all([
+          apiClient.get<Array<{ date: string; name: string }>>("/hr/holidays", {
+            from: rangeStart,
+            to: rangeEnd,
+          }),
+          targetUser
+            ? apiClient.get<{ requests?: Array<{ startDate: string; endDate: string; reason?: string; status: string }> }>(
+                "/hr/leaves",
+              )
+            : Promise.resolve({ requests: [] }),
+        ]);
+        for (const h of holidayRows ?? []) {
+          if (h.date) holidayByDate.set(h.date.slice(0, 10), h.name);
+        }
+        for (const lr of leaveRows?.requests ?? []) {
+          if (lr.status !== "APPROVED") continue;
+          const start = new Date(lr.startDate);
+          const end = new Date(lr.endDate);
+          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const ds = format(d, "yyyy-MM-dd");
+            if (ds >= rangeStart && ds <= rangeEnd) {
+              leaveByDate.set(ds, lr.reason ?? "Approved leave");
+            }
+          }
+        }
+      } catch {
+        holidayByDate = new Map();
+        leaveByDate = new Map();
+      }
 
       const headerRow = sheet.getRow(1);
       headerRow.font = { bold: true };
@@ -246,10 +289,15 @@ export default function WorkLogsPage() {
       for (const date of filteredDays) {
         const dateStr = format(date, "yyyy-MM-dd");
         const log = logs?.find((l) => l.date === dateStr);
+        const holidayName = holidayByDate.get(dateStr);
+        const leaveReason = leaveByDate.get(dateStr);
         sheet.addRow({
           date: format(date, "dd MMM yyyy"),
           day: format(date, "EEEE"),
           description: log?.description || "",
+          workLink: log?.workLink || "",
+          dayType: holidayName ? "Holiday" : leaveReason ? "Leave" : log?.description ? "Work" : "",
+          dayNote: holidayName ?? leaveReason ?? "",
           status: log?.status === "PENDING" ? "LOGGED" : (log?.status || (log?.description ? "LOGGED" : "")),
         });
       }
@@ -266,7 +314,7 @@ export default function WorkLogsPage() {
     } catch {
       toast.error("Failed to export work logs");
     }
-  }, [days, logs, selectedUserId, employees, quarter, year, filterDay]);
+  }, [days, logs, selectedUserId, employees, quarter, year, filterDay, session?.user?.id]);
 
   const sharedFilterProps = {
     filters,

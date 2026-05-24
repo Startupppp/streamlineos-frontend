@@ -7,12 +7,16 @@ import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { getWorkLogBlockReason } from "@/lib/hr/work-log-guard";
 
 const postWorkLogSchema = z.object({
   date: z.string(),
   hours: z.number().optional(),
-  description: z.string().optional(),
-  workLink: z.string().url().optional().or(z.literal("")),
+  description: z
+    .string()
+    .max(5000, "Description must be at most 5000 characters")
+    .optional(),
+  workLink: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
 export async function GET(req: NextRequest) {
@@ -47,6 +51,16 @@ export async function POST(req: NextRequest) {
     const body = await parseBody(req, postWorkLogSchema);
 
     const dateStr = formatDateOnly(body.date);
+
+    const blockReason = await getWorkLogBlockReason(
+      session.orgId,
+      session.user.id,
+      dateStr,
+    );
+    if (blockReason) {
+      return err(blockReason, 400);
+    }
+
     const normalizedDescription = body.description
       ? body.description.replace(
           /(^\s*\w|[.!?]\s+\w)/g,
