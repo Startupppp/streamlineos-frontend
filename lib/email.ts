@@ -64,7 +64,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - Vaivamm Capital",

@@ -74,7 +74,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     name: "Password Reset",
     generate: () => ({
       subject: "Reset Your Password - Vaivamm Capital",
-      html: getPasswordResetEmailTemplate(`${BASE_URL}/auth/reset-password?token=abc123`),
+      html: getPasswordResetEmailTemplate(`${BASE_URL}/reset-password?token=abc123`),
     }),
   },
   {

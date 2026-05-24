@@ -73,7 +73,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
   },
   "auth.password_reset": {
     subject: "Reset Your Password - Vaivamm Capital",
-    generateHtml: () => getPasswordResetEmailTemplate(`${BASE_URL}/auth/reset-password?token=test-token`),
+    generateHtml: () => getPasswordResetEmailTemplate(`${BASE_URL}/reset-password?token=test-token`),
   },
   "auth.welcome": {
     subject: "Welcome to Vaivamm Capital — Set Up Your Account",

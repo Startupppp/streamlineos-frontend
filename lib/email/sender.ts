@@ -80,6 +80,12 @@ export async function sendEmail(options: EmailOptions) {
     ...(attachments?.length ? { attachments } : {}),
     ...(ccList?.length ? { cc: ccList } : {}),
     ...(bccList?.length ? { bcc: bccList } : {}),
+    trackingSettings: {
+      clickTracking: {
+        enable: false,
+        enableText: false,
+      },
+    },
   };
 
   let lastError: unknown;
