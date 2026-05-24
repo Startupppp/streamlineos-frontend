@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { employeeSkills } from "@/lib/db/schema";
+import { employeeSkills, organizationMembers, users } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 
 /** Sync comma-separated or array skills from user profile into employee_skills for the skills matrix. */
@@ -42,4 +42,21 @@ export async function syncEmployeeSkillsFromProfile(
       level: 1,
     })),
   );
+}
+
+/** Backfill employee_skills from users.skills for all members in an org (skills matrix). */
+export async function backfillEmployeeSkillsForOrg(orgId: string): Promise<number> {
+  const members = await db
+    .select({ userId: organizationMembers.userId, skills: users.skills })
+    .from(organizationMembers)
+    .innerJoin(users, eq(users.id, organizationMembers.userId))
+    .where(eq(organizationMembers.orgId, orgId));
+
+  let synced = 0;
+  for (const m of members) {
+    if (!m.skills) continue;
+    await syncEmployeeSkillsFromProfile(orgId, m.userId, m.skills);
+    synced += 1;
+  }
+  return synced;
 }

@@ -2,11 +2,21 @@ import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { employeeSkills, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { cached, CACHE_TTL } from "@/lib/cache";
+import { cached, CACHE_TTL, invalidateCache } from "@/lib/cache";
+import { backfillEmployeeSkillsForOrg } from "@/lib/hr/sync-employee-skills";
 
 
 export async function GET() {
   return withAuth(async (session) => {
+    const existingSkills = await db.query.employeeSkills.findFirst({
+      where: eq(employeeSkills.orgId, session.orgId),
+      columns: { id: true },
+    });
+    if (!existingSkills) {
+      await backfillEmployeeSkillsForOrg(session.orgId);
+      await invalidateCache(`hr:skills-matrix:${session.orgId}`);
+    }
+
     const data = await cached(
       `hr:skills-matrix:${session.orgId}`,
       async () => {
