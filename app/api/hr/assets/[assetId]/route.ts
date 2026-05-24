@@ -3,21 +3,12 @@ import { db } from "@/lib/db";
 import { assets, assetStatusEnum, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
+import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 import { sendAssetAssignedEmail } from "@/lib/email";
+import { assetFormSchema } from "@/lib/validations/hr-assets";
 
-type AssetStatusEnum = (typeof assetStatusEnum.enumValues)[number];
-
-const patchAssetSchema = z.object({
-  name: z.string().optional(),
-  type: z.string().optional(),
-  serialNumber: z.string().optional(),
-  assignedTo: z.string().optional(),
-  status: z.enum(["AVAILABLE", "ASSIGNED", "MAINTENANCE", "RETIRED"] as [AssetStatusEnum, ...AssetStatusEnum[]]).optional(),
-  location: z.string().optional(),
-  notes: z.string().optional(),
-});
+const patchAssetSchema = assetFormSchema.partial();
 
 export async function PATCH(
   req: NextRequest,
@@ -46,6 +37,14 @@ export async function PATCH(
     if (body.status) updatePayload.status = body.status;
     if (body.location !== undefined) updatePayload.location = body.location;
     if (body.notes !== undefined) updatePayload.notes = body.notes;
+    if (body.purchaseCost !== undefined) {
+      updatePayload.purchaseCost = body.purchaseCost.toString();
+    }
+    if (body.purchaseDate !== undefined) {
+      updatePayload.purchaseDate = body.purchaseDate
+        ? formatDateOnly(new Date(body.purchaseDate))
+        : null;
+    }
     updatePayload.updatedAt = new Date();
 
     const existing = await db.query.assets.findFirst({
@@ -77,6 +76,32 @@ export async function PATCH(
         }
       })().catch(() => {});
     }
+
+    return ok({ success: true });
+  });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ assetId: string }> },
+) {
+  return withAuth(async (session) => {
+    if (!isAdminOrOwner(session.user.role)) {
+      return err("Only admins can delete assets.", 403);
+    }
+
+    const { assetId: id } = await params;
+    const assetId = Number(id);
+    if (isNaN(assetId)) return err("Invalid asset ID.", 400);
+
+    const existing = await db.query.assets.findFirst({
+      where: and(eq(assets.id, assetId), eq(assets.orgId, session.orgId)),
+    });
+    if (!existing) return err("Asset not found.", 404);
+
+    await db
+      .delete(assets)
+      .where(and(eq(assets.id, assetId), eq(assets.orgId, session.orgId)));
 
     return ok({ success: true });
   });

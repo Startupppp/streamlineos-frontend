@@ -34,6 +34,9 @@ import { Plus, CheckCircle2, Download, Laptop, Eye, Pencil, Trash2 } from "lucid
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { AssetReturnDetailSheet } from "@/features/hr/assets/asset-return-detail-sheet";
+import { EmployeeAssignCombobox } from "@/components/hr/employee-assign-combobox";
+import { useHrEmployees, useHrAssets } from "@/lib/api/hooks";
+import type { Asset } from "@/types/hr";
 
 interface AssetReturn {
   id: number;
@@ -88,6 +91,20 @@ export default function AssetReturnsPage() {
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
   });
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const { data: assetsRaw } = useHrAssets();
+  const employeeList: Array<{ id: string; name: string }> = Array.isArray(employeesRaw)
+    ? employeesRaw.map((e) => ({
+        id: e.id,
+        name:
+          e.name ??
+          ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email || e.id),
+      }))
+    : [];
+  const assignedAssetsForUser = (Array.isArray(assetsRaw) ? assetsRaw : []).filter(
+    (a: Asset) => a.assignedTo === userId && a.status === "ASSIGNED",
+  );
 
   const create = useMutation({
     mutationFn: (data: {
@@ -606,17 +623,55 @@ export default function AssetReturnsPage() {
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee User ID</label>
-          <Input placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Asset Name</label>
-          <Input
-            placeholder="e.g., MacBook Pro 16"
-            value={assetName}
-            onChange={(e) => setAssetName(e.target.value)}
+          <label className="text-sm font-medium">Employee</label>
+          <EmployeeAssignCombobox
+            employees={employeeList}
+            value={userId}
+            onValueChange={(id) => {
+              setUserId(id);
+              setAssetName("");
+              setSerialNumber("");
+            }}
+            placeholder="Search employee..."
+            disabled={create.isPending}
           />
         </div>
+        {userId && assignedAssetsForUser.length > 0 ? (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Assigned asset</label>
+            <Select
+              value={assetName || undefined}
+              onValueChange={(v) => {
+                const picked = assignedAssetsForUser.find((a: Asset) => a.name === v);
+                setAssetName(v);
+                if (picked) {
+                  setAssetType(picked.type ?? "Laptop");
+                  setSerialNumber(picked.serialNumber ?? "");
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select assigned asset" />
+              </SelectTrigger>
+              <SelectContent>
+                {assignedAssetsForUser.map((a: Asset) => (
+                  <SelectItem key={a.id} value={a.name ?? `asset-${a.id}`}>
+                    {a.name} {a.serialNumber ? `(${a.serialNumber})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Asset Name</label>
+            <Input
+              placeholder="e.g., MacBook Pro 16"
+              value={assetName}
+              onChange={(e) => setAssetName(e.target.value)}
+            />
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Asset Type</label>

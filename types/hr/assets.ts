@@ -35,6 +35,8 @@ export interface UpdateAssetInput {
   serialNumber?: string;
   assignedTo?: string;
   status?: AssetStatus;
+  purchaseDate?: string;
+  purchaseCost?: number;
   location?: string;
   notes?: string;
 }
