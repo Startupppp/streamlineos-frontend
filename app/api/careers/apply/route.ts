@@ -1,10 +1,19 @@
 import { ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { jobPostings, candidates, candidateApplications } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  jobPostings,
+  candidates,
+  candidateApplications,
+  users,
+  organizationMembers,
+} from "@/lib/db/schema";
+import { eq, and, or } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { sendNotification } from "@/lib/notifications/send";
+import { sendApplicantConfirmationEmail, sendHrNewApplicationEmail } from "@/lib/email/careers";
+import { logger } from "@/lib/logger";
 
 const NAME_RE = /^[\p{L}][\p{L}\s.''-]{1,199}$/u;
 const LINKEDIN_RE = /^https?:\/\/([\w-]+\.)?linkedin\.com\/.+/i;
@@ -70,7 +79,13 @@ export async function POST(req: NextRequest) {
   const { jobPostingId, name, email, phone, linkedinUrl, coverLetter, resumeUrl } = body;
 
   const [job] = await db
-    .select({ id: jobPostings.id, orgId: jobPostings.orgId })
+    .select({
+      id: jobPostings.id,
+      orgId: jobPostings.orgId,
+      title: jobPostings.title,
+      location: jobPostings.location,
+      postedBy: jobPostings.postedBy,
+    })
     .from(jobPostings)
     .where(and(eq(jobPostings.id, jobPostingId), eq(jobPostings.status, "OPEN")))
     .limit(1);
@@ -110,5 +125,119 @@ export async function POST(req: NextRequest) {
     coverLetter: coverLetter ?? null,
   });
 
+  void notifyHrOfApplication({
+    orgId: job.orgId,
+    postedById: job.postedBy,
+    jobId: job.id,
+    jobTitle: job.title,
+    jobLocation: job.location,
+    candidateId: candidate.id,
+    candidateName: `${firstName} ${lastName === "-" ? "" : lastName}`.trim(),
+    candidateEmail: email,
+    candidatePhone: phone ?? null,
+    linkedinUrl: linkedinUrl ?? null,
+    resumeUrl: resumeUrl ?? null,
+    coverLetter: coverLetter ?? null,
+  });
+
+  void sendApplicantConfirmationEmail({
+    to: email,
+    name: firstName,
+    jobTitle: job.title,
+  }).catch((error) => {
+    logger.error("Applicant confirmation dispatch failed", { error, candidateId: candidate.id });
+  });
+
   return ok({ id: candidate.id }, 201);
+}
+
+async function notifyHrOfApplication(params: {
+  orgId: string;
+  postedById: string | null;
+  jobId: number;
+  jobTitle: string;
+  jobLocation: string | null;
+  candidateId: number;
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone: string | null;
+  linkedinUrl: string | null;
+  resumeUrl: string | null;
+  coverLetter: string | null;
+}): Promise<void> {
+  try {
+    const hrMembers = await db
+      .select({ userId: organizationMembers.userId, email: users.email })
+      .from(organizationMembers)
+      .innerJoin(users, eq(users.id, organizationMembers.userId))
+      .where(
+        and(
+          eq(organizationMembers.orgId, params.orgId),
+          or(eq(organizationMembers.role, "HR"), eq(users.role, "HR")),
+        ),
+      );
+
+    const recipientUserIds = new Set<string>();
+    const recipientEmails = new Set<string>();
+    for (const m of hrMembers) {
+      recipientUserIds.add(m.userId);
+      if (m.email) recipientEmails.add(m.email);
+    }
+
+    if (params.postedById && !recipientUserIds.has(params.postedById)) {
+      const [poster] = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(eq(users.id, params.postedById))
+        .limit(1);
+      if (poster?.email) {
+        recipientUserIds.add(params.postedById);
+        recipientEmails.add(poster.email);
+      }
+    }
+
+    const link = `/hr/recruitment/candidates/${params.candidateId}`;
+    const title = `New application — ${params.jobTitle}`;
+    const message = `${params.candidateName} applied for ${params.jobTitle}${
+      params.jobLocation ? ` (${params.jobLocation})` : ""
+    }.`;
+
+    await Promise.allSettled(
+      Array.from(recipientUserIds).map((userId) =>
+        sendNotification({
+          orgId: params.orgId,
+          userId,
+          type: "INFO",
+          title,
+          message,
+          link,
+          channel: "in_app",
+          sound: true,
+          metadata: { jobId: params.jobId, candidateId: params.candidateId, source: "CAREERS_PAGE" },
+        }),
+      ),
+    );
+
+    if (recipientEmails.size > 0) {
+      await sendHrNewApplicationEmail({
+        to: Array.from(recipientEmails),
+        jobTitle: params.jobTitle,
+        jobLocation: params.jobLocation,
+        candidateName: params.candidateName,
+        candidateEmail: params.candidateEmail,
+        candidatePhone: params.candidatePhone,
+        linkedinUrl: params.linkedinUrl,
+        resumeUrl: params.resumeUrl,
+        candidateId: params.candidateId,
+        jobId: params.jobId,
+        coverLetter: params.coverLetter,
+      });
+    }
+  } catch (error) {
+    logger.error("Failed to notify HR of new application", {
+      error,
+      candidateId: params.candidateId,
+      jobId: params.jobId,
+    });
+  }
 }
