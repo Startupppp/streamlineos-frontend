@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CareersBrand } from "../../_components/careers-brand";
 
 interface FormState {
   name: string;
@@ -124,7 +125,7 @@ export default function ApplyPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
+          <CareersBrand />
           <Link
             href={`/careers/${jobId}`}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"

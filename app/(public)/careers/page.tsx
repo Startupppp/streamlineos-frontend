@@ -2,6 +2,7 @@ import { listOpenJobPostings, listDepartmentsByIds, type PublicJobPosting } from
 import Link from "next/link";
 import { MapPin, Clock, Briefcase, Building2, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
+import { CareersBrand } from "./_components/careers-brand";
 
 export const revalidate = 300;
 
@@ -35,9 +36,7 @@ export default async function CareersPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
-          <div>
-            <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
-          </div>
+          <CareersBrand href="/" />
           <Link
             href="/"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"

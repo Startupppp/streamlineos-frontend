@@ -5,6 +5,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Clock, Briefcase, Building2, Users, CalendarDays, ArrowLeft } from "lucide-react";
+import { CareersBrand } from "../../_components/careers-brand";
 
 const JOB_TYPE_LABELS: Record<string, string> = {
   FULL_TIME: "Full Time",
@@ -31,7 +32,7 @@ export async function JobDetailView({ jobId }: { jobId: number }) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
+          <CareersBrand />
           <Link
             href="/careers"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
