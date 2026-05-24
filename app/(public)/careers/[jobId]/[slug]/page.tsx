@@ -1,12 +1,12 @@
 import { getJobPostingMetadata } from "@/server/queries/public";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { JobDetailView, jobTitleToSlug } from "./_components/job-detail-view";
+import { JobDetailView } from "../_components/job-detail-view";
 
 export const revalidate = 300;
 
 type Props = {
-  params: Promise<{ jobId: string }>;
+  params: Promise<{ jobId: string; slug: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -22,16 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function JobDetailPage({ params }: Props) {
+export default async function JobDetailPageWithSlug({ params }: Props) {
   const { jobId } = await params;
   const id = Number(jobId);
   if (!Number.isFinite(id)) notFound();
-
-  const job = await getJobPostingMetadata(id);
-  if (!job) notFound();
-
-  const slug = jobTitleToSlug(job.title);
-  if (slug) redirect(`/careers/${id}/${slug}`);
 
   return <JobDetailView jobId={id} />;
 }
