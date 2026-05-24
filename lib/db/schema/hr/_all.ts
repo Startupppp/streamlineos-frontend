@@ -1023,13 +1023,18 @@ export const handbookVersions = pgTable("handbook_versions", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   version: text("version").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  documentUrl: text("document_url"),
   documentId: integer("document_id").references(() => richDocuments.id),
   changelog: text("changelog"),
+  status: text("status").notNull().default("DRAFT"),
   publishedAt: timestamp("published_at"),
   publishedBy: text("published_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_handbook_org").on(table.orgId),
+  uniqueIndex("uq_handbook_org_version").on(table.orgId, table.version),
 ]);
 
 export const goals = pgTable("goals", {
