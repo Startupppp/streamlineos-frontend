@@ -64,7 +64,7 @@ export function daysUntilNextBirthday(
   if (!parsed) return null;
   const { month, day } = parsed;
   const t0 = startOfDay(today);
-  let y = t0.getFullYear();
+  const y = t0.getFullYear();
   let next = startOfDay(new Date(y, month, day));
   if (next < t0) {
     next = startOfDay(new Date(y + 1, month, day));
