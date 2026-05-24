@@ -24,10 +24,12 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     });
     if (!job) return err("Job posting not found", 404);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.vaivamm.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://crm.vaivammcapital.com";
 
     const jobSlug = job.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const baseJobUrl = `${appUrl}/careers/${jobId}/${jobSlug}`;
+    const baseJobUrl = jobSlug
+      ? `${appUrl}/careers/${jobId}/${jobSlug}`
+      : `${appUrl}/careers/${jobId}`;
 
     const shareLinks = PLATFORMS.map(({ key, name, baseUrl }) => {
       const utmUrl = `${baseJobUrl}?utm_source=${key.toLowerCase()}&utm_medium=social&utm_campaign=job_${jobId}`;
