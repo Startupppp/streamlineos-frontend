@@ -210,7 +210,9 @@ export function ApplyForm({ jobId, jobTitle }: { jobId: number; jobTitle: string
             <Link href="/careers">Browse other openings</Link>
           </Button>
           <Button asChild>
-            <Link href="/">Visit Vaivamm</Link>
+            <a href="https://vaivammcapital.com/" target="_blank" rel="noopener noreferrer">
+              Visit Vaivamm
+            </a>
           </Button>
         </div>
       </div>
