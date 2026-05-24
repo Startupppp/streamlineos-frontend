@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
@@ -13,6 +13,7 @@ interface FormState {
   linkedinUrl: string;
   coverLetter: string;
   resumeUrl: string;
+  resumeName: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -22,14 +23,20 @@ const EMPTY_FORM: FormState = {
   linkedinUrl: "",
   coverLetter: "",
   resumeUrl: "",
+  resumeName: "",
 };
+
+const RESUME_ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const RESUME_MAX_BYTES = 10 * 1024 * 1024;
 
 export default function ApplyPage() {
   const params = useParams<{ jobId: string }>();
   const jobId = Number(params.jobId);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,12 +44,58 @@ export default function ApplyPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const handleResumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setError(null);
+
+    if (file.size > RESUME_MAX_BYTES) {
+      setError("Resume is too large. Maximum size is 10 MB.");
+      return;
+    }
+
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/careers/upload-resume", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+
+      if (!res.ok || !data.url) {
+        setError(data.error ?? "Failed to upload resume. Please try again.");
+        return;
+      }
+
+      setForm((prev) => ({ ...prev, resumeUrl: data.url ?? "", resumeName: file.name }));
+    } catch {
+      setError("Failed to upload resume. Please try again.");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  const clearResume = () => {
+    setForm((prev) => ({ ...prev, resumeUrl: "", resumeName: "" }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
     if (!form.name.trim() || !form.email.trim()) {
       setError("Name and email are required.");
+      return;
+    }
+
+    if (uploadingResume) {
+      setError("Please wait for the resume upload to finish.");
       return;
     }
 
@@ -167,17 +220,47 @@ export default function ApplyPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="resumeUrl" className="block text-sm font-medium">
-                  Resume URL
-                </label>
+                <label className="block text-sm font-medium">Resume</label>
                 <input
-                  id="resumeUrl"
-                  type="url"
-                  value={form.resumeUrl}
-                  onChange={set("resumeUrl")}
-                  placeholder="https://drive.google.com/..."
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  ref={fileInputRef}
+                  type="file"
+                  accept={RESUME_ACCEPT}
+                  onChange={handleResumeChange}
+                  className="sr-only"
+                  aria-label="Upload resume"
                 />
+                {form.resumeUrl ? (
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <span className="truncate text-foreground">{form.resumeName || "Resume uploaded"}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingResume}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearResume}
+                        disabled={uploadingResume}
+                        className="text-xs text-destructive hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingResume}
+                    className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-3 text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {uploadingResume ? "Uploading…" : "Click to upload resume (PDF, DOC, DOCX · 10 MB max)"}
+                  </button>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -202,7 +285,7 @@ export default function ApplyPage() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadingResume}
                 className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? "Submitting..." : "Submit Application"}
