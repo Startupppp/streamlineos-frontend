@@ -277,6 +277,7 @@ export default function CandidateDetailPage() {
           />
 
           <CandidateResumeCard
+            candidateId={id}
             resumeUrl={candidate.resumeUrl}
             candidateName={`${candidate.firstName} ${candidate.lastName}`}
           />

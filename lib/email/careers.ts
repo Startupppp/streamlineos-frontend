@@ -130,6 +130,9 @@ export async function sendHrNewApplicationEmail(params: {
   coverLetter: string | null;
 }): Promise<void> {
   const candidateLink = `${appUrl}/hr/recruitment/candidates/${params.candidateId}`;
+  const resumeProxyUrl = params.resumeUrl
+    ? `${appUrl}/api/hr/recruitment/candidates/${params.candidateId}/resume`
+    : null;
 
   const rowHtml = (label: string, valueHtml: string) => `
     <tr>
@@ -157,7 +160,7 @@ export async function sendHrNewApplicationEmail(params: {
         ${rowHtml("Email", `<a href="mailto:${escapeHtml(params.candidateEmail)}" style="color:${BRAND_NAVY};text-decoration:none;">${escapeHtml(params.candidateEmail)}</a>`)}
         ${rowHtml("Phone", params.candidatePhone ? escapeHtml(params.candidatePhone) : `<span style="color:#9ca3af;">—</span>`)}
         ${rowHtml("LinkedIn", linkOrDash(params.linkedinUrl, "View profile"))}
-        ${rowHtml("Resume", linkOrDash(params.resumeUrl, "Open resume"))}
+        ${rowHtml("Resume", linkOrDash(resumeProxyUrl, "Open resume"))}
       </table>
     </div>
 

@@ -29,11 +29,16 @@ function fileKind(name: string): "pdf" | "doc" {
 }
 
 interface CandidateResumeCardProps {
+  candidateId: number;
   resumeUrl: string | null;
   candidateName: string;
 }
 
-export function CandidateResumeCard({ resumeUrl, candidateName }: CandidateResumeCardProps) {
+export function CandidateResumeCard({
+  candidateId,
+  resumeUrl,
+  candidateName,
+}: CandidateResumeCardProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   if (!resumeUrl) {
@@ -46,9 +51,7 @@ export function CandidateResumeCard({ resumeUrl, candidateName }: CandidateResum
               Resume
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            No resume on file yet.
-          </p>
+          <p className="text-xs text-muted-foreground">No resume on file yet.</p>
         </CardContent>
       </Card>
     );
@@ -57,6 +60,9 @@ export function CandidateResumeCard({ resumeUrl, candidateName }: CandidateResum
   const name = fileNameFromUrl(resumeUrl);
   const kind = fileKind(name);
   const isPdf = kind === "pdf";
+
+  const proxyUrl = `/api/hr/recruitment/candidates/${candidateId}/resume`;
+  const downloadUrl = `${proxyUrl}?download=1`;
 
   return (
     <>
@@ -102,13 +108,13 @@ export function CandidateResumeCard({ resumeUrl, candidateName }: CandidateResum
               </Button>
             )}
             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 min-w-[90px]" asChild>
-              <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              <a href={proxyUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                 Open
               </a>
             </Button>
             <Button size="sm" variant="ghost" className="h-8 text-xs flex-1 min-w-[90px]" asChild>
-              <a href={resumeUrl} download={name}>
+              <a href={downloadUrl}>
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Download
               </a>
@@ -129,20 +135,20 @@ export function CandidateResumeCard({ resumeUrl, candidateName }: CandidateResum
             </SheetHeader>
             <div className="flex-1 bg-muted/40 overflow-hidden">
               <iframe
-                src={`${resumeUrl}#toolbar=1&navpanes=0`}
+                src={`${proxyUrl}#toolbar=1&navpanes=0`}
                 title={`Resume preview — ${candidateName}`}
                 className="w-full h-full border-0"
               />
             </div>
             <div className="px-5 py-3 border-t bg-card flex items-center justify-end gap-2">
               <Button size="sm" variant="outline" asChild>
-                <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                <a href={proxyUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                   Open in new tab
                 </a>
               </Button>
               <Button size="sm" asChild>
-                <a href={resumeUrl} download={name}>
+                <a href={downloadUrl}>
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   Download
                 </a>
