@@ -43,7 +43,7 @@ export default function DevicesPage() {
   const [viewDeviceId, setViewDeviceId] = useState<number | null>(null);
   const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
 
-  const { data: devices, isLoading } = useHrDevices({});
+  const { data: devices, isLoading } = useHrDevices();
   const { data: employeesRaw } = useHrEmployees(undefined);
   const employees = (employeesRaw ?? []) as Employee[];
 

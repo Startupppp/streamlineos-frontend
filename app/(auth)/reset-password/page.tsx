@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,9 +18,10 @@ import { toast } from "sonner";
 import { resetPassword } from "@/server/actions/auth-actions";
 import { Loader2, Rocket, ArrowRight } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PASSWORD_REGEX } from "@/lib/password-utils";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 const formSchema = z
   .object({
@@ -60,9 +61,11 @@ function getPasswordStrength(password: string): {
   return { score: 4, label: "Very Strong", color: "bg-emerald-500" };
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const { update } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [loading, setLoading] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,18 +78,35 @@ export default function ResetPasswordPage() {
   async function onSubmit(values: FormValues) {
     setLoading(true);
     try {
-      const result = await resetPassword(values.password);
-      if (result.success) {
-        toast.success("Password updated successfully!");
-        await update({ forceChangePassword: false });
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        router.push("/dashboard");
-        router.refresh();
+      if (token) {
+        // Token-based unauthenticated reset password (from forgot password email link)
+        const result = await apiClient.post<{ success: boolean; error?: string }>("/auth/reset-password", {
+          token,
+          password: values.password,
+        });
+        if (result.success) {
+          toast.success("Password updated successfully!");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          router.push("/signin");
+          router.refresh();
+        } else {
+          toast.error(result.error ?? "Failed to update password");
+        }
       } else {
-        toast.error(result.error ?? "Failed to update password");
+        // Authenticated forced password change (upon first login / flag set)
+        const result = await resetPassword(values.password);
+        if (result.success) {
+          toast.success("Password updated successfully!");
+          await update({ forceChangePassword: false });
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          router.push("/dashboard");
+          router.refresh();
+        } else {
+          toast.error(result.error ?? "Failed to update password");
+        }
       }
-    } catch {
-      toast.error("An error occurred. Please try again.");
+    } catch (error: any) {
+      toast.error(error?.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -195,5 +215,19 @@ export default function ResetPasswordPage() {
         </Form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-sm text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gold mx-auto" />
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

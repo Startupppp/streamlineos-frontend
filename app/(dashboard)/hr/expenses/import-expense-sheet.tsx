@@ -335,7 +335,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               />
             </div>
           ) : (
-            <div className="sticky top-0 z-10 -mx-4 -mt-4 px-4 pt-4 pb-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+            <div className="-mx-4 -mt-4 px-4 pt-4 pb-3 bg-background border-b mb-4">
               <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                 <FileText className="h-8 w-8 text-gold shrink-0" />
                 <div className="flex-1 min-w-0">

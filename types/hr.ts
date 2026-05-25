@@ -3,7 +3,7 @@
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type PayrollStatus = "DRAFT" | "APPROVED" | "PAID";
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
-export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "DISPOSED";
+export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED";
 export type DocumentType =
   | "CONTRACT"
   | "CERTIFICATE"
@@ -546,6 +546,8 @@ export interface UpdateAssetInput {
   serialNumber?: string;
   assignedTo?: string;
   status?: AssetStatus;
+  purchaseDate?: string;
+  purchaseCost?: number;
   location?: string;
   notes?: string;
 }

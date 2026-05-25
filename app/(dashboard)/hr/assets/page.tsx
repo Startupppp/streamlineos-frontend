@@ -39,10 +39,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { useHrAssets, useCreateAsset, useHrEmployees } from "@/lib/api/hooks";
+import { useHrAssets, useCreateAsset, useUpdateAsset, useDeleteAsset, useHrEmployees } from "@/lib/api/hooks";
+import { assetFormSchema } from "@/lib/validations/hr-assets";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { Pencil, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import type { Asset } from "@/types/hr";
+import type { Asset, AssetStatus } from "@/types/hr";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -98,6 +101,8 @@ const ASSET_TYPES = [
 
 export default function HrAssetsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editAsset, setEditAsset] = useState<Asset | null>(null);
+  const [deleteAssetId, setDeleteAssetId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const [name, setName] = useState("");
@@ -113,6 +118,8 @@ export default function HrAssetsPage() {
   const { data, isLoading } = useHrAssets();
   const { data: employeesData } = useHrEmployees({ limit: 200 });
   const createAsset = useCreateAsset();
+  const updateAsset = useUpdateAsset();
+  const deleteAsset = useDeleteAsset();
 
   const items: Asset[] = Array.isArray(data) ? data : [];
   const filteredItems = statusFilter ? items.filter((a) => a.status === statusFilter) : items;
@@ -195,26 +202,97 @@ export default function HrAssetsPage() {
     [emailExport, statusFilter]
   );
 
+  const loadFormFromAsset = useCallback((a: Asset) => {
+    setName(a.name ?? "");
+    setType(a.type ?? "Laptop");
+    setStatus(a.status ?? "AVAILABLE");
+    setSerialNumber(a.serialNumber ?? "");
+    setAssignedTo(a.assignedTo ?? "");
+    setPurchaseDate(a.purchaseDate ?? "");
+    setPurchaseCost(a.purchaseCost != null ? String(a.purchaseCost) : "");
+    setLocation(a.location ?? "");
+    setNotes(a.notes ?? "");
+  }, []);
+
+  const buildPayload = useCallback(() => {
+    const parsed = assetFormSchema.safeParse({
+      name: name.trim(),
+      type,
+      status,
+      serialNumber: serialNumber.trim() || undefined,
+      assignedTo: assignedTo || undefined,
+      purchaseDate: purchaseDate || undefined,
+      purchaseCost: purchaseCost ? Number(purchaseCost) : undefined,
+      location: location.trim() || undefined,
+      notes: notes.trim() || undefined,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
+      return null;
+    }
+    return parsed.data;
+  }, [name, type, status, serialNumber, assignedTo, purchaseDate, purchaseCost, location, notes]);
+
   const handleCreate = useCallback(() => {
-    if (!name.trim()) { toast.error("Asset name is required"); return; }
+    const payload = buildPayload();
+    if (!payload) return;
     createAsset.mutate(
       {
-        name: name.trim(),
-        type,
-        status,
-        serialNumber: serialNumber || undefined,
-        assignedTo: assignedTo || undefined,
-        purchaseDate: purchaseDate || undefined,
-        purchaseCost: purchaseCost ? Number(purchaseCost) : undefined,
-        location: location || undefined,
-        notes: notes || undefined,
+        name: payload.name,
+        type: payload.type,
+        status: payload.status as AssetStatus,
+        serialNumber: payload.serialNumber,
+        assignedTo: payload.assignedTo,
+        purchaseDate: payload.purchaseDate,
+        purchaseCost: payload.purchaseCost,
+        location: payload.location,
+        notes: payload.notes,
       },
       {
         onSuccess: () => { toast.success("Asset added"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, type, status, serialNumber, assignedTo, purchaseDate, purchaseCost, location, notes, createAsset, resetForm]);
+  }, [buildPayload, createAsset, resetForm]);
+
+  const handleUpdate = useCallback(() => {
+    if (!editAsset) return;
+    const payload = buildPayload();
+    if (!payload) return;
+    updateAsset.mutate(
+      {
+        assetId: editAsset.id,
+        name: payload.name,
+        type: payload.type,
+        status: payload.status as AssetStatus,
+        serialNumber: payload.serialNumber,
+        assignedTo: payload.assignedTo,
+        purchaseDate: payload.purchaseDate,
+        purchaseCost: payload.purchaseCost,
+        location: payload.location,
+        notes: payload.notes,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Asset updated");
+          setEditAsset(null);
+          resetForm();
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [editAsset, buildPayload, updateAsset, resetForm]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteAssetId === null) return;
+    deleteAsset.mutate(deleteAssetId, {
+      onSuccess: () => {
+        toast.success("Asset deleted");
+        setDeleteAssetId(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteAssetId, deleteAsset]);
 
   return (
     <PageWrapper
@@ -269,13 +347,14 @@ export default function HrAssetsPage() {
                     <TableHead>Assigned To</TableHead>
                     <TableHead className="text-right">Cost</TableHead>
                     <TableHead>Purchased</TableHead>
+                    <TableHead className="text-right w-[88px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : filteredItems.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyDevicesIllustration className="h-36 w-36 opacity-95" />
                       <p>No assets found.</p>
                     </div></TableCell></TableRow>
@@ -293,6 +372,33 @@ export default function HrAssetsPage() {
                         <TableCell className="text-right text-sm">{fmt(a.purchaseCost)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {a.purchaseDate ? format(new Date(a.purchaseDate), "dd MMM yyyy") : "—"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              aria-label="Edit asset"
+                              onClick={() => {
+                                loadFormFromAsset(a);
+                                setEditAsset(a);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive"
+                              aria-label="Delete asset"
+                              onClick={() => setDeleteAssetId(a.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -355,7 +461,7 @@ export default function HrAssetsPage() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Purchase Cost (₹)</label>
-            <Input value={purchaseCost} onChange={(e) => setPurchaseCost(e.target.value)} type="number" placeholder="0" />
+            <Input value={purchaseCost} onChange={(e) => setPurchaseCost(e.target.value)} type="number" min={0} step="0.01" placeholder="0" />
           </div>
         </div>
         <div className="space-y-1.5">
@@ -367,6 +473,96 @@ export default function HrAssetsPage() {
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
         </div>
       </HrSheet>
+
+      <HrSheet
+        open={editAsset !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditAsset(null);
+            resetForm();
+          }
+        }}
+        title="Edit Asset"
+        description="Update asset details."
+        onSubmit={handleUpdate}
+        submitLabel="Save changes"
+        isPending={updateAsset.isPending}
+      >
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Asset Name</label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. MacBook Pro 16-inch" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Type</label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ASSET_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Status</label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AVAILABLE">Available</SelectItem>
+                <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                <SelectItem value="RETIRED">Retired</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Serial Number</label>
+          <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="Optional" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Assign To</label>
+          <EmployeeAssignCombobox
+            employees={employeeList}
+            value={assignedTo}
+            onValueChange={setAssignedTo}
+            placeholder="Unassigned"
+            disabled={updateAsset.isPending}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Purchase Date</label>
+            <DatePicker value={purchaseDate} onChange={setPurchaseDate} placeholder="Pick date" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Purchase Cost (₹)</label>
+            <Input value={purchaseCost} onChange={(e) => setPurchaseCost(e.target.value)} type="number" min={0} step="0.01" placeholder="0" />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Location</label>
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Bangalore Office" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Notes</label>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
+        </div>
+      </HrSheet>
+
+      <ConfirmActionDialog
+        open={deleteAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteAssetId(null);
+        }}
+        title="Delete asset?"
+        description="This will permanently remove the asset from inventory."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+        isPending={deleteAsset.isPending}
+      />
     </PageWrapper>
   );
 }

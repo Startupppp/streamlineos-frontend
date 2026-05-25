@@ -6,20 +6,10 @@ import { eq } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth/helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 import { sendAssetAssignedEmail } from "@/lib/email";
+import { assetFormSchema } from "@/lib/validations/hr-assets";
 
-const postAssetSchema = z.object({
-  name: z.string(),
-  type: z.string(),
-  status: z.string().optional(),
-  serialNumber: z.string().optional(),
-  assignedTo: z.string().optional(),
-  purchaseDate: z.string().optional(),
-  purchaseCost: z.number().optional(),
-  location: z.string().optional(),
-  notes: z.string().optional(),
-});
+const postAssetSchema = assetFormSchema;
 
 export async function GET() {
   return withAuth(async (session) => {

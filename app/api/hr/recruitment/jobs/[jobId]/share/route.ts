@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { jobPostingPath } from "@/lib/careers/job-slug";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -26,8 +27,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.vaivamm.com";
 
-    const jobSlug = job.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const baseJobUrl = `${appUrl}/careers/${jobId}/${jobSlug}`;
+    const baseJobUrl = `${appUrl}${jobPostingPath(jobId, job.title)}`;
 
     const shareLinks = PLATFORMS.map(({ key, name, baseUrl }) => {
       const utmUrl = `${baseJobUrl}?utm_source=${key.toLowerCase()}&utm_medium=social&utm_campaign=job_${jobId}`;

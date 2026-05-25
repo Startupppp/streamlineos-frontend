@@ -9,20 +9,29 @@ import { inngest } from "@/lib/inngest/client";
 import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
-const REASON_CATEGORIES = [
-  "Better Opportunity", "Personal Reasons", "Higher Education",
-  "Work Environment", "Compensation", "Role Mismatch",
-  "Relocation", "Health Issues", "Starting Own Venture", "Other",
-] as const;
+import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
 
-const createSchema = z.object({
-  reason: z.string().min(50, "Detailed reason must be at least 50 characters").max(2000),
-  reasonCategory: z.enum(REASON_CATEGORIES),
-  lastWorkingDate: z.string().min(1, "Last working date is required"),
-  noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
-  willingForExitInterview: z.boolean().optional().default(true),
-  companyFeedback: z.string().max(2000).optional(),
-});
+const REASON_CATEGORIES = [...RESIGNATION_REASONS] as const;
+
+const createSchema = z
+  .object({
+    reason: z.string().min(50, "Detailed reason must be at least 50 characters").max(2000),
+    reasonCategory: z.enum(REASON_CATEGORIES),
+    reasonCategoryOther: z.string().trim().max(200).optional(),
+    lastWorkingDate: z.string().min(1, "Last working date is required"),
+    noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
+    willingForExitInterview: z.boolean().optional().default(true),
+    companyFeedback: z.string().max(2000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.reasonCategory === "Other" && !data.reasonCategoryOther?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please specify your reason when selecting Other",
+        path: ["reasonCategoryOther"],
+      });
+    }
+  });
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -46,7 +55,10 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       userId: session.user.id,
       reason: body.reason,
-      reasonCategory: body.reasonCategory,
+      reasonCategory:
+        body.reasonCategory === "Other" && body.reasonCategoryOther
+          ? `Other: ${body.reasonCategoryOther}`
+          : body.reasonCategory,
       lastWorkingDate: body.lastWorkingDate,
       noticePeriodDays: body.noticePeriodDays,
       willingForExitInterview: body.willingForExitInterview,

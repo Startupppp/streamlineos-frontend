@@ -237,7 +237,7 @@ export function AppSidebar({
               className={cn(
                 "z-50 flex h-6 w-6 shrink-0 items-center justify-center transition-colors",
                 isCollapsed
-                  ? "absolute top-1/2 -right-3 -translate-y-1/2 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-md hover:border-gold/40 hover:bg-sidebar hover:text-gold"
+                  ? "absolute top-3 -right-3 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-md hover:border-gold/40 hover:bg-sidebar hover:text-gold"
                   : "rounded-md text-sidebar-foreground/30 hover:bg-white/5 hover:text-sidebar-foreground/70"
               )}
             >

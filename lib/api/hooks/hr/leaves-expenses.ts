@@ -399,6 +399,15 @@ export function useUpdateAsset() {
   });
 }
 
+export function useDeleteAsset() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (assetId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/assets/${assetId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+  });
+}
+
 export function useHrDocuments(userId?: string, type?: DocumentType) {
   const params: Record<string, unknown> = {};
   if (userId) params.userId = userId;
@@ -596,10 +605,12 @@ export function useDeleteHoliday() {
   });
 }
 
-export function useHrDevices(params?: Record<string, unknown>) {
+const hrDevicesKeyPrefix = [...queryKeys.hr.all, "devices"] as const;
+
+export function useHrDevices() {
   return useQuery({
-    queryKey: queryKeys.hr.devices(params),
-    queryFn: () => apiClient.get<Device[]>("/hr/devices", params),
+    queryKey: queryKeys.hr.devices(),
+    queryFn: () => apiClient.get<Device[]>("/hr/devices"),
   });
 }
 
@@ -608,7 +619,8 @@ export function useCreateDevice() {
   return useMutation({
     mutationFn: (data: CreateDeviceInput) =>
       apiClient.post<Device>("/hr/devices", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: hrDevicesKeyPrefix }),
   });
 }
 
@@ -617,7 +629,8 @@ export function useUpdateDevice() {
   return useMutation({
     mutationFn: ({ deviceId, ...data }: UpdateDeviceInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/devices/${deviceId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: hrDevicesKeyPrefix }),
   });
 }
 
@@ -626,7 +639,8 @@ export function useDeleteDevice() {
   return useMutation({
     mutationFn: ({ deviceId }: DeleteDeviceInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/devices/${deviceId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: hrDevicesKeyPrefix }),
   });
 }
 

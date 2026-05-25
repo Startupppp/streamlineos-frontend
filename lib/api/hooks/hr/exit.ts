@@ -109,7 +109,8 @@ export function useCreateResignation() {
   return useMutation({
     mutationFn: (data: {
       reason: string;
-      reasonCategory?: string;
+      reasonCategory: string;
+      reasonCategoryOther?: string;
       lastWorkingDate: string;
       noticePeriodDays?: number;
       willingForExitInterview?: boolean;

@@ -26,6 +26,7 @@ export const RESIGNATION_REASONS = [
   "Personal commitments",
   "Job dissatisfaction",
   "Starting own business",
+  "Other",
 ] as const;
 
 export type ResignationReason = (typeof RESIGNATION_REASONS)[number];

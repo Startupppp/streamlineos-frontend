@@ -223,10 +223,18 @@ export function AdminExpenseItem({
                       ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
                       : status === "APPROVED"
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                      : status === "PAID"
+                      ? "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-300 dark:border-slate-600"
                       : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
                   }`}
                 >
-                  {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
+                  {status === "PENDING"
+                    ? "Pending Review"
+                    : status === "APPROVED"
+                    ? "Approved"
+                    : status === "PAID"
+                    ? "Paid"
+                    : "Rejected"}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
@@ -234,6 +242,8 @@ export function AdminExpenseItem({
                   ? "Waiting for HR/Admin approval."
                   : status === "APPROVED"
                   ? "Expense has been approved."
+                  : status === "PAID"
+                  ? "Reimbursement has been paid."
                   : expense.rejectionReason?.trim() || "Expense was rejected."}
               </TooltipContent>
             </Tooltip>

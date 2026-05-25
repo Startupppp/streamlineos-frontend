@@ -111,7 +111,7 @@ function SetupPasswordContent() {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-6">
-        <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center mb-4">
+        <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center mb-4 mx-auto">
           <Rocket className="h-5 w-5 text-gold" />
         </div>
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">

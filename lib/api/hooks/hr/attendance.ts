@@ -179,12 +179,12 @@ export function useUpsertWorkLog(
   return useMutation({
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.all });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
-    ...options,
   });
 }
 
@@ -195,11 +195,11 @@ export function useUpdateWorkLogStatus(
   return useMutation({
     mutationFn: (data: UpdateWorkLogStatusInput) =>
       apiClient.patch<WorkLog>("/hr/work-logs/status", data),
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.all });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
-    ...options,
   });
 }

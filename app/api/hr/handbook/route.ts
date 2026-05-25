@@ -1,15 +1,25 @@
-import { withAuth, withAdmin, ok } from "@/lib/api/helpers";
+import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { handbookVersions } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { z } from "zod";
+import { and, eq, desc } from "drizzle-orm";
+import { handbookVersionSchema } from "@/lib/validations/handbook";
 import type { NextRequest } from "next/server";
 
-const createSchema = z.object({
-  version: z.string().min(1, "Version is required"),
-  documentId: z.number().int().positive().optional(),
-  changelog: z.string().optional(),
-});
+function mapHandbookRow(row: typeof handbookVersions.$inferSelect) {
+  return {
+    id: row.id,
+    version: row.version,
+    title: row.title,
+    description: row.description ?? row.changelog ?? null,
+    documentUrl: row.documentUrl ?? null,
+    documentId: row.documentId,
+    changelog: row.changelog,
+    status: row.status,
+    publishedAt: row.publishedAt,
+    publishedBy: row.publishedBy,
+    createdAt: row.createdAt,
+  };
+}
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -19,26 +29,39 @@ export async function GET() {
       .where(eq(handbookVersions.orgId, session.orgId))
       .orderBy(desc(handbookVersions.createdAt));
 
-    return ok(data);
+    return ok(data.map(mapHandbookRow));
   });
 }
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, handbookVersionSchema);
+
+    const existing = await db.query.handbookVersions.findFirst({
+      where: and(
+        eq(handbookVersions.orgId, session.orgId),
+        eq(handbookVersions.version, body.version),
+      ),
+    });
+    if (existing) {
+      return err("A handbook version with this number already exists.", 409);
+    }
 
     const [record] = await db
       .insert(handbookVersions)
       .values({
         orgId: session.orgId,
         version: body.version,
-        documentId: body.documentId ?? null,
-        changelog: body.changelog ?? null,
-        publishedAt: new Date(),
-        publishedBy: session.user.id,
+        title: body.title,
+        description: body.description || null,
+        documentUrl: body.documentUrl || null,
+        changelog: body.description || null,
+        status: "DRAFT",
+        publishedAt: null,
+        publishedBy: null,
       })
       .returning();
 
-    return ok(record, 201);
+    return ok(mapHandbookRow(record), 201);
   });
 }

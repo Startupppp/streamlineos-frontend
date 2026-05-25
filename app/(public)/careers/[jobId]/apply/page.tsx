@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { CareersHeader } from "@/features/careers/careers-header";
+import { CareersFooter } from "@/features/careers/careers-footer";
 
 interface FormState {
   name: string;
@@ -68,41 +70,33 @@ export default function ApplyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
-          <Link
-            href={`/careers/${jobId}`}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to job
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col noir-mesh">
+      <CareersHeader
+        backHref={`/careers/${jobId}`}
+        backLabel="Back to job"
+      />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10">
         {submitted ? (
-          <div className="text-center py-16">
-            <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Application Submitted!</h2>
+          <div className="text-center py-16 rounded-2xl border bg-card/80 shadow-soft px-6">
+            <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Application submitted</h2>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               Thank you for your interest. We&apos;ll review your application and get in touch if
               there&apos;s a match.
             </p>
             <Link
               href="/careers"
-              className="mt-6 inline-block text-sm text-primary hover:underline"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Browse other openings
             </Link>
           </div>
         ) : (
-          <>
+          <div className="rounded-2xl border bg-card/90 p-6 sm:p-8 shadow-soft">
             <div className="mb-8">
               <h1 className="text-2xl font-bold tracking-tight">Apply for this position</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Fill out the form below and we&apos;ll get back to you soon.
               </p>
             </div>
@@ -203,20 +197,16 @@ export default function ApplyPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="press-scale w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-gold hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {submitting ? "Submitting..." : "Submit Application"}
+                {submitting ? "Submitting..." : "Submit application"}
               </button>
             </form>
-          </>
+          </div>
         )}
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
-        </div>
-      </footer>
+      <CareersFooter />
     </div>
   );
 }

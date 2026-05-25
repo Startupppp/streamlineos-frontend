@@ -15,6 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -65,6 +66,7 @@ export default function ExitManagementPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonCategory, setReasonCategory] = useState("");
+  const [reasonCategoryOther, setReasonCategoryOther] = useState("");
   const [willingForExitInterview, setWillingForExitInterview] = useState(false);
   const [companyFeedback, setCompanyFeedback] = useState("");
 
@@ -92,16 +94,31 @@ export default function ExitManagementPage() {
   }, []);
 
   const handleSubmitResignation = useCallback(() => {
-    if (!reason.trim()) {
-      toast.error("Detailed explanation is required");
+    const trimmed = reason.trim();
+    if (!reasonCategory) {
+      toast.error("Please select a reason category");
+      return;
+    }
+    if (reasonCategory === "Other" && !reasonCategoryOther.trim()) {
+      toast.error("Please specify your reason when selecting Other");
+      return;
+    }
+    if (trimmed.length < 50) {
+      toast.error(`Detailed explanation must be at least 50 characters (${trimmed.length}/50)`);
+      return;
+    }
+    if (trimmed.length > 2000) {
+      toast.error("Detailed explanation must be at most 2000 characters");
       return;
     }
     createResignation.mutate(
       {
-        reason: reason.trim(),
+        reason: trimmed,
         lastWorkingDate: autoLwd,
         noticePeriodDays: NOTICE_PERIOD_DAYS,
-        reasonCategory: reasonCategory || undefined,
+        reasonCategory,
+        reasonCategoryOther:
+          reasonCategory === "Other" ? reasonCategoryOther.trim() : undefined,
         willingForExitInterview,
         companyFeedback: companyFeedback.trim() || undefined,
       },
@@ -111,13 +128,14 @@ export default function ExitManagementPage() {
           setSheetOpen(false);
           setReason("");
           setReasonCategory("");
+          setReasonCategoryOther("");
           setWillingForExitInterview(false);
           setCompanyFeedback("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation]);
+  }, [reason, reasonCategory, reasonCategoryOther, willingForExitInterview, companyFeedback, autoLwd, createResignation]);
 
   const handleHrApprove = useCallback(() => {
     if (!hrApproveId) return;
@@ -259,7 +277,13 @@ export default function ExitManagementPage() {
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Reason Category</label>
-          <Select value={reasonCategory} onValueChange={setReasonCategory}>
+          <Select
+            value={reasonCategory}
+            onValueChange={(v) => {
+              setReasonCategory(v);
+              if (v !== "Other") setReasonCategoryOther("");
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select a category..." />
             </SelectTrigger>
@@ -273,16 +297,34 @@ export default function ExitManagementPage() {
           </Select>
         </div>
 
-        <div className="space-y-1.5">
+        {reasonCategory === "Other" && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Specify reason</label>
+            <Input
+              placeholder="Describe your reason category..."
+              value={reasonCategoryOther}
+              onChange={(e) => setReasonCategoryOther(e.target.value)}
+              maxLength={200}
+              className="max-w-full"
+            />
+          </div>
+        )}
+
+        <div className="space-y-1.5 max-w-full">
           <label className="text-sm font-medium">
             Detailed Explanation <span className="text-destructive">*</span>
           </label>
           <Textarea
-            placeholder="Please describe your reason for leaving..."
+            className="max-w-full min-h-[100px] resize-y"
+            placeholder="Please describe your reason for leaving (minimum 50 characters)..."
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={4}
+            maxLength={2000}
           />
+          <p className="text-xs text-muted-foreground text-right">
+            {reason.trim().length}/50 min · {reason.length}/2000 max
+          </p>
         </div>
 
         <div className="flex items-center justify-between rounded-md border px-3 py-2.5">

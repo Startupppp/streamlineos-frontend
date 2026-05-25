@@ -1,7 +1,7 @@
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type PayrollStatus = "DRAFT" | "APPROVED" | "PAID";
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
-export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "DISPOSED";
+export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED";
 export type DocumentType =
   | "CONTRACT"
   | "CERTIFICATE"

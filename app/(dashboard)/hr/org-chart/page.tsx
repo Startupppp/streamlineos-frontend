@@ -111,6 +111,10 @@ function PersonCard({ emp, size = "md" }: { emp: Employee; size?: "sm" | "md" })
 
 const MAX_TREE_DEPTH = 20;
 
+function countSubtree(node: TreeNode): number {
+  return 1 + node.children.reduce((sum, child) => sum + countSubtree(child), 0);
+}
+
 function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth?: number; isLast?: boolean }) {
   const hasChildren = node.children.length > 0 && depth < MAX_TREE_DEPTH;
 
@@ -133,7 +137,7 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
           <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
           {hasChildren && (
             <Badge variant="secondary" className="h-5 text-[10px]">
-              {node.children.length} report{node.children.length > 1 ? "s" : ""}
+              {countSubtree(node) - 1} in team
             </Badge>
           )}
         </div>
@@ -168,7 +172,7 @@ function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNod
           {label}
         </span>
         <Badge variant="secondary" className="h-4 text-[9px] px-1.5">
-          {roots.length}
+          {roots.reduce((sum, r) => sum + countSubtree(r), 0)} people
         </Badge>
       </div>
 

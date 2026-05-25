@@ -165,13 +165,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
               <BankDetailsSection />
             </div>
           </div>
-          <div className="shrink-0 flex justify-end gap-2 px-4 py-3 bg-muted/30 border-t">
-            <Button size="sm" type="submit" disabled={updateProfileMutation.isPending}>
-              {updateProfileMutation.isPending && (
-                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-              )}
-              Save Changes
-            </Button>
+          <div className="shrink-0 flex justify-between gap-2 px-4 py-3 bg-muted/30 border-t">
             <Button
               variant="outline"
               size="sm"
@@ -180,6 +174,12 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
               disabled={updateProfileMutation.isPending}
             >
               Back
+            </Button>
+            <Button size="sm" type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending && (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              )}
+              Save Changes
             </Button>
           </div>
         </div>

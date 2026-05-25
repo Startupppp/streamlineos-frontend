@@ -90,11 +90,11 @@ function EmployeeRow({ emp, dept }: { emp: Employee; dept: string | null }) {
           </Avatar>
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{displayName}</p>
-            {emp.employeeId && (
-              <p className="text-[11px] text-muted-foreground">{emp.employeeId}</p>
-            )}
           </div>
         </Link>
+      </TableCell>
+      <TableCell className="text-sm font-mono text-muted-foreground">
+        {emp.employeeId ?? "—"}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">{emp.designation ?? "—"}</TableCell>
       <TableCell>
@@ -277,6 +277,7 @@ export default function EmployeesPage() {
               <TableHeader>
                 <TableRow className="text-xs">
                   <TableHead scope="col">Employee</TableHead>
+                  <TableHead scope="col" className="w-[120px]">Employee ID</TableHead>
                   <TableHead scope="col" className="w-[160px]">Designation</TableHead>
                   <TableHead scope="col" className="w-[140px]">Department</TableHead>
                   <TableHead scope="col" className="w-[200px]">Email</TableHead>
