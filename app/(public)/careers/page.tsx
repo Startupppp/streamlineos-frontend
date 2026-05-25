@@ -38,12 +38,14 @@ export default async function CareersPage() {
           <div>
             <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
           </div>
-          <Link
-            href="/"
+          <a
+            href="https://vaivammcapital.com/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Back to site
-          </Link>
+            Visit Vaivamm Capital
+          </a>
         </div>
       </header>
 
