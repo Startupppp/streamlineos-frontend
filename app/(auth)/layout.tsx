@@ -40,7 +40,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         <footer className="shrink-0 px-4 sm:px-8 py-4 border-t border-border/20">
           <p className="text-[11px] text-muted-foreground/40">
-            &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
+            &copy; 2025 Vaivamm Capital. All rights reserved.
           </p>
         </footer>
       </div>

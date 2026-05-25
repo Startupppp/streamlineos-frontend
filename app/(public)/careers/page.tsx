@@ -1,21 +1,20 @@
-import { listOpenJobPostings, listDepartmentsByIds, type PublicJobPosting } from "@/server/queries/public";
-import Link from "next/link";
-import { MapPin, Clock, Briefcase, Building2, ChevronRight } from "lucide-react";
+import {
+  listOpenJobPostings,
+  listDepartmentsByIds,
+  type PublicJobPosting,
+} from "@/server/queries/public";
+import { Briefcase, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
+import { CareersHeader } from "@/features/careers/careers-header";
+import { CareersFooter } from "@/features/careers/careers-footer";
+import { CareersJobCard } from "@/features/careers/careers-job-card";
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Careers",
-  description: "Explore open positions at Vaivamm Capital. Join our team of driven professionals.",
-};
-
-const JOB_TYPE_LABELS: Record<string, string> = {
-  FULL_TIME: "Full Time",
-  PART_TIME: "Part Time",
-  CONTRACT: "Contract",
-  INTERNSHIP: "Internship",
-  REMOTE: "Remote",
+  description:
+    "Explore open positions at Vaivamm Capital. Join our team of driven professionals.",
 };
 
 export default async function CareersPage() {
@@ -25,147 +24,86 @@ export default async function CareersPage() {
   try {
     jobs = await listOpenJobPostings();
     const departmentIds = [
-      ...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null)),
+      ...new Set(
+        jobs.map((j) => j.departmentId).filter((id): id is number => id !== null)
+      ),
     ];
     deptMap = await listDepartmentsByIds(departmentIds);
   } catch {
+    // Public page: show empty state if DB unavailable
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
-          <div>
-            <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
-          </div>
-          <a
-            href="https://vaivammcapital.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Visit Vaivamm Capital
-          </a>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col noir-mesh">
+      <CareersHeader backHref="/" backLabel="Back to site" />
 
-      <section className="bg-card border-b">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-14 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-            Join Vaivamm Capital
-          </h1>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-            We&apos;re building the future of capital markets. Come grow with us.
-          </p>
-          <p className="mt-3 text-sm font-medium text-primary">
-            {jobs.length} open position{jobs.length !== 1 ? "s" : ""}
-          </p>
+      <section className="relative overflow-hidden border-b border-border/50">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-24 right-0 h-72 w-72 rounded-full bg-primary/8 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-secondary/10 blur-3xl" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <div className="max-w-2xl mx-auto lg:mx-0 text-center lg:text-left space-y-5">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                We&apos;re hiring
+              </span>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-tight">
+                Join{" "}
+                <span className="gold-text">Vaivamm Capital</span>
+              </h1>
+
+              <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                We&apos;re building the future of capital markets. Explore open
+                roles and grow your career with a team that moves fast and cares
+                deeply.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                <span className="inline-flex items-center rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow-gold">
+                  {jobs.length} open position{jobs.length !== 1 ? "s" : ""}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Updated regularly
+                </span>
+              </div>
+          </div>
         </div>
       </section>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12">
         {jobs.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <Briefcase className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">No open positions right now.</p>
-            <p className="text-sm mt-1">Check back soon — we&apos;re always growing.</p>
+          <div className="text-center py-16 sm:py-24 rounded-2xl border border-dashed border-border bg-card/50">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60">
+              <Briefcase className="h-8 w-8 text-muted-foreground/60" />
+            </div>
+            <p className="text-lg font-semibold">No open positions right now</p>
+            <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
+              Check back soon — we&apos;re always growing and new roles open up
+              frequently.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {jobs.map((job) => {
-              const deptName = job.departmentId ? deptMap.get(job.departmentId) : null;
-              const typeLabel = job.type ? (JOB_TYPE_LABELS[job.type] ?? job.type) : null;
-              const hasSalary = job.salaryMin !== null || job.salaryMax !== null;
-
-              return (
-                <Link
-                  key={job.id}
-                  href={`/careers/${job.id}`}
-                  className="block group"
-                >
-                  <div className="rounded-lg border bg-card p-5 hover:border-primary/50 hover:shadow-sm transition-all">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-base font-semibold group-hover:text-primary transition-colors truncate">
-                          {job.title}
-                        </h2>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
-                          {deptName && (
-                            <span className="flex items-center gap-1.5">
-                              <Building2 className="h-3.5 w-3.5 shrink-0" />
-                              {deptName}
-                            </span>
-                          )}
-                          {job.location && (
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 shrink-0" />
-                              {job.location}
-                            </span>
-                          )}
-                          {typeLabel && (
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 shrink-0" />
-                              {typeLabel}
-                            </span>
-                          )}
-                          {job.experience && (
-                            <span className="flex items-center gap-1.5">
-                              <Briefcase className="h-3.5 w-3.5 shrink-0" />
-                              {job.experience}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          {typeLabel && (
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium text-foreground">
-                              {typeLabel}
-                            </span>
-                          )}
-                          {hasSalary && (
-                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                              {job.salaryMin && job.salaryMax
-                                ? `₹${Number(job.salaryMin).toLocaleString("en-IN")} – ₹${Number(job.salaryMax).toLocaleString("en-IN")}`
-                                : job.salaryMin
-                                ? `From ₹${Number(job.salaryMin).toLocaleString("en-IN")}`
-                                : `Up to ₹${Number(job.salaryMax).toLocaleString("en-IN")}`}
-                            </span>
-                          )}
-                          {job.openings && job.openings > 1 && (
-                            <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                              {job.openings} openings
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 group-hover:text-primary transition-colors mt-0.5" />
-                    </div>
-
-                    {job.applicationDeadline && (
-                      <p className="mt-3 text-xs text-muted-foreground border-t pt-3">
-                        Apply by{" "}
-                        {new Date(job.applicationDeadline).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+            <p className="text-sm font-medium text-muted-foreground mb-6">
+              Open roles
+            </p>
+            {jobs.map((job) => (
+              <CareersJobCard
+                key={job.id}
+                job={job}
+                departmentName={
+                  job.departmentId ? deptMap.get(job.departmentId) : null
+                }
+              />
+            ))}
           </div>
         )}
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
-        </div>
-      </footer>
+      <CareersFooter />
     </div>
   );
 }

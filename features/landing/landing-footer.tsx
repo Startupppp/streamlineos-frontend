@@ -79,7 +79,7 @@ export function LandingFooter() {
 
         <div className="border-t border-white/[0.04] py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-white/20">
-            &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
+            &copy; 2025 Vaivamm Capital. All rights reserved.
           </p>
           <div className="flex items-center gap-5">
             <a

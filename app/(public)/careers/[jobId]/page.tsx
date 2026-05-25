@@ -4,9 +4,21 @@ import {
   getDepartmentName,
 } from "@/server/queries/public";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { MapPin, Clock, Briefcase, Building2, Users, CalendarDays, ArrowLeft } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Briefcase,
+  Building2,
+  Users,
+  CalendarDays,
+  ArrowLeft,
+} from "lucide-react";
 import type { Metadata } from "next";
+import { CareersHeader } from "@/features/careers/careers-header";
+import { CareersFooter } from "@/features/careers/careers-footer";
+import { jobPostingPath } from "@/lib/careers/job-slug";
 
 export const revalidate = 300;
 
@@ -43,53 +55,54 @@ export default async function JobDetailPage({ params }: Props) {
   const job = await getJobPostingDetail(id);
   if (!job) notFound();
 
-  const deptName = job.departmentId ? await getDepartmentName(job.departmentId) : null;
+  const deptName = job.departmentId
+    ? await getDepartmentName(job.departmentId)
+    : null;
 
   const typeLabel = job.type ? (JOB_TYPE_LABELS[job.type] ?? job.type) : null;
   const hasSalary = job.salaryMin !== null || job.salaryMax !== null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
-          <Link
-            href="/careers"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All jobs
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col noir-mesh">
+      <CareersHeader backHref="/careers" backLabel="All jobs" />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{job.title}</h1>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-10">
+        <Link
+          href="/careers"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to all openings
+        </Link>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-soft">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                {job.title}
+              </h1>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 {deptName && (
                   <span className="flex items-center gap-1.5">
-                    <Building2 className="h-4 w-4 shrink-0" />
+                    <Building2 className="h-4 w-4 shrink-0 text-primary/70" />
                     {deptName}
                   </span>
                 )}
                 {job.location && (
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 shrink-0" />
+                    <MapPin className="h-4 w-4 shrink-0 text-primary/70" />
                     {job.location}
                   </span>
                 )}
                 {typeLabel && (
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 shrink-0" />
+                    <Clock className="h-4 w-4 shrink-0 text-primary/70" />
                     {typeLabel}
                   </span>
                 )}
                 {job.experience && (
                   <span className="flex items-center gap-1.5">
-                    <Briefcase className="h-4 w-4 shrink-0" />
+                    <Briefcase className="h-4 w-4 shrink-0 text-primary/70" />
                     {job.experience}
                   </span>
                 )}
@@ -97,7 +110,7 @@ export default async function JobDetailPage({ params }: Props) {
             </div>
 
             {job.description && (
-              <section>
+              <section className="rounded-xl border bg-card/60 p-6">
                 <h2 className="text-base font-semibold mb-3">About this role</h2>
                 <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {job.description}
@@ -106,7 +119,7 @@ export default async function JobDetailPage({ params }: Props) {
             )}
 
             {job.requirements && (
-              <section>
+              <section className="rounded-xl border bg-card/60 p-6">
                 <h2 className="text-base font-semibold mb-3">Requirements</h2>
                 <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {job.requirements}
@@ -115,7 +128,7 @@ export default async function JobDetailPage({ params }: Props) {
             )}
 
             {job.benefits && (
-              <section>
+              <section className="rounded-xl border bg-card/60 p-6">
                 <h2 className="text-base font-semibold mb-3">Benefits</h2>
                 <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {job.benefits}
@@ -124,67 +137,90 @@ export default async function JobDetailPage({ params }: Props) {
             )}
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold">Job Details</h3>
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-2xl border bg-card p-6 space-y-5 shadow-gold ring-1 ring-primary/10">
+              <div className="flex items-center gap-3 pb-1 border-b border-border/60">
+                <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-primary/10 ring-1 ring-primary/20 shrink-0">
+                  <Image
+                    src="/logo.svg"
+                    alt="Vaivamm"
+                    fill
+                    className="object-contain p-1.5"
+                  />
+                </div>
+                <h3 className="text-sm font-semibold">Job details</h3>
+              </div>
 
-              <dl className="space-y-3 text-sm">
+              <dl className="space-y-4 text-sm">
                 {typeLabel && (
                   <div>
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Employment Type</dt>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+                      Employment type
+                    </dt>
                     <dd className="font-medium">{typeLabel}</dd>
                   </div>
                 )}
                 {job.location && (
                   <div>
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Location</dt>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+                      Location
+                    </dt>
                     <dd className="font-medium">{job.location}</dd>
                   </div>
                 )}
                 {job.experience && (
                   <div>
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Experience</dt>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+                      Experience
+                    </dt>
                     <dd className="font-medium">{job.experience}</dd>
                   </div>
                 )}
                 {hasSalary && (
                   <div>
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Salary Range</dt>
-                    <dd className="font-medium text-primary">
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+                      Salary range
+                    </dt>
+                    <dd className="font-semibold text-primary">
                       {job.salaryMin && job.salaryMax
                         ? `₹${Number(job.salaryMin).toLocaleString("en-IN")} – ₹${Number(job.salaryMax).toLocaleString("en-IN")}`
                         : job.salaryMin
-                        ? `From ₹${Number(job.salaryMin).toLocaleString("en-IN")}`
-                        : `Up to ₹${Number(job.salaryMax).toLocaleString("en-IN")}`}
+                          ? `From ₹${Number(job.salaryMin).toLocaleString("en-IN")}`
+                          : `Up to ₹${Number(job.salaryMax).toLocaleString("en-IN")}`}
                     </dd>
                   </div>
                 )}
                 {job.openings && (
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">{job.openings} opening{job.openings !== 1 ? "s" : ""}</span>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Users className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {job.openings} opening{job.openings !== 1 ? "s" : ""}
+                    </span>
                   </div>
                 )}
                 {job.applicationDeadline && (
-                  <div className="flex items-center gap-1.5">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                    <span>
                       Apply by{" "}
-                      {new Date(job.applicationDeadline).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
+                      {new Date(job.applicationDeadline).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
                     </span>
                   </div>
                 )}
               </dl>
 
               <Link
-                href={`/careers/${job.id}/apply`}
-                className="mt-2 block w-full text-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+                href={`${jobPostingPath(job.id, job.title)}/apply`}
+                className="press-scale block w-full text-center rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-gold hover:bg-primary/90 transition-colors"
               >
-                Apply Now
+                Apply now
               </Link>
             </div>
 
@@ -202,11 +238,7 @@ export default async function JobDetailPage({ params }: Props) {
         </div>
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
-        </div>
-      </footer>
+      <CareersFooter />
     </div>
   );
 }
