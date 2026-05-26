@@ -28,6 +28,7 @@ import { useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 import { AssignCrmDialog } from "@/features/crm/clients/assign-crm-dialog";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
@@ -436,14 +437,14 @@ export default function ClientAccountsPage() {
               </table>
               </div>
             </div>
-            {(data?.totalPages ?? 0) > 1 && (
-              <div className="shrink-0 flex items-center justify-between p-4 border-t">
-                <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Prev</Button>
-                  <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(page + 1)}>Next</Button>
-                </div>
-              </div>
+            {(data?.totalCount ?? 0) > 0 && (
+              <DataTablePagination
+                page={data?.page ?? page}
+                totalPages={data?.totalPages ?? 1}
+                total={data?.totalCount ?? 0}
+                limit={20}
+                onPageChange={setPage}
+              />
             )}
           </div>
         </motion.div>

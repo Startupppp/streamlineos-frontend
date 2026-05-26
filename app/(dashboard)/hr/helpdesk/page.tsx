@@ -2,6 +2,10 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
+import { HelpdeskCreateTicketForm } from "@/features/hr/helpdesk/helpdesk-create-ticket-form";
+import type { HelpdeskTicketFormValues } from "@/lib/validations/common-forms";
+import { usePaginationParams } from "@/hooks/use-pagination-params";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyTicketIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
@@ -100,10 +104,7 @@ export default function HelpdeskPage() {
   const createTicket = useCreateHelpdeskTicket();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams();
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -140,26 +141,34 @@ export default function HelpdeskPage() {
     };
   }, [tickets]);
 
-  const handleCreateTicket = useCallback(() => {
-    if (!title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-    createTicket.mutate(
-      { title: title.trim(), description: description.trim() || undefined, category: category || undefined, priority },
-      {
-        onSuccess: () => {
-          toast.success("Ticket created successfully");
-          setSheetOpen(false);
-          setTitle("");
-          setDescription("");
-          setCategory("");
-          setPriority("MEDIUM");
+  const paginatedTickets = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredTickets.slice(start, start + pageSize);
+  }, [filteredTickets, page, pageSize]);
+
+  const ticketTotalPages = Math.max(1, Math.ceil(filteredTickets.length / pageSize));
+
+  const handleCreateTicket = useCallback(
+    (values: HelpdeskTicketFormValues) => {
+      createTicket.mutate(
+        {
+          title: values.title,
+          description: values.description || undefined,
+          category: values.category || undefined,
+          priority: values.priority,
+          attachmentUrl: values.attachmentUrl || undefined,
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      }
-    );
-  }, [title, description, category, priority, createTicket]);
+        {
+          onSuccess: () => {
+            toast.success("Ticket created successfully");
+            setSheetOpen(false);
+          },
+          onError: (error) => toast.error(getErrorMessage(error)),
+        },
+      );
+    },
+    [createTicket],
+  );
 
   if (isLoading) {
     return (
@@ -206,59 +215,21 @@ export default function HelpdeskPage() {
               <SheetDescription className="text-xs">Describe your issue and we&apos;ll get back to you.</SheetDescription>
             </SheetHeader>
             <SheetScrollArea className="flex-1 min-h-0">
-              <div className="px-4 py-4 space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    placeholder="Brief description of the issue"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    placeholder="Provide more details..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Category</label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORY_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Priority</label>
-                    <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRIORITY_OPTIONS.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+              <HelpdeskCreateTicketForm
+                formId="helpdesk-create-ticket"
+                onSubmit={handleCreateTicket}
+              />
             </SheetScrollArea>
             <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>
                 Cancel
               </Button>
-              <Button className="flex-1" onClick={handleCreateTicket} disabled={createTicket.isPending}>
+              <Button
+                type="submit"
+                form="helpdesk-create-ticket"
+                className="flex-1"
+                disabled={createTicket.isPending}
+              >
                 {createTicket.isPending ? "Creating..." : "Create Ticket"}
               </Button>
             </SheetFooter>
@@ -339,7 +310,7 @@ export default function HelpdeskPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredTickets.map((ticket) => (
+                      paginatedTickets.map((ticket) => (
                         <TableRow key={ticket.id}>
                           <TableCell>
                             <div>
@@ -379,6 +350,16 @@ export default function HelpdeskPage() {
                 </Table>
               </div>
             </ScrollArea>
+            {filteredTickets.length > 0 && (
+              <DataTablePagination
+                page={page}
+                totalPages={ticketTotalPages}
+                total={filteredTickets.length}
+                limit={pageSize}
+                onPageChange={setPage}
+                onLimitChange={(limit) => setPageSize(limit as import("@/lib/pagination-constants").PageSizeOption)}
+              />
+            )}
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { usePaginationParams } from "@/hooks/use-pagination-params";
 import { FolderPlus, Upload, FilePlus2, FileText, Eye, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -43,14 +44,14 @@ const DOCUMENT_CATEGORIES = [
 
 export default function DocumentsPage() {
   const { data: session } = useSession();
+  const { page, pageSize, setPage, resetPage } = usePaginationParams();
+
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState("All Files");
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [page, setPage] = useState(1);
-  const pageSize = 5;
 
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
 
@@ -133,9 +134,9 @@ export default function DocumentsPage() {
     );
   }, [deleteMutation]);
 
-  const handleSearchChange = (value: string) => { setSearchTerm(value); setPage(1); };
-  const handleTypeChange = (value: string) => { setSelectedType(value); setPage(1); };
-  const handleCategoryChange = (value: string) => { setSelectedCategory(value); setPage(1); };
+  const handleSearchChange = (value: string) => { setSearchTerm(value); resetPage(); };
+  const handleTypeChange = (value: string) => { setSelectedType(value); resetPage(); };
+  const handleCategoryChange = (value: string) => { setSelectedCategory(value); resetPage(); };
 
   const handleNewFolder = useCallback(
     (name: string) => {

@@ -30,6 +30,12 @@ import {
   type AuditLogRow,
 } from "@/lib/api/hooks/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
+import {
+  PAGE_SIZE_OPTIONS,
+  parsePaginationFromSearchParams,
+  buildPaginationQueryUpdates,
+  DEFAULT_PAGE_SIZE,
+} from "@/lib/pagination-constants";
 
 function getInitials(name?: string | null) {
   if (!name) return "?";
@@ -53,9 +59,6 @@ const ACTION_COLORS: Record<string, string> = {
   "settings.updated": "bg-amber-500/10 text-amber-700 border-amber-200",
   "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200",
 };
-
-const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
-type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 function actionBadgeClass(action: string) {
   for (const [key, cls] of Object.entries(ACTION_COLORS)) {
@@ -184,10 +187,7 @@ export default function AuditLogPage() {
   const [goToPage, setGoToPage] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
 
-  const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (PAGE_SIZE_OPTIONS.includes(Number(searchParams.get("size")) as PageSize)
-    ? Number(searchParams.get("size"))
-    : 10) as PageSize;
+  const { page, pageSize } = parsePaginationFromSearchParams(searchParams);
   const actionFilter = searchParams.get("action") || "all";
   const targetTypeFilter = searchParams.get("target") || "all";
   const dateFrom = searchParams.get("from") || "";
@@ -237,9 +237,18 @@ export default function AuditLogPage() {
   const handleLastPage = useCallback(() => updateParams({ page: String(totalPages) }), [updateParams, totalPages]);
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
 
-  const handlePageSizeChange = useCallback((v: string) => {
-    updateParams({ size: v === "10" ? null : v, page: null });
-  }, [updateParams]);
+  const handlePageSizeChange = useCallback(
+    (v: string) => {
+      const size = Number(v);
+      updateParams(
+        buildPaginationQueryUpdates({
+          page: 1,
+          pageSize: Number.isFinite(size) ? (size as typeof DEFAULT_PAGE_SIZE) : DEFAULT_PAGE_SIZE,
+        }),
+      );
+    },
+    [updateParams],
+  );
 
   const handleGoToPageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setGoToPage(e.target.value);
