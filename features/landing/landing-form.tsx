@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { z } from "zod";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -209,15 +210,14 @@ export function LandingForm({ orgId, utm }: Props) {
           <label htmlFor="lf-phone" className="block text-sm font-medium text-foreground mb-1">
             Phone
           </label>
-          <input
+          <PhoneInput
             id="lf-phone"
-            name="phone"
-            type="tel"
             autoComplete="tel"
             value={values.phone}
-            onChange={handleChange}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            placeholder="+91 98765 43210"
+            onChange={(v) => {
+              setValues((prev) => ({ ...prev, phone: v ?? "" }));
+              setErrors((prev) => ({ ...prev, phone: undefined }));
+            }}
           />
         </div>
 

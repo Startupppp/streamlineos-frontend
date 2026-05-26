@@ -10,6 +10,8 @@ import {
 } from "@/lib/api/hooks/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +47,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
   const [refDesignation, setRefDesignation] = useState("");
   const [refCompany, setRefCompany] = useState("");
   const [refEmail, setRefEmail] = useState("");
-  const [refPhone, setRefPhone] = useState("");
+  const [refPhone, setRefPhone] = useState<PhoneValue>("");
   const [relationship, setRelationship] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -57,7 +59,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
         referenceDesignation: refDesignation.trim() || undefined,
         referenceCompany: refCompany.trim() || undefined,
         referenceEmail: refEmail.trim() || undefined,
-        referencePhone: refPhone.trim() || undefined,
+        referencePhone: refPhone?.toString().trim() || undefined,
         relationship: relationship.trim() || undefined,
         notes: notes.trim() || undefined,
       },
@@ -120,7 +122,7 @@ export function ReferenceChecksTab({ candidateId }: Props) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone</label>
-                  <Input placeholder="+91 98..." value={refPhone} onChange={(e) => setRefPhone(e.target.value)} />
+                  <PhoneInput value={refPhone} onChange={(v) => setRefPhone(v ?? "")} />
                 </div>
               </div>
               <div className="space-y-2">

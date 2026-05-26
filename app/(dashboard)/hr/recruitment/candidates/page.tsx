@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -88,7 +90,7 @@ export default function CandidatesPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<PhoneValue>("");
   const [source, setSource] = useState("DIRECT");
 
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -96,7 +98,7 @@ export default function CandidatesPage() {
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [editPhone, setEditPhone] = useState("");
+  const [editPhone, setEditPhone] = useState<PhoneValue>("");
   const [editCurrentRole, setEditCurrentRole] = useState("");
   const [editCurrentCompany, setEditCurrentCompany] = useState("");
   const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
@@ -139,7 +141,7 @@ export default function CandidatesPage() {
       return;
     }
     createCandidate.mutate(
-      { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), phone: phone || undefined, source },
+      { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), phone: phone?.toString() || undefined, source },
       {
         onSuccess: () => {
           toast.success("Candidate added");
@@ -187,7 +189,7 @@ export default function CandidatesPage() {
         firstName: editFirstName.trim(),
         lastName: editLastName.trim(),
         email: editEmail.trim(),
-        phone: editPhone.trim() || undefined,
+        phone: editPhone?.toString().trim() || undefined,
         currentRole: editCurrentRole.trim() || undefined,
         currentCompany: editCurrentCompany.trim() || undefined,
         linkedinUrl: editLinkedinUrl.trim() || undefined,
@@ -345,7 +347,7 @@ export default function CandidatesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Phone</label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <PhoneInput value={phone} onChange={(v) => setPhone(v ?? "")} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Source</label>
@@ -544,7 +546,7 @@ export default function CandidatesPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Phone</label>
-                <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+                <PhoneInput value={editPhone} onChange={(v) => setEditPhone(v ?? "")} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Source</label>

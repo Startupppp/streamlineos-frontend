@@ -48,7 +48,7 @@ describe("onboardEmployeeInputSchema", () => {
     ).toBe(false);
   });
 
-  it("rejects DOB in the future or under minimum age", () => {
+  it("rejects DOB in the future or under minimum age (18)", () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     expect(onboardEmployeeInputSchema.safeParse({ ...validBase, dateOfBirth: tomorrow }).success).toBe(false);
@@ -56,6 +56,14 @@ describe("onboardEmployeeInputSchema", () => {
     const tooYoung = new Date();
     tooYoung.setFullYear(tooYoung.getFullYear() - 10);
     expect(onboardEmployeeInputSchema.safeParse({ ...validBase, dateOfBirth: tooYoung }).success).toBe(false);
+
+    const seventeen = new Date();
+    seventeen.setFullYear(seventeen.getFullYear() - 17);
+    expect(onboardEmployeeInputSchema.safeParse({ ...validBase, dateOfBirth: seventeen }).success).toBe(false);
+
+    const eighteen = new Date();
+    eighteen.setFullYear(eighteen.getFullYear() - 18);
+    expect(onboardEmployeeInputSchema.safeParse({ ...validBase, dateOfBirth: eighteen }).success).toBe(true);
   });
 
   it("rejects joining date before company establishment", () => {

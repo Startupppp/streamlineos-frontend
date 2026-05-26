@@ -4,6 +4,12 @@ import * as React from "react";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
+import "react-phone-number-input/style.css";
+
+import {
+  DEFAULT_PHONE_COUNTRY,
+  PHONE_INPUT_PLACEHOLDER,
+} from "@/lib/phone";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +39,19 @@ type PhoneInputProps = Omit<
 
 const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> =
   React.forwardRef<React.ElementRef<typeof RPNInput.default>, PhoneInputProps>(
-    ({ className, onChange, value, ...props }, ref) => {
+    (
+      {
+        className,
+        onChange,
+        value,
+        defaultCountry = DEFAULT_PHONE_COUNTRY,
+        international = false,
+        countryCallingCodeEditable = false,
+        placeholder = PHONE_INPUT_PLACEHOLDER,
+        ...props
+      },
+      ref,
+    ) => {
       return (
         <RPNInput.default
           ref={ref}
@@ -42,6 +60,10 @@ const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> =
           countrySelectComponent={CountrySelect}
           inputComponent={InputComponent}
           smartCaret={false}
+          defaultCountry={defaultCountry}
+          international={international}
+          countryCallingCodeEditable={countryCallingCodeEditable}
+          placeholder={placeholder}
           value={value || undefined}
           onChange={(value) => onChange?.(value || ("" as RPNInput.Value))}
           {...props}

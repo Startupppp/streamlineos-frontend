@@ -9,6 +9,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -30,14 +32,12 @@ export const AddCandidateSheet = memo(function AddCandidateSheet({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<PhoneValue>("");
   const [source, setSource] = useState("DIRECT");
 
   const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value), []);
   const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value), []);
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value), []);
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value), []);
-
   const handleCreate = useCallback(() => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       toast.error("First name, last name, and email are required");
@@ -48,7 +48,7 @@ export const AddCandidateSheet = memo(function AddCandidateSheet({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
-        phone: phone || undefined,
+        phone: phone?.toString() || undefined,
         source,
       },
       {
@@ -98,7 +98,7 @@ export const AddCandidateSheet = memo(function AddCandidateSheet({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Phone</label>
-              <Input value={phone} onChange={handlePhoneChange} />
+              <PhoneInput value={phone} onChange={(v) => setPhone(v ?? "")} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Source</label>

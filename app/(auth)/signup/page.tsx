@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { optionalPhoneSchema } from "@/lib/phone";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +32,7 @@ const signupSchema = z.object({
     .regex(/[0-9]/, "Must include a number")
     .regex(/[^A-Za-z0-9]/, "Must include a special character"),
   companyName: z.string().min(1, "Company name is required"),
-  phone: z.string().optional(),
+  phone: optionalPhoneSchema,
 });
 
 type FormValues = z.infer<typeof signupSchema>;
@@ -160,7 +162,19 @@ export default function SignupPage() {
 
           <div>
             <Label>Phone (optional)</Label>
-            <Input {...form.register("phone")} placeholder="+91 98765 43210" />
+            <Controller
+              name="phone"
+              control={form.control}
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? "")}
+                />
+              )}
+            />
+            {form.formState.errors.phone && (
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.phone.message}</p>
+            )}
           </div>
 
           <div>

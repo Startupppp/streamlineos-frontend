@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
+import { MIN_EMPLOYEE_AGE_YEARS, onboardEmployeeInputSchema } from "@/lib/validations/hr";
 import { format, subYears } from "date-fns";
 import { isPersonNameInputCharValid, normalizePersonNameInput } from "@/lib/utils/person-name";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ const EMAIL_MAX_LENGTH = 254;
 const PERSON_NAME_MAX_LENGTH = 50;
 
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
-  const maxDateOfBirth = useMemo(() => subYears(new Date(), 16), []);
+  const maxDateOfBirth = useMemo(() => subYears(new Date(), MIN_EMPLOYEE_AGE_YEARS), []);
   const minDateOfBirth = useMemo(() => subYears(new Date(), 100), []);
 
   return (
@@ -143,9 +143,14 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
                 onChange={(v) => field.onChange(v ? new Date(v) : undefined)}
                 fromDate={minDateOfBirth}
                 toDate={maxDateOfBirth}
+                fromYear={minDateOfBirth.getFullYear()}
+                toYear={maxDateOfBirth.getFullYear()}
                 placeholder="Select DOB"
               />
             </FormControl>
+            <FormDescription className="text-xs">
+              Employee must be at least {MIN_EMPLOYEE_AGE_YEARS} years old to join.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

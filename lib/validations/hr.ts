@@ -7,7 +7,8 @@ import { bankDetailsSchema } from "@/lib/validations/bank-details";
 const PERSON_NAME_MIN_LENGTH = 2;
 const PERSON_NAME_MAX_LENGTH = 50;
 const EMAIL_MAX_LENGTH = 254;
-const MIN_EMPLOYEE_AGE_YEARS = 16;
+/** Minimum age to onboard as an employee (India labour norms: 18+). */
+export const MIN_EMPLOYEE_AGE_YEARS = 18;
 const MAX_EMPLOYEE_AGE_YEARS = 100;
 const EMPLOYEE_ID_MIN_LENGTH = 2;
 const EMPLOYEE_ID_MAX_LENGTH = 20;

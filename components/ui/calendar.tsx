@@ -69,7 +69,7 @@ function CalendarCaption({ displayMonth }: CaptionProps) {
           value={String(year)}
           onValueChange={(v) => goToMonth(setYear(displayMonth, parseInt(v)))}
         >
-          <SelectTrigger className="h-7 w-[68px] text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium">
+          <SelectTrigger className="h-7 min-w-[4.75rem] w-auto px-2 text-xs border-0 bg-transparent shadow-none focus:ring-0 font-medium tabular-nums [&_[data-slot=select-value]]:!line-clamp-none">
             <SelectValue>{year}</SelectValue>
           </SelectTrigger>
           <SelectContent>

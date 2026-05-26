@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -69,7 +71,15 @@ export default function DmLeadsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    phone: PhoneValue;
+    email: string;
+    whatsappNumber: PhoneValue;
+    sourcePlatform: string;
+    leadQuality: string;
+    notes: string;
+  }>({
     name: "", phone: "", email: "", whatsappNumber: "",
     sourcePlatform: "linkedin", leadQuality: "warm", notes: "",
   });
@@ -92,7 +102,11 @@ export default function DmLeadsPage() {
 
   const handleCreateLead = useCallback(() => {
     createMutation.mutate(
-      formData,
+      {
+        ...formData,
+        phone: formData.phone?.toString() || undefined,
+        whatsappNumber: formData.whatsappNumber?.toString() || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Lead captured");
@@ -288,7 +302,10 @@ export default function DmLeadsPage() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Phone</Label>
-            <Input value={formData.phone} onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))} />
+            <PhoneInput
+              value={formData.phone}
+              onChange={(v) => setFormData((f) => ({ ...f, phone: v ?? "" }))}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Email</Label>
@@ -296,7 +313,10 @@ export default function DmLeadsPage() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">WhatsApp</Label>
-            <Input value={formData.whatsappNumber} onChange={(e) => setFormData(f => ({ ...f, whatsappNumber: e.target.value }))} />
+            <PhoneInput
+              value={formData.whatsappNumber}
+              onChange={(v) => setFormData((f) => ({ ...f, whatsappNumber: v ?? "" }))}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Platform *</Label>

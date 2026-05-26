@@ -9,6 +9,8 @@ import type { Candidate } from "@/types/hr";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -33,7 +35,7 @@ export const EditCandidateSheet = memo(function EditCandidateSheet({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<PhoneValue>("");
   const [currentRole, setCurrentRole] = useState("");
   const [currentCompany, setCurrentCompany] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
@@ -57,7 +59,6 @@ export const EditCandidateSheet = memo(function EditCandidateSheet({
   const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value), []);
   const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value), []);
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value), []);
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value), []);
   const handleCurrentRoleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentRole(e.target.value), []);
   const handleCurrentCompanyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentCompany(e.target.value), []);
   const handleLinkedinUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLinkedinUrl(e.target.value), []);
@@ -75,7 +76,7 @@ export const EditCandidateSheet = memo(function EditCandidateSheet({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined,
+        phone: phone?.toString().trim() || undefined,
         currentRole: currentRole.trim() || undefined,
         currentCompany: currentCompany.trim() || undefined,
         linkedinUrl: linkedinUrl.trim() || undefined,
@@ -135,7 +136,7 @@ export const EditCandidateSheet = memo(function EditCandidateSheet({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Phone</label>
-              <Input value={phone} onChange={handlePhoneChange} />
+              <PhoneInput value={phone} onChange={(v) => setPhone(v ?? "")} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Source</label>

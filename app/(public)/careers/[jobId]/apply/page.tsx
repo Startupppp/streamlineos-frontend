@@ -7,11 +7,13 @@ import { apiClient } from "@/lib/api-client";
 import { CheckCircle2 } from "lucide-react";
 import { CareersHeader } from "@/features/careers/careers-header";
 import { CareersFooter } from "@/features/careers/careers-footer";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { PhoneValue } from "@/lib/phone";
 
 interface FormState {
   name: string;
   email: string;
-  phone: string;
+  phone: PhoneValue;
   linkedinUrl: string;
   coverLetter: string;
   resumeUrl: string;
@@ -54,7 +56,7 @@ export default function ApplyPage() {
         jobPostingId: jobId,
         name: form.name.trim(),
         email: form.email.trim(),
-        phone: form.phone.trim() || undefined,
+        phone: form.phone?.toString().trim() || undefined,
         linkedinUrl: form.linkedinUrl.trim() || undefined,
         coverLetter: form.coverLetter.trim() || undefined,
         resumeUrl: form.resumeUrl.trim() || undefined,
@@ -136,13 +138,12 @@ export default function ApplyPage() {
                 <label htmlFor="phone" className="block text-sm font-medium">
                   Phone Number
                 </label>
-                <input
+                <PhoneInput
                   id="phone"
-                  type="tel"
                   value={form.phone}
-                  onChange={set("phone")}
-                  placeholder="+91 98765 43210"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, phone: value ?? "" }))
+                  }
                 />
               </div>
 

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { branches, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { isOptionalPhoneValid } from "@/lib/phone";
 
 const optionalTrimmed = z
   .string()
@@ -26,7 +27,7 @@ const createSchema = z.object({
     message: "Invalid pincode",
   }),
   address: optionalTrimmed,
-  phone: optionalTrimmed.refine((v) => !v || /^[+()\d\s-]{7,20}$/.test(v), {
+  phone: optionalTrimmed.refine((v) => isOptionalPhoneValid(v), {
     message: "Invalid phone number",
   }),
   email: optionalTrimmed.refine((v) => !v || z.string().email().safeParse(v).success, {

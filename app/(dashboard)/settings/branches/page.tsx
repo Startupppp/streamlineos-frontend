@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -20,6 +21,7 @@ import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from "
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Branch } from "@/types/organization";
+import { isOptionalPhoneValid } from "@/lib/phone";
 
 const EMPTY_FORM = {
   name: "", code: "", city: "", state: "", country: "India",
@@ -28,7 +30,6 @@ const EMPTY_FORM = {
 
 const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
 const PINCODE_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
-const PHONE_REGEX = /^[+()\d\s-]{7,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FormErrors = Partial<Record<keyof typeof EMPTY_FORM, string>>;
@@ -80,6 +81,16 @@ export default function BranchManagementPage() {
     setEditFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const setFormPhone = useCallback((value: string) => {
+    setFormData((f) => ({ ...f, phone: value }));
+    setFormErrors((prev) => ({ ...prev, phone: undefined }));
+  }, []);
+
+  const setEditFormPhone = useCallback((value: string) => {
+    setEditFormData((f) => ({ ...f, phone: value }));
+    setEditFormErrors((prev) => ({ ...prev, phone: undefined }));
+  }, []);
+
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleCloseCreate = useCallback(() => {
     setShowCreate(false);
@@ -113,7 +124,7 @@ export default function BranchManagementPage() {
       errors.email = "Enter a valid email";
     }
 
-    if (trimmed.phone && !PHONE_REGEX.test(trimmed.phone)) {
+    if (!isOptionalPhoneValid(trimmed.phone)) {
       errors.phone = "Enter a valid phone number";
     }
 
@@ -178,7 +189,8 @@ export default function BranchManagementPage() {
   const branchFormFields = (
     data: typeof EMPTY_FORM,
     setter: (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => void,
-    errors: FormErrors
+    errors: FormErrors,
+    onPhoneChange: (value: string) => void,
   ) => (
     <div className="px-4 py-4 space-y-4">
       <div className="grid grid-cols-2 gap-3">
@@ -225,7 +237,7 @@ export default function BranchManagementPage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label className="text-xs">Phone</Label>
-          <Input value={data.phone} onChange={setter("phone")} placeholder="e.g., +91 9876543210" />
+          <PhoneInput value={data.phone} onChange={(v) => onPhoneChange(v ?? "")} />
           {errors.phone && <p className="text-[11px] text-destructive">{errors.phone}</p>}
         </div>
         <div className="space-y-1.5">
@@ -357,7 +369,7 @@ export default function BranchManagementPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            {branchFormFields(formData, set, formErrors)}
+            {branchFormFields(formData, set, formErrors, setFormPhone)}
           </ScrollArea>
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">
@@ -382,7 +394,7 @@ export default function BranchManagementPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            {branchFormFields(editFormData, setEdit, editFormErrors)}
+            {branchFormFields(editFormData, setEdit, editFormErrors, setEditFormPhone)}
           </ScrollArea>
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">

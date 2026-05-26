@@ -7,6 +7,8 @@ import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { optionalPhoneSchema } from "@/lib/phone";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -32,7 +34,7 @@ const editSchema = z.object({
   probability: z.coerce.number().min(0).max(100),
   contactPerson: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal("")),
-  contactPhone: z.string().optional(),
+  contactPhone: optionalPhoneSchema,
   expectedCloseDate: z.string().optional(),
   notes: z.string().optional(),
   lostReason: z.string().optional(),
@@ -156,7 +158,12 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
               <FormField control={form.control} name="contactPhone" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Contact Phone</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl>
+                    <PhoneInput
+                      value={field.value}
+                      onChange={(v) => field.onChange(v ?? "")}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
