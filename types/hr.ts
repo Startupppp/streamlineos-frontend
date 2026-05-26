@@ -656,6 +656,7 @@ export interface CreateHelpdeskTicketInput {
   description?: string;
   category?: string;
   priority?: TicketPriority;
+  attachmentUrl?: string;
 }
 
 export interface UpsertWorkLogInput {

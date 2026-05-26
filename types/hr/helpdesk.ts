@@ -12,6 +12,7 @@ export interface HelpdeskTicket {
   assigneeId: string | null;
   resolvedAt: Date | string | null;
   resolution: string | null;
+  attachmentUrl: string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
@@ -21,4 +22,5 @@ export interface CreateHelpdeskTicketInput {
   description?: string;
   category?: string;
   priority?: TicketPriority;
+  attachmentUrl?: string;
 }

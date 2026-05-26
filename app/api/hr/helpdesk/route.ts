@@ -10,10 +10,11 @@ import { z } from "zod";
 import { sendHelpdeskTicketEmail } from "@/lib/email";
 
 const createTicketSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  category: z.string().optional(),
+  title: z.string().trim().min(1, "Title is required").max(200),
+  description: z.string().trim().max(5000).optional(),
+  category: z.string().trim().max(100).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  attachmentUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export async function GET(req: NextRequest) {
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
         category: body.category,
         priority: body.priority || "MEDIUM",
         status: "TODO",
+        attachmentUrl: body.attachmentUrl?.trim() || null,
       })
       .returning();
 

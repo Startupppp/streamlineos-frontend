@@ -10,21 +10,16 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ReimbursementRequestForm } from "@/features/hr/reimbursements/reimbursement-request-form";
+import type { ReimbursementRequestFormValues } from "@/lib/validations/common-forms";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Receipt, CheckCircle2, XCircle, DollarSign } from "lucide-react";
+import { Plus, CheckCircle2, XCircle, DollarSign } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-
-const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (s === "APPROVED" || s === "PAID") return "default";
@@ -41,24 +36,27 @@ export default function ReimbursementsPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
-  const [category, setCategory] = useState("Travel");
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [receiptUrl, setReceiptUrl] = useState("");
 
-  const handleCreate = useCallback(() => {
-    if (!amount || Number(amount) <= 0) { toast.error("Valid amount is required"); return; }
-    create.mutate(
-      { category, amount: Number(amount), description: description || undefined, receiptUrl: receiptUrl || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Reimbursement submitted");
-          setSheetOpen(false); setCategory("Travel"); setAmount(""); setDescription(""); setReceiptUrl("");
+  const handleCreate = useCallback(
+    (values: ReimbursementRequestFormValues) => {
+      create.mutate(
+        {
+          category: values.category,
+          amount: values.amount,
+          description: values.description || undefined,
+          receiptUrl: values.receiptUrl || undefined,
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [category, amount, description, receiptUrl, create]);
+        {
+          onSuccess: () => {
+            toast.success("Reimbursement submitted");
+            setSheetOpen(false);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [create],
+  );
 
   const handleApprove = useCallback((id: number) => {
     process.mutate({ id, status: "APPROVED" }, {
@@ -129,25 +127,25 @@ export default function ReimbursementsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Submit Reimbursement" onSubmit={handleCreate} submitLabel="Submit" isPending={create.isPending}>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Category</label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Amount</label>
-          <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Details about the expense..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Receipt URL</label>
-          <Input placeholder="https://..." value={receiptUrl} onChange={(e) => setReceiptUrl(e.target.value)} />
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title="Submit Reimbursement"
+        showSubmit={false}
+      >
+        <ReimbursementRequestForm formId="reimbursement-request" onSubmit={handleCreate} />
+        <div className="flex gap-2 pt-4 border-t mt-4">
+          <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="reimbursement-request"
+            className="flex-1"
+            disabled={create.isPending}
+          >
+            {create.isPending ? "Submitting..." : "Submit"}
+          </Button>
         </div>
       </HrSheet>
 

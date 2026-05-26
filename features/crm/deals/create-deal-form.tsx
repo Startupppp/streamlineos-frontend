@@ -16,6 +16,10 @@ import { useCreateDeal } from "@/lib/api/hooks/crm";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { DealStage } from "@/features/crm/shared/constants";
 import { toast } from "sonner";
+import {
+  createDealFormSchema,
+  type CreateDealFormValues,
+} from "@/lib/validations/common-forms";
 
 interface CreateDealFormProps {
   employees: Array<{ id: string; name: string | null }>;
@@ -26,42 +30,76 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
   const createMutation = useCreateDeal();
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
   const [contactPhone, setContactPhone] = useState<PhoneValue | undefined>();
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof CreateDealFormValues, string>>>({});
 
-  const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const value = Number(fd.get("value") || 0);
-
-    createMutation.mutate(
-      {
-        name: fd.get("name") as string,
-        value: String(isNaN(value) ? 0 : value),
-        stage: (fd.get("stage") as DealStage) || "LEAD",
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const parsed = createDealFormSchema.safeParse({
+        name: fd.get("name"),
+        value: Number(fd.get("value") || 0),
+        stage: fd.get("stage") || "LEAD",
         probability: Number(fd.get("probability") || 0),
-        contactPerson: (fd.get("contactPerson") as string) || undefined,
-        contactEmail: (fd.get("contactEmail") as string) || undefined,
-        contactPhone: contactPhone || (fd.get("contactPhone") as string) || undefined,
-        assignedToId: (fd.get("assignedToId") as string) || undefined,
-        expectedCloseDate: expectedCloseDate || undefined,
-        notes: (fd.get("notes") as string) || undefined,
-      },
-      {
-        onSuccess: () => { toast.success("Deal created"); onSuccess(); },
-        onError: (err) => toast.error(err.message),
-      },
-    );
-  }, [createMutation, expectedCloseDate, onSuccess]);
+        contactPerson: fd.get("contactPerson") || "",
+        contactEmail: fd.get("contactEmail") || "",
+        contactPhone: contactPhone || (fd.get("contactPhone") as string) || "",
+        assignedToId: fd.get("assignedToId") || "",
+        expectedCloseDate: expectedCloseDate || "",
+        notes: fd.get("notes") || "",
+      });
+
+      if (!parsed.success) {
+        const next: Partial<Record<keyof CreateDealFormValues, string>> = {};
+        for (const issue of parsed.error.issues) {
+          const key = issue.path[0] as keyof CreateDealFormValues;
+          if (key && !next[key]) next[key] = issue.message;
+        }
+        setFieldErrors(next);
+        toast.error(parsed.error.issues[0]?.message ?? "Please fix form errors");
+        return;
+      }
+
+      setFieldErrors({});
+      const data = parsed.data;
+
+      createMutation.mutate(
+        {
+          name: data.name,
+          value: String(data.value),
+          stage: data.stage as DealStage,
+          probability: data.probability,
+          contactPerson: data.contactPerson || undefined,
+          contactEmail: data.contactEmail || undefined,
+          contactPhone: data.contactPhone || undefined,
+          assignedToId: data.assignedToId || undefined,
+          expectedCloseDate: data.expectedCloseDate || undefined,
+          notes: data.notes || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Deal created");
+            onSuccess();
+          },
+          onError: (err) => toast.error(err.message),
+        },
+      );
+    },
+    [createMutation, expectedCloseDate, contactPhone, onSuccess],
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2 space-y-1.5">
           <Label htmlFor="name">Deal Name *</Label>
-          <Input id="name" name="name" required placeholder="e.g. Enterprise License" pattern="^[A-Za-z].*" title="Name must start with a letter" className="capitalize" />
+          <Input id="name" name="name" required placeholder="e.g. Enterprise License" className="capitalize" />
+          {fieldErrors.name ? <p className="text-xs text-destructive">{fieldErrors.name}</p> : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="value">Value (INR)</Label>
           <Input id="value" name="value" type="number" min="0" placeholder="0" />
+          {fieldErrors.value ? <p className="text-xs text-destructive">{fieldErrors.value}</p> : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="stage">Stage</Label>
@@ -70,7 +108,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {DEAL_STAGES.map(s => (
+              {DEAL_STAGES.map((s) => (
                 <SelectItem key={s.key} value={s.key}>
                   <div className="flex items-center gap-2">
                     <div className={cn("w-2 h-2 rounded-full", s.dot)} />
@@ -84,48 +122,58 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         <div className="space-y-1.5">
           <Label htmlFor="probability">Probability (%)</Label>
           <Input id="probability" name="probability" type="number" min="0" max="100" defaultValue="0" />
+          {fieldErrors.probability ? (
+            <p className="text-xs text-destructive">{fieldErrors.probability}</p>
+          ) : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="expectedCloseDate">Expected Close</Label>
-          <DatePicker id="expectedCloseDate" value={expectedCloseDate} onChange={setExpectedCloseDate} placeholder="Select date" />
+          <DatePicker
+            id="expectedCloseDate"
+            value={expectedCloseDate}
+            onChange={setExpectedCloseDate}
+            placeholder="Select date"
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="contactPerson">Contact Person</Label>
-          <Input id="contactPerson" name="contactPerson" placeholder="Name" pattern="^[A-Za-z\s]*$" title="Only letters allowed" className="capitalize" />
+          <Input id="contactPerson" name="contactPerson" placeholder="Name" className="capitalize" />
+          {fieldErrors.contactPerson ? (
+            <p className="text-xs text-destructive">{fieldErrors.contactPerson}</p>
+          ) : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="contactEmail">Contact Email</Label>
           <Input id="contactEmail" name="contactEmail" type="email" placeholder="email@example.com" />
+          {fieldErrors.contactEmail ? (
+            <p className="text-xs text-destructive">{fieldErrors.contactEmail}</p>
+          ) : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="contactPhone">Contact Phone</Label>
-          <PhoneInput
-            id="contactPhone"
-            defaultCountry="IN"
-            placeholder="Enter phone number"
-            value={contactPhone}
-            onChange={setContactPhone}
-          />
+          <PhoneInput value={contactPhone} onChange={setContactPhone} defaultCountry="IN" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="assignedToId">Assigned To</Label>
           <Select name="assignedToId">
             <SelectTrigger className="w-full h-9">
-              <SelectValue placeholder="Select..." />
+              <SelectValue placeholder="Select assignee" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] overflow-y-auto">
-              {employees.map(e => (
-                <SelectItem key={e.id} value={e.id}>{e.name || e.id}</SelectItem>
+            <SelectContent>
+              {employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.name ?? e.id}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea id="notes" name="notes" placeholder="Additional details..." rows={3} />
+        </div>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
-      </div>
-      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createMutation.isPending}>
+      <Button type="submit" className="w-full" disabled={createMutation.isPending}>
         {createMutation.isPending ? "Creating..." : "Create Deal"}
       </Button>
     </form>
