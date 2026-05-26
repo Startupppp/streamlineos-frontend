@@ -46,7 +46,9 @@ export default function ChatPage() {
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
-  heartbeatRef.current = heartbeat;
+  useEffect(() => {
+    heartbeatRef.current = heartbeat;
+  }, [heartbeat]);
 
   useEffect(() => {
     if (!currentUserId) return;

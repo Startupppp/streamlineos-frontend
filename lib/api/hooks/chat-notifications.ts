@@ -27,10 +27,12 @@ export function useChatGlobalNotifications(
   const orgId = session?.orgId;
 
   const activeChannelIdRef = useRef(activeChannelId);
-  activeChannelIdRef.current = activeChannelId;
-
   const currentUserIdRef = useRef(currentUserId);
-  currentUserIdRef.current = currentUserId;
+
+  useEffect(() => {
+    activeChannelIdRef.current = activeChannelId;
+    currentUserIdRef.current = currentUserId;
+  }, [activeChannelId, currentUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
