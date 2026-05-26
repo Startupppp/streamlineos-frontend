@@ -7,6 +7,7 @@ import type {
   Deal,
   DealActivity,
   DealFilters,
+  DealsListResult,
   CreateDealInput,
   UpdateDealInput,
   UpdateDealStageInput,
@@ -26,7 +27,8 @@ export interface DealForecast {
 export function useDeals(filters?: DealFilters) {
   return useQuery({
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
-    queryFn: () => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<DealsListResult>("/deals", filters as Record<string, unknown>),
   });
 }
 

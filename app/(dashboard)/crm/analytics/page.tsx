@@ -39,7 +39,8 @@ export default function CrmAnalyticsPage() {
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   });
-  const { data: allDeals, isLoading: dealsLoading } = useDeals();
+  const { data: dealsResult, isLoading: dealsLoading } = useDeals({ limit: 500 });
+  const allDeals = dealsResult?.data ?? [];
   const { data: leaderboard, isLoading: leaderLoading } = useSalesLeaderboard();
   const { data: slaReport, isLoading: slaLoading } = useSlaReport();
   const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({ limit: 100 });

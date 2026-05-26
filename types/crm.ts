@@ -107,6 +107,14 @@ export interface DealFilters {
   offset?: number;
 }
 
+export interface DealsListResult {
+  data: Deal[];
+  total: number;
+  limit: number;
+  offset: number;
+  totalPages: number;
+}
+
 export interface Contact {
   id: number;
   orgId: string;

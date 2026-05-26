@@ -37,6 +37,8 @@ import { KanbanFilterBar } from "@/features/crm/deals/kanban-filter-bar";
 import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
+import { usePaginationParams } from "@/hooks/use-pagination-params";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 
 const CONFETTI_COLORS = [
   "#bd882c",
@@ -131,7 +133,9 @@ export default function DealsPage() {
     [searchParams, router, pathname],
   );
 
-  const { data: allDeals, isLoading } = useDeals();
+  const { page, pageSize, setPage, setPageSize, resetPage } = usePaginationParams();
+  const { data: dealsResult, isLoading } = useDeals({ limit: 500 });
+  const allDeals = dealsResult?.data ?? [];
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees)
     ? rawEmployees
@@ -177,7 +181,8 @@ export default function DealsPage() {
       minValue: filterMinValue,
       maxValue: filterMaxValue,
     });
-  }, [filterAssignee, filterMinValue, filterMaxValue]);
+    resetPage();
+  }, [filterAssignee, filterMinValue, filterMaxValue, resetPage]);
 
   const handleClearFilters = useCallback(() => {
     setFilterAssignee("all");
@@ -443,6 +448,13 @@ export default function DealsPage() {
     };
   }, [allDeals]);
 
+  const tableDeals = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredDeals.slice(start, start + pageSize);
+  }, [filteredDeals, page, pageSize]);
+
+  const tableTotalPages = Math.max(1, Math.ceil(filteredDeals.length / pageSize));
+
   if (isLoading) return <DealsLoadingSkeleton />;
 
   return (
@@ -515,15 +527,25 @@ export default function DealsPage() {
           </motion.div>
 
           {view === "table" && (
-            <motion.div variants={fadeUp}>
+            <motion.div variants={fadeUp} className="space-y-0">
               <DealTableView
-                deals={allDeals || []}
+                deals={tableDeals}
                 sortColumn={dealSortCol}
                 sortDirection={dealSortDir}
                 onSort={handleDealSort}
                 onStageChange={handleStageChange}
                 isLoading={isLoading}
               />
+              {filteredDeals.length > 0 && (
+                <DataTablePagination
+                  page={page}
+                  totalPages={tableTotalPages}
+                  total={filteredDeals.length}
+                  limit={pageSize}
+                  onPageChange={setPage}
+                  onLimitChange={(limit) => setPageSize(limit as import("@/lib/pagination-constants").PageSizeOption)}
+                />
+              )}
             </motion.div>
           )}
 

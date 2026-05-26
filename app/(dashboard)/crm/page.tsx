@@ -33,7 +33,8 @@ const NAV_CARDS = [
 
 export default function CrmHubPage() {
   const { data: leadStats, isLoading: statsLoading } = useLeadStats();
-  const { data: allDeals, isLoading: dealsLoading } = useDeals();
+  const { data: dealsResult, isLoading: dealsLoading } = useDeals({ limit: 500 });
+  const allDeals = dealsResult?.data ?? [];
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ limit: 1 });
   const { data: orgsData, isLoading: orgsLoading } = useCrmOrganizations({ limit: 1 });
 
