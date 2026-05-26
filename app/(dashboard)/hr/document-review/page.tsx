@@ -49,6 +49,8 @@ import {
 } from "@/components/ui/sheet";
 
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { DocumentFileUpload } from "@/components/storage/document-file-upload";
+import { onboardingDocUploadSchema } from "@/lib/validations/common-forms";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -307,16 +309,20 @@ export default function DocumentReviewPage() {
       toast.error("Select a document type");
       return;
     }
-    if (!hrUploadFileUrl.trim() || !hrUploadFileName.trim()) {
-      toast.error("File URL and name are required");
+    const parsed = onboardingDocUploadSchema.safeParse({
+      fileUrl: hrUploadFileUrl,
+      fileName: hrUploadFileName,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please upload a valid file");
       return;
     }
     hrUploadMutation.mutate(
       {
         userId: reviewUserId,
         documentTypeId,
-        fileUrl: hrUploadFileUrl.trim(),
-        fileName: hrUploadFileName.trim(),
+        fileUrl: parsed.data.fileUrl,
+        fileName: parsed.data.fileName,
       },
       {
         onSuccess: () => {
@@ -684,23 +690,18 @@ export default function DocumentReviewPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">File URL</Label>
-            <Input
-              type="url"
-              value={hrUploadFileUrl}
-              onChange={(e) => setHrUploadFileUrl(e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">File name</Label>
-            <Input
-              value={hrUploadFileName}
-              onChange={(e) => setHrUploadFileName(e.target.value)}
-              placeholder="document.pdf"
-            />
-          </div>
+          <DocumentFileUpload
+            folder="onboarding"
+            label="Document file"
+            onUploaded={({ url, fileName }) => {
+              setHrUploadFileUrl(url);
+              setHrUploadFileName(fileName);
+            }}
+            onClear={() => {
+              setHrUploadFileUrl("");
+              setHrUploadFileName("");
+            }}
+          />
         </div>
       </HrSheet>
     </PageWrapper>

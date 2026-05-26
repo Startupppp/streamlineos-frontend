@@ -31,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { DocumentFileUpload } from "@/components/storage/document-file-upload";
+import { onboardingDocUploadSchema } from "@/lib/validations/common-forms";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -172,15 +174,13 @@ function UploadSheet({
   const [fileName, setFileName] = useState("");
 
   const handleSubmit = useCallback(() => {
-    if (!fileUrl.trim()) {
-      toast.error("Please enter a file URL");
+    const parsed = onboardingDocUploadSchema.safeParse({ fileUrl, fileName });
+    if (!parsed.success) {
+      const first = parsed.error.issues[0]?.message;
+      toast.error(first ?? "Please upload a valid file");
       return;
     }
-    if (!fileName.trim()) {
-      toast.error("Please enter a file name");
-      return;
-    }
-    onSubmit(fileUrl.trim(), fileName.trim());
+    onSubmit(parsed.data.fileUrl, parsed.data.fileName);
   }, [fileUrl, fileName, onSubmit]);
 
   const handleOpenChange = useCallback(
@@ -192,6 +192,14 @@ function UploadSheet({
       onOpenChange(open);
     },
     [onOpenChange]
+  );
+
+  const handleUploaded = useCallback(
+    ({ url, fileName: name }: { url: string; key: string; fileName: string }) => {
+      setFileUrl(url);
+      setFileName(name);
+    },
+    [],
   );
 
   return (
@@ -211,15 +219,6 @@ function UploadSheet({
       submitLabel="Submit Document"
       isPending={isPending}
     >
-      <div className="rounded-md border bg-muted/40 px-3 py-2.5 text-[12px] text-muted-foreground leading-relaxed">
-        <p className="font-medium text-foreground mb-0.5">How to upload</p>
-        <p>
-          Upload your file via the{" "}
-          <strong>Files</strong> section (HR &rarr; Documents), then copy the
-          file URL and paste it below.
-        </p>
-      </div>
-
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
         <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 px-3 py-2.5 text-[12px] text-orange-800 dark:text-orange-300">
           <p className="font-medium mb-0.5">Reviewer remarks</p>
@@ -229,33 +228,21 @@ function UploadSheet({
 
       <Separator />
 
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          File URL <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          type="url"
-          placeholder="https://..."
-          value={fileUrl}
-          onChange={(e) => setFileUrl(e.target.value)}
-          aria-label="File URL"
-        />
-      </div>
+      <DocumentFileUpload
+        folder="onboarding"
+        label="Document file"
+        onUploaded={handleUploaded}
+        onClear={() => {
+          setFileUrl("");
+          setFileName("");
+        }}
+      />
 
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          File Name <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          placeholder="e.g. aadhaar-card.pdf"
-          value={fileName}
-          onChange={(e) => setFileName(e.target.value)}
-          aria-label="File name"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Include the file extension (e.g. .pdf, .jpg, .png).
+      {fileName ? (
+        <p className="text-xs text-muted-foreground">
+          Ready to submit: <span className="font-medium text-foreground">{fileName}</span>
         </p>
-      </div>
+      ) : null}
     </HrSheet>
   );
 }

@@ -1112,6 +1112,7 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
   assigneeId: text("assignee_id").references(() => users.id),
   resolvedAt: timestamp("resolved_at"),
   resolution: text("resolution"),
+  attachmentUrl: text("attachment_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

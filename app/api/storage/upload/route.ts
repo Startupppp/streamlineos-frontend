@@ -6,6 +6,7 @@ import {
   RECEIPT_ALLOWED_MIME_TYPES,
   RECEIPT_MAX_FILE_SIZE_BYTES,
 } from "@/lib/files/expense-file-validation";
+import { DOCUMENT_UPLOAD_MIME_TYPES, DOCUMENT_UPLOAD_MAX_BYTES } from "@/lib/validations/files";
 
 const FILE_SIGNATURES: Record<string, number[][]> = {
   "image/jpeg": [[0xff, 0xd8, 0xff]],
@@ -65,25 +66,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (file.size > RECEIPT_MAX_FILE_SIZE_BYTES) {
+    const maxBytes =
+      folder === "receipts" ? RECEIPT_MAX_FILE_SIZE_BYTES : DOCUMENT_UPLOAD_MAX_BYTES;
+
+    if (file.size > maxBytes) {
       return NextResponse.json(
-        { error: "File too large (max 10MB)" },
+        { error: `File too large (max ${Math.round(maxBytes / 1024 / 1024)}MB)` },
         { status: 400 }
       );
     }
 
-    const defaultAllowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    const allowedTypes = folder === "receipts" ? [...RECEIPT_ALLOWED_MIME_TYPES] : defaultAllowedTypes;
+    const documentFolders = new Set(["documents", "onboarding", "helpdesk", "uploads"]);
+    const allowedTypes =
+      folder === "receipts"
+        ? [...RECEIPT_ALLOWED_MIME_TYPES]
+        : documentFolders.has(folder)
+          ? [...DOCUMENT_UPLOAD_MIME_TYPES]
+          : [
+              "image/jpeg",
+              "image/png",
+              "image/gif",
+              "image/webp",
+              "application/pdf",
+              "application/msword",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.ms-excel",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ];
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
