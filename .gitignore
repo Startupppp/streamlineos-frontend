@@ -55,3 +55,16 @@ next-env.d.ts
 # generated QR codes (local development)
 /public/qr-codes/
 /public/uploads/
+
+# ruflo / claude-flow (local agent tooling — not part of the app)
+/.claude-flow/
+/.swarm/
+/.mcp.json
+/CLAUDE.md
+/ruvector.db
+*.ruflo.db
+.claude/settings.json
+.claude/skills/
+.claude/commands/
+.claude/agents/
+.claude/helpers/
