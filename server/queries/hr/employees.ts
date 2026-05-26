@@ -15,6 +15,7 @@ function departmentFromId(
   return { id: departmentId, name: "Unknown" };
 }
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
+import { DEFAULT_PAGE_SIZE, clampPageSize } from "@/lib/pagination-constants";
 import type {
   Department,
   Employee,
@@ -82,22 +83,44 @@ export async function getEmployees(
     }));
 }
 
+export type EmployeeListFilters = {
+  search?: string;
+  departmentName?: string;
+  role?: string;
+  /** active = isActive true, inactive = isActive false, all = no filter */
+  status?: "active" | "inactive" | "all";
+};
+
 export async function getEmployeesPaginated(
   orgId: string,
   page: number = 1,
-  limit: number = 20,
-  search?: string,
+  limit: number = DEFAULT_PAGE_SIZE,
+  filters?: EmployeeListFilters,
   branch?: BranchContext
 ): Promise<PaginatedEmployees> {
-  const offset = (page - 1) * limit;
+  const safeLimit = clampPageSize(limit);
+  const offset = (page - 1) * safeLimit;
+  const search = filters?.search?.trim();
 
-  const baseConditions = [
-    eq(organizationMembers.orgId, orgId),
-    eq(users.isActive, true),
-  ];
+  const baseConditions = [eq(organizationMembers.orgId, orgId)];
+
+  const status = filters?.status ?? "active";
+  if (status === "active") {
+    baseConditions.push(eq(users.isActive, true));
+  } else if (status === "inactive") {
+    baseConditions.push(eq(users.isActive, false));
+  }
 
   const branchCond = branchIdFilter(users.branchId, branch ?? { role: "", branchId: null, userId: "" });
   if (branchCond) baseConditions.push(branchCond);
+
+  if (filters?.role && filters.role !== "All") {
+    baseConditions.push(eq(users.role, filters.role));
+  }
+
+  if (filters?.departmentName && filters.departmentName !== "All") {
+    baseConditions.push(eq(departments.name, filters.departmentName));
+  }
 
   const searchConditions = search
     ? [
@@ -139,12 +162,16 @@ export async function getEmployeesPaginated(
       )
       .where(and(...searchConditions))
       .orderBy(users.name)
-      .limit(limit)
+      .limit(safeLimit)
       .offset(offset),
     db
       .select({ total: count() })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
+      .leftJoin(
+        departments,
+        and(eq(users.departmentId, departments.id), eq(departments.orgId, orgId)),
+      )
       .where(and(...searchConditions)),
   ]);
 
@@ -175,9 +202,9 @@ export async function getEmployeesPaginated(
     data,
     pagination: {
       page,
-      limit,
+      limit: safeLimit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / safeLimit),
     },
   };
 }

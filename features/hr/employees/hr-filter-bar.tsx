@@ -1,6 +1,5 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,12 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
-import type { StatusFilter, RoleFilter } from "./hr-types";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ROLE_LABELS, type StatusFilter, type RoleFilter } from "./hr-types";
+
+const selectTriggerClass =
+  "h-9 w-auto min-w-[9.5rem] max-w-[16rem] shrink-0 text-xs [&_[data-slot=select-value]]:!line-clamp-none";
+
+const roleSelectTriggerClass =
+  "h-9 w-auto min-w-[12.5rem] max-w-[16rem] shrink-0 text-xs [&_[data-slot=select-value]]:!line-clamp-none";
 
 interface HrFilterBarProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   deptFilter: string;
   onDeptChange: (value: string) => void;
   departments: string[];
@@ -23,11 +27,11 @@ interface HrFilterBarProps {
   roleFilter: RoleFilter;
   onRoleChange: (value: RoleFilter) => void;
   onClearFilters: () => void;
+  hasSearchFilter?: boolean;
+  className?: string;
 }
 
 export function HrFilterBar({
-  searchTerm,
-  onSearchChange,
   deptFilter,
   onDeptChange,
   departments,
@@ -36,28 +40,22 @@ export function HrFilterBar({
   roleFilter,
   onRoleChange,
   onClearFilters,
+  hasSearchFilter = false,
+  className,
 }: HrFilterBarProps) {
   const hasActiveFilters =
-    !!searchTerm ||
+    hasSearchFilter ||
     deptFilter !== "All" ||
     statusFilter !== "Active" ||
     roleFilter !== "All";
 
-  return (
-    <>
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search name, email, or employee ID (min 3 chars)…"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-8 h-8 w-[200px] text-sm"
-          aria-label="Search employees"
-        />
-      </div>
+  const roleLabel =
+    roleFilter === "All" ? "All Roles" : (ROLE_LABELS[roleFilter] ?? roleFilter);
 
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <Select value={deptFilter} onValueChange={onDeptChange}>
-        <SelectTrigger className="h-8 w-[130px] text-xs">
+        <SelectTrigger className={selectTriggerClass} title={deptFilter}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +72,7 @@ export function HrFilterBar({
         value={statusFilter}
         onValueChange={(v) => onStatusChange(v as StatusFilter)}
       >
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className={selectTriggerClass}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -88,8 +86,8 @@ export function HrFilterBar({
         value={roleFilter}
         onValueChange={(v) => onRoleChange(v as RoleFilter)}
       >
-        <SelectTrigger className="h-8 w-[120px] text-xs">
-          <SelectValue />
+        <SelectTrigger className={roleSelectTriggerClass} title={roleLabel}>
+          <SelectValue>{roleLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="All">All Roles</SelectItem>
@@ -116,6 +114,6 @@ export function HrFilterBar({
           Clear
         </Button>
       )}
-    </>
+    </div>
   );
 }

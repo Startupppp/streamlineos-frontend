@@ -192,105 +192,10 @@ export async function getTerminatedEmployees(
     });
 }
 
-export async function getEmployeesPaginated(
-  orgId: string,
-  page: number = 1,
-  limit: number = 20,
-  search?: string,
-  branch?: BranchContext
-): Promise<PaginatedEmployees> {
-  const offset = (page - 1) * limit;
-
-  const baseConditions = [
-    eq(organizationMembers.orgId, orgId),
-    eq(users.isActive, true),
-  ];
-
-  const branchCond = branchIdFilter(users.branchId, branch ?? { role: "", branchId: null, userId: "" });
-  if (branchCond) baseConditions.push(branchCond);
-
-  const searchConditions = search
-    ? [
-        ...baseConditions,
-        or(
-          ilike(users.name, `%${search}%`),
-          ilike(users.email, `%${search}%`),
-          ilike(users.employeeId, `%${search}%`),
-          ilike(users.designation, `%${search}%`)
-        ),
-      ]
-    : baseConditions;
-
-  const [dataResult, countResult] = await Promise.all([
-    db
-      .select({
-        id: users.id,
-        name: users.name,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        role: users.role,
-        designation: users.designation,
-        employeeId: users.employeeId,
-        departmentId: users.departmentId,
-        departmentName: departments.name,
-        image: users.image,
-        isActive: users.isActive,
-        joiningDate: users.joiningDate,
-        hasDashboardAccess: users.hasDashboardAccess,
-        reportingTo: users.reportingTo,
-        monthlySalary: users.monthlySalary,
-      })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .leftJoin(
-        departments,
-        and(eq(users.departmentId, departments.id), eq(departments.orgId, orgId)),
-      )
-      .where(and(...searchConditions))
-      .orderBy(users.name)
-      .limit(limit)
-      .offset(offset),
-    db
-      .select({ total: count() })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .where(and(...searchConditions)),
-  ]);
-
-  const total = countResult[0]?.total ?? 0;
-
-  const data: Employee[] = dataResult.map((row) => {
-    const { departmentName, ...rest } = row;
-    const department =
-      rest.departmentId != null && departmentName
-        ? { id: rest.departmentId, name: departmentName }
-        : rest.departmentId != null
-          ? { id: rest.departmentId, name: "Unknown" }
-          : null;
-    return {
-      ...rest,
-      department,
-      bio: null,
-      linkedinUrl: null,
-      twitterUrl: null,
-      githubUrl: null,
-      websiteUrl: null,
-      skills: null,
-      phone: null,
-    };
-  });
-
-  return {
-    data,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
+export {
+  getEmployeesPaginated,
+  type EmployeeListFilters,
+} from "./hr/employees";
 
 export async function getEmployee(orgId: string, userId: string): Promise<Employee | null> {
   const member = await db.query.organizationMembers.findFirst({

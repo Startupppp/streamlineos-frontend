@@ -11,19 +11,27 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { useHrEmployees, useTerminateEmployee, useToggleDashboardAccess } from "@/lib/api/hooks/hr";
+import {
+  useHrEmployees,
+  useHrDepartments,
+  useTerminateEmployee,
+  useToggleDashboardAccess,
+  isPaginatedEmployees,
+} from "@/lib/api/hooks/hr";
+import { usePaginationParams } from "@/hooks/use-pagination-params";
+import { clampPageSize } from "@/lib/pagination-constants";
 
 import {
   type Employee,
   type StatusFilter,
   type RoleFilter,
   type PageSizeOption,
-  ROLE_LABELS,
   PAGE_SIZE,
 } from "@/features/hr/employees/hr-types";
 import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
-import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
+import { HrEmployeeListToolbar } from "@/features/hr/employees/hr-employee-list-toolbar";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
+import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 
@@ -38,6 +46,9 @@ export default function HRDashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { page, pageSize, setPage, setPageSize, resetPage, updateParams } = usePaginationParams({
+    defaultPageSize: PAGE_SIZE,
+  });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
@@ -46,23 +57,9 @@ export default function HRDashboardPage() {
   const deptFilter = searchParams.get("dept") || "All";
   const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
   const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
-  const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
 
   const [searchInput, setSearchInput] = useState(searchFromUrl);
   const debouncedSearchInput = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
-
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [searchParams, router, pathname],
-  );
 
   useEffect(() => {
     setSearchInput(searchFromUrl);
@@ -83,69 +80,55 @@ export default function HRDashboardPage() {
     return trimmed.length >= MIN_SEARCH_LENGTH ? trimmed : "";
   }, [debouncedSearchInput]);
 
-  const { data: rawEmployees, isLoading } = useHrEmployees();
+  const { data: employeesResponse, isLoading } = useHrEmployees({
+    page,
+    limit: pageSize,
+    q: effectiveSearchTerm || undefined,
+    dept: deptFilter !== "All" ? deptFilter : undefined,
+    status: statusFilter !== "Active" ? statusFilter : undefined,
+    role: roleFilter !== "All" ? roleFilter : undefined,
+  });
+
+  const { data: departmentRows = [] } = useHrDepartments();
   const terminateMutation = useTerminateEmployee();
   const toggleAccessMutation = useToggleDashboardAccess();
 
-  const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
+  const employees = useMemo(() => {
+    if (isPaginatedEmployees(employeesResponse)) {
+      return employeesResponse.data as unknown as Employee[];
+    }
+    return (Array.isArray(employeesResponse) ? employeesResponse : []) as unknown as Employee[];
+  }, [employeesResponse]);
+
+  const paginationMeta = isPaginatedEmployees(employeesResponse)
+    ? employeesResponse.pagination
+    : null;
+
+  const totalCount = paginationMeta?.total ?? employees.length;
+  const totalPages = paginationMeta?.totalPages ?? 1;
 
   const setSearchTerm = useCallback((q: string) => setSearchInput(q), []);
-  const setDeptFilter = useCallback((d: string) => updateParams({ dept: d === "All" ? null : d, page: null }), [updateParams]);
-  const setStatusFilter = useCallback((s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }), [updateParams]);
-  const setRoleFilter = useCallback((r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }), [updateParams]);
-  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
-
-  const departments = useMemo(() => {
-    const deptSet = new Map<string, string>();
-    employees.forEach((e) => {
-      if (e.department) deptSet.set(e.department.name, e.department.name);
-    });
-    return Array.from(deptSet.values()).sort();
-  }, [employees]);
-
-  const filteredEmployees = useMemo(() => {
-    let result = employees;
-
-    if (effectiveSearchTerm) {
-      const term = effectiveSearchTerm.toLowerCase();
-      if (term) {
-        result = result.filter((e) => {
-          const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim().toLowerCase();
-          const email = e.email.toLowerCase();
-          const first = e.firstName?.toLowerCase() ?? "";
-          const last = e.lastName?.toLowerCase() ?? "";
-          const designation = e.designation?.toLowerCase() ?? "";
-          const employeeId = e.employeeId?.toLowerCase() ?? "";
-          const roleRaw = e.role.toLowerCase();
-          const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
-          return (
-            name.includes(term) || email.includes(term) || first.includes(term) ||
-            last.includes(term) || designation.includes(term) || employeeId.includes(term) ||
-            roleRaw.includes(term) || roleLabel.includes(term)
-          );
-        });
-      }
-    }
-
-    if (deptFilter !== "All") result = result.filter((e) => e.department?.name === deptFilter);
-
-    if (statusFilter === "Active") result = result.filter((e) => e.isActive !== false);
-    else if (statusFilter === "Inactive") result = result.filter((e) => e.isActive === false);
-
-    if (roleFilter !== "All") result = result.filter((e) => e.role === roleFilter);
-
-    return result;
-  }, [employees, effectiveSearchTerm, deptFilter, statusFilter, roleFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
-  const paginatedEmployees = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredEmployees.slice(start, start + pageSize);
-  }, [filteredEmployees, page, pageSize]);
+  const setDeptFilter = useCallback(
+    (d: string) => updateParams({ dept: d === "All" ? null : d, page: null }),
+    [updateParams],
+  );
+  const setStatusFilter = useCallback(
+    (s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }),
+    [updateParams],
+  );
+  const setRoleFilter = useCallback(
+    (r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }),
+    [updateParams],
+  );
 
   const handlePageSizeChange = useCallback(
-    (size: PageSizeOption) => updateParams({ size: size === PAGE_SIZE ? null : String(size), page: null }),
-    [updateParams],
+    (size: PageSizeOption) => setPageSize(clampPageSize(size)),
+    [setPageSize],
+  );
+
+  const departments = useMemo(
+    () => departmentRows.map((d) => d.name).sort(),
+    [departmentRows],
   );
 
   const handleDelete = useCallback(async () => {
@@ -163,7 +146,7 @@ export default function HRDashboardPage() {
       },
       onError: () => toast.error("Failed to terminate employee"),
     });
-  }, [employeeToDelete, terminateMutation]);
+  }, [employeeToDelete, terminateMutation, router]);
 
   const handleToggleDashboardAccess = useCallback(
     (userId: string, newValue: boolean) => {
@@ -180,11 +163,11 @@ export default function HRDashboardPage() {
 
   const handleExport = useCallback(async () => {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-    const rows = filteredEmployees.map((e) => ({
+    const rows = employees.map((e) => ({
       name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
       employeeId: e.employeeId ?? "",
       email: e.email,
-      role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
+      role: e.designation ?? e.role,
       department: e.department?.name ?? "",
       status: e.isActive !== false ? "Active" : "Inactive",
     }));
@@ -202,13 +185,13 @@ export default function HRDashboardPage() {
         rows,
       },
     ]);
-    toast.success("Employees exported");
-  }, [filteredEmployees]);
+    toast.success("Employees exported (current page)");
+  }, [employees]);
 
-  const handleClearFilters = useCallback(
-    () => updateParams({ q: null, dept: null, status: null, role: null, page: null }),
-    [updateParams],
-  );
+  const handleClearFilters = useCallback(() => {
+    setSearchInput("");
+    updateParams({ q: null, dept: null, status: null, role: null, page: null });
+  }, [updateParams]);
 
   const handleRequestDelete = useCallback((employee: Employee) => {
     setEmployeeToDelete(employee);
@@ -217,8 +200,8 @@ export default function HRDashboardPage() {
 
   if (isLoading) return <EmployeesLoadingSkeleton />;
 
-  const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
-  const showTo = Math.min(page * pageSize, filteredEmployees.length);
+  const showFrom = totalCount > 0 ? (page - 1) * pageSize + 1 : 0;
+  const showTo = Math.min(page * pageSize, totalCount);
   const hasActiveFilters =
     !!effectiveSearchTerm ||
     !!searchInput.trim() ||
@@ -233,7 +216,7 @@ export default function HRDashboardPage() {
     <PageWrapper
       title="Employees"
       subtitle="Manage your company directory and employee access"
-      badge={String(filteredEmployees.length)}
+      badge={String(totalCount)}
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -251,8 +234,11 @@ export default function HRDashboardPage() {
           </Button>
         </div>
       }
-      filters={
-        <HrFilterBar
+    >
+      <HrDashboardOverview />
+
+      {employees.length > 0 ? (
+        <HrEmployeeTable
           searchTerm={searchInput}
           onSearchChange={setSearchTerm}
           deptFilter={deptFilter}
@@ -263,15 +249,9 @@ export default function HRDashboardPage() {
           roleFilter={roleFilter}
           onRoleChange={setRoleFilter}
           onClearFilters={handleClearFilters}
-        />
-      }
-    >
-      <HrDashboardOverview />
-
-      {paginatedEmployees.length > 0 ? (
-        <HrEmployeeTable
-          employees={paginatedEmployees}
-          totalCount={filteredEmployees.length}
+          hasSearchFilter={!!effectiveSearchTerm || !!searchInput.trim()}
+          employees={employees}
+          totalCount={totalCount}
           page={page}
           pageSize={pageSize}
           totalPages={totalPages}
@@ -286,11 +266,29 @@ export default function HRDashboardPage() {
           onRequestDelete={handleRequestDelete}
         />
       ) : hasActiveFilters ? (
-        <EmptyState
-          illustration={<EmptySearchIllustration className="mb-3" />}
-          title="No results found"
-          description="No employees match your current filters. Try adjusting your search."
-        />
+        <Card className="border-border">
+          <CardContent className="p-0">
+            <HrEmployeeListToolbar
+              searchTerm={searchInput}
+              onSearchChange={setSearchTerm}
+              deptFilter={deptFilter}
+              onDeptChange={setDeptFilter}
+              departments={departments}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              roleFilter={roleFilter}
+              onRoleChange={setRoleFilter}
+              onClearFilters={handleClearFilters}
+              hasSearchFilter={!!effectiveSearchTerm || !!searchInput.trim()}
+            />
+            <EmptyState
+              illustration={<EmptySearchIllustration className="mb-3" />}
+              title="No results found"
+              description="No employees match your current filters. Try adjusting your search."
+              className="py-12"
+            />
+          </CardContent>
+        </Card>
       ) : (
         <EmptyState
           illustration={<EmptyTeamIllustration className="mb-3" />}

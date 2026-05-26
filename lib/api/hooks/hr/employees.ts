@@ -33,16 +33,28 @@ export function useCreateDepartment() {
   });
 }
 
-export function useHrEmployees(params?: {
+export type HrEmployeesQueryParams = {
   page?: number;
   limit?: number;
   search?: string;
-}) {
+  q?: string;
+  dept?: string;
+  role?: string;
+  status?: string;
+};
+
+export function useHrEmployees(params?: HrEmployeesQueryParams) {
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
     queryFn: () =>
       apiClient.get<Employee[] | PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
   });
+}
+
+export function isPaginatedEmployees(
+  data: Employee[] | PaginatedEmployees | undefined,
+): data is PaginatedEmployees {
+  return data != null && !Array.isArray(data) && "pagination" in data;
 }
 
 export function useTerminatedEmployees() {

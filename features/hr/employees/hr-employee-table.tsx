@@ -15,6 +15,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Eye, Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { HrEmployeeListToolbar } from "./hr-employee-list-toolbar";
+import type { StatusFilter, RoleFilter } from "./hr-types";
 import { resolveImageUrl } from "@/lib/utils";
 import { AIAttritionRiskButton } from "./ai-attrition-risk-button";
 import {
@@ -27,6 +29,17 @@ import {
 } from "./hr-types";
 
 interface HrEmployeeTableProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  deptFilter: string;
+  onDeptChange: (value: string) => void;
+  departments: string[];
+  statusFilter: StatusFilter;
+  onStatusChange: (value: StatusFilter) => void;
+  roleFilter: RoleFilter;
+  onRoleChange: (value: RoleFilter) => void;
+  onClearFilters: () => void;
+  hasSearchFilter?: boolean;
   employees: Employee[];
   totalCount: number;
   page: number;
@@ -44,6 +57,17 @@ interface HrEmployeeTableProps {
 }
 
 export function HrEmployeeTable({
+  searchTerm,
+  onSearchChange,
+  deptFilter,
+  onDeptChange,
+  departments,
+  statusFilter,
+  onStatusChange,
+  roleFilter,
+  onRoleChange,
+  onClearFilters,
+  hasSearchFilter,
   employees,
   totalCount,
   page,
@@ -89,6 +113,20 @@ export function HrEmployeeTable({
   return (
     <Card className="border-border flex flex-col flex-1 min-h-0">
       <CardContent className="p-0 flex flex-col flex-1 min-h-0">
+        <HrEmployeeListToolbar
+          searchTerm={searchTerm}
+          onSearchChange={onSearchChange}
+          deptFilter={deptFilter}
+          onDeptChange={onDeptChange}
+          departments={departments}
+          statusFilter={statusFilter}
+          onStatusChange={onStatusChange}
+          roleFilter={roleFilter}
+          onRoleChange={onRoleChange}
+          onClearFilters={onClearFilters}
+          hasSearchFilter={hasSearchFilter}
+          totalCount={totalCount}
+        />
         <div className="overflow-auto flex-1 min-h-0" role="region" aria-label="Employee directory table">
           <div className="min-w-[820px]">
             <Table>
