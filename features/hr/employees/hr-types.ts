@@ -36,9 +36,16 @@ export const ROLE_LABELS: Record<string, string> = {
   DIGITAL_MARKETING: "Digital Marketing",
 };
 
-export const PAGE_SIZE = 10;
-export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
-export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
+import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+  type PageSizeOption,
+} from "@/lib/pagination-constants";
+
+export { PAGE_SIZE_OPTIONS, type PageSizeOption };
+
+/** Default rows per page on the HR employees list */
+export const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function canDeleteEmployee(
   targetRole: UserRole,

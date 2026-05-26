@@ -5,6 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { PAGE_SIZE_OPTIONS } from "@/lib/pagination-constants";
 
 interface PaginationProps {
   page: number;
@@ -51,7 +52,7 @@ export function DataTablePagination({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {[10, 20, 50, 100].map(n => (
+              {PAGE_SIZE_OPTIONS.map((n) => (
                 <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
               ))}
             </SelectContent>
