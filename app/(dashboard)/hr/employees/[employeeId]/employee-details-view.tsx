@@ -264,16 +264,18 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </a>
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-              onClick={handleTerminateClick}
-              disabled={terminateMutation.isPending}
-            >
-              <UserX className="h-3.5 w-3.5 mr-1" />
-              Terminate
-            </Button>
+            {employee.isActive !== false && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={handleTerminateClick}
+                disabled={terminateMutation.isPending}
+              >
+                <UserX className="h-3.5 w-3.5 mr-1" />
+                Terminate
+              </Button>
+            )}
             <Button variant="ghost" size="sm" asChild>
               <Link href="/hr"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
             </Button>
