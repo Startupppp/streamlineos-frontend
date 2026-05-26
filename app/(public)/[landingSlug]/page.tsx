@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { LandingForm } from "@/features/landing/landing-form";
 import { clientEnv } from "@/lib/env";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const revalidate = 60;
 
@@ -72,7 +73,7 @@ export default async function LandingPageRoute({ params, searchParams }: Props) 
         {page.content && (
           <article
             className="prose prose-neutral dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: page.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
           />
         )}
 

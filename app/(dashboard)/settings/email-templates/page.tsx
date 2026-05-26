@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 import {
   getVerificationEmailTemplate,
@@ -711,7 +712,7 @@ export default function EmailTemplatesPage() {
               <div
                 className="bg-white rounded-b-lg"
                 style={{ minHeight: "500px" }}
-                dangerouslySetInnerHTML={{ __html: preview.html }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(preview.html) }}
               />
             </CardContent>
           </Card>

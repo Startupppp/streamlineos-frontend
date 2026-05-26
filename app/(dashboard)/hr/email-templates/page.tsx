@@ -1,6 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -650,7 +651,7 @@ function EmailTemplatesContent() {
               <p className="text-xs font-medium text-muted-foreground mb-1">Body</p>
               <div
                 className="text-sm max-w-none border rounded-md p-3 bg-muted/30 break-words [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: mergePreviewText(previewTemplate.body) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(mergePreviewText(previewTemplate.body)) }}
               />
             </ScrollArea>
           )}

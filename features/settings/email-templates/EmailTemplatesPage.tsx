@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { Mail, Send } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ const PreviewPanel = memo(function PreviewPanel({ preview }: PreviewPanelProps) 
         <div
           className="bg-white rounded-b-lg"
           style={{ minHeight: "500px" }}
-          dangerouslySetInnerHTML={{ __html: preview.html }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(preview.html) }}
         />
       </CardContent>
     </Card>

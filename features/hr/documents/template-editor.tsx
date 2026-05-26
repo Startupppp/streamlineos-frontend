@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Eye, EyeOff, Wand2, History } from "lucide-react";
 import Link from "next/link";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -422,7 +423,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               <CardContent className="pb-6">
                 <div
                   className="max-h-[600px] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-5 text-sm prose prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewHtml) }}
                 />
               </CardContent>
             </Card>

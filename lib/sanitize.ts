@@ -1,4 +1,31 @@
+import sanitizeHtmlLib from "sanitize-html";
 
+const HTML_SANITIZE_OPTIONS: sanitizeHtmlLib.IOptions = {
+  allowedTags: sanitizeHtmlLib.defaults.allowedTags.concat([
+    "img",
+    "h1",
+    "h2",
+    "span",
+    "center",
+    "u",
+    "s",
+  ]),
+  allowedAttributes: {
+    "*": ["style", "class", "id", "align", "dir", "title"],
+    a: ["href", "name", "target", "rel"],
+    img: ["src", "alt", "width", "height"],
+    td: ["colspan", "rowspan", "width", "height", "valign", "bgcolor"],
+    th: ["colspan", "rowspan", "width", "height", "valign", "bgcolor"],
+    table: ["width", "cellpadding", "cellspacing", "border", "bgcolor"],
+  },
+  allowedSchemes: ["http", "https", "mailto", "tel"],
+  allowedSchemesByTag: { img: ["http", "https", "data"] },
+};
+
+export function sanitizeHtml(input: string | null | undefined): string {
+  if (!input) return "";
+  return sanitizeHtmlLib(input, HTML_SANITIZE_OPTIONS);
+}
 
 export function sanitizeText(input: string): string {
   return input

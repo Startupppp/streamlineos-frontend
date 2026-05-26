@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   FileText,
   FilePlus2,
@@ -149,7 +150,7 @@ function PreviewDialog({ template }: { template: DocumentTemplate }) {
             </AlertDialogHeader>
             <div
               className="max-h-[60vh] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: template.htmlContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(template.htmlContent) }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>
