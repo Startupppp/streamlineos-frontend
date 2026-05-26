@@ -105,8 +105,8 @@ function ResetPasswordContent() {
           toast.error(result.error ?? "Failed to update password");
         }
       }
-    } catch (error: any) {
-      toast.error(error?.message || "An error occurred. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

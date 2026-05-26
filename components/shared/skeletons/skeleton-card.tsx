@@ -23,7 +23,7 @@ export function SkeletonCard({ hasHeader = true, lines = 3, className }: Skeleto
           <Skeleton
             key={i}
             className="h-4"
-            style={{ width: `${70 + Math.random() * 30}%` }}
+            style={{ width: `${70 + ((i * 37) % 30)}%` }}
           />
         ))}
       </div>

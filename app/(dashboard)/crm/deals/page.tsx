@@ -50,6 +50,11 @@ const CONFETTI_COLORS = [
   "#8B5CF6",
 ];
 
+function seededFraction(seed: number): number {
+  const x = Math.sin(seed * 99991) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 function ConfettiOverlay({ onDone }: { onDone: () => void }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -64,12 +69,11 @@ function ConfettiOverlay({ onDone }: { onDone: () => void }) {
       Array.from({ length: 60 }, (_, i) => ({
         id: i,
         color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        left: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 1.5}s`,
-        size: `${6 + Math.random() * 8}px`,
-        duration: `${1.5 + Math.random() * 1.5}s`,
+        left: `${seededFraction(i + 1) * 100}%`,
+        delay: `${seededFraction(i + 2) * 1.5}s`,
+        size: `${6 + seededFraction(i + 3) * 8}px`,
+        duration: `${1.5 + seededFraction(i + 4) * 1.5}s`,
       })),
-     
     [],
   );
 
@@ -135,7 +139,7 @@ export default function DealsPage() {
 
   const { page, pageSize, setPage, setPageSize, resetPage } = usePaginationParams();
   const { data: dealsResult, isLoading } = useDeals({ limit: 500 });
-  const allDeals = dealsResult?.data ?? [];
+  const allDeals = useMemo(() => dealsResult?.data ?? [], [dealsResult]);
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees)
     ? rawEmployees
