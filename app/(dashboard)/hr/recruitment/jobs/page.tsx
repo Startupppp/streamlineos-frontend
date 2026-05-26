@@ -1,5 +1,6 @@
 "use client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { createJobPostingSchema } from "@/lib/validations/common-forms";
 
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -150,21 +151,33 @@ export default function JobPostingsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    const sm = salaryMin ? Number(salaryMin) : undefined;
-    const sx = salaryMax ? Number(salaryMax) : undefined;
-    if (sm && sx && sm > sx) { toast.error("Salary min must be ≤ max"); return; }
+    const parsed = createJobPostingSchema.safeParse({
+      title,
+      location,
+      type,
+      description,
+      openings,
+      salaryMin,
+      salaryMax,
+      requirements,
+      applicationDeadline,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please fix the highlighted fields");
+      return;
+    }
+    const v = parsed.data;
     createJob.mutate(
       {
-        title: title.trim(),
-        location: location || undefined,
-        type,
-        description: description || undefined,
-        openings: Number(openings) || 1,
-        salaryMin: sm,
-        salaryMax: sx,
-        requirements: requirements.trim() || undefined,
-        applicationDeadline: applicationDeadline || undefined,
+        title: v.title,
+        location: v.location || undefined,
+        type: v.type,
+        description: v.description || undefined,
+        openings: v.openings,
+        salaryMin: v.salaryMin,
+        salaryMax: v.salaryMax,
+        requirements: v.requirements || undefined,
+        applicationDeadline: v.applicationDeadline || undefined,
       },
       {
         onSuccess: () => {
@@ -176,7 +189,7 @@ export default function JobPostingsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [title, location, type, description, openings, createJob]);
+  }, [title, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {

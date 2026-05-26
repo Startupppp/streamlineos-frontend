@@ -94,6 +94,63 @@ export const createDealFormSchema = z.object({
 
 export type CreateDealFormValues = z.infer<typeof createDealFormSchema>;
 
+const optionalSalary = z.preprocess(
+  (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+  z
+    .number({ error: "Salary must be a number" })
+    .refine((n) => !Number.isNaN(n), "Salary must be a number")
+    .min(0, "Salary cannot be negative")
+    .max(1_000_000_000, "Salary is too large")
+    .optional(),
+);
+
+export const createJobPostingSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(3, "Title must be at least 3 characters")
+      .max(150, "Title must be at most 150 characters")
+      .regex(/[A-Za-z]/, "Title must contain letters"),
+    location: z.string().trim().max(150, "Location must be at most 150 characters").optional().or(z.literal("")),
+    type: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"], {
+      error: "Select a valid job type",
+    }),
+    description: z.string().trim().max(10_000, "Description must be at most 10000 characters").optional().or(z.literal("")),
+    openings: z.preprocess(
+      (val) => (val === "" || val === undefined || val === null ? NaN : Number(val)),
+      z
+        .number({ error: "Openings must be a number" })
+        .int("Openings must be a whole number")
+        .min(1, "At least 1 opening is required")
+        .max(1000, "Openings must be at most 1000"),
+    ),
+    salaryMin: optionalSalary,
+    salaryMax: optionalSalary,
+    requirements: z.string().trim().max(10_000, "Requirements must be at most 10000 characters").optional().or(z.literal("")),
+    applicationDeadline: z.string().trim().optional().or(z.literal("")),
+  })
+  .refine(
+    (d) => d.salaryMin === undefined || d.salaryMax === undefined || d.salaryMin <= d.salaryMax,
+    { path: ["salaryMax"], message: "Max salary must be greater than or equal to min salary" },
+  )
+  .refine((d) => !d.applicationDeadline || !Number.isNaN(Date.parse(d.applicationDeadline)), {
+    path: ["applicationDeadline"],
+    message: "Application deadline is not a valid date",
+  })
+  .refine(
+    (d) => {
+      if (!d.applicationDeadline) return true;
+      const deadline = new Date(d.applicationDeadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return deadline >= today;
+    },
+    { path: ["applicationDeadline"], message: "Application deadline cannot be in the past" },
+  );
+
+export type CreateJobPostingFormValues = z.infer<typeof createJobPostingSchema>;
+
 export const onboardingDocUploadSchema = z.object({
   fileUrl: z.string().trim().url("Uploaded file URL is invalid"),
   fileName: requiredString("File name", 255),
