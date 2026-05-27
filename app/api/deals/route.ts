@@ -10,7 +10,7 @@ import { z } from "zod";
 const listSchema = z.object({
   stage: z.enum(["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]).optional(),
   assignedToId: z.string().optional(),
-  limit: z.coerce.number().min(1).max(100).optional(),
+  limit: z.coerce.number().min(1).max(500).optional(),
   offset: z.coerce.number().min(0).optional(),
 });
 
