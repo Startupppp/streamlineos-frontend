@@ -94,7 +94,7 @@ export default function InvitationPage() {
   if (!invitation) {
     return (
       <div className="flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-gold" />
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
         <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
       </div>
     );
@@ -134,8 +134,8 @@ export default function InvitationPage() {
           <CardContent className="px-6 md:px-8 pt-6 pb-8">
 
             <div className="text-center mb-6">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
-                <Mail className="w-6 h-6 text-gold" />
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+                <Mail className="w-6 h-6 text-blue-600" />
               </div>
               <h1 className="text-2xl font-bold text-foreground">Join Organization</h1>
               <p className="text-sm text-muted-foreground mt-1.5">
@@ -233,7 +233,7 @@ export default function InvitationPage() {
               <div className="pt-2 space-y-3">
                 <Button
                   type="submit"
-                  className="w-full gap-2 text-white font-medium h-11 gradient-gold"
+                  className="w-full gap-2 text-white font-medium h-11 bg-slate-900 hover:bg-slate-800"
                   disabled={acceptInvitation.isPending}
                 >
                   {acceptInvitation.isPending ? (

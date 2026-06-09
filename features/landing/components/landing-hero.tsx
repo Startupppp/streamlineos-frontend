@@ -92,21 +92,14 @@ export function LandingHero() {
           >
             <Magnetic strength={0.35}>
               <Link href="/signin">
-                <Button
-                  size="lg"
-                  className="bg-slate-900 text-white hover:bg-slate-800 font-bold border-0 shadow-[0_12px_40px_-8px_rgba(15,23,42,0.45)] h-12 px-7 text-[15px]"
-                >
+                <Button size="lg" className="h-12 px-7 text-[15px]">
                   Start for free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </Magnetic>
             <a href="#features">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-slate-200 bg-white/80 backdrop-blur text-slate-700 hover:bg-white hover:text-slate-900 hover:border-slate-300 h-12 px-7 text-[15px]"
-              >
+              <Button size="lg" variant="outline" className="h-12 px-7 text-[15px]">
                 See it in action
                 <ChevronRight className="ml-1.5 h-4 w-4" />
               </Button>

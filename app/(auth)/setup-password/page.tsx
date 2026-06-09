@@ -91,7 +91,7 @@ function SetupPasswordContent() {
   if (isValidating) {
     return (
       <div className="w-full max-w-sm text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gold mx-auto mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
         <p className="text-sm text-muted-foreground">Verifying your setup link...</p>
       </div>
     );
@@ -115,8 +115,8 @@ function SetupPasswordContent() {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-6">
-        <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center mb-4">
-          <Rocket className="h-5 w-5 text-gold" />
+        <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+          <Rocket className="h-5 w-5 text-blue-600" />
         </div>
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
           Welcome, {tokenInfo.name}!
@@ -196,7 +196,7 @@ function SetupPasswordContent() {
 
 export default function SetupPasswordPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-sm text-center"><Loader2 className="h-8 w-8 animate-spin text-gold mx-auto" /></div>}>
+    <Suspense fallback={<div className="w-full max-w-sm text-center"><Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></div>}>
       <SetupPasswordContent />
     </Suspense>
   );

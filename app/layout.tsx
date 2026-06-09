@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
@@ -9,25 +9,18 @@ import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
 import { BRAND_NAME, BRAND_TAGLINE, BRAND_DOMAIN } from "../lib/branding";
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-geist",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-jetbrains",
+  variable: "--font-geist-mono",
   weight: ["400", "500", "600", "700"],
-});
-
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-bricolage",
-  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -55,9 +48,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${jetbrainsMono.variable} ${bricolage.variable}`}
+      className={`${geist.variable} ${geistMono.variable}`}
     >
-      <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground">
+      <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

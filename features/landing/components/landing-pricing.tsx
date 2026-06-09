@@ -80,11 +80,8 @@ export function LandingPricing() {
               <Magnetic strength={0.18}>
                 <Link href="/signin" className="block">
                   <Button
-                    className={`w-full h-11 font-semibold ${
-                      tier.highlight
-                        ? "bg-slate-900 text-white hover:bg-slate-800 border-0"
-                        : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50"
-                    }`}
+                    variant={tier.highlight ? "default" : "outline"}
+                    className="w-full h-11"
                   >
                     {tier.cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
