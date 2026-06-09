@@ -14,9 +14,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <div className="relative flex flex-1 flex-col overflow-y-auto">
+      <div className="relative flex flex-1 flex-col overflow-y-auto scrollbar-hide">
         <header className="shrink-0 flex items-center justify-between px-6 sm:px-10 py-5">
-          <Link href="/" className="flex items-center gap-2.5 group" aria-label={BRAND_NAME}>
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 group"
+            aria-label={BRAND_NAME}
+          >
             <AnimatedLogo size={34} className="rounded-xl" />
             <span className="font-display text-base font-bold tracking-tight text-slate-900">
               {BRAND_NAME}
@@ -39,12 +43,20 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </main>
 
         <footer className="shrink-0 px-6 sm:px-10 py-5 flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.16em] text-slate-400">
-          <p>&copy; {new Date().getFullYear()} {BRAND_NAME}</p>
+          <p>
+            &copy; {new Date().getFullYear()} {BRAND_NAME}
+          </p>
           <div className="flex items-center gap-4">
-            <Link href="/legal/privacy" className="hover:text-slate-700 transition-colors">
+            <Link
+              href="/legal/privacy"
+              className="hover:text-slate-700 transition-colors"
+            >
               Privacy
             </Link>
-            <Link href="/legal/terms" className="hover:text-slate-700 transition-colors">
+            <Link
+              href="/legal/terms"
+              className="hover:text-slate-700 transition-colors"
+            >
               Terms
             </Link>
           </div>

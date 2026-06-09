@@ -10,7 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowRight, Check, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Check,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,13 +46,21 @@ const PLAN_IDS = ["STARTUP", "SCALEUP", "ENTERPRISE"] as const;
 
 export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedPlan, setSelectedPlan] = useState<(typeof PLAN_IDS)[number]>("STARTUP");
+  const [selectedPlan, setSelectedPlan] =
+    useState<(typeof PLAN_IDS)[number]>("STARTUP");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", companyName: "", phone: "" },
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      companyName: "",
+      phone: "",
+    },
   });
 
   const handleSubmit = async (data: FormValues) => {
@@ -63,7 +78,9 @@ export default function SignupPage() {
       if (result?.ok) {
         window.location.href = "/dashboard";
       } else {
-        toast.error("Account created but auto-login failed. Please sign in manually.");
+        toast.error(
+          "Account created but auto-login failed. Please sign in manually.",
+        );
         window.location.href = "/signin";
       }
     } catch (error) {
@@ -74,13 +91,15 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full max-w-md text-left">
-      <div className="mb-5">
+    <div className="w-full max-w-md text-left scrollbar-hide">
+      <div className="mb-5 text-center">
         <h1 className="font-display text-2xl sm:text-[1.7rem] font-extrabold tracking-[-0.02em] text-slate-900 leading-tight">
           Create your account
         </h1>
         <p className="text-[13px] text-slate-500 mt-1">
-          {step === 1 ? "Pick a plan — switch anytime." : "A few details and you're in."}
+          {step === 1
+            ? "Pick a plan — switch anytime."
+            : "A few details and you're in."}
         </p>
       </div>
 
@@ -108,10 +127,14 @@ export default function SignupPage() {
                   <span
                     className={cn(
                       "h-5 w-5 rounded-full border-2 inline-flex items-center justify-center shrink-0 transition-colors",
-                      isSelected ? "border-blue-500 bg-blue-500" : "border-slate-300 bg-white",
+                      isSelected
+                        ? "border-blue-500 bg-blue-500"
+                        : "border-slate-300 bg-white",
                     )}
                   >
-                    {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                    {isSelected && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
                   </span>
 
                   <div className="flex-1 min-w-0">
@@ -119,7 +142,9 @@ export default function SignupPage() {
                       <span className="font-display text-[15px] font-bold text-slate-900">
                         {plan.name}
                       </span>
-                      <span className="text-[15px] font-extrabold brand-text">{plan.price}</span>
+                      <span className="text-[15px] font-extrabold brand-text">
+                        {plan.price}
+                      </span>
                       <span className="text-[10px] font-mono text-slate-500 truncate">
                         {plan.period}
                       </span>
@@ -130,7 +155,10 @@ export default function SignupPage() {
                           key={f}
                           className="text-[11px] text-slate-600 inline-flex items-center gap-1"
                         >
-                          <Check className="h-2.5 w-2.5 text-blue-500 shrink-0" strokeWidth={3} />
+                          <Check
+                            className="h-2.5 w-2.5 text-blue-500 shrink-0"
+                            strokeWidth={3}
+                          />
                           {f}
                         </span>
                       ))}
@@ -152,26 +180,35 @@ export default function SignupPage() {
             14-day trial · No credit card · Cancel anytime
           </p>
 
-          <Button
-            onClick={() => setStep(2)}
-            className="w-full h-11"
-          >
+          <Button onClick={() => setStep(2)} className="w-full h-11">
             Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
 
           <p className="text-[13px] text-center text-slate-500 mt-2">
             Already have an account?{" "}
-            <Link href="/signin" className="text-blue-600 hover:text-blue-700 font-semibold">
+            <Link
+              href="/signin"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
               Sign in
             </Link>
           </p>
         </div>
       ) : (
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3.5">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-3.5"
+        >
           <div className="grid grid-cols-2 gap-2.5">
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">First name</Label>
-              <Input {...form.register("firstName")} placeholder="Aditya" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">
+                First name
+              </Label>
+              <Input
+                {...form.register("firstName")}
+                placeholder="Aditya"
+                className="h-10"
+              />
               {form.formState.errors.firstName && (
                 <p className="text-[11px] text-red-600">
                   {form.formState.errors.firstName.message}
@@ -179,8 +216,14 @@ export default function SignupPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label className="text-[12px] font-medium text-slate-700">Last name</Label>
-              <Input {...form.register("lastName")} placeholder="Sharma" className="h-10" />
+              <Label className="text-[12px] font-medium text-slate-700">
+                Last name
+              </Label>
+              <Input
+                {...form.register("lastName")}
+                placeholder="Sharma"
+                className="h-10"
+              />
               {form.formState.errors.lastName && (
                 <p className="text-[11px] text-red-600">
                   {form.formState.errors.lastName.message}
@@ -190,8 +233,14 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[12px] font-medium text-slate-700">Company</Label>
-            <Input {...form.register("companyName")} placeholder="Acme Inc." className="h-10" />
+            <Label className="text-[12px] font-medium text-slate-700">
+              Company
+            </Label>
+            <Input
+              {...form.register("companyName")}
+              placeholder="Acme Inc."
+              className="h-10"
+            />
             {form.formState.errors.companyName && (
               <p className="text-[11px] text-red-600">
                 {form.formState.errors.companyName.message}
@@ -200,7 +249,9 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[12px] font-medium text-slate-700">Work email</Label>
+            <Label className="text-[12px] font-medium text-slate-700">
+              Work email
+            </Label>
             <Input
               {...form.register("email")}
               type="email"
@@ -208,12 +259,16 @@ export default function SignupPage() {
               className="h-10"
             />
             {form.formState.errors.email && (
-              <p className="text-[11px] text-red-600">{form.formState.errors.email.message}</p>
+              <p className="text-[11px] text-red-600">
+                {form.formState.errors.email.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[12px] font-medium text-slate-700">Password</Label>
+            <Label className="text-[12px] font-medium text-slate-700">
+              Password
+            </Label>
             <div className="relative">
               <Input
                 {...form.register("password")}
@@ -228,7 +283,11 @@ export default function SignupPage() {
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
             {form.formState.errors.password && (
@@ -255,14 +314,19 @@ export default function SignupPage() {
               disabled={isSubmitting}
               className="flex-1 h-11"
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               {isSubmitting ? "Creating…" : "Start free trial"}
             </Button>
           </div>
 
           <p className="text-[13px] text-center text-slate-500 pt-1">
             Already have an account?{" "}
-            <Link href="/signin" className="text-blue-600 hover:text-blue-700 font-semibold">
+            <Link
+              href="/signin"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
               Sign in
             </Link>
           </p>

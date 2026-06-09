@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "../globals.css";
@@ -7,7 +7,17 @@ import { SessionProvider } from "../components/providers/session-provider";
 import { ThemeProvider } from "../components/theme-provider";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
-import { BRAND_NAME, BRAND_TAGLINE, BRAND_DOMAIN } from "../lib/branding";
+import {
+  BRAND_NAME,
+  BRAND_TAGLINE,
+  BRAND_DESCRIPTION,
+  BRAND_DOMAIN,
+  BRAND_URL,
+} from "../lib/branding";
+import {
+  OrganizationJsonLd,
+  WebsiteJsonLd,
+} from "@/features/seo/structured-data";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -23,22 +33,103 @@ const geistMono = Geist_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = new URL(process.env.NEXT_PUBLIC_APP_URL || BRAND_URL);
+
 export const metadata: Metadata = {
+  metadataBase: SITE_URL,
   title: {
     default: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
-    template: `%s | ${BRAND_NAME}`,
+    template: `%s · ${BRAND_NAME}`,
   },
-  description:
-    "StreamlineOS unifies HR, projects, CRM, chat, and analytics into one operating system for modern teams.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || `https://${BRAND_DOMAIN}`),
+  description: BRAND_DESCRIPTION,
+  keywords: [
+    "HR software India",
+    "all in one HR platform",
+    "CRM software",
+    "project management software",
+    "sales pipeline tool",
+    "employee management system",
+    "payroll software India",
+    "attendance tracking software",
+    "team operating system",
+    "StreamlineOS",
+    "HRMS",
+    "people operations",
+    "applicant tracking system",
+  ],
+  authors: [{ name: BRAND_NAME, url: BRAND_URL }],
+  creator: BRAND_NAME,
+  publisher: BRAND_NAME,
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  applicationName: BRAND_NAME,
+  category: "business",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
+    locale: "en_IN",
+    url: BRAND_URL,
     siteName: BRAND_NAME,
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
-    description:
-      "The operating system for modern teams. HR, projects, CRM, and chat — unified.",
+    description: BRAND_DESCRIPTION,
+    images: [
+      {
+        url: "/logo.svg",
+        width: 512,
+        height: 512,
+        alt: BRAND_NAME,
+        type: "image/svg+xml",
+      },
+    ],
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
+    description: BRAND_DESCRIPTION,
+    images: ["/logo.svg"],
+    creator: "@streamlineos",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon.svg",
+  },
+  manifest: "/manifest.webmanifest",
+  other: {
+    "msapplication-TileColor": "#3b82f6",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef3fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#03060f" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -50,6 +141,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
     >
+      <head>
+        <OrganizationJsonLd />
+        <WebsiteJsonLd />
+        <link rel="canonical" href={`https://${BRAND_DOMAIN}`} />
+      </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
         <ThemeProvider
           attribute="class"
