@@ -38,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   return NextResponse.json({
     candidateName: candidate ? `${candidate.firstName} ${candidate.lastName}` : "Candidate",
-    orgName: org?.name ?? "Vaivamm Capital",
+    orgName: org?.name ?? "StreamlineOS",
     interviewType: link.interviewType,
     durationMinutes: link.durationMinutes,
     availableSlots: link.availableSlots,

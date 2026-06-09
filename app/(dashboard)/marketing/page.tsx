@@ -37,7 +37,7 @@ const ROI_HIGH_THRESHOLD = 4;
 const ROI_MED_THRESHOLD = 2.5;
 const CONV_HIGH_THRESHOLD = 5;
 
-const statusIcons: Record<string, React.ElementType> = {
+const statusIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   active: Play,
   paused: Pause,
   completed: CheckCircle2,

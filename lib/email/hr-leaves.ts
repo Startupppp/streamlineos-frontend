@@ -18,7 +18,7 @@ export async function sendLeaveRequestEmail(
   const leaveUrl = `${baseUrl}/hr/leaves`;
   await sendEmail({
     to: email,
-    subject: `Leave Request: ${employeeName} - Vaivamm Capital`,
+    subject: `Leave Request: ${employeeName} - StreamlineOS`,
     html: getLeaveRequestEmailTemplate(
       approverName,
       employeeName,
@@ -43,7 +43,7 @@ export async function sendLeaveStatusUpdateEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Leave Request ${status}: ${leaveType} - Vaivamm Capital`,
+    subject: `Leave Request ${status}: ${leaveType} - StreamlineOS`,
     html: getLeaveStatusUpdateEmailTemplate(
       employeeName,
       leaveType,
@@ -66,7 +66,7 @@ export async function sendLeaveCancellationEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Leave Cancelled: ${employeeName} - Vaivamm Capital`,
+    subject: `Leave Cancelled: ${employeeName} - StreamlineOS`,
     html: getLeaveCancellationEmailTemplate(
       approverName,
       employeeName,

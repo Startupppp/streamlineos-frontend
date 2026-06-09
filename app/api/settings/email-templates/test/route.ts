@@ -58,7 +58,7 @@ import {
   getCompanyAnnouncementEmailTemplate,
 } from "@/lib/email-templates/organization";
 
-const BASE_URL = process.env.NEXTAUTH_URL ?? "https://crm.vaivammcapital.com";
+const BASE_URL = process.env.NEXTAUTH_URL ?? "https://streamlineos.app";
 
 interface TemplateEntry {
   subject: string;
@@ -67,33 +67,33 @@ interface TemplateEntry {
 
 const TEMPLATE_MAP: Record<string, TemplateEntry> = {
   "auth.verify": {
-    subject: "Verify Your Email Address - Vaivamm Capital",
+    subject: "Verify Your Email Address - StreamlineOS",
     generateHtml: () => getVerificationEmailTemplate(`${BASE_URL}/verify-email?token=test-token`),
   },
   "auth.password_reset": {
-    subject: "Reset Your Password - Vaivamm Capital",
+    subject: "Reset Your Password - StreamlineOS",
     generateHtml: () => getPasswordResetEmailTemplate(`${BASE_URL}/auth/reset-password?token=test-token`),
   },
   "auth.welcome": {
-    subject: "Welcome to Vaivamm Capital — Set Up Your Account",
+    subject: "Welcome to StreamlineOS — Set Up Your Account",
     generateHtml: () =>
       getWelcomeEmailTemplate("Test User", "test@example.com", `${BASE_URL}/setup-password?token=test-token`),
   },
   "auth.password_changed": {
-    subject: "Password Changed Successfully - Vaivamm Capital",
+    subject: "Password Changed Successfully - StreamlineOS",
     generateHtml: () => getPasswordChangeConfirmationEmailTemplate("Test User"),
   },
   "auth.account_deactivated": {
-    subject: "Account Deactivated - Vaivamm Capital",
+    subject: "Account Deactivated - StreamlineOS",
     generateHtml: () =>
       getAccountDeactivationEmailTemplate("Test User", "HR Admin", "Test deactivation"),
   },
   "auth.account_locked": {
-    subject: "Account Locked - Vaivamm Capital",
+    subject: "Account Locked - StreamlineOS",
     generateHtml: () => getAccountLockedEmailTemplate("Test User"),
   },
   "auth.new_device": {
-    subject: "New Device Sign-In Detected - Vaivamm Capital",
+    subject: "New Device Sign-In Detected - StreamlineOS",
     generateHtml: () =>
       getNewDeviceLoginEmailTemplate("Test User", {
         userAgent: "Chrome on Windows",
@@ -102,22 +102,22 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       }),
   },
   "auth.password_expiry": {
-    subject: "Your Password Expires in 7 Days - Vaivamm Capital",
+    subject: "Your Password Expires in 7 Days - StreamlineOS",
     generateHtml: () => getPasswordExpiryWarningEmailTemplate("Test User", 7),
   },
 
   "org.invitation": {
-    subject: "Invitation to join Vaivamm Capital",
+    subject: "Invitation to join StreamlineOS",
     generateHtml: () =>
-      getInvitationEmailTemplate(`${BASE_URL}/invitation/tok123`, "Vaivamm Capital", "HR Admin"),
+      getInvitationEmailTemplate(`${BASE_URL}/invitation/tok123`, "StreamlineOS", "HR Admin"),
   },
   "org.holiday": {
-    subject: "Holiday Tomorrow: Test Holiday - Vaivamm Capital",
+    subject: "Holiday Tomorrow: Test Holiday - StreamlineOS",
     generateHtml: () =>
       getHolidayAnnouncementEmailTemplate("Test Holiday", "Tomorrow", "Enjoy the holiday!"),
   },
   "org.announcement": {
-    subject: "Announcement: Test Announcement - Vaivamm Capital",
+    subject: "Announcement: Test Announcement - StreamlineOS",
     generateHtml: () =>
       getCompanyAnnouncementEmailTemplate(
         "Test Announcement",
@@ -127,7 +127,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
   },
 
   "hr.leave_request": {
-    subject: "Leave Request: Test Employee - Vaivamm Capital",
+    subject: "Leave Request: Test Employee - StreamlineOS",
     generateHtml: () =>
       getLeaveRequestEmailTemplate(
         "HR Admin",
@@ -140,7 +140,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "hr.leave_approved": {
-    subject: "Leave Request APPROVED: Casual Leave - Vaivamm Capital",
+    subject: "Leave Request APPROVED: Casual Leave - StreamlineOS",
     generateHtml: () =>
       getLeaveStatusUpdateEmailTemplate(
         "Test Employee",
@@ -152,7 +152,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "hr.leave_rejected": {
-    subject: "Leave Request REJECTED: Casual Leave - Vaivamm Capital",
+    subject: "Leave Request REJECTED: Casual Leave - StreamlineOS",
     generateHtml: () =>
       getLeaveStatusUpdateEmailTemplate(
         "Test Employee",
@@ -165,7 +165,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "hr.leave_cancelled": {
-    subject: "Leave Cancelled: Test Employee - Vaivamm Capital",
+    subject: "Leave Cancelled: Test Employee - StreamlineOS",
     generateHtml: () =>
       getLeaveCancellationEmailTemplate(
         "HR Admin",
@@ -187,7 +187,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "hr.resignation_submitted": {
-    subject: "Resignation Submitted: Test Employee - Vaivamm Capital",
+    subject: "Resignation Submitted: Test Employee - StreamlineOS",
     generateHtml: () =>
       getResignationSubmittedEmailTemplate(
         "HR Admin",
@@ -201,7 +201,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "hr.resignation_approved": {
-    subject: "Resignation Accepted - Vaivamm Capital",
+    subject: "Resignation Accepted - StreamlineOS",
     generateHtml: () =>
       getResignationApprovedEmailTemplate(
         "Test Employee",
@@ -289,12 +289,12 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
   },
 
   "crm.lead_welcome": {
-    subject: "Thank you for contacting Vaivamm Capital",
+    subject: "Thank you for contacting StreamlineOS",
     generateHtml: () =>
       getLeadWelcomeEmail(
         "Test Lead",
-        "Vaivamm Capital",
-        "info@vaivammcapital.com",
+        "StreamlineOS",
+        "info@streamlineos.app",
         BASE_URL
       ),
   },
@@ -314,18 +314,18 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       getSlaBreachAlertEmail("Test Rep", "Test Lead", 4, `${BASE_URL}/crm/leads/1`),
   },
   "crm.client_onboarding": {
-    subject: "Welcome to Vaivamm Capital",
+    subject: "Welcome to StreamlineOS",
     generateHtml: () =>
       getClientOnboardingEmail(
         "Test Client",
-        "Vaivamm Capital",
+        "StreamlineOS",
         "Test Rep",
         `${BASE_URL}/client-portal`
       ),
   },
 
   "project.assigned": {
-    subject: "Added to Project: Test Project - Vaivamm Capital",
+    subject: "Added to Project: Test Project - StreamlineOS",
     generateHtml: () =>
       getProjectAssignmentEmailTemplate(
         "Test Employee",
@@ -336,7 +336,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "project.ticket_assigned": {
-    subject: "Ticket Assigned: Test ticket - Vaivamm Capital",
+    subject: "Ticket Assigned: Test ticket - StreamlineOS",
     generateHtml: () =>
       getTicketAssignmentEmailTemplate(
         "Test Employee",
@@ -349,7 +349,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "project.review_request": {
-    subject: "Review Requested: Test ticket - Vaivamm Capital",
+    subject: "Review Requested: Test ticket - StreamlineOS",
     generateHtml: () =>
       getTicketReviewRequestEmailTemplate(
         "HR Admin",
@@ -362,7 +362,7 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
       ),
   },
   "project.changes_requested": {
-    subject: "Changes Requested: Test ticket - Vaivamm Capital",
+    subject: "Changes Requested: Test ticket - StreamlineOS",
     generateHtml: () =>
       getTicketChangesRequestedEmailTemplate(
         "Test Employee",

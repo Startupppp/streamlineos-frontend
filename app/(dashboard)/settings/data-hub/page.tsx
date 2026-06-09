@@ -18,7 +18,7 @@ import { toast } from "sonner";
 interface ImportEntity {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   description: string;
   templateUrl?: string;
   importEndpoint?: string;

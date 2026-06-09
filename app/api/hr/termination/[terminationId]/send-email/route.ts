@@ -56,7 +56,7 @@ export async function POST(
         detailedExplanation: existing.detailedExplanation ?? undefined,
         hrName: session.user.name ?? "HR Executive",
         hrDesignation: session.user.role === "CEO" ? "CEO" : "HR Executive",
-        companyName: org?.name ?? "VAIVAMM CAPITAL ADVISORS LLP",
+        companyName: org?.name ?? "STREAMLINEOS ADVISORS LLP",
       });
 
       await sendTerminationEmail(

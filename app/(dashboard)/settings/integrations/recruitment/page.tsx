@@ -35,7 +35,7 @@ interface PlatformConfig {
   id: UpsertPortalInput["platform"];
   label: string;
   description: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   docsUrl?: string;
   webhookEnvVar: string;
 }

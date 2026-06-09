@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
               recipientName: `${interviewer.firstName ?? ""} ${interviewer.lastName ?? ""}`.trim() || "Interviewer",
               candidateName,
               jobTitle: "this position",
-              companyName: "Vaivamm Capital",
+              companyName: "StreamlineOS",
               scheduledAt: dateLabel,
               durationMinutes: body.durationMinutes,
               format: formatLabel,
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
               recipientName: candidateName,
               candidateName,
               jobTitle: "this position",
-              companyName: "Vaivamm Capital",
+              companyName: "StreamlineOS",
               scheduledAt: dateLabel,
               durationMinutes: body.durationMinutes,
               format: formatLabel,
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (body.notifyChannels.whatsapp && candidate.phone) {
-          const waBody = `Hi ${candidate.firstName}, your interview at Vaivamm Capital is scheduled for ${dateLabel} (${formatLabel}, ${body.durationMinutes} min). Please be available on time.`;
+          const waBody = `Hi ${candidate.firstName}, your interview at StreamlineOS is scheduled for ${dateLabel} (${formatLabel}, ${body.durationMinutes} min). Please be available on time.`;
           emailTasks.push(sendWhatsAppWithSmsFallback(candidate.phone, waBody));
         }
 

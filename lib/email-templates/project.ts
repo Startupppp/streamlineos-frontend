@@ -53,7 +53,7 @@ export function getProjectAssignmentEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Added to Project: ${sProject} - Vaivamm Capital`,
+    title: `Added to Project: ${sProject} - StreamlineOS`,
     preheader: `You've been added to ${sProject}`,
     content,
   });
@@ -130,7 +130,7 @@ export function getTicketAssignmentEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Ticket Assigned: ${sTitle} - Vaivamm Capital`,
+    title: `Ticket Assigned: ${sTitle} - StreamlineOS`,
     preheader: `${sCreatedBy} assigned you a ${ticketPriority.toLowerCase()} priority ticket`,
     content,
   });
@@ -204,7 +204,7 @@ export function getTicketReviewRequestEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Review Requested: ${sTitle} - Vaivamm Capital`,
+    title: `Review Requested: ${sTitle} - StreamlineOS`,
     preheader: `${sCompletedBy} completed work on ${sTitle} and needs your review`,
     content,
   });
@@ -273,7 +273,7 @@ export function getTicketChangesRequestedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Changes Requested: ${sTitle} - Vaivamm Capital`,
+    title: `Changes Requested: ${sTitle} - StreamlineOS`,
     preheader: `${sReviewer} requested changes on ${sTitle}`,
     content,
   });

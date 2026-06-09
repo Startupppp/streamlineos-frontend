@@ -2,7 +2,7 @@
 
 **Authentication & Security**
 
-**Project: Vaivamm Capital CRM — Auth Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**Project: StreamlineOS — Auth Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 
@@ -25,7 +25,7 @@
 
 **1.1 Background**
 
-**Enterprise CRMs contain highly sensitive financial, client, and employee data. The auth module is the primary gatekeeper for the Vaivamm application.**
+**Enterprise CRMs contain highly sensitive financial, client, and employee data. The auth module is the primary gatekeeper for the StreamlineOS application.**
 
 **1.2 Objective**
 
@@ -93,7 +93,7 @@
 
 **7\. UI/UX Wireframe Descriptions**
 
-* **Login Screen: Split screen. Left side shows rotating Vaivamm marketing/value propositions. Right side holds the white login card with clean, modern inputs.**  
+* **Login Screen: Split screen. Left side shows rotating StreamlineOS marketing/value propositions. Right side holds the white login card with clean, modern inputs.**  
 * **MFA Setup Modal: Displays a scannable QR code alongside a manual string entry code. Below sits a 6-digit input field for the user to confirm successful binding.**
 
 **8\. Roles & Permissions**

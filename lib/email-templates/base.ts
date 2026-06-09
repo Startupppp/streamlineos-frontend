@@ -193,7 +193,7 @@ export function getEmailTemplate({ title, preheader, content }: EmailTemplatePro
     <div class="email-container">
       <div class="email-header">
         <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0;">
-          Vaivamm Capital
+          StreamlineOS
         </h1>
       </div>
 
@@ -203,11 +203,11 @@ export function getEmailTemplate({ title, preheader, content }: EmailTemplatePro
 
       <div class="email-footer">
         <p class="footer-text">
-          <strong>Vaivamm Capital CRM</strong><br>
+          <strong>StreamlineOS</strong><br>
           Enterprise Resource Management System
         </p>
         <p class="footer-text">
-          Need help? Contact us at <a href="mailto:support@vaivammcapital.com" class="footer-link">support@vaivammcapital.com</a>
+          Need help? Contact us at <a href="mailto:support@streamlineos.app" class="footer-link">support@streamlineos.app</a>
         </p>
         <p class="footer-text" style="margin-top: 16px; font-size: 12px; color: #94a3b8;">
           This is an automated email. Please do not reply to this message.

@@ -51,8 +51,8 @@ export async function GET(
 
     const empName = `${employee?.name ?? "Employee"}`;
     const empDesignation = employee?.designation ?? "—";
-    const orgName = org?.name ?? "Vaivamm Capital Advisors LLP";
-    const orgFullName = "Vaivamm Capital Advisors LLP";
+    const orgName = org?.name ?? "StreamlineOS Advisors LLP";
+    const orgFullName = "StreamlineOS Advisors LLP";
 
     const basic = parseFloat(payroll.basicSalary || "0");
     const hra = parseFloat(payroll.hra || "0");

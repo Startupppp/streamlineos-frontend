@@ -58,7 +58,7 @@ export async function sendVerificationEmail(email: string, token: string) {
   const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
   await sendEmail({
     to: email,
-    subject: "Verify Your Email - Vaivamm Capital",
+    subject: "Verify Your Email - StreamlineOS",
     html: getVerificationEmailTemplate(verificationUrl),
   });
 }
@@ -67,7 +67,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
-    subject: "Reset Your Password - Vaivamm Capital",
+    subject: "Reset Your Password - StreamlineOS",
     html: getPasswordResetEmailTemplate(resetUrl),
   });
 }
@@ -81,7 +81,7 @@ export async function sendInvitationEmail(
   const invitationUrl = `${baseUrl}/invitation/${token}`;
   await sendEmail({
     to: email,
-    subject: `Invitation to join ${organizationName} - Vaivamm Capital`,
+    subject: `Invitation to join ${organizationName} - StreamlineOS`,
     html: getInvitationEmailTemplate(invitationUrl, organizationName, inviterName),
   });
 }
@@ -93,7 +93,7 @@ export async function sendWelcomeEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: "Welcome to Vaivamm Capital — Set Up Your Account",
+    subject: "Welcome to StreamlineOS — Set Up Your Account",
     html: getWelcomeEmailTemplate(name, email, setupUrl),
   });
 }
@@ -109,7 +109,7 @@ export async function sendProjectAssignmentEmail(
   const projectUrl = `${baseUrl}/projects/${projectId}`;
   await sendEmail({
     to: email,
-    subject: `Added to Project: ${projectName} - Vaivamm Capital`,
+    subject: `Added to Project: ${projectName} - StreamlineOS`,
     html: getProjectAssignmentEmailTemplate(memberName, projectName, projectKey, projectUrl, assignedBy),
   });
 }
@@ -128,7 +128,7 @@ export async function sendTicketAssignmentEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Ticket Assigned: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Ticket Assigned: ${ticketTitle} - StreamlineOS`,
     html: getTicketAssignmentEmailTemplate(
       assigneeName,
       ticketTitle,
@@ -155,7 +155,7 @@ export async function sendTicketReviewRequestEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Review Requested: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Review Requested: ${ticketTitle} - StreamlineOS`,
     html: getTicketReviewRequestEmailTemplate(
       reviewerName,
       ticketTitle,
@@ -181,7 +181,7 @@ export async function sendTicketChangesRequestedEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Changes Requested: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Changes Requested: ${ticketTitle} - StreamlineOS`,
     html: getTicketChangesRequestedEmailTemplate(
       assigneeName,
       ticketTitle,
@@ -205,7 +205,7 @@ export async function sendLeaveRequestEmail(
   const leaveUrl = `${baseUrl}/hr/leaves`;
   await sendEmail({
     to: email,
-    subject: `Leave Request: ${employeeName} - Vaivamm Capital`,
+    subject: `Leave Request: ${employeeName} - StreamlineOS`,
     html: getLeaveRequestEmailTemplate(
       approverName,
       employeeName,
@@ -230,7 +230,7 @@ export async function sendLeaveStatusUpdateEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Leave Request ${status}: ${leaveType} - Vaivamm Capital`,
+    subject: `Leave Request ${status}: ${leaveType} - StreamlineOS`,
     html: getLeaveStatusUpdateEmailTemplate(
       employeeName,
       leaveType,
@@ -253,7 +253,7 @@ export async function sendLeaveCancellationEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Leave Cancelled: ${employeeName} - Vaivamm Capital`,
+    subject: `Leave Cancelled: ${employeeName} - StreamlineOS`,
     html: getLeaveCancellationEmailTemplate(
       approverName,
       employeeName,
@@ -270,7 +270,7 @@ export async function sendPasswordChangeConfirmationEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: 'Password Changed Successfully - Vaivamm Capital',
+    subject: 'Password Changed Successfully - StreamlineOS',
     html: getPasswordChangeConfirmationEmailTemplate(userName),
   });
 }
@@ -283,7 +283,7 @@ export async function sendAccountDeactivationEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: 'Account Deactivated - Vaivamm Capital',
+    subject: 'Account Deactivated - StreamlineOS',
     html: getAccountDeactivationEmailTemplate(employeeName, deactivatedBy, reason),
   });
 }
@@ -296,7 +296,7 @@ export async function sendHolidayAnnouncementEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Holiday Tomorrow: ${holidayName} - Vaivamm Capital`,
+    subject: `Holiday Tomorrow: ${holidayName} - StreamlineOS`,
     html: getHolidayAnnouncementEmailTemplate(holidayName, holidayDate, message),
   });
 }
@@ -309,7 +309,7 @@ export async function sendCompanyAnnouncementEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Announcement: ${subject} - Vaivamm Capital`,
+    subject: `Announcement: ${subject} - StreamlineOS`,
     html: getCompanyAnnouncementEmailTemplate(subject, message, announcedBy),
   });
 }
@@ -442,7 +442,7 @@ export async function sendPayslipGeneratedEmail(
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Vaivamm Capital</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">StreamlineOS</h1>
         <p style="color: #dbeafe; margin: 5px 0 0 0;">Capital Advisors LLP</p>
       </div>
 
@@ -474,7 +474,7 @@ export async function sendPayslipGeneratedEmail(
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
         <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-          This is an automated email from Vaivamm Capital. Please do not reply to this email.
+          This is an automated email from StreamlineOS. Please do not reply to this email.
         </p>
       </div>
     </body>
@@ -552,7 +552,7 @@ export async function sendResignationSubmittedEmail(
   const reviewUrl = `${baseUrl}/hr/exit`;
   await sendEmail({
     to: hrEmail,
-    subject: `Resignation Submitted: ${employeeName} - Vaivamm Capital`,
+    subject: `Resignation Submitted: ${employeeName} - StreamlineOS`,
     html: getResignationSubmittedEmailTemplate(
       hrName,
       employeeName,
@@ -577,7 +577,7 @@ export async function sendResignationApprovedEmail(
   const portalUrl = `${baseUrl}/hr/exit`;
   await sendEmail({
     to: employeeEmail,
-    subject: `Resignation Accepted - Vaivamm Capital`,
+    subject: `Resignation Accepted - StreamlineOS`,
     html: getResignationApprovedEmailTemplate(
       employeeName,
       approverName,
@@ -598,10 +598,10 @@ export async function sendTerminationEmail(
   reason: string,
   attachments?: EmailAttachment[]
 ) {
-  const hrContactEmail = "hr@vaivammcapital.com";
+  const hrContactEmail = "hr@streamlineos.app";
   await sendEmail({
     to: employeeEmail,
-    subject: `Employment Termination Notice - Vaivamm Capital`,
+    subject: `Employment Termination Notice - StreamlineOS`,
     html: getTerminationEmailTemplate(
       employeeName,
       employeeDesignation,
@@ -617,7 +617,7 @@ export async function sendTerminationEmail(
 export async function sendAccountLockedEmail(email: string, name: string): Promise<void> {
   await sendEmail({
     to: email,
-    subject: "Account Locked - Vaivamm Capital",
+    subject: "Account Locked - StreamlineOS",
     html: getAccountLockedEmailTemplate(name),
   });
 }
@@ -629,7 +629,7 @@ export async function sendNewDeviceLoginEmail(
 ): Promise<void> {
   await sendEmail({
     to: email,
-    subject: "New Device Sign-In Detected - Vaivamm Capital",
+    subject: "New Device Sign-In Detected - StreamlineOS",
     html: getNewDeviceLoginEmailTemplate(name, deviceInfo),
   });
 }
@@ -641,7 +641,7 @@ export async function sendPasswordExpiryWarningEmail(
 ): Promise<void> {
   await sendEmail({
     to: email,
-    subject: `Your Password Expires in ${daysLeft} Days - Vaivamm Capital`,
+    subject: `Your Password Expires in ${daysLeft} Days - StreamlineOS`,
     html: getPasswordExpiryWarningEmailTemplate(name, daysLeft),
   });
 }
@@ -677,7 +677,7 @@ export async function sendOnboardingWelcomeEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: "Welcome to Vaivamm Capital — Your Onboarding Starts Now!",
+    subject: "Welcome to StreamlineOS — Your Onboarding Starts Now!",
     html: getOnboardingWelcomeEmailTemplate(employeeName, designation, joiningDate, taskCount),
   });
 }
@@ -803,7 +803,7 @@ export async function sendReviewAssignedEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: "Performance Review Assigned — Vaivamm Capital",
+    subject: "Performance Review Assigned — StreamlineOS",
     html: getReviewAssignedEmailTemplate(employeeName, reviewerName, periodStart, periodEnd),
   });
 }

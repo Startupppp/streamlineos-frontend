@@ -15,7 +15,7 @@ export async function sendOnboardingWelcomeEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: "Welcome to Vaivamm Capital — Your Onboarding Starts Now!",
+    subject: "Welcome to StreamlineOS — Your Onboarding Starts Now!",
     html: getOnboardingWelcomeEmailTemplate(employeeName, designation, joiningDate, taskCount),
   });
 }

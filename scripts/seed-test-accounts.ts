@@ -39,7 +39,7 @@ const TEST_ACCOUNTS = [
     designation: "CRM Executive",
   },
   {
-    email: "tarun@vaivammcapital.com",
+    email: "tarun@streamlineos.app",
     password: "Tarun@1234",
     firstName: "Tarun",
     lastName: "Marketing",
@@ -53,8 +53,8 @@ async function main() {
   if (!org) {
     const [newOrg] = await db.insert(organizations).values({
       id: nanoid(),
-      name: "Vaivamm Capital",
-      slug: "vaivamm-capital",
+      name: "StreamlineOS",
+      slug: "streamlineos-capital",
     }).returning();
     org = newOrg;
   }

@@ -28,7 +28,7 @@ type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
 interface RecommendationOption {
   value: Recommendation;
   label: string;
-  Icon: React.ElementType;
+  Icon: React.ComponentType<{ className?: string }>;
   badgeClass: string;
   activeClass: string;
 }

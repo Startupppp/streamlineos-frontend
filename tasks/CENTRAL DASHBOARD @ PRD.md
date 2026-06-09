@@ -1,4 +1,4 @@
-**1\.**       **PRODUCT REQUIREMENTS DOCUMENT @ Project: Vaivamm Capital CRM — Central Dashboard Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**1\.**       **PRODUCT REQUIREMENTS DOCUMENT @ Project: StreamlineOS — Central Dashboard Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 

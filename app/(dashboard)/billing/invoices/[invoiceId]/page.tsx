@@ -151,7 +151,7 @@ export default function InvoiceDetailPage({
       doc.text("INVOICE", 20, 25);
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text("Vaivamm Capital — Capital Advisors LLP", 20, 33);
+      doc.text("StreamlineOS — Capital Advisors LLP", 20, 33);
       doc.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 40);
       doc.text(`Date: ${format(new Date(invoice.createdAt), "dd MMM yyyy")}`, 20, 47);
       if (invoice.dueDate) {

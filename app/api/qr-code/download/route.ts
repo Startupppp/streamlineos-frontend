@@ -11,7 +11,7 @@ const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
 
 const ALLOWED_DOMAINS = [
   "r2.cloudflarestorage.com",
-  "crm.vaivammcapital.com",
+  "streamlineos.app",
   "api.dicebear.com",
 ];
 

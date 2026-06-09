@@ -2,7 +2,7 @@
 
 Deal Pipeline (Kanban)
 
-**\*\*Project:\*\*** Vaivamm Capital CRM  
+**\*\*Project:\*\*** StreamlineOS  
 **\*\*Version:\*\*** 1.0  
 **\*\*Date:\*\*** April 11, 2026  
 **\*\*Author:\*\*** Tarun (Product Owner)  

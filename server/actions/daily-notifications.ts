@@ -107,7 +107,7 @@ export async function sendDailyNotifications() {
                 email,
                 subject,
                 message,
-                membership.orgName || "Vaivamm Capital"
+                membership.orgName || "StreamlineOS"
               )
             );
             await Promise.allSettled(emailPromises);

@@ -44,7 +44,7 @@ const ENTITY_LABELS = {
 } as const;
 
 
-function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
+function ItemIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string }> }) {
   return (
     <span className={cn(
       "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",

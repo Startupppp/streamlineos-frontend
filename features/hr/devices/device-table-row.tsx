@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { getColorSafe, deviceStatusColors } from "@/lib/theme-constants";
 import type { Device } from "@/types/hr";
 
-const DEVICE_ICONS: Record<string, React.ElementType> = {
+const DEVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Laptop,
   Phone: Smartphone,
   Monitor,

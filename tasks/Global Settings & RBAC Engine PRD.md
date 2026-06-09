@@ -2,7 +2,7 @@
 
 **Global Settings & RBAC Engine**
 
-**Project: Vaivamm Capital CRM — Settings Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**Project: StreamlineOS — Settings Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 
@@ -167,7 +167,7 @@
 ### API — Webhooks
 - [x] `GET/POST /api/webhooks` — webhook endpoint management
 - [x] `GET /api/webhooks/events` — webhook event log
-- [x] Webhook signing (HMAC-SHA256 header `X-Vaivamm-Signature`) on all outbound calls — `lib/inngest/functions/webhook-dispatcher.ts` uses `createHmac("sha256", ep.secret)` and sends `X-Vaivamm-Signature: sha256=<hex>` header
+- [x] Webhook signing (HMAC-SHA256 header `X-StreamlineOS-Signature`) on all outbound calls — `lib/inngest/functions/webhook-dispatcher.ts` uses `createHmac("sha256", ep.secret)` and sends `X-StreamlineOS-Signature: sha256=<hex>` header
 - [x] Webhook retry logic (3 attempts with exponential backoff via Inngest)
 - [x] Webhook events: `lead.created`, `deal.won`, `employee.hired`, `leave.approved`
 
@@ -218,7 +218,7 @@
 3. Load org settings on app init; apply currency formatter org-wide
 
 ### Phase 3 — Webhook Hardening (2 days)
-1. Outbound webhook: sign payload with HMAC-SHA256; include in `X-Vaivamm-Signature` header
+1. Outbound webhook: sign payload with HMAC-SHA256; include in `X-StreamlineOS-Signature` header
 2. Inngest function for retry: trigger on webhook failure → retry up to 3 times
 3. Events: define `lead.created`, `deal.won`, `leave.approved`, `employee.hired`
 

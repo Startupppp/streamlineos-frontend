@@ -299,7 +299,7 @@ function buildReportEmail(opts: {
         </tr>
         <tr>
           <td style="background:#f3f4f6;padding:16px 28px;font-size:11px;color:#9ca3af;text-align:center;">
-            This is an automated report from Vaivamm CRM. Do not reply to this email.
+            This is an automated report from StreamlineOS. Do not reply to this email.
           </td>
         </tr>
       </table>

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import {
   Sparkles, Brain, Mail, TrendingUp, Target, MessageSquare,
   FileText, Users, ShieldCheck, Zap, AlertTriangle, ClipboardList,
+  type LucideIcon,
 } from "lucide-react";
 import {
   useAIScoreLead, useGenerateEmail, usePredictDeal, useNextBestAction,
@@ -32,7 +33,7 @@ interface AiFeature {
   id: string;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   category: "sales" | "hr" | "marketing" | "general";
   color: string;
 }

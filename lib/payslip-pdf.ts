@@ -133,7 +133,7 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
     drawText(page, "V", margin + 14, y - 42, bold, 28, WHITE);
   }
 
-  const companyFullName = "Vaivamm Capital Advisors LLP";
+  const companyFullName = "StreamlineOS Advisors LLP";
   drawText(page, companyFullName, margin + 56, y - 20, bold, 14, WHITE);
   if (data.orgAddress) {
     drawText(page, data.orgAddress, margin + 56, y - 34, regular, 8, rgb(0.8, 0.85, 1));
@@ -302,7 +302,7 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   y = Math.min(bankY, authY) - 16;
 
   drawRect(page, 0, 0, pageW, 28, LIGHT_GRAY);
-  const footerText = `Generated ${format(new Date(), "dd MMM yyyy 'at' HH:mm")}  ·  Vaivamm Capital Advisors LLP  ·  Confidential — For Employee Use Only`;
+  const footerText = `Generated ${format(new Date(), "dd MMM yyyy 'at' HH:mm")}  ·  StreamlineOS Advisors LLP  ·  Confidential — For Employee Use Only`;
   const fw = regular.widthOfTextAtSize(footerText, 7.5);
   drawText(page, footerText, pageW / 2 - fw / 2, 10, regular, 7.5, GRAY);
   void y;

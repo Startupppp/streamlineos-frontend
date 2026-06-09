@@ -638,7 +638,7 @@ export async function emailExpenseReport(
 
     await sendMonthlyExpenseReportEmail(
       periodLabel,
-      org?.name || "Vaivamm Capital",
+      org?.name || "StreamlineOS",
       rows,
       summary,
       recipientEmails,

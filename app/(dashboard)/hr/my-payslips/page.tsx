@@ -231,7 +231,7 @@ export default function MyPayslipsPage() {
                 letterSpacing: "20px",
               }}
             >
-              VAIVAMM
+              STREAMLINEOS
             </div>
 
             <div className="relative" style={{ zIndex: 1 }}>
@@ -252,7 +252,7 @@ export default function MyPayslipsPage() {
                   V
                 </div>
                 <div>
-                  <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "#0f2b7f", letterSpacing: "2px", margin: 0 }}>VAIVAMM</h1>
+                  <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "#0f2b7f", letterSpacing: "2px", margin: 0 }}>STREAMLINEOS</h1>
                   <p style={{ color: "#0f2b7f", fontSize: "12px", letterSpacing: "4px", margin: 0 }}>CAPITAL ADVISORS LLP</p>
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default function MyPayslipsPage() {
               </div>
 
               <div style={{ marginBottom: "32px" }}>
-                <p style={{ fontSize: "14px", color: "#111827" }}>For <span style={{ fontWeight: "bold" }}>Vaivamm Capital Advisors LLP</span></p>
+                <p style={{ fontSize: "14px", color: "#111827" }}>For <span style={{ fontWeight: "bold" }}>StreamlineOS Advisors LLP</span></p>
                 <p style={{ fontSize: "14px", color: "#374151" }}>(Company Stamp/Seal)</p>
                 <p style={{ fontSize: "14px", color: "#111827", marginTop: "16px" }}>Employee Signature:</p>
               </div>
@@ -393,11 +393,11 @@ export default function MyPayslipsPage() {
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                       <span>🌐</span>
-                      <span>www.vaivammcapital.com</span>
+                      <span>www.streamlineos.app</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span>✉</span>
-                      <span>support@vaivammcapital.com</span>
+                      <span>support@streamlineos.app</span>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", textAlign: "right" }}>

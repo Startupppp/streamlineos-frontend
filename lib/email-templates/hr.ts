@@ -52,7 +52,7 @@ export function getLeaveRequestEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Request: ${sEmployee} - Vaivamm Capital`,
+    title: `Leave Request: ${sEmployee} - StreamlineOS`,
     preheader: `${sEmployee} requested ${sLeaveType} from ${startDate} to ${endDate}`,
     content,
   });
@@ -109,7 +109,7 @@ export function getLeaveStatusUpdateEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Request ${status}: ${sLeaveType} - Vaivamm Capital`,
+    title: `Leave Request ${status}: ${sLeaveType} - StreamlineOS`,
     preheader: `Your leave request has been ${status.toLowerCase()}`,
     content,
   });
@@ -153,7 +153,7 @@ export function getLeaveCancellationEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Cancelled: ${sEmployee} - Vaivamm Capital`,
+    title: `Leave Cancelled: ${sEmployee} - StreamlineOS`,
     preheader: `${sEmployee} cancelled their ${sLeaveType} request`,
     content,
   });
@@ -226,7 +226,7 @@ export function getResignationSubmittedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Resignation Submitted: ${sEmployee} - Vaivamm Capital`,
+    title: `Resignation Submitted: ${sEmployee} - StreamlineOS`,
     preheader: `${sEmployee} has submitted a resignation. Last working date: ${lastWorkingDate}`,
     content,
   });
@@ -288,13 +288,13 @@ export function getResignationApprovedEmailTemplate(
     <div class="divider"></div>
 
     <p class="email-text" style="font-size: 14px;">
-      We appreciate your contributions to Vaivamm Capital and wish you all the best in your future endeavours.
+      We appreciate your contributions to StreamlineOS and wish you all the best in your future endeavours.
       If you have any questions regarding the exit process, please contact the HR department.
     </p>
   `;
 
   return getEmailTemplate({
-    title: `Resignation Accepted - Vaivamm Capital`,
+    title: `Resignation Accepted - StreamlineOS`,
     preheader: `Your resignation has been accepted. Last working date: ${lastWorkingDate}`,
     content,
   });
@@ -320,7 +320,7 @@ export function getTerminationEmailTemplate(
       Dear <strong>${sEmployee}</strong>,
     </p>
     <p class="email-text">
-      This letter serves as formal notice that your employment with <strong>Vaivamm Capital</strong>
+      This letter serves as formal notice that your employment with <strong>StreamlineOS</strong>
       has been terminated effective the date stated below.
     </p>
 
@@ -366,13 +366,13 @@ export function getTerminationEmailTemplate(
       please contact HR at <a href="mailto:${sHrEmail}" style="color: #0f2b7f; text-decoration: none; font-weight: 500;">${sHrEmail}</a>.
     </p>
     <p class="email-text" style="font-size: 14px;">
-      We thank you for your time and service with Vaivamm Capital.
+      We thank you for your time and service with StreamlineOS.
     </p>
   `;
 
   return getEmailTemplate({
-    title: `Employment Termination Notice - Vaivamm Capital`,
-    preheader: `Your employment with Vaivamm Capital has been terminated effective ${terminationDate}`,
+    title: `Employment Termination Notice - StreamlineOS`,
+    preheader: `Your employment with StreamlineOS has been terminated effective ${terminationDate}`,
     content,
   });
 }

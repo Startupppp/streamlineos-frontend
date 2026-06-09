@@ -2,7 +2,7 @@
 
 **Core CRM & Lead Pipeline**
 
-**Project: Vaivamm Capital CRM — Deals Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**Project: StreamlineOS — Deals Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 
@@ -25,7 +25,7 @@
 
 **1.1 Background**
 
-**The Core CRM module is the heartbeat of Vaivamm Capital. It is responsible for taking raw top-of-funnel leads and moving them through structured sales stages until they become Closed Won deals.**
+**The Core CRM module is the heartbeat of StreamlineOS. It is responsible for taking raw top-of-funnel leads and moving them through structured sales stages until they become Closed Won deals.**
 
 **1.2 Objective**
 

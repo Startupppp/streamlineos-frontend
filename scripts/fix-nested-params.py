@@ -22,7 +22,7 @@ FIXES: list[tuple[str, str, str]] = [
     ("app/api/v1/chat/channels/[channelId]/messages/[messageId]/route.ts", "id", "channelId"),
 ]
 
-BASE = Path("D:/projects/vaivamm-capital-crm")
+BASE = Path("D:/projects/streamlineos-capital-crm")
 
 
 def fix_file(rel_path: str, old: str, new: str) -> None:

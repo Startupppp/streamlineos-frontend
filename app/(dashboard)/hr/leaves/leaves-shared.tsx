@@ -110,7 +110,7 @@ export interface WfhRequest {
   } | null;
 }
 
-export const balanceCardConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+export const balanceCardConfig: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   "Casual Leave": { label: "CASUAL", color: "bg-gold", icon: CalendarDays },
   "Sick Leave": { label: "SICK", color: "bg-red-400", icon: Heart },
   "Unpaid Leave": { label: "UNPAID", color: "bg-slate-400", icon: Palmtree },
@@ -118,7 +118,7 @@ export const balanceCardConfig: Record<string, { label: string; color: string; i
 
 export const DEFAULT_CARD_CONFIG = { label: "LEAVE", color: "bg-slate-400", icon: CalendarDays };
 
-export const statusIconMap: Record<string, React.ElementType> = {
+export const statusIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   PENDING: Clock,
   APPROVED: CheckCircle2,
   REJECTED: XCircle,
@@ -257,7 +257,7 @@ export const StatsCard = React.memo(function StatsCard({
   title: string;
   value: string | number;
   subtitle: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   accent: string;
 }) {
   return (

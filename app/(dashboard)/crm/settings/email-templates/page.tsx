@@ -55,7 +55,7 @@ const SAMPLE_DATA: Record<string, string> = {
   "deal.value": "25,00,000",
   "deal.stage": "Proposal",
   "user.name": "Priya Patel",
-  "user.email": "priya@vaivamm.com",
+  "user.email": "priya@streamlineos.app",
 };
 
 const templateSchema = z.object({
@@ -182,7 +182,7 @@ export default function EmailTemplatesPage() {
                 <FormField control={createForm.control} name="subject" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Welcome to Vaivamm, {{lead.name}}" /></FormControl>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

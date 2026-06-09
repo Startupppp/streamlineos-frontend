@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = page.title ?? "Landing Page";
   const description = page.description ?? undefined;
-  const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL ?? "https://vaivammcapital.com";
+  const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL ?? "https://streamlineos.app";
   const pageUrl = `${baseUrl}/${slug}`;
 
   return {
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: pageUrl,
-      siteName: "Vaivamm Capital",
+      siteName: "StreamlineOS",
     },
     twitter: {
       card: "summary",

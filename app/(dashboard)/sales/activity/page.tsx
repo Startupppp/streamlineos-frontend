@@ -74,7 +74,7 @@ function useSalesActivityDashboard(period: "week" | "month") {
 interface StatTileProps {
   label: string;
   value: number;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   colorClass: string;
 }
 

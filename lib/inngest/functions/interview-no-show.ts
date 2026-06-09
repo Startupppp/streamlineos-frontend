@@ -85,7 +85,7 @@ export const interviewNoShow = inngest.createFunction(
       if (!candidate?.email) return { sent: false, reason: "no candidate email" };
 
       const name = `${candidate.firstName} ${candidate.lastName}`.trim();
-      const orgName = org?.name ?? "Vaivamm Capital";
+      const orgName = org?.name ?? "StreamlineOS";
 
       await sendEmail({
         to: candidate.email,

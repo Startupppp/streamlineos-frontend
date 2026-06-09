@@ -120,7 +120,7 @@ export const leaveEscalation = inngest.createFunction(
           </table>
           <p><a href="${process.env.NEXTAUTH_URL ?? ""}/hr/leaves" style="color:#bd882c;font-weight:bold">Review in HR Portal →</a></p>
           <p style="color:#888;font-size:11px;margin-top:24px">
-            This is an automated escalation from the Vaivamm HR system.
+            This is an automated escalation from the StreamlineOS HR system.
           </p>
         </div>
       `;

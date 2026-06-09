@@ -197,7 +197,7 @@ export const interviewReminders = inngest.createFunction(
           }),
         ]);
 
-        const orgName = org?.name ?? "Vaivamm Capital";
+        const orgName = org?.name ?? "StreamlineOS";
         const candidateName = candidate
           ? `${candidate.firstName} ${candidate.lastName}`.trim()
           : "Candidate";
@@ -301,7 +301,7 @@ export const interviewReminders = inngest.createFunction(
           const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
           const { subject, html } = buildPrepEmailHtml({
             candidateName,
-            orgName: org?.name ?? "Vaivamm Capital",
+            orgName: org?.name ?? "StreamlineOS",
             interviewType: interview.type ?? "VIDEO",
             scheduledAt: interview.scheduledAt,
             meetingLink: interview.meetingLink ?? null,

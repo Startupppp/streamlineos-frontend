@@ -14,7 +14,7 @@ function getVapidSubject(): string {
     if (from.includes("@")) return `mailto:${from}`;
   }
 
-  return "https://crm.vaivammcapital.com";
+  return "https://streamlineos.app";
 }
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {

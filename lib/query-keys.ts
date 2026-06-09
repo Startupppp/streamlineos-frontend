@@ -1,6 +1,6 @@
 
 
-const base = ["vaivamm"] as const;
+const base = ["streamlineos"] as const;
 
 export const queryKeys = {
 

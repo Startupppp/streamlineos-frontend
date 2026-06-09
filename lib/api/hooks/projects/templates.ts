@@ -50,7 +50,7 @@ export interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-const TEMPLATES_KEY = ["vaivamm", "project-templates"] as const;
+const TEMPLATES_KEY = ["streamlineos", "project-templates"] as const;
 
 
 export function useProjectTemplates() {
@@ -88,7 +88,7 @@ export function useApplyProjectTemplate() {
         input,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["vaivamm", "projects"] });
+      void qc.invalidateQueries({ queryKey: ["streamlineos", "projects"] });
     },
   });
 }

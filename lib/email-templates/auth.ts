@@ -30,7 +30,7 @@ export function getVerificationEmailTemplate(verificationUrl: string): string {
   `;
 
   return getEmailTemplate({
-    title: 'Verify Your Email - Vaivamm Capital',
+    title: 'Verify Your Email - StreamlineOS',
     preheader: 'Complete your registration by verifying your email address',
     content,
   });
@@ -67,7 +67,7 @@ export function getPasswordResetEmailTemplate(resetUrl: string): string {
   `;
 
   return getEmailTemplate({
-    title: 'Reset Your Password - Vaivamm Capital',
+    title: 'Reset Your Password - StreamlineOS',
     preheader: 'Click to reset your password securely',
     content,
   });
@@ -77,7 +77,7 @@ export function getWelcomeEmailTemplate(name: string, email: string, setupUrl: s
   const sName = escapeHtml(name);
   const sEmail = escapeHtml(email);
   const content = `
-    <h2 class="email-title">Welcome to Vaivamm Capital, ${sName}! 🚀</h2>
+    <h2 class="email-title">Welcome to StreamlineOS, ${sName}! 🚀</h2>
     <p class="email-text">
       Your account has been successfully created. We're excited to have you on board!
     </p>
@@ -119,7 +119,7 @@ export function getWelcomeEmailTemplate(name: string, email: string, setupUrl: s
   `;
 
   return getEmailTemplate({
-    title: 'Welcome to Vaivamm Capital — Set Up Your Account',
+    title: 'Welcome to StreamlineOS — Set Up Your Account',
     preheader: 'Your account is ready — set up your password to get started!',
     content,
   });
@@ -140,7 +140,7 @@ export function getPasswordChangeConfirmationEmailTemplate(userName: string): st
     <div class="security-notice">
       <p class="security-text">
         <strong>Security Alert:</strong> If you did NOT make this change, please contact our support team immediately
-        at <a href="mailto:support@vaivammcapital.com" style="color: #92400e; text-decoration: underline;">support@vaivammcapital.com</a>
+        at <a href="mailto:support@streamlineos.app" style="color: #92400e; text-decoration: underline;">support@streamlineos.app</a>
         or reset your password right away.
       </p>
     </div>
@@ -159,7 +159,7 @@ export function getPasswordChangeConfirmationEmailTemplate(userName: string): st
   `;
 
   return getEmailTemplate({
-    title: 'Password Changed Successfully - Vaivamm Capital',
+    title: 'Password Changed Successfully - StreamlineOS',
     preheader: 'Your password has been updated',
     content,
   });
@@ -180,7 +180,7 @@ export function getAccountDeactivationEmailTemplate(
     </p>
 
     <p class="email-text">
-      Your account on Vaivamm Capital CRM has been deactivated by <strong>${sDeactivatedBy}</strong>.
+      Your account on StreamlineOS has been deactivated by <strong>${sDeactivatedBy}</strong>.
     </p>
 
     ${sReason ? `
@@ -206,7 +206,7 @@ export function getAccountDeactivationEmailTemplate(
 
     <p class="email-text">
       If you believe this is an error or have questions, please contact HR at
-      <a href="mailto:support@vaivammcapital.com" style="color: #0f2b7f; text-decoration: underline;">support@vaivammcapital.com</a>.
+      <a href="mailto:support@streamlineos.app" style="color: #0f2b7f; text-decoration: underline;">support@streamlineos.app</a>.
     </p>
 
     <p class="email-text" style="margin-top: 24px;">
@@ -215,7 +215,7 @@ export function getAccountDeactivationEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: 'Account Deactivated - Vaivamm Capital',
+    title: 'Account Deactivated - StreamlineOS',
     preheader: 'Your account has been deactivated',
     content,
   });
@@ -249,12 +249,12 @@ export function getAccountLockedEmailTemplate(name: string): string {
 
     <p class="email-text" style="font-size: 14px; color: #64748b;">
       If you need immediate assistance, please contact our support team at
-      <a href="mailto:support@vaivammcapital.com" style="color: #0f2b7f;">support@vaivammcapital.com</a>.
+      <a href="mailto:support@streamlineos.app" style="color: #0f2b7f;">support@streamlineos.app</a>.
     </p>
   `;
 
   return getEmailTemplate({
-    title: 'Account Locked - Vaivamm Capital',
+    title: 'Account Locked - StreamlineOS',
     preheader: 'Your account has been temporarily locked',
     content,
   });
@@ -275,7 +275,7 @@ export function getNewDeviceLoginEmailTemplate(
     </p>
 
     <p class="email-text">
-      We detected a sign-in to your Vaivamm Capital account from a new device or location.
+      We detected a sign-in to your StreamlineOS account from a new device or location.
     </p>
 
     <div class="credential-box">
@@ -308,7 +308,7 @@ export function getNewDeviceLoginEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: 'New Device Sign-In - Vaivamm Capital',
+    title: 'New Device Sign-In - StreamlineOS',
     preheader: 'A new device signed into your account',
     content,
   });
@@ -323,7 +323,7 @@ export function getPasswordExpiryWarningEmailTemplate(name: string, daysLeft: nu
     </p>
 
     <p class="email-text">
-      Your Vaivamm Capital account password will expire in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.
+      Your StreamlineOS account password will expire in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.
       Please update it before it expires to avoid being locked out of your account.
     </p>
 
@@ -346,7 +346,7 @@ export function getPasswordExpiryWarningEmailTemplate(name: string, daysLeft: nu
   `;
 
   return getEmailTemplate({
-    title: 'Password Expiring Soon - Vaivamm Capital',
+    title: 'Password Expiring Soon - StreamlineOS',
     preheader: `Your password expires in ${daysLeft} days`,
     content,
   });

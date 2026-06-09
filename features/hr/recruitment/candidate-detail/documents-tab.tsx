@@ -28,7 +28,7 @@ type DocStatus = "GENERATED" | "SENT" | "VIEWED" | "SIGNED" | "DECLINED";
 
 const STATUS_CONFIG: Record<
   DocStatus,
-  { label: string; icon: React.ElementType; className: string }
+  { label: string; icon: React.ComponentType<{ className?: string }>; className: string }
 > = {
   GENERATED: {
     label: "Generated",
@@ -66,7 +66,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
   const steps: Array<{
     key: keyof RolloutDocumentRecord;
     label: string;
-    icon: React.ElementType;
+    icon: React.ComponentType<{ className?: string }>;
   }> = [
     { key: "sentAt", label: "Sent", icon: Send },
     { key: "viewedAt", label: "Viewed", icon: Eye },

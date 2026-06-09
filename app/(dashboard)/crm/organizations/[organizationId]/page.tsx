@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 interface StatCardProps {
   label: string;
   value: string | number;
-  icon: ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   color?: "gold" | "blue" | "green" | "red";
 }
 

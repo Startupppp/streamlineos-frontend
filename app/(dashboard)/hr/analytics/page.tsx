@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 function StatCard({ label, value, icon: Icon, subtitle }: {
-  label: string; value: string | number; icon: React.ElementType; subtitle?: string;
+  label: string; value: string | number; icon: React.ComponentType<{ className?: string }>; subtitle?: string;
 }) {
   return (
     <Card>

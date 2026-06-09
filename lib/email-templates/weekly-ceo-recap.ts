@@ -43,7 +43,7 @@ export function getWeeklyCeoRecapTemplate(data: WeeklyCeoRecapData): string {
 <head><meta charset="utf-8"><title>Weekly CEO Recap</title></head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 650px; margin: 0 auto; padding: 20px; background: #f9fafb;">
   <div style="background: linear-gradient(135deg, #0f2b7f 0%, #1e40af 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: #bd882c; margin: 0; font-size: 26px; font-family: Georgia, serif;">Vaivamm Capital</h1>
+    <h1 style="color: #bd882c; margin: 0; font-size: 26px; font-family: Georgia, serif;">StreamlineOS</h1>
     <p style="color: #dbeafe; margin: 8px 0 0 0; font-size: 16px;">Weekly CEO Recap — ${data.weekRange}</p>
   </div>
 
@@ -120,7 +120,7 @@ export function getWeeklyCeoRecapTemplate(data: WeeklyCeoRecapData): string {
 
   <div style="text-align: center; padding: 16px; border-radius: 0 0 10px 10px; background: #f9fafb;">
     <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-      This is an automated weekly recap from Vaivamm Capital CRM.
+      This is an automated weekly recap from StreamlineOS.
     </p>
   </div>
 </body>

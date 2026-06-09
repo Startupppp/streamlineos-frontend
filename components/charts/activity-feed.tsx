@@ -26,7 +26,7 @@ interface ActivityFeedProps {
   items: ActivityItem[];
 }
 
-const typeConfig: Record<ActivityType, { icon: React.ElementType; color: string; bg: string }> = {
+const typeConfig: Record<ActivityType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
   deal_won: { icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
   meeting: { icon: Calendar, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
   proposal: { icon: FileText, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-500/10" },

@@ -8,7 +8,7 @@ import type { OrgTimelineEvent, OrgTimelineEventType } from "@/types/crm";
 
 const eventConfig: Record<
   OrgTimelineEventType,
-  { icon: ElementType; color: string; bg: string }
+  { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }
 > = {
   contact_created: { icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/15" },
   deal_created: { icon: TrendingUp, color: "text-gold", bg: "bg-gold/10" },

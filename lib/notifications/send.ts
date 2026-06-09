@@ -50,10 +50,10 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
       try {
         await sendEmail({
           to: payload.recipientEmail,
-          subject: `${payload.title} — Vaivamm Capital`,
+          subject: `${payload.title} — StreamlineOS`,
           html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
             <div style="background:linear-gradient(135deg,#0f2b7f,#1e40af);padding:24px;text-align:center;border-radius:10px 10px 0 0;">
-              <h1 style="color:#bd882c;margin:0;font-size:22px;">Vaivamm Capital</h1>
+              <h1 style="color:#bd882c;margin:0;font-size:22px;">StreamlineOS</h1>
             </div>
             <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;">
               <h2 style="color:#1e40af;margin-top:0;">${payload.title}</h2>

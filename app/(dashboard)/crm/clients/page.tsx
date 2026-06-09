@@ -33,7 +33,7 @@ import { AssignCrmDialog } from "@/features/crm/clients/assign-crm-dialog";
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
 type ClientStatus = typeof STATUSES[number];
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; textColor: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; textColor: string; icon: React.ComponentType<{ className?: string }> }> = {
   ACCOUNT_OPENING: { label: "Account Opening", color: "border-blue-500", bg: "bg-blue-500/10", textColor: "text-blue-500", icon: ClipboardList },
   QUERIES: { label: "Queries", color: "border-amber-500", bg: "bg-amber-500/10", textColor: "text-amber-500", icon: MessageSquare },
   PLAN_SELECTED: { label: "Plan Selected", color: "border-purple-500", bg: "bg-purple-500/10", textColor: "text-purple-500", icon: FileCheck },

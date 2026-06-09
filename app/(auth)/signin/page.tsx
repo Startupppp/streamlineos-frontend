@@ -155,7 +155,7 @@ export default function SignInPage() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="you@vaivamm.com"
+              placeholder="you@streamlineos.app"
               {...form.register("email")}
               disabled={isPending}
               className={cn(

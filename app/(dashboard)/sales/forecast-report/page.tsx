@@ -30,7 +30,7 @@ async function exportToExcel(data: {
 }) {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Vaivamm Capital CRM";
+  wb.creator = "StreamlineOS";
   wb.created = new Date();
 
   const monthly = wb.addWorksheet("Monthly Forecast");

@@ -45,7 +45,7 @@ function delay(ms: number): Promise<void> {
 }
 
 export async function sendEmail(options: EmailOptions) {
-  const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@vaivammcapital.com";
+  const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@streamlineos.app";
 
   if (!process.env.SENDGRID_API_KEY) {
     logger.warn("EMAIL_SKIPPED: No SENDGRID_API_KEY configured", { to: options.to, subject: options.subject });

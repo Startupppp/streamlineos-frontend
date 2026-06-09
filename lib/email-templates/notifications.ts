@@ -100,7 +100,7 @@ export function getOnboardingWelcomeEmailTemplate(
       </p>
     </div>
   `;
-  return getEmailTemplate({ title: "Welcome to Vaivamm Capital", preheader: "Your onboarding journey starts now!", content });
+  return getEmailTemplate({ title: "Welcome to StreamlineOS", preheader: "Your onboarding journey starts now!", content });
 }
 
 export function getOnboardingTaskEmailTemplate(

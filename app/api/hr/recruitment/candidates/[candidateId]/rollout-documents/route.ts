@@ -191,7 +191,7 @@ export async function POST(req: NextRequest, { params }: Params) {
           </ul>
           <p>Please review and sign the documents at your earliest convenience.</p>
           <p style="color:#666;font-size:12px;margin-top:32px">
-            This is an automated message from Vaivamm Capital HR system.
+            This is an automated message from StreamlineOS HR system.
           </p>
         </div>
       `;

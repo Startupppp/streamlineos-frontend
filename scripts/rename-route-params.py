@@ -8,7 +8,7 @@ import re
 import shutil
 from pathlib import Path
 
-BASE = Path("D:/projects/vaivamm-capital-crm/app/api/v1")
+BASE = Path("D:/projects/streamlineos-capital-crm/app/api/v1")
 
 # Maps: old path prefix (relative to BASE) -> new entity param name
 RENAMES: list[tuple[str, str]] = [

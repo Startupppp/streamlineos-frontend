@@ -73,8 +73,8 @@ export async function GET(
     const dtStart = formatIcsDate(interview.scheduledAt);
     const dtEnd = formatIcsDate(addMinutes(interview.scheduledAt, interview.duration ?? 60));
     const dtstamp = formatIcsDate(new Date());
-    const uid = `interview-${interviewId}-${session.orgId}@vaivammcapital.com`;
-    const orgName = org?.name ?? "Vaivamm Capital";
+    const uid = `interview-${interviewId}-${session.orgId}@streamlineos.app`;
+    const orgName = org?.name ?? "StreamlineOS";
 
     const summary = escapeIcsText(
       `Interview: ${candidateName} — ${interview.type ?? "VIDEO"}`
@@ -112,7 +112,7 @@ export async function GET(
     const lines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      `PRODID:-//${orgName}//Vaivamm Capital CRM//EN`,
+      `PRODID:-//${orgName}//StreamlineOS//EN`,
       "CALSCALE:GREGORIAN",
       "METHOD:REQUEST",
       "BEGIN:VEVENT",
@@ -123,7 +123,7 @@ export async function GET(
       `SUMMARY:${summary}`,
       `DESCRIPTION:${description}`,
       `LOCATION:${location}`,
-      `ORGANIZER;CN=${escapeIcsText(orgName)}:mailto:noreply@vaivammcapital.com`,
+      `ORGANIZER;CN=${escapeIcsText(orgName)}:mailto:noreply@streamlineos.app`,
       ...attendeeLines,
       "STATUS:CONFIRMED",
       "TRANSP:OPAQUE",

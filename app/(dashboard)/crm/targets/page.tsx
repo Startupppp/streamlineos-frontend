@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
-const METRIC_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
+const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },
   revenue: { icon: TrendingUp, color: "text-gold" },

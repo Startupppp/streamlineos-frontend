@@ -23,8 +23,8 @@ export async function sendSmtpEmail(options: SmtpEmailOptions, config?: SmtpConf
   const smtpPort = config?.port || Number(process.env.SMTP_PORT || "587");
   const smtpUser = config?.user || process.env.SMTP_USER;
   const smtpPass = config?.pass || process.env.SMTP_PASS;
-  const fromEmail = config?.fromEmail || process.env.SMTP_FROM_EMAIL || "noreply@vaivammcapital.com";
-  const fromName = config?.fromName || process.env.SMTP_FROM_NAME || "Vaivamm Capital";
+  const fromEmail = config?.fromEmail || process.env.SMTP_FROM_EMAIL || "noreply@streamlineos.app";
+  const fromName = config?.fromName || process.env.SMTP_FROM_NAME || "StreamlineOS";
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     logger.warn("SMTP not configured, skipping email send");

@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     });
     if (!job) return err("Job posting not found", 404);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.vaivamm.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.streamlineos.com";
 
     const jobSlug = job.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const baseJobUrl = `${appUrl}/careers/${jobId}/${jobSlug}`;

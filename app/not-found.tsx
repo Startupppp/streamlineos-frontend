@@ -23,14 +23,14 @@ export default function GlobalNotFound() {
             <div className="relative w-9 h-9 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-sm">
               <Image
                 src="/logo.svg"
-                alt="Vaivamm Logo"
+                alt="StreamlineOS Logo"
                 width={30}
                 height={30}
                 className="rounded"
               />
             </div>
             <h1 className="text-xl font-bold font-serif text-foreground">
-              Vaivamm
+              StreamlineOS
             </h1>
           </Link>
         </motion.div>

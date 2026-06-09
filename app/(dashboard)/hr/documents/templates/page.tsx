@@ -63,7 +63,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const TYPE_CONFIG: Record<
   string,
-  { label: string; className: string; icon: React.ElementType }
+  { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   OFFER_LETTER: {
     label: "Offer Letter",

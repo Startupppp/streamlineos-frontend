@@ -60,7 +60,7 @@ const SAMPLE_VARS: Record<string, string> = {
   Job_Title: "Senior Engineer",
   Salary: "₹12,00,000 p.a.",
   Start_Date: "May 1, 2026",
-  Company_Name: "Vaivamm Capital",
+  Company_Name: "StreamlineOS",
   Manager_Name: "Priya Sharma",
   Department: "Engineering",
   Location: "Mumbai, India",

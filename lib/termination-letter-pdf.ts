@@ -94,7 +94,7 @@ export async function generateTerminationLetterPdf(
   const pageW = 595;
   const margin = 50;
   const contentW = pageW - margin * 2;
-  const company = data.companyName ?? "VAIVAMM CAPITAL ADVISORS LLP";
+  const company = data.companyName ?? "STREAMLINEOS ADVISORS LLP";
   const dt = createDt(page);
 
   let y = height - margin;
@@ -140,12 +140,12 @@ export async function generateTerminationLetterPdf(
       width: logoSize,
       height: logoSize,
     });
-    dt("VAIVAMM", margin + 62, y - 18, bold, 26, NAVY);
+    dt("STREAMLINEOS", margin + 62, y - 18, bold, 26, NAVY);
     dt("CAPITAL ADVISORS LLP", margin + 62, y - 38, regular, 11, NAVY);
   } else {
     page.drawRectangle({ x: margin, y: y - 52, width: 50, height: 50, color: GOLD });
     dt("V", margin + 14, y - 40, bold, 30, WHITE);
-    dt("VAIVAMM", margin + 60, y - 18, bold, 26, NAVY);
+    dt("STREAMLINEOS", margin + 60, y - 18, bold, 26, NAVY);
     dt("CAPITAL ADVISORS LLP", margin + 60, y - 38, regular, 11, NAVY);
   }
 
@@ -243,7 +243,7 @@ export async function generateTerminationLetterPdf(
       opacity: 0.8,
     });
   } else {
-    dt("VAIVAMM", sealX - 22, sealY + 14, bold, 7, NAVY);
+    dt("STREAMLINEOS", sealX - 22, sealY + 14, bold, 7, NAVY);
     dt("CAPITAL", sealX - 19, sealY + 4, bold, 7, NAVY);
     dt("ADVISORS", sealX - 22, sealY - 6, bold, 7, NAVY);
     dt("LLP", sealX - 8, sealY - 16, bold, 7, NAVY);
@@ -254,7 +254,7 @@ export async function generateTerminationLetterPdf(
 
 
   page.drawLine({ start: { x: margin, y: 42 }, end: { x: pageW - margin, y: 42 }, thickness: 0.5, color: GRAY });
-  const footer = "This is a system-generated document from Vaivamm Capital Advisors LLP | hr@vaivammcapital.com";
+  const footer = "This is a system-generated document from StreamlineOS Advisors LLP | hr@streamlineos.app";
   const footerW = regular.widthOfTextAtSize(footer, 6.5);
   dt(footer, (pageW - footerW) / 2, 30, regular, 6.5, GRAY);
 

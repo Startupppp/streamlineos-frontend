@@ -51,7 +51,7 @@ const DOCUMENT_TYPES = [
   { value: "OTHER", label: "Other" },
 ] as const;
 
-const FILE_ICON_CONFIG: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
+const FILE_ICON_CONFIG: Record<string, { bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
   pdf:  { bg: "bg-red-100 dark:bg-red-900/20",    text: "text-red-600 dark:text-red-400",    icon: FileText },
   docx: { bg: "bg-blue-100 dark:bg-blue-900/20",   text: "text-blue-600 dark:text-blue-400",   icon: FileText },
   doc:  { bg: "bg-blue-100 dark:bg-blue-900/20",   text: "text-blue-600 dark:text-blue-400",   icon: FileText },

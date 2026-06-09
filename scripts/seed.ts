@@ -17,7 +17,7 @@ async function main() {
   // ─── Organization ───
   let orgId = "org_" + nanoid();
   const existingOrg = await db.query.organizations.findFirst({
-    where: (orgs, { eq }) => eq(orgs.slug, "vaivamm-capital"),
+    where: (orgs, { eq }) => eq(orgs.slug, "streamlineos-capital"),
   });
 
   if (existingOrg) {
@@ -25,8 +25,8 @@ async function main() {
   } else {
     await db.insert(organizations).values({
       id: orgId,
-      name: "Vaivamm Capital",
-      slug: "vaivamm-capital",
+      name: "StreamlineOS",
+      slug: "streamlineos-capital",
     });
   }
 
@@ -78,7 +78,7 @@ async function main() {
   });
 
   // ─── Clean up stale demo accounts ───
-  const staleEmails = ["admin@vaivamm.demo", "hr@vaivamm.demo"];
+  const staleEmails = ["admin@streamlineos.demo", "hr@streamlineos.demo"];
   for (const email of staleEmails) {
     const stale = await db.query.users.findFirst({
       where: (u, { eq }) => eq(u.email, email),

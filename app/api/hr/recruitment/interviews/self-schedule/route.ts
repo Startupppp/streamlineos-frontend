@@ -60,14 +60,14 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL ?? "https://vaivammcapital.com";
+    const baseUrl = clientEnv.NEXT_PUBLIC_APP_URL ?? "https://streamlineos.app";
     const bookingUrl = `${baseUrl}/interview-booking/${token}`;
 
     if (candidate.email) {
       const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
       void sendEmail({
         to: candidate.email,
-        subject: "Schedule Your Interview — Vaivamm Capital",
+        subject: "Schedule Your Interview — StreamlineOS",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #0f2b7f; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
               <p style="font-size: 13px; color: #6b7280;">
                 This link expires on ${expiresAt.toLocaleDateString("en-IN", { dateStyle: "long" })}.
               </p>
-              <p>Best regards,<br/><strong>Vaivamm Capital Recruitment Team</strong></p>
+              <p>Best regards,<br/><strong>StreamlineOS Recruitment Team</strong></p>
             </div>
           </div>
         `,

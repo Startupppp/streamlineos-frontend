@@ -41,7 +41,7 @@ export const offerDeadlineReminder = inngest.createFunction(
         </ul>
         <p>If you have any questions, please reach out to your HR contact.</p>
         <p style="color:#666;font-size:12px;margin-top:32px">
-          This is an automated reminder from Vaivamm Capital HR system.
+          This is an automated reminder from StreamlineOS HR system.
         </p>
       </div>
     `;

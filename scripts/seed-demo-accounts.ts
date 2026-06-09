@@ -13,17 +13,17 @@ import { nanoid } from "nanoid";
 const DEMO_PASSWORD = "Demo@1234";
 
 const DEMO_ACCOUNTS = [
-  { email: "demo.ceo@vaivamm.demo",             firstName: "Demo", lastName: "CEO",            role: "CEO",              designation: "Chief Executive Officer",       branchScoped: false },
-  { email: "demo.hr@vaivamm.demo",              firstName: "Demo", lastName: "HR",             role: "HR",               designation: "HR Manager",                    branchScoped: false },
-  { email: "demo.admin@vaivamm.demo",           firstName: "Demo", lastName: "Admin",          role: "ADMIN",            designation: "System Administrator",          branchScoped: false },
-  { email: "demo.sales@vaivamm.demo",           firstName: "Demo", lastName: "Sales",          role: "SALES",            designation: "Sales Representative",          branchScoped: false },
-  { email: "demo.engineering@vaivamm.demo",     firstName: "Demo", lastName: "Engineer",       role: "ENGINEERING",      designation: "Software Engineer",             branchScoped: false },
-  { email: "demo.design@vaivamm.demo",          firstName: "Demo", lastName: "Designer",       role: "DESIGN",           designation: "UI/UX Designer",                branchScoped: false },
-  { email: "demo.support@vaivamm.demo",         firstName: "Demo", lastName: "Support",        role: "CUSTOMER_SUPPORT", designation: "Customer Support Executive",     branchScoped: false },
-  { email: "demo.videoeditor@vaivamm.demo",     firstName: "Demo", lastName: "VideoEditor",    role: "VIDEO_EDITOR",     designation: "Video Editor",                  branchScoped: false },
-  { email: "demo.marketing@vaivamm.demo",       firstName: "Demo", lastName: "Marketing",      role: "DIGITAL_MARKETING",designation: "Digital Marketing Specialist",  branchScoped: false },
-  { email: "demo.branchmanager@vaivamm.demo",   firstName: "Demo", lastName: "BranchManager",  role: "BRANCH_MANAGER",   designation: "Branch Manager",                branchScoped: true  },
-  { email: "demo.branchhr@vaivamm.demo",        firstName: "Demo", lastName: "BranchHR",       role: "BRANCH_HR",        designation: "Branch HR Executive",           branchScoped: true  },
+  { email: "demo.ceo@streamlineos.demo",             firstName: "Demo", lastName: "CEO",            role: "CEO",              designation: "Chief Executive Officer",       branchScoped: false },
+  { email: "demo.hr@streamlineos.demo",              firstName: "Demo", lastName: "HR",             role: "HR",               designation: "HR Manager",                    branchScoped: false },
+  { email: "demo.admin@streamlineos.demo",           firstName: "Demo", lastName: "Admin",          role: "ADMIN",            designation: "System Administrator",          branchScoped: false },
+  { email: "demo.sales@streamlineos.demo",           firstName: "Demo", lastName: "Sales",          role: "SALES",            designation: "Sales Representative",          branchScoped: false },
+  { email: "demo.engineering@streamlineos.demo",     firstName: "Demo", lastName: "Engineer",       role: "ENGINEERING",      designation: "Software Engineer",             branchScoped: false },
+  { email: "demo.design@streamlineos.demo",          firstName: "Demo", lastName: "Designer",       role: "DESIGN",           designation: "UI/UX Designer",                branchScoped: false },
+  { email: "demo.support@streamlineos.demo",         firstName: "Demo", lastName: "Support",        role: "CUSTOMER_SUPPORT", designation: "Customer Support Executive",     branchScoped: false },
+  { email: "demo.videoeditor@streamlineos.demo",     firstName: "Demo", lastName: "VideoEditor",    role: "VIDEO_EDITOR",     designation: "Video Editor",                  branchScoped: false },
+  { email: "demo.marketing@streamlineos.demo",       firstName: "Demo", lastName: "Marketing",      role: "DIGITAL_MARKETING",designation: "Digital Marketing Specialist",  branchScoped: false },
+  { email: "demo.branchmanager@streamlineos.demo",   firstName: "Demo", lastName: "BranchManager",  role: "BRANCH_MANAGER",   designation: "Branch Manager",                branchScoped: true  },
+  { email: "demo.branchhr@streamlineos.demo",        firstName: "Demo", lastName: "BranchHR",       role: "BRANCH_HR",        designation: "Branch HR Executive",           branchScoped: true  },
 ];
 
 async function main() {
@@ -38,7 +38,7 @@ async function main() {
     orgId = nanoid();
     await db.execute(
       sql`INSERT INTO organizations (id, name, slug, created_at, updated_at)
-          VALUES (${orgId}, ${"Vaivamm Capital"}, ${"vaivamm-capital"}, now(), now())
+          VALUES (${orgId}, ${"StreamlineOS"}, ${"streamlineos-capital"}, now(), now())
           ON CONFLICT (slug) DO NOTHING`
     );
   } else {

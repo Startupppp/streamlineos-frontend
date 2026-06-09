@@ -2,7 +2,7 @@
 
 Landing Module & External Portals
 
-**Project:** Vaivamm Capital CRM — Landing Pages Module **Version:** 1.0 **Date:** April 11, 2026 **Author:** Tarun (Product Owner) **Status:** Final
+**Project:** StreamlineOS — Landing Pages Module **Version:** 1.0 **Date:** April 11, 2026 **Author:** Tarun (Product Owner) **Status:** Final
 
 **Table of Contents**
 
@@ -77,7 +77,7 @@ leads (Or deals extension)
 
 **7\. UI/UX Wireframe Descriptions**
 
-* **Marketing Page:** A slick, fast-loading unauthenticated page conforming to Vaivamm's brand colors. Large Hero Title, Trust Badges, and a Sticky "Get a Query" Form embedded on the right or heavily prompted via CTA buttons.
+* **Marketing Page:** A slick, fast-loading unauthenticated page conforming to StreamlineOS's brand colors. Large Hero Title, Trust Badges, and a Sticky "Get a Query" Form embedded on the right or heavily prompted via CTA buttons.
 
 **8\. Roles & Permissions**
 

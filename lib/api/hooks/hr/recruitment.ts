@@ -256,7 +256,7 @@ export function useRecruitmentPipeline() {
   });
 }
 
-const ATS_KANBAN_KEY = ["vaivamm", "hr", "atsKanban"] as const;
+const ATS_KANBAN_KEY = ["streamlineos", "hr", "atsKanban"] as const;
 
 
 export function useAtsKanban() {
@@ -468,7 +468,7 @@ export interface InterviewSla {
   createdAt: string | null;
 }
 
-const INTERVIEW_SLAS_KEY = ["vaivamm", "hr", "interviewSlas"] as const;
+const INTERVIEW_SLAS_KEY = ["streamlineos", "hr", "interviewSlas"] as const;
 
 export function useInterviewSlas() {
   return useQuery({
@@ -500,7 +500,7 @@ export interface CandidateSlaRecord {
 
 export function useCandidateSla(candidateId: number) {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "candidateSla", candidateId],
+    queryKey: ["streamlineos", "hr", "candidateSla", candidateId],
     queryFn: () =>
       apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
     enabled: !!candidateId,
@@ -516,8 +516,8 @@ export function useResetCandidateSla() {
         { stage }
       ),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "candidateSla", vars.candidateId] });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "atsKanban"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "candidateSla", vars.candidateId] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "atsKanban"] });
     },
   });
 }
@@ -643,7 +643,7 @@ export interface HrSlaReport {
   stageSummary: SlaReportStageSummary[];
 }
 
-const SLA_REPORT_KEY = ["vaivamm", "hr", "slaReport"] as const;
+const SLA_REPORT_KEY = ["streamlineos", "hr", "slaReport"] as const;
 
 export function useHrSlaReport() {
   return useQuery({

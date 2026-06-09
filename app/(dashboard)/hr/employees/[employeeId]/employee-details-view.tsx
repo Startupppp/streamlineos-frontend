@@ -52,7 +52,7 @@ function getInitials(first?: string | null, last?: string | null) {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
 }
 
-function InfoItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
+function InfoItem({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
     <div className="flex items-center gap-2 text-sm">

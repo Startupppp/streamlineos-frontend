@@ -53,7 +53,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
   const origin = typeof window !== "undefined" ? window.location.origin : "https://yourapp.com";
 
   const iframeSnippet = `<iframe src="${origin}/lead-form/${form.publicToken}" width="100%" height="600" frameborder="0"></iframe>`;
-  const jsSnippet = `<script src="${origin}/lead-form/${form.publicToken}/embed.js"></script>\n<div id="vaivamm-form-${form.publicToken}"></div>`;
+  const jsSnippet = `<script src="${origin}/lead-form/${form.publicToken}/embed.js"></script>\n<div id="streamlineos-form-${form.publicToken}"></div>`;
 
   const copy = useCallback((text: string, setter: (v: boolean) => void) => {
     navigator.clipboard.writeText(text).then(() => {

@@ -71,7 +71,7 @@ export default function ApplyPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
+          <span className="text-lg font-bold tracking-tight">StreamlineOS</span>
           <Link
             href={`/careers/${jobId}`}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -214,7 +214,7 @@ export default function ApplyPage() {
 
       <footer className="border-t mt-16">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
+          &copy; {new Date().getFullYear()} StreamlineOS. All rights reserved.
         </div>
       </footer>
     </div>

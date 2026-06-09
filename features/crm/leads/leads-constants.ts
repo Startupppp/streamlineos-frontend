@@ -13,7 +13,7 @@ export const ACTIVITY_TYPES = ["call", "email", "whatsapp", "meeting", "site_vis
 
 export const STATUS_CONFIG: Record<
   (typeof STATUSES)[number],
-  { label: string; color: string; bg: string; border: string; icon: React.ElementType }
+  { label: string; color: string; bg: string; border: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   NEW: { label: "New", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", icon: Zap },
   CONTACTED: { label: "Contacted", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20", icon: Phone },

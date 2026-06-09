@@ -44,13 +44,13 @@ function buildFeedbackEmailHtml(params: {
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
               <tr>
                 <td style="padding: 4px;">
-                  <a href="mailto:hr@vaivammcapital.com?subject=Interview Feedback — Excellent&body=Hi, I would rate my experience as Excellent. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #22c55e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">😊 Excellent</a>
+                  <a href="mailto:hr@streamlineos.app?subject=Interview Feedback — Excellent&body=Hi, I would rate my experience as Excellent. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #22c55e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">😊 Excellent</a>
                 </td>
                 <td style="padding: 4px;">
-                  <a href="mailto:hr@vaivammcapital.com?subject=Interview Feedback — Good&body=Hi, I would rate my experience as Good. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #3b82f6; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">🙂 Good</a>
+                  <a href="mailto:hr@streamlineos.app?subject=Interview Feedback — Good&body=Hi, I would rate my experience as Good. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #3b82f6; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">🙂 Good</a>
                 </td>
                 <td style="padding: 4px;">
-                  <a href="mailto:hr@vaivammcapital.com?subject=Interview Feedback — Needs Improvement&body=Hi, I would rate my experience as Needs Improvement. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #f59e0b; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">😐 Could be better</a>
+                  <a href="mailto:hr@streamlineos.app?subject=Interview Feedback — Needs Improvement&body=Hi, I would rate my experience as Needs Improvement. (Add your feedback here)" style="display: inline-block; padding: 10px 18px; background: #f59e0b; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">😐 Could be better</a>
                 </td>
               </tr>
             </table>
@@ -100,7 +100,7 @@ export const candidateFeedbackEmail = inngest.createFunction(
       }
 
       const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
-      const orgName = org?.name ?? "Vaivamm Capital";
+      const orgName = org?.name ?? "StreamlineOS";
 
       const { subject, html } = buildFeedbackEmailHtml({
         candidateName,

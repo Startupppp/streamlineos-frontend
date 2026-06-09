@@ -2,7 +2,7 @@
 
 **Sales Executive Dashboard**
 
-**Project: Vaivamm Capital CRM — Sales Analytics Dashboard Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**Project: StreamlineOS — Sales Analytics Dashboard Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 
@@ -25,7 +25,7 @@
 
 **1.1 Background**
 
-**The Vaivamm Capital CRM currently handles lead ingestion and a deal pipeline, but it lacks a centralized administrative dashboard for Sales Directors and Executives. Currently, management must manually aggregate data across individual deal stages to calculate Monthly Recurring Revenue (MRR), evaluate pipeline health, and track individual sales rep performance.**
+**The StreamlineOS currently handles lead ingestion and a deal pipeline, but it lacks a centralized administrative dashboard for Sales Directors and Executives. Currently, management must manually aggregate data across individual deal stages to calculate Monthly Recurring Revenue (MRR), evaluate pipeline health, and track individual sales rep performance.**
 
 **1.2 Objective**
 

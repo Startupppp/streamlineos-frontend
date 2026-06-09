@@ -45,7 +45,7 @@ export async function GET(
         detailedExplanation: termination.detailedExplanation ?? undefined,
         hrName: session.user.name ?? "HR Executive",
         hrDesignation: session.user.role === "CEO" ? "CEO" : "HR Executive",
-        companyName: org?.name ?? "VAIVAMM CAPITAL ADVISORS LLP",
+        companyName: org?.name ?? "STREAMLINEOS ADVISORS LLP",
       });
 
       const filename = `Termination-Letter-${(employee?.name ?? "Employee").replace(/\s+/g, "-")}.pdf`;
@@ -123,7 +123,7 @@ function generateTerminationLetterHtml(data: {
   </p>
 
   <p style="margin-top: 20px; font-size: 11px; color: #999; text-align: center;">
-    For queries, please contact HR at <a href="mailto:hr@vaivammcapital.com">hr@vaivammcapital.com</a>
+    For queries, please contact HR at <a href="mailto:hr@streamlineos.app">hr@streamlineos.app</a>
   </p>
 </div>`.trim();
 }

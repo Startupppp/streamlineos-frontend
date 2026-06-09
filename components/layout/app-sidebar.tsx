@@ -118,7 +118,7 @@ export function AppSidebar({
   const unreadNotifCount = notifData?.count ?? 0;
 
   useEffect(() => {
-    const base = "Vaivamm CRM";
+    const base = "StreamlineOS";
     const total = unreadChatCount + unreadNotifCount;
     document.title = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
   }, [unreadChatCount, unreadNotifCount]);
@@ -189,14 +189,14 @@ export function AppSidebar({
               <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 shrink-0">
                 <Image
                   src="/logo.svg"
-                  alt="Vaivamm"
+                  alt="StreamlineOS"
                   fill
                   className="object-contain p-1.5"
                 />
               </div>
               <div className="min-w-0">
                 <span className="gold-text text-[17px] font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
-                  Vaivamm
+                  StreamlineOS
                 </span>
                 {orgName ? (
                   <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[120px]">
@@ -220,7 +220,7 @@ export function AppSidebar({
             >
               <Image
                 src="/logo.svg"
-                alt="Vaivamm"
+                alt="StreamlineOS"
                 width={26}
                 height={26}
                 className="object-contain"

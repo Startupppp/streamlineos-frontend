@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 
 interface PrefRowProps {
   id: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   description: string;
   checked: boolean;

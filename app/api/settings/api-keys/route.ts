@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
     const body = await parseBody(req, createApiKeySchema);
 
-    const rawKey = `vaivamm_${randomBytes(32).toString("hex")}`;
+    const rawKey = `streamlineos_${randomBytes(32).toString("hex")}`;
     const keyHash = createHash("sha256").update(rawKey).digest("hex");
     const keyPrefix = rawKey.slice(0, 16);
     const id = randomBytes(16).toString("hex");

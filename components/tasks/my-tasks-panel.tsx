@@ -51,7 +51,7 @@ import { CallLogDialog } from "@/components/tasks/call-log-dialog";
 import { EmailTaskDialog } from "@/components/tasks/email-task-dialog";
 
 
-const TYPE_ICONS: Record<TaskType, React.ElementType> = {
+const TYPE_ICONS: Record<TaskType, React.ComponentType<{ className?: string }>> = {
   CALL: Phone,
   EMAIL: Mail,
   MEETING: Video,

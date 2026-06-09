@@ -66,7 +66,7 @@ export function useRequestLeave() {
       apiClient.post<{ success: boolean }>("/hr/leaves", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
     },
   });
 }
@@ -82,7 +82,7 @@ export function useApproveLeave() {
 
 export function useHrMyLeaves() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "leaves", "my"] as const,
+    queryKey: ["streamlineos", "hr", "leaves", "my"] as const,
     queryFn: () =>
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",
@@ -92,7 +92,7 @@ export function useHrMyLeaves() {
 
 export function useHrTeamLeaves() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "leaves", "team"] as const,
+    queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
     queryFn: () =>
       apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
   });
@@ -107,9 +107,9 @@ export function useApproveLeaveDedicated() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesThisWeek"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesThisWeek"] });
     },
   });
 }
@@ -132,8 +132,8 @@ export function useRejectLeaveDedicated() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
     },
   });
 }
@@ -145,7 +145,7 @@ export function useCancelLeave() {
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
     },
   });
 }
@@ -159,8 +159,8 @@ export function useRevertLeave() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
+      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
     },
   });
 }
@@ -204,21 +204,21 @@ interface LeaveApprovalsResult {
 
 export function useHrLeaveApprovals() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "leaves", "team"] as const,
+    queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
   });
 }
 
 export function useHrLeavesThisWeek() {
   return useQuery({
-    queryKey: [...["vaivamm"], "hr", "leavesThisWeek"] as const,
+    queryKey: [...["streamlineos"], "hr", "leavesThisWeek"] as const,
     queryFn: () => apiClient.get<unknown[]>("/hr/leaves/this-week"),
   });
 }
 
 export function useHrMyLeaveRequests() {
   return useQuery({
-    queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] as const,
+    queryKey: [...["streamlineos"], "hr", "leavesMyRequests"] as const,
     queryFn: () =>
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",

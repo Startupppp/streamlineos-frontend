@@ -43,7 +43,7 @@ export interface HrHeadcountGroup {
 
 export function useHrDashboardMetrics() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "metrics"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "metrics"] as const,
     queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
     staleTime: 60_000,
   });
@@ -51,7 +51,7 @@ export function useHrDashboardMetrics() {
 
 export function useHrHeadcountTrends() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "headcount-trends"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "headcount-trends"] as const,
     queryFn: () => apiClient.get<HrHeadcountTrends>("/hr/dashboard/headcount-trends"),
     staleTime: 120_000,
   });
@@ -64,7 +64,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   const qs = params.toString();
 
   return useQuery({
-    queryKey: ["vaivamm", "hr", "leave-calendar", month, year] as const,
+    queryKey: ["streamlineos", "hr", "leave-calendar", month, year] as const,
     queryFn: () =>
       apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`),
     staleTime: 60_000,
@@ -73,7 +73,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
 
 export function useHrHeadcount(groupBy: "department" | "role" | "branch" = "department") {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "headcount", groupBy] as const,
+    queryKey: ["streamlineos", "hr", "headcount", groupBy] as const,
     queryFn: () =>
       apiClient.get<HrHeadcountGroup[]>(`/hr/headcount?groupBy=${groupBy}`),
     staleTime: 120_000,
@@ -96,7 +96,7 @@ export interface HrOnboardingStatus {
 
 export function useHrOnboardingStatus() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "onboarding-status"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "onboarding-status"] as const,
     queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
     staleTime: 60_000,
   });
@@ -109,7 +109,7 @@ export interface HrDiversityMetrics {
 
 export function useHrDiversityMetrics() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "diversity"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "diversity"] as const,
     queryFn: () => apiClient.get<HrDiversityMetrics>("/hr/dashboard/diversity"),
     staleTime: 300_000,
   });
@@ -122,7 +122,7 @@ export interface HrTimeToFill {
 
 export function useHrTimeToFill() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "time-to-fill"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "time-to-fill"] as const,
     queryFn: () => apiClient.get<HrTimeToFill>("/hr/dashboard/time-to-fill"),
     staleTime: 300_000,
   });
@@ -140,7 +140,7 @@ export interface HrPayrollSummary {
 
 export function useHrPayrollSummary() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "payroll-summary"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "payroll-summary"] as const,
     queryFn: () => apiClient.get<HrPayrollSummary>("/hr/dashboard/payroll-summary"),
     staleTime: 120_000,
   });
@@ -159,7 +159,7 @@ export interface HrSalaryBands {
 
 export function useHrSalaryBands() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "salary-bands"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "salary-bands"] as const,
     queryFn: () => apiClient.get<HrSalaryBands>("/hr/dashboard/salary-bands"),
     staleTime: 300_000,
   });
@@ -174,7 +174,7 @@ export interface HrCompliance {
 
 export function useHrCompliance() {
   return useQuery({
-    queryKey: ["vaivamm", "hr", "dashboard", "compliance"] as const,
+    queryKey: ["streamlineos", "hr", "dashboard", "compliance"] as const,
     queryFn: () => apiClient.get<HrCompliance>("/hr/dashboard/compliance"),
     staleTime: 120_000,
   });

@@ -8,7 +8,7 @@ import type { TrendValue } from "@/types/crm";
 interface MetricCardProps {
   label: string;
   value: string | number;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   trend?: TrendValue;
   sparkData?: number[];
   sparkColor?: string;

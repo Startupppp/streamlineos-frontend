@@ -18,7 +18,7 @@ const FLAG_META: {
   key: keyof OrgFeatureFlags;
   label: string;
   description: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
 }[] = [
   {
     key: "aiChat",

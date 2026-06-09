@@ -33,7 +33,7 @@ import {
 } from "@/features/hr/devices/device-form-content";
 import { DeviceTableRow } from "@/features/hr/devices/device-table-row";
 
-const DEVICE_ICONS: Record<string, React.ElementType> = {
+const DEVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Laptop, Phone: Smartphone, Monitor, Keyboard,
 };
 

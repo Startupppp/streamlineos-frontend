@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
             {
               type: "context",
               elements: [
-                { type: "mrkdwn", text: `*Type:* ${body.type} | *Sent via:* Vaivamm HR` },
+                { type: "mrkdwn", text: `*Type:* ${body.type} | *Sent via:* StreamlineOS HR` },
               ],
             },
           ],

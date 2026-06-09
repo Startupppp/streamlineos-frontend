@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
           <aside aria-label="Email delivery help" className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
             <p className="text-xs text-amber-600">
-              Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@vaivamm.com.
+              Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@streamlineos.app.
             </p>
           </aside>
 

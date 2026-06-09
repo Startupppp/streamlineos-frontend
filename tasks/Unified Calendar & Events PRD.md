@@ -2,7 +2,7 @@
 
 **Unified Calendar & Events**
 
-**Project: Vaivamm Capital CRM — Calendar Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
+**Project: StreamlineOS — Calendar Module Version: 1.0 Date: April 11, 2026 Author: Tarun (Product Owner) Status: Final**
 
 **Table of Contents**
 

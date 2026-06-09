@@ -1,8 +1,8 @@
-## Vaivamm CRM
+## StreamlineOS
 
-![Vaivamm CRM](public/logo.svg)
+![StreamlineOS](public/logo.svg)
 
-**Vaivamm CRM** is an opinionated, enterprise-grade platform for Human Resources, Project Management, CRM, and organizational workflows. It is built for small-to-mid sized companies that want a single, cohesive system for employee lifecycle management, agile delivery, sales pipelines, and executive reporting.
+**StreamlineOS** is an opinionated, enterprise-grade platform for Human Resources, Project Management, CRM, and organizational workflows. It is built for small-to-mid sized companies that want a single, cohesive system for employee lifecycle management, agile delivery, sales pipelines, and executive reporting.
 
 ---
 
@@ -79,7 +79,7 @@
 
 ```bash
 git clone <your-repo-url>
-cd vaivamm-crm
+cd streamlineos
 ```
 
 ### 2. Install dependencies
@@ -194,7 +194,7 @@ Visit `http://localhost:3000` in your browser.
 ## 📂 Project Structure (High-Level)
 
 ```text
-vaivamm-crm/
+streamlineos/
 ├── app/                    # Next.js App Router layouts, routes, and API handlers
 │   ├── (auth)/             # Authentication-related routes (sign-in, verify, etc.)
 │   ├── (dashboard)/        # Main dashboard experience (HR, CRM, projects, etc.)

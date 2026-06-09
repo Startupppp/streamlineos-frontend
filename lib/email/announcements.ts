@@ -12,7 +12,7 @@ export async function sendHolidayAnnouncementEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Holiday Tomorrow: ${holidayName} - Vaivamm Capital`,
+    subject: `Holiday Tomorrow: ${holidayName} - StreamlineOS`,
     html: getHolidayAnnouncementEmailTemplate(holidayName, holidayDate, message),
   });
 }
@@ -25,7 +25,7 @@ export async function sendCompanyAnnouncementEmail(
 ) {
   await sendEmail({
     to: email,
-    subject: `Announcement: ${subject} - Vaivamm Capital`,
+    subject: `Announcement: ${subject} - StreamlineOS`,
     html: getCompanyAnnouncementEmailTemplate(subject, message, announcedBy),
   });
 }

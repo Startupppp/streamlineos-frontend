@@ -8,7 +8,7 @@ export function generateTotpSecret(): string {
 }
 
 export function generateTotpUri(secret: string, email: string): string {
-  return generateURI({ secret, label: email, issuer: "Vaivamm CRM", strategy: "totp" });
+  return generateURI({ secret, label: email, issuer: "StreamlineOS", strategy: "totp" });
 }
 
 export async function generateQrCodeDataUrl(uri: string): Promise<string> {

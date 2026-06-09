@@ -14,4 +14,4 @@ Disallow: /billing/
 Disallow: /timesheets/
 Disallow: /support/
 
-Sitemap: https://crm.vaivammcapital.com/sitemap.xml
+Sitemap: https://streamlineos.app/sitemap.xml

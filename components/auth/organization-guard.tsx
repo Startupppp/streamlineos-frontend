@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { checkUserHasOrganization } from "@/server/actions/organization-actions";
 import { Loader2 } from "lucide-react";
 
-const ORG_CACHE_KEY = "vaivamm_org_verified";
+const ORG_CACHE_KEY = "streamlineos_org_verified";
 
 interface OrganizationGuardProps {
   children: React.ReactNode;

@@ -61,7 +61,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "crm.vaivammcapital.com",
+        hostname: "streamlineos.app",
       },
       {
         protocol: "https",
@@ -94,7 +94,7 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://crm.vaivammcapital.com",
+            "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://streamlineos.app",
             "font-src 'self' https://fonts.gstatic.com",
             "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.r2.cloudflarestorage.com",
             "frame-ancestors 'none'",

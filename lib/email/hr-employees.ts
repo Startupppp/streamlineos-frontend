@@ -20,7 +20,7 @@ export async function sendResignationSubmittedEmail(
   const reviewUrl = `${baseUrl}/hr/exit`;
   await sendEmail({
     to: hrEmail,
-    subject: `Resignation Submitted: ${employeeName} - Vaivamm Capital`,
+    subject: `Resignation Submitted: ${employeeName} - StreamlineOS`,
     html: getResignationSubmittedEmailTemplate(
       hrName,
       employeeName,
@@ -45,7 +45,7 @@ export async function sendResignationApprovedEmail(
   const portalUrl = `${baseUrl}/hr/exit`;
   await sendEmail({
     to: employeeEmail,
-    subject: `Resignation Accepted - Vaivamm Capital`,
+    subject: `Resignation Accepted - StreamlineOS`,
     html: getResignationApprovedEmailTemplate(
       employeeName,
       approverName,
@@ -66,10 +66,10 @@ export async function sendTerminationEmail(
   reason: string,
   attachments?: EmailAttachment[]
 ) {
-  const hrContactEmail = "hr@vaivammcapital.com";
+  const hrContactEmail = "hr@streamlineos.app";
   await sendEmail({
     to: employeeEmail,
-    subject: `Employment Termination Notice - Vaivamm Capital`,
+    subject: `Employment Termination Notice - StreamlineOS`,
     html: getTerminationEmailTemplate(
       employeeName,
       employeeDesignation,

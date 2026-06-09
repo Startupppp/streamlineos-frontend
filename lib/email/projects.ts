@@ -18,7 +18,7 @@ export async function sendProjectAssignmentEmail(
   const projectUrl = `${baseUrl}/projects/${projectId}`;
   await sendEmail({
     to: email,
-    subject: `Added to Project: ${projectName} - Vaivamm Capital`,
+    subject: `Added to Project: ${projectName} - StreamlineOS`,
     html: getProjectAssignmentEmailTemplate(memberName, projectName, projectKey, projectUrl, assignedBy),
   });
 }
@@ -37,7 +37,7 @@ export async function sendTicketAssignmentEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Ticket Assigned: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Ticket Assigned: ${ticketTitle} - StreamlineOS`,
     html: getTicketAssignmentEmailTemplate(
       assigneeName,
       ticketTitle,
@@ -64,7 +64,7 @@ export async function sendTicketReviewRequestEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Review Requested: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Review Requested: ${ticketTitle} - StreamlineOS`,
     html: getTicketReviewRequestEmailTemplate(
       reviewerName,
       ticketTitle,
@@ -90,7 +90,7 @@ export async function sendTicketChangesRequestedEmail(
   const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
-    subject: `Changes Requested: ${ticketTitle} - Vaivamm Capital`,
+    subject: `Changes Requested: ${ticketTitle} - StreamlineOS`,
     html: getTicketChangesRequestedEmailTemplate(
       assigneeName,
       ticketTitle,

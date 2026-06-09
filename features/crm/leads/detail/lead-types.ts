@@ -32,7 +32,7 @@ export const PRIORITY_STYLES: Record<
 
 export const TIMELINE_ICONS: Record<
   string,
-  { icon: React.ElementType; color: string }
+  { icon: React.ComponentType<{ className?: string }>; color: string }
 > = {
   note: { icon: StickyNote, color: "bg-amber-500/15 text-amber-400" },
   task: { icon: ListTodo, color: "bg-purple-500/15 text-purple-400" },

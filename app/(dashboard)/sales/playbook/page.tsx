@@ -30,7 +30,7 @@ const PLAYBOOK_ENTRIES: PlaybookEntry[] = [
     category: "Scripts",
     title: "Cold Call Opening",
     content:
-      "Hi [Name], this is [Rep] from Vaivamm Capital. I'm calling because we help professionals like you grow their wealth through structured investment plans. Do you have 2 minutes to hear how we've helped others in [their industry]?",
+      "Hi [Name], this is [Rep] from StreamlineOS. I'm calling because we help professionals like you grow their wealth through structured investment plans. Do you have 2 minutes to hear how we've helped others in [their industry]?",
     tags: ["cold-call", "opening", "intro"],
   },
   {

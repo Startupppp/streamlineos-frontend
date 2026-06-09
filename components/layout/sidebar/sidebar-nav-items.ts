@@ -18,7 +18,7 @@ import {
 
 export interface NavRoute {
   label: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
   badge?: "leaves";
   isProjectsList?: boolean;

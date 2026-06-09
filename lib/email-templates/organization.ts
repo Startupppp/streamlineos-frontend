@@ -7,7 +7,7 @@ export function getInvitationEmailTemplate(invitationUrl: string, organizationNa
     <h2 class="email-title">🎉 You're Invited!</h2>
     <p class="email-text">
       ${safeInviterName ? `<strong>${safeInviterName}</strong> has invited you` : 'You have been invited'}
-      to join <strong>${safeOrgName}</strong> on Vaivamm Capital CRM.
+      to join <strong>${safeOrgName}</strong> on StreamlineOS.
     </p>
 
     <p class="email-text">
@@ -38,7 +38,7 @@ export function getInvitationEmailTemplate(invitationUrl: string, organizationNa
   `;
 
   return getEmailTemplate({
-    title: `Invitation to join ${safeOrgName} - Vaivamm Capital`,
+    title: `Invitation to join ${safeOrgName} - StreamlineOS`,
     preheader: `You've been invited to join ${safeOrgName}`,
     content,
   });
@@ -96,7 +96,7 @@ export function getHolidayAnnouncementEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Holiday Tomorrow: ${safeName} - Vaivamm Capital`,
+    title: `Holiday Tomorrow: ${safeName} - StreamlineOS`,
     preheader: `Office closed tomorrow for ${safeName}`,
     content,
   });
@@ -133,7 +133,7 @@ export function getCompanyAnnouncementEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Announcement: ${safeSubject} - Vaivamm Capital`,
+    title: `Announcement: ${safeSubject} - StreamlineOS`,
     preheader: safeSubject,
     content,
   });

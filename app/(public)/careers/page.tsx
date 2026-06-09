@@ -9,7 +9,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Careers",
-  description: "Explore open positions at Vaivamm Capital. Join our team of driven professionals.",
+  description: "Explore open positions at StreamlineOS. Join our team of driven professionals.",
 };
 
 const JOB_TYPE_LABELS: Record<string, string> = {
@@ -71,7 +71,7 @@ export default async function CareersPage() {
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
           <div>
-            <span className="text-lg font-bold tracking-tight">Vaivamm Capital</span>
+            <span className="text-lg font-bold tracking-tight">StreamlineOS</span>
           </div>
           <Link
             href="/"
@@ -85,7 +85,7 @@ export default async function CareersPage() {
       <section className="bg-card border-b">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-14 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-            Join Vaivamm Capital
+            Join StreamlineOS
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
             We&apos;re building the future of capital markets. Come grow with us.
@@ -196,7 +196,7 @@ export default async function CareersPage() {
 
       <footer className="border-t mt-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
+          &copy; {new Date().getFullYear()} StreamlineOS. All rights reserved.
         </div>
       </footer>
     </div>

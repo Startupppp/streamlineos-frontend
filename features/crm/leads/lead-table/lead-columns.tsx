@@ -110,7 +110,7 @@ export function useLeadCellRenderer({
       case "whatsapp":
         return lead.whatsappNumber ? (
           <a
-            href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from Vaivamm Capital.`)}`}
+            href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from StreamlineOS.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300"

@@ -55,7 +55,7 @@ import {
 
 import type { EmailTemplateConfig } from "./types";
 
-export const BASE_URL = "https://crm.vaivammcapital.com";
+export const BASE_URL = "https://streamlineos.app";
 
 export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
   {
@@ -63,7 +63,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Email Verification",
     generate: () => ({
-      subject: "Verify Your Email Address - Vaivamm Capital",
+      subject: "Verify Your Email Address - StreamlineOS",
       html: getVerificationEmailTemplate(`${BASE_URL}/verify-email?token=abc123`),
     }),
   },
@@ -72,7 +72,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Password Reset",
     generate: () => ({
-      subject: "Reset Your Password - Vaivamm Capital",
+      subject: "Reset Your Password - StreamlineOS",
       html: getPasswordResetEmailTemplate(`${BASE_URL}/auth/reset-password?token=abc123`),
     }),
   },
@@ -81,7 +81,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Welcome / Account Created",
     generate: () => ({
-      subject: "Welcome to Vaivamm Capital — Set Up Your Account",
+      subject: "Welcome to StreamlineOS — Set Up Your Account",
       html: getWelcomeEmailTemplate(
         "Priya Sharma",
         "priya@example.com",
@@ -94,7 +94,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Password Changed Confirmation",
     generate: () => ({
-      subject: "Password Changed Successfully - Vaivamm Capital",
+      subject: "Password Changed Successfully - StreamlineOS",
       html: getPasswordChangeConfirmationEmailTemplate("Priya Sharma"),
     }),
   },
@@ -103,7 +103,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Account Deactivated",
     generate: () => ({
-      subject: "Account Deactivated - Vaivamm Capital",
+      subject: "Account Deactivated - StreamlineOS",
       html: getAccountDeactivationEmailTemplate("Rohan Mehta", "Anita HR", "Resigned from company"),
     }),
   },
@@ -112,7 +112,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Account Locked",
     generate: () => ({
-      subject: "Account Locked - Vaivamm Capital",
+      subject: "Account Locked - StreamlineOS",
       html: getAccountLockedEmailTemplate("Rohan Mehta"),
     }),
   },
@@ -121,7 +121,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "New Device Login Alert",
     generate: () => ({
-      subject: "New Device Sign-In Detected - Vaivamm Capital",
+      subject: "New Device Sign-In Detected - StreamlineOS",
       html: getNewDeviceLoginEmailTemplate("Priya Sharma", {
         userAgent: "Chrome 123 on Windows 11",
         ipAddress: "103.45.67.89",
@@ -134,7 +134,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Password Expiry Warning",
     generate: () => ({
-      subject: "Your Password Expires in 7 Days - Vaivamm Capital",
+      subject: "Your Password Expires in 7 Days - StreamlineOS",
       html: getPasswordExpiryWarningEmailTemplate("Priya Sharma", 7),
     }),
   },
@@ -144,10 +144,10 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Organization",
     name: "Team Invitation",
     generate: () => ({
-      subject: "Invitation to join Vaivamm Capital",
+      subject: "Invitation to join StreamlineOS",
       html: getInvitationEmailTemplate(
         `${BASE_URL}/invitation/tok123`,
-        "Vaivamm Capital",
+        "StreamlineOS",
         "Anita HR"
       ),
     }),
@@ -157,7 +157,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Organization",
     name: "Holiday Announcement",
     generate: () => ({
-      subject: "Holiday Tomorrow: Diwali - Vaivamm Capital",
+      subject: "Holiday Tomorrow: Diwali - StreamlineOS",
       html: getHolidayAnnouncementEmailTemplate(
         "Diwali",
         "2 Nov 2026",
@@ -170,11 +170,11 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Organization",
     name: "Company Announcement",
     generate: () => ({
-      subject: "Announcement: Q3 All-Hands Meeting - Vaivamm Capital",
+      subject: "Announcement: Q3 All-Hands Meeting - StreamlineOS",
       html: getCompanyAnnouncementEmailTemplate(
         "Q3 All-Hands Meeting",
         "We are holding our Q3 All-Hands meeting on Friday at 4 PM IST. Please make sure to attend.",
-        "Rahul Vaivamm"
+        "Rahul StreamlineOS"
       ),
     }),
   },
@@ -184,7 +184,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Leave Request (to approver)",
     generate: () => ({
-      subject: "Leave Request: Rohan Mehta - Vaivamm Capital",
+      subject: "Leave Request: Rohan Mehta - StreamlineOS",
       html: getLeaveRequestEmailTemplate(
         "Anita HR",
         "Rohan Mehta",
@@ -201,7 +201,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Leave Approved",
     generate: () => ({
-      subject: "Leave Request APPROVED: Casual Leave - Vaivamm Capital",
+      subject: "Leave Request APPROVED: Casual Leave - StreamlineOS",
       html: getLeaveStatusUpdateEmailTemplate(
         "Rohan Mehta",
         "Casual Leave",
@@ -217,7 +217,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Leave Rejected",
     generate: () => ({
-      subject: "Leave Request REJECTED: Casual Leave - Vaivamm Capital",
+      subject: "Leave Request REJECTED: Casual Leave - StreamlineOS",
       html: getLeaveStatusUpdateEmailTemplate(
         "Rohan Mehta",
         "Casual Leave",
@@ -234,7 +234,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Leave Cancellation",
     generate: () => ({
-      subject: "Leave Cancelled: Rohan Mehta - Vaivamm Capital",
+      subject: "Leave Cancelled: Rohan Mehta - StreamlineOS",
       html: getLeaveCancellationEmailTemplate(
         "Anita HR",
         "Rohan Mehta",
@@ -264,7 +264,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Resignation Submitted",
     generate: () => ({
-      subject: "Resignation Submitted: Rohan Mehta - Vaivamm Capital",
+      subject: "Resignation Submitted: Rohan Mehta - StreamlineOS",
       html: getResignationSubmittedEmailTemplate(
         "Anita HR",
         "Rohan Mehta",
@@ -282,10 +282,10 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "HR Leave",
     name: "Resignation Accepted",
     generate: () => ({
-      subject: "Resignation Accepted - Vaivamm Capital",
+      subject: "Resignation Accepted - StreamlineOS",
       html: getResignationApprovedEmailTemplate(
         "Rohan Mehta",
-        "Rahul Vaivamm",
+        "Rahul StreamlineOS",
         "12 May 2026",
         30,
         "12 Apr 2026",
@@ -406,11 +406,11 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "CRM",
     name: "Lead Welcome Email",
     generate: () => ({
-      subject: "Thank you for contacting Vaivamm Capital",
+      subject: "Thank you for contacting StreamlineOS",
       html: getLeadWelcomeEmail(
         "Vikram Nair",
-        "Vaivamm Capital",
-        "info@vaivammcapital.com",
+        "StreamlineOS",
+        "info@streamlineos.app",
         BASE_URL
       ),
     }),
@@ -463,10 +463,10 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "CRM",
     name: "Client Onboarding Email",
     generate: () => ({
-      subject: "Welcome to Vaivamm Capital",
+      subject: "Welcome to StreamlineOS",
       html: getClientOnboardingEmail(
         "Nair Enterprises",
-        "Vaivamm Capital",
+        "StreamlineOS",
         "Priya Sharma",
         `${BASE_URL}/client-portal`
       ),
@@ -478,7 +478,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Projects",
     name: "Project Assignment",
     generate: () => ({
-      subject: "Added to Project: Platform Revamp - Vaivamm Capital",
+      subject: "Added to Project: Platform Revamp - StreamlineOS",
       html: getProjectAssignmentEmailTemplate(
         "Rohan Mehta",
         "Platform Revamp",
@@ -493,7 +493,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Projects",
     name: "Ticket Assigned",
     generate: () => ({
-      subject: "Ticket Assigned: Fix dashboard layout - Vaivamm Capital",
+      subject: "Ticket Assigned: Fix dashboard layout - StreamlineOS",
       html: getTicketAssignmentEmailTemplate(
         "Rohan Mehta",
         "Fix dashboard layout on mobile",
@@ -510,7 +510,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Projects",
     name: "Ticket Review Request",
     generate: () => ({
-      subject: "Review Requested: Fix dashboard layout - Vaivamm Capital",
+      subject: "Review Requested: Fix dashboard layout - StreamlineOS",
       html: getTicketReviewRequestEmailTemplate(
         "Anita HR",
         "Fix dashboard layout on mobile",
@@ -527,7 +527,7 @@ export const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Projects",
     name: "Changes Requested",
     generate: () => ({
-      subject: "Changes Requested: Fix dashboard layout - Vaivamm Capital",
+      subject: "Changes Requested: Fix dashboard layout - StreamlineOS",
       html: getTicketChangesRequestedEmailTemplate(
         "Rohan Mehta",
         "Fix dashboard layout on mobile",

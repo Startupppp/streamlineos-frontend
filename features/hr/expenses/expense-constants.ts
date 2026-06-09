@@ -11,7 +11,7 @@ import {
   Package,
 } from "lucide-react";
 
-export const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; label: string; bg: string; text: string }> = {
+export const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string; bg: string; text: string }> = {
   Travel:            { icon: Plane,           label: "Travel",    bg: "bg-blue-50 dark:bg-blue-900/20",     text: "text-blue-600 dark:text-blue-400" },
   Meals:             { icon: UtensilsCrossed, label: "Meals",     bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-600 dark:text-orange-400" },
   Transport:         { icon: Car,             label: "Transport", bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400" },

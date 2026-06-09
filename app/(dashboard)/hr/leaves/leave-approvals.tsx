@@ -25,7 +25,7 @@ import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem, priorityConfig } from "./leaves-shared";
 
 function LeaveStatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string; icon: React.ElementType }> = {
+  const config: Record<string, { label: string; className: string; icon: React.ComponentType<{ className?: string }> }> = {
     PENDING: {
       label: "Pending",
       className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",

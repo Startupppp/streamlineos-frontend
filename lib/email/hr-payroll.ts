@@ -16,7 +16,7 @@ export async function sendPayslipGeneratedEmail(
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">Vaivamm Capital</h1>
+        <h1 style="color: white; margin: 0; font-size: 24px;">StreamlineOS</h1>
         <p style="color: #dbeafe; margin: 5px 0 0 0;">Capital Advisors LLP</p>
       </div>
 
@@ -48,7 +48,7 @@ export async function sendPayslipGeneratedEmail(
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
         <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-          This is an automated email from Vaivamm Capital. Please do not reply to this email.
+          This is an automated email from StreamlineOS. Please do not reply to this email.
         </p>
       </div>
     </body>

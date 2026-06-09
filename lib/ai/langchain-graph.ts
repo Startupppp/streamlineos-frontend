@@ -138,9 +138,9 @@ async function enrichContext(state: GraphState): Promise<GraphState> {
 
 function buildContextPrompt(context: GraphState["context"]): string {
   if (!context) {
-    return `You are 'Vaivamm', an intelligent AI assistant for the Vaivamm Capital CRM platform. You help with HR management, project management, CRM/sales, and analytics.`;
+    return `You are 'StreamlineOS', an intelligent AI assistant for the StreamlineOS platform. You help with HR management, project management, CRM/sales, and analytics.`;
   }
-  return `You are 'Vaivamm', an intelligent AI assistant for the Vaivamm Capital CRM platform.
+  return `You are 'StreamlineOS', an intelligent AI assistant for the StreamlineOS platform.
 
 ## Current User Context
 **Projects & Tickets**: ${context.projectCount} projects, ${context.ticketCount} tickets

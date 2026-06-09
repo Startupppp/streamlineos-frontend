@@ -47,7 +47,7 @@ export interface ResourceAllocationEntry {
 }
 
 function milestoneKey(projectId: number) {
-  return ["vaivamm", "projects", projectId, "milestones"] as const;
+  return ["streamlineos", "projects", projectId, "milestones"] as const;
 }
 
 
@@ -90,7 +90,7 @@ export function useDeleteMilestone(projectId: number) {
 
 export function useProjectBudget(projectId: number) {
   return useQuery({
-    queryKey: ["vaivamm", "projects", projectId, "budget"] as const,
+    queryKey: ["streamlineos", "projects", projectId, "budget"] as const,
     queryFn: () => apiClient.get<ProjectBudget>(`/projects/${projectId}/budget`),
     enabled: !!projectId,
     staleTime: 60_000,
@@ -102,14 +102,14 @@ export function useUpdateProjectBudget(projectId: number) {
   return useMutation({
     mutationFn: (budget: number) =>
       apiClient.patch<{ id: number; budget: string }>(`/projects/${projectId}/budget`, { budget }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["vaivamm", "projects", projectId, "budget"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["streamlineos", "projects", projectId, "budget"] }),
   });
 }
 
 
 export function useResourceAllocation() {
   return useQuery({
-    queryKey: ["vaivamm", "projects", "resource-allocation"] as const,
+    queryKey: ["streamlineos", "projects", "resource-allocation"] as const,
     queryFn: () => apiClient.get<ResourceAllocationEntry[]>("/projects/resource-allocation"),
     staleTime: 60_000,
   });

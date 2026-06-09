@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     await sendInvitationEmail(
       invitation.email,
       invitation.token,
-      org?.name ?? "Vaivamm Capital",
+      org?.name ?? "StreamlineOS",
       inviterName
     );
 
