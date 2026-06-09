@@ -1,15 +1,36 @@
+import { Resend } from "resend";
 import sgMail from "@sendgrid/mail";
 import { logger } from "../logger";
 import { appUrl } from "../app-url";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Provider-agnostic email sender.
+
+   Priority order (first available wins):
+     1. RESEND_API_KEY → uses Resend (preferred — modern, generous free tier)
+     2. SENDGRID_API_KEY → uses SendGrid (legacy fallback)
+     3. Neither configured → logs the email and returns silently
+
+   Same call signature everywhere: sendEmail({ to, subject, html, ... })
+   ───────────────────────────────────────────────────────────────────────── */
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 
 export const baseUrl = appUrl;
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+if (SENDGRID_API_KEY) sgMail.setApiKey(SENDGRID_API_KEY);
+
+type Provider = "resend" | "sendgrid" | "none";
+const activeProvider: Provider = resend
+  ? "resend"
+  : SENDGRID_API_KEY
+    ? "sendgrid"
+    : "none";
 
 export interface EmailAttachment {
   filename: string;
@@ -23,35 +44,82 @@ export interface EmailOptions {
   html: string;
   text?: string;
   attachments?: EmailAttachment[];
+  replyTo?: string;
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function isTransientError(error: unknown): boolean {
-  if (error && typeof error === "object") {
-    const code = (error as { code?: number | string }).code;
-    if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "EAI_AGAIN") {
-      return true;
-    }
-    const statusCode = (error as { code?: number; statusCode?: number }).statusCode ?? (typeof code === "number" ? code : undefined);
-    if (typeof statusCode === "number") {
-      if (statusCode >= 500 && statusCode < 600) return true;
-      if (statusCode >= 400 && statusCode < 500) return false;
-    }
+  if (!error || typeof error !== "object") return true;
+  const code = (error as { code?: number | string }).code;
+  if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "EAI_AGAIN") {
+    return true;
+  }
+  const statusCode =
+    (error as { statusCode?: number }).statusCode ??
+    (typeof code === "number" ? code : undefined);
+  if (typeof statusCode === "number") {
+    if (statusCode >= 500 && statusCode < 600) return true;
+    if (statusCode >= 400 && statusCode < 500) return false;
   }
   return true;
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function getFromAddress(): string {
+  const fromName = process.env.EMAIL_FROM_NAME?.trim();
+  const fromEmail =
+    process.env.EMAIL_FROM_ADDRESS ||
+    process.env.SENDGRID_FROM_EMAIL ||
+    "no-reply@streamlineos.in";
+  return fromName ? `${fromName} <${fromEmail}>` : fromEmail;
 }
 
-export async function sendEmail(options: EmailOptions) {
-  const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@streamlineos.app";
+async function sendViaResend(options: EmailOptions): Promise<void> {
+  if (!resend) throw new Error("Resend not initialized");
 
-  if (!process.env.SENDGRID_API_KEY) {
-    logger.warn("EMAIL_SKIPPED: No SENDGRID_API_KEY configured", { to: options.to, subject: options.subject });
-    return;
+  const text = options.text || htmlToText(options.html);
+  const attachments = options.attachments?.map((a) => ({
+    filename: a.filename,
+    content: Buffer.isBuffer(a.content) ? a.content : Buffer.from(a.content),
+    contentType: a.type,
+  }));
+
+  const { data, error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text,
+    ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+    ...(attachments?.length ? { attachments } : {}),
+  });
+
+  if (error) {
+    const err = error as { statusCode?: number; name?: string; message?: string };
+    const wrapped = new Error(err.message || "Resend send failed");
+    (wrapped as { statusCode?: number }).statusCode = err.statusCode;
+    throw wrapped;
   }
 
+  logger.info("Email sent (resend)", { to: options.to, subject: options.subject, id: data?.id });
+}
+
+async function sendViaSendgrid(options: EmailOptions): Promise<void> {
   const attachments = options.attachments?.map((a) => ({
     content: Buffer.isBuffer(a.content) ? a.content.toString("base64") : a.content,
     filename: a.filename,
@@ -61,36 +129,71 @@ export async function sendEmail(options: EmailOptions) {
 
   const msg: sgMail.MailDataRequired = {
     to: options.to,
-    from: fromEmail,
+    from: getFromAddress(),
     subject: options.subject,
     html: options.html,
-    text: options.text || options.html.replace(/<[^>]*>/g, ""),
+    text: options.text || htmlToText(options.html),
+    ...(options.replyTo ? { replyTo: options.replyTo } : {}),
     ...(attachments?.length ? { attachments } : {}),
   };
+
+  await sgMail.send(msg);
+  logger.info("Email sent (sendgrid)", { to: options.to, subject: options.subject });
+}
+
+export async function sendEmail(options: EmailOptions): Promise<void> {
+  if (activeProvider === "none") {
+    logger.warn("EMAIL_SKIPPED: no email provider configured", {
+      to: options.to,
+      subject: options.subject,
+      hint: "Set RESEND_API_KEY (preferred) or SENDGRID_API_KEY in .env",
+    });
+    return;
+  }
 
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await sgMail.send(msg);
-      logger.info("Email sent", { to: options.to, subject: options.subject });
+      if (activeProvider === "resend") {
+        await sendViaResend(options);
+      } else {
+        await sendViaSendgrid(options);
+      }
       return;
     } catch (error) {
       lastError = error;
-
       if (!isTransientError(error)) {
-        logger.error("Email send failed (non-retryable)", { to: options.to, subject: options.subject, attempt, error });
+        logger.error("Email send failed (non-retryable)", {
+          provider: activeProvider,
+          to: options.to,
+          subject: options.subject,
+          attempt,
+          error,
+        });
         throw error;
       }
-
       if (attempt < MAX_RETRIES) {
         const backoff = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-        logger.warn(`Email retry ${attempt}/${MAX_RETRIES}`, { to: options.to, nextRetryMs: backoff });
+        logger.warn(`Email retry ${attempt}/${MAX_RETRIES}`, {
+          provider: activeProvider,
+          to: options.to,
+          nextRetryMs: backoff,
+        });
         await delay(backoff);
       }
     }
   }
 
-  logger.error("Email send failed after all retries", { to: options.to, subject: options.subject, error: lastError });
+  logger.error("Email send failed after all retries", {
+    provider: activeProvider,
+    to: options.to,
+    subject: options.subject,
+    error: lastError,
+  });
   throw lastError;
+}
+
+export function getEmailProvider(): Provider {
+  return activeProvider;
 }

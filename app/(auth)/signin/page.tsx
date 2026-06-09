@@ -60,7 +60,9 @@ export default function SignInPage() {
       const url = params.get("callbackUrl");
       if (url && url.startsWith("/")) return url;
     }
-    return "/dashboard";
+    // Route through /post-signin so the server can decide between
+    // /owner (PLATFORM_OWNER) and /dashboard (everyone else) based on role.
+    return "/post-signin";
   };
 
   const signInMutation = useMutation({
