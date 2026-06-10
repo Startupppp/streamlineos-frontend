@@ -8,7 +8,13 @@ type Props = {
   children?: ReactNode;
 };
 
-export function OwnerPage({ eyebrow, title, description, actions, children }: Props) {
+export function OwnerPage({
+  eyebrow,
+  title,
+  description,
+  actions,
+  children,
+}: Props) {
   return (
     <>
       <div className="sticky top-0 z-10 -mx-3 lg:-mx-4 px-3 lg:px-4 py-1.5 mb-1 bg-[#f6f8fc]/90 backdrop-blur-sm border-b border-slate-200/60">

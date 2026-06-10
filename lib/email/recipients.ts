@@ -1,4 +1,3 @@
-import "server-only";
 import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 /* ─────────────────────────────────────────────────────────────────────────────

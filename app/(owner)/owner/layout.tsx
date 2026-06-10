@@ -7,14 +7,23 @@ import { OwnerSidebar } from "@/components/owner/owner-sidebar";
 
 export const dynamic = "force-dynamic";
 
-export default async function OwnerLayout({ children }: { children: ReactNode }) {
+export default async function OwnerLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const session = await requirePlatformOwner();
 
   const [unreadRow, ownerRow] = await Promise.all([
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(platformMessages)
-      .where(and(eq(platformMessages.status, "NEW"), isNull(platformMessages.repliedAt)))
+      .where(
+        and(
+          eq(platformMessages.status, "NEW"),
+          isNull(platformMessages.repliedAt),
+        ),
+      )
       .then((r) => r[0]?.n ?? 0),
     db.query.users.findFirst({
       where: eq(users.id, session.user!.id as string),
@@ -35,7 +44,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         unreadInbox={unreadRow}
       />
       <main className="flex-1 min-w-0">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">{children}</div>
+        <div className="max-w-7xl mx-auto px-6 py-4">{children}</div>
       </main>
     </div>
   );
