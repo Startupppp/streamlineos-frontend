@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { format } from "date-fns";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { MetricCard } from "@/components/owner/metric-card";
 import { getCustomerBySlug } from "@/server/owner/queries/customers";
 
@@ -26,7 +26,7 @@ export default async function CustomerDetailPage({
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-4">
         <Link
           href="/owner/customers"
           className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.16em] text-slate-500 hover:text-slate-900"
@@ -36,13 +36,13 @@ export default async function CustomerDetailPage({
         </Link>
       </div>
 
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow={`Customer · /${org.slug}`}
         title={org.name}
         description={`Joined ${format(org.createdAt!, "PPP")}`}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-1.5">
         <MetricCard label="Users" value={members.length} />
         <MetricCard
           label="Plan"
@@ -62,9 +62,9 @@ export default async function CustomerDetailPage({
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-2">
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
+          <div className="px-4 py-3 border-b border-slate-100">
             <h3 className="font-display text-base font-bold text-slate-900">
               Team members
             </h3>
@@ -73,7 +73,7 @@ export default async function CustomerDetailPage({
             </p>
           </div>
           {members.length === 0 ? (
-            <p className="text-[13px] text-slate-400 px-5 py-8 text-center">
+            <p className="text-[13px] text-slate-400 px-5 py-4 text-center">
               No users.
             </p>
           ) : (
@@ -81,7 +81,7 @@ export default async function CustomerDetailPage({
               {members.slice(0, 12).map((u) => (
                 <li
                   key={u.id}
-                  className="px-5 py-3 flex items-center gap-3 text-[13px]"
+                  className="px-4 py-2.5 flex items-center gap-2 text-[13px]"
                 >
                   <span
                     className="h-7 w-7 rounded-full inline-flex items-center justify-center text-[10px] font-bold text-white shrink-0"
@@ -105,7 +105,7 @@ export default async function CustomerDetailPage({
                 </li>
               ))}
               {members.length > 12 && (
-                <li className="px-5 py-3 text-[12px] text-slate-400 text-center">
+                <li className="px-4 py-2.5 text-[12px] text-slate-400 text-center">
                   +{members.length - 12} more
                 </li>
               )}
@@ -114,7 +114,7 @@ export default async function CustomerDetailPage({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
+          <div className="px-4 py-3 border-b border-slate-100">
             <h3 className="font-display text-base font-bold text-slate-900">
               Recent payments
             </h3>
@@ -123,7 +123,7 @@ export default async function CustomerDetailPage({
             </p>
           </div>
           {payments.length === 0 ? (
-            <p className="text-[13px] text-slate-400 px-5 py-8 text-center">
+            <p className="text-[13px] text-slate-400 px-5 py-4 text-center">
               No payments yet.
             </p>
           ) : (
@@ -131,7 +131,7 @@ export default async function CustomerDetailPage({
               {payments.slice(0, 12).map((p) => (
                 <li
                   key={p.id}
-                  className="px-5 py-3 flex items-center gap-3 text-[13px]"
+                  className="px-4 py-2.5 flex items-center gap-2 text-[13px]"
                 >
                   <Building2 className="h-3.5 w-3.5 text-slate-300 shrink-0" />
                   <div className="min-w-0 flex-1">

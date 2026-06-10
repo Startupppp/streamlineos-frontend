@@ -1,6 +1,6 @@
 import { LifeBuoy, Mail } from "lucide-react";
 import Link from "next/link";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { listMessages } from "@/server/owner/queries/inbox";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export default async function SupportPage() {
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Customer support"
         title="Support requests"
         description="Every 'Get support' message customers send through the contact form. Reply directly from each conversation."
@@ -18,7 +18,7 @@ export default async function SupportPage() {
 
       {supportMessages.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <LifeBuoy className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+          <LifeBuoy className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">
             No support requests yet.
           </p>
@@ -34,9 +34,9 @@ export default async function SupportPage() {
               <li key={m.publicCode}>
                 <Link
                   href={`/owner/inbox/${m.publicCode}`}
-                  className="block px-5 py-4 hover:bg-slate-50 transition-colors"
+                  className="block px-4 py-3 hover:bg-slate-50 transition-colors"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2">
                     <Mail className="h-4 w-4 text-slate-300 mt-1 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">

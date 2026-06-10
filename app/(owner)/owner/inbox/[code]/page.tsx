@@ -31,7 +31,7 @@ export default async function MessageDetailPage({
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-4">
         <Link
           href="/owner/inbox"
           className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.16em] text-slate-500 hover:text-slate-900 transition-colors"
@@ -42,7 +42,7 @@ export default async function MessageDetailPage({
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 flex items-start gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-start gap-2">
           <span
             className="h-12 w-12 rounded-full inline-flex items-center justify-center text-[14px] font-bold text-white shrink-0"
             style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
@@ -58,7 +58,7 @@ export default async function MessageDetailPage({
             <h1 className="font-display text-xl font-bold text-slate-900">
               {message.name}
             </h1>
-            <div className="flex items-center gap-3 mt-1 text-[12px] text-slate-500 flex-wrap">
+            <div className="flex items-center gap-2 mt-1 text-[12px] text-slate-500 flex-wrap">
               <a
                 href={`mailto:${message.email}`}
                 className="inline-flex items-center gap-1 hover:text-blue-600"
@@ -79,7 +79,7 @@ export default async function MessageDetailPage({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-3 text-[10px] font-mono uppercase tracking-[0.14em]">
+            <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono uppercase tracking-[0.14em]">
               <span className="px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700">
                 {TOPIC_LABEL[message.topic] ?? message.topic}
               </span>
@@ -90,8 +90,8 @@ export default async function MessageDetailPage({
           </div>
         </div>
 
-        <div className="px-6 py-5">
-          <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-slate-500 mb-2">
+        <div className="px-6 py-4">
+          <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-slate-500 mb-1.5">
             Message
           </p>
           <p className="text-[14px] text-slate-700 leading-relaxed whitespace-pre-wrap">
@@ -100,8 +100,8 @@ export default async function MessageDetailPage({
         </div>
 
         {message.replyBody && (
-          <div className="px-6 py-5 border-t border-slate-100 bg-emerald-50/40">
-            <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-emerald-700 mb-2 flex items-center gap-1.5">
+          <div className="px-6 py-4 border-t border-slate-100 bg-emerald-50/40">
+            <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-emerald-700 mb-1.5 flex items-center gap-1.5">
               <Send className="h-3 w-3" />
               Your reply{" "}
               {message.repliedAt &&
@@ -114,7 +114,7 @@ export default async function MessageDetailPage({
         )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-1.5">
         <ReplyComposer publicCode={message.publicCode} replied={!!message.replyBody} />
       </div>
     </div>

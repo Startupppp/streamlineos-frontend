@@ -2,12 +2,6 @@ import "server-only";
 import Razorpay from "razorpay";
 import { createHmac, timingSafeEqual } from "crypto";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Razorpay client + webhook verification.
-   Initialises lazily — works even when keys are missing (returns null), so
-   the rest of the app boots and the /owner/revenue page can show a setup CTA.
-   ───────────────────────────────────────────────────────────────────────── */
-
 let cached: Razorpay | null = null;
 let cacheKey = "";
 
@@ -26,7 +20,6 @@ export function isRazorpayConfigured(): boolean {
   return !!process.env.RAZORPAY_KEY_ID && !!process.env.RAZORPAY_KEY_SECRET;
 }
 
-/** Constant-time verification of a Razorpay webhook signature header. */
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) return false;

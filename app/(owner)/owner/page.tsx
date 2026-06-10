@@ -6,7 +6,7 @@ import {
   Eye,
   Wallet,
 } from "lucide-react";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { MetricCard } from "@/components/owner/metric-card";
 import { getDashboardMetrics } from "@/server/owner/queries/dashboard-metrics";
 
@@ -17,13 +17,13 @@ export default async function OwnerDashboard() {
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Platform overview"
         title="Welcome back."
         description="Everything across your StreamlineOS platform — customers, messages, leads, traffic, and revenue."
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
         <MetricCard
           label="Customers"
           value={m.customers.total}
@@ -69,7 +69,7 @@ export default async function OwnerDashboard() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4 mt-10">
+      <div className="grid lg:grid-cols-2 gap-2 mt-1.5">
         <ChartCard
           title="Visits — last 30 days"
           unit="visits"
@@ -102,8 +102,8 @@ function ChartCard({
 }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-6">
-      <div className="flex items-center justify-between mb-5">
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-3">
+      <div className="flex items-center justify-between mb-1.5">
         <h3 className="font-display text-base font-bold text-slate-900">{title}</h3>
         <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">
           {data.length === 0 ? "No data yet" : `${data.length} points`}

@@ -12,13 +12,6 @@ import {
 import { relations } from "drizzle-orm";
 import { organizations, users } from "./auth";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Platform-scoped tables — these belong to the SaaS itself (not to any
-   individual customer organization). Only the PLATFORM_OWNER role queries
-   these.
-   ───────────────────────────────────────────────────────────────────────── */
-
-/** Contact-form / direct messages to the platform owner. */
 export const platformMessages = pgTable(
   "platform_messages",
   {
@@ -48,7 +41,6 @@ export const platformMessages = pgTable(
   ],
 );
 
-/** Lightweight pageview tracking — anonymous, no PII. */
 export const platformVisits = pgTable(
   "platform_visits",
   {
@@ -68,7 +60,6 @@ export const platformVisits = pgTable(
   ],
 );
 
-/** Razorpay payment ledger (denormalised mirror of Razorpay records). */
 export const platformPayments = pgTable(
   "platform_payments",
   {
@@ -97,7 +88,6 @@ export const platformPayments = pgTable(
   ],
 );
 
-/** Recurring subscription state per customer org. */
 export const platformSubscriptions = pgTable(
   "platform_subscriptions",
   {

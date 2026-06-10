@@ -246,32 +246,6 @@ export default function SignInPage() {
                 {form.formState.errors.password.message}
               </p>
             )}
-            {passwordStrength && (
-              <div className="space-y-1">
-                <div className="flex gap-1">
-                  {[20, 40, 60, 80, 100].map((threshold) => (
-                    <div
-                      key={threshold}
-                      className={cn(
-                        "h-1 flex-1 rounded-full transition-colors",
-                        passwordStrength.score >= threshold
-                          ? passwordStrength.score >= 80
-                            ? "bg-green-500"
-                            : passwordStrength.score >= 60
-                              ? "bg-yellow-500"
-                              : "bg-destructive"
-                          : "bg-muted",
-                      )}
-                    />
-                  ))}
-                </div>
-                {passwordStrength.missing.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground">
-                    {passwordStrength.missing[0]}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
 
           <Button

@@ -8,12 +8,7 @@ import { db } from "@/lib/db";
 import { platformMessages } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email/sender";
 import { logger } from "@/lib/logger";
-import {
-  BRAND_NAME,
-  BRAND_SUPPORT_EMAIL,
-  BRAND_NO_REPLY_EMAIL,
-  BRAND_URL,
-} from "@/lib/branding";
+import { BRAND_NAME, BRAND_SUPPORT_EMAIL, BRAND_URL } from "@/lib/branding";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -185,8 +180,3 @@ export async function submitContactForm(raw: unknown): Promise<ContactResult> {
 
   return { ok: true, reference };
 }
-
-export const __ADMIN_INBOX_DOC = {
-  envVar: "ADMIN_NOTIFICATION_EMAIL",
-  fallback: BRAND_NO_REPLY_EMAIL,
-};

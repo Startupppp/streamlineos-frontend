@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Mail, ArrowRight, Archive } from "lucide-react";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { listMessages } from "@/server/owner/queries/inbox";
 import { cn } from "@/lib/utils";
 
@@ -40,13 +40,13 @@ export default async function InboxPage({
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Messages"
         title="Inbox"
         description="Everything customers send from the contact form. Reply directly — they get a branded email."
       />
 
-      <div className="flex items-center gap-1.5 mb-5 border-b border-slate-200">
+      <div className="flex items-center gap-1.5 mb-1.5 border-b border-slate-200">
         {tabs.map((t) => {
           const active = (status ?? "ALL") === t.value;
           return (
@@ -68,7 +68,7 @@ export default async function InboxPage({
 
       {messages.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <Mail className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+          <Mail className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">No messages yet.</p>
           <p className="text-[12px] text-slate-400 mt-1">
             When customers submit the contact form, they appear here.
@@ -81,9 +81,9 @@ export default async function InboxPage({
               <Link
                 key={m.publicCode}
                 href={`/owner/inbox/${m.publicCode}`}
-                className="block px-5 py-4 hover:bg-slate-50 transition-colors group"
+                className="block px-4 py-3 hover:bg-slate-50 transition-colors group"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-2">
                   <span
                     className="h-9 w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0"
                     style={{
@@ -111,7 +111,7 @@ export default async function InboxPage({
                         </span>
                       )}
                     </div>
-                    <p className="text-[13px] text-slate-600 line-clamp-1 mb-2">
+                    <p className="text-[13px] text-slate-600 line-clamp-1 mb-1.5">
                       {m.message}
                     </p>
                     <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em]">
@@ -132,7 +132,7 @@ export default async function InboxPage({
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors shrink-0 mt-2" />
+                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors shrink-0 mt-1.5" />
                 </div>
               </Link>
             ))}
@@ -140,7 +140,7 @@ export default async function InboxPage({
         </div>
       )}
 
-      <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400 mt-4 flex items-center gap-1.5">
+      <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400 mt-1.5 flex items-center gap-1.5">
         <Archive className="h-3 w-3" />
         {messages.length} message{messages.length === 1 ? "" : "s"}
       </p>

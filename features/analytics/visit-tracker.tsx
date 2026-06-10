@@ -18,8 +18,6 @@ function makeSessionToken(): string {
   return token;
 }
 
-/* Fires a single anonymous beacon per page navigation. No cookies, no IDs
-   that can identify a person — just a per-browser session token. */
 export function VisitTracker() {
   const pathname = usePathname();
 

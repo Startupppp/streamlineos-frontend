@@ -1,6 +1,6 @@
 import { Eye, Globe, FileText } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { MetricCard } from "@/components/owner/metric-card";
 import { getVisitorAnalytics } from "@/server/owner/queries/visitors";
 
@@ -14,13 +14,13 @@ export default async function VisitorsPage() {
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Analytics"
         title="Visitors"
         description="Lightweight pageview tracking — anonymous, no cookies, no third parties."
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-1.5">
         <MetricCard
           label="Visits (30d)"
           value={total}
@@ -45,12 +45,12 @@ export default async function VisitorsPage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 mb-6">
-        <h3 className="font-display text-base font-bold text-slate-900 mb-5">
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 mb-4">
+        <h3 className="font-display text-base font-bold text-slate-900 mb-1.5">
           Visits — last 30 days
         </h3>
         {a.byDay.length === 0 ? (
-          <p className="text-[13px] text-slate-400 text-center py-10">
+          <p className="text-[13px] text-slate-400 text-center py-3">
             No visits yet. Once people start landing on your site, they show up here.
           </p>
         ) : (
@@ -74,7 +74,7 @@ export default async function VisitorsPage() {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-2">
         <ListCard
           title="Top pages"
           empty="No pageviews yet."
@@ -93,18 +93,18 @@ export default async function VisitorsPage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white mt-6 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
+      <div className="rounded-2xl border border-slate-200 bg-white mt-1.5 overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100">
           <h3 className="font-display text-base font-bold text-slate-900">
             Recent visits
           </h3>
         </div>
         {a.recent.length === 0 ? (
-          <p className="text-[13px] text-slate-400 text-center py-8">No data.</p>
+          <p className="text-[13px] text-slate-400 text-center py-4">No data.</p>
         ) : (
           <ul className="divide-y divide-slate-100 max-h-96 overflow-y-auto scrollbar-hide">
             {a.recent.map((v, i) => (
-              <li key={i} className="px-5 py-2.5 flex items-center gap-3 text-[12px]">
+              <li key={i} className="px-5 py-2.5 flex items-center gap-2 text-[12px]">
                 <span className="font-mono text-slate-500 truncate flex-1">
                   {v.path}
                 </span>
@@ -134,11 +134,11 @@ function ListCard({
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100">
+      <div className="px-4 py-3 border-b border-slate-100">
         <h3 className="font-display text-base font-bold text-slate-900">{title}</h3>
       </div>
       {rows.length === 0 ? (
-        <p className="text-[13px] text-slate-400 text-center py-8">{empty}</p>
+        <p className="text-[13px] text-slate-400 text-center py-4">{empty}</p>
       ) : (
         <ul className="divide-y divide-slate-100">
           {rows.map((r) => (

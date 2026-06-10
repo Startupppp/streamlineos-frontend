@@ -1,4 +1,4 @@
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { getEmailProvider } from "@/lib/email/sender";
 
@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Platform settings"
         title="Configuration"
         description="What's wired up, what needs your attention."
@@ -46,7 +46,7 @@ export default function SettingsPage() {
         {checks.map((c) => (
           <div
             key={c.label}
-            className="rounded-2xl border border-slate-200 bg-white px-5 py-4 flex items-start gap-3"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-2"
           >
             {c.ok ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />

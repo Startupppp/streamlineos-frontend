@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TrendingUp, Mail } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { OwnerPageHeader } from "@/components/owner/page-header";
+import { OwnerPage } from "@/components/owner/owner-page";
 import { listLeadsAcrossOrgs } from "@/server/owner/queries/leads";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ export default async function LeadsPage() {
 
   return (
     <div>
-      <OwnerPageHeader
+      <OwnerPage
         eyebrow="Cross-org leads"
         title="Leads"
         description="Every lead captured across every customer org and through your contact form."
@@ -29,7 +29,7 @@ export default async function LeadsPage() {
 
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <TrendingUp className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+          <TrendingUp className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">No leads yet.</p>
         </div>
       ) : (
@@ -37,21 +37,21 @@ export default async function LeadsPage() {
           <table className="w-full text-[13px]">
             <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
               <tr>
-                <th className="px-5 py-3 text-left font-medium">Reference</th>
-                <th className="px-5 py-3 text-left font-medium">Contact</th>
-                <th className="px-5 py-3 text-left font-medium">Organization</th>
-                <th className="px-5 py-3 text-left font-medium">Source</th>
-                <th className="px-5 py-3 text-left font-medium">Status</th>
-                <th className="px-5 py-3 text-left font-medium">Created</th>
+                <th className="px-4 py-2.5 text-left font-medium">Reference</th>
+                <th className="px-4 py-2.5 text-left font-medium">Contact</th>
+                <th className="px-4 py-2.5 text-left font-medium">Organization</th>
+                <th className="px-4 py-2.5 text-left font-medium">Source</th>
+                <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                <th className="px-4 py-2.5 text-left font-medium">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((r) => (
                 <tr key={r.publicCode} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-5 py-3 font-mono text-[11px] text-slate-500">
+                  <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500">
                     {r.publicCode}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-4 py-2.5">
                     <p className="font-medium text-slate-900">{r.name}</p>
                     {r.email && (
                       <a
@@ -63,7 +63,7 @@ export default async function LeadsPage() {
                       </a>
                     )}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-4 py-2.5">
                     {r.organizationSlug ? (
                       <Link
                         href={`/owner/customers/${r.organizationSlug}`}
@@ -75,10 +75,10 @@ export default async function LeadsPage() {
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-slate-600">
+                  <td className="px-4 py-2.5 text-slate-600">
                     {r.source ?? <span className="text-slate-400">—</span>}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-4 py-2.5">
                     <span
                       className={cn(
                         "inline-block px-2 py-0.5 rounded border text-[10px] font-mono uppercase tracking-[0.14em]",
@@ -88,7 +88,7 @@ export default async function LeadsPage() {
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-[11px] font-mono text-slate-500">
+                  <td className="px-4 py-2.5 text-[11px] font-mono text-slate-500">
                     {r.createdAt
                       ? formatDistanceToNow(r.createdAt, { addSuffix: true })
                       : "—"}

@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { sql, gte, eq } from "drizzle-orm";
+import { sql, gte, eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   organizations,
@@ -11,11 +11,6 @@ import {
   platformVisits,
   platformPayments,
 } from "@/lib/db/schema";
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Aggregated platform metrics — cached for 60 s.
-   Single round-trip set so the dashboard renders in one paint.
-   ───────────────────────────────────────────────────────────────────────── */
 
 export type PlatformDashboardMetrics = {
   customers: { total: number; activeLast30d: number };
@@ -54,22 +49,36 @@ async function load(): Promise<PlatformDashboardMetrics> {
     visitsByDayRows,
     revenueByMonthRows,
   ] = await Promise.all([
-    db.select({ n: sql<number>`count(*)::int` }).from(organizations).then((r) => r[0]?.n ?? 0),
     db
-      .select({ n: sql<number>`count(distinct ${organizationMembers.orgId})::int` })
+      .select({ n: sql<number>`count(*)::int` })
+      .from(organizations)
+      .then((r) => r[0]?.n ?? 0),
+    db
+      .select({
+        n: sql<number>`count(distinct ${organizationMembers.orgId})::int`,
+      })
       .from(organizationMembers)
       .innerJoin(users, eq(users.id, organizationMembers.userId))
       .where(gte(users.updatedAt, since30d))
       .then((r) => r[0]?.n ?? 0)
       .catch(() => 0),
-    db.select({ n: sql<number>`count(*)::int` }).from(users).then((r) => r[0]?.n ?? 0),
-    db.select({ n: sql<number>`count(*)::int` }).from(platformMessages).then((r) => r[0]?.n ?? 0),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(users)
+      .then((r) => r[0]?.n ?? 0),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(platformMessages)
+      .then((r) => r[0]?.n ?? 0),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(platformMessages)
       .where(eq(platformMessages.status, "NEW"))
       .then((r) => r[0]?.n ?? 0),
-    db.select({ n: sql<number>`count(*)::int` }).from(leads).then((r) => r[0]?.n ?? 0),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(leads)
+      .then((r) => r[0]?.n ?? 0),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(leads)
@@ -81,17 +90,28 @@ async function load(): Promise<PlatformDashboardMetrics> {
       .where(gte(platformVisits.createdAt, since30d))
       .then((r) => r[0]?.n ?? 0),
     db
-      .select({ n: sql<number>`count(distinct ${platformVisits.sessionToken})::int` })
+      .select({
+        n: sql<number>`count(distinct ${platformVisits.sessionToken})::int`,
+      })
       .from(platformVisits)
       .where(gte(platformVisits.createdAt, since30d))
       .then((r) => r[0]?.n ?? 0),
     db
-      .select({ sum: sql<number>`coalesce(sum(${platformPayments.amount}), 0)::int` })
+      .select({
+        sum: sql<number>`coalesce(sum(${platformPayments.amount}), 0)::int`,
+      })
       .from(platformPayments)
-      .where(sql`${platformPayments.status} = 'captured' AND ${platformPayments.createdAt} >= ${since30d}`)
+      .where(
+        and(
+          eq(platformPayments.status, "captured"),
+          gte(platformPayments.createdAt, since30d),
+        ),
+      )
       .then((r) => r[0]?.sum ?? 0),
     db
-      .select({ sum: sql<number>`coalesce(sum(${platformPayments.amount}), 0)::int` })
+      .select({
+        sum: sql<number>`coalesce(sum(${platformPayments.amount}), 0)::int`,
+      })
       .from(platformPayments)
       .where(eq(platformPayments.status, "captured"))
       .then((r) => r[0]?.sum ?? 0),
@@ -133,12 +153,19 @@ async function load(): Promise<PlatformDashboardMetrics> {
     },
     series: {
       visitsByDay: visitsByDayRows,
-      revenueByMonth: revenueByMonthRows.map((r) => ({ month: r.month, amount: inr(r.amount) })),
+      revenueByMonth: revenueByMonthRows.map((r) => ({
+        month: r.month,
+        amount: inr(r.amount),
+      })),
     },
   };
 }
 
-export const getDashboardMetrics = unstable_cache(load, ["owner:dashboard-metrics"], {
-  revalidate: 60,
-  tags: ["owner-metrics"],
-});
+export const getDashboardMetrics = unstable_cache(
+  load,
+  ["owner:dashboard-metrics"],
+  {
+    revalidate: 60,
+    tags: ["owner-metrics"],
+  },
+);

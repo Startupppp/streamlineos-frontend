@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,6 +13,8 @@ import {
   LifeBuoy,
   Settings as SettingsIcon,
   LogOut,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -35,6 +38,8 @@ const NAV: Item[] = [
   { href: "/owner/settings", label: "Settings", icon: SettingsIcon },
 ];
 
+const COLLAPSE_KEY = "owner.sidebar.collapsed";
+
 export function OwnerSidebar({
   ownerName,
   ownerEmail,
@@ -45,21 +50,70 @@ export function OwnerSidebar({
   unreadInbox: number;
 }) {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === "1");
+    } catch {}
+  }, []);
+
+  const toggle = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        window.localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  };
+
   const badge: Record<string, number> = { inbox: unreadInbox };
+  const initials = ownerName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-[#03060f] text-white border-r border-white/[0.06]">
-      <div className="px-5 py-5 border-b border-white/[0.05] flex items-center gap-2.5">
-        <AnimatedLogo size={32} className="rounded-lg" />
-        <div className="min-w-0">
-          <p className="font-display text-sm font-bold tracking-tight truncate">StreamlineOS</p>
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-cyan-300/80">
-            Platform Owner
-          </p>
-        </div>
+    <aside
+      className={cn(
+        "hidden lg:flex shrink-0 flex-col bg-white text-slate-700 border-r border-slate-200 transition-[width] duration-200 ease-out",
+        collapsed ? "w-[56px]" : "w-[220px]",
+      )}
+    >
+      <div
+        className={cn(
+          "h-12 shrink-0 border-b border-slate-200 flex items-center",
+          collapsed ? "justify-center px-2" : "justify-between px-3",
+        )}
+      >
+        <Link href="/owner" className="flex items-center gap-2 min-w-0" aria-label="StreamlineOS">
+          <AnimatedLogo size={26} className="rounded-md shrink-0" />
+          {!collapsed && (
+            <div className="min-w-0 leading-tight">
+              <p className="font-display text-[12.5px] font-bold tracking-tight text-slate-900 truncate">
+                StreamlineOS
+              </p>
+              <p className="text-[9px] font-mono uppercase tracking-[0.16em] text-blue-600">
+                Owner
+              </p>
+            </div>
+          )}
+        </Link>
+        {!collapsed && (
+          <button
+            onClick={toggle}
+            aria-label="Collapse sidebar"
+            className="h-6 w-6 inline-flex items-center justify-center rounded text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          >
+            <PanelLeftClose className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active =
@@ -71,50 +125,87 @@ export function OwnerSidebar({
             <Link
               key={item.href}
               href={item.href}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
+                "relative flex items-center rounded-md text-[12.5px] font-medium transition-colors",
+                collapsed ? "justify-center h-8" : "gap-2 px-2 h-8",
                 active
-                  ? "bg-white/[0.08] text-white"
-                  : "text-white/55 hover:text-white hover:bg-white/[0.04]",
+                  ? "text-slate-900 bg-blue-50"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
               )}
             >
-              <Icon className={cn("h-4 w-4 shrink-0", active && "text-cyan-300")} />
-              <span className="flex-1 truncate">{item.label}</span>
-              {badgeCount > 0 && (
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/90 text-white">
-                  {badgeCount}
-                </span>
+              {active && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full bg-gradient-to-b from-cyan-500 to-blue-600" />
+              )}
+              <Icon
+                className={cn(
+                  "h-3.5 w-3.5 shrink-0",
+                  active ? "text-blue-600" : "text-slate-500",
+                )}
+              />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span className="text-[9.5px] font-mono px-1.5 py-px rounded bg-blue-600 text-white">
+                      {badgeCount}
+                    </span>
+                  )}
+                </>
+              )}
+              {collapsed && badgeCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-blue-600" />
               )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-3 border-t border-white/[0.05]">
-        <div className="px-3 py-2 mb-1 flex items-center gap-2.5">
+      <div className="shrink-0 border-t border-slate-200 px-2 py-1.5">
+        <div
+          className={cn(
+            "flex items-center gap-2 px-1 py-1 rounded-md",
+            collapsed && "justify-center",
+          )}
+        >
           <span
-            className="h-8 w-8 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white"
+            className="h-6 w-6 rounded-full inline-flex items-center justify-center text-[9.5px] font-bold text-white shrink-0"
             style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+            title={collapsed ? `${ownerName} · ${ownerEmail}` : undefined}
           >
-            {ownerName
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()}
+            {initials}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold truncate">{ownerName}</p>
-            <p className="text-[10px] font-mono text-white/45 truncate">{ownerEmail}</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-[11.5px] font-semibold text-slate-900 truncate leading-tight">
+                {ownerName}
+              </p>
+              <p className="text-[10px] font-mono text-slate-500 truncate">
+                {ownerEmail}
+              </p>
+            </div>
+          )}
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/signin" })}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[12px] font-medium text-white/55 hover:text-white hover:bg-white/[0.04] transition-colors"
+          title={collapsed ? "Sign out" : undefined}
+          className={cn(
+            "w-full flex items-center rounded-md text-[11.5px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors",
+            collapsed ? "justify-center h-7" : "gap-2 px-2 h-7",
+          )}
         >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out
+          <LogOut className="h-3 w-3 shrink-0" />
+          {!collapsed && <span>Sign out</span>}
         </button>
+        {collapsed && (
+          <button
+            onClick={toggle}
+            aria-label="Expand sidebar"
+            className="mt-1 w-full inline-flex items-center justify-center h-7 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          >
+            <PanelLeft className="h-3 w-3" />
+          </button>
+        )}
       </div>
     </aside>
   );
