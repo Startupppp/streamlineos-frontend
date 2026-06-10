@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
+    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
+    "seed:blog": "npx tsx --env-file=.env scripts/seed-blog.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -116,6 +117,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.11",

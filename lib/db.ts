@@ -3,10 +3,10 @@ import postgres from "postgres";
 
 import * as schema from "./db/schema";
 
-const rawDatabaseUrl = process.env.DATABASE_URL;
+const rawDatabaseUrl = process.env.DATABASE_URL ?? process.env.DB;
 
 if (!rawDatabaseUrl) {
-  throw new Error("DATABASE_URL environment variable is required.");
+  throw new Error("DATABASE_URL (or DB) environment variable is required.");
 }
 
 function normalizeDatabaseUrl(url: string): string {

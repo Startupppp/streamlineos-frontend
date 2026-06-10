@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -704,4 +705,51 @@
 
 .calendar-container .rbc-current-time-indicator {
   background: color-mix(in srgb, var(--primary) 80%, transparent);
+}
+
+/* ── Blog article typography (prose) brand tweaks ─────────────────────── */
+.blog-prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--primary);
+  --tw-prose-bullets: color-mix(in srgb, var(--foreground) 40%, transparent);
+  --tw-prose-hr: var(--border);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-bg: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --tw-prose-pre-code: var(--foreground);
+}
+
+.blog-prose :where(h2, h3):not(:where([class~="not-prose"] *)) {
+  scroll-margin-top: 6rem;
+  letter-spacing: -0.02em;
+}
+
+.blog-prose :where(a):not(:where([class~="not-prose"] *)) {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.blog-prose :where(a):not(:where([class~="not-prose"] *)):hover {
+  text-decoration: underline;
+}
+
+.blog-prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+  font-style: normal;
+  border-inline-start-width: 3px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding-block: 0.25rem;
+}
+
+.blog-prose :where(img):not(:where([class~="not-prose"] *)) {
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.blog-prose :where(pre):not(:where([class~="not-prose"] *)) {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
 }
