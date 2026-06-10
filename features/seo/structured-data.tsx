@@ -91,17 +91,31 @@ export function SoftwareApplicationJsonLd() {
         offers: [
           {
             "@type": "Offer",
-            name: "Startup",
+            name: "Starter",
             price: "0",
             priceCurrency: "INR",
-            description: "Free for the first 10 seats.",
+            description: "Free forever for up to 5 seats.",
           },
           {
             "@type": "Offer",
-            name: "Scaleup",
-            price: "499",
+            name: "Growth",
+            price: "399",
             priceCurrency: "INR",
-            description: "Per seat per month.",
+            description: "Per seat per month, billed annually.",
+          },
+          {
+            "@type": "Offer",
+            name: "Business",
+            price: "799",
+            priceCurrency: "INR",
+            description: "Per seat per month, billed annually.",
+          },
+          {
+            "@type": "Offer",
+            name: "Enterprise",
+            price: "1999",
+            priceCurrency: "INR",
+            description: "Starting price per seat per month, custom contracts.",
           },
         ],
         featureList: [

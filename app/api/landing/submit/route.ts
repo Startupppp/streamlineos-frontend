@@ -6,6 +6,7 @@ import { organizations } from "@/lib/db/schema/auth";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/security/verify-turnstile";
 
 const submitSchema = z.object({
   orgId: z.string().min(1),
@@ -24,29 +25,6 @@ const submitSchema = z.object({
   cfTurnstileToken: z.string().optional(),
 });
 
-
-async function verifyTurnstile(token: string | undefined, ip: string): Promise<boolean> {
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
-  if (!secretKey) return true;
-
-  if (!token) return false;
-
-  try {
-    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        secret: secretKey,
-        response: token,
-        remoteip: ip,
-      }),
-    });
-    const json = (await res.json()) as { success: boolean };
-    return json.success === true;
-  } catch {
-    return false;
-  }
-}
 
 function getClientIp(req: NextRequest): string {
   return (
@@ -87,11 +65,12 @@ export async function POST(req: NextRequest) {
 
   const data = parsed.data;
 
-  const turnstileValid = await verifyTurnstile(data.cfTurnstileToken, ip);
-  if (!turnstileValid) {
+  const turnstile = await verifyTurnstileToken(data.cfTurnstileToken, ip);
+  if (!turnstile.ok) {
+    const status = turnstile.reason === "misconfigured" ? 500 : 403;
     return NextResponse.json(
       { error: "Bot verification failed. Please refresh the page and try again." },
-      { status: 403 }
+      { status },
     );
   }
 

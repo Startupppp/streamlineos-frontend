@@ -12,6 +12,7 @@ import {
   type ContactInput,
   type ContactResult,
 } from "@/server/actions/contact-submission";
+import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
 const TOPICS: { value: ContactInput["topic"]; label: string }[] = [
   { value: "sales", label: "Talk to sales" },
@@ -47,6 +48,8 @@ export function ContactForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRequired = isTurnstileEnabled();
 
   const handleChange = <K extends keyof FormState>(
     key: K,
@@ -60,8 +63,17 @@ export function ContactForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setServerError(null);
+
+    if (turnstileRequired && !turnstileToken) {
+      setServerError("Please complete the bot verification challenge.");
+      return;
+    }
+
     startTransition(async () => {
-      const result: ContactResult = await submitContactForm(values);
+      const result: ContactResult = await submitContactForm({
+        ...values,
+        cfTurnstileToken: turnstileToken ?? undefined,
+      });
       if (result.ok) {
         setSubmitted(true);
       } else {
@@ -202,6 +214,10 @@ export function ContactForm() {
               />
             </Field>
 
+            {turnstileRequired && (
+              <TurnstileWidget onToken={setTurnstileToken} className="mt-1" />
+            )}
+
             {serverError && (
               <p role="alert" className="text-sm text-red-600">
                 {serverError}
@@ -210,7 +226,7 @@ export function ContactForm() {
 
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || (turnstileRequired && !turnstileToken)}
               className="w-full h-11"
             >
               {pending ? (

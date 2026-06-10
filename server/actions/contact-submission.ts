@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email/sender";
 import { getAdminRecipients } from "@/lib/email/recipients";
 import { logger } from "@/lib/logger";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL, BRAND_URL } from "@/lib/branding";
+import { verifyTurnstileToken } from "@/lib/security/verify-turnstile";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -20,6 +21,7 @@ const contactSchema = z.object({
     .enum(["sales", "support", "partnership", "press", "other"])
     .default("sales"),
   message: z.string().min(10, "Tell us a little more").max(5000),
+  cfTurnstileToken: z.string().optional(),
 });
 
 export type ContactInput = z.infer<typeof contactSchema>;
@@ -126,6 +128,23 @@ export async function submitContactForm(raw: unknown): Promise<ContactResult> {
     requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const userAgent = requestHeaders.get("user-agent") ?? null;
   const referrerUrl = requestHeaders.get("referer") ?? null;
+
+  if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+    const turnstile = await verifyTurnstileToken(
+      data.cfTurnstileToken,
+      ipAddress ?? "unknown",
+    );
+    if (!turnstile.ok) {
+      logger.warn("[contact-form] Turnstile rejected", { reason: turnstile.reason });
+      return {
+        ok: false,
+        error:
+          turnstile.reason === "missing-token"
+            ? "Please complete the bot verification challenge."
+            : "Bot verification failed. Please refresh and try again.",
+      };
+    }
+  }
 
   /* 1. Persist as a platform message — owner sees it in /owner/inbox */
   try {
