@@ -18,17 +18,11 @@ const serverSchema = z.object({
   CRON_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
 
+  RESEND_API_KEY: z.string().optional(),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM_ADDRESS: z.string().email().optional(),
   EMAIL_FROM_NAME: z.string().optional(),
-  EMAIL_PROVIDER: z.enum(["sendgrid", "smtp", "azure"]).default("sendgrid"),
-
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  SMTP_FROM_EMAIL: z.string().optional(),
-  SMTP_FROM_NAME: z.string().optional(),
+  EMAIL_PROVIDER: z.enum(["resend", "sendgrid"]).default("resend"),
 
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),

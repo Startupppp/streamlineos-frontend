@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.18.0",
   "scripts": {
     "lint": "eslint",
-    "dev": "next dev",
+    "dev": "next dev -p 1000",
     "start": "next start",
     "build": "next build",
     "db:push": "drizzle-kit push",
@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
+    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
+    "setup:r2": "tsx --env-file=.env scripts/setup-r2-buckets.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -75,7 +76,6 @@
     "next": "16.1.7",
     "next-auth": "5.0.0-beta.30",
     "next-themes": "^0.4.6",
-    "nodemailer": "^8.0.4",
     "openai": "^6.33.0",
     "otplib": "^13.4.0",
     "pdf-lib": "^1.17.1",
@@ -120,7 +120,6 @@
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
-    "@types/nodemailer": "^7.0.11",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",

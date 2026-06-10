@@ -32,10 +32,7 @@ export async function GET(req: NextRequest) {
 
   checks.auth = process.env.NEXTAUTH_SECRET ? { status: "ok" } : { status: "error" };
 
-  const emailConfigured = !!(
-    process.env.SENDGRID_API_KEY ||
-    (process.env.SMTP_HOST && process.env.SMTP_PORT)
-  );
+  const emailConfigured = !!(process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY);
   checks.email = emailConfigured ? { status: "ok" } : { status: "warning" };
 
   checks.inngest = process.env.INNGEST_EVENT_KEY ? { status: "ok" } : { status: "warning" };
