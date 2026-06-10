@@ -3,7 +3,7 @@ export const PRICING = {
   starterSeatLimit: 3,
   annualDiscountPct: 20,
   freeSeatLimit: 3,
-  scaleupPriceInr: 199,
+  scaleupPriceInr: 499,
 } as const;
 
 export type BillingPeriod = "monthly" | "annual";
@@ -33,13 +33,10 @@ export const PRICING_TIERS: PricingTier[] = [
     id: "starter",
     name: "Free",
     tagline: "Forever free",
-    description: "Everything you need to try StreamlineOS with a tiny team.",
+    description: "Try StreamlineOS with a small team. No card required.",
     monthly: 0,
     annual: 0,
-    priceLabel: {
-      monthly: `${PRICING.currency}0`,
-      annual: `${PRICING.currency}0`,
-    },
+    priceLabel: { monthly: `${PRICING.currency}0`, annual: `${PRICING.currency}0` },
     price: `${PRICING.currency}0`,
     period: `up to ${PRICING.starterSeatLimit} seats`,
     bestFor: "Solo founders, evaluating",
@@ -57,13 +54,12 @@ export const PRICING_TIERS: PricingTier[] = [
   {
     id: "startup",
     name: "Startup",
-    tagline: "Cheapest all-in-one",
-    description:
-      "Unlimited seats and the core stack — built for early teams that need to move fast.",
-    monthly: 199,
-    annual: 149,
-    priceLabel: { monthly: fmt(199), annual: fmt(149) },
-    price: fmt(199),
+    tagline: "31% cheaper than Odoo",
+    description: "Unlimited seats with everything an early-stage team needs to operate.",
+    monthly: 499,
+    annual: 399,
+    priceLabel: { monthly: fmt(499), annual: fmt(399) },
+    price: fmt(499),
     period: "per seat / month",
     bestFor: "5–25 person startups",
     features: [
@@ -84,12 +80,11 @@ export const PRICING_TIERS: PricingTier[] = [
     id: "growth",
     name: "Growth",
     tagline: "For scaling teams",
-    description:
-      "AI assistance, multi-org, SSO, and the controls scaling teams need.",
-    monthly: 599,
-    annual: 479,
-    priceLabel: { monthly: fmt(599), annual: fmt(479) },
-    price: fmt(599),
+    description: "AI assistance, multi-org, SSO, and the controls scaling teams need.",
+    monthly: 799,
+    annual: 639,
+    priceLabel: { monthly: fmt(799), annual: fmt(639) },
+    price: fmt(799),
     period: "per seat / month",
     bestFor: "25–100 employees",
     features: [
@@ -136,12 +131,66 @@ export function getTierById(id: PricingTier["id"]): PricingTier | undefined {
   return PRICING_TIERS.find((t) => t.id === id);
 }
 
+export const COMPETITOR_PRICES = {
+  odooStandard: 580,
+  odooCustom: 890,
+  zohoOne: 2500,
+  keka: 120,
+  hubspotStarter: 1700,
+  slackPro: 365,
+  notion: 830,
+  asana: 915,
+  pipedrive: 1160,
+} as const;
+
+export type SavingsBreakdown = {
+  odooAnnual: number;
+  streamlineAnnual: number;
+  savings: number;
+  savingsPct: number;
+};
+
+export function calculateSavingsVsOdoo(
+  seats: number,
+  billingPeriod: BillingPeriod = "annual",
+): SavingsBreakdown {
+  const odooAnnual = COMPETITOR_PRICES.odooStandard * seats * 12;
+  const streamlinePerSeat =
+    billingPeriod === "annual"
+      ? PRICING_TIERS[1].annual ?? 0
+      : PRICING_TIERS[1].monthly ?? 0;
+  const streamlineAnnual = streamlinePerSeat * seats * 12;
+  return {
+    odooAnnual,
+    streamlineAnnual,
+    savings: odooAnnual - streamlineAnnual,
+    savingsPct: Math.round(((odooAnnual - streamlineAnnual) / odooAnnual) * 100),
+  };
+}
+
+export function calculateSavingsVsStack(seats: number) {
+  const stackPerSeat =
+    COMPETITOR_PRICES.keka +
+    COMPETITOR_PRICES.hubspotStarter +
+    COMPETITOR_PRICES.slackPro +
+    COMPETITOR_PRICES.notion;
+  const stackAnnual = stackPerSeat * seats * 12;
+  const streamlineAnnual = (PRICING_TIERS[1].annual ?? 0) * seats * 12;
+  return {
+    stackAnnual,
+    stackPerSeat,
+    streamlineAnnual,
+    savings: stackAnnual - streamlineAnnual,
+    savingsPct: Math.round(((stackAnnual - streamlineAnnual) / stackAnnual) * 100),
+  };
+}
+
 export function bundleSavingsCopy(): string {
-  return "≈ ₹2,500–3,500 per seat if bought separately across HR + Projects + CRM + Chat — Odoo Custom alone is ₹3,115/seat.";
+  return `Odoo Standard charges ${fmt(COMPETITOR_PRICES.odooStandard)}/seat for the same bundle. We're 31% cheaper on annual.`;
 }
 
 export function cheapestAnnualLabel(): string {
   const cheapest = PRICING_TIERS.find((t) => t.annual && t.annual > 0);
-  if (!cheapest || !cheapest.annual) return fmt(149);
+  if (!cheapest || !cheapest.annual) return fmt(399);
   return fmt(cheapest.annual);
 }

@@ -7,23 +7,20 @@ import {
 } from "@/features/marketing/marketing-shell";
 import { Button } from "@/components/ui/button";
 import { BRAND_NAME, BRAND_URL } from "@/lib/branding";
-import {
-  PRICING,
-  PRICING_TIERS,
-  bundleSavingsCopy,
-} from "@/lib/pricing";
+import { PRICING, PRICING_TIERS, COMPETITOR_PRICES } from "@/lib/pricing";
 import { faqs } from "@/features/landing/data/faqs";
 import { FAQJsonLd } from "@/features/seo/structured-data";
+import { SavingsCalculator } from "@/features/landing/components/savings-calculator";
 
 export const metadata: Metadata = {
   title: `Pricing — ${BRAND_NAME}`,
-  description: `Transparent per-seat pricing for ${BRAND_NAME}. Free for up to 5 seats. Paid plans from ₹399/seat/month with annual billing.`,
+  description: `From ₹399/seat/month annual — 31% cheaper than Odoo. Free forever for 3 seats. HR, Projects, CRM, Chat in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
     url: `${BRAND_URL}/pricing`,
     title: `Pricing — ${BRAND_NAME}`,
-    description: `Per-seat pricing for ${BRAND_NAME}. Free tier, no per-module fees, no setup costs.`,
+    description: `From ₹399/seat/month. 31% cheaper than Odoo Standard. Free tier, no per-module fees.`,
   },
 };
 
@@ -54,9 +51,14 @@ const featureMatrix: { feature: string; tiers: (boolean | string)[] }[] = [
 
 const pricingFaqs = [
   {
+    question: "How are you cheaper than Odoo?",
+    answer:
+      "Odoo Standard is ₹580 per seat per month for the all-apps cloud plan. Our equivalent Startup plan is ₹399 per seat per month on annual billing — 31% cheaper for the same modules (HR, Projects, CRM, Chat). We run on modern, low-cost infrastructure (Vercel + Neon + Cloudflare R2) without the legacy overhead of a 20-year-old codebase.",
+  },
+  {
     question: "Is there really a free plan with no time limit?",
     answer:
-      "Yes. The Starter plan is free forever for up to 5 seats. No credit card required. You get all core modules — HR, Projects, CRM, Chat, Calendar — with a generous 5 GB storage allotment per workspace.",
+      "Yes. The Free plan works forever for up to 3 seats. No credit card required. You get all core modules — HR, Projects, CRM, Chat, Calendar — with a generous 5 GB storage allotment per workspace.",
   },
   {
     question: "How does annual billing work?",
@@ -76,7 +78,7 @@ const pricingFaqs = [
   {
     question: "Do you offer discounts for non-profits, startups, or educational institutions?",
     answer:
-      "Yes. Registered non-profits get 50% off Growth and Business plans. Y Combinator and Sequoia Surge startups get the first 12 months free on Growth. Email founders@streamlineos.in with proof of eligibility.",
+      "Yes. Registered non-profits get 50% off Startup and Growth plans. Y Combinator, Sequoia Surge, and Antler portfolio startups get the first 12 months free on Startup. Email founders@streamlineos.in with proof of eligibility.",
   },
   {
     question: "What counts as a seat?",
@@ -86,7 +88,7 @@ const pricingFaqs = [
   {
     question: "How does the Enterprise plan pricing work?",
     answer:
-      "Enterprise starts at ₹1,999 per seat per month with a 250-seat minimum, but is fully customized based on your compliance, deployment, and SLA needs. Contact sales for a precise quote.",
+      "Enterprise starts at ₹999 per seat per month with a 100-seat minimum, but is fully customized based on your compliance, deployment, and SLA needs. Contact sales for a precise quote.",
   },
 ];
 
@@ -98,14 +100,22 @@ export default function PricingPage() {
         <section className="container mx-auto px-4 lg:px-8 max-w-5xl text-center">
           <MarketingEyebrow>Pricing</MarketingEyebrow>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
-            One number per seat.{" "}
-            <span className="brand-text">Honest as you grow.</span>
+            31% cheaper than Odoo.{" "}
+            <span className="brand-text">Same all-in-one bundle.</span>
           </h1>
           <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto mb-3">
-            Free for the first 5 seats — forever. Paid plans bundle HR, Projects, CRM, Chat, and
-            Calendar at a fraction of the per-tool sum.
+            From{" "}
+            <span className="font-semibold text-slate-900">₹399 per seat / month</span> (billed
+            annually) — one platform for HR, Projects, CRM, Chat, and Calendar.
           </p>
-          <p className="text-slate-500 text-sm">{bundleSavingsCopy()}</p>
+          <p className="text-slate-500 text-sm">
+            Odoo Standard charges ₹{COMPETITOR_PRICES.odooStandard}/seat for the same bundle. Free
+            forever for up to {PRICING.starterSeatLimit} seats.
+          </p>
+        </section>
+
+        <section className="container mx-auto px-4 lg:px-8 max-w-4xl mt-14">
+          <SavingsCalculator />
         </section>
 
         <section className="container mx-auto px-4 lg:px-8 max-w-7xl mt-12">
