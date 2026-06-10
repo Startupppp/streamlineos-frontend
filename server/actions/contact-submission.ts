@@ -7,6 +7,7 @@ import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { platformMessages } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email/sender";
+import { getAdminRecipients } from "@/lib/email/recipients";
 import { logger } from "@/lib/logger";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL, BRAND_URL } from "@/lib/branding";
 
@@ -150,14 +151,11 @@ export async function submitContactForm(raw: unknown): Promise<ContactResult> {
     };
   }
 
-  /* 2. Notify the owner (email — best effort) */
-  const adminInbox =
-    process.env.ADMIN_NOTIFICATION_EMAIL ||
-    process.env.OWNER_EMAIL ||
-    BRAND_SUPPORT_EMAIL;
+  /* 2. Notify the owner team (email — best effort, multi-recipient) */
+  const adminRecipients = getAdminRecipients();
   try {
     await sendEmail({
-      to: adminInbox,
+      to: adminRecipients,
       subject: `[${BRAND_NAME}] New ${TOPIC_LABEL[data.topic]} — ${data.name}`,
       html: buildAdminNotificationHtml(data, reference),
       replyTo: data.email,

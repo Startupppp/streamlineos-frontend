@@ -18,7 +18,10 @@ import {
   OrganizationJsonLd,
   WebsiteJsonLd,
 } from "@/features/seo/structured-data";
-import { GoogleAnalytics } from "@/features/analytics/google-analytics";
+import {
+  GoogleTagManagerHead,
+  GoogleTagManagerNoscript,
+} from "@/features/analytics/google-tag-manager";
 import { MicrosoftClarity } from "@/features/analytics/clarity";
 
 const geist = Geist({
@@ -130,9 +133,11 @@ export default function RootLayout({
       <head>
         <OrganizationJsonLd />
         <WebsiteJsonLd />
+        <GoogleTagManagerHead />
         <link rel="canonical" href={`https://${BRAND_DOMAIN}`} />
       </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
+        <GoogleTagManagerNoscript />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -146,7 +151,6 @@ export default function RootLayout({
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
-        <GoogleAnalytics />
         <MicrosoftClarity />
       </body>
     </html>

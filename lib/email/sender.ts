@@ -2,16 +2,19 @@ import { Resend } from "resend";
 import sgMail from "@sendgrid/mail";
 import { logger } from "../logger";
 import { appUrl } from "../app-url";
+import { getFromAddress } from "./recipients";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Provider-agnostic email sender.
 
-   Priority order (first available wins):
-     1. RESEND_API_KEY → uses Resend (preferred — modern, generous free tier)
-     2. SENDGRID_API_KEY → uses SendGrid (legacy fallback)
-     3. Neither configured → logs the email and returns silently
+   Provider selection (in order):
+     1. EMAIL_PROVIDER env var ("resend" | "sendgrid") — explicit choice
+     2. RESEND_API_KEY present → Resend
+     3. SENDGRID_API_KEY present → SendGrid
+     4. None configured → logs and returns silently (no throw — best-effort)
 
    Same call signature everywhere: sendEmail({ to, subject, html, ... })
+   `to` accepts a string or string[] for multi-recipient notifications.
    ───────────────────────────────────────────────────────────────────────── */
 
 const MAX_RETRIES = 3;
@@ -21,16 +24,22 @@ export const baseUrl = appUrl;
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const EMAIL_PROVIDER_PREFERENCE = process.env.EMAIL_PROVIDER?.toLowerCase().trim();
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 if (SENDGRID_API_KEY) sgMail.setApiKey(SENDGRID_API_KEY);
 
 type Provider = "resend" | "sendgrid" | "none";
-const activeProvider: Provider = resend
-  ? "resend"
-  : SENDGRID_API_KEY
-    ? "sendgrid"
-    : "none";
+
+function resolveProvider(): Provider {
+  if (EMAIL_PROVIDER_PREFERENCE === "sendgrid" && SENDGRID_API_KEY) return "sendgrid";
+  if (EMAIL_PROVIDER_PREFERENCE === "resend" && resend) return "resend";
+  if (resend) return "resend";
+  if (SENDGRID_API_KEY) return "sendgrid";
+  return "none";
+}
+
+const activeProvider: Provider = resolveProvider();
 
 export interface EmailAttachment {
   filename: string;
@@ -39,12 +48,17 @@ export interface EmailAttachment {
 }
 
 export interface EmailOptions {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
   text?: string;
   attachments?: EmailAttachment[];
   replyTo?: string;
+}
+
+function normalizeRecipients(to: string | string[]): string[] {
+  const arr = Array.isArray(to) ? to : [to];
+  return arr.map((s) => s.trim()).filter(Boolean);
 }
 
 function htmlToText(html: string): string {
@@ -80,18 +94,10 @@ function isTransientError(error: unknown): boolean {
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function getFromAddress(): string {
-  const fromName = process.env.EMAIL_FROM_NAME?.trim();
-  const fromEmail =
-    process.env.EMAIL_FROM_ADDRESS ||
-    process.env.SENDGRID_FROM_EMAIL ||
-    "no-reply@streamlineos.in";
-  return fromName ? `${fromName} <${fromEmail}>` : fromEmail;
-}
-
 async function sendViaResend(options: EmailOptions): Promise<void> {
   if (!resend) throw new Error("Resend not initialized");
 
+  const recipients = normalizeRecipients(options.to);
   const text = options.text || htmlToText(options.html);
   const attachments = options.attachments?.map((a) => ({
     filename: a.filename,
@@ -101,7 +107,7 @@ async function sendViaResend(options: EmailOptions): Promise<void> {
 
   const { data, error } = await resend.emails.send({
     from: getFromAddress(),
-    to: options.to,
+    to: recipients,
     subject: options.subject,
     html: options.html,
     text,
@@ -116,10 +122,11 @@ async function sendViaResend(options: EmailOptions): Promise<void> {
     throw wrapped;
   }
 
-  logger.info("Email sent (resend)", { to: options.to, subject: options.subject, id: data?.id });
+  logger.info("Email sent (resend)", { to: recipients, subject: options.subject, id: data?.id });
 }
 
 async function sendViaSendgrid(options: EmailOptions): Promise<void> {
+  const recipients = normalizeRecipients(options.to);
   const attachments = options.attachments?.map((a) => ({
     content: Buffer.isBuffer(a.content) ? a.content.toString("base64") : a.content,
     filename: a.filename,
@@ -127,8 +134,10 @@ async function sendViaSendgrid(options: EmailOptions): Promise<void> {
     disposition: "attachment" as const,
   }));
 
+  // SendGrid: pass an array to `to` for multi-recipient (each gets a separate copy
+  // via `personalizations` under the hood); pass a single string for single recipient.
   const msg: sgMail.MailDataRequired = {
-    to: options.to,
+    to: recipients.length === 1 ? recipients[0] : recipients,
     from: getFromAddress(),
     subject: options.subject,
     html: options.html,
@@ -138,15 +147,20 @@ async function sendViaSendgrid(options: EmailOptions): Promise<void> {
   };
 
   await sgMail.send(msg);
-  logger.info("Email sent (sendgrid)", { to: options.to, subject: options.subject });
+  logger.info("Email sent (sendgrid)", { to: recipients, subject: options.subject });
 }
 
 export async function sendEmail(options: EmailOptions): Promise<void> {
+  const recipients = normalizeRecipients(options.to);
+  if (recipients.length === 0) {
+    logger.warn("EMAIL_SKIPPED: no recipients", { subject: options.subject });
+    return;
+  }
   if (activeProvider === "none") {
     logger.warn("EMAIL_SKIPPED: no email provider configured", {
-      to: options.to,
+      to: recipients,
       subject: options.subject,
-      hint: "Set RESEND_API_KEY (preferred) or SENDGRID_API_KEY in .env",
+      hint: "Set EMAIL_PROVIDER + SENDGRID_API_KEY (or RESEND_API_KEY) in .env",
     });
     return;
   }
@@ -166,7 +180,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       if (!isTransientError(error)) {
         logger.error("Email send failed (non-retryable)", {
           provider: activeProvider,
-          to: options.to,
+          to: recipients,
           subject: options.subject,
           attempt,
           error,
@@ -177,7 +191,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
         const backoff = BASE_DELAY_MS * Math.pow(2, attempt - 1);
         logger.warn(`Email retry ${attempt}/${MAX_RETRIES}`, {
           provider: activeProvider,
-          to: options.to,
+          to: recipients,
+          subject: options.subject,
           nextRetryMs: backoff,
         });
         await delay(backoff);

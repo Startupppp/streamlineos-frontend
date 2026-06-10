@@ -48,6 +48,7 @@ const serverSchema = z.object({
   EMAIL_FROM_ADDRESS: z.string().email().optional(),
   EMAIL_FROM_NAME: z.string().optional(),
   EMAIL_PROVIDER: z.enum(["resend", "sendgrid"]).default("resend"),
+  ADMIN_NOTIFICATION_EMAILS: z.string().optional(),
   ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
   OWNER_EMAIL: z.string().email().optional(),
 
@@ -88,7 +89,8 @@ const clientSchema = z.object({
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   NEXT_PUBLIC_GOOGLE_ENABLED: z.string().optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
-  NEXT_PUBLIC_GA_ID: z.string().optional(),
+  NEXT_PUBLIC_GTM_ID: z.string().optional(),
+  NEXT_PUBLIC_GA4_ID: z.string().optional(),
   NEXT_PUBLIC_CLARITY_ID: z.string().optional(),
 });
 
@@ -118,7 +120,8 @@ function validateClientEnv() {
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     NEXT_PUBLIC_GOOGLE_ENABLED: process.env.NEXT_PUBLIC_GOOGLE_ENABLED,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+    NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
+    NEXT_PUBLIC_GA4_ID: process.env.NEXT_PUBLIC_GA4_ID,
     NEXT_PUBLIC_CLARITY_ID: process.env.NEXT_PUBLIC_CLARITY_ID,
   });
 
