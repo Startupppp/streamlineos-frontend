@@ -62,12 +62,10 @@ const CATEGORIES = [
 interface PostSeed {
   title: string;
   category: string;
-  author: number;
   cover: string;
   tags: string[];
   featured?: boolean;
   status: "published" | "draft";
-  daysAgo: number;
   excerpt: string;
   content: string;
 }
@@ -76,12 +74,10 @@ const POSTS: PostSeed[] = [
   {
     title: "Building a Unified Operating System for Modern Teams",
     category: "Business",
-    author: 0,
     cover: cover("1522071820081-009f0129c71c"),
     tags: ["operations", "company-building", "productivity", "tools"],
     featured: true,
     status: "published",
-    daysAgo: 4,
     excerpt:
       "Most teams run on a dozen disconnected tools. Here is why we believe the future is a single operating system - and how we are building one.",
     content: buildHtml(
@@ -124,12 +120,10 @@ const POSTS: PostSeed[] = [
   {
     title: "How We Cut Our Page Load Times in Half",
     category: "Engineering",
-    author: 2,
     cover: cover("1498050108023-c5249f4df085"),
     tags: ["performance", "nextjs", "web", "optimization"],
     featured: true,
     status: "published",
-    daysAgo: 9,
     excerpt:
       "A practical walkthrough of the changes that took our median page load from 2.1s to under a second - without rewriting the app.",
     content: buildHtml(
@@ -171,11 +165,9 @@ const POSTS: PostSeed[] = [
   {
     title: "The Design Principles Behind StreamlineOS",
     category: "Design",
-    author: 1,
     cover: cover("1531403009284-440f080d1e12"),
     tags: ["design", "principles", "ux", "craft"],
     status: "published",
-    daysAgo: 14,
     excerpt:
       "Good design is invisible. These are the principles we return to whenever we are unsure how something should look or behave.",
     content: buildHtml(
@@ -212,11 +204,9 @@ const POSTS: PostSeed[] = [
   {
     title: "A Practical Guide to Role-Based Access Control",
     category: "Technology",
-    author: 2,
     cover: cover("1517694712202-14dd9538aa97"),
     tags: ["security", "rbac", "permissions", "architecture"],
     status: "published",
-    daysAgo: 21,
     excerpt:
       "RBAC sounds simple until you ship it. Here is a pragmatic model that scales from five users to five thousand without becoming a tangle.",
     content: buildHtml(
@@ -258,11 +248,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Why Async Communication Wins for Distributed Teams",
     category: "Business",
-    author: 0,
     cover: cover("1556761175-5973dc0f32e7"),
     tags: ["remote", "communication", "culture", "productivity"],
     status: "published",
-    daysAgo: 27,
     excerpt:
       "Meetings feel productive and often are not. A bias toward writing makes distributed teams faster, fairer, and far less exhausted.",
     content: buildHtml(
@@ -305,11 +293,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Designing Accessible Color Systems",
     category: "Design",
-    author: 1,
     cover: cover("1499951360447-b19be8fe80f5"),
     tags: ["design", "accessibility", "color", "systems"],
     status: "published",
-    daysAgo: 33,
     excerpt:
       "Color is one of the easiest things to get wrong and one of the most rewarding to get right. A field guide to building palettes everyone can use.",
     content: buildHtml(
@@ -350,11 +336,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Scaling Postgres: Lessons from 200 Tables",
     category: "Engineering",
-    author: 2,
     cover: cover("1432888622747-4eb9a8efeb07"),
     tags: ["postgres", "database", "scaling", "sql"],
     status: "published",
-    daysAgo: 38,
     excerpt:
       "Postgres will take you remarkably far before you need anything exotic. These are the habits that kept ours fast as the schema grew.",
     content: buildHtml(
@@ -391,11 +375,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Content Marketing That Actually Converts",
     category: "Marketing",
-    author: 0,
     cover: cover("1460925895917-afdab827c52f"),
     tags: ["marketing", "content", "growth", "seo"],
     status: "published",
-    daysAgo: 45,
     excerpt:
       "Publishing more is not a strategy. Here is how to write content that earns trust and turns readers into customers.",
     content: buildHtml(
@@ -437,11 +419,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Shipping Faster with Feature Flags",
     category: "Engineering",
-    author: 2,
     cover: cover("1488590528505-98d2b5aba04b"),
     tags: ["engineering", "deployment", "feature-flags", "ci-cd"],
     status: "published",
-    daysAgo: 52,
     excerpt:
       "Feature flags decouple deploy from release. That one change transforms how confidently a team can ship.",
     content: buildHtml(
@@ -478,11 +458,9 @@ const POSTS: PostSeed[] = [
   {
     title: "The Founder's Guide to Early Hiring",
     category: "Business",
-    author: 0,
     cover: cover("1454165804606-c3d57bc86b40"),
     tags: ["hiring", "startups", "team", "leadership"],
     status: "published",
-    daysAgo: 61,
     excerpt:
       "Your first ten hires set the ceiling for everything that follows. A few hard-won lessons on getting them right.",
     content: buildHtml(
@@ -519,11 +497,9 @@ const POSTS: PostSeed[] = [
   {
     title: "SEO Fundamentals for SaaS in 2026",
     category: "Marketing",
-    author: 1,
     cover: cover("1553877522-43269d4ea984"),
     tags: ["seo", "marketing", "saas", "growth"],
     status: "published",
-    daysAgo: 70,
     excerpt:
       "Search has changed, but the fundamentals have not. What actually moves the needle for SaaS discoverability today.",
     content: buildHtml(
@@ -564,11 +540,9 @@ const POSTS: PostSeed[] = [
   {
     title: "Our Move to Server Components",
     category: "Technology",
-    author: 2,
     cover: cover("1467232004584-a241de8bcf5d"),
     tags: ["react", "nextjs", "architecture", "frontend"],
     status: "draft",
-    daysAgo: 2,
     excerpt:
       "A behind-the-scenes look at migrating to React Server Components - the wins, the gotchas, and what we would do differently.",
     content: buildHtml(

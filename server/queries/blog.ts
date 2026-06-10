@@ -1,8 +1,8 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { blogPosts, blogCategories, blogAuthors } from "@/lib/db/schema";
-import { and, asc, desc, eq, gt, lt, sql, count } from "drizzle-orm";
+import { blogPosts, blogCategories } from "@/lib/db/schema";
+import { and, asc, desc, eq, gt, lt, ne, sql, count } from "drizzle-orm";
 
 export interface PostListOptions {
   limit?: number;
@@ -128,7 +128,7 @@ export async function getRelatedPosts(opts: {
   const limit = opts.limit ?? 3;
   const conditions = [
     eq(blogPosts.status, "published"),
-    sql`${blogPosts.id} <> ${opts.postId}`,
+    ne(blogPosts.id, opts.postId),
   ];
   if (opts.categoryId) conditions.push(eq(blogPosts.categoryId, opts.categoryId));
 
@@ -138,19 +138,6 @@ export async function getRelatedPosts(opts: {
     orderBy: [desc(blogPosts.publishedAt)],
     limit,
   });
-}
-
-/** Distinct tags across published posts, with counts (most used first). */
-export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
-  const result = await db.execute<{ tag: string; count: number }>(sql`
-    SELECT unnest(${blogPosts.tags}) AS tag, COUNT(*)::int AS count
-    FROM ${blogPosts}
-    WHERE ${blogPosts.status} = 'published'
-    GROUP BY tag
-    ORDER BY count DESC, tag ASC
-  `);
-  const rows = (result as unknown as { tag: string; count: number }[]) ?? [];
-  return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }));
 }
 
 /** Previous (older) and next (newer) published posts for a given post. */
@@ -180,15 +167,6 @@ export async function getAdjacentPosts(publishedAt: Date | null) {
   return { prev: prev ?? null, next: next ?? null };
 }
 
-/** Slugs of all published posts - for generateStaticParams. */
-export async function getAllPublishedSlugs(): Promise<string[]> {
-  const rows = await db.query.blogPosts.findMany({
-    where: eq(blogPosts.status, "published"),
-    columns: { slug: true },
-  });
-  return rows.map((r) => r.slug);
-}
-
 // ── Admin reads (all statuses) ───────────────────────────────────────────────
 
 export async function getAdminPosts() {
@@ -205,10 +183,4 @@ export async function getAdminPostById(id: string) {
       with: POST_WITH,
     })) ?? null
   );
-}
-
-export async function getAuthors() {
-  return db.query.blogAuthors.findMany({
-    orderBy: [asc(blogAuthors.name)],
-  });
 }
