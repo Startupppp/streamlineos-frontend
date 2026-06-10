@@ -12,9 +12,8 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
-    "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts",
-    "setup:r2": "tsx --env-file=.env scripts/setup-r2-buckets.ts"
+    "setup:r2": "tsx --env-file=.env scripts/setup-r2-buckets.ts",
+    "seed:owner": "tsx --env-file=.env scripts/seed-platform-owner.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
