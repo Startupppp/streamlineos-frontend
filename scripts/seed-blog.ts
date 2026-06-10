@@ -580,6 +580,7 @@ const POSTS: PostSeed[] = [
 // ── Seed runner ──────────────────────────────────────────────────────────────
 async function main() {
   const { db, client } = await import("../lib/db");
+  const { blogDb, blogClient } = await import("../lib/blog-db");
   const { blogAuthors, blogCategories, blogPosts, users, organizations, organizationMembers } =
     await import("../lib/db/schema");
   const { eq, sql } = await import("drizzle-orm");
@@ -649,8 +650,9 @@ async function main() {
     .values({ userId: editorId, orgId: org.id, role: "BLOG_EDITOR" })
     .onConflictDoNothing();
 
-  // 3. Blog content (authors + categories + posts) in a transaction ───────────
-  await db.transaction(async (tx) => {
+  // 3. Blog content (authors + categories + posts) in a transaction, on the
+  //    dedicated blog database (BLOGS_DB). Auth above stays on the app DB.
+  await blogDb.transaction(async (tx) => {
     console.log("\n🧹 Clearing existing blog data...");
     await tx.delete(blogPosts);
     await tx.delete(blogCategories);
@@ -714,6 +716,7 @@ async function main() {
   console.log("──────────────────────────────────────────\n");
 
   await client.end({ timeout: 5 });
+  await blogClient.end({ timeout: 5 });
   process.exit(0);
 }
 

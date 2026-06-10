@@ -1,6 +1,6 @@
 "server-only";
 
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogPosts, blogCategories } from "@/lib/db/schema";
 import { and, asc, desc, eq, gt, lt, ne, sql, count } from "drizzle-orm";
 
@@ -22,7 +22,7 @@ export async function getPublishedPosts(opts: PostListOptions = {}) {
   const conditions = [eq(blogPosts.status, "published")];
 
   if (opts.categorySlug) {
-    const category = await db.query.blogCategories.findFirst({
+    const category = await blogDb.query.blogCategories.findFirst({
       where: eq(blogCategories.slug, opts.categorySlug),
     });
     if (!category) return { posts: [], nextCursor: null, hasMore: false };
@@ -47,7 +47,7 @@ export async function getPublishedPosts(opts: PostListOptions = {}) {
     }
   }
 
-  const rows = await db.query.blogPosts.findMany({
+  const rows = await blogDb.query.blogPosts.findMany({
     where: and(...conditions),
     with: POST_WITH,
     orderBy: [desc(blogPosts.publishedAt)],
@@ -69,7 +69,7 @@ export type PostWithRelations = Awaited<
 
 /** Featured published posts for the listing hero. */
 export async function getFeaturedPosts(limit = 1) {
-  return db.query.blogPosts.findMany({
+  return blogDb.query.blogPosts.findMany({
     where: and(eq(blogPosts.status, "published"), eq(blogPosts.isFeatured, true)),
     with: POST_WITH,
     orderBy: [desc(blogPosts.publishedAt)],
@@ -79,7 +79,7 @@ export async function getFeaturedPosts(limit = 1) {
 
 /** A single published post by slug (with author + category), or null. */
 export async function getPostBySlug(slug: string) {
-  const post = await db.query.blogPosts.findFirst({
+  const post = await blogDb.query.blogPosts.findFirst({
     where: and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")),
     with: POST_WITH,
   });
@@ -88,7 +88,7 @@ export async function getPostBySlug(slug: string) {
 
 /** Categories with their published-post counts. */
 export async function getCategories() {
-  const rows = await db
+  const rows = await blogDb
     .select({
       id: blogCategories.id,
       name: blogCategories.name,
@@ -113,7 +113,7 @@ export async function getCategories() {
 
 export async function getCategoryBySlug(slug: string) {
   return (
-    (await db.query.blogCategories.findFirst({
+    (await blogDb.query.blogCategories.findFirst({
       where: eq(blogCategories.slug, slug),
     })) ?? null
   );
@@ -132,7 +132,7 @@ export async function getRelatedPosts(opts: {
   ];
   if (opts.categoryId) conditions.push(eq(blogPosts.categoryId, opts.categoryId));
 
-  return db.query.blogPosts.findMany({
+  return blogDb.query.blogPosts.findMany({
     where: and(...conditions),
     with: POST_WITH,
     orderBy: [desc(blogPosts.publishedAt)],
@@ -144,7 +144,7 @@ export async function getRelatedPosts(opts: {
 export async function getAdjacentPosts(publishedAt: Date | null) {
   if (!publishedAt) return { prev: null, next: null };
 
-  const [prev] = await db.query.blogPosts.findMany({
+  const [prev] = await blogDb.query.blogPosts.findMany({
     where: and(
       eq(blogPosts.status, "published"),
       lt(blogPosts.publishedAt, publishedAt),
@@ -154,7 +154,7 @@ export async function getAdjacentPosts(publishedAt: Date | null) {
     columns: { slug: true, title: true },
   });
 
-  const [next] = await db.query.blogPosts.findMany({
+  const [next] = await blogDb.query.blogPosts.findMany({
     where: and(
       eq(blogPosts.status, "published"),
       gt(blogPosts.publishedAt, publishedAt),
@@ -170,7 +170,7 @@ export async function getAdjacentPosts(publishedAt: Date | null) {
 // ── Admin reads (all statuses) ───────────────────────────────────────────────
 
 export async function getAdminPosts() {
-  return db.query.blogPosts.findMany({
+  return blogDb.query.blogPosts.findMany({
     with: POST_WITH,
     orderBy: [desc(blogPosts.updatedAt)],
   });
@@ -178,7 +178,7 @@ export async function getAdminPosts() {
 
 export async function getAdminPostById(id: string) {
   return (
-    (await db.query.blogPosts.findFirst({
+    (await blogDb.query.blogPosts.findFirst({
       where: eq(blogPosts.id, id),
       with: POST_WITH,
     })) ?? null
