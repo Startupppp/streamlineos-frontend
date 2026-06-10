@@ -9,6 +9,7 @@ export const ROLES = {
   CUSTOMER_SUPPORT: "CUSTOMER_SUPPORT",
   VIDEO_EDITOR: "VIDEO_EDITOR",
   DIGITAL_MARKETING: "DIGITAL_MARKETING",
+  BLOG_EDITOR: "BLOG_EDITOR",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -16,6 +17,13 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 export const ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR];
 
 export const EXPENSE_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.ADMIN];
+
+/** Roles permitted to manage the public blog at /blogs/admin. */
+export const BLOG_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.BLOG_EDITOR];
+
+export function isBlogAdmin(role: string | undefined | null): boolean {
+  return !!role && BLOG_ADMIN_ROLES.includes(role);
+}
 
 export const ALL_ROLES: readonly string[] = Object.values(ROLES);
 

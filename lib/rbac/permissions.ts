@@ -416,6 +416,7 @@ export const SYSTEM_ROLES = [
   "DESIGN",
   "VIDEO_EDITOR",
   "DIGITAL_MARKETING",
+  "BLOG_EDITOR",
   "BRANCH_MANAGER",
   "BRANCH_HR",
 ] as const;
@@ -534,6 +535,10 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:view",
     "projects:timesheets:create",
   ],
+
+  // Blog editors manage the public blog at /blogs/admin (gated by BLOG_ADMIN_ROLES,
+  // not by a granular permission). They otherwise only have employee self-service.
+  BLOG_EDITOR: [...EMPLOYEE_SELF_SERVICE],
 
   BRANCH_MANAGER: [
     ...EMPLOYEE_SELF_SERVICE,

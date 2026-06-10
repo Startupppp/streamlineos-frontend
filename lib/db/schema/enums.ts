@@ -94,3 +94,5 @@ export const subscriptionPlanEnum = pgEnum("subscription_plan", ["STARTER", "PRO
 export const taskEntityTypeEnum = pgEnum("task_entity_type", ["LEAD", "DEAL", "CONTACT", "PROJECT"]);
 export const taskTypeEnum = pgEnum("task_type", ["CALL", "EMAIL", "MEETING", "CUSTOM"]);
 export const taskStatusEnum = pgEnum("task_status", ["pending", "completed", "cancelled"]);
+
+export const blogPostStatusEnum = pgEnum("blog_post_status", ["draft", "published", "archived"]);

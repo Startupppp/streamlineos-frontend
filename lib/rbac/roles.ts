@@ -12,6 +12,7 @@ export const ROLE_LABELS: Record<SystemRole, string> = {
   DESIGN: "Designer",
   VIDEO_EDITOR: "Video Editor",
   DIGITAL_MARKETING: "Digital Marketing",
+  BLOG_EDITOR: "Blog Editor",
   BRANCH_MANAGER: "Branch Manager",
   BRANCH_HR: "Branch HR",
 };
