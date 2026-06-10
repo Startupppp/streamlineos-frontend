@@ -22,6 +22,7 @@ const ROLE_LABELS: Record<SystemRole, string> = {
   DESIGN: "Design",
   VIDEO_EDITOR: "Video Editor",
   DIGITAL_MARKETING: "DM",
+  BLOG_EDITOR: "Blog Editor",
   BRANCH_MANAGER: "Branch Mgr",
   BRANCH_HR: "Branch HR",
 };

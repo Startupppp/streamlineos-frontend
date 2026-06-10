@@ -103,10 +103,19 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/ai": ["CEO", "HR"],
 
   "/calendar": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
+
+  "/blogs/admin": ["CEO", "HR", "BLOG_EDITOR"],
 };
 
 function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
+}
+
+// The public blog lives at /blogs and /blogs/[slug]; only the /blogs/admin CMS is
+// gated. Match it exactly (or as a sub-path) so a post slug like "admin-tips"
+// stays public.
+function isBlogAdminPath(pathname: string): boolean {
+  return pathname === "/blogs/admin" || pathname.startsWith("/blogs/admin/");
 }
 
 function canAccessRoute(pathname: string, role: string): boolean {
@@ -190,7 +199,10 @@ export default async function middleware(req: NextRequest) {
   });
 
   const isAuthenticated = !!token;
-  if (!isAuthenticated && startsWithAny(pathname, PROTECTED_ROUTES)) {
+  if (
+    !isAuthenticated &&
+    (startsWithAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname))
+  ) {
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     url.searchParams.set("callbackUrl", pathname);
@@ -298,11 +310,15 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  if (isAuthenticated && token?.role && startsWithAny(pathname, PROTECTED_ROUTES)) {
+  if (
+    isAuthenticated &&
+    token?.role &&
+    (startsWithAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname))
+  ) {
     const userRole = token.role as string;
     if (!canAccessRoute(pathname, userRole)) {
       const url = req.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = isBlogAdminPath(pathname) ? "/blogs" : "/dashboard";
       url.search = "";
       return NextResponse.redirect(url);
     }

@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { redis } from "@/lib/redis";
+import { BLOG_ADMIN_ROLES } from "@/lib/constants/roles";
 import type { Session } from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { z, type ZodSchema } from "zod";
@@ -105,6 +106,17 @@ export async function withAdmin<T>(
   return withAuth(async (session) => {
     const role = session.user.role;
     if (role !== "CEO" && role !== "HR" && role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+    }
+    return handler(session);
+  });
+}
+
+export async function withBlogAdmin<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>
+): Promise<NextResponse<T>> {
+  return withAuth(async (session) => {
+    if (!BLOG_ADMIN_ROLES.includes(session.user.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
     }
     return handler(session);
