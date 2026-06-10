@@ -16,7 +16,6 @@ interface BlogContentEditorProps {
   placeholder?: string;
 }
 
-/** TipTap editor for blog bodies - emits HTML (for rendering) and JSON (for re-edit). */
 export function BlogContentEditor({
   initialHtml,
   onChange,

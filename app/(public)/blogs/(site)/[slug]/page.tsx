@@ -111,7 +111,6 @@ export default async function BlogPostPage({
           <ArrowLeft className="size-4" /> Back to Blog
         </Link>
 
-        {/* Header */}
         <header className="mx-auto mt-6 max-w-3xl text-center">
           {post.category && (
             <div className="flex justify-center">
@@ -135,7 +134,6 @@ export default async function BlogPostPage({
           </div>
         </header>
 
-        {/* Cover */}
         {cover && (
           <div className="relative mx-auto mt-10 aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-muted shadow-soft">
             <Image
@@ -149,7 +147,6 @@ export default async function BlogPostPage({
           </div>
         )}
 
-        {/* Body + TOC */}
         <div className="mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-12">
           <div className="mx-auto w-full max-w-3xl">
             <BlogContent html={html} />
@@ -185,7 +182,6 @@ export default async function BlogPostPage({
           )}
         </div>
 
-        {/* Footer sections */}
         <div className="mx-auto mt-16 max-w-5xl space-y-16">
           <PostNavigation prev={adjacent.prev} next={adjacent.next} />
           <RelatedPosts posts={related} />

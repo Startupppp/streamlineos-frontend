@@ -1,30 +1,27 @@
 import { type NextRequest } from "next/server";
 import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogPosts } from "@/lib/db/schema";
 import { getAdminPosts } from "@/server/queries/blog";
 import { calcReadingTime } from "@/lib/blog-utils";
 import { postCreateSchema, ensureUniqueSlug } from "@/lib/blog/post-write";
 
-/** Admin: list all posts (any status), newest-updated first. */
 export async function GET() {
   return withBlogAdmin(async () => {
     return ok(await getAdminPosts());
   });
 }
 
-/** Admin: create a post. */
 export async function POST(req: NextRequest) {
   return withBlogAdmin(async () => {
     const body = await parseBody(req, postCreateSchema);
     const slug = await ensureUniqueSlug(body.slug || body.title);
 
-    // Posts are authored by the company (the single blog author).
-    const companyAuthor = await db.query.blogAuthors.findFirst({
+    const companyAuthor = await blogDb.query.blogAuthors.findFirst({
       columns: { id: true },
     });
 
-    const [created] = await db
+    const [created] = await blogDb
       .insert(blogPosts)
       .values({
         title: body.title,

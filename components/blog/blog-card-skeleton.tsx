@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Loading placeholder matching BlogCard's layout. */
 export function BlogCardSkeleton() {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">

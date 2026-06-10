@@ -4,7 +4,6 @@ interface BlogHeaderProps {
   eyebrow?: string;
 }
 
-/** Large page header for blog listing / category / tag pages. */
 export function BlogHeader({ title, subtitle, eyebrow }: BlogHeaderProps) {
   return (
     <header className="mx-auto max-w-3xl text-center">

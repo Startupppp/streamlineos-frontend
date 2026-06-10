@@ -1,12 +1,11 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogCategories } from "@/lib/db/schema";
 import { getCategories } from "@/server/queries/blog";
 import { slugify } from "@/lib/blog-utils";
 
-/** Public: list categories with published-post counts. */
 export async function GET() {
   try {
     return ok(await getCategories());
@@ -25,18 +24,17 @@ const createCategorySchema = z.object({
     .nullable(),
 });
 
-/** Admin: create a category. */
 export async function POST(req: NextRequest) {
   return withBlogAdmin(async () => {
     const body = await parseBody(req, createCategorySchema);
     const slug = slugify(body.name);
 
-    const existing = await db.query.blogCategories.findFirst({
+    const existing = await blogDb.query.blogCategories.findFirst({
       where: (c, { eq }) => eq(c.slug, slug),
     });
     if (existing) return err("A category with that name already exists", 409);
 
-    const [created] = await db
+    const [created] = await blogDb
       .insert(blogCategories)
       .values({
         name: body.name,

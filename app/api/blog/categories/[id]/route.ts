@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogCategories } from "@/lib/db/schema";
 import { slugify } from "@/lib/blog-utils";
 
@@ -32,7 +32,7 @@ export async function PATCH(
     if (body.description !== undefined) updates.description = body.description;
     if (body.color !== undefined) updates.color = body.color;
 
-    const [updated] = await db
+    const [updated] = await blogDb
       .update(blogCategories)
       .set(updates)
       .where(eq(blogCategories.id, id))
@@ -49,7 +49,7 @@ export async function DELETE(
 ) {
   return withBlogAdmin(async () => {
     const { id } = await params;
-    const [deleted] = await db
+    const [deleted] = await blogDb
       .delete(blogCategories)
       .where(eq(blogCategories.id, id))
       .returning();

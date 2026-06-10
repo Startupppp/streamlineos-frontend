@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-/** Thin progress bar at the very top of the viewport tracking read position. */
 export function ReadingProgress() {
   const [progress, setProgress] = useState(0);
 

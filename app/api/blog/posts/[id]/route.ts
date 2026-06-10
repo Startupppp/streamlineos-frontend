@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogPosts } from "@/lib/db/schema";
 import { getAdminPostById } from "@/server/queries/blog";
 import { calcReadingTime } from "@/lib/blog-utils";
@@ -27,7 +27,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await parseBody(req, postUpdateSchema);
 
-    const existing = await db.query.blogPosts.findFirst({
+    const existing = await blogDb.query.blogPosts.findFirst({
       where: eq(blogPosts.id, id),
     });
     if (!existing) return err("Post not found", 404);
@@ -50,14 +50,12 @@ export async function PATCH(
     if (body.metaDescription !== undefined)
       updates.metaDescription = body.metaDescription;
 
-    // Slug follows an explicit slug, else a changed title.
     if (body.slug) {
       updates.slug = await ensureUniqueSlug(body.slug, id);
     } else if (body.title !== undefined && body.title !== existing.title) {
       updates.slug = await ensureUniqueSlug(body.title, id);
     }
 
-    // Stamp publishedAt the first time a post becomes published.
     if (body.status !== undefined) {
       updates.status = body.status;
       if (body.status === "published" && !existing.publishedAt) {
@@ -65,7 +63,7 @@ export async function PATCH(
       }
     }
 
-    const [updated] = await db
+    const [updated] = await blogDb
       .update(blogPosts)
       .set(updates)
       .where(eq(blogPosts.id, id))
@@ -81,7 +79,7 @@ export async function DELETE(
 ) {
   return withBlogAdmin(async () => {
     const { id } = await params;
-    const [deleted] = await db
+    const [deleted] = await blogDb
       .delete(blogPosts)
       .where(eq(blogPosts.id, id))
       .returning();

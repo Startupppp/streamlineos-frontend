@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-/** Debounced search box that drives the listing via the `search` query param. */
 export function BlogSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();

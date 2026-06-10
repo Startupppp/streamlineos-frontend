@@ -5,11 +5,6 @@ interface BlogContentProps {
   className?: string;
 }
 
-/**
- * Renders the article body. The HTML is produced by the TipTap editor, whose
- * schema only emits a fixed set of formatting nodes (no <script>), so it is safe
- * to render directly inside the typography container.
- */
 export function BlogContent({ html, className }: BlogContentProps) {
   return (
     <div

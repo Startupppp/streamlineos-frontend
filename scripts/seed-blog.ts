@@ -1,17 +1,10 @@
-/**
- * Seeds the blog: an organization + a BLOG_EDITOR login (so /blogs/admin is
- * testable), one author (the company), 5 categories, and 12 posts with real
- * written content and working Unsplash cover images.
- *
- * Run: pnpm seed:blog   (alias for: npx tsx --env-file=.env scripts/seed-blog.ts)
- */
+
 
 process.env.DATABASE_URL ??= process.env.DB;
 
 import { calcReadingTime, slugify } from "../lib/blog-utils";
 import { BRAND_NAME } from "../lib/branding";
 
-// ── Content builder ──────────────────────────────────────────────────────────
 interface Section {
   h2: string;
   body: string[];
@@ -35,8 +28,6 @@ function buildHtml(intro: string[], sections: Section[]): string {
 
 const cover = (id: string) => `https://images.unsplash.com/photo-${id}?w=1200&h=630&fit=crop`;
 
-// ── Author ───────────────────────────────────────────────────────────────────
-// A single author: the company itself (logo avatar + company name, nothing else).
 const AUTHORS = [
   {
     name: BRAND_NAME,
@@ -49,7 +40,6 @@ const AUTHORS = [
   },
 ];
 
-// ── Categories ───────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { name: "Technology", color: "#3B82F6", description: "Architecture, tooling, and the tech that powers modern teams." },
   { name: "Design", color: "#8B5CF6", description: "Product design, accessibility, and craft." },
@@ -58,7 +48,6 @@ const CATEGORIES = [
   { name: "Engineering", color: "#EF4444", description: "Deep dives on how we build and scale." },
 ];
 
-// ── Posts ────────────────────────────────────────────────────────────────────
 interface PostSeed {
   title: string;
   category: string;
@@ -577,9 +566,9 @@ const POSTS: PostSeed[] = [
   },
 ];
 
-// ── Seed runner ──────────────────────────────────────────────────────────────
 async function main() {
   const { db, client } = await import("../lib/db");
+  const { blogDb, blogClient } = await import("../lib/blog-db");
   const { blogAuthors, blogCategories, blogPosts, users, organizations, organizationMembers } =
     await import("../lib/db/schema");
   const { eq, sql } = await import("drizzle-orm");
@@ -588,7 +577,6 @@ async function main() {
 
   console.log("🌱 Seeding blog...\n");
 
-  // 1. Organization (find first or create one) ───────────────────────────────
   let org = await db.query.organizations.findFirst();
   if (!org) {
     const orgId = nanoid();
@@ -604,7 +592,6 @@ async function main() {
   }
   if (!org) throw new Error("Failed to ensure an organization exists.");
 
-  // 2. Blog editor login ──────────────────────────────────────────────────────
   const editorEmail = "blog.editor@streamlineos.app";
   const editorPassword = "Blog@1234";
   const passwordHash = await hash(editorPassword, 12);
@@ -649,8 +636,7 @@ async function main() {
     .values({ userId: editorId, orgId: org.id, role: "BLOG_EDITOR" })
     .onConflictDoNothing();
 
-  // 3. Blog content (authors + categories + posts) in a transaction ───────────
-  await db.transaction(async (tx) => {
+  await blogDb.transaction(async (tx) => {
     console.log("\n🧹 Clearing existing blog data...");
     await tx.delete(blogPosts);
     await tx.delete(blogCategories);
@@ -675,8 +661,7 @@ async function main() {
     const categoryByName = new Map(insertedCategories.map((c) => [c.name, c.id]));
 
     console.log("📝 Inserting posts...");
-    // All posts dated 9 June 2026. Stagger by a minute so they sort stably and
-    // cursor pagination works, while still all displaying as "June 9, 2026".
+
     const base = new Date(2026, 5, 9, 12, 0, 0).getTime();
     const rows = POSTS.map((p, i) => {
       const ts = new Date(base - i * 60 * 1000);
@@ -714,6 +699,7 @@ async function main() {
   console.log("──────────────────────────────────────────\n");
 
   await client.end({ timeout: 5 });
+  await blogClient.end({ timeout: 5 });
   process.exit(0);
 }
 
