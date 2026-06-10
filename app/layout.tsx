@@ -18,6 +18,8 @@ import {
   OrganizationJsonLd,
   WebsiteJsonLd,
 } from "@/features/seo/structured-data";
+import { GoogleAnalytics } from "@/features/analytics/google-analytics";
+import { MicrosoftClarity } from "@/features/analytics/clarity";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -77,21 +79,11 @@ export const metadata: Metadata = {
     siteName: BRAND_NAME,
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: BRAND_DESCRIPTION,
-    images: [
-      {
-        url: "/logo.svg",
-        width: 512,
-        height: 512,
-        alt: BRAND_NAME,
-        type: "image/svg+xml",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: BRAND_DESCRIPTION,
-    images: ["/logo.svg"],
     creator: "@streamlineos",
   },
   robots: {
@@ -109,12 +101,6 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
-  },
-  icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: "/icon.svg",
   },
   manifest: "/manifest.webmanifest",
   other: {
@@ -160,6 +146,8 @@ export default function RootLayout({
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
+        <GoogleAnalytics />
+        <MicrosoftClarity />
       </body>
     </html>
   );

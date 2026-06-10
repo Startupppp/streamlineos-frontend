@@ -152,6 +152,53 @@ export function FAQJsonLd({
   );
 }
 
+export function BlogPostingJsonLd({
+  title,
+  description,
+  url,
+  datePublished,
+  authorName,
+  image,
+}: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  authorName: string;
+  image?: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: title,
+        description,
+        url,
+        datePublished,
+        dateModified: datePublished,
+        author: {
+          "@type": "Person",
+          name: authorName,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: BRAND_NAME,
+          logo: {
+            "@type": "ImageObject",
+            url: `${BRAND_URL}/logo.svg`,
+          },
+        },
+        image: image ?? `${BRAND_URL}/opengraph-image`,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": url,
+        },
+      }}
+    />
+  );
+}
+
 export function BreadcrumbJsonLd({
   items,
 }: {
