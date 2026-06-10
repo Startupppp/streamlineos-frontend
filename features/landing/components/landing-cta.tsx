@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "./motion/magnetic";
+import { PRICING } from "@/lib/pricing";
 
 export function LandingCTA() {
   return (
@@ -55,7 +56,7 @@ export function LandingCTA() {
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3.5 py-1.5 mb-6">
                 <Sparkles className="h-3 w-3 text-cyan-300" />
                 <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-100">
-                  Free for the first 10 seats
+                  Free for the first {PRICING.freeSeatLimit} seats
                 </span>
               </div>
 

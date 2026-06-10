@@ -79,10 +79,7 @@ export function LandingNav() {
             </Link>
             <Magnetic strength={0.3}>
               <Link href="/signin">
-                <Button
-                  size="sm"
-                  className="bg-slate-900 text-white hover:bg-slate-800 font-semibold border-0 shadow-[0_8px_24px_-8px_rgba(15,23,42,0.35)] h-9 px-4"
-                >
+                <Button size="sm" className="h-9 px-4">
                   Get started
                   <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                 </Button>

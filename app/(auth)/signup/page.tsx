@@ -9,12 +9,19 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Check,
+  Sparkles,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { PRICING_TIERS } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -35,28 +42,32 @@ const signupSchema = z.object({
 
 type FormValues = z.infer<typeof signupSchema>;
 
-const PLANS = [
-  { id: "STARTER", name: "Starter", price: "999", features: ["Up to 10 users", "CRM + Lead Pipeline", "Basic HR"] },
-  { id: "PROFESSIONAL", name: "Professional", price: "2,499", features: ["Up to 50 users", "Full CRM + AI", "HR + Recruitment", "Projects"] },
-  { id: "ENTERPRISE", name: "Enterprise", price: "4,999", features: ["Unlimited users", "Everything in Pro", "Custom integrations", "Priority support"] },
-];
+const PLAN_IDS = ["STARTUP", "SCALEUP", "ENTERPRISE"] as const;
 
 export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedPlan, setSelectedPlan] = useState("STARTER");
+  const [selectedPlan, setSelectedPlan] =
+    useState<(typeof PLAN_IDS)[number]>("STARTUP");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", companyName: "", phone: "" },
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      companyName: "",
+      phone: "",
+    },
   });
 
   const handleSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
       await apiClient.post("/auth/signup", { ...data, plan: selectedPlan });
-      toast.success("Account created! Signing you in...");
+      toast.success("Account created! Signing you in…");
 
       const result = await signIn("credentials", {
         email: data.email,
@@ -67,146 +78,260 @@ export default function SignupPage() {
       if (result?.ok) {
         window.location.href = "/dashboard";
       } else {
-        toast.error("Account created but auto-login failed. Please sign in manually.");
+        toast.error(
+          "Account created but auto-login failed. Please sign in manually.",
+        );
         window.location.href = "/signin";
       }
     } catch (error) {
-      const msg = getErrorMessage(error);
-      toast.error(msg);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full max-w-lg space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
-        <p className="text-muted-foreground mt-1">
-          {step === 1 ? "Choose a plan that fits your team" : "Enter your details to get started"}
+    <div className="w-full max-w-md text-left scrollbar-hide">
+      <div className="mb-5 text-center">
+        <h1 className="font-display text-2xl sm:text-[1.7rem] font-extrabold tracking-[-0.02em] text-slate-900 leading-tight">
+          Create your account
+        </h1>
+        <p className="text-[13px] text-slate-500 mt-1">
+          {step === 1
+            ? "Pick a plan — switch anytime."
+            : "A few details and you're in."}
         </p>
       </div>
 
       {step === 1 ? (
-        <div className="space-y-4">
-          <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="grid gap-3">
-            {PLANS.map((plan) => (
-              <Label key={plan.id} htmlFor={plan.id} className="cursor-pointer">
-                <Card className={`transition-all ${selectedPlan === plan.id ? "ring-2 ring-gold border-gold" : "hover:border-gold/50"}`}>
-                  <CardContent className="flex items-start gap-4 p-4">
-                    <RadioGroupItem value={plan.id} id={plan.id} className="mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-semibold">{plan.name}</span>
-                        <span className="text-lg font-bold text-gold">INR {plan.price}</span>
-                        <span className="text-xs text-muted-foreground">/month</span>
-                      </div>
-                      <ul className="mt-2 space-y-1">
-                        {plan.features.map((f) => (
-                          <li key={f} className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Check className="h-3 w-3 text-green-500" /> {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Label>
-            ))}
-          </RadioGroup>
+        <div className="space-y-3">
+          <div role="radiogroup" aria-label="Plan" className="space-y-2">
+            {PRICING_TIERS.map((plan, idx) => {
+              const id = PLAN_IDS[idx];
+              const isSelected = selectedPlan === id;
+              const shortFeatures = plan.features.slice(0, 2);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setSelectedPlan(id)}
+                  className={cn(
+                    "relative w-full text-left rounded-xl border px-4 py-3 transition-all duration-200 flex items-center gap-3",
+                    isSelected
+                      ? "border-blue-500/70 bg-white shadow-[0_10px_28px_-12px_rgba(30,64,175,0.22)]"
+                      : "border-slate-200 bg-white/70 hover:border-blue-300/70 hover:bg-white",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "h-5 w-5 rounded-full border-2 inline-flex items-center justify-center shrink-0 transition-colors",
+                      isSelected
+                        ? "border-blue-500 bg-blue-500"
+                        : "border-slate-300 bg-white",
+                    )}
+                  >
+                    {isSelected && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </span>
 
-          <p className="text-xs text-center text-muted-foreground">
-            All plans include a 14-day free trial. No credit card required.
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
+                      <span className="font-display text-[15px] font-bold text-slate-900">
+                        {plan.name}
+                      </span>
+                      <span className="text-[15px] font-extrabold brand-text">
+                        {plan.price}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500 truncate">
+                        {plan.period}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                      {shortFeatures.map((f) => (
+                        <span
+                          key={f}
+                          className="text-[11px] text-slate-600 inline-flex items-center gap-1"
+                        >
+                          <Check
+                            className="h-2.5 w-2.5 text-blue-500 shrink-0"
+                            strokeWidth={3}
+                          />
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {plan.highlight && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.14em] text-white font-semibold shadow-sm shrink-0">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      Popular
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400 text-center pt-1">
+            14-day trial · No credit card · Cancel anytime
           </p>
 
-          <Button onClick={() => setStep(2)} className="w-full">
+          <Button onClick={() => setStep(2)} className="w-full h-11">
             Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
+
+          <p className="text-[13px] text-center text-slate-500 mt-2">
+            Already have an account?{" "}
+            <Link
+              href="/signin"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       ) : (
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>First Name</Label>
-              <Input {...form.register("firstName")} placeholder="John" />
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-3.5"
+        >
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <Label className="text-[12px] font-medium text-slate-700">
+                First name
+              </Label>
+              <Input
+                {...form.register("firstName")}
+                placeholder="Aditya"
+                className="h-10"
+              />
               {form.formState.errors.firstName && (
-                <p className="text-xs text-destructive mt-1">{form.formState.errors.firstName.message}</p>
+                <p className="text-[11px] text-red-600">
+                  {form.formState.errors.firstName.message}
+                </p>
               )}
             </div>
-            <div>
-              <Label>Last Name</Label>
-              <Input {...form.register("lastName")} placeholder="Doe" />
+            <div className="space-y-1">
+              <Label className="text-[12px] font-medium text-slate-700">
+                Last name
+              </Label>
+              <Input
+                {...form.register("lastName")}
+                placeholder="Sharma"
+                className="h-10"
+              />
               {form.formState.errors.lastName && (
-                <p className="text-xs text-destructive mt-1">{form.formState.errors.lastName.message}</p>
+                <p className="text-[11px] text-red-600">
+                  {form.formState.errors.lastName.message}
+                </p>
               )}
             </div>
           </div>
 
-          <div>
-            <Label>Company Name</Label>
-            <Input {...form.register("companyName")} placeholder="Acme Corp" />
+          <div className="space-y-1">
+            <Label className="text-[12px] font-medium text-slate-700">
+              Company
+            </Label>
+            <Input
+              {...form.register("companyName")}
+              placeholder="Acme Inc."
+              className="h-10"
+            />
             {form.formState.errors.companyName && (
-              <p className="text-xs text-destructive mt-1">{form.formState.errors.companyName.message}</p>
+              <p className="text-[11px] text-red-600">
+                {form.formState.errors.companyName.message}
+              </p>
             )}
           </div>
 
-          <div>
-            <Label>Work Email</Label>
-            <Input {...form.register("email")} type="email" placeholder="john@company.com" />
+          <div className="space-y-1">
+            <Label className="text-[12px] font-medium text-slate-700">
+              Work email
+            </Label>
+            <Input
+              {...form.register("email")}
+              type="email"
+              placeholder="you@company.com"
+              className="h-10"
+            />
             {form.formState.errors.email && (
-              <p className="text-xs text-destructive mt-1">{form.formState.errors.email.message}</p>
+              <p className="text-[11px] text-red-600">
+                {form.formState.errors.email.message}
+              </p>
             )}
           </div>
 
-          <div>
-            <Label>Phone (optional)</Label>
-            <Input {...form.register("phone")} placeholder="+91 98765 43210" />
-          </div>
-
-          <div>
-            <Label>Password</Label>
+          <div className="space-y-1">
+            <Label className="text-[12px] font-medium text-slate-700">
+              Password
+            </Label>
             <div className="relative">
               <Input
                 {...form.register("password")}
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a strong password"
+                className="h-10 pr-10"
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3"
                 onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
             </div>
             {form.formState.errors.password && (
-              <p className="text-xs text-destructive mt-1">{form.formState.errors.password.message}</p>
+              <p className="text-[11px] text-red-600">
+                {form.formState.errors.password.message}
+              </p>
             )}
-            <p className="text-[10px] text-muted-foreground mt-1">
-              8+ chars, uppercase, lowercase, number, special character
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              8+ chars · upper · lower · number · symbol
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1">
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="flex-1 h-11 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            >
               Back
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {isSubmitting ? "Creating..." : "Start Free Trial"}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 h-11"
+            >
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              {isSubmitting ? "Creating…" : "Start free trial"}
             </Button>
           </div>
+
+          <p className="text-[13px] text-center text-slate-500 pt-1">
+            Already have an account?{" "}
+            <Link
+              href="/signin"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              Sign in
+            </Link>
+          </p>
         </form>
       )}
-
-      <p className="text-sm text-center text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/signin" className="text-gold hover:underline font-medium">
-          Sign in
-        </Link>
-      </p>
     </div>
   );
 }

@@ -27,11 +27,8 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isAdminOrOwner(session.user.role)) return err("Only admins can send emails.", 403);
 
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpFrom = process.env.SMTP_FROM_EMAIL;
-
-    if (!smtpHost || !smtpFrom) {
-      return err("Email not configured. Set SMTP_HOST and SMTP_FROM_EMAIL.", 400);
+    if (!process.env.RESEND_API_KEY && !process.env.SENDGRID_API_KEY) {
+      return err("Email not configured. Set RESEND_API_KEY or SENDGRID_API_KEY.", 400);
     }
 
     const body = sendSchema.parse(await req.json());

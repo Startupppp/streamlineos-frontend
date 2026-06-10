@@ -207,7 +207,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         createAuditLog({
           action: "user.login",
           userId: user.id as string,
-          orgId: (token.orgId as string | null) ?? "unknown",
+          orgId: (token.orgId as string | null) ?? undefined,
           targetId: user.id as string,
           targetType: "user",
           metadata: { email: user.email },

@@ -28,7 +28,8 @@ type FormValues = z.infer<typeof signinSchema>;
 function formatLockoutTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  if (mins > 0) return `${mins} minute${mins !== 1 ? "s" : ""} and ${secs} second${secs !== 1 ? "s" : ""}`;
+  if (mins > 0)
+    return `${mins} minute${mins !== 1 ? "s" : ""} and ${secs} second${secs !== 1 ? "s" : ""}`;
   return `${secs} second${secs !== 1 ? "s" : ""}`;
 }
 
@@ -59,13 +60,17 @@ export default function SignInPage() {
       const url = params.get("callbackUrl");
       if (url && url.startsWith("/")) return url;
     }
-    return "/dashboard";
+    // Route through /post-signin so the server can decide between
+    // /owner (PLATFORM_OWNER) and /dashboard (everyone else) based on role.
+    return "/post-signin";
   };
 
   const signInMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       if (!navigator.onLine) {
-        throw new Error("No internet connection. Check your network and try again.");
+        throw new Error(
+          "No internet connection. Check your network and try again.",
+        );
       }
       try {
         const result = await signIn("credentials", {
@@ -78,14 +83,18 @@ export default function SignInPage() {
           if (result.error.startsWith("ACCOUNT_LOCKED:")) {
             const secs = parseInt(result.error.split(":")[1] ?? "0", 10);
             setLockedSeconds(isNaN(secs) ? null : secs);
-            throw new Error(`Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`);
+            throw new Error(
+              `Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`,
+            );
           }
           throw new Error("Invalid email or password.");
         }
         return result;
       } catch (error) {
         if (error instanceof TypeError && error.message.includes("fetch")) {
-          throw new Error("No internet connection. Check your network and try again.");
+          throw new Error(
+            "No internet connection. Check your network and try again.",
+          );
         }
         throw error;
       }
@@ -113,14 +122,14 @@ export default function SignInPage() {
   });
 
   const isPending = signInMutation.isPending;
-  const passwordStrength = passwordValue.length > 0 ? validatePasswordStrength(passwordValue) : null;
+  const passwordStrength =
+    passwordValue.length > 0 ? validatePasswordStrength(passwordValue) : null;
 
   const hasGoogleProvider = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
 
   return (
     <div className="w-full max-w-sm animate-fade-up">
-
-      <div className="mb-5 sm:mb-8">
+      <div className="mb-5 sm:mb-8 text-center">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Sign in to your account
         </h1>
@@ -133,20 +142,23 @@ export default function SignInPage() {
         <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
           <Lock className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
           <p className="text-sm text-destructive">
-            Your account has been temporarily locked due to too many failed login attempts.
-            Please try again in <span className="font-semibold">{formatLockoutTime(lockedSeconds)}</span>.
+            Your account has been temporarily locked due to too many failed
+            login attempts. Please try again in{" "}
+            <span className="font-semibold">
+              {formatLockoutTime(lockedSeconds)}
+            </span>
+            .
           </p>
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6 space-y-4 sm:space-y-5">
+      <div className="rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-4">
         <form
           onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
           aria-busy={isPending}
           noValidate
           className="space-y-4"
         >
-
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-[13px] font-medium">
               Email
@@ -160,13 +172,20 @@ export default function SignInPage() {
               disabled={isPending}
               className={cn(
                 "h-9 text-sm",
-                form.formState.errors.email && "border-destructive focus-visible:ring-destructive/30"
+                form.formState.errors.email &&
+                  "border-destructive focus-visible:ring-destructive/30",
               )}
               aria-invalid={!!form.formState.errors.email}
-              aria-describedby={form.formState.errors.email ? "email-error" : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "email-error" : undefined
+              }
             />
             {form.formState.errors.email && (
-              <p id="email-error" role="alert" className="text-[12px] text-destructive">
+              <p
+                id="email-error"
+                role="alert"
+                className="text-[12px] text-destructive"
+              >
                 {form.formState.errors.email.message}
               </p>
             )}
@@ -196,10 +215,13 @@ export default function SignInPage() {
                 disabled={isPending}
                 className={cn(
                   "h-9 text-sm pr-9",
-                  form.formState.errors.password && "border-destructive focus-visible:ring-destructive/30"
+                  form.formState.errors.password &&
+                    "border-destructive focus-visible:ring-destructive/30",
                 )}
                 aria-invalid={!!form.formState.errors.password}
-                aria-describedby={form.formState.errors.password ? "pw-error" : undefined}
+                aria-describedby={
+                  form.formState.errors.password ? "pw-error" : undefined
+                }
               />
               <button
                 type="button"
@@ -216,33 +238,13 @@ export default function SignInPage() {
               </button>
             </div>
             {form.formState.errors.password && (
-              <p id="pw-error" role="alert" className="text-[12px] text-destructive">
+              <p
+                id="pw-error"
+                role="alert"
+                className="text-[12px] text-destructive"
+              >
                 {form.formState.errors.password.message}
               </p>
-            )}
-            {passwordStrength && (
-              <div className="space-y-1">
-                <div className="flex gap-1">
-                  {[20, 40, 60, 80, 100].map((threshold) => (
-                    <div
-                      key={threshold}
-                      className={cn(
-                        "h-1 flex-1 rounded-full transition-colors",
-                        passwordStrength.score >= threshold
-                          ? passwordStrength.score >= 80
-                            ? "bg-green-500"
-                            : passwordStrength.score >= 60
-                            ? "bg-yellow-500"
-                            : "bg-destructive"
-                          : "bg-muted"
-                      )}
-                    />
-                  ))}
-                </div>
-                {passwordStrength.missing.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground">{passwordStrength.missing[0]}</p>
-                )}
-              </div>
             )}
           </div>
 
@@ -325,15 +327,16 @@ export default function SignInPage() {
 
         <p className="text-sm text-center text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-gold hover:underline font-medium">
+          <Link
+            href="/signup"
+            className="text-blue-600 hover:underline font-medium"
+          >
             Sign up free
           </Link>
         </p>
 
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
           Your session is protected with end-to-end encryption.
-          <br />
-          Never share your credentials with anyone.
         </p>
       </div>
     </div>
