@@ -14,7 +14,6 @@ interface CoverImageUploadProps {
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
-/** Uploads a cover image to R2 and previews it. Stores the returned URL. */
 export function CoverImageUpload({ value, onChange }: CoverImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +51,7 @@ export function CoverImageUpload({ value, onChange }: CoverImageUploadProps) {
     <div className="space-y-3">
       {preview ? (
         <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg border border-border bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+
           <img src={preview} alt="Cover preview" className="size-full object-cover" />
           <button
             type="button"

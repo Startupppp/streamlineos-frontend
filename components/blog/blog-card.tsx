@@ -9,7 +9,6 @@ interface BlogCardProps {
   post: BlogPostWithRelations;
 }
 
-/** Post card used in the listing and related grids. */
 export function BlogCard({ post }: BlogCardProps) {
   const cover = resolveImageUrl(post.coverImage);
   const avatar = resolveImageUrl(post.author?.avatar ?? undefined);

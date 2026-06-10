@@ -5,7 +5,6 @@ interface RelatedPostsProps {
   posts: BlogPostWithRelations[];
 }
 
-/** "Related articles" grid shown below a post. */
 export function RelatedPosts({ posts }: RelatedPostsProps) {
   if (posts.length === 0) return null;
 

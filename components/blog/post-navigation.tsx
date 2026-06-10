@@ -11,7 +11,6 @@ interface PostNavigationProps {
   next: AdjacentPost | null;
 }
 
-/** Previous (older) / next (newer) post links at the foot of an article. */
 export function PostNavigation({ prev, next }: PostNavigationProps) {
   if (!prev && !next) return null;
 

@@ -17,7 +17,6 @@ interface PostFeedProps {
   emptyMessage?: string;
 }
 
-/** Responsive post grid with cursor-based "Load more". */
 export function PostFeed({
   initialPosts,
   initialCursor,

@@ -6,7 +6,6 @@ import { blogCategories } from "@/lib/db/schema";
 import { getCategories } from "@/server/queries/blog";
 import { slugify } from "@/lib/blog-utils";
 
-/** Public: list categories with published-post counts. */
 export async function GET() {
   try {
     return ok(await getCategories());
@@ -25,7 +24,6 @@ const createCategorySchema = z.object({
     .nullable(),
 });
 
-/** Admin: create a category. */
 export async function POST(req: NextRequest) {
   return withBlogAdmin(async () => {
     const body = await parseBody(req, createCategorySchema);

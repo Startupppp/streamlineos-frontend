@@ -9,7 +9,6 @@ interface FeaturedPostProps {
   post: BlogPostWithRelations;
 }
 
-/** Editorial hero card for the most important post. */
 export function FeaturedPost({ post }: FeaturedPostProps) {
   const cover = resolveImageUrl(post.coverImage);
 

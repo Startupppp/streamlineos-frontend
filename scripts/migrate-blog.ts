@@ -1,14 +1,4 @@
-/**
- * Creates the blog schema (blog_post_status enum + blog_authors + blog_categories
- * + blog_posts) idempotently in the dedicated blog database (BLOGS_DB, falling
- * back to DATABASE_URL / DB).
- *
- * We apply only the blog objects via targeted SQL rather than `drizzle-kit push`
- * so we never diff/alter the rest of an existing, populated database. The blog
- * tables are self-contained (authors live in blog_authors, no FK to users).
- *
- * Run: npx tsx --env-file=.env scripts/migrate-blog.ts
- */
+
 
 process.env.DATABASE_URL ??= process.env.DB;
 

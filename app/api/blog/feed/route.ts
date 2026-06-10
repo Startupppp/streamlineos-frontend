@@ -2,7 +2,6 @@ import { type NextRequest } from "next/server";
 import { ok, err } from "@/lib/api/helpers";
 import { getPublishedPosts } from "@/server/queries/blog";
 
-/** Public, unauthenticated paginated feed of published posts (Load More / search). */
 export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams;

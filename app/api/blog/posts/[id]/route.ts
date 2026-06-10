@@ -50,14 +50,12 @@ export async function PATCH(
     if (body.metaDescription !== undefined)
       updates.metaDescription = body.metaDescription;
 
-    // Slug follows an explicit slug, else a changed title.
     if (body.slug) {
       updates.slug = await ensureUniqueSlug(body.slug, id);
     } else if (body.title !== undefined && body.title !== existing.title) {
       updates.slug = await ensureUniqueSlug(body.title, id);
     }
 
-    // Stamp publishedAt the first time a post becomes published.
     if (body.status !== undefined) {
       updates.status = body.status;
       if (body.status === "published" && !existing.publishedAt) {

@@ -10,15 +10,6 @@ import {
   blogPostsRelations,
 } from "./db/schema/blog";
 
-/**
- * Dedicated database client for the blog.
- *
- * The blog is self-contained (standalone authors, no foreign keys into the app
- * schema), so it can live in its own database. Set `BLOGS_DB` to point it at a
- * dedicated Postgres database; if it is not set we fall back to the main app
- * connection (DATABASE_URL / DB) so nothing breaks out of the box.
- */
-
 const blogSchema = {
   blogAuthors,
   blogCategories,

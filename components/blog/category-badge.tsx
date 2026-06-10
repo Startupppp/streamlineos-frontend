@@ -9,7 +9,6 @@ interface CategoryBadgeProps {
   asLink?: boolean;
 }
 
-/** Colored category pill. Links to the category page when a slug is provided. */
 export function CategoryBadge({
   name,
   slug,

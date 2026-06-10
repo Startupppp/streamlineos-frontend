@@ -4,11 +4,10 @@ import type { CategoryWithCount } from "@/types/blog";
 
 interface CategoryFilterProps {
   categories: CategoryWithCount[];
-  /** slug of the active category, or null for "All". */
+
   activeSlug?: string | null;
 }
 
-/** Horizontal, scrollable category pills linking to category pages. */
 export function CategoryFilter({ categories, activeSlug }: CategoryFilterProps) {
   return (
     <nav

@@ -6,20 +6,17 @@ import { getAdminPosts } from "@/server/queries/blog";
 import { calcReadingTime } from "@/lib/blog-utils";
 import { postCreateSchema, ensureUniqueSlug } from "@/lib/blog/post-write";
 
-/** Admin: list all posts (any status), newest-updated first. */
 export async function GET() {
   return withBlogAdmin(async () => {
     return ok(await getAdminPosts());
   });
 }
 
-/** Admin: create a post. */
 export async function POST(req: NextRequest) {
   return withBlogAdmin(async () => {
     const body = await parseBody(req, postCreateSchema);
     const slug = await ensureUniqueSlug(body.slug || body.title);
 
-    // Posts are authored by the company (the single blog author).
     const companyAuthor = await blogDb.query.blogAuthors.findFirst({
       columns: { id: true },
     });

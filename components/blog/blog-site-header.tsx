@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BRAND_NAME } from "@/lib/branding";
 import { PenLine } from "lucide-react";
 
-/** Lightweight top bar for the public blog. */
 export function BlogSiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">

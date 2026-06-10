@@ -7,7 +7,6 @@ interface AuthorBioProps {
   author: BlogAuthor | null;
 }
 
-/** Full author bio block shown at the end of a post. */
 export function AuthorBio({ author }: AuthorBioProps) {
   if (!author) return null;
   const avatar = resolveImageUrl(author.avatar ?? undefined);
