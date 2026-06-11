@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
+import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
 import { usePermissions } from "@/lib/rbac/hooks";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +75,7 @@ export function CommandPalette() {
     const groups = getNavGroupsForUser(role, permissions);
     const seen = new Set<string>();
     return groups.flatMap((group) =>
-      group.routes
+      flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
           seen.add(r.href);
@@ -157,7 +157,7 @@ export function CommandPalette() {
     const seen = new Set<string>();
     return groups.slice(0, 5).map((group) => ({
       label: group.label,
-      routes: group.routes
+      routes: flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
           seen.add(r.href);

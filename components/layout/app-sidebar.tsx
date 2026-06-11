@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
-import { getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
+import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
 import { NotificationBell } from "./notification-bell";
@@ -55,7 +55,7 @@ export function AppSidebar({
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
-      const match = group.routes.some((route) => {
+      const match = flattenNavRoutes(group.routes).some((route) => {
         if (route.isProjectsList) return pathname.startsWith("/projects/");
         return pathname === route.href || pathname.startsWith(route.href + "/");
       });

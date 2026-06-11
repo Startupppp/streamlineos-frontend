@@ -42,12 +42,19 @@ const signupSchema = z.object({
 
 type FormValues = z.infer<typeof signupSchema>;
 
-const PLAN_IDS = ["STARTUP", "SCALEUP", "ENTERPRISE"] as const;
+type TierId = (typeof PRICING_TIERS)[number]["id"];
+type ApiPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+
+const TIER_TO_API_PLAN: Record<TierId, ApiPlan> = {
+  starter: "STARTER",
+  startup: "STARTER",
+  growth: "PROFESSIONAL",
+  enterprise: "ENTERPRISE",
+};
 
 export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedPlan, setSelectedPlan] =
-    useState<(typeof PLAN_IDS)[number]>("STARTUP");
+  const [selectedTier, setSelectedTier] = useState<TierId>("startup");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,7 +73,7 @@ export default function SignupPage() {
   const handleSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/auth/signup", { ...data, plan: selectedPlan });
+      await apiClient.post("/auth/signup", { ...data, plan: TIER_TO_API_PLAN[selectedTier] });
       toast.success("Account created! Signing you in…");
 
       const result = await signIn("credentials", {
@@ -106,17 +113,16 @@ export default function SignupPage() {
       {step === 1 ? (
         <div className="space-y-3">
           <div role="radiogroup" aria-label="Plan" className="space-y-2">
-            {PRICING_TIERS.map((plan, idx) => {
-              const id = PLAN_IDS[idx];
-              const isSelected = selectedPlan === id;
+            {PRICING_TIERS.map((plan) => {
+              const isSelected = selectedTier === plan.id;
               const shortFeatures = plan.features.slice(0, 2);
               return (
                 <button
-                  key={id}
+                  key={plan.id}
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => setSelectedPlan(id)}
+                  onClick={() => setSelectedTier(plan.id)}
                   className={cn(
                     "relative w-full text-left rounded-xl border px-4 py-3 transition-all duration-200 flex items-center gap-3",
                     isSelected
