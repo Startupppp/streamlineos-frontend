@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { generateFollowUpEmail, generateEmailVariations } from "@/lib/ai/email-generator";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
 import { z } from "zod";
@@ -21,6 +22,8 @@ const generateSchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
+    const featureGuard = requireFeature(session.plan, "ai.email-drafting");
+    if (featureGuard) return featureGuard;
     if (!isOpenAIConfigured()) {
       return err("AI email generation is not configured. Set OPENAI_API_KEY.", 503);
     }

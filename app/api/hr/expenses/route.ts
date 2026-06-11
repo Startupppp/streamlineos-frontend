@@ -62,7 +62,10 @@ export async function POST(req: NextRequest) {
       return err("category, amount, and expenseDate are required.", 400);
     }
 
-    const isAdminRole = session.user.role === "HR" || session.user.role === "CEO";
+    const ability = await getSessionAbility();
+
+
+    const isAdminRole = ability.can("approve", "hr:expenses");
 
     const [expense] = await db
       .insert(expenses)

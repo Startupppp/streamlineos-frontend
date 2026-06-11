@@ -84,6 +84,7 @@ import { QuickActionsWidget } from "@/components/dashboard/widgets/quick-actions
 import { WidgetSkeleton } from "@/components/dashboard/widgets/widget-skeleton";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/utils";
+import { useAbility } from "@/lib/abilities-context";
 
 function LeavesTodayCard({ isAdmin }: { isAdmin: boolean }) {
   const { data, isLoading } = useLeavesToday({ enabled: isAdmin });
@@ -324,8 +325,9 @@ export default function DashboardPage() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const role = session?.user?.role;
-  const isAdmin = role === "OWNER" || role === "CEO" || role === "HR";
-  const isManager = role === "BRANCH_MANAGER" || role === "BRANCH_HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
+  const isManager = false; /* branch-manager check deprecated — gate via ability.can if needed */
   const isEmployee = !isAdmin && !isManager;
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({

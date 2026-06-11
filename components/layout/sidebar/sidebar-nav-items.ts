@@ -11,7 +11,7 @@ import {
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
   GitBranch, Building2, UserCog, SlidersHorizontal, UserX,
   Activity, FlaskConical, Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
-  FormInput, CalendarRange, FileSearch, LayoutTemplate, Grid3X3,
+  FormInput, CalendarRange, FileSearch, LayoutTemplate, Grid3X3, Calculator,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -191,6 +191,17 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Meeting Prep", icon: CalendarCheck, href: "/sales/meeting-prep", isSubItem: true, requiredPermission: "dashboard:sales:view" },
       { label: "Cohort Analysis", icon: BarChart3, href: "/sales/cohort-analysis", isSubItem: true, requiredPermission: "dashboard:sales:view" },
       { label: "Rep Comparison", icon: Users, href: "/sales/rep-comparison", isSubItem: true, requiredPermission: "dashboard:sales:view" },
+    ],
+  },
+  {
+    label: "Accounting",
+    requiredPermission: ["hr:salary:manage", "hr:payroll:approve"],
+    routes: [
+      { label: "Overview", icon: Calculator, href: "/accounting", requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
+      { label: "Chart of Accounts", icon: BookOpen, href: "/accounting/coa", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
+      { label: "Journal", icon: FileText, href: "/accounting/journal", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
+      { label: "Trial Balance", icon: Scale, href: "/accounting/trial-balance", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
+      { label: "Profit & Loss", icon: TrendingUp, href: "/accounting/profit-loss", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
     ],
   },
   {

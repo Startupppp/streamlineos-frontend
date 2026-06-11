@@ -1,22 +1,37 @@
 import { AbilityBuilder, createMongoAbility, type MongoAbility } from "@casl/ability";
-import { isSuperAdminRole } from "@/lib/rbac/permissions";
+import { moduleFromPermission } from "@/lib/billing/plan-modules";
 
 export type AppAbility = MongoAbility<[string, string]>;
 
 interface AbilityInput {
-  role: string | null | undefined;
-  permissions: readonly string[] | null | undefined;
+  isPlatformAdmin?: boolean;
+  isOrgOwner?: boolean;
+  permissions?: readonly string[] | null;
+  enabledModules?: readonly string[] | null;
 }
 
-export function defineAbilityFor({ role, permissions }: AbilityInput): AppAbility {
+export function defineAbilityFor({
+  isPlatformAdmin,
+  isOrgOwner,
+  permissions,
+  enabledModules,
+}: AbilityInput): AppAbility {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
-  if (isSuperAdminRole(role)) {
+  if (isPlatformAdmin || isOrgOwner) {
     can("manage", "all");
     return build();
   }
 
+  const moduleAllowed = (perm: string) => {
+    if (!enabledModules || enabledModules.length === 0) return true;
+    const mod = moduleFromPermission(perm);
+    if (!mod) return false;
+    return enabledModules.includes(mod);
+  };
+
   for (const perm of permissions ?? []) {
+    if (!moduleAllowed(perm)) continue;
     const [domain, resource, action] = perm.split(":");
     if (!domain || !resource || !action) continue;
     can(action, `${domain}:${resource}`);

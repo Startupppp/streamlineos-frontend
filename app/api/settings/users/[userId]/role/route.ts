@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { ALL_ROLES } from "@/lib/constants/roles";
-import { isSuperAdminRole } from "@/lib/rbac/permissions";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const updateRoleSchema = z.object({
@@ -16,7 +16,8 @@ export async function POST(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isSuperAdminRole(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "all")) {
       return err("Only Owner, CEO, or CTO can change user roles", 403);
     }
 

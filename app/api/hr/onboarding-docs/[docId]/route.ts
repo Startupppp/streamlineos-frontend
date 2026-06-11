@@ -7,6 +7,7 @@ import { aliasedTable } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { recalcOnboardingStatus } from "../route";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 type Params = { params: Promise<{ docId: string }> };
 
@@ -24,8 +25,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     if (!Number.isFinite(docId)) return err("Invalid document ID.", 400);
 
     const isAdmin =
-      session.user.role === "CEO" ||
-      session.user.role === "HR";
+      (await getSessionAbility()).can("manage", "hr:documents");
 
     const whereConditions = isAdmin
       ? and(

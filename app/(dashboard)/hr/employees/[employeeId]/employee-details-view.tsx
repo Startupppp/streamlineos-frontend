@@ -42,6 +42,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl } from "@/lib/utils";
@@ -220,6 +221,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const terminateMutation = useTerminateEmployee();
   const router = useRouter();
   const { data: session } = useSession();
+  const ability = useAbility();
   const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
@@ -259,7 +261,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             <Button variant="ghost" size="sm" asChild>
               <Link href="/hr"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
             </Button>
-            {(session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR") && (
+            {ability.can("manage", "hr:employees") && (
               <Button variant="outline" size="sm" asChild>
                 <a href={`/api/hr/employees/${employee.id}/profile-pdf`} download>
                   <Download className="h-3.5 w-3.5 mr-1" />

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AttendanceContent } from "./attendance-content";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAbility } from "@/lib/abilities-context";
 
 export default function AttendancePage() {
   const { data: session, status } = useSession();
@@ -27,7 +28,8 @@ export default function AttendancePage() {
 
   const userId = session?.user?.id;
   if (!userId) return null;
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   return (
     <PageWrapper

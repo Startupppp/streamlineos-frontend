@@ -3,6 +3,7 @@ import "server-only";
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { isOpenAIConfigured, aiText } from "@/lib/ai/openai";
 import { db } from "@/lib/db";
 import { clientAccounts, clientAccountActivities, leads } from "@/lib/db/schema/crm";
@@ -15,6 +16,8 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
+    const featureGuard = requireFeature(session.plan, "ai.deal-summary");
+    if (featureGuard) return featureGuard;
     if (!isOpenAIConfigured()) {
       return err("AI features are not configured. Set OPENAI_API_KEY.", 503);
     }

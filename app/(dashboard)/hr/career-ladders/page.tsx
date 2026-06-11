@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowUpRight, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 interface CareerLadder {
   id: number; title: string; department: string | null; description: string | null;
@@ -29,7 +30,8 @@ const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: ()
 export default function CareerLaddersPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: ladders, isLoading } = useQuery({
     queryKey: clKeys.list(),

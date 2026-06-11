@@ -22,6 +22,7 @@ export const organizations = pgTable("organizations", {
   mfaEnforced: boolean("mfa_enforced").default(false).notNull(),
   allowedEmailDomains: text("allowed_email_domains").array().default([]),
   passwordExpiryDays: integer("password_expiry_days"),
+  enabledModules: text("enabled_modules").array(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -31,10 +32,12 @@ export const organizationMembers = pgTable("organization_members", {
   userId: text("user_id").references(() => users.id).notNull(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   role: text("role").default("ENGINEERING").notNull(),
+  isOwner: boolean("is_owner").default(false).notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_org_members_user_org").on(table.userId, table.orgId),
   index("idx_org_members_org_role").on(table.orgId, table.role),
+  index("idx_org_members_owner").on(table.orgId, table.isOwner),
 ]);
 
 export const users = pgTable("users", {

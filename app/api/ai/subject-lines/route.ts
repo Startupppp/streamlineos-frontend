@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { isOpenAIConfigured, aiInvoke } from "@/lib/ai/openai";
 import { z } from "zod";
 

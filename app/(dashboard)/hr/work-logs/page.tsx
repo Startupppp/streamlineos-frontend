@@ -20,6 +20,7 @@ import {
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
 import { EmptyTimeIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
@@ -92,7 +93,8 @@ export default function WorkLogsPage() {
   const quarter = filters.quarter;
   const selectedUserId = filters.selectedUserId;
 
-  const isAdminOrCeo = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdminOrCeo = ability.can("manage", "hr:employees");
 
   const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
   const { data: departments } = useHrDepartments();

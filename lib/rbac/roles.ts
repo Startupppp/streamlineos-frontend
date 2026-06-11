@@ -1,7 +1,7 @@
 
-import { SYSTEM_ROLES, SUPER_ADMIN_ROLES, isSuperAdminRole, type SystemRole } from "./permissions";
+import { SYSTEM_ROLES, type SystemRole } from "./permissions";
 
-export { SYSTEM_ROLES, SUPER_ADMIN_ROLES, isSuperAdminRole, type SystemRole };
+export { SYSTEM_ROLES, type SystemRole };
 
 export const ROLE_LABELS: Record<SystemRole, string> = {
   OWNER: "Owner",

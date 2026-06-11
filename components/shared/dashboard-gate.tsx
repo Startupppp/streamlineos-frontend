@@ -3,7 +3,6 @@
 import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isSuperAdminRole } from "@/lib/rbac/permissions";
 import { useAbility } from "@/lib/abilities-context";
 
 interface DashboardGateProps {
@@ -37,8 +36,10 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
   }
 
   const userRole = session?.user?.role;
+  const isPlatformAdmin = session?.user?.isPlatformAdmin ?? false;
+  const isOrgOwner = session?.user?.isOrgOwner ?? false;
 
-  if (!userRole) {
+  if (!userRole && !isPlatformAdmin) {
     return (
       <AccessDenied
         currentRole={undefined}
@@ -47,7 +48,7 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
     );
   }
 
-  if (isSuperAdminRole(userRole)) {
+  if (isPlatformAdmin || isOrgOwner) {
     return <>{children}</>;
   }
 
@@ -62,7 +63,7 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
     );
   }
 
-  if (allowedRoles && allowedRoles.includes(userRole)) {
+  if (allowedRoles && userRole && allowedRoles.includes(userRole)) {
     return <>{children}</>;
   }
 

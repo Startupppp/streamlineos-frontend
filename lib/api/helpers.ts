@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { redis } from "@/lib/redis";
-import { BLOG_ADMIN_ROLES } from "@/lib/constants/roles";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { Session } from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { z, type ZodSchema } from "zod";
@@ -102,12 +102,26 @@ export async function withAuth(
   }
 }
 
+export async function withAbility(
+  verb: string,
+  subject: string,
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
+  return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (!ability.can(verb, subject)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return handler(session);
+  });
+}
+
 export async function withAdmin(
   handler: (session: AuthSession) => Promise<RouteResponse>
 ): Promise<RouteResponse> {
   return withAuth(async (session) => {
-    const role = session.user.role;
-    if (role !== "CEO" && role !== "HR" && role !== "ADMIN") {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "all") && !ability.can("manage", "hr:employees")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
@@ -118,7 +132,8 @@ export async function withBlogAdmin(
   handler: (session: AuthSession) => Promise<RouteResponse>
 ): Promise<RouteResponse> {
   return withAuth(async (session) => {
-    if (!BLOG_ADMIN_ROLES.includes(session.user.role ?? "")) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "all") && !ability.can("manage", "settings")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
@@ -130,48 +145,14 @@ export async function withRoles(
   handler: (session: AuthSession) => Promise<RouteResponse>,
 ): Promise<RouteResponse> {
   return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (ability.can("manage", "all")) return handler(session);
     const role = session.user.role ?? "";
     if (!allowed.includes(role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
   });
-}
-
-export async function withCEO(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO"], handler);
-}
-
-export async function withHrRole(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO", "HR"], handler);
-}
-
-export async function withSalesRole(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO", "HR", "SALES"], handler);
-}
-
-export async function withCrmRole(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO", "HR", "SALES"], handler);
-}
-
-export async function withMarketingRole(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO", "HR", "DIGITAL_MARKETING"], handler);
-}
-
-export async function withSupportRole(
-  handler: (session: AuthSession) => Promise<RouteResponse>,
-): Promise<RouteResponse> {
-  return withRoles(["CEO", "HR", "CUSTOMER_SUPPORT"], handler);
 }
 
 export function parseQuery<T>(req: NextRequest, schema: ZodSchema<T>): T {

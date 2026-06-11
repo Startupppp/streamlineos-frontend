@@ -13,8 +13,19 @@ export function AbilityContextProvider({ children }: { children: ReactNode }) {
   const { permissions } = usePermissions();
 
   const ability = useMemo(
-    () => defineAbilityFor({ role: session?.user?.role, permissions }),
-    [session?.user?.role, permissions],
+    () =>
+      defineAbilityFor({
+        isPlatformAdmin: session?.user?.isPlatformAdmin ?? false,
+        isOrgOwner: session?.user?.isOrgOwner ?? false,
+        permissions,
+        enabledModules: session?.enabledModules ?? [],
+      }),
+    [
+      session?.user?.isPlatformAdmin,
+      session?.user?.isOrgOwner,
+      session?.enabledModules,
+      permissions,
+    ],
   );
 
   return <AbilityProvider value={ability}>{children}</AbilityProvider>;

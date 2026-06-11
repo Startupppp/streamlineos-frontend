@@ -38,6 +38,7 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAbility } from "@/lib/abilities-context";
 
 
 interface DocumentType {
@@ -149,7 +150,8 @@ function blankForm() {
 export default function DocumentTypesPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isHROrCEO = role === "OWNER" || role === "CEO" || role === "HR";
+  const ability = useAbility();
+  const isHROrCEO = ability.can("manage", "hr:employees");
 
   const { data, isLoading } = useDocumentTypes();
   const createMutation = useCreateDocumentType();

@@ -35,8 +35,17 @@ const DEMO_LEADS = [
 ];
 
 const DEMO_DEALS = [
-  { name: "Acme Logistics — Annual HRMS",  value: 850000, stage: "PROPOSAL",    probability: 60 },
-  { name: "Vista Pharma — Enterprise Plan", value: 1200000, stage: "NEGOTIATION", probability: 75 },
+  { name: "Acme Logistics — Annual HRMS",   value:  850000, stage: "PROPOSAL",    probability: 60 },
+  { name: "Vista Pharma — Enterprise Plan",  value: 1200000, stage: "NEGOTIATION", probability: 75 },
+  { name: "Crestpoint Foods — Annual Plan",  value:  640000, stage: "WON",         probability: 100 },
+  { name: "Helio Health — Pilot",            value:  180000, stage: "LOST",        probability: 0 },
+];
+
+const DEMO_EXPENSES = [
+  { category: "Travel",        amount: "4250.00", description: "Client visit — Mumbai",        merchant: "IndiGo",         paymentMethod: "CARD", status: "APPROVED" as const, daysAgo: 12 },
+  { category: "Software",      amount: "1799.00", description: "Design tool annual license",   merchant: "Figma",          paymentMethod: "CARD", status: "PENDING"  as const, daysAgo: 3 },
+  { category: "Meals",         amount: "780.00",  description: "Team lunch after sprint demo", merchant: "The Big Chill",  paymentMethod: "UPI",  status: "APPROVED" as const, daysAgo: 5 },
+  { category: "Equipment",     amount: "2399.00", description: "Mechanical keyboard",          merchant: "Keychron India", paymentMethod: "CARD", status: "PENDING"  as const, daysAgo: 1 },
 ];
 
 const DEMO_TICKETS = [
@@ -75,6 +84,10 @@ async function main() {
     projects,
     tickets,
     candidates,
+    departments,
+    departmentMembers,
+    expenseCategories,
+    expenses,
   } = schema;
 
   console.log("[seed-demo] Looking up existing demo org…");
@@ -142,6 +155,7 @@ async function main() {
     userId: ownerId,
     orgId,
     role: "owner",
+    isOwner: true,
   }).onConflictDoNothing();
 
   if (isFreshOrg) {
@@ -216,6 +230,40 @@ async function main() {
   const pmId    = teamUserIds.PROJECT_MANAGER;
   const salesId = teamUserIds.SALES_REP;
   const engId   = teamUserIds.MEMBER;
+
+  console.log("[seed-demo] Seeding departments…");
+  const DEPARTMENT_NAMES = ["Engineering", "Sales", "Human Resources", "Design"] as const;
+  const departmentIds: Record<string, number> = {};
+  for (const name of DEPARTMENT_NAMES) {
+    let dept = await db.query.departments.findFirst({
+      where: and(eq(departments.orgId, orgId), eq(departments.name, name)),
+    });
+    if (!dept) {
+      const [row] = await db.insert(departments).values({
+        orgId,
+        name,
+        managerId: name === "Sales" ? salesId : name === "Human Resources" ? hrId : pmId,
+      }).returning();
+      dept = row;
+    }
+    departmentIds[name] = dept.id;
+  }
+
+  const departmentAssignments: Array<[string, string]> = [
+    [pmId,    "Engineering"],
+    [engId,   "Engineering"],
+    [salesId, "Sales"],
+    [hrId,    "Human Resources"],
+    [teamUserIds.MEMBER, "Design"],
+  ];
+  for (const [uid, deptName] of departmentAssignments) {
+    if (!uid || !departmentIds[deptName]) continue;
+    await db.insert(departmentMembers).values({
+      departmentId: departmentIds[deptName],
+      userId: uid,
+      role: "member",
+    }).onConflictDoNothing();
+  }
 
   console.log("[seed-demo] Seeding HR data (leave types, balances, recent leave & attendance)…");
   let casualLeaveType = await db.query.leaveTypes.findFirst({
@@ -313,18 +361,60 @@ async function main() {
     firstLeadId = existingLead.id;
   }
 
-  const existingDeal = await db.query.deals.findFirst({ where: eq(deals.orgId, orgId) });
-  if (!existingDeal) {
-    await db.insert(deals).values(
-      DEMO_DEALS.map((d, i) => ({
+  for (let i = 0; i < DEMO_DEALS.length; i++) {
+    const d = DEMO_DEALS[i];
+    const existing = await db.query.deals.findFirst({
+      where: and(eq(deals.orgId, orgId), eq(deals.name, d.name)),
+    });
+    if (existing) continue;
+    const wonOrLost = d.stage === "WON" || d.stage === "LOST";
+    await db.insert(deals).values({
+      orgId,
+      name: d.name,
+      value: String(d.value),
+      stage: d.stage as never,
+      probability: d.probability,
+      assignedToId: salesId,
+      leadId: i === 0 ? firstLeadId ?? undefined : undefined,
+      expectedCloseDate: formatISO(addDays(new Date(), wonOrLost ? -10 : 30 + i * 15), { representation: "date" }),
+      actualCloseDate: wonOrLost ? formatISO(subDays(new Date(), 5 + i), { representation: "date" }) : undefined,
+      lostReason: d.stage === "LOST" ? "Budget constraints — re-engaging Q3" : undefined,
+    });
+  }
+
+  console.log("[seed-demo] Seeding expense categories + sample expenses…");
+  const EXPENSE_CATEGORY_SEED = ["Travel", "Software", "Meals", "Equipment"];
+  const expenseCategoryIds: Record<string, number> = {};
+  for (const name of EXPENSE_CATEGORY_SEED) {
+    let cat = await db.query.expenseCategories.findFirst({
+      where: and(eq(expenseCategories.orgId, orgId), eq(expenseCategories.name, name)),
+    });
+    if (!cat) {
+      const [row] = await db.insert(expenseCategories).values({
+        orgId, name, isActive: true, budgetPeriod: "MONTHLY",
+      }).returning();
+      cat = row;
+    }
+    expenseCategoryIds[name] = cat.id;
+  }
+
+  const existingExpense = await db.query.expenses.findFirst({ where: eq(expenses.orgId, orgId) });
+  if (!existingExpense) {
+    await db.insert(expenses).values(
+      DEMO_EXPENSES.map((e, i) => ({
         orgId,
-        name: d.name,
-        value: String(d.value),
-        stage: d.stage as never,
-        probability: d.probability,
-        assignedToId: salesId,
-        leadId: i === 0 ? firstLeadId ?? undefined : undefined,
-        expectedCloseDate: formatISO(addDays(new Date(), 30 + i * 15), { representation: "date" }),
+        userId: i % 2 === 0 ? engId : salesId,
+        categoryId: expenseCategoryIds[e.category],
+        category: e.category,
+        amount: e.amount,
+        currency: "INR",
+        description: e.description,
+        merchant: e.merchant,
+        paymentMethod: e.paymentMethod,
+        status: e.status,
+        approverId: e.status === "APPROVED" ? hrId : undefined,
+        approvedAt: e.status === "APPROVED" ? subDays(new Date(), e.daysAgo - 1) : undefined,
+        expenseDate: formatISO(subDays(new Date(), e.daysAgo), { representation: "date" }),
       })),
     );
   }

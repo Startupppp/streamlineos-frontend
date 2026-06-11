@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,8 +21,8 @@ import { cn } from "@/lib/utils";
 
 export function AnnouncementsWidget() {
   const { data: session } = useSession();
-  const role = session?.user?.role;
-  const isAdmin = role === "CEO" || role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "settings");
 
   const { data, isLoading, error } = useAnnouncements();
   const createMutation = useCreateAnnouncement();

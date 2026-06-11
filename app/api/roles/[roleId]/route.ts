@@ -5,7 +5,7 @@ import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isSuperAdminRole } from "@/lib/rbac/permissions";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { z } from "zod";
 
@@ -42,7 +42,8 @@ export async function PATCH(
 ) {
   return withAuth(async (session) => {
     try {
-      if (!isSuperAdminRole(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
         return err("Only Owner, CEO, or CTO can update roles", 403);
       }
 
@@ -93,7 +94,8 @@ export async function DELETE(
 ) {
   return withAuth(async (session) => {
     try {
-      if (!isSuperAdminRole(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
         return err("Only Owner, CEO, or CTO can delete roles", 403);
       }
 

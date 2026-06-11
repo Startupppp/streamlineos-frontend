@@ -20,6 +20,7 @@ import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/documen
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAbility } from "@/lib/abilities-context";
 
 const DOCUMENT_CATEGORIES = [
   "Personal Documents",
@@ -52,7 +53,8 @@ export default function DocumentsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 

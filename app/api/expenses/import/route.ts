@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { expenses, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_ROWS = 10_000;
@@ -140,7 +141,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No organization found" }, { status: 400 });
     }
 
-    const isAdmin = member.role === "CEO" || member.role === "HR";
+    const ability = await getSessionAbility();
+
+
+    const isAdmin = ability.can("approve", "hr:expenses");
     if (!isAdmin) {
       return NextResponse.json({ error: "Only HR and CEO can import expenses" }, { status: 403 });
     }

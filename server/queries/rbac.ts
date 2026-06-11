@@ -10,7 +10,6 @@ import { eq, and } from "drizzle-orm";
 import {
   PERMISSIONS,
   ROLE_DEFAULT_PERMISSIONS,
-  isSuperAdminRole,
 } from "@/lib/rbac/permissions";
 
 export async function getUserPermissions(userId: string, orgId: string) {
@@ -59,10 +58,6 @@ export async function getUserPermissions(userId: string, orgId: string) {
   });
 
   defaultPerms.forEach((perm) => permissionSet.add(perm));
-
-  if (isSuperAdminRole(role)) {
-    PERMISSIONS.forEach((p) => permissionSet.add(p.name));
-  }
 
   return Array.from(permissionSet);
 }

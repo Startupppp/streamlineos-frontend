@@ -356,4 +356,13 @@ export const queryKeys = {
     sequences: () => [...base, "tasks", "sequences"] as const,
   },
 
+  accounting: {
+    all: [...base, "accounting"] as const,
+    accounts: <P extends object>(params?: P) => [...base, "accounting", "accounts", params] as const,
+    journal: <P extends object>(params?: P) => [...base, "accounting", "journal", params] as const,
+    journalEntry: (id: number) => [...base, "accounting", "journalEntry", id] as const,
+    trialBalance: (asOf: string) => [...base, "accounting", "trialBalance", asOf] as const,
+    profitLoss: (from: string, to: string) => [...base, "accounting", "profitLoss", from, to] as const,
+  },
+
 } as const;

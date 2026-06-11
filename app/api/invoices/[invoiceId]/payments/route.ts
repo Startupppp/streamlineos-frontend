@@ -1,10 +1,14 @@
 import { type NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { createPayment, getInvoicePayments } from "@/server/queries/invoice";
 import { db } from "@/lib/db";
 import { invoices } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { postPaymentReceipt } from "@/lib/accounting/post-payment";
+import { seedChartOfAccountsForOrg } from "@/lib/accounting/seed-coa";
+import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
 const recordPaymentSchema = z.object({
   amount: z.number().positive().max(999999999.99),
@@ -51,6 +55,20 @@ export async function POST(
       ...parsed.data,
       createdBy: session.user.id,
     });
+
+    await seedChartOfAccountsForOrg(session.orgId);
+    await postPaymentReceipt({
+      orgId: session.orgId,
+      paymentId: payment.id,
+      invoiceNumber: invoice.invoiceNumber,
+      paymentDate: parsed.data.paymentDate,
+      paymentMethod: parsed.data.paymentMethod,
+      amount: parsed.data.amount,
+      createdBy: session.user.id,
+    });
+    revalidateTag(orgScopedTag(CacheTag.journal, session.orgId), "default");
+    revalidateTag(orgScopedTag(CacheTag.trialBalance, session.orgId), "default");
+    revalidateTag(orgScopedTag(CacheTag.profitLoss, session.orgId), "default");
 
     return ok(payment, 201);
   });

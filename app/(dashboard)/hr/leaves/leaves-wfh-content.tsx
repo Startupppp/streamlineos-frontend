@@ -31,13 +31,12 @@ import type {
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
+import { useAbility } from "@/lib/abilities-context";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();
-  const isAdmin =
-    session?.user?.role === "OWNER" ||
-    session?.user?.role === "CEO" ||
-    session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();

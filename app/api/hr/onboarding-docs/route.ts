@@ -6,6 +6,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const querySchema = z.object({
   userId: z.string().optional(),
@@ -92,8 +93,7 @@ const reviewerUsers = aliasedTable(users, "reviewer");
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin =
-      session.user.role === "CEO" ||
-      session.user.role === "HR";
+      (await getSessionAbility()).can("manage", "hr:documents");
 
     if (isAdmin) {
       const query = parseQuery(req, querySchema);

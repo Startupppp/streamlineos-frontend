@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTasks } from "@/lib/db/schema";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(
   _req: NextRequest,
@@ -12,7 +13,9 @@ export async function GET(
     const { userId } = await params;
 
     const role = session.user.role;
-    const isAdmin = role === "CEO" || role === "HR";
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:employees");
 
     if (!isAdmin && session.user.id !== userId) {
       return err("Forbidden", 403);

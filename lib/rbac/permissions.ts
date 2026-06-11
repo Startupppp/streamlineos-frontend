@@ -424,12 +424,6 @@ export const SYSTEM_ROLES = [
 
 export type SystemRole = (typeof SYSTEM_ROLES)[number];
 
-export const SUPER_ADMIN_ROLES: ReadonlyArray<SystemRole> = ["OWNER"] as const;
-
-export function isSuperAdminRole(role: string | undefined | null): boolean {
-  return role === "OWNER";
-}
-
 const ALL_PERMISSIONS = PERMISSIONS.map((p) => p.name);
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {

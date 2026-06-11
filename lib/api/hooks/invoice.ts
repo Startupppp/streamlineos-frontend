@@ -20,18 +20,33 @@ interface InvoiceFilters {
   limit?: number;
 }
 
+export interface CreateInvoiceItemInput {
+  description: string;
+  hsnSacCode?: string;
+  quantity: number;
+  rate: number;
+  gstRate: number;
+}
+
 interface CreateInvoiceInput {
   clientId?: number;
   projectId?: number;
-  lineItems: InvoiceItem[];
+  lineItems?: InvoiceItem[];
+  items?: CreateInvoiceItemInput[];
   taxRate?: number;
   discount?: number;
   currency?: string;
   dueDate?: string;
   notes?: string;
+  status?: "DRAFT" | "SENT";
+  placeOfSupply?: string;
+  customerGstin?: string;
+  supplierGstin?: string;
+  reverseCharge?: boolean;
+  taxInclusive?: boolean;
 }
 
-interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> {
+interface UpdateInvoiceInput extends Partial<Omit<CreateInvoiceInput, "status">> {
   id: number;
   status?: InvoiceStatus;
 }

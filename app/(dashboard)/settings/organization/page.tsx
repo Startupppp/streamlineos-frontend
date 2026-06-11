@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,8 +89,8 @@ export default function OrganizationSettingsPage() {
 
   const uploadFileMutation = useUploadFile();
 
-  const role = session?.user?.role;
-  const canEdit = role === "OWNER" || role === "CEO";
+  const ability = useAbility();
+  const canEdit = ability.can("manage", "settings");
 
   const { mutate: updateOrg, isPending: isUpdatingOrg } = useUpdateOrgSettings();
   const { mutate: updateSecurity, isPending: isUpdatingSecurity } = useUpdateOrgSecuritySettings();

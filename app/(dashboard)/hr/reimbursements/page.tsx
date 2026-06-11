@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { Plus, Receipt, CheckCircle2, XCircle, DollarSign } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];
 
@@ -37,7 +38,8 @@ export default function ReimbursementsPage() {
   const { data: items, isLoading } = useReimbursements();
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);

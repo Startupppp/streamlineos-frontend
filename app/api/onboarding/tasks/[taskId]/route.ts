@@ -5,6 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTasks, users, organizationMembers } from "@/lib/db/schema";
 import { sendOnboardingCompleteEmployeeEmail, sendOnboardingCompleteHrEmail } from "@/lib/email";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const patchSchema = z.object({
   status: z.enum(["COMPLETED", "PENDING"]),
@@ -33,7 +34,9 @@ export async function PATCH(
     }
 
     const role = session.user.role;
-    const isAdmin = role === "CEO" || role === "HR";
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:employees");
 
     if (!isAdmin && task.userId !== session.user.id) {
       return err("Forbidden", 403);

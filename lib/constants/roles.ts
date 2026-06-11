@@ -1,6 +1,4 @@
 
-import { SUPER_ADMIN_ROLES as CANONICAL_SUPER_ADMIN_ROLES } from "@/lib/rbac/permissions";
-
 export const ROLES = {
   OWNER: "OWNER",
   CEO: "CEO",
@@ -15,8 +13,6 @@ export const ROLES = {
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
-
-export const SUPER_ADMIN_ROLES: readonly string[] = CANONICAL_SUPER_ADMIN_ROLES;
 
 export const ADMIN_ROLES: readonly string[] = [
   ROLES.OWNER,

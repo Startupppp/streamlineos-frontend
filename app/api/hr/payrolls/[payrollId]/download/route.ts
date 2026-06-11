@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import fs from "fs/promises";
 import path from "path";
 import type { NextRequest } from "next/server";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(
   _req: NextRequest,
@@ -23,7 +24,10 @@ export async function GET(
     if (!payroll) return err("Payroll not found.", 404);
     if (payroll.status !== "PAID") return err("Payslip only available for PAID payrolls.", 400);
 
-    const isAdmin = session.user.role === "CEO" || session.user.role === "HR";
+    const ability = await getSessionAbility();
+
+
+    const isAdmin = ability.can("approve", "hr:payroll");
     if (!isAdmin && payroll.userId !== session.user.id) {
       return err("Access denied.", 403);
     }

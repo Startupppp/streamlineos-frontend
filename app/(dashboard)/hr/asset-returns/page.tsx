@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 interface AssetReturn {
   id: number; userId: string; employeeName: string | null; assetName: string;
@@ -45,7 +46,8 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" | "d
 export default function AssetReturnsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: items, isLoading } = useQuery({
     queryKey: arKeys.list(),

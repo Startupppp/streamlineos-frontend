@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 function statusBadge(status: string | null): "default" | "secondary" | "outline" {
   if (status === "PUBLISHED") return "default";
@@ -51,7 +52,8 @@ export default function TrainingPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const handleCreate = useCallback(() => {
     if (!title.trim()) { toast.error("Title is required"); return; }

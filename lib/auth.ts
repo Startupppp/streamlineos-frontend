@@ -3,8 +3,26 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, platformSubscriptions } from "./db/schema";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions } from "./db/schema";
 import type { Plan } from "@/lib/billing/feature-gates";
+import { resolveEnabledModules, type Module } from "@/lib/billing/plan-modules";
+
+function parsePlatformAdminEmails(): ReadonlySet<string> {
+  const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
+  return new Set(
+    raw
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+const PLATFORM_ADMIN_EMAILS = parsePlatformAdminEmails();
+
+function isPlatformAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
+}
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
@@ -31,6 +49,8 @@ interface UserSessionCache {
   mfaEnforced: boolean | null;
   permissions: string[];
   plan: Plan | null;
+  isOrgOwner: boolean;
+  enabledModules: Module[];
 }
 
 const USER_SESSION_TTL = 300;
@@ -267,17 +287,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }),
               db.query.organizationMembers.findFirst({
                 where: eq(organizationMembers.userId, userId),
-                columns: { orgId: true },
+                columns: { orgId: true, isOwner: true },
               }),
             ]);
 
             let mfaEnforcedValue = false;
+            let orgEnabledModulesOverride: string[] | null = null;
             if (membership?.orgId) {
               const orgRow = await db.query.organizations.findFirst({
                 where: eq(organizations.id, membership.orgId),
-                columns: { mfaEnforced: true },
+                columns: { mfaEnforced: true, enabledModules: true },
               });
               mfaEnforcedValue = orgRow?.mfaEnforced ?? false;
+              orgEnabledModulesOverride = orgRow?.enabledModules ?? null;
             }
 
             let permissions: string[] = [];
@@ -287,16 +309,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
             let plan: Plan | null = null;
             if (membership?.orgId) {
-              const sub = await db.query.platformSubscriptions.findFirst({
-                where: eq(platformSubscriptions.orgId, membership.orgId),
+              const sub = await db.query.subscriptions.findFirst({
+                where: eq(subscriptions.orgId, membership.orgId),
                 columns: { plan: true, status: true },
               }).catch(() => null);
-              if (sub && sub.status === "active") {
+              if (sub && (sub.status === "ACTIVE" || sub.status === "TRIAL")) {
                 plan = sub.plan as Plan;
               } else {
                 plan = "FREE";
               }
             }
+
+            const enabledModules = resolveEnabledModules(plan, orgEnabledModulesOverride);
 
             const cacheValue: UserSessionCache | null = fresh
               ? {
@@ -307,6 +331,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   mfaEnforced: mfaEnforcedValue,
                   permissions,
                   plan,
+                  isOrgOwner: membership?.isOwner ?? false,
+                  enabledModules: [...enabledModules],
                 }
               : null;
             if (cacheValue && redis) {
@@ -327,6 +353,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.mfaEnforced = dbUser.mfaEnforced ?? false;
             token.permissions = dbUser.permissions ?? [];
             token.plan = dbUser.plan ?? null;
+            token.isOrgOwner = dbUser.isOrgOwner ?? false;
+            token.enabledModules = dbUser.enabledModules ?? [];
+            token.isPlatformAdmin = isPlatformAdminEmail(token.email as string | null | undefined);
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {
@@ -366,6 +395,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.sessionId = token.sessionId;
       session.plan = token.plan ?? null;
       session.permissions = token.permissions ?? [];
+      session.enabledModules = token.enabledModules ?? [];
+      if (session.user) {
+        session.user.isPlatformAdmin = token.isPlatformAdmin ?? false;
+        session.user.isOrgOwner = token.isOrgOwner ?? false;
+      }
       return session;
     },
   },

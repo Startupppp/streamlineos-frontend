@@ -1,42 +1,10 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { indianStates } from "@/lib/db/schema/accounting";
-
-const STATES: ReadonlyArray<{ stateCode: string; stateName: string }> = [
-  { stateCode: "01", stateName: "Jammu and Kashmir" },
-  { stateCode: "02", stateName: "Himachal Pradesh" },
-  { stateCode: "03", stateName: "Punjab" },
-  { stateCode: "04", stateName: "Chandigarh" },
-  { stateCode: "05", stateName: "Uttarakhand" },
-  { stateCode: "06", stateName: "Haryana" },
-  { stateCode: "07", stateName: "Delhi" },
-  { stateCode: "08", stateName: "Rajasthan" },
-  { stateCode: "09", stateName: "Uttar Pradesh" },
-  { stateCode: "10", stateName: "Bihar" },
-  { stateCode: "11", stateName: "Sikkim" },
-  { stateCode: "12", stateName: "Arunachal Pradesh" },
-  { stateCode: "13", stateName: "Nagaland" },
-  { stateCode: "14", stateName: "Manipur" },
-  { stateCode: "15", stateName: "Mizoram" },
-  { stateCode: "16", stateName: "Tripura" },
-  { stateCode: "17", stateName: "Meghalaya" },
-  { stateCode: "18", stateName: "Assam" },
-  { stateCode: "19", stateName: "West Bengal" },
-  { stateCode: "20", stateName: "Jharkhand" },
-  { stateCode: "21", stateName: "Odisha" },
-  { stateCode: "22", stateName: "Chhattisgarh" },
-  { stateCode: "23", stateName: "Madhya Pradesh" },
-  { stateCode: "24", stateName: "Gujarat" },
-  { stateCode: "27", stateName: "Maharashtra" },
-  { stateCode: "29", stateName: "Karnataka" },
-  { stateCode: "32", stateName: "Kerala" },
-  { stateCode: "33", stateName: "Tamil Nadu" },
-  { stateCode: "36", stateName: "Telangana" },
-  { stateCode: "37", stateName: "Andhra Pradesh" },
-];
+import { INDIAN_STATES } from "@/lib/accounting/indian-states";
 
 export async function seedIndianStates() {
-  for (const row of STATES) {
+  for (const row of INDIAN_STATES) {
     await db.insert(indianStates).values({ ...row, gstStateCode: row.stateCode }).onConflictDoNothing();
   }
 }

@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
         orgId,
         userId,
         role: "owner",
+        isOwner: true,
       });
 
       await tx.insert(subscriptions).values({

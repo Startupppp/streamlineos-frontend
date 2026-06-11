@@ -39,6 +39,7 @@ import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAbility } from "@/lib/abilities-context";
 import {
   useOnboardingStatus,
   useInitiateOnboarding,
@@ -634,7 +635,8 @@ function HrDocumentsTab() {
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isHROrCEO = role === "OWNER" || role === "CEO" || role === "HR";
+  const ability = useAbility();
+  const isHROrCEO = ability.can("manage", "hr:employees");
 
   return (
     <PageWrapper

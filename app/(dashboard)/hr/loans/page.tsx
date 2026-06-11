@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { Plus, Landmark, CheckCircle2, XCircle, Banknote } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (s === "ACTIVE" || s === "REPAID") return "default";
@@ -33,7 +34,8 @@ export default function LoansPage() {
   const { data: loans, isLoading } = useSalaryLoans();
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
