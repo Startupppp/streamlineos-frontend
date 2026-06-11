@@ -123,6 +123,55 @@ export async function withBlogAdmin<T>(
   });
 }
 
+export async function withRoles<T>(
+  allowed: readonly string[],
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withAuth(async (session) => {
+    const role = session.user.role ?? "";
+    if (!allowed.includes(role)) {
+      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+    }
+    return handler(session);
+  });
+}
+
+export async function withCEO<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO"], handler);
+}
+
+export async function withHrRole<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO", "HR"], handler);
+}
+
+export async function withSalesRole<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO", "HR", "SALES"], handler);
+}
+
+export async function withCrmRole<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO", "HR", "SALES"], handler);
+}
+
+export async function withMarketingRole<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO", "HR", "DIGITAL_MARKETING"], handler);
+}
+
+export async function withSupportRole<T>(
+  handler: (session: AuthSession) => Promise<NextResponse<T>>,
+): Promise<NextResponse<T>> {
+  return withRoles(["CEO", "HR", "CUSTOMER_SUPPORT"], handler);
+}
+
 export function parseQuery<T>(req: NextRequest, schema: ZodSchema<T>): T {
   const raw = Object.fromEntries(req.nextUrl.searchParams.entries());
   return schema.parse(raw);

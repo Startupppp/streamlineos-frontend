@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
+import { useImportExpenses } from "@/lib/api/hooks/use-import-expenses";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const TEMPLATE_COLUMNS = [
@@ -197,33 +198,28 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     }
   }, []);
 
+  const importMutation = useImportExpenses();
+
   const handleImport = useCallback(async () => {
     if (!file) return;
     setIsImporting(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("autoApprove", String(autoApprove));
-      if (Object.keys(categoryMapping).length > 0) {
-        formData.append("categoryMapping", JSON.stringify(categoryMapping));
-      }
-      const response = await fetch("/api/expenses/import", { method: "POST", body: formData });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        setImportResult({
-          success: true,
-          count: result.count ?? 0,
-          skipped: result.skipped ?? 0,
-          skippedReasons: Array.isArray(result.skippedReasons) ? result.skippedReasons : [],
-        });
-        toast.success(`Imported ${result.count ?? 0} expense(s) successfully`);
-        onSuccess();
-      } else {
-        toast.error(result.error || "Failed to import expenses");
-        setImportResult(null);
-      }
+      const result = await importMutation.mutateAsync({
+        file,
+        autoApprove,
+        categoryMapping,
+      });
+      setImportResult({
+        success: true,
+        count: result.count ?? 0,
+        skipped: result.skipped ?? 0,
+        skippedReasons: Array.isArray(result.skippedReasons) ? result.skippedReasons : [],
+      });
+      toast.success(`Imported ${result.count ?? 0} expense(s) successfully`);
+      onSuccess();
     } catch (error) {
       toast.error(getErrorMessage(error));
+      setImportResult(null);
     } finally {
       setIsImporting(false);
     }

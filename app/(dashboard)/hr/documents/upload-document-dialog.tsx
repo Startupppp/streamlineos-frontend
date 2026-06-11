@@ -10,6 +10,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useCreateDocument, useHrEmployees } from "@/lib/api/hooks/hr";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
@@ -41,6 +42,7 @@ export function UploadDocumentDialog({
 
   const { data: employees } = useHrEmployees(undefined);
   const createDocumentMutation = useCreateDocument();
+  const uploadFileMutation = useUploadFile();
 
   const filteredCategories = useMemo(
     () => categories.filter((cat) => cat && cat.trim() !== ""),
@@ -143,26 +145,21 @@ export function UploadDocumentDialog({
     }
   }, [handleAddTag]);
 
-  const uploadFileFn = useCallback(async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "documents");
-      const response = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
+  const uploadFileFn = useCallback(
+    async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
+      try {
+        setUploading(true);
+        const result = await uploadFileMutation.mutateAsync({ file, folder: "documents" });
+        return { url: result.url, size: result.size, mimeType: result.mimeType };
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+        return null;
+      } finally {
+        setUploading(false);
       }
-      const data = await response.json();
-      return { url: data.url, size: file.size, mimeType: file.type };
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  }, []);
+    },
+    [uploadFileMutation],
+  );
 
   const onSubmit = useCallback(async (data: DocumentFormData) => {
     if (files.length === 0) { toast.error("Please select at least one file to upload"); return; }

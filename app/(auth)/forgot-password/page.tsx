@@ -10,7 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useForgotPassword } from "@/lib/hooks/auth-hooks";
-import { ArrowLeft, CheckCircle2, KeyRound, Loader2, AlertCircle, RefreshCw, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  ArrowRight,
+} from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const forgotPasswordSchema = z.object({
@@ -51,30 +59,36 @@ export default function ForgotPasswordPage() {
   const forgotPassword = useForgotPassword();
 
   const onSubmit = (values: ForgotPasswordFormValues) => {
-    forgotPassword.mutate({ email: values.email }, {
-      onSuccess: () => {
-        setSent(true);
-        startCooldown();
-        toast.success("Password reset email sent! Check your inbox.");
+    forgotPassword.mutate(
+      { email: values.email },
+      {
+        onSuccess: () => {
+          setSent(true);
+          startCooldown();
+          toast.success("Password reset email sent! Check your inbox.");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
       },
-      onError: (error) => {
-        toast.error(getErrorMessage(error));
-      },
-    });
+    );
   };
 
   const handleResend = () => {
     if (cooldown > 0) return;
     const email = form.getValues("email");
-    forgotPassword.mutate({ email }, {
-      onSuccess: () => {
-        toast.success("Password reset email resent!");
-        startCooldown();
+    forgotPassword.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          toast.success("Password reset email resent!");
+          startCooldown();
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
       },
-      onError: (error) => {
-        toast.error(getErrorMessage(error));
-      },
-    });
+    );
   };
 
   if (sent) {
@@ -84,26 +98,45 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Check Your Email</h1>
-          <p className="text-muted-foreground mt-2">Password reset instructions sent</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+            Check Your Email
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Password reset instructions sent
+          </p>
         </div>
 
         <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6 space-y-4">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">We have sent a password reset link to</p>
-            <p className="font-medium text-foreground mt-1">{form.getValues("email")}</p>
-          </div>
-
-          <div role="status" className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-            <p className="text-sm text-blue-600">
-              Click the link in the email to reset your password. The link will expire in 1 hour.
+            <p className="text-sm text-muted-foreground">
+              We have sent a password reset link to
+            </p>
+            <p className="font-medium text-foreground mt-1">
+              {form.getValues("email")}
             </p>
           </div>
 
-          <aside aria-label="Email delivery help" className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <div
+            role="status"
+            className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4"
+          >
+            <p className="text-sm text-blue-600">
+              Click the link in the email to reset your password. The link will
+              expire in 1 hour.
+            </p>
+          </div>
+
+          <aside
+            aria-label="Email delivery help"
+            className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2"
+          >
+            <AlertCircle
+              className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0"
+              aria-hidden="true"
+            />
             <p className="text-xs text-amber-600">
-              Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@streamlineos.app.
+              Can&apos;t find the email? Check your spam or junk folder. The
+              email is sent from noreply@streamlineos.app.
             </p>
           </aside>
 
@@ -112,14 +145,20 @@ export default function ForgotPasswordPage() {
             className="w-full"
             onClick={handleResend}
             disabled={forgotPassword.isPending || cooldown > 0}
-            aria-label={cooldown > 0 ? `Resend available in ${cooldown} seconds` : "Resend reset email"}
+            aria-label={
+              cooldown > 0
+                ? `Resend available in ${cooldown} seconds`
+                : "Resend reset email"
+            }
           >
             {forgotPassword.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            {cooldown > 0 ? `Resend available in ${cooldown}s` : "Resend Reset Email"}
+            {cooldown > 0
+              ? `Resend available in ${cooldown}s`
+              : "Resend Reset Email"}
           </Button>
 
           <Link href="/signin" className="block">
@@ -139,16 +178,21 @@ export default function ForgotPasswordPage() {
         <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
           <KeyRound className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Forgot Password</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+          Forgot Password
+        </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Enter your registered email address and we&apos;ll send you instructions to reset your password.
+          Enter your registered email address and we&apos;ll send you
+          instructions to reset your password.
         </p>
       </div>
 
-      <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6">
+      <div className="rounded-xl border bg-card shadow-soft p-4">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground">Email Address</Label>
+            <Label htmlFor="email" className="text-foreground">
+              Email Address
+            </Label>
             <Input
               id="email"
               type="email"
@@ -157,14 +201,26 @@ export default function ForgotPasswordPage() {
               disabled={forgotPassword.isPending}
               className="h-9 text-sm focus-visible:ring-primary"
               aria-invalid={!!form.formState.errors.email}
-              aria-describedby={form.formState.errors.email ? "email-error" : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "email-error" : undefined
+              }
             />
             {form.formState.errors.email && (
-              <p id="email-error" role="alert" className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              <p
+                id="email-error"
+                role="alert"
+                className="text-sm text-destructive"
+              >
+                {form.formState.errors.email.message}
+              </p>
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={forgotPassword.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={forgotPassword.isPending}
+          >
             {forgotPassword.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -179,8 +235,11 @@ export default function ForgotPasswordPage() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+        <div className="mt-4 text-center">
+          <Link
+            href="/signin"
+            className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Sign In
           </Link>

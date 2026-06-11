@@ -30,6 +30,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/lib/api/hooks/hr";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const formSchema = z.object({
@@ -113,6 +114,7 @@ export function CreateExpenseDialog({
 
   const createExpenseMutation = useCreateExpense();
   const updateExpenseMutation = useUpdateExpense();
+  const uploadFileMutation = useUploadFile();
   const isEditMode = !!editExpense;
 
   const form = useForm<FormData>({
@@ -174,22 +176,8 @@ export function CreateExpenseDialog({
   const uploadFile = async (file: File): Promise<string | null> => {
     try {
       setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "receipts");
-
-      const response = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data = await response.json();
-      return data.url;
+      const result = await uploadFileMutation.mutateAsync({ file, folder: "receipts" });
+      return result.url;
     } catch (error) {
       toast.error(getErrorMessage(error));
       return null;

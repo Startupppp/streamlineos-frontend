@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Phone } from "lucide-react";
+import { EntityFormDialog } from "@/components/shared";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useCompleteTask, useUpdateTask, type Task } from "@/lib/api/hooks/tasks";
 import { toast } from "sonner";
 
@@ -31,7 +31,17 @@ const CALL_OUTCOMES = [
   { value: "CALLBACK_REQUESTED", label: "Callback requested" },
 ] as const;
 
-type CallOutcome = (typeof CALL_OUTCOMES)[number]["value"];
+const OUTCOME_VALUES = CALL_OUTCOMES.map((o) => o.value) as [
+  (typeof CALL_OUTCOMES)[number]["value"],
+  ...(typeof CALL_OUTCOMES)[number]["value"][],
+];
+
+const callLogSchema = z.object({
+  outcome: z.enum(OUTCOME_VALUES),
+  notes: z.string().optional(),
+});
+
+type CallLogValues = z.infer<typeof callLogSchema>;
 
 interface CallLogDialogProps {
   task: Task;
@@ -39,14 +49,17 @@ interface CallLogDialogProps {
 }
 
 export function CallLogDialog({ task, onClose }: CallLogDialogProps) {
-  const [outcome, setOutcome] = useState<CallOutcome>("REACHED");
-  const [notes, setNotes] = useState(task.notes ?? "");
   const completeTask = useCompleteTask();
   const updateTask = useUpdateTask();
 
-  function handleLog() {
-    const outcomeLabel = CALL_OUTCOMES.find((o) => o.value === outcome)?.label ?? outcome;
-    const callNotes = `[Call Log] Outcome: ${outcomeLabel}${notes.trim() ? `\n${notes.trim()}` : ""}`;
+  const isPending = updateTask.isPending || completeTask.isPending;
+
+  const handleSubmit = (data: CallLogValues) => {
+    const outcomeLabel =
+      CALL_OUTCOMES.find((o) => o.value === data.outcome)?.label ?? data.outcome;
+    const callNotes = `[Call Log] Outcome: ${outcomeLabel}${
+      data.notes && data.notes.trim() ? `\n${data.notes.trim()}` : ""
+    }`;
 
     updateTask.mutate(
       { taskId: task.id, data: { notes: callNotes } },
@@ -66,54 +79,74 @@ export function CallLogDialog({ task, onClose }: CallLogDialogProps) {
         onError: () => toast.error("Failed to save call log"),
       },
     );
-  }
+  };
 
-  const isPending = updateTask.isPending || completeTask.isPending;
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onClose();
+  };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-blue-500" />
-            Log Call — {task.title}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1">
-            <Label>Call Outcome *</Label>
-            <Select value={outcome} onValueChange={(v) => setOutcome(v as CallOutcome)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CALL_OUTCOMES.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Notes</Label>
-            <Textarea
-              placeholder="What was discussed? Any follow-up actions?"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button onClick={handleLog} disabled={isPending}>
-            {isPending ? "Saving…" : "Log & Complete"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <EntityFormDialog<CallLogValues>
+      open
+      onOpenChange={handleOpenChange}
+      title={`Log call — ${task.title}`}
+      resolver={zodResolver(callLogSchema)}
+      defaultValues={{
+        outcome: "REACHED",
+        notes: task.notes ?? "",
+      }}
+      onSubmit={handleSubmit}
+      isSubmitting={isPending}
+      submitLabel="Log & complete"
+    >
+      {(form) => (
+        <>
+          <FormField
+            control={form.control}
+            name="outcome"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5 text-blue-500" />
+                  Call outcome
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {CALL_OUTCOMES.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="What was discussed? Any follow-up actions?"
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
+    </EntityFormDialog>
   );
 }

@@ -1,20 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { ReactNode, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Pencil, Calendar, Target } from "lucide-react";
+import { Calendar, Pencil, Target } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -27,7 +20,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useUpdateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { format } from "date-fns";
 
 const editSprintSchema = z.object({
   name: z.string().min(1, "Sprint name is required"),
@@ -47,36 +39,16 @@ interface EditSprintDialogProps {
     goal?: string | null;
   };
   projectId: number;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
 }
 
 export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialogProps) {
   const [open, setOpen] = useState(false);
-
-  const form = useForm<EditSprintInput>({
-    resolver: zodResolver(editSprintSchema),
-    defaultValues: {
-      name: sprint.name,
-      startDate: format(new Date(sprint.startDate), "yyyy-MM-dd"),
-      endDate: format(new Date(sprint.endDate), "yyyy-MM-dd"),
-      goal: sprint.goal || "",
-    },
-  });
-
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        name: sprint.name,
-        startDate: format(new Date(sprint.startDate), "yyyy-MM-dd"),
-        endDate: format(new Date(sprint.endDate), "yyyy-MM-dd"),
-        goal: sprint.goal || "",
-      });
-    }
-  }, [open, sprint, form]);
-
   const updateSprint = useUpdateSprint(projectId);
 
-  function onSubmit(data: EditSprintInput) {
+  const handleOpen = () => setOpen(true);
+
+  const handleSubmit = (data: EditSprintInput) => {
     updateSprint.mutate(
       {
         sprintId: sprint.id,
@@ -93,35 +65,51 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
         onError: (error) => {
           toast.error(getErrorMessage(error));
         },
-      }
+      },
     );
-  }
+  };
+
+  const defaultValues: EditSprintInput = {
+    name: sprint.name,
+    startDate: format(new Date(sprint.startDate), "yyyy-MM-dd"),
+    endDate: format(new Date(sprint.endDate), "yyyy-MM-dd"),
+    goal: sprint.goal ?? "",
+  };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm">
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Edit Sprint
-          </SheetTitle>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <>
+      {trigger ? (
+        <span onClick={handleOpen} role="button" tabIndex={0}>
+          {trigger}
+        </span>
+      ) : (
+        <Button variant="ghost" size="sm" onClick={handleOpen}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
+      )}
+      <EntityFormSheet<EditSprintInput>
+        open={open}
+        onOpenChange={setOpen}
+        title="Edit sprint"
+        resolver={zodResolver(editSprintSchema)}
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isSubmitting={updateSprint.isPending}
+        resetOnOpen
+        submitLabel="Save changes"
+      >
+        {(form) => (
+          <>
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sprint Name</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                    Sprint name
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Sprint 1" {...field} />
                   </FormControl>
@@ -135,7 +123,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel>Start date</FormLabel>
                     <FormControl>
                       <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
@@ -148,7 +136,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>End date</FormLabel>
                     <FormControl>
                       <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
@@ -162,11 +150,9 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
               name="goal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Sprint Goal (Optional)
-                    </div>
+                  <FormLabel className="flex items-center gap-2">
+                    <Target className="h-3.5 w-3.5 text-cyan-500" />
+                    Sprint goal (optional)
                   </FormLabel>
                   <FormControl>
                     <Textarea
@@ -180,15 +166,9 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
                 </FormItem>
               )}
             />
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={updateSprint.isPending}>
-                {updateSprint.isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+          </>
+        )}
+      </EntityFormSheet>
+    </>
   );
 }

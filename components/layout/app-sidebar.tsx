@@ -186,7 +186,7 @@ export function AppSidebar({
               onClick={onNavigate}
               className="flex items-center gap-3 min-w-0 group"
             >
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 shrink-0">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/30 shrink-0">
                 <Image
                   src="/logo.svg"
                   alt="StreamlineOS"
@@ -215,7 +215,7 @@ export function AppSidebar({
             <Link
               href="/dashboard"
               onClick={onNavigate}
-              className="h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 flex items-center justify-center"
+              className="h-10 w-10 rounded-xl overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/30 flex items-center justify-center"
               aria-label="Go to dashboard"
             >
               <Image
@@ -245,7 +245,7 @@ export function AppSidebar({
             type="button"
             onClick={onToggleCollapse}
             aria-label="Expand sidebar"
-            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-gold hover:border-gold/40 hover:bg-sidebar transition-colors"
+            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar transition-colors"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>

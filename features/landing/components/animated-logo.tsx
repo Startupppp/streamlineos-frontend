@@ -21,8 +21,7 @@ export function AnimatedLogo({ size = 36, className }: Props) {
     >
       <defs>
         <linearGradient id="al-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#1E40AF" />
-          <stop offset="0.55" stopColor="#3B82F6" />
+          <stop offset="0" stopColor="#3B82F6" />
           <stop offset="1" stopColor="#06B6D4" />
         </linearGradient>
       </defs>

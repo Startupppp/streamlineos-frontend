@@ -1,31 +1,38 @@
 "use client";
 
-import * as React from "react";
-import { cn } from "../../lib/utils";
-import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import { LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type StatColor =
+  | "blue"
+  | "cyan"
+  | "green"
+  | "red"
+  | "violet"
+  | "amber"
+  | "gold"
+  | "purple";
 
 interface StatCardProps {
   label: string;
   value: string | number;
   icon: LucideIcon;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-    label?: string;
-  };
+  trend?: { value: number; isPositive: boolean; label?: string };
   href?: string;
   className?: string;
   index?: number;
-
-  color?: "gold" | "blue" | "green" | "red" | "purple";
+  color?: StatColor;
 }
 
-const colorMap = {
-  gold:   { bg: "bg-gold/10",   icon: "text-gold",          bar: "bg-gold" },
-  blue:   { bg: "bg-blue/10",   icon: "text-blue",          bar: "bg-blue" },
-  green:  { bg: "bg-emerald-500/10", icon: "text-emerald-600", bar: "bg-emerald-500" },
-  red:    { bg: "bg-red-500/10", icon: "text-red-600",       bar: "bg-red-500" },
+const COLOR_MAP: Record<StatColor, { bg: string; icon: string; bar: string }> = {
+  blue: { bg: "bg-blue-500/10", icon: "text-blue-600", bar: "bg-blue-500" },
+  cyan: { bg: "bg-cyan-500/10", icon: "text-cyan-600", bar: "bg-cyan-500" },
+  green: { bg: "bg-emerald-500/10", icon: "text-emerald-600", bar: "bg-emerald-500" },
+  red: { bg: "bg-red-500/10", icon: "text-red-600", bar: "bg-red-500" },
+  violet: { bg: "bg-violet-500/10", icon: "text-violet-600", bar: "bg-violet-500" },
+  amber: { bg: "bg-amber-500/10", icon: "text-amber-600", bar: "bg-amber-500" },
+  gold: { bg: "bg-blue-500/10", icon: "text-blue-600", bar: "bg-blue-500" },
   purple: { bg: "bg-violet-500/10", icon: "text-violet-600", bar: "bg-violet-500" },
 };
 
@@ -37,29 +44,32 @@ export function StatCard({
   href,
   className,
   index = 0,
-  color = "gold",
+  color = "blue",
 }: StatCardProps) {
-  const c = colorMap[color];
+  const c = COLOR_MAP[color];
 
-  const content = (
+  const body = (
     <div
       className={cn(
         "relative group rounded-xl border border-border bg-card p-4 overflow-hidden transition-all duration-200",
-        href && "hover:border-gold/30 hover:shadow-soft cursor-pointer",
-        className
+        href && "hover:border-blue-300/40 hover:shadow-sm cursor-pointer",
+        className,
       )}
       style={{ animation: `fade-up 0.3s ease-out ${index * 0.07}s both` }}
     >
-
-      <div className={cn("absolute top-0 left-0 right-0 h-[2px]", c.bar, "opacity-60")} />
+      <div className={cn("absolute top-0 left-0 right-0 h-[2px] opacity-70", c.bar)} />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-          <p className={cn(
-            "font-semibold text-foreground mt-1 truncate leading-none",
-            typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl"
-          )}>
+          <p className="text-xs font-medium text-muted-foreground truncate">
+            {label}
+          </p>
+          <p
+            className={cn(
+              "font-semibold text-foreground mt-1 truncate leading-none",
+              typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl",
+            )}
+          >
             {value}
           </p>
 
@@ -73,10 +83,11 @@ export function StatCard({
               <span
                 className={cn(
                   "text-[11px] font-medium",
-                  trend.isPositive ? "text-emerald-600" : "text-red-600"
+                  trend.isPositive ? "text-emerald-600" : "text-red-600",
                 )}
               >
-                {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%
+                {trend.isPositive ? "+" : "-"}
+                {Math.abs(trend.value)}%
               </span>
               {trend.label && (
                 <span className="text-[11px] text-muted-foreground">{trend.label}</span>
@@ -85,17 +96,19 @@ export function StatCard({
           )}
         </div>
 
-        <div className={cn(
-          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
-          c.bg,
-          href && "group-hover:scale-110"
-        )}>
+        <div
+          className={cn(
+            "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
+            c.bg,
+            href && "group-hover:scale-110",
+          )}
+        >
           <Icon className={cn("h-4 w-4", c.icon)} />
         </div>
       </div>
     </div>
   );
 
-  if (href) return <Link href={href}>{content}</Link>;
-  return content;
+  if (href) return <Link href={href}>{body}</Link>;
+  return body;
 }

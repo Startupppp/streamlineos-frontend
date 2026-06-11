@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Mail } from "lucide-react";
+import { EntityFormDialog } from "@/components/shared";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompleteTask, type TaskWithBucket } from "@/lib/api/hooks/tasks";
 import { useLeadDetail } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
-import { Mail } from "lucide-react";
+
+const emailTaskSchema = z.object({
+  to: z.string().email("Enter a valid email address"),
+  subject: z.string().min(1, "Subject is required"),
+  body: z.string().optional(),
+});
+
+type EmailTaskValues = z.infer<typeof emailTaskSchema>;
 
 interface EmailTaskDialogProps {
   task: TaskWithBucket;
@@ -25,21 +33,17 @@ interface EmailTaskDialogProps {
 export function EmailTaskDialog({ task, onClose }: EmailTaskDialogProps) {
   const isLeadTask = task.entityType === "LEAD" && !!task.entityId;
   const { data: lead } = useLeadDetail(isLeadTask ? task.entityId! : 0);
-
-  const [to, setTo] = useState(lead?.email ?? "");
-  const [subject, setSubject] = useState(`Follow-up: ${task.title}`);
-  const [body, setBody] = useState("");
   const completeTask = useCompleteTask();
 
-  const resolvedTo = to || lead?.email || "";
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onClose();
+  };
 
-  function handleSend() {
-    if (!resolvedTo.trim()) {
-      toast.error("Recipient email is required");
-      return;
-    }
+  const handleSubmit = (data: EmailTaskValues) => {
     window.open(
-      `mailto:${encodeURIComponent(resolvedTo)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      `mailto:${encodeURIComponent(data.to)}?subject=${encodeURIComponent(
+        data.subject,
+      )}&body=${encodeURIComponent(data.body ?? "")}`,
       "_blank",
     );
     completeTask.mutate(
@@ -52,58 +56,86 @@ export function EmailTaskDialog({ task, onClose }: EmailTaskDialogProps) {
         onError: () => toast.error("Failed to complete task"),
       },
     );
-  }
+  };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-amber-500" />
-            Send Email
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          {lead && (
-            <p className="text-xs text-muted-foreground">
-              Lead: <strong>{lead.name}</strong>
-              {lead.company ? ` · ${lead.company}` : ""}
-            </p>
-          )}
-          <div className="space-y-1">
-            <Label>To *</Label>
-            <Input
-              type="email"
-              value={resolvedTo}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="recipient@example.com"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Subject</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Body</Label>
-            <Textarea
-              rows={6}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Write your email here…"
-            />
-          </div>
+    <EntityFormDialog<EmailTaskValues>
+      open
+      onOpenChange={handleOpenChange}
+      title="Send email"
+      description={
+        lead
+          ? `Lead: ${lead.name}${lead.company ? ` · ${lead.company}` : ""}`
+          : undefined
+      }
+      resolver={zodResolver(emailTaskSchema)}
+      defaultValues={{
+        to: lead?.email ?? "",
+        subject: `Follow-up: ${task.title}`,
+        body: "",
+      }}
+      onSubmit={handleSubmit}
+      isSubmitting={completeTask.isPending}
+      submitLabel="Send & complete"
+      className="max-w-lg"
+    >
+      {(form) => (
+        <>
+          <FormField
+            control={form.control}
+            name="to"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 text-amber-500" />
+                  To
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="recipient@example.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="body"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Body</FormLabel>
+                <FormControl>
+                  <Textarea
+                    rows={6}
+                    placeholder="Write your email here..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <p className="text-xs text-muted-foreground">
-            Clicking Send will open your default mail client and mark this task as complete.
+            Clicking Send opens your default mail client and marks this task complete.
           </p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSend} disabled={completeTask.isPending || !resolvedTo.trim()}>
-            <Mail className="h-4 w-4 mr-1" />
-            {completeTask.isPending ? "Completing…" : "Send & Complete"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      )}
+    </EntityFormDialog>
   );
 }

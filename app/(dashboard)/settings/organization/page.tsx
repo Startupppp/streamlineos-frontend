@@ -14,6 +14,7 @@ import { Loader2, Shield, Clock, Globe, DollarSign, CalendarRange, Image, Users,
 import { Badge } from "@/components/ui/badge";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } from "@/lib/api/hooks/organization";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 
@@ -84,6 +85,8 @@ export default function OrganizationSettingsPage() {
   const [domainInput, setDomainInput] = useState("");
   const [securityInitialized, setSecurityInitialized] = useState(false);
   const domainInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadFileMutation = useUploadFile();
 
   const role = session?.user?.role;
   const canEdit = role === "CEO" || role === "ADMIN";
@@ -214,15 +217,10 @@ export default function OrganizationSettingsPage() {
   const handleLogoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "org-logos");
     setLogoUploading(true);
     try {
-      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      const json = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
-      setLogoUrl(json.url);
+      const result = await uploadFileMutation.mutateAsync({ file, folder: "org-logos" });
+      setLogoUrl(result.url);
       toast.success("Logo uploaded");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");

@@ -118,7 +118,7 @@ export function DashboardHeader() {
           </SheetContent>
         </Sheet>
 
-        <span className="text-sm flex-1 bg-black font-semibold text-foreground md:hidden">
+        <span className="text-sm flex-1 font-semibold text-foreground md:hidden">
           {pageTitle}
         </span>
       </div>

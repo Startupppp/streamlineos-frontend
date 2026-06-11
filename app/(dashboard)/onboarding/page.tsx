@@ -111,8 +111,8 @@ export default function OnboardingPage() {
         <motion.div variants={fadeUpVariants} initial="hidden" animate="visible">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">Employee Onboarding</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="font-display text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-slate-900">Employee Onboarding</h1>
+              <p className="text-sm text-slate-600">
                 Complete your profile to get started · Step {currentStepIndex + 1} of {ONBOARDING_STEPS.length}
               </p>
             </div>

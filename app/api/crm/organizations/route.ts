@@ -1,4 +1,6 @@
-import { withAuth, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { paginationSchema, searchSchema } from "@/lib/validation";
+import { paginateOffset } from "@/lib/api/list-response";
 import { db } from "@/lib/db";
 import { crmOrganizations } from "@/lib/db/schema";
 import { eq, desc, and, ilike, sql } from "drizzle-orm";
@@ -15,32 +17,29 @@ const createSchema = z.object({
   description: z.string().optional(),
 });
 
-const listQuerySchema = z.object({
-  search: z.string().optional(),
-  page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(100).optional().default(20),
-});
+const listQuerySchema = paginationSchema
+  .merge(searchSchema)
+  .extend({
+    search: z.string().optional(),
+  });
+
+function escapeLike(input: string): string {
+  return input.replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const parsed = listQuerySchema.safeParse({
-      search: req.nextUrl.searchParams.get("search") ?? undefined,
-      page: req.nextUrl.searchParams.get("page") ?? undefined,
-      limit: req.nextUrl.searchParams.get("limit") ?? undefined,
-    });
+    const { page, pageSize, search } = parseQuery(req, listQuerySchema);
+    const { offset, limit } = paginateOffset({ page, pageSize });
 
-    const { search, page, limit } = parsed.success
-      ? parsed.data
-      : { search: undefined, page: 1, limit: 20 };
+    const searchTerm = (search ?? req.nextUrl.searchParams.get("q") ?? "").trim();
 
     const where = and(
       eq(crmOrganizations.orgId, session.orgId),
-      search
-        ? ilike(crmOrganizations.name, `%${search.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`)
-        : undefined
+      searchTerm
+        ? ilike(crmOrganizations.name, `%${escapeLike(searchTerm)}%`)
+        : undefined,
     );
-
-    const offset = (page - 1) * limit;
 
     const [organizations, countRow] = await Promise.all([
       db
@@ -58,7 +57,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const totalCount = Number(countRow?.count ?? 0);
-    const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / limit);
+    const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / pageSize);
 
     return ok({
       organizations,
