@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
+import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";

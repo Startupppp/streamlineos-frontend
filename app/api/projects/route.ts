@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, withAdmin, ok, err, parseBody, toNumber } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import {
   projects,
@@ -46,21 +47,24 @@ export async function GET(req: NextRequest) {
     const offset = (page - 1) * limit;
 
     const ability = await getSessionAbility();
-
-
     const isOwnerOrAdmin = ability.can("manage", "projects");
-    const conditions = [eq(projects.orgId, session.orgId!)];
+    const orgId = session.orgId!;
+    const userId = session.user.id;
+
+    const key = `projects:list:${orgId}:${userId}:${isOwnerOrAdmin ? "all" : "scoped"}:${statusParam}:${search ?? ""}:${page}:${limit}`;
+    const result = await cached(key, async () => {
+    const conditions = [eq(projects.orgId, orgId)];
 
     if (!isOwnerOrAdmin) {
       const memberOf = await db
         .select({ projectId: projectMembers.projectId })
         .from(projectMembers)
-        .where(eq(projectMembers.userId, session.user.id));
+        .where(eq(projectMembers.userId, userId));
       const projectIds = memberOf.map((m) => m.projectId);
 
       conditions.push(
         or(
-          eq(projects.managerId, session.user.id),
+          eq(projects.managerId, userId),
           projectIds.length > 0
             ? inArray(projects.id, projectIds)
             : sql`false`
@@ -115,13 +119,13 @@ export async function GET(req: NextRequest) {
       .offset(offset);
 
     if (projectRows.length === 0) {
-      return ok({
+      return {
         data: [],
         total: Number(total),
         page,
         limit,
         totalPages: Math.ceil(Number(total) / limit),
-      });
+      };
     }
 
     const projectIds = projectRows.map((p) => p.id);
@@ -186,13 +190,15 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return ok({
+    return {
       data,
       total: Number(total),
       page,
       limit,
       totalPages: Math.ceil(Number(total) / limit),
-    });
+    };
+    }, { ttlSeconds: CACHE_TTL.SHORT });
+    return ok(result);
   });
 }
 
@@ -287,6 +293,8 @@ export async function POST(req: NextRequest) {
       targetType: "project",
       metadata: { name: body.name, key: projectKey, managerId: body.managerId },
     }).catch(() => {});
+
+    await invalidateCachePattern(`projects:list:${session.orgId}:*`);
 
     return ok(project, 201);
   });

@@ -100,7 +100,7 @@ export const SOURCE_COLORS: Record<string, string> = {
   website: "bg-blue-500/10 text-blue-400",
   social_media: "bg-purple-500/10 text-purple-400",
   walk_in: "bg-teal-500/10 text-teal-400",
-  other: "bg-gray-500/10 text-gray-400",
+  other: "bg-slate-500/10 text-slate-400",
 };
 
 export const ALL_COLUMNS = [

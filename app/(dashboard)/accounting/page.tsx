@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, BookOpen, ScrollText, BarChart3 } from "lucide-react";
+import { Calculator, BookOpen, ScrollText, BarChart3, Users, FileText, Scale, Clock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { DS } from "@/lib/design-system";
@@ -47,6 +47,37 @@ const NAV_CARDS: ReadonlyArray<NavCard> = [
     description: "Income and expense report for a period.",
     icon: BarChart3,
     accent: "bg-amber-500/10 text-amber-600",
+  },
+];
+
+const SECONDARY_NAV_CARDS: ReadonlyArray<NavCard> = [
+  {
+    href: "/accounting/customers",
+    title: "Customer ledgers",
+    description: "Outstanding receivables and per-customer ledger.",
+    icon: Users,
+    accent: "bg-cyan-500/10 text-cyan-600",
+  },
+  {
+    href: "/accounting/gstr-1",
+    title: "GSTR-1",
+    description: "Outward supplies summary grouped by place and GST rate.",
+    icon: FileText,
+    accent: "bg-indigo-500/10 text-indigo-600",
+  },
+  {
+    href: "/accounting/balance-sheet",
+    title: "Balance Sheet",
+    description: "Assets, liabilities, and equity as of a date.",
+    icon: Scale,
+    accent: "bg-sky-500/10 text-sky-600",
+  },
+  {
+    href: "/accounting/aged-receivables",
+    title: "Aged Receivables",
+    description: "Outstanding customer balances by days overdue.",
+    icon: Clock,
+    accent: "bg-rose-500/10 text-rose-600",
   },
 ];
 
@@ -113,6 +144,33 @@ export default function AccountingHubPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {NAV_CARDS.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link
+                key={card.href}
+                href={card.href}
+                className="group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-blue-300/40 hover:shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${card.accent}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-foreground truncate">
+                      {card.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground leading-snug">
+                      {card.description}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {SECONDARY_NAV_CARDS.map((card) => {
             const Icon = card.icon;
             return (
               <Link

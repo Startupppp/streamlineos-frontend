@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 import { Camera, Loader2, Trash2, Check, X } from "lucide-react";
 import { useUpdateProfile } from "@/lib/api/hooks/hr";
+import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -66,12 +67,10 @@ export function SettingsProfile() {
       formData.append("file", file);
       formData.append("folder", "avatars");
 
-      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || "Upload failed");
-      }
-      const { url, key } = await res.json();
+      const { url, key } = await apiClient.upload<{ url?: string; key?: string }>(
+        "/storage/upload",
+        formData,
+      );
       const imageValue = url || key;
 
       await new Promise<void>((resolve, reject) => {
@@ -95,7 +94,7 @@ export function SettingsProfile() {
       setCropDialogOpen(false);
       setCropImageSrc(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload photo");
+      toast.error(getApiError(err) || "Failed to upload photo");
       setPreviewUrl(null);
     } finally {
       setUploading(false);

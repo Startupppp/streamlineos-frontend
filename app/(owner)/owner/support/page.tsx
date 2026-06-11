@@ -17,7 +17,7 @@ export default async function SupportPage() {
       />
 
       {supportMessages.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
           <LifeBuoy className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">
             No support requests yet.
@@ -28,7 +28,7 @@ export default async function SupportPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <ul className="divide-y divide-slate-100">
             {supportMessages.map((m) => (
               <li key={m.publicCode}>

@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { leaveRequests, users } from "@/lib/db/schema";
 import { eq, and, desc, SQL } from "drizzle-orm";
@@ -66,7 +67,9 @@ async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isA
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";
-    const isAdmin = EXPENSE_ADMIN_ROLES.includes(role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:leaves");
 
     if (!isAdmin && role !== "MANAGER" && role !== "BRANCH_MANAGER") {
       return err("Only managers and admins can access team leave requests.", 403);

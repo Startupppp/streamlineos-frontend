@@ -18,10 +18,10 @@ const updateCategorySchema = z.object({
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   return withBlogAdmin(async () => {
-    const { id } = await params;
+    const { entityId: id } = await params;
     const body = await parseBody(req, updateCategorySchema);
 
     const updates: Record<string, unknown> = {};
@@ -45,10 +45,10 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   return withBlogAdmin(async () => {
-    const { id } = await params;
+    const { entityId: id } = await params;
     const [deleted] = await blogDb
       .delete(blogCategories)
       .where(eq(blogCategories.id, id))

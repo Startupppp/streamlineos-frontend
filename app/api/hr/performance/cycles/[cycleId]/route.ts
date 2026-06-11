@@ -3,7 +3,7 @@ import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reviewCycles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { updateReviewCycleSchema } from "@/lib/validations/hr";
+import { updateReviewCycleSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 
 export async function GET(

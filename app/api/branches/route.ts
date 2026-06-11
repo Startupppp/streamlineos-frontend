@@ -1,5 +1,7 @@
-import { type NextRequest } from "next/server";
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { NextResponse, type NextRequest } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 import { getBranches } from "@/server/queries/branches";
 import { db } from "@/lib/db";
 import { branches, users } from "@/lib/db/schema";
@@ -39,12 +41,21 @@ const createSchema = z.object({
 export async function GET() {
   return withAuth(async (session) => {
     try {
-      const data = await getBranches(session.orgId);
-      return ok(data);
+      const tag = orgScopedTag(CacheTag.branches, session.orgId);
+      const fetcher = unstable_cache(
+        () => getBranches(session.orgId),
+        [tag],
+        { tags: [tag], revalidate: 300 },
+      );
+      const data = await fetcher();
+      return NextResponse.json(data, {
+        status: 200,
+        headers: { "Cache-Control": "private, max-age=60" },
+      });
     } catch (error) {
       return err(
         error instanceof Error ? error.message : "Failed to load branches",
-        500
+        500,
       );
     }
   });
@@ -58,8 +69,7 @@ export async function POST(req: NextRequest) {
         return err("Only HR/CEO can create branches", 403);
       }
 
-      const body = await req.json();
-      const input = createSchema.parse(body);
+      const input = await parseBody(req, createSchema);
 
       const [branch] = await db
         .insert(branches)
@@ -79,11 +89,13 @@ export async function POST(req: NextRequest) {
           .where(eq(users.id, input.branchHrId));
       }
 
+      revalidateTag(orgScopedTag(CacheTag.branches, session.orgId), "default");
+
       return ok(branch, 201);
     } catch (error) {
       return err(
         error instanceof Error ? error.message : "Failed to create branch",
-        500
+        500,
       );
     }
   });

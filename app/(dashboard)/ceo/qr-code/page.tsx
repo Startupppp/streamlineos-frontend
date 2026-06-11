@@ -33,6 +33,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 type QRCodeData = {
   id: number;
@@ -301,11 +302,7 @@ export default function CEOQRCodePage() {
 
   const handleDownload = useCallback(async (slug: string, format: "png" | "jpeg" | "svg") => {
     try {
-      const res = await fetch(`/api/qr-code/download?slug=${encodeURIComponent(slug)}&format=${format}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Download failed");
-      const blob = await res.blob();
+      const blob = await apiClient.download("/qr-code/download", { params: { slug, format } });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;

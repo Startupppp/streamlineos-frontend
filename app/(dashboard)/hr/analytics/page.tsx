@@ -92,7 +92,7 @@ function AnalyticsContent() {
     MALE: "bg-blue-500",
     FEMALE: "bg-pink-500",
     OTHER: "bg-purple-500",
-    Unknown: "bg-gray-400",
+    Unknown: "bg-slate-400",
   };
 
   return (

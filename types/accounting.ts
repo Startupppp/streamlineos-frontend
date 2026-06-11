@@ -70,3 +70,176 @@ export interface ProfitLossReport {
   totalExpense: string;
   netIncome: string;
 }
+
+export interface CustomerLedgerLine {
+  date: string;
+  entryId: number;
+  entryNumber: string;
+  sourceType: string;
+  sourceEvent: string | null;
+  description: string | null;
+  invoiceId: number | null;
+  invoiceNumber: string | null;
+  debit: string;
+  credit: string;
+  runningBalance: string;
+}
+
+export interface CustomerLedgerSummary {
+  clientId: number;
+  clientName: string;
+  state: string | null;
+  gstin: string | null;
+  totalInvoiced: string;
+  totalPaid: string;
+  outstanding: string;
+}
+
+export interface CustomerLedger {
+  summary: CustomerLedgerSummary;
+  lines: CustomerLedgerLine[];
+}
+
+export interface CustomerOutstanding {
+  clientId: number;
+  clientName: string;
+  state: string | null;
+  gstin: string | null;
+  invoiceCount: number;
+  outstanding: string;
+}
+
+export type Gstr1Section = "B2B" | "B2C";
+
+export interface Gstr1RateBucket {
+  gstRate: string;
+  taxableValue: string;
+  cgst: string;
+  sgst: string;
+  igst: string;
+  invoiceCount: number;
+}
+
+export interface Gstr1PlaceBucket {
+  placeOfSupply: string | null;
+  placeName: string | null;
+  rates: Gstr1RateBucket[];
+}
+
+export interface Gstr1Section1 {
+  section: Gstr1Section;
+  places: Gstr1PlaceBucket[];
+  totalTaxableValue: string;
+  totalCgst: string;
+  totalSgst: string;
+  totalIgst: string;
+  totalInvoices: number;
+}
+
+export interface Gstr1Report {
+  from: string;
+  to: string;
+  b2b: Gstr1Section1;
+  b2c: Gstr1Section1;
+  grandTotal: {
+    taxableValue: string;
+    cgst: string;
+    sgst: string;
+    igst: string;
+    invoices: number;
+  };
+}
+
+export interface BalanceSheetRow {
+  accountId: number;
+  code: string;
+  name: string;
+  accountType: AccountType;
+  balance: string;
+}
+
+export interface BalanceSheetReport {
+  asOf: string;
+  assets: BalanceSheetRow[];
+  liabilities: BalanceSheetRow[];
+  equity: BalanceSheetRow[];
+  totalAssets: string;
+  totalLiabilities: string;
+  totalEquity: string;
+  retainedEarnings: string;
+  balanced: boolean;
+}
+
+export type AgingBucket = "current" | "d1_30" | "d31_60" | "d61_90" | "d91_plus";
+
+export interface AgedReceivablesRow {
+  clientId: number;
+  clientName: string;
+  current: string;
+  d1_30: string;
+  d31_60: string;
+  d61_90: string;
+  d91_plus: string;
+  total: string;
+}
+
+export interface AgedReceivablesReport {
+  asOf: string;
+  rows: AgedReceivablesRow[];
+  totals: {
+    current: string;
+    d1_30: string;
+    d31_60: string;
+    d61_90: string;
+    d91_plus: string;
+    total: string;
+  };
+}
+
+export type PurchaseBillStatus = "DRAFT" | "POSTED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
+
+export interface PurchaseBillItem {
+  id: number;
+  billId: number;
+  description: string;
+  hsnSacCode: string | null;
+  quantity: string;
+  rate: string;
+  gstRate: string;
+  amount: string;
+  lineOrder: number;
+}
+
+export interface PurchaseBillSummary {
+  id: number;
+  orgId: string;
+  vendorId: number | null;
+  vendorName: string | null;
+  billNumber: string;
+  vendorBillNumber: string | null;
+  billDate: string;
+  dueDate: string | null;
+  status: PurchaseBillStatus;
+  subtotal: string;
+  taxAmount: string;
+  cgstAmount: string;
+  sgstAmount: string;
+  igstAmount: string;
+  discount: string;
+  total: string;
+  amountPaid: string;
+  currency: string;
+  placeOfSupply: string | null;
+  vendorGstin: string | null;
+  supplierGstin: string | null;
+  reverseCharge: boolean;
+  notes: string | null;
+  expenseAccountCode: string | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PurchaseBill extends PurchaseBillSummary {
+  items: PurchaseBillItem[];
+}

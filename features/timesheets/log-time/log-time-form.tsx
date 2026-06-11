@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
-import type { addTimeEntryInputSchema } from "@/lib/validations/project";
+import type { addTimeEntryInputSchema } from "@/lib/validation/projects";
 import type { ProjectListItem, Ticket } from "@/types/projects";
 import { ProjectTicketSelects } from "./project-ticket-selects";
 import { AttachmentUploader } from "./attachment-uploader";

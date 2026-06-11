@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
+import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";

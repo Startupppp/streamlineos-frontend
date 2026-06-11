@@ -41,9 +41,10 @@ import {
   useLogTime,
 } from "@/lib/api/hooks/projects";
 import { Plus, Loader2, Link as LinkIcon, Upload, X, FileText } from "lucide-react";
-import { addTimeEntryInputSchema } from "@/lib/validations/project";
+import { addTimeEntryInputSchema } from "@/lib/validation/projects";
 import type { ProjectListItem, Ticket } from "@/types/projects";
 import { ScrollArea } from "../ui/scroll-area";
+import { apiClient } from "@/lib/api-client";
 
 interface LogTimeDialogProps {
   trigger?: React.ReactNode;
@@ -120,18 +121,10 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "time-entries");
-
-      const response = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data = await response.json();
+      const data = await apiClient.upload<{ url?: string; key?: string }>(
+        "/storage/upload",
+        formData,
+      );
       return data.url ?? data.key ?? null;
     } catch {
       toast.error("Failed to upload file");

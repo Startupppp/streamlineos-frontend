@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { dealApprovals, dealApprovalRules, deals, users } from "@/lib/db/schema";
@@ -71,7 +72,9 @@ export async function POST(req: NextRequest) {
     if (body.approvalId) {
       const { approvalId, action, rejectionReason } = resolveSchema.parse(body);
       const role = session.user.role ?? "";
-      if (!ADMIN_ROLES.includes(role)) return err("Only admins can resolve approvals", 403);
+      const ability = await getSessionAbility();
+
+      if (!ability.can("manage", "settings")) return err("Only admins can resolve approvals", 403);
 
       const [updated] = await db
         .update(dealApprovals)

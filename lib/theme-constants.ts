@@ -107,7 +107,7 @@ export const leaveStatusColors: Record<LeaveStatus, string> = {
 };
 
 export const payrollStatusColors: Record<PayrollStatus, string> = {
-  DRAFT: "bg-gray-500/10 text-gray-700 border-gray-200",
+  DRAFT: "bg-slate-500/10 text-slate-700 border-slate-200",
   PENDING_APPROVAL: "bg-yellow-500/10 text-yellow-700 border-yellow-200",
   APPROVED: "bg-blue-500/10 text-blue-700 border-blue-200",
   PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
@@ -122,7 +122,7 @@ export const expenseStatusColors: Record<ExpenseStatus, string> = {
 
 export const deviceStatusColors: Record<DeviceStatus, string> = {
   ACTIVE: "bg-green-500/10 text-green-700 border-green-200",
-  INACTIVE: "bg-gray-500/10 text-gray-700 border-gray-200",
+  INACTIVE: "bg-slate-500/10 text-slate-700 border-slate-200",
   LOST: "bg-red-500/10 text-red-700 border-red-200",
   RETURNED: "bg-blue-500/10 text-blue-700 border-blue-200",
 };

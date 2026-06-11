@@ -3,14 +3,14 @@ import { and, eq, lte, sum } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { ledgerAccounts, journalEntries, journalLines } from "@/lib/db/schema/accounting";
-import { withRoles, parseQuery, ok } from "@/lib/api/helpers";
+import { withModuleAbility, parseQuery, ok } from "@/lib/api/helpers";
 import { trialBalanceQuerySchema } from "@/lib/validation/accounting-schemas";
 import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
 const NORMAL_DEBIT: ReadonlyArray<string> = ["ASSET", "EXPENSE"];
 
 export async function GET(req: NextRequest) {
-  return withRoles(["OWNER", "CEO", "HR"], async (session) => {
+  return withModuleAbility("accounting", "read", "accounting:reports", async (session) => {
     const { asOf } = parseQuery(req, trialBalanceQuerySchema);
 
     const tag = orgScopedTag(CacheTag.trialBalance, session.orgId);

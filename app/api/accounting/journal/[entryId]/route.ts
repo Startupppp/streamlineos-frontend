@@ -2,7 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ledgerAccounts, journalEntries, journalLines } from "@/lib/db/schema/accounting";
-import { withRoles, ok, err } from "@/lib/api/helpers";
+import { withModuleAbility, ok, err } from "@/lib/api/helpers";
 
 type Params = { params: Promise<{ entryId: string }> };
 
@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const id = Number(entryId);
   if (!Number.isInteger(id) || id <= 0) return err("Invalid entry id", 400);
 
-  return withRoles(["OWNER", "CEO", "HR"], async (session) => {
+  return withModuleAbility("accounting", "read", "accounting:journal", async (session) => {
     const headerRows = await db
       .select()
       .from(journalEntries)

@@ -2,9 +2,11 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -91,6 +93,14 @@ export default function JournalListPage() {
       title="Journal"
       subtitle="Every posted journal entry."
       badge={`${total}`}
+      actions={
+        <Button asChild>
+          <Link href="/accounting/journal/new">
+            <Plus className="size-4 mr-1" />
+            New entry
+          </Link>
+        </Button>
+      }
     >
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">

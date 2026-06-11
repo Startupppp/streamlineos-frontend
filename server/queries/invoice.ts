@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { invoices, payments } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
+import type { DbOrTx } from "@/lib/accounting/persist-entry";
 
 export interface InvoiceFilters {
   status?: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
@@ -79,9 +80,10 @@ export async function createPayment(
     referenceNumber?: string;
     notes?: string;
     createdBy: string;
-  }
+  },
+  outerTx?: DbOrTx
 ) {
-  return db.transaction(async (tx) => {
+  async function run(tx: DbOrTx) {
     const [payment] = await tx.insert(payments).values({
       orgId,
       invoiceId,
@@ -109,7 +111,12 @@ export async function createPayment(
     }
 
     return payment;
-  });
+  }
+
+  if (outerTx) {
+    return run(outerTx);
+  }
+  return db.transaction(async (tx) => run(tx));
 }
 
 export async function getInvoiceStats(orgId: string) {

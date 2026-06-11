@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { redis } from "@/lib/redis";
 import { getSessionAbility } from "@/lib/abilities-server";
+import type { Module } from "@/lib/billing/plan-modules";
 import type { Session } from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { z, type ZodSchema } from "zod";
@@ -102,20 +103,89 @@ export async function withAuth(
   }
 }
 
+export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage";
+
+export type AbilitySubject =
+  | "all"
+  | "accounting"
+  | "accounting:accounts"
+  | "accounting:journal"
+  | "accounting:reports"
+  | "audit-log"
+  | "blog"
+  | "blog:posts"
+  | "blog:categories"
+  | "crm"
+  | "crm:leads"
+  | "crm:assignment-rules"
+  | "crm:email-templates"
+  | "crm:scoring-rules"
+  | "crm:sla"
+  | "hr"
+  | "hr:employees"
+  | "hr:payroll"
+  | "hr:analytics"
+  | "hr:documents"
+  | "projects"
+  | "projects:sprints"
+  | "settings"
+  | "settings:custom-fields"
+  | "settings:email-templates"
+  | "settings:webhooks";
+
 export async function withAbility(
-  verb: string,
-  subject: string,
+  verb: AbilityVerb,
+  subject: AbilitySubject,
   handler: (session: AuthSession) => Promise<RouteResponse>,
 ): Promise<RouteResponse> {
   return withAuth(async (session) => {
     const ability = await getSessionAbility();
     if (!ability.can(verb, subject)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden", code: "RBAC_DENIED", verb, subject },
+        { status: 403 },
+      );
     }
     return handler(session);
   });
 }
 
+export async function withModule(
+  module: Module,
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
+  return withAuth(async (session) => {
+    const isPlatformAdmin = session.user.isPlatformAdmin === true;
+    const enabled = session.enabledModules ?? [];
+    if (!isPlatformAdmin && !enabled.includes(module)) {
+      return NextResponse.json(
+        { error: "Module not available on this plan", code: "MODULE_DISABLED", module },
+        { status: 404 },
+      );
+    }
+    return handler(session);
+  });
+}
+
+export async function withModuleAbility(
+  module: Module,
+  verb: AbilityVerb,
+  subject: AbilitySubject,
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
+  return withModule(module, async (session) => {
+    const ability = await getSessionAbility();
+    if (!ability.can(verb, subject)) {
+      return NextResponse.json(
+        { error: "Forbidden", code: "RBAC_DENIED", verb, subject },
+        { status: 403 },
+      );
+    }
+    return handler(session);
+  });
+}
+
+/** @deprecated Use {@link withModuleAbility} or {@link withAbility}. Kept as a shim during Wave 1 migration. */
 export async function withAdmin(
   handler: (session: AuthSession) => Promise<RouteResponse>
 ): Promise<RouteResponse> {
@@ -128,6 +198,7 @@ export async function withAdmin(
   });
 }
 
+/** @deprecated Use {@link withModuleAbility}("settings", "manage", "blog:posts"). */
 export async function withBlogAdmin(
   handler: (session: AuthSession) => Promise<RouteResponse>
 ): Promise<RouteResponse> {
@@ -140,6 +211,7 @@ export async function withBlogAdmin(
   });
 }
 
+/** @deprecated Hardcoded role names bypass dynamic RBAC. Use {@link withModuleAbility} instead. */
 export async function withRoles(
   allowed: readonly string[],
   handler: (session: AuthSession) => Promise<RouteResponse>,
@@ -154,6 +226,7 @@ export async function withRoles(
     return handler(session);
   });
 }
+
 
 export function parseQuery<T>(req: NextRequest, schema: ZodSchema<T>): T {
   const raw = Object.fromEntries(req.nextUrl.searchParams.entries());

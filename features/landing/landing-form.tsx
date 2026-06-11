@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { z } from "zod";
+import { useSubmitLandingForm } from "@/lib/api/hooks/landing";
+import { getApiError } from "@/lib/api-client";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -53,6 +55,8 @@ export function LandingForm({ orgId, utm }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const submitMutation = useSubmitLandingForm();
+
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileTokenRef = useRef<string | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
@@ -101,41 +105,29 @@ export function LandingForm({ orgId, utm }: Props) {
 
       setStatus("loading");
 
+      if (TURNSTILE_SITE_KEY && !turnstileTokenRef.current) {
+        setServerError("Please complete the bot verification challenge.");
+        setStatus("error");
+        return;
+      }
+
       try {
-        if (TURNSTILE_SITE_KEY && !turnstileTokenRef.current) {
-          setServerError("Please complete the bot verification challenge.");
-          setStatus("error");
-          return;
-        }
-
-        const res = await fetch("/api/landing/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orgId,
-            name: result.data.name,
-            email: result.data.email || null,
-            phone: result.data.phone || null,
-            message: result.data.message || null,
-            ...resolvedUtm,
-            ...(turnstileTokenRef.current && { cfTurnstileToken: turnstileTokenRef.current }),
-          }),
+        await submitMutation.mutateAsync({
+          orgId,
+          name: result.data.name,
+          email: result.data.email || null,
+          phone: result.data.phone || null,
+          message: result.data.message || null,
+          ...resolvedUtm,
+          ...(turnstileTokenRef.current && { cfTurnstileToken: turnstileTokenRef.current }),
         });
-
-        if (!res.ok) {
-          const json = (await res.json()) as { error?: string };
-          setServerError(json.error ?? "Submission failed. Please try again.");
-          setStatus("error");
-          return;
-        }
-
         setStatus("success");
-      } catch {
-        setServerError("Network error. Please check your connection and try again.");
+      } catch (e) {
+        setServerError(getApiError(e) || "Submission failed. Please try again.");
         setStatus("error");
       }
     },
-    [values, orgId, resolvedUtm.utmSource, resolvedUtm.utmMedium, resolvedUtm.utmCampaign, resolvedUtm.utmContent, resolvedUtm.utmTerm, resolvedUtm.referrerUrl],
+    [values, orgId, resolvedUtm.utmSource, resolvedUtm.utmMedium, resolvedUtm.utmCampaign, resolvedUtm.utmContent, resolvedUtm.utmTerm, resolvedUtm.referrerUrl, submitMutation],
   );
 
   if (status === "success") {

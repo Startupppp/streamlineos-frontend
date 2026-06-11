@@ -6,6 +6,11 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Account,
   AccountType,
+  AgedReceivablesReport,
+  BalanceSheetReport,
+  CustomerLedger,
+  CustomerOutstanding,
+  Gstr1Report,
   JournalEntry,
   ProfitLossReport,
   TrialBalanceRow,
@@ -111,6 +116,71 @@ export function useJournalEntry(entryId: number) {
   });
 }
 
+export interface ReverseJournalEntryResult {
+  id: number;
+  entryNumber: string;
+  created: boolean;
+}
+
+export function useReverseJournalEntry(entryId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<ReverseJournalEntryResult, Error, void>({
+    mutationFn: () =>
+      apiClient.post<ReverseJournalEntryResult>(`/accounting/journal/${entryId}/reverse`),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.journalEntry(entryId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.journalEntry(result.id) });
+    },
+  });
+}
+
+export interface CreateJournalEntryLine {
+  accountCode: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface CreateJournalEntryInput {
+  entryDate: string;
+  description: string;
+  status: "DRAFT" | "POSTED";
+  lines: CreateJournalEntryLine[];
+}
+
+interface CreateJournalEntryResult {
+  id: number;
+  entryNumber: string;
+}
+
+export function useCreateJournalEntry() {
+  const queryClient = useQueryClient();
+  return useMutation<CreateJournalEntryResult, Error, CreateJournalEntryInput>({
+    mutationFn: (input) => apiClient.post<CreateJournalEntryResult>("/accounting/journal", input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+    },
+  });
+}
+
+interface PostJournalEntryResult {
+  id: number;
+  entryNumber: string;
+  status: "DRAFT" | "POSTED" | "VOID";
+}
+
+export function usePostJournalEntry(entryId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<PostJournalEntryResult, Error, void>({
+    mutationFn: () => apiClient.post<PostJournalEntryResult>(`/accounting/journal/${entryId}/post`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.journalEntry(entryId) });
+    },
+  });
+}
+
 export function useTrialBalance(asOf: string) {
   return useQuery<TrialBalanceResponse, Error>({
     queryKey: queryKeys.accounting.trialBalance(asOf),
@@ -127,6 +197,64 @@ export function useProfitLoss(from: string, to: string) {
     queryFn: () =>
       apiClient.get<ProfitLossReport>("/accounting/reports/profit-loss", { from, to }),
     enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+}
+
+export interface ListCustomersOutstandingParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  onlyOutstanding?: boolean;
+}
+
+export function useCustomersOutstanding(params: ListCustomersOutstandingParams = {}) {
+  return useQuery<ListResponse<CustomerOutstanding>, Error>({
+    queryKey: queryKeys.accounting.customersOutstanding(params),
+    queryFn: () =>
+      apiClient.get<ListResponse<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
+    staleTime: 60_000,
+  });
+}
+
+export interface CustomerLedgerParams {
+  from?: string;
+  to?: string;
+}
+
+export function useCustomerLedger(clientId: number, params: CustomerLedgerParams = {}) {
+  return useQuery<CustomerLedger, Error>({
+    queryKey: queryKeys.accounting.customerLedger(clientId, params),
+    queryFn: () =>
+      apiClient.get<CustomerLedger>(`/accounting/customers/${clientId}/ledger`, toQuery(params)),
+    enabled: Number.isInteger(clientId) && clientId > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useGstr1(from: string, to: string) {
+  return useQuery<Gstr1Report, Error>({
+    queryKey: queryKeys.accounting.gstr1({ from, to }),
+    queryFn: () => apiClient.get<Gstr1Report>("/accounting/reports/gstr-1", { from, to }),
+    enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+}
+
+export function useBalanceSheet(asOf: string) {
+  return useQuery<BalanceSheetReport, Error>({
+    queryKey: queryKeys.accounting.balanceSheet({ asOf }),
+    queryFn: () => apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", { asOf }),
+    enabled: !!asOf,
+    staleTime: 30_000,
+  });
+}
+
+export function useAgedReceivables(asOf: string) {
+  return useQuery<AgedReceivablesReport, Error>({
+    queryKey: queryKeys.accounting.agedReceivables({ asOf }),
+    queryFn: () => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }),
+    enabled: !!asOf,
     staleTime: 30_000,
   });
 }

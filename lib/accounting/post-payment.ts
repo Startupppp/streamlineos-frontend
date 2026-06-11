@@ -1,6 +1,6 @@
 import "server-only";
 import { ACCOUNT_CODES, paymentMethodToAccountCode } from "./posting-rules";
-import { persistJournalEntry, type DraftLine, type PersistedEntry } from "./persist-entry";
+import { persistJournalEntry, type DbOrTx, type DraftLine, type PersistedEntry } from "./persist-entry";
 
 export type PostPaymentInput = {
   orgId: string;
@@ -12,7 +12,7 @@ export type PostPaymentInput = {
   createdBy: string;
 };
 
-export async function postPaymentReceipt(input: PostPaymentInput): Promise<PersistedEntry> {
+export async function postPaymentReceipt(input: PostPaymentInput, tx?: DbOrTx): Promise<PersistedEntry> {
   const cashCode = paymentMethodToAccountCode(input.paymentMethod);
   const lines: DraftLine[] = [
     { accountCode: cashCode, debit: input.amount, credit: 0, description: `Payment for ${input.invoiceNumber} (${input.paymentMethod})` },
@@ -28,5 +28,5 @@ export async function postPaymentReceipt(input: PostPaymentInput): Promise<Persi
     sourceEvent: "receipt",
     createdBy: input.createdBy,
     lines,
-  });
+  }, tx);
 }

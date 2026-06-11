@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ledgerAccounts } from "@/lib/db/schema/accounting";
-import { withRoles, parseBody, ok, err } from "@/lib/api/helpers";
+import { withModuleAbility, parseBody, ok, err } from "@/lib/api/helpers";
 import { updateAccountSchema } from "@/lib/validation/accounting-schemas";
 import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const id = Number(accountId);
   if (!Number.isInteger(id) || id <= 0) return err("Invalid account id", 400);
 
-  return withRoles(["OWNER", "CEO"], async (session) => {
+  return withModuleAbility("accounting", "update", "accounting:accounts", async (session) => {
     const input = await parseBody(req, updateAccountSchema);
 
     const updated = await db

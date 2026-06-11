@@ -102,7 +102,7 @@ function ChartCard({
 }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-3">
+    <div className="rounded-2xl border border-border/80 bg-card p-3">
       <div className="flex items-center justify-between mb-1.5">
         <h3 className="font-display text-base font-bold text-slate-900">{title}</h3>
         <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">

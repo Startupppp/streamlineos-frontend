@@ -56,6 +56,28 @@ const NO_PERMS_USER = defineAbilityFor({
   enabledModules: ["hr", "crm"],
 });
 
+const ACCOUNTANT_PRO_PLAN = defineAbilityFor({
+  isPlatformAdmin: false,
+  isOrgOwner: false,
+  permissions: [
+    "accounting:accounts:read",
+    "accounting:accounts:create",
+    "accounting:journal:read",
+    "accounting:reports:read",
+  ],
+  enabledModules: ["self", "dashboard", "accounting"],
+});
+
+const ACCOUNTANT_ACCOUNTING_DISABLED = defineAbilityFor({
+  isPlatformAdmin: false,
+  isOrgOwner: false,
+  permissions: [
+    "accounting:accounts:read",
+    "accounting:journal:read",
+  ],
+  enabledModules: ["self", "dashboard", "hr"],
+});
+
 const TESTS: TestCase[] = [
   {
     name: "Platform admin — should manage everything",
@@ -110,6 +132,26 @@ const TESTS: TestCase[] = [
       { verb: "view", subject: "hr:employees", want: false },
       { verb: "approve", subject: "hr:leaves", want: false },
       { verb: "view", subject: "crm:leads", want: false },
+    ],
+  },
+  {
+    name: "Accountant on PRO plan — accounting perms should resolve",
+    ability: ACCOUNTANT_PRO_PLAN,
+    expected: [
+      { verb: "read", subject: "accounting:accounts", want: true },
+      { verb: "create", subject: "accounting:accounts", want: true },
+      { verb: "read", subject: "accounting:journal", want: true },
+      { verb: "read", subject: "accounting:reports", want: true },
+      { verb: "read", subject: "hr:employees", want: false },
+    ],
+  },
+  {
+    name: "Accountant on plan WITHOUT accounting module — accounting perms dropped",
+    ability: ACCOUNTANT_ACCOUNTING_DISABLED,
+    expected: [
+      { verb: "read", subject: "accounting:accounts", want: false },
+      { verb: "read", subject: "accounting:journal", want: false },
+      { verb: "manage", subject: "all", want: false },
     ],
   },
 ];

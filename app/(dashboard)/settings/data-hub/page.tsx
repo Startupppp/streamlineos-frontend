@@ -135,9 +135,9 @@ export default function DataHubPage() {
 
     try {
       setUploadState(entityId, { progress: 40 });
-      const result = await apiClient.post<{ imported: number; skipped: number; errors: string[] }>(
+      const result = await apiClient.upload<{ imported: number; skipped: number; errors: string[] }>(
         endpoint,
-        formData as unknown as Record<string, unknown>
+        formData,
       );
       setUploadState(entityId, {
         status: "success",
@@ -157,9 +157,7 @@ export default function DataHubPage() {
     if (!entity.exportEndpoint) return;
     setExportingIds(prev => new Set([...prev, entity.id]));
     try {
-      const response = await fetch(`/api${entity.exportEndpoint}`, { method: "GET" });
-      if (!response.ok) throw new Error("Export failed");
-      const blob = await response.blob();
+      const blob = await apiClient.download(entity.exportEndpoint);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

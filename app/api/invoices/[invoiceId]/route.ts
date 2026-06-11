@@ -96,41 +96,50 @@ export async function PATCH(
         if (input.status === "SENT") updateData.sentAt = new Date();
         if (input.status === "PAID") updateData.paidAt = new Date();
 
-        await db
-          .update(invoices)
-          .set(updateData)
-          .where(
-            and(
-              eq(invoices.id, invoiceId),
-              eq(invoices.orgId, session.orgId)
-            )
-          );
-
-        if (input.status === "SENT" && existing.status !== "SENT") {
-          const subtotal = Number(existing.subtotal ?? 0);
-          const discount = Number(existing.discount ?? 0);
-          const cgst = Number(existing.cgstAmount ?? 0);
-          const sgst = Number(existing.sgstAmount ?? 0);
-          const igst = Number(existing.igstAmount ?? 0);
-          const taxPool = Math.round((cgst + sgst + igst) * 100) / 100;
-          const total = Number(existing.total ?? 0);
-          const supplierStateCode = await resolveSupplierStateCode(session.orgId);
-          const placeOfSupplyStateCode = existing.placeOfSupply ?? supplierStateCode;
-          const today = new Date().toISOString().slice(0, 10);
+        const willPost = input.status === "SENT" && existing.status !== "SENT";
+        if (willPost) {
           await seedChartOfAccountsForOrg(session.orgId);
-          await postInvoiceSend({
-            orgId: session.orgId,
-            invoiceId: existing.id,
-            invoiceNumber: existing.invoiceNumber,
-            invoiceDate: today,
-            supplierStateCode,
-            placeOfSupplyStateCode,
-            subtotal,
-            discount,
-            taxPool,
-            total,
-            createdBy: session.user.id,
-          });
+        }
+
+        await db.transaction(async (tx) => {
+          await tx
+            .update(invoices)
+            .set(updateData)
+            .where(
+              and(
+                eq(invoices.id, invoiceId),
+                eq(invoices.orgId, session.orgId)
+              )
+            );
+
+          if (willPost) {
+            const subtotal = Number(existing.subtotal ?? 0);
+            const discount = Number(existing.discount ?? 0);
+            const cgst = Number(existing.cgstAmount ?? 0);
+            const sgst = Number(existing.sgstAmount ?? 0);
+            const igst = Number(existing.igstAmount ?? 0);
+            const taxPool = Math.round((cgst + sgst + igst) * 100) / 100;
+            const total = Number(existing.total ?? 0);
+            const supplierStateCode = await resolveSupplierStateCode(session.orgId);
+            const placeOfSupplyStateCode = existing.placeOfSupply ?? supplierStateCode;
+            const today = new Date().toISOString().slice(0, 10);
+            await postInvoiceSend({
+              orgId: session.orgId,
+              invoiceId: existing.id,
+              invoiceNumber: existing.invoiceNumber,
+              invoiceDate: today,
+              supplierStateCode,
+              placeOfSupplyStateCode,
+              subtotal,
+              discount,
+              taxPool,
+              total,
+              createdBy: session.user.id,
+            }, tx);
+          }
+        });
+
+        if (willPost) {
           revalidateTag(orgScopedTag(CacheTag.journal, session.orgId), "default");
           revalidateTag(orgScopedTag(CacheTag.trialBalance, session.orgId), "default");
           revalidateTag(orgScopedTag(CacheTag.profitLoss, session.orgId), "default");

@@ -2,7 +2,7 @@
 
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
+import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";

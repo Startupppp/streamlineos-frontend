@@ -117,10 +117,11 @@ function isBlogAdminPath(pathname: string): boolean {
 
 function canAccessRoute(
   pathname: string,
-  role: string,
+  isPlatformAdmin: boolean,
+  isOrgOwner: boolean,
   permissions: string[],
 ): boolean {
-  if (role === "OWNER") return true;
+  if (isPlatformAdmin || isOrgOwner) return true;
 
   const matchingRoutes = Object.keys(ROUTE_PERMISSION_MAP)
     .filter((route) => pathname === route || pathname.startsWith(route + "/"))
@@ -316,14 +317,14 @@ export default async function middleware(req: NextRequest) {
 
   if (
     isAuthenticated &&
-    token?.role &&
     (startsWithAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname))
   ) {
-    const userRole = token.role as string;
-    const userPermissions = Array.isArray(token.permissions)
-      ? (token.permissions as string[])
+    const isPlatformAdmin = (token?.isPlatformAdmin as boolean | undefined) === true;
+    const isOrgOwner = (token?.isOrgOwner as boolean | undefined) === true;
+    const userPermissions = Array.isArray(token?.permissions)
+      ? (token!.permissions as string[])
       : [];
-    if (!canAccessRoute(pathname, userRole, userPermissions)) {
+    if (!canAccessRoute(pathname, isPlatformAdmin, isOrgOwner, userPermissions)) {
       const url = req.nextUrl.clone();
       url.pathname = isBlogAdminPath(pathname) ? "/blogs" : "/dashboard";
       url.search = "";

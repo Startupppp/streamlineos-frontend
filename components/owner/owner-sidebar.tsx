@@ -79,7 +79,7 @@ export function OwnerSidebar({
   return (
     <aside
       className={cn(
-        "hidden lg:flex shrink-0 flex-col bg-white text-slate-700 border-r border-slate-200 transition-[width] duration-200 ease-out",
+        "hidden lg:flex shrink-0 flex-col bg-card text-foreground border-r border-border transition-[width] duration-200 ease-out",
         collapsed ? "w-[56px]" : "w-[220px]",
       )}
     >

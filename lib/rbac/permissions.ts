@@ -157,6 +157,24 @@ export const PERMISSIONS: Permission[] = [
     description: "Manage goals",
   },
   {
+    name: "accounting:view",
+    resource: "accounting",
+    action: "view",
+    description: "View chart of accounts, journal entries, and accounting reports",
+  },
+  {
+    name: "accounting:manage",
+    resource: "accounting",
+    action: "manage",
+    description: "Create and edit accounts and post manual journal entries",
+  },
+  {
+    name: "accounting:report",
+    resource: "accounting",
+    action: "report",
+    description: "Generate Trial Balance, P&L, and other accounting reports",
+  },
+  {
     name: "projects:view",
     resource: "projects",
     action: "view",
@@ -456,6 +474,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "hr:performance:manage",
     "hr:goals:view",
     "hr:goals:manage",
+    "accounting:view",
+    "accounting:report",
     "reports:view",
     "reports:create",
     "reports:export",

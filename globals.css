@@ -261,10 +261,6 @@
   background-clip: text;
 }
 
-.gold-border {
-  border-image: linear-gradient(135deg, var(--gold), var(--sidebar-primary), var(--gold)) 1;
-}
-
 /* ─── Shadows ────────────────────────────────────────────────────────────────── */
 .shadow-soft {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
@@ -276,10 +272,6 @@
 
 .shadow-noir {
   box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px color-mix(in srgb, var(--primary) 6%, transparent);
-}
-
-.shadow-gold {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent), 0 4px 24px color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
 /* ─── Hover effects ──────────────────────────────────────────────────────────── */

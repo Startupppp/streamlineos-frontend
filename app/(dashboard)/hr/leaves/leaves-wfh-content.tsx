@@ -146,7 +146,7 @@ export function LeavesWfhContent() {
                   {approvedLeavesThisWeek.map((leave) => (
                     <div
                       key={leave.id}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-card border border-amber-200/50 dark:border-amber-800/20"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-amber-200/50 dark:border-amber-800/20"
                     >
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={resolveImageUrl(leave.user?.image)} />

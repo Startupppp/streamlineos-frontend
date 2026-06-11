@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { performanceReviews, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
-import { createPerformanceReviewSchema } from "@/lib/validations/hr";
+import { createPerformanceReviewSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 import { sendReviewAssignedEmail } from "@/lib/email";
 

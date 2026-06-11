@@ -30,8 +30,8 @@ const GENDER_COLORS: Record<string, string> = {
   MALE: "bg-blue-500",
   FEMALE: "bg-pink-500",
   OTHER: "bg-purple-500",
-  PREFER_NOT_TO_SAY: "bg-gray-400",
-  Unknown: "bg-gray-300",
+  PREFER_NOT_TO_SAY: "bg-slate-400",
+  Unknown: "bg-slate-300",
 };
 
 function HorizontalBar({
@@ -139,7 +139,7 @@ export default function DiversityReportPage() {
                   <HorizontalBar
                     items={data.genderBreakdown.map((g) => ({ label: g.gender, count: g.count }))}
                     total={data.total}
-                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-gray-400"}
+                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-slate-400"}
                   />
                 )}
               </CardContent>

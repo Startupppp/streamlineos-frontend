@@ -41,7 +41,7 @@ export default async function MessageDetailPage({
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-start gap-2">
           <span
             className="h-12 w-12 rounded-full inline-flex items-center justify-center text-[14px] font-bold text-white shrink-0"

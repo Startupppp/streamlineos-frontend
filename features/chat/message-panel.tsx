@@ -33,6 +33,7 @@ import {
   useChatOrgUsers,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
+import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
@@ -189,13 +190,19 @@ export function MessagePanel({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "chat");
-        const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-        if (!res.ok) { const err = await res.json(); toast.error(`Failed: ${err.error || file.name}`); continue; }
-        const result = await res.json();
-        setPendingAttachments((prev) => [
-          ...prev,
-          { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
-        ]);
+        try {
+          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>(
+            "/storage/upload",
+            formData,
+          );
+          setPendingAttachments((prev) => [
+            ...prev,
+            { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+          continue;
+        }
       }
     } catch (error) { toast.error(getErrorMessage(error)); }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }

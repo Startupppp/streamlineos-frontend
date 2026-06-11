@@ -19,12 +19,12 @@ export default async function CustomersPage() {
       />
 
       {customers.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
           <Building2 className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">No customers yet.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <table className="w-full text-[13px]">
             <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
               <tr>

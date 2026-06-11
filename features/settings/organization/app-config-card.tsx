@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Globe, Clock, DollarSign, CalendarRange, Image, Users, Upload, Palette } from "lucide-react";
 import { useUpdateOrgSettings } from "@/lib/api/hooks/organization";
+import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { CURRENCIES, TIMEZONES, MONTHS } from "@/features/settings/organization/constants";
 import type { OrgSettings } from "@/types/organization";
@@ -84,13 +85,12 @@ export function AppConfigCard({ org }: AppConfigCardProps) {
     formData.append("folder", "org-logos");
     setLogoUploading(true);
     try {
-      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      const json = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+      const json = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
+      if (!json.url) throw new Error("Upload failed");
       setLogoUrl(json.url);
       toast.success("Logo uploaded");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(getApiError(err) || "Upload failed");
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = "";

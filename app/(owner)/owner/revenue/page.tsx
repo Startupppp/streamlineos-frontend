@@ -77,7 +77,7 @@ export default async function RevenuePage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100">
           <h3 className="font-display text-base font-bold text-slate-900">
             Recent payments

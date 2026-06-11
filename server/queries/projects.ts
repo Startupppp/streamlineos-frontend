@@ -72,6 +72,33 @@ export async function getProject(orgId: string, id: number) {
   });
 }
 
+export interface ProjectAccessDTO {
+  id: number;
+  name: string;
+  key: string;
+  orgId: string;
+  managerId: string | null;
+}
+
+export async function getProjectAccessForUser(
+  projectId: number,
+  userId: string,
+): Promise<ProjectAccessDTO | null> {
+  const rows = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      key: projects.key,
+      orgId: projects.orgId,
+      managerId: projects.managerId,
+    })
+    .from(projects)
+    .innerJoin(organizationMembers, eq(organizationMembers.orgId, projects.orgId))
+    .where(and(eq(projects.id, projectId), eq(organizationMembers.userId, userId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function getTickets(
   orgId: string,
   projectId?: number,

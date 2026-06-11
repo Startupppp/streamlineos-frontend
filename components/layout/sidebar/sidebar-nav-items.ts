@@ -195,13 +195,17 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Accounting",
-    requiredPermission: ["hr:salary:manage", "hr:payroll:approve"],
+    requiredPermission: ["accounting:view"],
     routes: [
-      { label: "Overview", icon: Calculator, href: "/accounting", requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
-      { label: "Chart of Accounts", icon: BookOpen, href: "/accounting/coa", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
-      { label: "Journal", icon: FileText, href: "/accounting/journal", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
-      { label: "Trial Balance", icon: Scale, href: "/accounting/trial-balance", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
-      { label: "Profit & Loss", icon: TrendingUp, href: "/accounting/profit-loss", isSubItem: true, requiredPermission: ["hr:salary:manage", "hr:payroll:approve"] },
+      { label: "Overview", icon: Calculator, href: "/accounting", requiredPermission: "accounting:view" },
+      { label: "Chart of Accounts", icon: BookOpen, href: "/accounting/coa", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Journal", icon: FileText, href: "/accounting/journal", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Trial Balance", icon: Scale, href: "/accounting/trial-balance", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Profit & Loss", icon: TrendingUp, href: "/accounting/profit-loss", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Balance Sheet", icon: Landmark, href: "/accounting/balance-sheet", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Customer Ledgers", icon: Users, href: "/accounting/customers", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Aged Receivables", icon: Clock, href: "/accounting/aged-receivables", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "GSTR-1", icon: FileText, href: "/accounting/gstr-1", isSubItem: true, requiredPermission: "accounting:view" },
     ],
   },
   {

@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { ledgerAccounts, journalEntries, journalLines } from "@/lib/db/schema/accounting";
 import { nextEntryNumber } from "./numbering";
 
+export type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 export type DraftLine = {
   accountCode: string;
   debit: number;
@@ -18,6 +20,7 @@ export type DraftEntry = {
   sourceType: string;
   sourceId: string | null;
   sourceEvent: string | null;
+  status?: "DRAFT" | "POSTED";
   createdBy: string;
   lines: DraftLine[];
 };
@@ -44,11 +47,12 @@ export type PersistedEntry = {
   entryNumber: string;
 };
 
-export async function persistJournalEntry(draft: DraftEntry): Promise<PersistedEntry> {
+export async function persistJournalEntry(draft: DraftEntry, tx?: DbOrTx): Promise<PersistedEntry> {
   assertBalanced(draft.lines);
+  const executor: DbOrTx = tx ?? db;
 
   if (draft.sourceId !== null && draft.sourceEvent !== null) {
-    const existing = await db
+    const existing = await executor
       .select({ id: journalEntries.id, entryNumber: journalEntries.entryNumber })
       .from(journalEntries)
       .where(
@@ -66,7 +70,7 @@ export async function persistJournalEntry(draft: DraftEntry): Promise<PersistedE
   const year = new Date(draft.entryDate).getUTCFullYear();
   const codeToId = new Map<string, number>();
   const distinctCodes = Array.from(new Set(draft.lines.map((l) => l.accountCode)));
-  const rows = await db
+  const rows = await executor
     .select({ id: ledgerAccounts.id, code: ledgerAccounts.code })
     .from(ledgerAccounts)
     .where(eq(ledgerAccounts.orgId, draft.orgId));
@@ -80,9 +84,9 @@ export async function persistJournalEntry(draft: DraftEntry): Promise<PersistedE
 
   const maxAttempts = 5;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const entryNumber = await nextEntryNumber(draft.orgId, year);
+    const entryNumber = await nextEntryNumber(draft.orgId, year, tx);
     try {
-      const inserted = await db
+      const inserted = await executor
         .insert(journalEntries)
         .values({
           orgId: draft.orgId,
@@ -92,6 +96,7 @@ export async function persistJournalEntry(draft: DraftEntry): Promise<PersistedE
           sourceType: draft.sourceType,
           sourceId: draft.sourceId,
           sourceEvent: draft.sourceEvent,
+          status: draft.status ?? "POSTED",
           createdBy: draft.createdBy,
         })
         .returning({ id: journalEntries.id, entryNumber: journalEntries.entryNumber });
@@ -113,7 +118,7 @@ export async function persistJournalEntry(draft: DraftEntry): Promise<PersistedE
           lineOrder: idx,
         };
       });
-      await db.insert(journalLines).values(lineRows);
+      await executor.insert(journalLines).values(lineRows);
 
       return entry;
     } catch (err) {

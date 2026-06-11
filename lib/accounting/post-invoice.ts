@@ -1,6 +1,6 @@
 import "server-only";
 import { ACCOUNT_CODES, splitTaxPool } from "./posting-rules";
-import { persistJournalEntry, type DraftLine, type PersistedEntry } from "./persist-entry";
+import { persistJournalEntry, type DbOrTx, type DraftLine, type PersistedEntry } from "./persist-entry";
 
 export type PostInvoiceInput = {
   orgId: string;
@@ -16,7 +16,7 @@ export type PostInvoiceInput = {
   createdBy: string;
 };
 
-export async function postInvoiceSend(input: PostInvoiceInput): Promise<PersistedEntry> {
+export async function postInvoiceSend(input: PostInvoiceInput, tx?: DbOrTx): Promise<PersistedEntry> {
   const split = splitTaxPool(input.taxPool, {
     supplierStateCode: input.supplierStateCode,
     placeOfSupplyStateCode: input.placeOfSupplyStateCode,
@@ -39,5 +39,5 @@ export async function postInvoiceSend(input: PostInvoiceInput): Promise<Persiste
     sourceEvent: "send",
     createdBy: input.createdBy,
     lines,
-  });
+  }, tx);
 }

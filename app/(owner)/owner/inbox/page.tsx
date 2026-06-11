@@ -67,7 +67,7 @@ export default async function InboxPage({
       </div>
 
       {messages.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
           <Mail className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">No messages yet.</p>
           <p className="text-[12px] text-slate-400 mt-1">
@@ -75,7 +75,7 @@ export default async function InboxPage({
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="divide-y divide-slate-100">
             {messages.map((m) => (
               <Link

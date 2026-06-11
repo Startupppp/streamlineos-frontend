@@ -356,6 +356,20 @@ export const queryKeys = {
     sequences: () => [...base, "tasks", "sequences"] as const,
   },
 
+  blog: {
+    all: [...base, "blog"] as const,
+    feed: <P extends object>(params?: P) => [...base, "blog", "feed", params] as const,
+  },
+
+  landing: {
+    all: [...base, "landing"] as const,
+  },
+
+  publicBooking: {
+    all: [...base, "publicBooking"] as const,
+    detail: (token: string) => [...base, "publicBooking", "detail", token] as const,
+  },
+
   accounting: {
     all: [...base, "accounting"] as const,
     accounts: <P extends object>(params?: P) => [...base, "accounting", "accounts", params] as const,
@@ -363,6 +377,11 @@ export const queryKeys = {
     journalEntry: (id: number) => [...base, "accounting", "journalEntry", id] as const,
     trialBalance: (asOf: string) => [...base, "accounting", "trialBalance", asOf] as const,
     profitLoss: (from: string, to: string) => [...base, "accounting", "profitLoss", from, to] as const,
+    customersOutstanding: <P extends object>(params?: P) => [...base, "accounting", "customersOutstanding", params] as const,
+    customerLedger: <P extends object>(clientId: number, params?: P) => [...base, "accounting", "customerLedger", clientId, params] as const,
+    gstr1: (params: { from: string; to: string }) => [...base, "accounting", "gstr1", params] as const,
+    balanceSheet: (params: { asOf: string }) => [...base, "accounting", "balanceSheet", params] as const,
+    agedReceivables: (params: { asOf: string }) => [...base, "accounting", "agedReceivables", params] as const,
   },
 
 } as const;

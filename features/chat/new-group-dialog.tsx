@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/hooks/trpc-hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
 
 type OrgUserItem = { id: string; name?: string | null; email?: string | null; image?: string | null };
@@ -127,8 +128,7 @@ export function NewGroupDialog({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "chat-avatars");
-      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
       if (data.url) setAvatarUrl(data.url);
       else toast.error("Upload failed");
     } catch (error) { toast.error(getErrorMessage(error)); }

@@ -22,6 +22,7 @@ export const useBranches = (
   return useQuery<Branch[], Error>({
     queryKey: queryKeys.branches.list(),
     queryFn: () => apiClient.get<Branch[]>("/branches"),
+    staleTime: 30 * 60_000,
     ...options,
   });
 };
@@ -37,6 +38,7 @@ export const useBranch = (
     queryKey: queryKeys.branches.detail(id),
     queryFn: () => apiClient.get<BranchWithEmployees>(`/branches/${id}`),
     enabled: id > 0,
+    staleTime: 30 * 60_000,
     ...options,
   });
 };

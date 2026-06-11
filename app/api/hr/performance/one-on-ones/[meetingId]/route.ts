@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { oneOnOneMeetings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { updateOneOnOneSchema } from "@/lib/validations/hr";
+import { updateOneOnOneSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 
 export async function PATCH(

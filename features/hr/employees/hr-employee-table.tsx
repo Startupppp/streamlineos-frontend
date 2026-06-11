@@ -175,7 +175,7 @@ export function HrEmployeeTable({
 
                       {canManageAccess && (
                         <TableCell className="text-center">
-                          {user.role === "CEO" || user.id === currentUserId ? (
+                          {user.id === currentUserId || user.role === "OWNER" || user.role === "CEO" ? (
                             <Switch
                               checked={true}
                               disabled

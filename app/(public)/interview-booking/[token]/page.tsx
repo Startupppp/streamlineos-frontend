@@ -1,120 +1,97 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-
-interface BookingData {
-  candidateName: string;
-  orgName: string;
-  interviewType: string;
-  durationMinutes: number;
-  availableSlots: { start: string; end: string }[];
-  notes: string | null;
-}
-
-type Status = "loading" | "ready" | "booking" | "success" | "error" | "expired";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  InterviewBookingExpiredError,
+  useConfirmInterviewBooking,
+  usePublicInterviewBooking,
+} from "@/lib/api/hooks/public-booking";
+import { getApiError } from "@/lib/api-client";
 
 export default function InterviewBookingPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
-  const [status, setStatus] = useState<Status>("loading");
-  const [data, setData] = useState<BookingData | null>(null);
+  const bookingQuery = usePublicInterviewBooking(token);
+  const confirmMutation = useConfirmInterviewBooking(token);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
-    fetch(`/api/public/interview-booking/${token}`)
-      .then(async (res) => {
-        if (res.status === 410) {
-          setStatus("expired");
-          return;
-        }
-        if (!res.ok) {
-          setStatus("error");
-          setErrorMsg("Booking link not found.");
-          return;
-        }
-        const json = await res.json() as BookingData;
-        setData(json);
-        setStatus("ready");
-      })
-      .catch(() => {
-        setStatus("error");
-        setErrorMsg("Failed to load booking details.");
-      });
-  }, [token]);
+  const isExpired = bookingQuery.error instanceof InterviewBookingExpiredError;
+  const isSuccess = confirmMutation.isSuccess;
+  const data = bookingQuery.data;
 
-  const handleConfirm = useCallback(async () => {
+  const handleConfirm = useCallback(() => {
     if (!selectedSlot) return;
-    setStatus("booking");
-    try {
-      const res = await fetch(`/api/public/interview-booking/${token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slotStart: selectedSlot }),
-      });
-      if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        setErrorMsg(err.error ?? "Failed to book.");
-        setStatus("error");
-        return;
-      }
-      setStatus("success");
-    } catch {
-      setErrorMsg("Something went wrong. Please try again.");
-      setStatus("error");
-    }
-  }, [selectedSlot, token]);
+    confirmMutation.mutate({ slotStart: selectedSlot });
+  }, [selectedSlot, confirmMutation]);
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-start justify-center pt-12 px-4">
+    <main className="min-h-screen surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">
       <div className="w-full max-w-lg">
-        <div className="bg-[#0f2b7f] text-white rounded-t-xl px-6 py-8 text-center">
-          <h1 className="text-2xl font-bold">
-            {status === "success" ? "Interview Confirmed!" : "Schedule Your Interview"}
+        <div className="gradient-brand text-white rounded-t-2xl px-6 py-8 text-center shadow-noir">
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isSuccess ? "Interview Confirmed!" : "Schedule Your Interview"}
           </h1>
-          {data && status !== "success" && (
-            <p className="text-white/70 text-sm mt-1">{data.orgName}</p>
+          {data && !isSuccess && (
+            <p className="text-white/80 text-sm mt-1">{data.orgName}</p>
           )}
         </div>
 
-        <div className="bg-white border border-gray-200 border-t-0 rounded-b-xl px-6 py-6">
-          {status === "loading" && (
+        <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir">
+          {bookingQuery.isLoading && (
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
-              <div className="h-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3" />
+              <div className="h-4 bg-slate-200 rounded animate-pulse w-1/2" />
+              <div className="h-32 bg-slate-200 rounded animate-pulse" />
             </div>
           )}
 
-          {status === "expired" && (
+          {isExpired && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-gray-600">Link Expired</p>
-              <p className="text-sm text-gray-400 mt-2">
-                This booking link has expired or has already been used. Please contact the recruiter for a new link.
+              <p className="text-lg font-semibold text-slate-700">
+                Link Expired
+              </p>
+              <p className="text-sm text-slate-500 mt-2">
+                This booking link has expired or has already been used. Please
+                contact the recruiter for a new link.
               </p>
             </div>
           )}
 
-          {status === "error" && (
+          {bookingQuery.isError && !isExpired && (
             <div className="text-center py-8">
-              <p className="text-lg font-semibold text-red-600">Error</p>
-              <p className="text-sm text-gray-500 mt-2">{errorMsg}</p>
+              <p className="text-lg font-semibold text-destructive">Error</p>
+              <p className="text-sm text-slate-500 mt-2">
+                {getApiError(bookingQuery.error) || "Failed to load booking details."}
+              </p>
             </div>
           )}
 
-          {(status === "ready" || status === "booking") && data && (
+          {confirmMutation.isError && (
+            <p className="text-sm text-destructive mb-4" role="alert">
+              {getApiError(confirmMutation.error) || "Failed to book."}
+            </p>
+          )}
+
+          {bookingQuery.isSuccess && data && !isSuccess && (
             <>
               <div className="mb-4 space-y-1">
-                <p className="text-sm text-gray-500">
-                  Hi <strong>{data.candidateName}</strong>, please select a time for your{" "}
-                  <strong>{data.interviewType.toLowerCase().replace("_", " ")}</strong> interview
-                  ({data.durationMinutes} min):
+                <p className="text-sm text-slate-600">
+                  Hi <strong>{data.candidateName}</strong>, please select a time
+                  for your{" "}
+                  <strong>
+                    {data.interviewType.toLowerCase().replace("_", " ")}
+                  </strong>{" "}
+                  interview ({data.durationMinutes} min):
                 </p>
                 {data.notes && (
-                  <p className="text-xs text-gray-400 italic">{data.notes}</p>
+                  <p className="text-xs text-slate-500 italic">{data.notes}</p>
                 )}
               </div>
 
@@ -127,53 +104,65 @@ export default function InterviewBookingPage() {
                       key={slot.start}
                       type="button"
                       onClick={() => setSelectedSlot(slot.start)}
-                      className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm ${
+                      className={cn(
+                        "w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm press-scale",
                         isSelected
-                          ? "border-[#0f2b7f] bg-blue-50 font-semibold"
-                          : "border-gray-200 hover:border-gray-300 bg-white"
-                      }`}
+                          ? "border-primary bg-blue-50 font-semibold text-slate-900"
+                          : "border-slate-200 hover:border-slate-300 bg-white text-slate-700",
+                      )}
                     >
                       <span className="block font-medium">
                         {format(start, "EEEE, MMMM d, yyyy")}
                       </span>
-                      <span className="text-gray-500">
-                        {format(start, "h:mm a")} – {format(new Date(slot.end), "h:mm a")}
+                      <span className="text-slate-500">
+                        {format(start, "h:mm a")} –{" "}
+                        {format(new Date(slot.end), "h:mm a")}
                       </span>
                     </button>
                   );
                 })}
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={handleConfirm}
-                disabled={!selectedSlot || status === "booking"}
-                className="mt-6 w-full py-3 rounded-lg bg-[#0f2b7f] text-white font-semibold text-sm hover:bg-[#0d2266] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                disabled={!selectedSlot || confirmMutation.isPending}
+                className="mt-6 w-full h-11"
               >
-                {status === "booking" ? "Confirming..." : "Confirm Interview"}
-              </button>
+                {confirmMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Confirming…
+                  </>
+                ) : (
+                  "Confirm Interview"
+                )}
+              </Button>
             </>
           )}
 
-          {status === "success" && data && (
+          {isSuccess && (
             <div className="text-center py-6 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-green-100 mx-auto flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+              <div className="w-16 h-16 rounded-full bg-emerald-100 mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
-              <p className="text-lg font-semibold text-gray-800">Interview Scheduled!</p>
+              <p className="text-lg font-semibold text-slate-900">
+                Interview Scheduled!
+              </p>
               {selectedSlot && (
-                <p className="text-sm text-gray-500">
-                  {format(new Date(selectedSlot), "EEEE, MMMM d, yyyy 'at' h:mm a")}
+                <p className="text-sm text-slate-500">
+                  {format(
+                    new Date(selectedSlot),
+                    "EEEE, MMMM d, yyyy 'at' h:mm a",
+                  )}
                 </p>
               )}
-              <p className="text-xs text-gray-400">
-                You will receive a confirmation email with further details. Thank you!
+              <p className="text-xs text-slate-500">
+                You will receive a confirmation email with further details.
+                Thank you!
               </p>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </main>
   );

@@ -22,6 +22,7 @@ export const useOrgSettings = (
   return useQuery<OrgSettings, Error>({
     queryKey: queryKeys.organization.settings(),
     queryFn: () => apiClient.get<OrgSettings>("/organization/settings"),
+    staleTime: 30 * 60_000,
     ...options,
   });
 };

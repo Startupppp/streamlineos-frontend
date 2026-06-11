@@ -51,7 +51,7 @@ export function ReplyComposer({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-card p-5">
       <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-slate-500 mb-2">
         Reply
       </p>

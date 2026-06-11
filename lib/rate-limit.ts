@@ -233,7 +233,11 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/storage/upload", tier: "upload" },
   { prefix: "/api/expenses/import", tier: "upload" },
   { prefix: "/api/public/", tier: "public-intake" },
+  { prefix: "/api/careers/apply", tier: "public-intake" },
   { prefix: "/api/landing/submit", tier: "landing-submit" },
+  { prefix: "/api/billing/", tier: "auth-write" },
+  { prefix: "/api/calendar/create-meet", tier: "auth-write" },
+  { prefix: "/api/webhooks/", tier: "api-default" },
   { prefix: "/api/auth/", tier: "auth-write" },
 ];
 

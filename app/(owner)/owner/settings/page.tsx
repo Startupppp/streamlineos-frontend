@@ -54,7 +54,7 @@ export default function SettingsPage() {
         {checks.map((c) => (
           <div
             key={c.label}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-2"
+            className="rounded-2xl border border-border bg-card px-4 py-3 flex items-start gap-2"
           >
             {c.ok ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
@@ -89,7 +89,7 @@ export default function SettingsPage() {
           </h2>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <Row
             icon={<Send className="h-4 w-4 text-slate-400" />}
             label="Provider"

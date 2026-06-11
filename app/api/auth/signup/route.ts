@@ -1,10 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { users, organizations, organizationMembers, roles } from "@/lib/db/schema";
 import { subscriptions } from "@/lib/db/schema/shared";
 import { hash } from "bcryptjs";
 import { randomUUID } from "crypto";
 import { z } from "zod";
+import { ok, err, parseBody } from "@/lib/api/helpers";
 import { createAuditLog } from "@/lib/audit-log";
 import { addDays } from "date-fns";
 import { DEFAULT_ORG_ROLES } from "@/lib/rbac/default-org-roles";
@@ -27,14 +28,13 @@ const signupSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const input = signupSchema.parse(body);
+    const input = await parseBody(req, signupSchema);
 
     const existing = await db.query.users.findFirst({
       where: (u, { eq }) => eq(u.email, input.email.toLowerCase()),
     });
     if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
+      return err("An account with this email already exists.", 409);
     }
 
     const passwordHash = await hash(input.password, 12);
@@ -101,11 +101,11 @@ export async function POST(req: NextRequest) {
       metadata: { email: input.email, companyName: input.companyName, plan: input.plan ?? "STARTER" },
     }).catch(() => {});
 
-    return NextResponse.json({ success: true, userId, orgId }, { status: 201 });
+    return ok({ userId, orgId }, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {
       const detail = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-      return NextResponse.json({ error: `Validation failed: ${detail}` }, { status: 400 });
+      return err(`Validation failed: ${detail}`, 400);
     }
     throw error;
   }

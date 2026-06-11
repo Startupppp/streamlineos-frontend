@@ -30,7 +30,7 @@ export const SOURCE_COLORS: Record<string, string> = {
   website: "bg-purple-500/15 text-purple-400 border-purple-500/20",
   social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
   walk_in: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
-  other: "bg-gray-500/15 text-gray-400 border-gray-500/20",
+  other: "bg-slate-500/15 text-slate-400 border-slate-500/20",
 };
 
 export const PRIORITY_CONFIG = {

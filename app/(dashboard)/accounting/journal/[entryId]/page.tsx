@@ -1,8 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Send, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
-import { useJournalEntry } from "@/lib/api/hooks/accounting";
+import { useJournalEntry, usePostJournalEntry, useReverseJournalEntry } from "@/lib/api/hooks/accounting";
+import { useAbility } from "@/lib/abilities-context";
 import type { JournalEntryStatus, JournalLine } from "@/types/accounting";
 
 interface JournalEntryDetailPageProps {
@@ -68,18 +71,90 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   const debitTotal = sumColumn(lines, "debit");
   const creditTotal = sumColumn(lines, "credit");
 
+  const ability = useAbility();
+  const canManageJournal = ability.can("manage", "accounting:journal");
+  const reverseMutation = useReverseJournalEntry(entryId);
+  const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
+
+  const isReverseEntry = entry?.sourceEvent === "reverse";
+  const isPosted = entry?.status === "POSTED";
+  const canReverse = Boolean(entry) && isPosted && !isReverseEntry;
+
+  function handleReverseClick() {
+    setReverseDialogOpen(true);
+  }
+
+  function handleReverseCancel(open: boolean) {
+    if (reverseMutation.isPending) return;
+    setReverseDialogOpen(open);
+  }
+
+  function handleReverseConfirm() {
+    reverseMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        setReverseDialogOpen(false);
+        const label = result.created ? "Reversing entry created" : "Reversing entry already existed";
+        toast.success(`${label}: ${result.entryNumber}`);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+  }
+
+  const reverseButton = canManageJournal ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleReverseClick}
+      disabled={!canReverse || reverseMutation.isPending}
+    >
+      <Undo2 className="mr-1 h-4 w-4" />
+      Reverse this entry
+    </Button>
+  ) : null;
+
+  const postMutation = usePostJournalEntry(entryId);
+  const isDraft = entry?.status === "DRAFT";
+
+  function handlePostClick(): void {
+    postMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(`Entry ${result.entryNumber} posted`);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+  }
+
+  const postButton = canManageJournal && isDraft ? (
+    <Button
+      size="sm"
+      onClick={handlePostClick}
+      disabled={postMutation.isPending}
+    >
+      <Send className="mr-1 h-4 w-4" />
+      {postMutation.isPending ? "Posting…" : "Post entry"}
+    </Button>
+  ) : null;
+
   return (
     <PageWrapper
       eyebrow="Accounting · Journal"
       title={entry ? entry.entryNumber : "Journal entry"}
       subtitle={entry ? formatDate(entry.entryDate) : "Loading journal entry..."}
       actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/accounting/journal">
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to journal
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {postButton}
+          {reverseButton}
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/accounting/journal">
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back to journal
+            </Link>
+          </Button>
+        </div>
       }
     >
       <div className="space-y-4">
@@ -183,6 +258,15 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
           </>
         )}
       </div>
+      <ConfirmDialog
+        open={reverseDialogOpen}
+        onOpenChange={handleReverseCancel}
+        title="Reverse journal entry?"
+        description="This will create a new journal entry with debits and credits swapped. The original entry will remain unchanged."
+        confirmLabel="Create reversing entry"
+        isPending={reverseMutation.isPending}
+        onConfirm={handleReverseConfirm}
+      />
     </PageWrapper>
   );
 }

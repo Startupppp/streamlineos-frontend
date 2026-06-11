@@ -3,14 +3,14 @@ import { unstable_cache, revalidateTag } from "next/cache";
 import type { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ledgerAccounts } from "@/lib/db/schema/accounting";
-import { withRoles, parseQuery, parseBody, ok, err } from "@/lib/api/helpers";
+import { withModuleAbility, parseQuery, parseBody, ok, err } from "@/lib/api/helpers";
 import { listAccountsQuerySchema, createAccountSchema } from "@/lib/validation/accounting-schemas";
 import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 import { paginateOffset, buildListResponse } from "@/lib/api/list-response";
 import { seedChartOfAccountsForOrg } from "@/lib/accounting/seed-coa";
 
 export async function GET(req: NextRequest) {
-  return withRoles(["OWNER", "CEO", "HR"], async (session) => {
+  return withModuleAbility("accounting", "read", "accounting:accounts", async (session) => {
     const { page, pageSize, q, type, activeOnly } = parseQuery(req, listAccountsQuerySchema);
 
     await seedChartOfAccountsForOrg(session.orgId);
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withRoles(["OWNER", "CEO"], async (session) => {
+  return withModuleAbility("accounting", "create", "accounting:accounts", async (session) => {
     const input = await parseBody(req, createAccountSchema);
 
     const existing = await db

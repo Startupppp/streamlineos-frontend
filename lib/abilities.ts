@@ -32,9 +32,16 @@ export function defineAbilityFor({
 
   for (const perm of permissions ?? []) {
     if (!moduleAllowed(perm)) continue;
-    const [domain, resource, action] = perm.split(":");
-    if (!domain || !resource || !action) continue;
-    can(action, `${domain}:${resource}`);
+    const parts = perm.split(":");
+    if (parts.length === 3) {
+      const [domain, resource, action] = parts;
+      if (!domain || !resource || !action) continue;
+      can(action, `${domain}:${resource}`);
+    } else if (parts.length === 2) {
+      const [domain, action] = parts;
+      if (!domain || !action) continue;
+      can(action, domain);
+    }
   }
 
   return build();

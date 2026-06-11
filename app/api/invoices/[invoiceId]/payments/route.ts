@@ -51,21 +51,27 @@ export async function POST(
     const parsed = recordPaymentSchema.safeParse(body);
     if (!parsed.success) return err("Invalid payment data", 400);
 
-    const payment = await createPayment(session.orgId, invoiceId, {
-      ...parsed.data,
-      createdBy: session.user.id,
+    await seedChartOfAccountsForOrg(session.orgId);
+
+    const payment = await db.transaction(async (tx) => {
+      const created = await createPayment(session.orgId, invoiceId, {
+        ...parsed.data,
+        createdBy: session.user.id,
+      }, tx);
+
+      await postPaymentReceipt({
+        orgId: session.orgId,
+        paymentId: created.id,
+        invoiceNumber: invoice.invoiceNumber,
+        paymentDate: parsed.data.paymentDate,
+        paymentMethod: parsed.data.paymentMethod,
+        amount: parsed.data.amount,
+        createdBy: session.user.id,
+      }, tx);
+
+      return created;
     });
 
-    await seedChartOfAccountsForOrg(session.orgId);
-    await postPaymentReceipt({
-      orgId: session.orgId,
-      paymentId: payment.id,
-      invoiceNumber: invoice.invoiceNumber,
-      paymentDate: parsed.data.paymentDate,
-      paymentMethod: parsed.data.paymentMethod,
-      amount: parsed.data.amount,
-      createdBy: session.user.id,
-    });
     revalidateTag(orgScopedTag(CacheTag.journal, session.orgId), "default");
     revalidateTag(orgScopedTag(CacheTag.trialBalance, session.orgId), "default");
     revalidateTag(orgScopedTag(CacheTag.profitLoss, session.orgId), "default");

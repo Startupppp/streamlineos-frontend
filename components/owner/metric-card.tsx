@@ -24,7 +24,7 @@ export function MetricCard({
   };
 
   return (
-    <div className="relative rounded-lg border border-slate-200 bg-white p-3">
+    <div className="relative rounded-lg border border-border bg-card p-3">
       <div className="flex items-center justify-between mb-1.5">
         <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
           {label}

@@ -9,10 +9,10 @@ import { postUpdateSchema, ensureUniqueSlug } from "@/lib/blog/post-write";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   return withBlogAdmin(async () => {
-    const { id } = await params;
+    const { entityId: id } = await params;
     const post = await getAdminPostById(id);
     if (!post) return err("Post not found", 404);
     return ok(post);
@@ -21,10 +21,10 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   return withBlogAdmin(async () => {
-    const { id } = await params;
+    const { entityId: id } = await params;
     const body = await parseBody(req, postUpdateSchema);
 
     const existing = await blogDb.query.blogPosts.findFirst({
@@ -75,10 +75,10 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   return withBlogAdmin(async () => {
-    const { id } = await params;
+    const { entityId: id } = await params;
     const [deleted] = await blogDb
       .delete(blogPosts)
       .where(eq(blogPosts.id, id))

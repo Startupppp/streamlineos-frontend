@@ -15,6 +15,7 @@ export const MODULES = [
   "chat",
   "billing",
   "support",
+  "accounting",
 ] as const;
 
 export type Module = (typeof MODULES)[number];
@@ -31,6 +32,7 @@ const PLAN_MODULES: Record<Plan, ReadonlySet<Module>> = {
     "reports",
     "chat",
     "ai",
+    "accounting",
   ]),
   ENTERPRISE: new Set<Module>(MODULES),
 };

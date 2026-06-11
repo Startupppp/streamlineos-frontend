@@ -3,12 +3,12 @@ import { and, eq, gte, inArray, lte, sum } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { ledgerAccounts, journalEntries, journalLines } from "@/lib/db/schema/accounting";
-import { withRoles, parseQuery, ok, err } from "@/lib/api/helpers";
+import { withModuleAbility, parseQuery, ok, err } from "@/lib/api/helpers";
 import { profitLossQuerySchema } from "@/lib/validation/accounting-schemas";
 import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
 export async function GET(req: NextRequest) {
-  return withRoles(["OWNER", "CEO", "HR"], async (session) => {
+  return withModuleAbility("accounting", "read", "accounting:reports", async (session) => {
     const { from, to } = parseQuery(req, profitLossQuerySchema);
     if (!from || !to) return err("from and to are required", 400);
 

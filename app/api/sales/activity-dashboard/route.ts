@@ -71,8 +71,11 @@ export async function GET(req: NextRequest) {
           .select({
             userId: dealActivities.userId,
             createdAt: dealActivities.createdAt,
+            userName: users.name,
+            userRole: users.role,
           })
           .from(dealActivities)
+          .leftJoin(users, eq(dealActivities.userId, users.id))
           .where(
             and(
               eq(dealActivities.orgId, session.orgId),
@@ -120,15 +123,10 @@ export async function GET(req: NextRequest) {
 
         for (const row of dealRows) {
           if (!repMap.has(row.userId)) {
-            const userInfo = await db
-              .select({ name: users.name, role: users.role })
-              .from(users)
-              .where(eq(users.id, row.userId))
-              .limit(1);
             repMap.set(row.userId, {
               userId: row.userId,
-              name: userInfo[0]?.name ?? null,
-              role: userInfo[0]?.role ?? null,
+              name: row.userName ?? null,
+              role: row.userRole ?? null,
               calls: 0,
               emails: 0,
               meetings: 0,

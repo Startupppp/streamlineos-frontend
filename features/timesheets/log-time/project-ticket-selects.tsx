@@ -18,7 +18,7 @@ import {
 import type { UseFormReturn } from "react-hook-form";
 import type { ProjectListItem, Ticket } from "@/types/projects";
 import type { z } from "zod";
-import type { addTimeEntryInputSchema } from "@/lib/validations/project";
+import type { addTimeEntryInputSchema } from "@/lib/validation/projects";
 
 type FormValues = z.infer<typeof addTimeEntryInputSchema>;
 

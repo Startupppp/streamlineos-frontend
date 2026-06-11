@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
-import { invalidateCachePattern } from "@/lib/cache";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads, notifications, users } from "@/lib/db/schema";
@@ -70,16 +70,23 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getLeads(session.orgId!, {
-      ...filters,
-      role: session.user.role ?? undefined,
-      userId: session.user.id,
-      branch: {
-        role: session.user.role ?? "",
-        branchId: session.branchId,
-        userId: session.user.id,
-      },
-    });
+    const orgId = session.orgId!;
+    const role = session.user.role ?? "";
+    const branchId = session.branchId;
+    const userId = session.user.id;
+    const filterHash = JSON.stringify(filters);
+    const key = `leads:list:${orgId}:${userId}:${role}:${branchId ?? ""}:${filterHash}`;
+    const data = await cached(
+      key,
+      () =>
+        getLeads(orgId, {
+          ...filters,
+          role: role || undefined,
+          userId,
+          branch: { role, branchId, userId },
+        }),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
     return ok(data);
   });
 }
