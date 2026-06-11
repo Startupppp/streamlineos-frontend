@@ -72,7 +72,7 @@ export function PageWrapper({
 
       {filters && (
         <div className="shrink-0 border-b border-slate-200/70 bg-white/60 backdrop-blur-sm">
-          <div className="px-3 sm:px-4 py-2 flex items-center gap-3 overflow-x-auto scrollbar-thin">
+          <div className="px-3 sm:px-4 py-2 flex flex-wrap items-center gap-3">
             {filters}
           </div>
         </div>

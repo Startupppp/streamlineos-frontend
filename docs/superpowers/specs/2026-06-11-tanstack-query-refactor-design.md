@@ -131,13 +131,23 @@ Register `queryKeys.blog`, `queryKeys.landing`, `queryKeys.publicBooking` in `li
 | `app/(dashboard)/ceo/qr-code/page.tsx:304` | `apiClient.download()` |
 | `app/(dashboard)/settings/data-hub/page.tsx:160` | `apiClient.download()` |
 
-### Phase 4 — HydrationBoundary (DEFERRED, not done in this pass)
+### Phase 4 — HydrationBoundary
 
-After audit, all three candidate pages (`dashboard/page.tsx`, `accounting/page.tsx`, `billing/invoices/page.tsx`) are top-level `"use client"` components that depend on session-aware hooks, `useSearchParams`, and a `DashboardGate` role check. Two of three (accounting, dashboard) lack matching `server/queries/*` functions for the queries the page actually uses — adding them is independent work, not a data-fetching refactor.
+**Done for the invoices list page:**
 
-Doing this properly would require, per page: (a) splitting `page.tsx` into server (prefetch) + client (consume), (b) reading session via `auth()` in the server half, (c) writing new server query functions for `useInvoiceStats`, `useAccounts`, `useJournal`, `useTrialBalance`, and `useDashboardStats` (5+ new server functions), (d) keeping `DashboardGate` and `useSearchParams` working across the boundary. That is a separate, larger refactor.
+- New `lib/api/server-query-client.ts` exposes `getServerQueryClient()` — a per-request `QueryClient` factory marked `"server-only"`.
+- `app/(dashboard)/billing/invoices/page.tsx` rewritten as a server component:
+  - Reads `searchParams.status`.
+  - Calls `getAuthenticatedMember()` for `orgId`.
+  - Prefetches `getInvoices(orgId, filter)` and `getInvoiceStats(orgId)` in parallel using the existing `queryKeys.invoice.list(filter)` / `queryKeys.invoice.stats()` keys so the client hooks hydrate from cache.
+  - Wraps `<InvoicesClient />` in `<HydrationBoundary state={dehydrate(qc)}>` inside the existing `<DashboardGate>`.
+- The client half moved to `invoices-client.tsx` (export `InvoicesClient`). No behavioral change — it still reads `useSearchParams` for filter switching, and reactive refetch on filter change works against the hydrated cache.
 
-**Recommended follow-up PR:** Land the missing `server/queries/{invoice-stats,accounting,dashboard}.ts` functions, then add `HydrationBoundary` to the three pages in one pass.
+**Extended in same pass — accounting hub and dashboard:**
+
+- `server/queries/accounting.ts` added with `listLedgerAccounts`, `listJournalEntries`, `getTrialBalanceSnapshot`. The existing route handlers continue using their own inline `unstable_cache` wrappers; the new server queries are raw data fetchers consumed only by the server-component prefetch. (Future cleanup: route handlers could delegate to these.)
+- `app/(dashboard)/accounting/page.tsx` rewritten as a server component. Splits client body into `accounting-hub-client.tsx` (`export function AccountingHubClient`). Prefetches accounts count, journal count, and today's trial balance using the same `queryKeys.accounting.{accounts,journal,trialBalance}` keys the client hooks use.
+- `app/(dashboard)/dashboard/page.tsx` rewritten as a server component. Client body moved to `dashboard-client.tsx` (`export function DashboardClient`). Prefetches 4 high-value queries: `getDashboardStats`, `getRecentProjects`, `getActiveSprintSummary`, `getRoleStats`. The polling team-availability query (`refetchInterval: 30s`) is deliberately skipped — server prefetch would just race the next poll tick. `useTodayActivities`, `useRecentActivity`, `useMyIssues`, and notifications stay on client-side fetch — too long a list to bake into one server prefetch and the dashboard already has skeletons for them.
 
 ### Phase 5 — Per-domain staleTime tuning
 
@@ -169,4 +179,4 @@ All other hooks retain the global 2-min default.
 - `grep -E "fetch\(['\"\`]/api/" app components features` returns only the two documented exceptions. ✅
 - TypeScript (`npx tsc --noEmit`) passes. ✅
 - ESLint passes on touched files. ✅
-- Phase 4 (HydrationBoundary) deferred per scope decision above.
+- HydrationBoundary live on `/billing/invoices`, `/accounting`, and `/dashboard` — initial render hydrates from prefetched cache. ✅

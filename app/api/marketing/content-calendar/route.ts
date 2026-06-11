@@ -1,4 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { contentCalendarItems } from "@/lib/db/schema/marketing";
 import { eq, and, sql } from "drizzle-orm";
@@ -20,23 +21,32 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = new URL(req.url);
     const month = searchParams.get("month");
+    const orgId = session.orgId;
 
-    let query = db
-      .select()
-      .from(contentCalendarItems)
-      .where(eq(contentCalendarItems.orgId, session.orgId))
-      .$dynamic();
+    const key = `marketing:content-calendar:${orgId}:${month ?? ""}`;
+    const rows = await cached(
+      key,
+      async () => {
+        let query = db
+          .select()
+          .from(contentCalendarItems)
+          .where(eq(contentCalendarItems.orgId, orgId))
+          .$dynamic();
 
-    if (month) {
-      query = query.where(
-        and(
-          eq(contentCalendarItems.orgId, session.orgId),
-          sql`to_char(${contentCalendarItems.scheduledDate}, 'YYYY-MM') = ${month}`
-        )
-      );
-    }
+        if (month) {
+          query = query.where(
+            and(
+              eq(contentCalendarItems.orgId, orgId),
+              sql`to_char(${contentCalendarItems.scheduledDate}, 'YYYY-MM') = ${month}`
+            )
+          );
+        }
 
-    const rows = await query.orderBy(contentCalendarItems.scheduledDate);
+        return query.orderBy(contentCalendarItems.scheduledDate);
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
+
     return ok(rows);
   });
 }
@@ -66,6 +76,8 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
+
+    await invalidateCachePattern(`marketing:content-calendar:${session.orgId}:*`);
 
     return ok(created, 201);
   });

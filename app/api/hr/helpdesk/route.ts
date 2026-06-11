@@ -1,13 +1,17 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { getHelpdeskTickets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { helpdeskTickets, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
-import type { TicketPriority, TicketStatus } from "@/types/hr";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { sendHelpdeskTicketEmail } from "@/lib/email";
+
+const listSchema = z.object({
+  userId: z.string().min(1).optional(),
+  status: z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]).optional(),
+});
 
 const createTicketSchema = z.object({
   title: z.string(),
@@ -18,12 +22,10 @@ const createTicketSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const { searchParams } = req.nextUrl;
+    const { userId: filterUserId, status } = parseQuery(req, listSchema);
     const ability = await getSessionAbility();
 
     const isAdmin = ability.can("manage", "hr:employees");
-    const filterUserId = searchParams.get("userId") ?? undefined;
-    const status = searchParams.get("status") as TicketStatus | null;
 
     if (filterUserId && filterUserId !== session.user.id && !isAdmin) {
       return err("Not authorized to view other users' tickets.", 403);
@@ -33,10 +35,7 @@ export async function GET(req: NextRequest) {
       session.orgId,
       session.user.id,
       isAdmin,
-      {
-        filterUserId,
-        status: status ?? undefined,
-      }
+      { filterUserId, status },
     );
     return ok(data);
   });

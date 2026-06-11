@@ -1,7 +1,7 @@
 
 import {
   LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
-  Receipt, FileText, Laptop, Timer, QrCode, DollarSign, Handshake,
+  Receipt, FileText, Laptop, Timer, DollarSign, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
@@ -53,7 +53,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "AI Hub", icon: Sparkles, href: "/ai", requiredPermission: "settings:manage" },
       { label: "Calendar", icon: CalendarDays, href: "/calendar" },
       { label: "Chat", icon: MessageSquareText, href: "/chat" },
-      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code", requiredPermission: "reports:view" },
       { label: "Notifications", icon: Bell, href: "/notifications" },
     ],
   },
@@ -205,7 +204,11 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Balance Sheet", icon: Landmark, href: "/accounting/balance-sheet", isSubItem: true, requiredPermission: "accounting:view" },
       { label: "Customer Ledgers", icon: Users, href: "/accounting/customers", isSubItem: true, requiredPermission: "accounting:view" },
       { label: "Aged Receivables", icon: Clock, href: "/accounting/aged-receivables", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Purchase Bills", icon: Receipt, href: "/accounting/purchase-bills", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Vendor Ledgers", icon: Users, href: "/accounting/vendors", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "Aged Payables", icon: Clock, href: "/accounting/aged-payables", isSubItem: true, requiredPermission: "accounting:view" },
       { label: "GSTR-1", icon: FileText, href: "/accounting/gstr-1", isSubItem: true, requiredPermission: "accounting:view" },
+      { label: "GSTR-3B", icon: BarChart2, href: "/accounting/gstr-3b", isSubItem: true, requiredPermission: "accounting:view" },
     ],
   },
   {

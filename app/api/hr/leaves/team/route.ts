@@ -31,11 +31,14 @@ const WITH_RELATIONS = {
   },
 };
 
+const TEAM_LEAVES_CAP = 500;
+
 async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isAdmin: boolean) {
   const base = await db.query.leaveRequests.findMany({
     where: and(...conditions),
     with: WITH_RELATIONS,
     orderBy: [desc(leaveRequests.createdAt)],
+    limit: TEAM_LEAVES_CAP,
   });
 
   if (isAdmin) return base;
@@ -54,6 +57,7 @@ async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isA
     where: and(eq(leaveRequests.orgId, orgId), eq(leaveRequests.status, "PENDING")),
     with: WITH_RELATIONS,
     orderBy: [desc(leaveRequests.createdAt)],
+    limit: TEAM_LEAVES_CAP,
   });
 
   const extra = reporteeRequests.filter(
@@ -90,6 +94,7 @@ export async function GET(req: NextRequest) {
         where: and(...baseConditions),
         with: WITH_RELATIONS,
         orderBy: [desc(leaveRequests.createdAt)],
+        limit: TEAM_LEAVES_CAP,
       }),
     ]);
 

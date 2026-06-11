@@ -1,9 +1,13 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { territories } from "@/lib/db/schema/crm";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
+
+const listSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -14,13 +18,15 @@ const createSchema = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
+    const { limit } = parseQuery(req, listSchema);
     const rows = await db
       .select()
       .from(territories)
       .where(eq(territories.orgId, session.orgId))
-      .orderBy(territories.name);
+      .orderBy(territories.name)
+      .limit(limit);
 
     return ok(rows);
   });
@@ -28,13 +34,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json();
-    const parsed = createSchema.safeParse(body);
-    if (!parsed.success) {
-      return err(parsed.error.issues[0]?.message ?? "Validation failed");
-    }
-
-    const { name, states, cities, assignedReps, description, isActive } = parsed.data;
+    const { name, states, cities, assignedReps, description, isActive } = await parseBody(req, createSchema);
 
     const [created] = await db
       .insert(territories)

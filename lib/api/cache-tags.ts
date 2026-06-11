@@ -34,6 +34,7 @@ export const CacheTag = {
   purchaseBills: "purchase-bills",
   agedPayables: "aged-payables",
   vendorLedger: "vendor-ledger",
+  gstr3B: "gstr-3b",
 } as const;
 
 export type CacheTagName = (typeof CacheTag)[keyof typeof CacheTag];

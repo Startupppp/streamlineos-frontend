@@ -21,6 +21,10 @@ export const dynamic = "force-dynamic";
 
 type ExpenseStatus = (typeof expenseStatusEnum.enumValues)[number];
 
+function isExpenseStatus(value: string): value is ExpenseStatus {
+  return (expenseStatusEnum.enumValues as readonly string[]).includes(value);
+}
+
 function buildConditions(
   params: URLSearchParams,
   orgId: string,
@@ -57,8 +61,8 @@ function buildConditions(
   if (category) conditions.push(eq(expenses.category, category));
 
   const status = params.get("status");
-  if (status && status !== "all" && status !== "ALL") {
-    conditions.push(eq(expenses.status, status as ExpenseStatus));
+  if (status && status !== "all" && status !== "ALL" && isExpenseStatus(status)) {
+    conditions.push(eq(expenses.status, status));
   }
 
   const minAmount = params.get("minAmount");

@@ -1,11 +1,15 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { taskSequences, taskSequenceSteps } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const listSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const stepSchema = z.object({
   title: z.string().min(1),
@@ -21,12 +25,14 @@ const createSchema = z.object({
   steps: z.array(stepSchema).min(1),
 });
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
+    const { limit } = parseQuery(req, listSchema);
     const sequences = await db.query.taskSequences.findMany({
       where: eq(taskSequences.orgId, session.orgId),
       with: { steps: { orderBy: (s, { asc }) => [asc(s.order)] } },
       orderBy: (t, { desc }) => [desc(t.createdAt)],
+      limit,
     });
     return ok(sequences);
   });

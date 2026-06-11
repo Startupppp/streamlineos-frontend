@@ -1,4 +1,5 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getExpenses } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { expenses, users, organizationMembers } from "@/lib/db/schema";
@@ -9,6 +10,15 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendExpenseSubmittedEmail } from "@/lib/email";
+
+const listExpensesSchema = z.object({
+  userId: z.string().min(1).optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED", "PAID"]).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
 
 const createExpenseSchema = z.object({
   category: z.string(),
@@ -25,30 +35,25 @@ const createExpenseSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const { searchParams } = req.nextUrl;
+    const { userId: filterUserId, status, page, limit, startDate, endDate } = parseQuery(req, listExpensesSchema);
     const ability = await getSessionAbility();
 
     const isAdmin = ability.can("approve", "hr:expenses");
-    const filterUserId = searchParams.get("userId") ?? undefined;
-    const status = searchParams.get("status") as
-      | "PENDING"
-      | "APPROVED"
-      | "REJECTED"
-      | "PAID"
-      | null;
-    const page = searchParams.get("page");
-    const limit = searchParams.get("limit");
-    const startDate = searchParams.get("startDate") ?? undefined;
-    const endDate = searchParams.get("endDate") ?? undefined;
 
-    const data = await getExpenses(session.orgId, session.user.id, isAdmin, {
-      filterUserId,
-      status: status ?? undefined,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-      startDate,
-      endDate,
-    });
+    const key = `hr:expenses:${session.orgId}:${session.user.id}:${isAdmin ? "admin" : "self"}:${filterUserId ?? ""}:${status ?? ""}:${page ?? ""}:${limit ?? ""}:${startDate ?? ""}:${endDate ?? ""}`;
+    const data = await cached(
+      key,
+      () =>
+        getExpenses(session.orgId, session.user.id, isAdmin, {
+          filterUserId,
+          status,
+          page,
+          limit,
+          startDate,
+          endDate,
+        }),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(data);
   });
@@ -124,6 +129,8 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch {  }
+
+    await invalidateCachePattern(`hr:expenses:${session.orgId}:*`);
 
     return ok(expense);
   });

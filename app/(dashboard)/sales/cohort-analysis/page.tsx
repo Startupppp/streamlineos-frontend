@@ -120,8 +120,8 @@ export default function CohortAnalysisPage() {
               <CardTitle className="text-sm">Cohort Detail</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div>
+                <table className="w-full text-[11px] md:text-sm">
                   <thead>
                     <tr className="border-b text-muted-foreground text-xs">
                       <th className="text-left py-2 font-medium">Cohort</th>

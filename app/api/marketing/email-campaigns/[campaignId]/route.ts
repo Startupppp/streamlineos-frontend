@@ -21,13 +21,41 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!Number.isFinite(campaignId)) return err("Invalid campaign id", 400);
 
   return withAuth(async (session) => {
-    const [campaign] = await db.select().from(emailCampaigns)
+    const [campaign] = await db
+      .select({
+        id: emailCampaigns.id,
+        orgId: emailCampaigns.orgId,
+        name: emailCampaigns.name,
+        subject: emailCampaigns.subject,
+        body: emailCampaigns.body,
+        templateId: emailCampaigns.templateId,
+        status: emailCampaigns.status,
+        recipientFilter: emailCampaigns.recipientFilter,
+        recipientCount: emailCampaigns.recipientCount,
+        sentCount: emailCampaigns.sentCount,
+        failedCount: emailCampaigns.failedCount,
+        openCount: emailCampaigns.openCount,
+        clickCount: emailCampaigns.clickCount,
+        scheduledAt: emailCampaigns.scheduledAt,
+        sentAt: emailCampaigns.sentAt,
+        createdAt: emailCampaigns.createdAt,
+        updatedAt: emailCampaigns.updatedAt,
+      })
+      .from(emailCampaigns)
       .where(and(eq(emailCampaigns.id, campaignId), eq(emailCampaigns.orgId, session.orgId)))
       .limit(1);
     if (!campaign) return err("Campaign not found", 404);
 
     const recipients = await db
-      .select()
+      .select({
+        id: emailCampaignRecipients.id,
+        campaignId: emailCampaignRecipients.campaignId,
+        leadId: emailCampaignRecipients.leadId,
+        email: emailCampaignRecipients.email,
+        name: emailCampaignRecipients.name,
+        status: emailCampaignRecipients.status,
+        sentAt: emailCampaignRecipients.sentAt,
+      })
       .from(emailCampaignRecipients)
       .where(eq(emailCampaignRecipients.campaignId, campaignId));
 

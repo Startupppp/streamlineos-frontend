@@ -113,3 +113,16 @@ export const createPurchaseBillSchema = z.object({
 export const updatePurchaseBillStatusSchema = z.object({
   status: z.enum(["POSTED", "CANCELLED"]),
 });
+
+export const gstr3BQuerySchema = z.object({
+  from: z.string().date(),
+  to: z.string().date(),
+});
+
+export const recordVendorPaymentSchema = z.object({
+  amount: z.number().positive().max(999999999.99),
+  paymentDate: z.string().date(),
+  paymentMethod: z.enum(["bank_transfer", "upi", "cheque", "cash", "card", "other"]),
+  referenceNumber: z.string().max(100).optional(),
+  notes: z.string().max(500).optional(),
+});

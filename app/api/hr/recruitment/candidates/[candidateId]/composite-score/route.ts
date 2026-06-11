@@ -183,12 +183,12 @@ Based on ALL interview rounds above, provide a holistic composite evaluation. Re
         return err("AI returned an unexpected response format. Please try again.", 500);
       }
 
-      const validVerdicts: CompositeVerdict[] = ["STRONG_HIRE", "HIRE", "ON_FENCE", "NO_HIRE"];
+      const validVerdicts = ["STRONG_HIRE", "HIRE", "ON_FENCE", "NO_HIRE"] as const;
+      const isVerdict = (v: unknown): v is CompositeVerdict =>
+        typeof v === "string" && (validVerdicts as readonly string[]).includes(v);
 
       result = {
-        verdict: validVerdicts.includes(parsed.verdict as CompositeVerdict)
-          ? (parsed.verdict as CompositeVerdict)
-          : "ON_FENCE",
+        verdict: isVerdict(parsed.verdict) ? parsed.verdict : "ON_FENCE",
         overall: clamp(parsed.overall),
         reasoning: typeof parsed.reasoning === "string" ? parsed.reasoning : "",
         strengthsAcrossRounds: Array.isArray(parsed.strengthsAcrossRounds)

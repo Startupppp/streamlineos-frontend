@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import {
   getCalendarEvents,
   createCalendarEvent,
@@ -41,11 +42,17 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const events = await getCalendarEvents(
-        session.orgId,
-        session.user.id,
-        new Date(params.start),
-        new Date(params.end)
+      const key = `calendar:events:${session.orgId}:${session.user.id}:${params.start}:${params.end}`;
+      const events = await cached(
+        key,
+        () =>
+          getCalendarEvents(
+            session.orgId,
+            session.user.id,
+            new Date(params.start),
+            new Date(params.end),
+          ),
+        { ttlSeconds: CACHE_TTL.SHORT },
       );
       return ok(events);
     } catch (error) {
@@ -92,6 +99,8 @@ export async function POST(req: NextRequest) {
       }),
       getOooConflicts(session.orgId, input.attendeeIds ?? [], startDate, endDate),
     ]);
+
+    await invalidateCachePattern(`calendar:events:${session.orgId}:*`);
 
     return ok({ event, oooConflicts }, 201);
   });

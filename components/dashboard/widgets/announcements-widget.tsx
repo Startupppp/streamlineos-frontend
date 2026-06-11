@@ -78,7 +78,7 @@ export function AnnouncementsWidget() {
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden space-y-3">
         {showForm && isAdmin && (
-          <div className="space-y-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-amber-950/40 p-3">
+          <div className="space-y-2 rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50/40 dark:bg-amber-950/40 p-3">
             <Textarea
               placeholder="Write an announcement..."
               value={content}

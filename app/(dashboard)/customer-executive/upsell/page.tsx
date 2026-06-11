@@ -379,7 +379,7 @@ export default function UpsellTrackerPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 pb-4">
           {STAGES.map((s) => (
             <div key={s.id} className="min-w-[260px] flex-1 space-y-2">
               <Skeleton className="h-9 w-full rounded-lg" />
@@ -389,7 +389,7 @@ export default function UpsellTrackerPage() {
           ))}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 pb-4">
           {STAGES.map((stage) => (
             <KanbanColumn
               key={stage.id}

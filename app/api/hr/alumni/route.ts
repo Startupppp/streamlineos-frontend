@@ -1,9 +1,13 @@
-import { withAuth, withAdmin, ok } from "@/lib/api/helpers";
+import { withAuth, withAdmin, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { alumniProfiles } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const listSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createSchema = z.object({
   userId: z.string().min(1),
@@ -15,13 +19,15 @@ const createSchema = z.object({
   isOptedIn: z.boolean().optional(),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
+    const { limit } = parseQuery(req, listSchema);
     const data = await db
       .select()
       .from(alumniProfiles)
       .where(eq(alumniProfiles.orgId, session.orgId))
-      .orderBy(desc(alumniProfiles.createdAt));
+      .orderBy(desc(alumniProfiles.createdAt))
+      .limit(limit);
 
     return ok(data);
   });
@@ -29,7 +35,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     const [record] = await db
       .insert(alumniProfiles)

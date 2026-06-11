@@ -305,7 +305,7 @@ export default function ClientAccountsPage() {
       {viewMode === "kanban" && (
         <motion.div variants={fadeUp}>
           {isLoading ? (
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 pb-4">
               {STATUSES.map((s) => (
                 <div key={s} className="min-w-[280px] flex-1">
                   <Skeleton className="h-10 mb-2 rounded-t-lg" />
@@ -317,7 +317,7 @@ export default function ClientAccountsPage() {
               ))}
             </div>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 pb-4">
               {kanbanColumns.map(({ status, accounts: colAccounts, count }) => (
                 <KanbanColumn
                   key={status}

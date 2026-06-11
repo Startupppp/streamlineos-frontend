@@ -889,6 +889,28 @@ export const purchaseBillItemsRelations = relations(purchaseBillItems, ({ one })
   bill: one(purchaseBills, { fields: [purchaseBillItems.billId], references: [purchaseBills.id] }),
 }));
 
+export const vendorPayments = pgTable("vendor_payments", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  billId: integer("bill_id").references(() => purchaseBills.id, { onDelete: "cascade" }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentDate: date("payment_date").notNull(),
+  paymentMethod: text("payment_method").notNull(),
+  referenceNumber: text("reference_number"),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_vendor_payments_bill").on(table.billId),
+  index("idx_vendor_payments_org_date").on(table.orgId, table.paymentDate),
+]);
+
+export const vendorPaymentsRelations = relations(vendorPayments, ({ one }) => ({
+  organization: one(organizations, { fields: [vendorPayments.orgId], references: [organizations.id] }),
+  bill: one(purchaseBills, { fields: [vendorPayments.billId], references: [purchaseBills.id] }),
+  creator: one(users, { fields: [vendorPayments.createdBy], references: [users.id] }),
+}));
+
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),

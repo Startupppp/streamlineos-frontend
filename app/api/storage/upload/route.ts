@@ -48,13 +48,15 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const rawFolder = (formData.get("folder") as string) || "uploads";
-    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, "-");
-
+    const fileEntry = formData.get("file");
+    const file = fileEntry instanceof File ? fileEntry : null;
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
+
+    const folderEntry = formData.get("folder");
+    const rawFolder = typeof folderEntry === "string" && folderEntry.length > 0 ? folderEntry : "uploads";
+    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, "-");
 
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {

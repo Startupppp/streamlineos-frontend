@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getContacts } from "@/server/queries/crm";
 import { db } from "@/lib/db";
 import { contacts } from "@/lib/db/schema";
@@ -31,7 +32,13 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getContacts(session.orgId!, filters);
+    const orgId = session.orgId!;
+    const key = `crm:contacts:list:${orgId}:${filters.search ?? ""}:${filters.organizationId ?? ""}:${filters.limit ?? ""}:${filters.offset ?? ""}`;
+    const data = await cached(
+      key,
+      () => getContacts(orgId, filters),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
     return ok(data);
   });
 }
@@ -56,6 +63,8 @@ export async function POST(req: NextRequest) {
       tags: input.tags,
       orgId: session.orgId!,
     }).returning();
+
+    await invalidateCachePattern(`crm:contacts:list:${session.orgId}:*`);
 
     return ok(contact, 201);
   });

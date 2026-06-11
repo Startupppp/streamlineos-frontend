@@ -4,7 +4,6 @@ import { requireFeature } from "@/lib/billing/server-feature";
 import { generateFollowUpEmail, generateEmailVariations } from "@/lib/ai/email-generator";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
 import { z } from "zod";
-import type { EmailTone } from "@/lib/ai/prompts";
 
 const generateSchema = z.object({
   leadName: z.string().min(1),
@@ -61,7 +60,7 @@ export async function POST(req: NextRequest) {
       potentialValue: input.potentialValue,
       senderName,
       senderRole,
-      tone: input.tone as EmailTone,
+      tone: input.tone,
       context: input.context,
     });
 

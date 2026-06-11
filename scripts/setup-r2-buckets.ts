@@ -27,7 +27,6 @@ const FOLDER_DESCRIPTIONS: Record<keyof typeof R2_FOLDERS, string> = {
   employeeDocuments: "Employee HR documents (contracts, certificates)",
   payslips: "Generated payslip PDFs",
   esign: "E-signed documents (Documenso integration)",
-  qrCodes: "Generated QR code PNGs",
   exports: "Generated exports (CSV, Excel, PDF reports)",
   emailAttachments: "Outbound email attachments",
   temp: "Short-lived uploads (eligible for lifecycle expiration)",

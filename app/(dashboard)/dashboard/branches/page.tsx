@@ -112,7 +112,7 @@ export default function BranchCommandCenterPage() {
       <Tabs defaultValue="cards">
         <TabsList>
           <TabsTrigger value="cards">Card View</TabsTrigger>
-          <TabsTrigger value="table">Comparison Table</TabsTrigger>
+          <TabsTrigger value="table" className="hidden md:inline-flex">Comparison Table</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cards" className="mt-6">
@@ -126,7 +126,7 @@ export default function BranchCommandCenterPage() {
         <TabsContent value="table" className="mt-6">
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div>
                 <Table>
                   <TableHeader>
                     <TableRow>

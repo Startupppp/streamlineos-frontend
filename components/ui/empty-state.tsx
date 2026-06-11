@@ -67,24 +67,27 @@ export function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center",
-        compact ? "py-8 px-4" : "py-14 px-6",
-        "rounded-xl border border-dashed border-border/60 bg-muted/20",
+        compact
+          ? "py-4 px-2"
+          : "py-14 px-6 rounded-xl border border-dashed border-border/60 bg-muted/20",
         className
       )}
     >
       {illustration ? (
-        <div className={cn("mb-4", compact ? "mb-3" : "mb-5")}>{illustration}</div>
+        <div className={cn(compact ? "mb-2 [&>svg]:h-10 [&>svg]:w-10" : "mb-5")}>
+          {illustration}
+        </div>
       ) : Icon ? (
         <div
           className={cn(
-            "mb-4 rounded-xl bg-muted flex items-center justify-center",
-            compact ? "h-10 w-10 mb-3" : "h-12 w-12 mb-5"
+            "rounded-xl bg-muted flex items-center justify-center",
+            compact ? "h-8 w-8 mb-2" : "h-12 w-12 mb-5"
           )}
         >
           <Icon
             className={cn(
               "text-muted-foreground/60",
-              compact ? "h-5 w-5" : "h-6 w-6"
+              compact ? "h-4 w-4" : "h-6 w-6"
             )}
           />
         </div>
@@ -93,7 +96,7 @@ export function EmptyState({
       <h3
         className={cn(
           "font-semibold text-foreground",
-          compact ? "text-sm" : "text-[0.9375rem]"
+          compact ? "text-[13px] leading-tight" : "text-[0.9375rem]"
         )}
       >
         {title}
@@ -102,8 +105,8 @@ export function EmptyState({
       {description && (
         <p
           className={cn(
-            "text-muted-foreground mt-1 max-w-xs leading-relaxed",
-            compact ? "text-xs" : "text-sm"
+            "text-muted-foreground mt-0.5 max-w-xs leading-snug",
+            compact ? "text-[11px]" : "text-sm mt-1"
           )}
         >
           {description}
@@ -111,7 +114,7 @@ export function EmptyState({
       )}
 
       {(action || secondaryAction) && (
-        <div className={cn("flex items-center gap-2", compact ? "mt-3" : "mt-5")}>
+        <div className={cn("flex items-center gap-2", compact ? "mt-2" : "mt-5")}>
           {action && (
             <ActionButton
               action={action}

@@ -243,3 +243,96 @@ export interface PurchaseBillSummary {
 export interface PurchaseBill extends PurchaseBillSummary {
   items: PurchaseBillItem[];
 }
+
+export interface Gstr3BTaxBlock {
+  taxableValue: string;
+  cgst: string;
+  sgst: string;
+  igst: string;
+}
+
+export interface Gstr3BReport {
+  from: string;
+  to: string;
+  outward: {
+    taxable: Gstr3BTaxBlock;
+    zeroRated: Gstr3BTaxBlock;
+    nilExempted: Gstr3BTaxBlock;
+    reverseCharge: Gstr3BTaxBlock;
+  };
+  itc: {
+    available: Gstr3BTaxBlock;
+    reversed: Gstr3BTaxBlock;
+    net: Gstr3BTaxBlock;
+  };
+  netTaxPayable: {
+    cgst: string;
+    sgst: string;
+    igst: string;
+    total: string;
+  };
+  invoiceCount: number;
+  billCount: number;
+}
+
+export interface AgedPayablesRow {
+  vendorId: number;
+  vendorName: string;
+  current: string;
+  d1_30: string;
+  d31_60: string;
+  d61_90: string;
+  d91_plus: string;
+  total: string;
+}
+
+export interface AgedPayablesReport {
+  asOf: string;
+  rows: AgedPayablesRow[];
+  totals: {
+    current: string;
+    d1_30: string;
+    d31_60: string;
+    d61_90: string;
+    d91_plus: string;
+    total: string;
+  };
+}
+
+export interface VendorLedgerLine {
+  date: string;
+  entryId: number;
+  entryNumber: string;
+  sourceType: string;
+  sourceEvent: string | null;
+  description: string | null;
+  billId: number | null;
+  billNumber: string | null;
+  debit: string;
+  credit: string;
+  runningBalance: string;
+}
+
+export interface VendorLedgerSummary {
+  vendorId: number;
+  vendorName: string;
+  state: string | null;
+  gstin: string | null;
+  totalBilled: string;
+  totalPaid: string;
+  outstanding: string;
+}
+
+export interface VendorLedger {
+  summary: VendorLedgerSummary;
+  lines: VendorLedgerLine[];
+}
+
+export interface VendorOutstanding {
+  vendorId: number;
+  vendorName: string;
+  state: string | null;
+  gstin: string | null;
+  billCount: number;
+  outstanding: string;
+}

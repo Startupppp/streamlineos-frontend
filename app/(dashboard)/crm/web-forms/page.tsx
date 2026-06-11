@@ -76,7 +76,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">iFrame Snippet</Label>
             <div className="relative">
-              <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="bg-muted rounded-md p-3 text-xs whitespace-pre-wrap break-all">
                 {iframeSnippet}
               </pre>
               <Button
@@ -93,7 +93,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">JavaScript Snippet</Label>
             <div className="relative">
-              <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="bg-muted rounded-md p-3 text-xs whitespace-pre-wrap break-all">
                 {jsSnippet}
               </pre>
               <Button

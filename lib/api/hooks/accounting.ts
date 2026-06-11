@@ -6,14 +6,21 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   Account,
   AccountType,
+  AgedPayablesReport,
   AgedReceivablesReport,
   BalanceSheetReport,
   CustomerLedger,
   CustomerOutstanding,
   Gstr1Report,
+  Gstr3BReport,
   JournalEntry,
   ProfitLossReport,
+  PurchaseBill,
+  PurchaseBillStatus,
+  PurchaseBillSummary,
   TrialBalanceRow,
+  VendorLedger,
+  VendorOutstanding,
 } from "@/types/accounting";
 
 interface ListResponse<T> {
@@ -254,6 +261,133 @@ export function useAgedReceivables(asOf: string) {
   return useQuery<AgedReceivablesReport, Error>({
     queryKey: queryKeys.accounting.agedReceivables({ asOf }),
     queryFn: () => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }),
+    enabled: !!asOf,
+    staleTime: 30_000,
+  });
+}
+
+export interface ListPurchaseBillsParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: PurchaseBillStatus;
+  vendorId?: number;
+}
+
+export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
+  return useQuery<ListResponse<PurchaseBillSummary>, Error>({
+    queryKey: queryKeys.accounting.purchaseBills(params),
+    queryFn: () =>
+      apiClient.get<ListResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
+    staleTime: 60_000,
+  });
+}
+
+export function usePurchaseBill(billId: number) {
+  return useQuery<PurchaseBill, Error>({
+    queryKey: queryKeys.accounting.purchaseBill(billId),
+    queryFn: () => apiClient.get<PurchaseBill>(`/accounting/purchase-bills/${billId}`),
+    enabled: Number.isInteger(billId) && billId > 0,
+    staleTime: 60_000,
+  });
+}
+
+export interface CreatePurchaseBillLine {
+  description: string;
+  hsnSacCode?: string;
+  quantity: number;
+  rate: number;
+  gstRate: number;
+}
+
+export interface CreatePurchaseBillInput {
+  vendorId: number;
+  vendorBillNumber?: string;
+  billDate: string;
+  dueDate?: string;
+  status: "DRAFT" | "POSTED";
+  placeOfSupply?: string;
+  vendorGstin?: string;
+  supplierGstin?: string;
+  reverseCharge: boolean;
+  discount: number;
+  notes?: string;
+  expenseAccountCode: string;
+  items: CreatePurchaseBillLine[];
+}
+
+interface PurchaseBillCreateResult {
+  id: number;
+  billNumber: string;
+  status: PurchaseBillStatus;
+}
+
+export function useCreatePurchaseBill() {
+  const queryClient = useQueryClient();
+  return useMutation<PurchaseBillCreateResult, Error, CreatePurchaseBillInput>({
+    mutationFn: (input) => apiClient.post<PurchaseBillCreateResult>("/accounting/purchase-bills", input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+    },
+  });
+}
+
+export function usePostPurchaseBill(billId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<{ id: number; status: PurchaseBillStatus }, Error, void>({
+    mutationFn: () =>
+      apiClient.patch<{ id: number; status: PurchaseBillStatus }>(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.purchaseBill(billId) });
+    },
+  });
+}
+
+export function useGstr3B(from: string, to: string) {
+  return useQuery<Gstr3BReport, Error>({
+    queryKey: queryKeys.accounting.gstr3B({ from, to }),
+    queryFn: () => apiClient.get<Gstr3BReport>("/accounting/reports/gstr-3b", { from, to }),
+    enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+}
+
+export interface ListVendorsOutstandingParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  onlyOutstanding?: boolean;
+}
+
+export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {}) {
+  return useQuery<ListResponse<VendorOutstanding>, Error>({
+    queryKey: queryKeys.accounting.vendorsOutstanding(params),
+    queryFn: () =>
+      apiClient.get<ListResponse<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
+    staleTime: 60_000,
+  });
+}
+
+export interface VendorLedgerParams {
+  from?: string;
+  to?: string;
+}
+
+export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {}) {
+  return useQuery<VendorLedger, Error>({
+    queryKey: queryKeys.accounting.vendorLedger(vendorId, params),
+    queryFn: () =>
+      apiClient.get<VendorLedger>(`/accounting/vendors/${vendorId}/ledger`, toQuery(params)),
+    enabled: Number.isInteger(vendorId) && vendorId > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useAgedPayables(asOf: string) {
+  return useQuery<AgedPayablesReport, Error>({
+    queryKey: queryKeys.accounting.agedPayables({ asOf }),
+    queryFn: () => apiClient.get<AgedPayablesReport>("/accounting/reports/aged-payables", { asOf }),
     enabled: !!asOf,
     staleTime: 30_000,
   });

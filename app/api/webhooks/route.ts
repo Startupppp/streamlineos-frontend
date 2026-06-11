@@ -17,6 +17,7 @@ export async function GET(_req: NextRequest) {
     const endpoints = await db.query.webhookEndpoints.findMany({
       where: eq(webhookEndpoints.orgId, session.orgId),
       orderBy: [desc(webhookEndpoints.createdAt)],
+      limit: 200,
     });
 
     const safe = endpoints.map((ep) => {

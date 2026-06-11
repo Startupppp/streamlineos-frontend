@@ -58,7 +58,6 @@ const ROUTE_TITLES: Record<string, string> = {
   "/reports": "Reports",
   "/marketing": "Marketing",
   "/digital-marketing": "Digital Marketing",
-  "/ceo/qr-code": "QR Codes",
   "/calendar": "Calendar",
 };
 

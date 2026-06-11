@@ -237,7 +237,7 @@ export function AppSidebar({
               type="button"
               onClick={onToggleCollapse}
               aria-label="Collapse sidebar"
-              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-white/5 transition-colors shrink-0"
+              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-blue-500/8 transition-colors shrink-0"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
@@ -295,7 +295,7 @@ export function AppSidebar({
                     type="button"
                     onClick={handleSearchClick}
                     aria-label="Search"
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5 transition-colors"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-blue-500/8 transition-colors"
                   >
                     <Search className="h-4 w-4" />
                   </button>
@@ -304,7 +304,7 @@ export function AppSidebar({
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-black/[0.04]">
                 <NotificationBell />
               </div>
             </>
@@ -314,15 +314,15 @@ export function AppSidebar({
                 type="button"
                 onClick={handleSearchClick}
                 aria-label="Search"
-                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] px-2.5 text-sidebar-foreground/40 text-xs hover:text-sidebar-foreground/70 hover:bg-white/[0.07] transition-colors"
+                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-black/[0.03] border border-sidebar-border px-2.5 text-sidebar-foreground/55 text-xs hover:text-sidebar-foreground/85 hover:bg-black/[0.05] transition-colors"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="flex-1 text-left">Search…</span>
-                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/[0.08] bg-white/[0.04] px-1 font-mono text-[9px] text-sidebar-foreground/25">
+                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-sidebar-border bg-slate-100 px-1 font-mono text-[9px] text-sidebar-foreground/45">
                   ⌘K
                 </kbd>
               </button>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-black/[0.04]">
                 <NotificationBell />
               </div>
             </>

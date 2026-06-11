@@ -77,7 +77,7 @@ export default function AIHubPage() {
       subtitle="Intelligent tools powered by AI to supercharge your workflow"
     >
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="h-auto w-full justify-start gap-1 rounded-lg p-1 overflow-x-auto">
+        <TabsList className="h-auto w-full justify-start gap-1 rounded-lg p-1 flex-wrap">
           {CATEGORIES.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value} className="whitespace-nowrap">
               {cat.label}

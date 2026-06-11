@@ -1,4 +1,4 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
@@ -6,7 +6,11 @@ import { eq, and, desc } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
-import type { JobPostingStatus } from "@/types/hr";
+
+const listSchema = z.object({
+  status: z.enum(["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createJobSchema = z.object({
   title: z.string(),
@@ -25,7 +29,7 @@ const createJobSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const status = req.nextUrl.searchParams.get("status") as JobPostingStatus | null;
+    const { status, limit } = parseQuery(req, listSchema);
 
     const conditions = [eq(jobPostings.orgId, session.orgId)];
     if (status) conditions.push(eq(jobPostings.status, status));
@@ -33,6 +37,7 @@ export async function GET(req: NextRequest) {
     const data = await db.query.jobPostings.findMany({
       where: and(...conditions),
       orderBy: [desc(jobPostings.createdAt)],
+      limit,
     });
 
     return ok(data);

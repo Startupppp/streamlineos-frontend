@@ -284,7 +284,7 @@ export default function DealDetailPage({
       }
     >
       <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-        <motion.div variants={fadeUp} className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
+        <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50">
           {STAGES.map((stage, i) => {
             const isActive = stage.key === deal.stage;
             const isPast = i < currentStageIndex;

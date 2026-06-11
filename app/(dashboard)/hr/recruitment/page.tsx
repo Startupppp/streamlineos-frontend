@@ -225,12 +225,12 @@ export default function RecruitmentDashboardPage() {
             <CardTitle className="text-sm font-medium">Pipeline Funnel</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="flex items-end gap-2 overflow-x-auto pb-2">
+            <div className="flex items-end gap-2 pb-2">
               {analytics.funnel.map((stage) => {
                 const maxCount = Math.max(...analytics.funnel.map((s) => s.count), 1);
                 const heightPct = Math.max((stage.count / maxCount) * 100, 4);
                 return (
-                  <div key={stage.stage} className="flex flex-col items-center gap-1 flex-1 min-w-[60px]">
+                  <div key={stage.stage} className="flex flex-col items-center gap-1 flex-1 min-w-0">
                     <span className="text-xs font-semibold tabular-nums">{stage.count}</span>
                     <div className="w-full rounded-t-sm bg-primary/80" style={{ height: `${heightPct * 0.6}px`, minHeight: 4 }} />
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">{stage.stage}</span>

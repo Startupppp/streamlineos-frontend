@@ -382,6 +382,12 @@ export const queryKeys = {
     gstr1: (params: { from: string; to: string }) => [...base, "accounting", "gstr1", params] as const,
     balanceSheet: (params: { asOf: string }) => [...base, "accounting", "balanceSheet", params] as const,
     agedReceivables: (params: { asOf: string }) => [...base, "accounting", "agedReceivables", params] as const,
+    purchaseBills: <P extends object>(params?: P) => [...base, "accounting", "purchaseBills", params] as const,
+    purchaseBill: (id: number) => [...base, "accounting", "purchaseBill", id] as const,
+    gstr3B: (params: { from: string; to: string }) => [...base, "accounting", "gstr3B", params] as const,
+    vendorsOutstanding: <P extends object>(params?: P) => [...base, "accounting", "vendorsOutstanding", params] as const,
+    vendorLedger: <P extends object>(vendorId: number, params?: P) => [...base, "accounting", "vendorLedger", vendorId, params] as const,
+    agedPayables: (params: { asOf: string }) => [...base, "accounting", "agedPayables", params] as const,
   },
 
 } as const;

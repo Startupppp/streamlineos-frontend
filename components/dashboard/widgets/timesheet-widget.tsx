@@ -26,51 +26,45 @@ export function TimesheetWidget() {
           <ExternalLink className="h-3 w-3" aria-hidden="true" />
         </Link>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
+      <CardContent className="flex-1 flex flex-col gap-2 pb-4">
         {isLoading ? (
-          <div className="w-full space-y-3">
-            <Skeleton className="h-16 w-full rounded-xl" />
-            <Skeleton className="h-4 w-32 mx-auto" />
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-3 w-24" />
           </div>
         ) : error ? (
           <p className="text-sm text-destructive">Failed to load.</p>
         ) : ts ? (
           <>
-            <div
-              className={cn(
-                "w-full rounded-xl px-4 py-4 flex flex-col items-center gap-1 text-center",
-                ts.submitted
-                  ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
-                  : "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
-              )}
-            >
-              {ts.submitted ? (
-                <CheckCircle2
-                  className="h-7 w-7 text-emerald-500 mb-1"
-                  aria-hidden="true"
-                />
-              ) : (
-                <AlertTriangle
-                  className="h-7 w-7 text-red-500 mb-1"
-                  aria-hidden="true"
-                />
-              )}
-              <p
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    "text-[11px] font-semibold uppercase tracking-wide",
+                    ts.submitted ? "text-emerald-600" : "text-red-600",
+                  )}
+                >
+                  {ts.submitted ? "Submitted" : "Hours Missing"}
+                </p>
+                <p className="text-2xl font-bold tabular-nums leading-none mt-1">
+                  {ts.hoursLogged.toFixed(1)}
+                  <span className="text-sm font-normal text-muted-foreground ml-1">hrs</span>
+                </p>
+              </div>
+              <div
                 className={cn(
-                  "text-sm font-semibold",
-                  ts.submitted
-                    ? "text-emerald-700 dark:text-emerald-300"
-                    : "text-red-700 dark:text-red-300"
+                  "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                  ts.submitted ? "bg-emerald-500/10" : "bg-red-500/10",
                 )}
               >
-                {ts.submitted ? "Week Submitted" : "Hours Missing"}
-              </p>
-              <p className="text-2xl font-bold tabular-nums">
-                {ts.hoursLogged.toFixed(1)}
-                <span className="text-sm font-normal text-muted-foreground ml-1">hrs</span>
-              </p>
+                {ts.submitted ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                )}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">{ts.weekLabel}</p>
+            <p className="text-[11px] text-muted-foreground">{ts.weekLabel}</p>
           </>
         ) : null}
       </CardContent>

@@ -51,30 +51,31 @@ export function StatCard({
   const body = (
     <div
       className={cn(
-        "relative group rounded-xl border border-border bg-card p-4 overflow-hidden transition-all duration-200",
-        href && "hover:border-blue-300/40 hover:shadow-sm cursor-pointer",
+        "relative group rounded-xl border border-border bg-card p-3.5 overflow-hidden transition-all duration-200",
+        href &&
+          "hover:border-blue-400 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)] hover:-translate-y-0.5 cursor-pointer",
         className,
       )}
       style={{ animation: `fade-up 0.3s ease-out ${index * 0.07}s both` }}
     >
-      <div className={cn("absolute top-0 left-0 right-0 h-[2px] opacity-70", c.bar)} />
+      <div className={cn("absolute top-0 left-0 right-0 h-[2px]", c.bar)} />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-muted-foreground truncate">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground truncate">
             {label}
           </p>
           <p
             className={cn(
               "font-semibold text-foreground mt-1 truncate leading-none",
-              typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl",
+              typeof value === "string" && value.length > 8 ? "text-lg" : "text-[1.375rem]",
             )}
           >
             {value}
           </p>
 
           {trend && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="flex items-center gap-1 mt-1.5">
               {trend.isPositive ? (
                 <TrendingUp className="h-3 w-3 text-emerald-500" />
               ) : (
@@ -98,7 +99,7 @@ export function StatCard({
 
         <div
           className={cn(
-            "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
+            "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
             c.bg,
             href && "group-hover:scale-110",
           )}

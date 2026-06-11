@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSupportTickets } from "@/server/queries/support";
 import { db } from "@/lib/db";
 import { supportTickets, users } from "@/lib/db/schema";
@@ -43,13 +44,20 @@ export async function GET(req: NextRequest) {
       const page = toNumber(params.get("page")) ?? 1;
       const limit = toNumber(params.get("limit")) ?? 50;
 
-      const data = await getSupportTickets(session.orgId, {
-        status: status ?? undefined,
-        priority: priority ?? undefined,
-        assigneeId,
-        page,
-        limit,
-      });
+      const orgId = session.orgId;
+      const key = `support:tickets:${orgId}:${status ?? ""}:${priority ?? ""}:${assigneeId ?? ""}:${page}:${limit}`;
+      const data = await cached(
+        key,
+        () =>
+          getSupportTickets(orgId, {
+            status: status ?? undefined,
+            priority: priority ?? undefined,
+            assigneeId,
+            page,
+            limit,
+          }),
+        { ttlSeconds: CACHE_TTL.SHORT },
+      );
       return ok(data);
     } catch (error) {
       return err(
@@ -101,6 +109,8 @@ export async function POST(req: NextRequest) {
           }
         })().catch(() => {});
       }
+
+      await invalidateCachePattern(`support:tickets:${session.orgId}:*`);
 
       return ok(ticket, 201);
     } catch (error) {
