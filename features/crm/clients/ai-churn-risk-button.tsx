@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAnalyzeChurnRisk } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIChurnRiskButtonProps {
   clientId: number;
@@ -32,8 +33,10 @@ export function AIChurnRiskButton({
   const [open, setOpen] = useState(false);
   const analyzeMutation = useAnalyzeChurnRisk();
   const result = analyzeMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.churn-risk");
 
   const handleAnalyze = () => {
+    if (!featureEnabled) { toast.error(`AI churn risk analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     analyzeMutation.mutate(
       { clientId, openTickets, ticketsLast90Days, daysSinceLastActivity },
       { onError: (e) => toast.error(getErrorMessage(e)) },

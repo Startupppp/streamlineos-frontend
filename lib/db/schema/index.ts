@@ -12,3 +12,4 @@ export * from "./shared";
 export * from "./marketing";
 export * from "./blog";
 export * from "./platform";
+export * from "./accounting";

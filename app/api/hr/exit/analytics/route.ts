@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, users, organizationMembers, departmentMembers, departments } from "@/lib/db/schema";
 import { eq, and, sql, gte, count } from "drizzle-orm";
@@ -7,7 +7,9 @@ import { subMonths, format, startOfMonth } from "date-fns";
 
 export async function GET() {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:leaves"))  return err("Forbidden", 403);
 
     const orgId = session.orgId;
 

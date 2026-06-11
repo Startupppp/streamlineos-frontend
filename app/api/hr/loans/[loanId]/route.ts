@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { salaryLoans } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,7 +16,9 @@ export async function PATCH(
   { params }: { params: Promise<{ loanId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can manage loans.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:expenses"))  return err("Only admins can manage loans.", 403);
     const { loanId: id } = await params;
     const loanId = Number(id);
     if (!loanId) return err("Invalid ID.", 400);

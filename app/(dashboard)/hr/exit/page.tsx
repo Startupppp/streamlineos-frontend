@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
@@ -58,9 +59,10 @@ export default function ExitManagementPage() {
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
-  const isAdmin = role === "CEO" || role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("approve", "hr:leaves");
   const isHR = role === "HR";
-  const isCEO = role === "CEO";
+  const isCEO = ability.can("manage", "all");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");

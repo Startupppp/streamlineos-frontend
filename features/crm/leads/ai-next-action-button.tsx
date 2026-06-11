@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useNextBestAction } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AINextActionButtonProps {
   leadId: number;
@@ -23,8 +24,10 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
   const [open, setOpen] = useState(false);
   const actionMutation = useNextBestAction();
   const result = actionMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.next-action");
 
   const handleSuggest = () => {
+    if (!featureEnabled) { toast.error(`AI next-action suggestion requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     actionMutation.mutate(leadId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });

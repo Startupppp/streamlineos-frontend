@@ -27,7 +27,7 @@ export default function AttendancePage() {
 
   const userId = session?.user?.id;
   if (!userId) return null;
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO";
 
   return (
     <PageWrapper

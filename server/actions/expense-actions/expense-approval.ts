@@ -1,12 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { expenses } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
-import { isAdminOrOwner, isExpenseAdmin } from "@/lib/auth-helpers";
 import { createNotification } from "@/server/actions/create-notification";
 import { getExpenseMember } from "./_helpers";
 
@@ -15,7 +15,8 @@ export async function approveExpense(expenseId: number) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (!isExpenseAdmin(member.role)) {
+  const ability = await getSessionAbility();
+  if (!ability.can("approve", "hr:expenses")) {
     return { error: "Permission denied" };
   }
 
@@ -74,7 +75,8 @@ export async function rejectExpense(expenseId: number, reason: string) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (!isExpenseAdmin(member.role)) {
+  const ability = await getSessionAbility();
+  if (!ability.can("approve", "hr:expenses")) {
     return { error: "Permission denied" };
   }
 
@@ -134,7 +136,10 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (!isAdminOrOwner(member.role)) {
+  const ability = await getSessionAbility();
+
+
+  if (!ability.can("approve", "hr:expenses")) {
     return { error: "Permission denied" };
   }
 

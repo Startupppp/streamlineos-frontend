@@ -1,12 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { expenses, expenseCategories, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
-import { isAdminOrOwner, isExpenseAdmin } from "@/lib/auth-helpers";
 import { notifyByRoles } from "@/server/actions/create-notification";
 import { ROLES } from "@/lib/constants/roles";
 import { getExpenseMember } from "./_helpers";
@@ -136,7 +136,8 @@ export async function updateExpense(expenseId: number, data: Partial<CreateExpen
     if (!existing) return { error: "Expense not found" };
 
     const isOwner = existing.userId === session.user.id;
-    const isAdminRole = isExpenseAdmin(member.role);
+    const ability = await getSessionAbility();
+    const isAdminRole = ability.can("approve", "hr:expenses");
 
     if (!isOwner && !isAdminRole) return { error: "Permission denied" };
     if (existing.status !== "PENDING" && !isAdminRole) return { error: "Can only edit pending expenses" };
@@ -174,7 +175,10 @@ export async function getExpenses(filters?: {
   if (!ctx) return [];
   const { session, member } = ctx;
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const ability = await getSessionAbility();
+
+
+  const isAdmin = ability.can("approve", "hr:expenses");
 
   const conditions = [eq(expenses.orgId, member.orgId)];
 
@@ -241,7 +245,10 @@ export async function getPendingExpenses() {
   if (!ctx) return [];
   const { member } = ctx;
 
-  if (!isAdminOrOwner(member.role)) {
+  const ability = await getSessionAbility();
+
+
+  if (!ability.can("approve", "hr:expenses")) {
     return [];
   }
 
@@ -275,7 +282,9 @@ export async function deleteExpense(expenseId: number) {
   if (!expense) return { error: "Expense not found" };
 
   const isOwner = expense.userId === session.user.id;
-  const isAdmin = isAdminOrOwner(member.role);
+  const ability = await getSessionAbility();
+
+  const isAdmin = ability.can("approve", "hr:expenses");
   const isPending = expense.status === "PENDING";
 
   if (!isAdmin && (!isOwner || !isPending)) {
@@ -316,7 +325,10 @@ export async function createExpenseCategory(data: {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (!isAdminOrOwner(member.role)) {
+  const ability = await getSessionAbility();
+
+
+  if (!ability.can("approve", "hr:expenses")) {
     return { error: "Permission denied" };
   }
 
@@ -342,7 +354,10 @@ export async function getExpenseStats() {
   if (!ctx) return null;
   const { session, member } = ctx;
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const ability = await getSessionAbility();
+
+
+  const isAdmin = ability.can("approve", "hr:expenses");
   const conditions = [eq(expenses.orgId, member.orgId)];
 
   if (!isAdmin) {
@@ -379,7 +394,10 @@ export async function getCategorySpending() {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || !isAdminOrOwner(member.role)) {
+  const ability = await getSessionAbility();
+
+
+  if (!member || !ability.can("approve", "hr:expenses")) {
     return [];
   }
 
@@ -426,7 +444,10 @@ export async function getExpenseReportData(filters: {
   if (!ctx) return null;
   const { session, member } = ctx;
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const ability = await getSessionAbility();
+
+
+  const isAdmin = ability.can("approve", "hr:expenses");
   const conditions = [
     eq(expenses.orgId, member.orgId),
     gte(expenses.expenseDate, filters.startDate),

@@ -11,7 +11,6 @@ import {
   BRAND_NAME,
   BRAND_TAGLINE,
   BRAND_DESCRIPTION,
-  BRAND_DOMAIN,
   BRAND_URL,
 } from "../lib/branding";
 import {
@@ -72,9 +71,6 @@ export const metadata: Metadata = {
   },
   applicationName: BRAND_NAME,
   category: "business",
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -135,7 +131,6 @@ export default function RootLayout({
         <OrganizationJsonLd />
         <WebsiteJsonLd />
         <GoogleTagManagerHead />
-        <link rel="canonical" href={`https://${BRAND_DOMAIN}`} />
       </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
         <GoogleTagManagerNoscript />

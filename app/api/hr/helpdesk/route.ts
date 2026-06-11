@@ -3,7 +3,7 @@ import { getHelpdeskTickets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { helpdeskTickets, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { TicketPriority, TicketStatus } from "@/types/hr";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -19,7 +19,9 @@ const createTicketSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:employees");
     const filterUserId = searchParams.get("userId") ?? undefined;
     const status = searchParams.get("status") as TicketStatus | null;
 

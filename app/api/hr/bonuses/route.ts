@@ -2,7 +2,7 @@ import { withAuth, withAdmin, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { bonuses } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -16,7 +16,9 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:payroll");
 
     const data = await db
       .select()

@@ -3,7 +3,7 @@ import { getAssets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { assets, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -30,7 +30,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:assets")) {
       return err("Only admins can create assets.", 403);
     }
 

@@ -14,7 +14,7 @@ import {
   asc,
   count,
 } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -96,7 +96,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const orgId = session.orgId;
     const userId = session.user.id;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:expenses");
 
     const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
     const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize") ?? "10")));

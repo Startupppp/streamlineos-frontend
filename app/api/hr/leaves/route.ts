@@ -85,10 +85,10 @@ export async function GET() {
       const role = member.role;
       const targetRoles =
         role === ROLES.CEO
-          ? [ROLES.HR, ROLES.ADMIN]
+          ? [ROLES.HR]
           : role === ROLES.HR
-          ? [ROLES.CEO, ROLES.ADMIN]
-          : [ROLES.ADMIN, ROLES.HR, ROLES.CEO];
+          ? [ROLES.CEO]
+          : [ROLES.HR, ROLES.CEO];
 
       const approverMembers = await db.query.organizationMembers.findMany({
         where: and(

@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEnrichLead } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIEnrichLeadButtonProps {
   leadName: string;
@@ -29,8 +30,10 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
   const [open, setOpen] = useState(false);
   const enrichMutation = useEnrichLead();
   const result = enrichMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.enrichment");
 
   const handleEnrich = () => {
+    if (!featureEnabled) { toast.error(`AI lead enrichment requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     enrichMutation.mutate(
       {
         name: leadName,

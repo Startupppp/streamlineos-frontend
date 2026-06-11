@@ -1,5 +1,5 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -24,7 +24,9 @@ export async function PATCH(
   { params }: { params: Promise<{ deviceId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:assets")) {
       return err("Only admins can update devices.", 403);
     }
 
@@ -64,7 +66,9 @@ export async function DELETE(
   { params }: { params: Promise<{ deviceId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:assets")) {
       return err("Only admins can delete devices.", 403);
     }
 

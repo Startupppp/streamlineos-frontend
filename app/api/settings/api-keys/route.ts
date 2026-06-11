@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { apiKeys } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createHash, randomBytes } from "crypto";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -24,7 +24,8 @@ const createApiKeySchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "settings")) {
       return err("Only admins can manage API keys.", 403);
     }
     const keys = await db.query.apiKeys.findMany({
@@ -39,7 +40,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "settings")) {
       return err("Only admins can create API keys.", 403);
     }
     const body = await parseBody(req, createApiKeySchema);

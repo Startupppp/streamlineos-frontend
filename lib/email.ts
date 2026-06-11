@@ -52,10 +52,9 @@ import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx"
 
 export type { EmailOptions, EmailAttachment };
 
-const baseUrl = appUrl;
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+  const verificationUrl = `${appUrl}/verify-email?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Verify Your Email - StreamlineOS",
@@ -64,7 +63,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - StreamlineOS",
@@ -78,7 +77,7 @@ export async function sendInvitationEmail(
   organizationName: string,
   inviterName?: string
 ) {
-  const invitationUrl = `${baseUrl}/invitation/${token}`;
+  const invitationUrl = `${appUrl}/invitation/${token}`;
   await sendEmail({
     to: email,
     subject: `Invitation to join ${organizationName} - StreamlineOS`,
@@ -106,7 +105,7 @@ export async function sendProjectAssignmentEmail(
   projectId: number,
   assignedBy?: string
 ) {
-  const projectUrl = `${baseUrl}/projects/${projectId}`;
+  const projectUrl = `${appUrl}/projects/${projectId}`;
   await sendEmail({
     to: email,
     subject: `Added to Project: ${projectName} - StreamlineOS`,
@@ -125,7 +124,7 @@ export async function sendTicketAssignmentEmail(
   ticketId: number,
   createdBy: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Ticket Assigned: ${ticketTitle} - StreamlineOS`,
@@ -152,7 +151,7 @@ export async function sendTicketReviewRequestEmail(
   completedBy: string,
   comment?: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Review Requested: ${ticketTitle} - StreamlineOS`,
@@ -178,7 +177,7 @@ export async function sendTicketChangesRequestedEmail(
   reviewerName: string,
   comment?: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Changes Requested: ${ticketTitle} - StreamlineOS`,
@@ -202,7 +201,7 @@ export async function sendLeaveRequestEmail(
   endDate: string,
   reason: string
 ) {
-  const leaveUrl = `${baseUrl}/hr/leaves`;
+  const leaveUrl = `${appUrl}/hr/leaves`;
   await sendEmail({
     to: email,
     subject: `Leave Request: ${employeeName} - StreamlineOS`,
@@ -348,7 +347,7 @@ export async function sendExpenseSubmittedEmail(
   amount: string,
   description: string
 ) {
-  const expenseLink = `${baseUrl}/hr/expenses`;
+  const expenseLink = `${appUrl}/hr/expenses`;
   await sendEmail({
     to: approverEmail,
     subject: `New Expense Claim from ${employeeName}`,
@@ -549,7 +548,7 @@ export async function sendResignationSubmittedEmail(
   noticePeriodDays: number,
   reason: string
 ) {
-  const reviewUrl = `${baseUrl}/hr/exit`;
+  const reviewUrl = `${appUrl}/hr/exit`;
   await sendEmail({
     to: hrEmail,
     subject: `Resignation Submitted: ${employeeName} - StreamlineOS`,
@@ -574,7 +573,7 @@ export async function sendResignationApprovedEmail(
   noticePeriodDays: number,
   submissionDate: string
 ) {
-  const portalUrl = `${baseUrl}/hr/exit`;
+  const portalUrl = `${appUrl}/hr/exit`;
   await sendEmail({
     to: employeeEmail,
     subject: `Resignation Accepted - StreamlineOS`,

@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { terminations, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -19,7 +19,9 @@ const createSchema = z.object({
 
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees"))  return err("Forbidden", 403);
 
     const rows = await db
       .select({

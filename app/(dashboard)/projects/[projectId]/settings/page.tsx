@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Separator } from "@/components/ui/separator";
@@ -202,7 +203,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
     );
   };
 
-  const isOwner = session?.user?.role === "CEO";
+  const ability = useAbility();
+  const isOwner = ability.can("manage", "all");
 
   return (
     <PageWrapper

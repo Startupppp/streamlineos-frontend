@@ -3,7 +3,7 @@ import { getWorkLogs } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -18,7 +18,9 @@ const postWorkLogSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:attendance");
     const filterUserId = searchParams.get("userId") ?? undefined;
     const year = searchParams.get("year");
     const quarter = searchParams.get("quarter");

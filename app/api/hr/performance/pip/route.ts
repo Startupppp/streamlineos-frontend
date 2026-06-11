@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -21,7 +21,9 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:performance");
     const conditions = [eq(performanceImprovementPlans.orgId, session.orgId)];
     if (!isAdmin) conditions.push(eq(performanceImprovementPlans.userId, session.user.id));
 
@@ -36,7 +38,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can create PIPs.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Only admins can create PIPs.", 403);
     const body = createSchema.parse(await req.json());
     const [pip] = await db.insert(performanceImprovementPlans).values({
       orgId: session.orgId,

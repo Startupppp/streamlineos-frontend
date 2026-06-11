@@ -3,7 +3,7 @@ import { getDocuments } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { documents, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -37,7 +37,9 @@ const createDocumentSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:documents");
     const filterUserId = searchParams.get("userId") ?? undefined;
     const type = searchParams.get("type") ?? undefined;
 
@@ -56,7 +58,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:documents");
 
     const body = await parseBody(req, createDocumentSchema);
 

@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getDevices } from "@/server/queries/hr";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -27,7 +27,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:assets")) {
       return err("Only admins can add devices.", 403);
     }
 

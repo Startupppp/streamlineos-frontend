@@ -5,7 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets, tickets } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const updateEntrySchema = z.object({
@@ -32,7 +32,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return err("Cannot edit a time entry that has already been reviewed", 403);
     }
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects:timesheets");
     if (!isOwnerOrAdmin && entry.userId !== session.user.id) {
       return err("You can only edit your own time entries", 403);
     }
@@ -85,7 +88,10 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       return err("Cannot delete a time entry that has already been reviewed", 403);
     }
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects:timesheets");
     if (!isOwnerOrAdmin && entry.userId !== session.user.id) {
       return err("You can only delete your own time entries", 403);
     }

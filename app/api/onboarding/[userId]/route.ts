@@ -12,7 +12,7 @@ export async function GET(
     const { userId } = await params;
 
     const role = session.user.role;
-    const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
+    const isAdmin = role === "CEO" || role === "HR";
 
     if (!isAdmin && session.user.id !== userId) {
       return err("Forbidden", 403);

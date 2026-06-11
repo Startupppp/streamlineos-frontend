@@ -25,8 +25,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     const isAdmin =
       session.user.role === "CEO" ||
-      session.user.role === "HR" ||
-      session.user.role === "ADMIN";
+      session.user.role === "HR";
 
     const whereConditions = isAdmin
       ? and(

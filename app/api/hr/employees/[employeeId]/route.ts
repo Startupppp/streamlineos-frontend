@@ -3,7 +3,7 @@ import { getEmployee } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { users, organizationMembers, onboardingTasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { invalidateUserSession } from "@/lib/auth";
 import { sendTerminationEmail } from "@/lib/email";
 import { format, differenceInDays, addDays } from "date-fns";
@@ -75,7 +75,9 @@ export async function PATCH(
     }
 
     const isSelf = session.user.id === targetUserId;
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isOwnerOrAdmin = ability.can("manage", "hr:employees");
     if (!isSelf && !isOwnerOrAdmin) {
       return err("You can only update your own profile.", 403);
     }

@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { holidays } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -10,7 +10,9 @@ export async function DELETE(
   { params }: { params: Promise<{ holidayId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:attendance")) {
       return err("Only admins can delete holidays.", 403);
     }
 

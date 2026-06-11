@@ -1,6 +1,7 @@
 "server-only";
 
 import { db } from "@/lib/db";
+import { getSessionAbility } from "@/lib/abilities-server";
 import {
   projects,
   attendance,
@@ -25,7 +26,6 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, desc, or, inArray, count, sql, gte, lt, isNull, gt, sum } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 
 export async function getDashboardStats(orgId: string, _userId: string) {
@@ -71,7 +71,9 @@ export async function getDashboardStats(orgId: string, _userId: string) {
 }
 
 export async function getRecentProjects(orgId: string, userId: string, role?: string | null) {
-  const isOwnerOrAdmin = isAdminOrOwner(role ?? "");
+  const ability = await getSessionAbility();
+
+  const isOwnerOrAdmin = ability.can("manage", "hr:employees");
 
   if (isOwnerOrAdmin) {
     return db.query.projects.findMany({
@@ -173,7 +175,9 @@ export async function getMyIssues(orgId: string, userId: string) {
 }
 
 export async function getActiveSprintSummary(orgId: string, userId: string, role?: string | null) {
-  const isOwnerOrAdmin = isAdminOrOwner(role ?? "");
+  const ability = await getSessionAbility();
+
+  const isOwnerOrAdmin = ability.can("manage", "hr:employees");
 
   let projectIds: number[];
   if (isOwnerOrAdmin) {
@@ -537,7 +541,9 @@ export async function getManagerDashboard(orgId: string, userId: string) {
 }
 
 export async function getRecentActivity(orgId: string, userId: string, role?: string | null) {
-  const isOwnerOrAdmin = isAdminOrOwner(role ?? "");
+  const ability = await getSessionAbility();
+
+  const isOwnerOrAdmin = ability.can("manage", "hr:employees");
 
   let projectIds: number[];
   if (isOwnerOrAdmin) {

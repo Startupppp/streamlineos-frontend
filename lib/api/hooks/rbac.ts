@@ -63,4 +63,3 @@ export const useUpdateRolePermissions = () => {
   });
 };
 
-export const useRbacUserPermissions = useUserPermissions;

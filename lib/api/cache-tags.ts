@@ -19,6 +19,10 @@ export const CacheTag = {
   rbac: "rbac",
   organization: "organization",
   reports: "reports",
+  ledgerAccounts: "ledger-accounts",
+  journal: "journal",
+  trialBalance: "trial-balance",
+  profitLoss: "profit-loss",
 } as const;
 
 export type CacheTagName = (typeof CacheTag)[keyof typeof CacheTag];

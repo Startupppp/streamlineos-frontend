@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -357,10 +358,11 @@ function TerminationCard({
 
 export default function TerminationPage() {
   const { data: session } = useSession();
+  const ability = useAbility();
 
   const role = session?.user?.role;
   const isHR = role === "HR";
-  const isCEO = role === "OWNER" || role === "CEO";
+  const isCEO = ability.can("manage", "all");
 
   const { data: terminations, isLoading } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });

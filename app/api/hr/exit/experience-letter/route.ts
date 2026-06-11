@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { users, richDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -13,7 +13,9 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can generate experience letters.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:leaves"))  return err("Only admins can generate experience letters.", 403);
 
     const body = schema.parse(await req.json());
     const employee = await db.query.users.findFirst({

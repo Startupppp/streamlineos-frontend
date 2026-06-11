@@ -55,7 +55,6 @@ export default function ExpensesPage() {
   const isAdmin =
     session?.user?.role === "OWNER" ||
     session?.user?.role === "CEO" ||
-    session?.user?.role === "ADMIN" ||
     session?.user?.role === "HR";
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =

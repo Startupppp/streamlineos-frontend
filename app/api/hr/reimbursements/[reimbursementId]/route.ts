@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reimbursements } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,7 +16,9 @@ export async function PATCH(
   { params }: { params: Promise<{ reimbursementId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can process reimbursements.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:expenses"))  return err("Only admins can process reimbursements.", 403);
     const { reimbursementId: id } = await params;
     const reimbursementId = Number(id);
     if (!reimbursementId) return err("Invalid ID.", 400);

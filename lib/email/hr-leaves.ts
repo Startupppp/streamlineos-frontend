@@ -1,5 +1,5 @@
 import { sendEmail } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "./sender";
 import {
   getLeaveRequestEmailTemplate,
   getLeaveStatusUpdateEmailTemplate,
@@ -15,7 +15,7 @@ export async function sendLeaveRequestEmail(
   endDate: string,
   reason: string
 ) {
-  const leaveUrl = `${baseUrl}/hr/leaves`;
+  const leaveUrl = `${appUrl}/hr/leaves`;
   await sendEmail({
     to: email,
     subject: `Leave Request: ${employeeName} - StreamlineOS`,

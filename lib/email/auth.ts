@@ -1,5 +1,5 @@
 import { sendEmail } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "./sender";
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -13,7 +13,7 @@ import {
 } from "../email-templates";
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+  const verificationUrl = `${appUrl}/verify-email?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Verify Your Email - StreamlineOS",
@@ -22,7 +22,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - StreamlineOS",
@@ -36,7 +36,7 @@ export async function sendInvitationEmail(
   organizationName: string,
   inviterName?: string
 ) {
-  const invitationUrl = `${baseUrl}/invitation/${token}`;
+  const invitationUrl = `${appUrl}/invitation/${token}`;
   await sendEmail({
     to: email,
     subject: `Invitation to join ${organizationName} - StreamlineOS`,

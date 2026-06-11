@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getIncentiveConfigs } from "@/server/queries/hr";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { incentiveConfig } from "@/lib/db/schema/crm";
 import type { NextRequest } from "next/server";
@@ -19,7 +19,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "crm:incentives")) {
       return err("Only admins can set incentive config.", 403);
     }
 

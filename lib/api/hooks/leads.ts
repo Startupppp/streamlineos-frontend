@@ -352,7 +352,6 @@ export function useLeadImportStatus(batchId: number | null) {
   });
 }
 
-export const useSlaAlerts = useLeadSlaAlerts;
 
 export interface ScoreExplanation {
   score: number;

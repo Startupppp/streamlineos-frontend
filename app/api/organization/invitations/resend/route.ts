@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { invitations, organizations, users } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 
@@ -11,7 +11,8 @@ const schema = z.object({ invitationId: z.string().min(1) });
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "settings")) return err("Forbidden", 403);
 
     const body = await parseBody(req, schema);
 

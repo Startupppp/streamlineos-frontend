@@ -3,7 +3,8 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions } from "./db/schema";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, platformSubscriptions } from "./db/schema";
+import type { Plan } from "@/lib/billing/feature-gates";
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
@@ -29,6 +30,7 @@ interface UserSessionCache {
   totpEnabled: boolean | null;
   mfaEnforced: boolean | null;
   permissions: string[];
+  plan: Plan | null;
 }
 
 const USER_SESSION_TTL = 300;
@@ -283,6 +285,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               permissions = await getUserPermissions(userId, membership.orgId).catch(() => []);
             }
 
+            let plan: Plan | null = null;
+            if (membership?.orgId) {
+              const sub = await db.query.platformSubscriptions.findFirst({
+                where: eq(platformSubscriptions.orgId, membership.orgId),
+                columns: { plan: true, status: true },
+              }).catch(() => null);
+              if (sub && sub.status === "active") {
+                plan = sub.plan as Plan;
+              } else {
+                plan = "FREE";
+              }
+            }
+
             const cacheValue: UserSessionCache | null = fresh
               ? {
                   ...fresh,
@@ -291,6 +306,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   totpEnabled: fresh.totpEnabled ?? false,
                   mfaEnforced: mfaEnforcedValue,
                   permissions,
+                  plan,
                 }
               : null;
             if (cacheValue && redis) {
@@ -310,6 +326,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.totpEnabled = dbUser.totpEnabled ?? false;
             token.mfaEnforced = dbUser.mfaEnforced ?? false;
             token.permissions = dbUser.permissions ?? [];
+            token.plan = dbUser.plan ?? null;
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {
@@ -347,6 +364,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       session.orgId = token.orgId ?? null;
       session.sessionId = token.sessionId;
+      session.plan = token.plan ?? null;
+      session.permissions = token.permissions ?? [];
       return session;
     },
   },

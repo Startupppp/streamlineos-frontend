@@ -208,10 +208,8 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
   const { data: session } = useSession();
   const isAdmin =
     session?.user?.role === "OWNER" ||
-    session?.user?.role === "OWNER" ||
     session?.user?.role === "CEO" ||
-    session?.user?.role === "HR" ||
-    session?.user?.role === "ADMIN";
+    session?.user?.role === "HR";
 
   const currentYear = new Date().getFullYear();
 

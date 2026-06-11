@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { terminations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -10,7 +10,9 @@ export async function GET(
   { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees"))  return err("Forbidden", 403);
 
     const { terminationId: rawId } = await params;
     const terminationId = Number(rawId);

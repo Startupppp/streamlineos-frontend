@@ -6,6 +6,7 @@ import { PRICING } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: `Terms of Service — ${BRAND_NAME}`,
   description: `The agreement between you and ${BRAND_NAME} for use of the platform.`,
+  alternates: { canonical: "/legal/terms" },
 };
 
 const sections = [

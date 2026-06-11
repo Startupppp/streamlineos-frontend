@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useGenerateEmail } from "@/lib/api/hooks/ai";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 import type { EmailTone } from "@/lib/ai/prompts";
 
 interface AIEmailDialogProps {
@@ -44,8 +45,10 @@ export function AIEmailDialog({
 
   const generateMutation = useGenerateEmail();
   const email = generateMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.email-drafting");
 
   const handleGenerate = useCallback(() => {
+    if (!featureEnabled) { toast.error(`AI email drafting requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     generateMutation.mutate(
       {
         leadName,

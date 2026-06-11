@@ -1,5 +1,5 @@
 import { sendEmail } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "./sender";
 import {
   getExpenseSubmittedEmailTemplate,
   getExpenseApprovedEmailTemplate,
@@ -15,7 +15,7 @@ export async function sendExpenseSubmittedEmail(
   amount: string,
   description: string
 ) {
-  const expenseLink = `${baseUrl}/hr/expenses`;
+  const expenseLink = `${appUrl}/hr/expenses`;
   await sendEmail({
     to: approverEmail,
     subject: `New Expense Claim from ${employeeName}`,

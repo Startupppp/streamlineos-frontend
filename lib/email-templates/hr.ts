@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, escapeHtml } from "./base";
 
 export function getLeaveRequestEmailTemplate(
   approverName: string,

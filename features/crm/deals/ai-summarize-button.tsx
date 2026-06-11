@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useSummarizeConversation } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AISummarizeButtonProps {
   activityType: string;
@@ -26,8 +27,10 @@ export function AISummarizeButton({ activityType, subject, notes, leadName, deal
   const [open, setOpen] = useState(false);
   const summarizeMutation = useSummarizeConversation();
   const result = summarizeMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.deal-summary");
 
   const handleSummarize = () => {
+    if (!featureEnabled) { toast.error(`AI conversation summary requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     summarizeMutation.mutate(
       { activityType, subject, notes, leadName, dealName },
       { onError: (e) => toast.error(getErrorMessage(e)) },

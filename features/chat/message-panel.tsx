@@ -23,7 +23,7 @@ import {
   useChatChannel,
   useChatMessages,
   useChatPoll,
-  useMarkRead,
+  useMarkChannelRead,
   useSendMessage,
   useDeleteMessage,
   useEditMessage,
@@ -65,7 +65,7 @@ export function MessagePanel({
     hasNextPage,
     isFetchingNextPage,
   } = useChatMessages(channelId);
-  const markReadRef = useRef(useMarkRead());
+  const markReadRef = useRef(useMarkChannelRead());
   const markRead = markReadRef.current;
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();

@@ -1,0 +1,103 @@
+import { PERMISSIONS } from "./permissions";
+
+export interface DefaultOrgRole {
+  name: string;
+  slug: string;
+  permissions: string[];
+}
+
+export const DEFAULT_ORG_ROLES: DefaultOrgRole[] = [
+  {
+    name: "Administrator",
+    slug: "ADMIN",
+    permissions: PERMISSIONS.map((p) => p.name),
+  },
+  {
+    name: "HR Manager",
+    slug: "HR_MANAGER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "hr:employees:view",
+      "hr:employees:create",
+      "hr:employees:update",
+      "hr:employees:delete",
+      "hr:attendance:view",
+      "hr:attendance:manage",
+      "hr:leaves:view",
+      "hr:leaves:approve",
+      "hr:payroll:view",
+      "hr:payroll:generate",
+      "hr:payroll:approve",
+      "hr:salary:view",
+      "hr:salary:manage",
+      "hr:expenses:view",
+      "hr:expenses:approve",
+      "hr:documents:view",
+      "hr:documents:manage",
+      "hr:assets:view",
+      "hr:assets:manage",
+      "hr:performance:view",
+      "hr:performance:manage",
+      "hr:goals:view",
+      "hr:goals:manage",
+      "reports:view",
+      "reports:create",
+      "reports:export",
+    ],
+  },
+  {
+    name: "Project Manager",
+    slug: "PROJECT_MANAGER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "projects:view",
+      "projects:create",
+      "projects:update",
+      "projects:tickets:view",
+      "projects:tickets:create",
+      "projects:tickets:update",
+      "projects:tickets:delete",
+      "projects:tickets:assign",
+      "projects:sprints:view",
+      "projects:sprints:manage",
+      "projects:timesheets:view",
+      "projects:timesheets:create",
+      "reports:view",
+    ],
+  },
+  {
+    name: "Sales",
+    slug: "SALES_REP",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "crm:leads:view",
+      "crm:leads:create",
+      "crm:leads:update",
+      "crm:targets:view",
+      "crm:clients:read",
+      "crm:clients:update",
+      "dashboard:sales:view",
+    ],
+  },
+  {
+    name: "Team Member",
+    slug: "MEMBER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "hr:leaves:create",
+      "hr:expenses:create",
+    ],
+  },
+];

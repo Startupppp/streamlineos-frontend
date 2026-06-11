@@ -160,6 +160,7 @@ export const clients = pgTable("clients", {
   company: text("company"),
   designation: text("designation"),
   city: text("city"),
+  gstin: text("gstin"),
   investmentValue: decimal("investment_value"),
   status: text("status").default("active").notNull(),
   accountManagerId: text("account_manager_id").references(() => users.id),
@@ -789,6 +790,14 @@ export const invoices = pgTable("invoices", {
   paidAt: timestamp("paid_at"),
   viewedAt: timestamp("viewed_at"),
   terms: text("terms"),
+  placeOfSupply: text("place_of_supply"),
+  customerGstin: text("customer_gstin"),
+  supplierGstin: text("supplier_gstin"),
+  reverseCharge: boolean("reverse_charge").default(false).notNull(),
+  taxInclusive: boolean("tax_inclusive").default(false).notNull(),
+  cgstAmount: decimal("cgst_amount", { precision: 18, scale: 4 }).default("0").notNull(),
+  sgstAmount: decimal("sgst_amount", { precision: 18, scale: 4 }).default("0").notNull(),
+  igstAmount: decimal("igst_amount", { precision: 18, scale: 4 }).default("0").notNull(),
   isRecurring: boolean("is_recurring").default(false).notNull(),
   recurringInterval: text("recurring_interval"),
   nextRecurringDate: date("next_recurring_date"),
@@ -801,6 +810,24 @@ export const invoices = pgTable("invoices", {
   index("idx_invoices_project").on(table.projectId),
   index("idx_invoices_due_date").on(table.dueDate),
 ]);
+
+export const invoiceItems = pgTable("invoice_items", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id").references(() => invoices.id, { onDelete: "cascade" }).notNull(),
+  description: text("description").notNull(),
+  hsnSacCode: text("hsn_sac_code"),
+  quantity: decimal("quantity", { precision: 18, scale: 4 }).notNull(),
+  rate: decimal("rate", { precision: 18, scale: 4 }).notNull(),
+  gstRate: decimal("gst_rate", { precision: 5, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 18, scale: 4 }).notNull(),
+  lineOrder: integer("line_order").notNull(),
+}, (table) => [
+  index("idx_invoice_items_invoice").on(table.invoiceId),
+]);
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, { fields: [invoiceItems.invoiceId], references: [invoices.id] }),
+}));
 
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
@@ -1175,6 +1202,7 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   project: one(projects, { fields: [invoices.projectId], references: [projects.id] }),
   creator: one(users, { fields: [invoices.createdBy], references: [users.id] }),
   payments: many(payments),
+  items: many(invoiceItems),
 }));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({

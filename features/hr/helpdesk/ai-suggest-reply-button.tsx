@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAISuggestHelpdeskReply } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AISuggestReplyButtonProps {
   ticketId: number;
@@ -22,8 +23,10 @@ export function AISuggestReplyButton({ ticketId, compact }: AISuggestReplyButton
   const [open, setOpen] = useState(false);
   const suggestMutation = useAISuggestHelpdeskReply();
   const result = suggestMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.reply-suggestion");
 
   const handleSuggest = () => {
+    if (!featureEnabled) { toast.error(`AI reply suggestion requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     suggestMutation.mutate(ticketId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });

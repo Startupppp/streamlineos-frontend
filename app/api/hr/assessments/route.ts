@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { skillAssessments, assessmentAttempts } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -69,7 +69,10 @@ export async function POST(req: NextRequest) {
       return ok({ ...attempt, score, passed, correct, total: questions.length }, 201);
     }
 
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can create assessments.", 403);
+    const ability = await getSessionAbility();
+
+
+    if (!ability.can("manage", "hr:performance"))  return err("Only admins can create assessments.", 403);
     const body = createSchema.parse(await req.json());
     const [assessment] = await db.insert(skillAssessments).values({
       orgId: session.orgId,

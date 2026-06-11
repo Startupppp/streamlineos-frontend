@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAIGenerateReview } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIGenerateReviewButtonProps {
   userId: string;
@@ -28,8 +29,10 @@ export function AIGenerateReviewButton({ userId, userName, periodStart, periodEn
   const [open, setOpen] = useState(false);
   const generateMutation = useAIGenerateReview();
   const result = generateMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.review-generation");
 
   const handleGenerate = () => {
+    if (!featureEnabled) { toast.error(`AI review generation requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     generateMutation.mutate(
       { userId, periodStart, periodEnd },
       { onError: (e) => toast.error(getErrorMessage(e)) },

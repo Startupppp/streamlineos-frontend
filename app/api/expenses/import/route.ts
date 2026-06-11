@@ -140,7 +140,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No organization found" }, { status: 400 });
     }
 
-    const isAdmin = member.role === "CEO" || member.role === "HR" || member.role === "ADMIN";
+    const isAdmin = member.role === "CEO" || member.role === "HR";
     if (!isAdmin) {
       return NextResponse.json({ error: "Only HR and CEO can import expenses" }, { status: 403 });
     }

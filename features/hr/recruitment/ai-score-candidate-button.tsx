@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAIScoreCandidate } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIScoreCandidateButtonProps {
   candidateId: number;
@@ -20,8 +21,10 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
   const [open, setOpen] = useState(false);
   const scoreMutation = useAIScoreCandidate();
   const result = scoreMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.candidate-scoring");
 
   const handleScore = () => {
+    if (!featureEnabled) { toast.error(`AI candidate scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     scoreMutation.mutate(
       { candidateId, jobId },
       { onError: (e) => toast.error(getErrorMessage(e)) },

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { attendance, leaveRequests, performanceReviews } from "@/lib/db/schema/hr";
 import { eq, and, avg, count, gte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { subDays, format } from "date-fns";
 
 export interface ManagerScorecard {
@@ -30,7 +30,8 @@ export async function GET(
     const { employeeId } = await params;
 
     const isSelf = session.user.id === employeeId;
-    if (!isSelf && !isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!isSelf && !ability.can("manage", "hr:performance")) {
       return err("Access denied", 403);
     }
 

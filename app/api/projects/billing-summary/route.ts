@@ -5,7 +5,7 @@ import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets, tickets, projects } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
       eq(timesheets.isBillable, true),
     ];
 
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+
+    if (!ability.can("manage", "projects")) {
       conditions.push(eq(timesheets.userId, session.user.id));
     }
 

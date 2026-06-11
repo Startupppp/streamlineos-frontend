@@ -28,10 +28,10 @@ export async function getApprovers() {
   if (!member) return [];
 
   const targetRoles: string[] = member.role === ROLES.CEO
-    ? [ROLES.HR, ROLES.ADMIN]
+    ? [ROLES.HR]
     : member.role === ROLES.HR
-    ? [ROLES.CEO, ROLES.ADMIN]
-    : [ROLES.ADMIN, ROLES.HR, ROLES.CEO];
+    ? [ROLES.CEO]
+    : [ROLES.HR, ROLES.CEO];
 
   const approvers = await db.query.organizationMembers.findMany({
     where: and(

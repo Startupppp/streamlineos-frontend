@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAIAttritionRisk } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIAttritionRiskButtonProps {
   userId: string;
@@ -23,8 +24,10 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
   const [open, setOpen] = useState(false);
   const analyzeMutation = useAIAttritionRisk();
   const result = analyzeMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.attrition-risk");
 
   const handleAnalyze = () => {
+    if (!featureEnabled) { toast.error(`AI attrition analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     analyzeMutation.mutate(userId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });

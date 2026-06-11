@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { pulseSurveys, surveyResponses } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -57,7 +57,10 @@ export async function POST(req: NextRequest) {
       return ok(response, 201);
     }
 
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can create surveys.", 403);
+    const ability = await getSessionAbility();
+
+
+    if (!ability.can("manage", "hr:performance"))  return err("Only admins can create surveys.", 403);
     const body = createSurveySchema.parse(await req.json());
     const [survey] = await db.insert(pulseSurveys).values({
       orgId: session.orgId,

@@ -4,7 +4,7 @@ import { getInvitations } from "@/server/queries/organization";
 import { db } from "@/lib/db";
 import { invitations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const cancelSchema = z.object({
@@ -14,7 +14,8 @@ const cancelSchema = z.object({
 export async function GET() {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "settings")) {
         return err("Forbidden", 403);
       }
       const data = await getInvitations(session.orgId);
@@ -31,7 +32,8 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "settings")) {
         return err("Forbidden", 403);
       }
 

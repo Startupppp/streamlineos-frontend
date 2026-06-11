@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { trainingPrograms } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -20,7 +20,9 @@ export async function PATCH(
   { params }: { params: Promise<{ programId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { programId: id } = await params;
     const programId = Number(id);
     if (!programId) return err("Invalid program ID.", 400);
@@ -41,7 +43,9 @@ export async function DELETE(
   { params }: { params: Promise<{ programId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { programId: id } = await params;
     const programId = Number(id);
     if (!programId) return err("Invalid program ID.", 400);

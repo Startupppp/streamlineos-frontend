@@ -20,7 +20,7 @@ import { getFromAddress } from "./recipients";
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 
-export const baseUrl = appUrl;
+export { appUrl };
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;

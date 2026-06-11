@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const month = searchParams.get("month");
 
     const role = session.user.role;
-    const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
+    const isAdmin = role === "CEO" || role === "HR";
     if (userId !== session.user.id && !isAdmin) {
       return err("Not authorized to view other users' logs.", 403);
     }

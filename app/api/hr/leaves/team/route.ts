@@ -66,7 +66,7 @@ async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isA
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";
-    const isAdmin = EXPENSE_ADMIN_ROLES.includes(role) || role === "ADMIN";
+    const isAdmin = EXPENSE_ADMIN_ROLES.includes(role);
 
     if (!isAdmin && role !== "MANAGER" && role !== "BRANCH_MANAGER") {
       return err("Only managers and admins can access team leave requests.", 403);

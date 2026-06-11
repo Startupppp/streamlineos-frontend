@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, escapeHtml } from "./base";
 
 
 export function getWorkLogApprovedEmailTemplate(
@@ -22,7 +22,7 @@ export function getWorkLogApprovedEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/work-logs" class="email-button">View Work Logs</a>
+      <a href="${appUrl}/hr/work-logs" class="email-button">View Work Logs</a>
     </div>
   `;
   return getEmailTemplate({ title: "Work Log Approved", content });
@@ -56,7 +56,7 @@ export function getWorkLogRejectedEmailTemplate(
     </div>
     <p class="email-text">Please review and resubmit your work log.</p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/work-logs" class="email-button">Update Work Log</a>
+      <a href="${appUrl}/hr/work-logs" class="email-button">Update Work Log</a>
     </div>
   `;
   return getEmailTemplate({ title: "Work Log Rejected", content });
@@ -92,7 +92,7 @@ export function getOnboardingWelcomeEmailTemplate(
       Your onboarding tasks have been set up. Please log in to your dashboard to get started with your onboarding checklist.
     </p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/onboarding/my-tasks" class="email-button">Start Onboarding</a>
+      <a href="${appUrl}/hr/onboarding/my-tasks" class="email-button">Start Onboarding</a>
     </div>
     <div class="security-notice">
       <p class="security-text">
@@ -130,7 +130,7 @@ export function getOnboardingTaskEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/onboarding" class="email-button">View Onboarding Tasks</a>
+      <a href="${appUrl}/hr/onboarding" class="email-button">View Onboarding Tasks</a>
     </div>
   `;
   return getEmailTemplate({ title: "Onboarding Tasks Assigned", content });
@@ -165,7 +165,7 @@ export function getTicketCreatedEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/support/${ticketId}" class="email-button">View Ticket</a>
+      <a href="${appUrl}/support/${ticketId}" class="email-button">View Ticket</a>
     </div>
   `;
   return getEmailTemplate({ title: "Support Ticket Assigned", content });
@@ -197,7 +197,7 @@ export function getTicketReplyEmailTemplate(
       <p style="color: #475569; font-size: 14px; margin: 0; font-style: italic;">"${escapeHtml(messagePreview.slice(0, 200))}${messagePreview.length > 200 ? "..." : ""}"</p>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/support/${ticketId}" class="email-button">View Full Conversation</a>
+      <a href="${appUrl}/support/${ticketId}" class="email-button">View Full Conversation</a>
     </div>
   `;
   return getEmailTemplate({ title: "New Reply on Support Ticket", content });
@@ -231,7 +231,7 @@ export function getTicketStatusEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/support/${ticketId}" class="email-button">View Ticket</a>
+      <a href="${appUrl}/support/${ticketId}" class="email-button">View Ticket</a>
     </div>
   `;
   return getEmailTemplate({ title: "Ticket Status Updated", content });
@@ -276,7 +276,7 @@ export function getTaskAssignedEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/crm/tasks" class="email-button">View Tasks</a>
+      <a href="${appUrl}/crm/tasks" class="email-button">View Tasks</a>
     </div>
   `;
   return getEmailTemplate({ title: "New Task Assigned", content });
@@ -318,7 +318,7 @@ export function getDealStageChangeEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/crm/deals/${dealId}" class="email-button">View Deal</a>
+      <a href="${appUrl}/crm/deals/${dealId}" class="email-button">View Deal</a>
     </div>
   `;
   return getEmailTemplate({ title: `Deal ${newStage === "WON" ? "Won" : newStage === "LOST" ? "Lost" : "Updated"}`, content });
@@ -357,7 +357,7 @@ export function getLeadAssignedEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/crm/leads" class="email-button">View Leads</a>
+      <a href="${appUrl}/crm/leads" class="email-button">View Leads</a>
     </div>
   `;
   return getEmailTemplate({ title: "New Lead Assigned", content });
@@ -386,7 +386,7 @@ export function getReviewAssignedEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/performance" class="email-button">View Review</a>
+      <a href="${appUrl}/hr/performance" class="email-button">View Review</a>
     </div>
   `;
   return getEmailTemplate({ title: "Performance Review Assigned", content });
@@ -406,7 +406,7 @@ export function getOnboardingCompleteEmployeeEmailTemplate(
       If you have any questions, don't hesitate to reach out to your manager or HR.
     </p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/onboarding/my-tasks" class="email-button">View Dashboard</a>
+      <a href="${appUrl}/hr/onboarding/my-tasks" class="email-button">View Dashboard</a>
     </div>
   `;
   return getEmailTemplate({ title: "Onboarding Complete", preheader: "You're all set!", content });
@@ -422,7 +422,7 @@ export function getOnboardingCompleteHrEmailTemplate(
       Hi <strong>${escapeHtml(hrName)}</strong>, <strong>${escapeHtml(employeeName)}</strong> has completed all onboarding tasks.
     </p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/onboarding" class="email-button">View Onboarding</a>
+      <a href="${appUrl}/hr/onboarding" class="email-button">View Onboarding</a>
     </div>
   `;
   return getEmailTemplate({ title: "Onboarding Complete", content });
@@ -462,7 +462,7 @@ export function getHelpdeskTicketEmailTemplate(
       </div>
     </div>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/helpdesk" class="email-button">View Ticket</a>
+      <a href="${appUrl}/hr/helpdesk" class="email-button">View Ticket</a>
     </div>
   `;
   return getEmailTemplate({ title: "New Helpdesk Ticket", content });
@@ -499,7 +499,7 @@ export function getAssetAssignedEmailTemplate(
       Please take care of this equipment. Report any issues to IT or HR.
     </p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/assets" class="email-button">View My Assets</a>
+      <a href="${appUrl}/hr/assets" class="email-button">View My Assets</a>
     </div>
   `;
   return getEmailTemplate({ title: "Asset Assigned", content });
@@ -530,7 +530,7 @@ export function getPayrollApprovedEmailTemplate(
       Your payslip will be available once payment is processed.
     </p>
     <div style="text-align: center;">
-      <a href="${baseUrl}/hr/my-payslips" class="email-button">View Payslips</a>
+      <a href="${appUrl}/hr/my-payslips" class="email-button">View Payslips</a>
     </div>
   `;
   return getEmailTemplate({ title: "Payroll Approved", content });

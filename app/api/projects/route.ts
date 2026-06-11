@@ -11,7 +11,7 @@ import {
   tickets,
 } from "@/lib/db/schema";
 import { eq, and, desc, inArray, or, sql, count } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
 import { logger } from "@/lib/logger";
@@ -45,7 +45,10 @@ export async function GET(req: NextRequest) {
     const limit = toNumber(searchParams.get("limit")) ?? 9;
     const offset = (page - 1) * limit;
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
     const conditions = [eq(projects.orgId, session.orgId!)];
 
     if (!isOwnerOrAdmin) {

@@ -1,5 +1,5 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -49,7 +49,9 @@ export async function PATCH(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees")) {
       return err("Only admins can update job postings.", 403);
     }
 
@@ -95,7 +97,9 @@ export async function DELETE(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees")) {
       return err("Only admins can delete job postings.", 403);
     }
 

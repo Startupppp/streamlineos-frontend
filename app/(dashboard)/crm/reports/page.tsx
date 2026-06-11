@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/motion-variants";
-import { useLeadStats, useSlaAlerts } from "@/lib/api/hooks/leads";
+import { useLeadStats, useLeadSlaAlerts } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
@@ -42,7 +42,7 @@ export default function CrmReportsPage() {
   }, [appliedFrom, appliedTo]);
 
   const { data: stats, isLoading } = useLeadStats(statsInput);
-  const { data: slaData } = useSlaAlerts();
+  const { data: slaData } = useLeadSlaAlerts();
 
   const handleApplyFilter = useCallback(() => {
     setAppliedFrom(dateFrom);

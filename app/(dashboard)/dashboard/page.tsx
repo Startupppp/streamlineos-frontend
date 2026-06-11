@@ -324,7 +324,7 @@ export default function DashboardPage() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const role = session?.user?.role;
-  const isAdmin = role === "OWNER" || role === "OWNER" || role === "CEO" || role === "HR" || role === "ADMIN";
+  const isAdmin = role === "OWNER" || role === "CEO" || role === "HR";
   const isManager = role === "BRANCH_MANAGER" || role === "BRANCH_HR";
   const isEmployee = !isAdmin && !isManager;
 

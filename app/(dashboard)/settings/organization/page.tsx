@@ -89,7 +89,7 @@ export default function OrganizationSettingsPage() {
   const uploadFileMutation = useUploadFile();
 
   const role = session?.user?.role;
-  const canEdit = role === "OWNER" || role === "CEO" || role === "ADMIN";
+  const canEdit = role === "OWNER" || role === "CEO";
 
   const { mutate: updateOrg, isPending: isUpdatingOrg } = useUpdateOrgSettings();
   const { mutate: updateSecurity, isPending: isUpdatingSecurity } = useUpdateOrgSecuritySettings();

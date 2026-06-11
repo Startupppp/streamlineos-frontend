@@ -54,7 +54,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
   );
 
   const approvers = useMemo(
-    () => employees.filter((e) => e.role === "ADMIN" || e.role === "CEO"),
+    () => employees.filter((e) => e.role === "CEO"),
     [employees],
   );
 

@@ -93,8 +93,7 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin =
       session.user.role === "CEO" ||
-      session.user.role === "HR" ||
-      session.user.role === "ADMIN";
+      session.user.role === "HR";
 
     if (isAdmin) {
       const query = parseQuery(req, querySchema);

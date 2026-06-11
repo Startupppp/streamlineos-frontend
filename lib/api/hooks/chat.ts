@@ -315,11 +315,6 @@ export function useVotePoll() {
   });
 }
 
-export const useMarkRead = useMarkChannelRead;
-
-export const useCreateDM = useCreateDMChannel;
-
-export const useChatSearch = useChatSearchMessages;
 
 export function useToggleReaction(channelId: number, messageId: number) {
   const queryClient = useQueryClient();

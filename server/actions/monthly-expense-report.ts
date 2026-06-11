@@ -27,7 +27,7 @@ export async function generateAndSendMonthlyExpenseReport() {
     });
 
     const ownerAndAdminMembers = members.filter(
-      (m) => m.role === "CEO" || m.role === "ADMIN"
+      (m) => m.role === "CEO"
     );
     const recipientEmails = [
       ...new Set(

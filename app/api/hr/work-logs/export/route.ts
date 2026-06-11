@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { users } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
 
 export async function GET(req: NextRequest) {
@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
     const startDate = params.get("startDate");
     const endDate = params.get("endDate");
     const userId = params.get("userId");
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:attendance");
 
     const conditions = [eq(timesheets.orgId, session.orgId)];
 

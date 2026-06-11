@@ -1,7 +1,7 @@
 "use client";
 
-import { usePermissions } from "../../lib/rbac/hooks";
 import { ReactNode } from "react";
+import { useAbility } from "@/lib/abilities-context";
 
 interface PermissionGateProps {
   permission?: string;
@@ -11,6 +11,12 @@ interface PermissionGateProps {
   children: ReactNode;
 }
 
+function canDo(ability: ReturnType<typeof useAbility>, permission: string): boolean {
+  const [domain, resource, action] = permission.split(":");
+  if (!domain || !resource || !action) return false;
+  return ability.can(action, `${domain}:${resource}`);
+}
+
 export function PermissionGate({
   permission,
   permissions,
@@ -18,17 +24,16 @@ export function PermissionGate({
   fallback = null,
   children,
 }: PermissionGateProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions } =
-    usePermissions();
+  const ability = useAbility();
 
   let hasAccess = false;
 
   if (permission) {
-    hasAccess = hasPermission(permission);
+    hasAccess = canDo(ability, permission);
   } else if (permissions) {
     hasAccess = requireAll
-      ? hasAllPermissions(permissions)
-      : hasAnyPermission(permissions);
+      ? permissions.every((p) => canDo(ability, p))
+      : permissions.some((p) => canDo(ability, p));
   } else {
     hasAccess = true;
   }

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { usePredictDeal } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIPredictDealButtonProps {
   dealId: number;
@@ -23,8 +24,10 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
   const [open, setOpen] = useState(false);
   const predictMutation = usePredictDeal();
   const result = predictMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.deal-prediction");
 
   const handlePredict = () => {
+    if (!featureEnabled) { toast.error(`AI deal prediction requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     predictMutation.mutate(dealId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });

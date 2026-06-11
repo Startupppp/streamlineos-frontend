@@ -5,7 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets, workItemRelations, users } from "@/lib/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
@@ -49,7 +49,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
     if (!ticket) return err("Ticket not found", 404);
 
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+
+    if (!ability.can("manage", "projects")) {
       const isAssignee =
         ticket.assigneeId === session.user.id ||
         ticket.assignees.some((a) => a.userId === session.user.id);

@@ -3,7 +3,7 @@ import { getSalaryStructures } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { salaryStructures } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
     const userId = searchParams.get("userId") ?? undefined;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:salary");
 
     if (userId && userId !== session.user.id && !isAdmin) {
       return err("Not authorized.", 403);
@@ -41,7 +43,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:salary")) {
       return err("Only admins can manage salary structures.", 403);
     }
 

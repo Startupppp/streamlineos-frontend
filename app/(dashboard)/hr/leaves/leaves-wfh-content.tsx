@@ -37,7 +37,6 @@ export function LeavesWfhContent() {
   const isAdmin =
     session?.user?.role === "OWNER" ||
     session?.user?.role === "CEO" ||
-    session?.user?.role === "ADMIN" ||
     session?.user?.role === "HR";
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();

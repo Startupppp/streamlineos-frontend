@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 
@@ -25,7 +25,9 @@ export async function DELETE(
     if (!doc) return err("Document not found.", 404);
 
     const isOwner = doc.userId === session.user.id;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:documents");
 
     if (!isOwner && !isAdmin) return err("Not authorized to delete this document.", 403);
 

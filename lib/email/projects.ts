@@ -1,5 +1,5 @@
 import { sendEmail } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "./sender";
 import {
   getProjectAssignmentEmailTemplate,
   getTicketAssignmentEmailTemplate,
@@ -15,7 +15,7 @@ export async function sendProjectAssignmentEmail(
   projectId: number,
   assignedBy?: string
 ) {
-  const projectUrl = `${baseUrl}/projects/${projectId}`;
+  const projectUrl = `${appUrl}/projects/${projectId}`;
   await sendEmail({
     to: email,
     subject: `Added to Project: ${projectName} - StreamlineOS`,
@@ -34,7 +34,7 @@ export async function sendTicketAssignmentEmail(
   ticketId: number,
   createdBy: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Ticket Assigned: ${ticketTitle} - StreamlineOS`,
@@ -61,7 +61,7 @@ export async function sendTicketReviewRequestEmail(
   completedBy: string,
   comment?: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Review Requested: ${ticketTitle} - StreamlineOS`,
@@ -87,7 +87,7 @@ export async function sendTicketChangesRequestedEmail(
   reviewerName: string,
   comment?: string
 ) {
-  const ticketUrl = `${baseUrl}/projects/${projectId}?ticket=${ticketId}`;
+  const ticketUrl = `${appUrl}/projects/${projectId}?ticket=${ticketId}`;
   await sendEmail({
     to: email,
     subject: `Changes Requested: ${ticketTitle} - StreamlineOS`,

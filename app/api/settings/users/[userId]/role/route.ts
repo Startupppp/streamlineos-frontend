@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isOwner, ALL_ROLES } from "@/lib/constants/roles";
+import { ALL_ROLES } from "@/lib/constants/roles";
 import { isSuperAdminRole } from "@/lib/rbac/permissions";
 import { z } from "zod";
 
@@ -36,7 +36,7 @@ export async function POST(
       return err(`Invalid role. Valid roles: ${ALL_ROLES.join(", ")}`, 400);
     }
 
-    if (userId === session.user.id && !isOwner(session.user.role)) {
+    if (userId === session.user.id && session.user.role !== "OWNER") {
       return err("You cannot change your own role", 403);
     }
 

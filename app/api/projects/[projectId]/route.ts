@@ -17,7 +17,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { eq, and, desc, asc, inArray, ne } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
@@ -43,7 +43,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
 
     const projectCheck = await db.query.projects.findFirst({
       where: and(eq(projects.id, projectId), eq(projects.orgId, session.orgId!)),
@@ -97,7 +100,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
     if (!isOwnerOrAdmin) {
       const project = await db.query.projects.findFirst({
         where: and(eq(projects.id, projectId), eq(projects.orgId, session.orgId!)),

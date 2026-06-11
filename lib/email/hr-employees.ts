@@ -1,6 +1,6 @@
 import { sendEmail } from "./sender";
 import type { EmailAttachment } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "./sender";
 import {
   getResignationSubmittedEmailTemplate,
   getResignationApprovedEmailTemplate,
@@ -17,7 +17,7 @@ export async function sendResignationSubmittedEmail(
   noticePeriodDays: number,
   reason: string
 ) {
-  const reviewUrl = `${baseUrl}/hr/exit`;
+  const reviewUrl = `${appUrl}/hr/exit`;
   await sendEmail({
     to: hrEmail,
     subject: `Resignation Submitted: ${employeeName} - StreamlineOS`,
@@ -42,7 +42,7 @@ export async function sendResignationApprovedEmail(
   noticePeriodDays: number,
   submissionDate: string
 ) {
-  const portalUrl = `${baseUrl}/hr/exit`;
+  const portalUrl = `${appUrl}/hr/exit`;
   await sendEmail({
     to: employeeEmail,
     subject: `Resignation Accepted - StreamlineOS`,

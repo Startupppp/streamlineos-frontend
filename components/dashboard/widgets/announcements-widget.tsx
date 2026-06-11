@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 export function AnnouncementsWidget() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
+  const isAdmin = role === "CEO" || role === "HR";
 
   const { data, isLoading, error } = useAnnouncements();
   const createMutation = useCreateAnnouncement();
