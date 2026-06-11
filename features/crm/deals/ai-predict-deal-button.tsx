@@ -64,7 +64,7 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
             {predictMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold", probColor(result.winProbability))}>{result.winProbability}%</span> : "Predict"}
           </Button>
@@ -90,7 +90,7 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
         {predictMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Predicting...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Predict Win Probability</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Predict Win Probability</>
         )}
       </Button>
       {result && <PredictDetails result={result} probColor={probColor} probBg={probBg} confidenceVariant={confidenceVariant} />}

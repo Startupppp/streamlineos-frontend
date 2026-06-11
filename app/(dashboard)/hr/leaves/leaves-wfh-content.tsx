@@ -35,6 +35,7 @@ import { LeaveApprovalsContent } from "./leave-approvals";
 export function LeavesWfhContent() {
   const { data: session } = useSession();
   const isAdmin =
+    session?.user?.role === "OWNER" ||
     session?.user?.role === "CEO" ||
     session?.user?.role === "ADMIN" ||
     session?.user?.role === "HR";
@@ -100,7 +101,7 @@ export function LeavesWfhContent() {
             <Button
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5 bg-gold hover:bg-gold/80 text-white"
+              className="gap-1.5 bg-blue-500 hover:bg-blue-500/80 text-white"
             >
               <Plus className="h-3.5 w-3.5" />
               Request Leave
@@ -181,20 +182,20 @@ export function LeavesWfhContent() {
             <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
               <TabsTrigger
                 value="my-leaves"
-                className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 My Leaves
               </TabsTrigger>
               <TabsTrigger
                 value="wfh"
-                className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 Work From Home
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="approvals"
-                  className="relative data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                  className="relative data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
                 >
                   Approvals
                   {totalPendingApprovals > 0 && (

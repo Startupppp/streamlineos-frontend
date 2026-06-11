@@ -92,7 +92,7 @@ export default function WorkLogsPage() {
   const quarter = filters.quarter;
   const selectedUserId = filters.selectedUserId;
 
-  const isAdminOrCeo = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
+  const isAdminOrCeo = session?.user?.role === "OWNER" || session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
 
   const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
   const { data: departments } = useHrDepartments();

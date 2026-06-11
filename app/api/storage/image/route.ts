@@ -1,10 +1,10 @@
 import { Readable } from "stream";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../lib/auth";
-import { logger } from "../../../../lib/logger";
-import { getFileStream, isStorageConfigured } from "../../../../lib/storage";
-import { db } from "../../../../lib/db";
-import { organizationMembers } from "../../../../lib/db/schema";
+import { withAuth } from "@/lib/api/helpers";
+import { logger } from "@/lib/logger";
+import { getFileStream, isStorageConfigured } from "@/lib/storage";
+import { db } from "@/lib/db";
+import { organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import path from "path";
 
@@ -33,12 +33,8 @@ function isValidFileKey(key: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+  return withAuth(async (session) => {
+    try {
     const key = req.nextUrl.searchParams.get("key");
     if (!key || !isValidFileKey(key)) {
       return NextResponse.json({ error: "Invalid key parameter" }, { status: 400 });
@@ -63,8 +59,9 @@ export async function GET(req: NextRequest) {
         "Cache-Control": "public, max-age=86400, immutable",
       },
     });
-  } catch (error) {
-    logger.error("Image proxy error", { error: error instanceof Error ? error.message : "Unknown" });
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+    } catch (error) {
+      logger.error("Image proxy error", { error: error instanceof Error ? error.message : "Unknown" });
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  });
 }

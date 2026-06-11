@@ -121,7 +121,7 @@ export default function NotificationsPage() {
         <TabsTrigger value="UNREAD">
           Unread
           {unreadCount > 0 && (
-            <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-semibold text-white">
+            <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-semibold text-white">
               {unreadCount}
             </span>
           )}
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
           size="sm"
           disabled={unreadCount === 0 || markAllRead.isPending}
           onClick={handleMarkAllRead}
-          className="border-gold/30 text-gold hover:bg-gold/10 hover:text-gold"
+          className="border-blue-500/30 text-blue-600 hover:bg-blue-500/10 hover:text-blue-600"
         >
           {markAllRead.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -155,7 +155,7 @@ export default function NotificationsPage() {
           {unreadCount > 0 && (
             <Badge
               variant="secondary"
-              className="ml-2 bg-gold/20 text-gold text-xs"
+              className="ml-2 bg-blue-500/20 text-blue-600 text-xs"
             >
               {unreadCount}
             </Badge>
@@ -207,7 +207,7 @@ export default function NotificationsPage() {
                 className={cn(
                   "group relative cursor-pointer transition-all duration-200 hover:shadow-md",
                   isUnread
-                    ? "border-l-2 border-l-gold bg-gold/[0.03]"
+                    ? "border-l-2 border-l-gold bg-blue-500/[0.03]"
                     : "opacity-75 hover:opacity-100"
                 )}
                 onClick={() => handleNotificationClick(notification)}
@@ -256,8 +256,8 @@ export default function NotificationsPage() {
                   <div className="flex shrink-0 items-center gap-2">
                     {isUnread && (
                       <span className="flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-gold opacity-40" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold" />
+                        <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-blue-500 opacity-40" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
                       </span>
                     )}
                   </div>

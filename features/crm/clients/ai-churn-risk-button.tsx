@@ -68,7 +68,7 @@ export function AIChurnRiskButton({
             {analyzeMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold capitalize", riskColor(result.riskLevel))}>{result.riskLevel}</span> : "Churn Risk"}
           </Button>
@@ -94,7 +94,7 @@ export function AIChurnRiskButton({
         {analyzeMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Analyzing...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Churn Risk Analysis</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Churn Risk Analysis</>
         )}
       </Button>
       {result && <ChurnDetails result={result} riskColor={riskColor} riskBg={riskBg} />}

@@ -1,9 +1,10 @@
 
-import { SYSTEM_ROLES, type SystemRole } from "./permissions";
+import { SYSTEM_ROLES, SUPER_ADMIN_ROLES, isSuperAdminRole, type SystemRole } from "./permissions";
 
-export { SYSTEM_ROLES, type SystemRole };
+export { SYSTEM_ROLES, SUPER_ADMIN_ROLES, isSuperAdminRole, type SystemRole };
 
 export const ROLE_LABELS: Record<SystemRole, string> = {
+  OWNER: "Owner",
   CEO: "CEO",
   HR: "HR Manager",
   SALES: "Sales Executive",
@@ -17,11 +18,11 @@ export const ROLE_LABELS: Record<SystemRole, string> = {
   BRANCH_HR: "Branch HR",
 };
 
-export const ADMIN_ROLES: ReadonlyArray<SystemRole> = ["CEO", "HR"] as const;
+export const ADMIN_ROLES: ReadonlyArray<SystemRole> = ["OWNER", "CEO", "HR"] as const;
 
 export const BRANCH_ROLES: ReadonlyArray<SystemRole> = ["BRANCH_MANAGER", "BRANCH_HR"] as const;
 
-export const CRM_ROLES: ReadonlyArray<SystemRole> = ["CEO", "HR", "SALES", "BRANCH_MANAGER", "BRANCH_HR"] as const;
+export const CRM_ROLES: ReadonlyArray<SystemRole> = ["OWNER", "CEO", "HR", "SALES", "BRANCH_MANAGER", "BRANCH_HR"] as const;
 
 export function isSystemRole(role: string | undefined | null): role is SystemRole {
   return SYSTEM_ROLES.includes(role as SystemRole);

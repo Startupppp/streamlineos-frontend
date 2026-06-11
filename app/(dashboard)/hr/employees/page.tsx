@@ -194,7 +194,7 @@ export default function EmployeesPage() {
           <Button
             variant={view === "grid" ? "default" : "ghost"}
             size="sm"
-            className={`rounded-r-none ${view === "grid" ? "bg-gold hover:bg-gold/90 text-white" : ""}`}
+            className={`rounded-r-none ${view === "grid" ? "bg-blue-500 hover:bg-blue-500/90 text-white" : ""}`}
             onClick={() => setView("grid")}
             aria-label="Grid view"
           >
@@ -203,7 +203,7 @@ export default function EmployeesPage() {
           <Button
             variant={view === "list" ? "default" : "ghost"}
             size="sm"
-            className={`rounded-l-none ${view === "list" ? "bg-gold hover:bg-gold/90 text-white" : ""}`}
+            className={`rounded-l-none ${view === "list" ? "bg-blue-500 hover:bg-blue-500/90 text-white" : ""}`}
             onClick={() => setView("list")}
             aria-label="List view"
           >

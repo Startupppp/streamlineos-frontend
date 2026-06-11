@@ -118,13 +118,13 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <ListOrdered className="h-4 w-4 text-gold" aria-hidden="true" />
+          <ListOrdered className="h-4 w-4 text-blue-600" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Content Outline</h3>
         </div>
         <ol className="space-y-1.5 ml-1">
           {brief.outline.map((item, i) => (
             <li key={i} className="flex gap-2.5 text-sm text-foreground">
-              <span className="shrink-0 w-5 h-5 rounded-full bg-gold/10 text-gold text-xs flex items-center justify-center font-medium">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 text-xs flex items-center justify-center font-medium">
                 {i + 1}
               </span>
               <span className="pt-0.5">{item}</span>
@@ -135,13 +135,13 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 text-gold" aria-hidden="true" />
+          <Lightbulb className="h-4 w-4 text-blue-600" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Key Points</h3>
         </div>
         <ul className="space-y-1.5 ml-1">
           {brief.keyPoints.map((kp, i) => (
             <li key={i} className="flex gap-2.5 text-sm text-foreground">
-              <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-gold" aria-hidden="true" />
+              <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
               <span>{kp}</span>
             </li>
           ))}
@@ -150,7 +150,7 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Tag className="h-4 w-4 text-gold" aria-hidden="true" />
+          <Tag className="h-4 w-4 text-blue-600" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">SEO Keywords</h3>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -164,17 +164,17 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <MessageSquareQuote className="h-4 w-4 text-gold" aria-hidden="true" />
+          <MessageSquareQuote className="h-4 w-4 text-blue-600" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Call to Action</h3>
         </div>
-        <blockquote className="border-l-4 border-gold pl-4 py-1 text-sm text-foreground italic bg-gold/5 rounded-r-md">
+        <blockquote className="border-l-4 border-blue-500 pl-4 py-1 text-sm text-foreground italic bg-blue-500/5 rounded-r-md">
           {brief.callToAction}
         </blockquote>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-gold" aria-hidden="true" />
+          <Users className="h-4 w-4 text-blue-600" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-foreground">Target Audience Insights</h3>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">{brief.targetAudienceInsights}</p>
@@ -228,7 +228,7 @@ export default function ContentBriefPage() {
           <Card className="shadow-noir">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-gold" aria-hidden="true" />
+                <Sparkles className="h-4 w-4 text-blue-600" aria-hidden="true" />
                 Brief Parameters
               </CardTitle>
             </CardHeader>
@@ -299,7 +299,7 @@ export default function ContentBriefPage() {
                 <Button
                   type="submit"
                   disabled={isPending || !topic.trim()}
-                  className="w-full bg-gold hover:bg-gold/90 text-white"
+                  className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
                 >
                   {isPending ? (
                     <>
@@ -328,7 +328,7 @@ export default function ContentBriefPage() {
             <CardContent className="p-5">
               {isPending ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[360px] gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-gold" aria-hidden="true" />
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" aria-hidden="true" />
                   <p className="text-sm text-muted-foreground">Crafting your content brief…</p>
                 </div>
               ) : brief ? (

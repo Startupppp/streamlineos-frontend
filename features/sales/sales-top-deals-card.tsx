@@ -28,7 +28,7 @@ export function SalesTopDealsCard({ topDeals, getPersonSlug }: SalesTopDealsCard
       <Card className="h-full shadow-noir">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <ArrowUpRight className="h-4 w-4 text-gold" />
+            <ArrowUpRight className="h-4 w-4 text-blue-600" />
             Top Deals
           </CardTitle>
         </CardHeader>
@@ -51,7 +51,7 @@ export function SalesTopDealsCard({ topDeals, getPersonSlug }: SalesTopDealsCard
                           {deal.stage}
                         </span>
                         {slug ? (
-                          <Link href={`/sales/person/${slug}`} className="text-xs text-gold hover:underline">
+                          <Link href={`/sales/person/${slug}`} className="text-xs text-blue-600 hover:underline">
                             {deal.rep}
                           </Link>
                         ) : (

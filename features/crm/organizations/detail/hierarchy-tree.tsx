@@ -20,7 +20,7 @@ function HierarchyNodeCard({ node, currentId, depth = 0 }: HierarchyNodeProps) {
         className={cn(
           "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors",
           isCurrent
-            ? "bg-gold/10 text-gold font-medium pointer-events-none"
+            ? "bg-blue-500/10 text-blue-600 font-medium pointer-events-none"
             : "hover:bg-accent text-foreground",
         )}
       >

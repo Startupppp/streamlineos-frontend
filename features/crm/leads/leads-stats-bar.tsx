@@ -34,7 +34,7 @@ export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Pipeline</span>
-          <span className="font-bold tabular-nums text-gold">{formatINRCompact(stats.totalPotentialValue)}</span>
+          <span className="font-bold tabular-nums text-blue-600">{formatINRCompact(stats.totalPotentialValue)}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Unassigned</span>

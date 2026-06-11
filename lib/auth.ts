@@ -13,6 +13,7 @@ import { randomUUID } from "crypto";
 import { getDeviceId } from "./device-fingerprint";
 import { sendAccountLockedEmail, sendNewDeviceLoginEmail } from "./email";
 import { createAuditLog } from "./audit-log";
+import { getUserPermissions } from "@/server/queries/rbac";
 
 interface UserSessionCache {
   isActive: boolean | null;
@@ -27,6 +28,7 @@ interface UserSessionCache {
   branchId: number | null;
   totpEnabled: boolean | null;
   mfaEnforced: boolean | null;
+  permissions: string[];
 }
 
 const USER_SESSION_TTL = 300;
@@ -276,6 +278,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               mfaEnforcedValue = orgRow?.mfaEnforced ?? false;
             }
 
+            let permissions: string[] = [];
+            if (fresh && membership?.orgId) {
+              permissions = await getUserPermissions(userId, membership.orgId).catch(() => []);
+            }
+
             const cacheValue: UserSessionCache | null = fresh
               ? {
                   ...fresh,
@@ -283,6 +290,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   branchId: fresh.branchId ?? null,
                   totpEnabled: fresh.totpEnabled ?? false,
                   mfaEnforced: mfaEnforcedValue,
+                  permissions,
                 }
               : null;
             if (cacheValue && redis) {
@@ -301,6 +309,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.branchId = dbUser.branchId ?? null;
             token.totpEnabled = dbUser.totpEnabled ?? false;
             token.mfaEnforced = dbUser.mfaEnforced ?? false;
+            token.permissions = dbUser.permissions ?? [];
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {

@@ -105,7 +105,7 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
           </DropdownMenu>
         </div>
 
-        <p className="text-lg font-bold text-gold mt-1">
+        <p className="text-lg font-bold text-blue-600 mt-1">
           {formatINRCompact(deal.value || 0)}
         </p>
 
@@ -140,7 +140,7 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
         {deal.probability !== null && deal.probability !== undefined && deal.probability > 0 && (
           <div className="mt-2">
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
+              <div className="h-full rounded-full bg-blue-500" style={{ width: `${deal.probability}%` }} />
             </div>
             <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
           </div>

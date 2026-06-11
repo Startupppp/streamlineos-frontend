@@ -113,7 +113,7 @@ export default function NotificationPreferencesPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4 text-gold" />
+                <Bell className="h-4 w-4 text-blue-600" />
                 Notification Channels
               </CardTitle>
             </CardHeader>

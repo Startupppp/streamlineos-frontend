@@ -36,5 +36,6 @@ declare module "next-auth/jwt" {
     sessionId?: string;
     totpEnabled?: boolean;
     mfaEnforced?: boolean;
+    permissions?: string[];
   }
 }

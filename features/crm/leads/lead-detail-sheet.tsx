@@ -263,7 +263,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
-                      <a href={`mailto:${lead.email}`} className="text-gold hover:underline truncate text-sm">
+                      <a href={`mailto:${lead.email}`} className="text-blue-600 hover:underline truncate text-sm">
                         {lead.email}
                       </a>
                     </div>
@@ -308,9 +308,9 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       </div>
                     )}
                     {lead.investmentInterest && (
-                      <div className="p-3.5 rounded-xl bg-gold/5 border border-gold/15">
+                      <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15">
                         <p className="text-[11px] text-muted-foreground mb-1">Investment Interest</p>
-                        <p className="text-lg font-bold text-gold">
+                        <p className="text-lg font-bold text-blue-600">
                           ₹{Number(lead.investmentInterest).toLocaleString("en-IN")}
                         </p>
                       </div>
@@ -455,7 +455,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                   <TabsContent value="follow-up" className="mt-4 space-y-5">
                     <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3">
                       <p className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
-                        <Plus className="h-3.5 w-3.5 text-gold" />
+                        <Plus className="h-3.5 w-3.5 text-blue-600" />
                         Schedule Follow-up
                       </p>
 
@@ -521,7 +521,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
 
                       <Button
                         size="sm"
-                        className="w-full h-8 text-xs bg-gold hover:bg-gold/90 text-white gap-1.5"
+                        className="w-full h-8 text-xs bg-blue-500 hover:bg-blue-500/90 text-white gap-1.5"
                         onClick={handleScheduleFollowUp}
                         disabled={createTask.isPending}
                       >

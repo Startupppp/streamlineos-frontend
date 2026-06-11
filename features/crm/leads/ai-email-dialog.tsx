@@ -87,7 +87,7 @@ export function AIEmailDialog({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button variant="outline" size="sm">
-            <Sparkles className="h-4 w-4 mr-2 text-gold" />
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
             AI Email
           </Button>
         )}
@@ -95,7 +95,7 @@ export function AIEmailDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-gold" />
+            <Sparkles className="h-5 w-5 text-blue-600" />
             Generate Follow-up Email
           </DialogTitle>
         </DialogHeader>
@@ -137,7 +137,7 @@ export function AIEmailDialog({
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}
-            className="w-full bg-gold hover:bg-gold/90 text-white"
+            className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
           >
             {generateMutation.isPending ? (
               <>

@@ -38,7 +38,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth<unknown>(async (session) => {
+  return withAuth(async (session) => {
     const contentType = req.headers.get("x-action");
 
     if (contentType === "respond") {

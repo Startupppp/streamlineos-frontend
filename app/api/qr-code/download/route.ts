@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withAuth } from "@/lib/api/helpers";
 import { getQRCodeImageUrl } from "@/app/(dashboard)/ceo/qr-code/actions";
 import { db } from "@/lib/db";
 import { qrCodes } from "@/lib/db/schema";
@@ -67,12 +67,8 @@ function sanitizeFilename(name: string): string {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+  return withAuth(async (_session) => {
+    try {
     const searchParams = req.nextUrl.searchParams;
     const slug = searchParams.get("slug");
     const format = searchParams.get("format") || "png";
@@ -204,8 +200,9 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       );
     }
-  } catch (error) {
-    logger.error("QR download route error", error);
-    return NextResponse.json({ error: "Download failed" }, { status: 500 });
-  }
+    } catch (error) {
+      logger.error("QR download route error", error);
+      return NextResponse.json({ error: "Download failed" }, { status: 500 });
+    }
+  });
 }

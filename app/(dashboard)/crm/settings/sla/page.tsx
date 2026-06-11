@@ -133,7 +133,7 @@ export default function SlaPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Policy
             </Button>
@@ -196,7 +196,7 @@ export default function SlaPage() {
                     </FormItem>
                   )} />
                 </div>
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createPolicy.isPending}>
+                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createPolicy.isPending}>
                   {createPolicy.isPending ? "Creating..." : "Create Policy"}
                 </Button>
               </form>
@@ -278,7 +278,7 @@ export default function SlaPage() {
 
         {editingId !== null && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm border-gold/30">
+            <Card className="shadow-sm border-blue-500/30">
               <CardHeader>
                 <CardTitle className="text-base">Edit Policy</CardTitle>
               </CardHeader>
@@ -339,7 +339,7 @@ export default function SlaPage() {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                      <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updatePolicy.isPending}>
+                      <Button type="submit" className="bg-blue-500 hover:bg-blue-500/90 text-white" disabled={updatePolicy.isPending}>
                         {updatePolicy.isPending ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>

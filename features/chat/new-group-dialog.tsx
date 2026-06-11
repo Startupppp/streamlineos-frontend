@@ -32,9 +32,9 @@ interface SelectedUserBadgeProps {
 function SelectedUserBadge({ id, name, onRemove }: SelectedUserBadgeProps) {
   const handleRemove = useCallback(() => onRemove(id), [id, onRemove]);
   return (
-    <span className="inline-flex items-center gap-1 bg-gold/10 text-gold rounded-full px-2 py-0.5 text-[11px] font-medium">
+    <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-600 rounded-full px-2 py-0.5 text-[11px] font-medium">
       {name?.split(" ")[0]}
-      <button onClick={handleRemove} className="hover:bg-gold/20 rounded-full p-0.5">
+      <button onClick={handleRemove} className="hover:bg-blue-500/20 rounded-full p-0.5">
         <X className="h-2.5 w-2.5" />
       </button>
     </span>
@@ -54,10 +54,10 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-        selected && "bg-gold/5"
+        selected && "bg-blue-500/5"
       )}
     >
-      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ? "bg-gold border-gold text-white" : "border-border/60")}>
+      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ? "bg-blue-500 border-blue-500 text-white" : "border-border/60")}>
         {selected && <Check className="h-3 w-3" />}
       </div>
       <Avatar className="h-7 w-7 shrink-0">
@@ -242,7 +242,7 @@ export function NewGroupDialog({
             <Button
               onClick={handleGoToMembers}
               disabled={!name.trim()}
-              className="w-full bg-gold hover:bg-gold/90 text-white h-9"
+              className="w-full bg-blue-500 hover:bg-blue-500/90 text-white h-9"
             >
               Next: Add Members
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -296,7 +296,7 @@ export function NewGroupDialog({
               <Button
                 onClick={handleCreate}
                 disabled={selectedIds.size === 0 || createGroup.isPending}
-                className="flex-1 bg-gold hover:bg-gold/90 text-white h-9"
+                className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white h-9"
               >
                 {createGroup.isPending ? (
                   <>

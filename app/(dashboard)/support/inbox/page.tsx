@@ -130,7 +130,7 @@ function InboxContent() {
             : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` : ""}`
         }
         actions={
-          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
+          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-500/80 text-white">
             <Plus className="h-3.5 w-3.5" /> New Ticket
           </Button>
         }
@@ -225,7 +225,7 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-        isSelected && "bg-muted/50 border-l-2 border-gold"
+        isSelected && "bg-muted/50 border-l-2 border-blue-500"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -382,7 +382,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             onClick={handleReply}
             disabled={!replyText.trim() || addMessage.isPending}
             size="icon"
-            className="h-[60px] w-10 shrink-0 bg-gold hover:bg-gold/80 text-white"
+            className="h-[60px] w-10 shrink-0 bg-blue-500 hover:bg-blue-500/80 text-white"
             aria-label="Send reply"
           >
             {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -446,7 +446,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-gold hover:bg-gold/80 text-white">
+            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-blue-500 hover:bg-blue-500/80 text-white">
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>

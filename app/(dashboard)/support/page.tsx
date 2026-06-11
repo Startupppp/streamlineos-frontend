@@ -109,7 +109,7 @@ export default function SupportDashboardPage() {
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-gold" />
+                <Shield className="h-4 w-4 text-blue-600" />
                 Ticket Status Breakdown
               </CardTitle>
             </CardHeader>
@@ -127,7 +127,7 @@ export default function SupportDashboardPage() {
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-gold" />
+                <Ticket className="h-4 w-4 text-blue-600" />
                 Ticket Volume Trend
               </CardTitle>
             </CardHeader>
@@ -184,8 +184,8 @@ export default function SupportDashboardPage() {
                       >
                         <td className="py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-gold">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-semibold text-blue-600">
                                 {member.avatar}
                               </span>
                             </div>
@@ -226,7 +226,7 @@ export default function SupportDashboardPage() {
         <Card className="shadow-noir">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="h-4 w-4 text-gold" />
+              <Shield className="h-4 w-4 text-blue-600" />
               Tickets by Priority
             </CardTitle>
           </CardHeader>

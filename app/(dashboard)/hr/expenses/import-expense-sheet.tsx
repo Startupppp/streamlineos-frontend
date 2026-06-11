@@ -246,7 +246,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">1</div>
+              <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-600">1</div>
               <Label className="text-sm font-semibold">Download Template</Label>
             </div>
             <p className="text-xs text-muted-foreground pl-8">
@@ -276,13 +276,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
 
           <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
+              <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-600">2</div>
               <Label className="text-sm font-semibold">Upload File</Label>
             </div>
 
             {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-gold/50 hover:bg-gold/5">
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-blue-500/50 hover:bg-blue-500/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
                   <p className="text-xs text-muted-foreground mt-1">CSV or Excel (.xlsx, .xls) — Max 5MB</p>
@@ -291,7 +291,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             ) : (
               <div className="pl-8 min-h-[92px]">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <FileText className="h-8 w-8 text-gold shrink-0" />
+                  <FileText className="h-8 w-8 text-blue-600 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>

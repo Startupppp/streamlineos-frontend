@@ -26,7 +26,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ employeeId: string }> },
 ) {
-  return withAuth<ManagerScorecard>(async (session) => {
+  return withAuth(async (session) => {
     const { employeeId } = await params;
 
     const isSelf = session.user.id === employeeId;

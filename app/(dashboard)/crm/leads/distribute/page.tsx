@@ -32,7 +32,7 @@ interface DistributeLeadRowProps {
 function DistributeLeadRow({ lead, isSelected, onToggle }: DistributeLeadRowProps) {
   const handleToggle = useCallback(() => onToggle(lead.id), [lead.id, onToggle]);
   return (
-    <TableRow className={isSelected ? "bg-gold/5" : ""}>
+    <TableRow className={isSelected ? "bg-blue-500/5" : ""}>
       <TableCell className="px-3">
         <Checkbox checked={isSelected} onCheckedChange={handleToggle} />
       </TableCell>

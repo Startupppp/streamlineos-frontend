@@ -144,12 +144,12 @@ export default function ContactsPage() {
           <>
             <div className="flex items-center border border-border rounded-md">
               <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-                className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
+                className={cn("rounded-r-none", view === "table" && "bg-blue-500 hover:bg-blue-500/90 text-white")}
                 onClick={handleViewTable}>
                 <TableIcon className="h-4 w-4" />
               </Button>
               <Button variant={view === "card" ? "default" : "ghost"} size="sm"
-                className={cn("rounded-l-none", view === "card" && "bg-gold hover:bg-gold/90 text-white")}
+                className={cn("rounded-l-none", view === "card" && "bg-blue-500 hover:bg-blue-500/90 text-white")}
                 onClick={handleViewCard}>
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -203,7 +203,7 @@ export default function ContactsPage() {
                           <TableRow key={contact.id} className="h-8 hover:bg-muted/30 transition-colors">
                             <TableCell className="px-2 py-1">
                               <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] font-bold text-gold shrink-0">
+                                <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
                                   {contact.name[0]?.toUpperCase() ?? "?"}
                                 </div>
                                 <span className="text-[12px] font-medium truncate max-w-[120px]">{contact.name}</span>
@@ -255,7 +255,7 @@ export default function ContactsPage() {
                                   </Link>
                                 )}
                                 {contact.deal && (
-                                  <Link href={`/crm/deals/${contact.deal.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-gold hover:text-gold/80 hover:underline truncate max-w-[90px]">
+                                  <Link href={`/crm/deals/${contact.deal.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-600/80 hover:underline truncate max-w-[90px]">
                                     <Link2 className="h-2.5 w-2.5 shrink-0" />Deal: {contact.deal.name}
                                   </Link>
                                 )}
@@ -282,7 +282,7 @@ export default function ContactsPage() {
                                     disabled={enrichContact.isPending}
                                     onClick={() => handleEnrich(contact)}
                                   >
-                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-gold" />Enrich with AI
+                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -323,14 +323,14 @@ export default function ContactsPage() {
             <>
               <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {data?.items.map(contact => (
-                  <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 group">
+                  <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 group">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
                           {contact.name[0]?.toUpperCase() ?? "?"}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate group-hover:text-gold transition-colors">{contact.name}</p>
+                          <p className="text-sm font-medium truncate group-hover:text-blue-600 transition-colors">{contact.name}</p>
                           {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
                         </div>
                         <DropdownMenu>
@@ -352,7 +352,7 @@ export default function ContactsPage() {
                               disabled={enrichContact.isPending}
                               onClick={() => handleEnrich(contact)}
                             >
-                              <Sparkles className="h-3.5 w-3.5 mr-2 text-gold" />Enrich with AI
+                              <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

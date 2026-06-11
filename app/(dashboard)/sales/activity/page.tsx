@@ -394,7 +394,7 @@ export default function SalesActivityPage() {
       <Card className="mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            <BarChart2 className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Task Completion — Per Rep
           </CardTitle>
         </CardHeader>
@@ -406,7 +406,7 @@ export default function SalesActivityPage() {
       <Card className="mt-4">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4 text-gold" aria-hidden="true" />
+            <Users className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Rep Activity Breakdown
             {data && (
               <span className="ml-auto text-xs font-normal text-muted-foreground">

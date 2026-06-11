@@ -63,48 +63,45 @@ const ALLOW_AUTHENTICATED = [
   "/reset-password",
 ];
 
-const ROUTE_ROLE_MAP: Record<string, string[]> = {
-  "/hr": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/onboarding": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/payroll": ["CEO", "HR", "BRANCH_HR"],
-  "/hr/devices": ["CEO", "HR", "BRANCH_HR"],
-  "/hr/documents": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/work-logs": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/performance": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/org-chart": ["CEO", "HR"],
-  "/hr/incentives": ["CEO", "HR"],
-  "/hr/my-payslips": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/leaves": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/expenses": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/attendance": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/helpdesk": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/crm/leads": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
-  "/crm/deals": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
-  "/crm/targets": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
-  "/crm/reports": ["CEO", "HR"],
-  "/crm/clients": ["CEO", "HR", "CUSTOMER_SUPPORT", "SALES"],
-  "/digital-marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
-  "/projects": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/timesheets": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/support/inbox": ["CEO", "HR", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "SALES"],
-  "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/sales": ["CEO", "HR", "SALES"],
-  "/customer-executive": ["CEO", "HR", "CUSTOMER_SUPPORT"],
-  "/marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
-  "/settings": ["CEO", "HR"],
-  "/settings/roles": ["CEO", "HR"],
-  "/settings/branches": ["CEO", "HR"],
-  "/billing": ["CEO", "HR"],
-  "/billing/invoices": ["CEO", "HR"],
-  "/notifications": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-  "/ceo": ["CEO", "HR"],
-
-  "/ai": ["CEO", "HR"],
-
-  "/calendar": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
-
-  "/blogs/admin": ["CEO", "HR", "BLOG_EDITOR"],
+const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
+  "/hr": ["hr:employees:view"],
+  "/hr/onboarding": ["hr:employees:create"],
+  "/hr/payroll": ["hr:payroll:view"],
+  "/hr/devices": ["hr:assets:view"],
+  "/hr/documents": ["hr:documents:view"],
+  "/hr/work-logs": ["self:attendance"],
+  "/hr/performance": ["hr:performance:view"],
+  "/hr/org-chart": ["hr:employees:view"],
+  "/hr/incentives": ["crm:incentives:read"],
+  "/hr/my-payslips": ["self:payslips"],
+  "/hr/leaves": ["self:leaves"],
+  "/hr/expenses": ["self:expenses"],
+  "/hr/attendance": ["self:attendance"],
+  "/hr/helpdesk": ["self:attendance"],
+  "/crm/leads": ["crm:leads:view"],
+  "/crm/deals": ["crm:leads:view"],
+  "/crm/targets": ["crm:targets:view"],
+  "/crm/reports": ["crm:reports:view"],
+  "/crm/clients": ["crm:clients:read"],
+  "/digital-marketing": ["dm:leads:read", "dm:campaigns:read"],
+  "/projects": ["projects:view"],
+  "/timesheets": ["projects:timesheets:view"],
+  "/support": ["projects:tickets:view"],
+  "/support/inbox": ["projects:tickets:view"],
+  "/chat": ["chat:submit_lead", "self:attendance"],
+  "/sales": ["dashboard:sales:view"],
+  "/customer-executive": ["dashboard:customer-executive:view"],
+  "/marketing": ["dm:campaigns:read"],
+  "/settings": ["settings:view"],
+  "/settings/roles": ["settings:rbac:manage"],
+  "/settings/branches": ["settings:manage"],
+  "/billing": ["settings:manage"],
+  "/billing/invoices": ["settings:manage"],
+  "/notifications": ["self:attendance"],
+  "/ceo": ["reports:view"],
+  "/ai": ["settings:manage"],
+  "/calendar": ["self:attendance"],
+  "/blogs/admin": ["settings:manage"],
 };
 
 function startsWithAny(pathname: string, routes: string[]): boolean {
@@ -118,16 +115,23 @@ function isBlogAdminPath(pathname: string): boolean {
   return pathname === "/blogs/admin" || pathname.startsWith("/blogs/admin/");
 }
 
-function canAccessRoute(pathname: string, role: string): boolean {
-  if (role === "CEO") return true;
+function canAccessRoute(
+  pathname: string,
+  role: string,
+  permissions: string[],
+): boolean {
+  if (role === "OWNER") return true;
 
-  const matchingRoutes = Object.keys(ROUTE_ROLE_MAP)
+  const matchingRoutes = Object.keys(ROUTE_PERMISSION_MAP)
     .filter((route) => pathname === route || pathname.startsWith(route + "/"))
     .sort((a, b) => b.length - a.length);
 
   if (matchingRoutes.length === 0) return true;
 
-  return ROUTE_ROLE_MAP[matchingRoutes[0]].includes(role);
+  const required = ROUTE_PERMISSION_MAP[matchingRoutes[0]];
+  if (!required || required.length === 0) return true;
+  const granted = new Set(permissions);
+  return required.some((perm) => granted.has(perm));
 }
 
 const BOT_BLOCKED_PREFIXES = [
@@ -316,7 +320,10 @@ export default async function middleware(req: NextRequest) {
     (startsWithAny(pathname, PROTECTED_ROUTES) || isBlogAdminPath(pathname))
   ) {
     const userRole = token.role as string;
-    if (!canAccessRoute(pathname, userRole)) {
+    const userPermissions = Array.isArray(token.permissions)
+      ? (token.permissions as string[])
+      : [];
+    if (!canAccessRoute(pathname, userRole, userPermissions)) {
       const url = req.nextUrl.clone();
       url.pathname = isBlogAdminPath(pathname) ? "/blogs" : "/dashboard";
       url.search = "";

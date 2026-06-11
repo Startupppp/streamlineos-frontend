@@ -103,7 +103,7 @@ export function DashboardShell({
                   </SheetContent>
                 </Sheet>
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-gold/15 ring-1 ring-gold/20 flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/20 flex items-center justify-center">
                     <Image src="/logo.svg" alt="StreamlineOS" width={20} height={20} className="object-contain" />
                   </div>
                   <span className="text-sm font-bold gold-text">StreamlineOS</span>

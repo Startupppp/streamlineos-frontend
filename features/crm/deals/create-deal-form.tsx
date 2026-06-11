@@ -125,7 +125,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
       </div>
-      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createMutation.isPending}>
+      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createMutation.isPending}>
         {createMutation.isPending ? "Creating..." : "Create Deal"}
       </Button>
     </form>

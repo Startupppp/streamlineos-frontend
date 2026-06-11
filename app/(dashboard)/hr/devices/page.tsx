@@ -272,8 +272,8 @@ export default function DevicesPage() {
             return (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 pb-4 border-b">
-                  <div className="h-12 w-12 rounded-lg bg-gold/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-gold" />
+                  <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">{viewedDevice.deviceName}</p>

@@ -61,7 +61,7 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
             {analyzeMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold capitalize", riskColor(result.riskLevel))}>{result.riskLevel}</span> : "Risk"}
           </Button>
@@ -81,7 +81,7 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
         {analyzeMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Analyzing...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Attrition Risk</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Attrition Risk</>
         )}
       </Button>
       {result && <RiskDetails result={result} riskColor={riskColor} riskBg={riskBg} />}

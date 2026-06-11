@@ -243,7 +243,7 @@ export default function BranchManagementPage() {
       subtitle="Manage your organization's branch offices"
       badge={branches.length > 0 ? String(branches.length) : undefined}
       actions={
-        <Button onClick={handleOpenCreate} className="bg-gold hover:bg-gold/80 text-white">
+        <Button onClick={handleOpenCreate} className="bg-blue-500 hover:bg-blue-500/80 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Add Branch
         </Button>
@@ -265,7 +265,7 @@ export default function BranchManagementPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {branches.map((branch) => (
-            <Card key={branch.id} className="hover:border-gold/30 transition-colors">
+            <Card key={branch.id} className="hover:border-blue-500/30 transition-colors">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>

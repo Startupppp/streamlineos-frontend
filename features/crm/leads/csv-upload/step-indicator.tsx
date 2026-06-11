@@ -22,9 +22,9 @@ export const StepIndicator = memo(function StepIndicator({
           <div
             className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
               step === s
-                ? "bg-gold text-white"
+                ? "bg-blue-500 text-white"
                 : i < currentIdx
-                  ? "bg-gold/30 text-gold"
+                  ? "bg-blue-500/30 text-blue-600"
                   : "bg-muted text-muted-foreground"
             }`}
           >

@@ -131,7 +131,7 @@ export function AppConfigCard({ org }: AppConfigCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Globe className="h-4 w-4 text-gold" />
+            <Globe className="h-4 w-4 text-blue-600" />
             App Configuration
           </CardTitle>
           {!isEditing && (

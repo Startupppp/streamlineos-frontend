@@ -254,7 +254,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ quoteId:
                 <p className="text-sm text-muted-foreground">
                   Tax: {quote.currency} {Number(quote.taxAmount).toLocaleString("en-IN")}
                 </p>
-                <p className="text-lg font-bold text-gold">
+                <p className="text-lg font-bold text-blue-600">
                   Net Total: {quote.currency} {Number(quote.netAmount).toLocaleString("en-IN")}
                 </p>
               </div>

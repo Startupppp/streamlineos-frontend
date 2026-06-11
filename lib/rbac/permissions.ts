@@ -408,6 +408,7 @@ const EMPLOYEE_SELF_SERVICE = [
 ];
 
 export const SYSTEM_ROLES = [
+  "OWNER",
   "CEO",
   "HR",
   "SALES",
@@ -423,9 +424,18 @@ export const SYSTEM_ROLES = [
 
 export type SystemRole = (typeof SYSTEM_ROLES)[number];
 
-export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+export const SUPER_ADMIN_ROLES: ReadonlyArray<SystemRole> = ["OWNER"] as const;
 
-  CEO: PERMISSIONS.map((p) => p.name),
+export function isSuperAdminRole(role: string | undefined | null): boolean {
+  return role === "OWNER";
+}
+
+const ALL_PERMISSIONS = PERMISSIONS.map((p) => p.name);
+
+export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  OWNER: ALL_PERMISSIONS,
+
+  CEO: ALL_PERMISSIONS,
 
   HR: [
     ...EMPLOYEE_SELF_SERVICE,
@@ -452,24 +462,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "hr:performance:manage",
     "hr:goals:view",
     "hr:goals:manage",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
-    "projects:create",
-    "projects:update",
-    "projects:tickets:view",
     "reports:view",
     "reports:create",
     "reports:export",
-    "settings:view",
-    "settings:manage",
-    "dashboard:sales:view",
-    "dashboard:customer-executive:view",
-    "dashboard:support:view",
   ],
 
   SALES: [

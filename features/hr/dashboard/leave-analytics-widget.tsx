@@ -40,7 +40,7 @@ export function LeaveAnalyticsWidget() {
                   </span>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gold/70"
+                      className="h-full rounded-full bg-blue-500/70"
                       style={{ width: `${(d.total / maxCount) * 100}%` }}
                     />
                   </div>
@@ -61,7 +61,7 @@ export function LeaveAnalyticsWidget() {
                   return (
                     <div key={m.month} className="flex flex-col items-center gap-0.5 flex-1">
                       <div
-                        className="w-full rounded-sm bg-gold/60"
+                        className="w-full rounded-sm bg-blue-500/60"
                         style={{ height: `${Math.max(4, pct)}%`, minHeight: "2px" }}
                         title={`${m.month}: ${m.count}`}
                       />

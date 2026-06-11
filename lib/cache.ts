@@ -71,12 +71,17 @@ export const CACHE_KEYS = {
 
   orgSettings: (orgId: string) => `org:settings:${orgId}`,
   rolePermissions: (orgId: string, role: string) => `org:roles:${orgId}:${role}`,
+  rolesList: (orgId: string) => `org:roles:${orgId}`,
 
   leadsCount: (orgId: string) => `leads:count:${orgId}`,
   leadsList: (orgId: string, hash: string) => `leads:list:${orgId}:${hash}`,
   leadDetail: (orgId: string, id: number) => `leads:detail:${orgId}:${id}`,
 
   projectsList: (orgId: string) => `projects:list:${orgId}`,
+  projectLabels: (orgId: string) => `projects:labels:${orgId}`,
+  orgMembers: (orgId: string) => `org:members:${orgId}`,
+  customStates: (orgId: string, projectId: number) =>
+    `projects:customStates:${orgId}:${projectId}`,
   ticketsList: (orgId: string, projectId: number, hash: string) =>
     `tickets:list:${orgId}:${projectId}:${hash}`,
 

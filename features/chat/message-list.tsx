@@ -127,7 +127,7 @@ export function MessageList({
     >
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-full">
-          <Loader2 className="h-6 w-6 animate-spin text-gold" />
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           <p className="text-[13px] text-muted-foreground mt-3">Loading messages...</p>
         </div>
       ) : (
@@ -197,8 +197,8 @@ export function MessageList({
 
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 flex items-center justify-center mb-3">
-                <Send className="h-5 w-5 text-gold" />
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5 flex items-center justify-center mb-3">
+                <Send className="h-5 w-5 text-blue-600" />
               </div>
               <h4 className="text-[14px] font-semibold mb-0.5">
                 {channelType === "DIRECT"

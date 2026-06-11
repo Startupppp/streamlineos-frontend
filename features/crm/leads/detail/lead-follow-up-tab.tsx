@@ -196,7 +196,7 @@ export const LeadFollowUpTab = memo(function LeadFollowUpTab({
       {/* ── Schedule new follow-up ─────────────────────────── */}
       <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3">
         <p className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
-          <Plus className="h-3.5 w-3.5 text-gold" />
+          <Plus className="h-3.5 w-3.5 text-blue-600" />
           Schedule Follow-up
         </p>
 
@@ -260,7 +260,7 @@ export const LeadFollowUpTab = memo(function LeadFollowUpTab({
 
         <Button
           size="sm"
-          className="w-full h-8 text-xs bg-gold hover:bg-gold/90 text-white gap-1.5"
+          className="w-full h-8 text-xs bg-blue-500 hover:bg-blue-500/90 text-white gap-1.5"
           onClick={onSchedule}
           disabled={isScheduling}
         >

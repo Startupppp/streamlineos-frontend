@@ -307,7 +307,7 @@ export default function QuotesPage() {
               {data.quotes.map((q) => (
                 <TableRow key={q.id} className="cursor-pointer hover:bg-muted/50">
                   <TableCell>
-                    <Link href={`/crm/quotes/${q.id}`} className="font-mono text-sm text-gold hover:underline">
+                    <Link href={`/crm/quotes/${q.id}`} className="font-mono text-sm text-blue-600 hover:underline">
                       {q.quoteNumber}
                     </Link>
                   </TableCell>

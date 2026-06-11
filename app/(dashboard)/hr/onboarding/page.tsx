@@ -634,7 +634,7 @@ function HrDocumentsTab() {
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isHROrCEO = role === "HR" || role === "CEO";
+  const isHROrCEO = role === "OWNER" || role === "CEO" || role === "HR";
 
   return (
     <PageWrapper

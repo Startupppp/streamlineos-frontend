@@ -88,14 +88,14 @@ export function SidebarSection({
               >
 
                 {isActive && !isCollapsed && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-gold" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-blue-500" />
                 )}
 
                 <route.icon
                   className={cn(
                     "nav-icon transition-colors duration-150",
                     route.isSubItem ? "h-3.5 w-3.5" : "h-4 w-4",
-                    isActive && "text-gold"
+                    isActive && "text-blue-600"
                   )}
                 />
 

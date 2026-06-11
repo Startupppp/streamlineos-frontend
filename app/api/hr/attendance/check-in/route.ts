@@ -1,20 +1,29 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { attendance } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const checkInSchema = z.object({
+  location: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      address: z.string().max(500).optional(),
+    })
+    .nullish(),
+  localDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json().catch(() => ({})) as {
-      location?: { lat: number; lng: number; address?: string } | null;
-      localDate?: string;
-    };
-
-    const today = body.localDate && /^\d{4}-\d{2}-\d{2}$/.test(body.localDate)
-      ? body.localDate
-      : getTodayString();
+    const body = await parseBody(req, checkInSchema);
+    const today = body.localDate ?? getTodayString();
 
     try {
       await db.transaction(async (tx) => {

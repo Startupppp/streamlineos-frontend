@@ -39,7 +39,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth<unknown>(async (session) => {
+  return withAuth(async (session) => {
     const action = req.headers.get("x-action");
 
     if (action === "submit") {

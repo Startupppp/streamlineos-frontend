@@ -30,7 +30,7 @@ const alumniKeys = { all: [...queryKeys.hr.all, "alumni"] as const, list: () => 
 export default function AlumniPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: alumni, isLoading } = useQuery({
     queryKey: alumniKeys.list(),

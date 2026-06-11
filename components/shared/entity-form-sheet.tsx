@@ -14,24 +14,30 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSheet } from "./app-sheet";
 
-interface EntityFormSheetProps<TValues extends FieldValues> {
+interface EntityFormSheetProps<
+  TInput extends FieldValues,
+  TOutput extends FieldValues = TInput,
+> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
-  resolver: Resolver<TValues>;
-  defaultValues: DefaultValues<TValues>;
-  onSubmit: SubmitHandler<TValues>;
+  resolver: Resolver<TInput, unknown, TOutput>;
+  defaultValues: DefaultValues<TInput>;
+  onSubmit: SubmitHandler<TOutput>;
   isSubmitting?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
   side?: "right" | "left" | "top" | "bottom";
   className?: string;
   resetOnOpen?: boolean;
-  children: (form: UseFormReturn<TValues>) => ReactNode;
+  children: (form: UseFormReturn<TInput, unknown, TOutput>) => ReactNode;
 }
 
-export function EntityFormSheet<TValues extends FieldValues>({
+export function EntityFormSheet<
+  TInput extends FieldValues,
+  TOutput extends FieldValues = TInput,
+>({
   open,
   onOpenChange,
   title,
@@ -46,8 +52,8 @@ export function EntityFormSheet<TValues extends FieldValues>({
   className,
   resetOnOpen = false,
   children,
-}: EntityFormSheetProps<TValues>) {
-  const form = useForm<TValues>({
+}: EntityFormSheetProps<TInput, TOutput>) {
+  const form = useForm<TInput, unknown, TOutput>({
     resolver,
     defaultValues,
   });

@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   }
 
   const role = session.user.role;
-  const isAdminRole = role === "CEO" || role === "HR";
+  const isAdminRole = role === "OWNER" || role === "CEO" || role === "HR";
   const hasDashboardAccess = isAdminRole || session.user.hasDashboardAccess !== false;
 
   const cookieStore = await cookies();

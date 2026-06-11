@@ -51,7 +51,7 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
             {actionMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Zap className="h-3 w-3 text-gold" />
+              <Zap className="h-3 w-3 text-blue-600" />
             )}
             Next Action
           </Button>
@@ -77,7 +77,7 @@ export function AINextActionButton({ leadId, compact }: AINextActionButtonProps)
         {actionMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Thinking...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />Suggest Next Action</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />Suggest Next Action</>
         )}
       </Button>
       {result && <ActionDetails result={result} urgencyColor={urgencyColor} />}

@@ -192,7 +192,7 @@ export default function DmLeadsPage() {
                   </TableRow>
                 ) : (
                   leads.map((lead) => (
-                    <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-gold/5" : ""}>
+                    <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-blue-500/5" : ""}>
                       <TableCell className="px-3">
                         <Checkbox checked={selectedIds.has(lead.id)} onCheckedChange={() => {
                           setSelectedIds(prev => {

@@ -371,7 +371,7 @@ export default function SalesDashboardPage() {
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-gold" />
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
                   Live CRM Metrics (Last 7 Days)
                 </CardTitle>
               </CardHeader>
@@ -413,7 +413,7 @@ export default function SalesDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-gold" />
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
                   Revenue Trend
                 </CardTitle>
               </CardHeader>
@@ -432,7 +432,7 @@ export default function SalesDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Target className="h-4 w-4 text-gold" />
+                  <Target className="h-4 w-4 text-blue-600" />
                   Pipeline Funnel
                   {datePreset !== "all" && (
                     <span className="ml-auto text-[10px] font-normal text-muted-foreground">
@@ -456,7 +456,7 @@ export default function SalesDashboardPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-gold" />
+                <BarChart3 className="h-4 w-4 text-blue-600" />
                 Revenue vs Target ({new Date().getFullYear()})
               </CardTitle>
             </CardHeader>
@@ -471,7 +471,7 @@ export default function SalesDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <ArrowUpRight className="h-4 w-4 text-gold" />
+                  <ArrowUpRight className="h-4 w-4 text-blue-600" />
                   Top Deals
                 </CardTitle>
               </CardHeader>
@@ -501,7 +501,7 @@ export default function SalesDashboardPage() {
                           {getPersonSlug(deal.rep) ? (
                             <Link
                               href={`/sales/person/${getPersonSlug(deal.rep)}`}
-                              className="text-xs text-gold hover:underline"
+                              className="text-xs text-blue-600 hover:underline"
                             >
                               {deal.rep}
                             </Link>
@@ -528,7 +528,7 @@ export default function SalesDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-gold" />
+                  <Trophy className="h-4 w-4 text-blue-600" />
                   Sales Leaderboard
                   {datePreset !== "all" && (
                     <span className="ml-auto text-[10px] font-normal text-muted-foreground">
@@ -596,7 +596,7 @@ export default function SalesDashboardPage() {
                                       "text-sm font-semibold truncate block transition-colors",
                                       isTop3
                                         ? cn(style?.text, "hover:opacity-80")
-                                        : "text-foreground hover:text-gold",
+                                        : "text-foreground hover:text-blue-600",
                                     )}
                                   >
                                     {rep.name}

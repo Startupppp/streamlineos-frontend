@@ -108,7 +108,7 @@ function QRCard({
   const handleDownloadSvg = useCallback(() => onDownload(qr.slug, "svg"), [qr.slug, onDownload]);
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden border border-border/40 bg-card flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_8px_40px_rgba(189,136,44,0.18)]">
+    <div className="group relative rounded-2xl overflow-hidden border border-border/40 bg-card flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_8px_40px_rgba(189,136,44,0.18)]">
 
       <div
         className="relative flex items-center justify-center p-6 h-48 overflow-hidden"
@@ -127,10 +127,10 @@ function QRCard({
           style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(189,136,44,0.12) 0%, transparent 70%)" }}
         />
 
-        <span className="absolute top-3 left-3 h-5 w-5 border-t-2 border-l-2 border-gold/50 rounded-tl-sm" />
-        <span className="absolute top-3 right-3 h-5 w-5 border-t-2 border-r-2 border-gold/50 rounded-tr-sm" />
-        <span className="absolute bottom-3 left-3 h-5 w-5 border-b-2 border-l-2 border-gold/50 rounded-bl-sm" />
-        <span className="absolute bottom-3 right-3 h-5 w-5 border-b-2 border-r-2 border-gold/50 rounded-br-sm" />
+        <span className="absolute top-3 left-3 h-5 w-5 border-t-2 border-l-2 border-blue-500/50 rounded-tl-sm" />
+        <span className="absolute top-3 right-3 h-5 w-5 border-t-2 border-r-2 border-blue-500/50 rounded-tr-sm" />
+        <span className="absolute bottom-3 left-3 h-5 w-5 border-b-2 border-l-2 border-blue-500/50 rounded-bl-sm" />
+        <span className="absolute bottom-3 right-3 h-5 w-5 border-b-2 border-r-2 border-blue-500/50 rounded-br-sm" />
 
         <span className="absolute left-3 right-3 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent opacity-0 group-hover:opacity-100 animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
 
@@ -157,10 +157,10 @@ function QRCard({
             rel="noopener noreferrer"
             className="group/link flex items-center gap-1.5 w-fit max-w-full"
           >
-            <span className="text-sm font-semibold truncate leading-tight group-hover/link:text-gold transition-colors">
+            <span className="text-sm font-semibold truncate leading-tight group-hover/link:text-blue-600 transition-colors">
               {domain}
             </span>
-            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/40 group-hover/link:text-gold transition-colors" />
+            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/40 group-hover/link:text-blue-600 transition-colors" />
           </Link>
           <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">{qr.targetUrl}</p>
         </div>
@@ -362,8 +362,8 @@ export default function CEOQRCodePage() {
 
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-9 w-9 rounded-xl bg-gold/10 ring-1 ring-gold/20 flex items-center justify-center shrink-0">
-              <QrCodeIcon className="h-4 w-4 text-gold" />
+            <div className="h-9 w-9 rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20 flex items-center justify-center shrink-0">
+              <QrCodeIcon className="h-4 w-4 text-blue-600" />
             </div>
             <div>
               <p className="text-sm font-semibold">Generate New QR Code</p>

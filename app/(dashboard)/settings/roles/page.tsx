@@ -73,7 +73,7 @@ function groupPermissions(permissions: Permission[]) {
 
 export default function RolesPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="settings:rbac:manage">
       <RolesContent />
     </DashboardGate>
   );

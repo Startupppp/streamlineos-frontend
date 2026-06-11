@@ -149,7 +149,7 @@ function blankForm() {
 export default function DocumentTypesPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  const isHROrCEO = role === "HR" || role === "CEO";
+  const isHROrCEO = role === "OWNER" || role === "CEO" || role === "HR";
 
   const { data, isLoading } = useDocumentTypes();
   const createMutation = useCreateDocumentType();

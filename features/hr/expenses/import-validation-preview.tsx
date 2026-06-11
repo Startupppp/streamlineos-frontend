@@ -76,7 +76,7 @@ export function ImportValidationPreview({
   return (
     <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">
+        <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-xs font-bold text-blue-600">
           3
         </div>
         <Label className="text-sm font-semibold">Validation Preview</Label>

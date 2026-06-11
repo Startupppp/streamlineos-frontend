@@ -36,7 +36,7 @@ export function LiveCrmMetricsCard({ metrics }: LiveCrmMetricsCardProps) {
       <Card className="shadow-noir">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-gold" />
+            <TrendingUp className="h-4 w-4 text-blue-600" />
             Live CRM Metrics (Last 7 Days)
           </CardTitle>
         </CardHeader>

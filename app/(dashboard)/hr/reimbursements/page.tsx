@@ -37,7 +37,7 @@ export default function ReimbursementsPage() {
   const { data: items, isLoading } = useReimbursements();
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);

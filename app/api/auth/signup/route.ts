@@ -1,12 +1,109 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { users, organizations, organizationMembers } from "@/lib/db/schema";
+import { users, organizations, organizationMembers, roles } from "@/lib/db/schema";
 import { subscriptions } from "@/lib/db/schema/shared";
 import { hash } from "bcryptjs";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 import { addDays } from "date-fns";
+import { PERMISSIONS } from "@/lib/rbac/permissions";
+
+const DEFAULT_ORG_ROLES: Array<{ name: string; slug: string; permissions: string[] }> = [
+  {
+    name: "Administrator",
+    slug: "ADMIN",
+    permissions: PERMISSIONS.map((p) => p.name),
+  },
+  {
+    name: "HR Manager",
+    slug: "HR_MANAGER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "hr:employees:view",
+      "hr:employees:create",
+      "hr:employees:update",
+      "hr:employees:delete",
+      "hr:attendance:view",
+      "hr:attendance:manage",
+      "hr:leaves:view",
+      "hr:leaves:approve",
+      "hr:payroll:view",
+      "hr:payroll:generate",
+      "hr:payroll:approve",
+      "hr:salary:view",
+      "hr:salary:manage",
+      "hr:expenses:view",
+      "hr:expenses:approve",
+      "hr:documents:view",
+      "hr:documents:manage",
+      "hr:assets:view",
+      "hr:assets:manage",
+      "hr:performance:view",
+      "hr:performance:manage",
+      "hr:goals:view",
+      "hr:goals:manage",
+      "reports:view",
+      "reports:create",
+      "reports:export",
+    ],
+  },
+  {
+    name: "Project Manager",
+    slug: "PROJECT_MANAGER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "projects:view",
+      "projects:create",
+      "projects:update",
+      "projects:tickets:view",
+      "projects:tickets:create",
+      "projects:tickets:update",
+      "projects:tickets:delete",
+      "projects:tickets:assign",
+      "projects:sprints:view",
+      "projects:sprints:manage",
+      "projects:timesheets:view",
+      "projects:timesheets:create",
+      "reports:view",
+    ],
+  },
+  {
+    name: "Sales",
+    slug: "SALES_REP",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "crm:leads:view",
+      "crm:leads:create",
+      "crm:leads:update",
+      "crm:targets:view",
+      "crm:clients:read",
+      "crm:clients:update",
+      "dashboard:sales:view",
+    ],
+  },
+  {
+    name: "Team Member",
+    slug: "MEMBER",
+    permissions: [
+      "self:attendance",
+      "self:leaves",
+      "self:expenses",
+      "self:payslips",
+      "hr:leaves:create",
+      "hr:expenses:create",
+    ],
+  },
+];
 
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -59,7 +156,7 @@ export async function POST(req: NextRequest) {
         lastName: input.lastName,
         phone: input.phone,
         password: passwordHash,
-        role: "CEO",
+        role: "OWNER",
         isActive: true,
         hasDashboardAccess: true,
         emailVerified: new Date(),
@@ -80,6 +177,16 @@ export async function POST(req: NextRequest) {
         currentPeriodStart: new Date(),
         currentPeriodEnd: addDays(new Date(), 14),
       });
+
+      await tx.insert(roles).values(
+        DEFAULT_ORG_ROLES.map((r) => ({
+          name: r.name,
+          slug: r.slug,
+          orgId,
+          isSystem: false,
+          permissions: r.permissions,
+        })),
+      );
     });
 
     void createAuditLog({

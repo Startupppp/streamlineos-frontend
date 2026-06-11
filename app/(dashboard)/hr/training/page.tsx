@@ -51,7 +51,7 @@ export default function TrainingPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const handleCreate = useCallback(() => {
     if (!title.trim()) { toast.error("Title is required"); return; }

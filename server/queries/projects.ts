@@ -19,6 +19,7 @@ import {
   projectStatuses,
 } from "@/lib/db/schema";
 import { eq, and, desc, asc, sql, inArray, or, gte, lte, count } from "drizzle-orm";
+import { cached, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import type {
   ProjectFilters,
   TicketFilters,
@@ -250,31 +251,41 @@ export async function getProjectMembers(projectId: number) {
 }
 
 export async function getOrgMembersForProject(orgId: string) {
-  return db
-    .select({
-      id: users.id,
-      name: users.name,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      image: users.image,
-      email: users.email,
-      role: organizationMembers.role,
-    })
-    .from(organizationMembers)
-    .innerJoin(users, eq(organizationMembers.userId, users.id))
-    .where(
-      and(
-        eq(organizationMembers.orgId, orgId),
-        eq(users.isActive, true)
-      )
-    );
+  return cached(
+    CACHE_KEYS.orgMembers(orgId),
+    () =>
+      db
+        .select({
+          id: users.id,
+          name: users.name,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          image: users.image,
+          email: users.email,
+          role: organizationMembers.role,
+        })
+        .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(
+          and(
+            eq(organizationMembers.orgId, orgId),
+            eq(users.isActive, true)
+          )
+        ),
+    { ttlSeconds: CACHE_TTL.MEDIUM },
+  );
 }
 
 export async function getProjectLabels(orgId: string) {
-  return db.query.ticketLabels.findMany({
-    where: eq(ticketLabels.orgId, orgId),
-    orderBy: [desc(ticketLabels.createdAt)],
-  });
+  return cached(
+    CACHE_KEYS.projectLabels(orgId),
+    () =>
+      db.query.ticketLabels.findMany({
+        where: eq(ticketLabels.orgId, orgId),
+        orderBy: [desc(ticketLabels.createdAt)],
+      }),
+    { ttlSeconds: CACHE_TTL.LONG },
+  );
 }
 
 export async function getProjectAnalytics(orgId: string, projectId: number) {
@@ -477,11 +488,16 @@ export async function getIntakeRequests(
 }
 
 export async function getCustomStates(orgId: string, projectId: number) {
-  return db
-    .select()
-    .from(customStates)
-    .where(
-      and(eq(customStates.projectId, projectId), eq(customStates.orgId, orgId))
-    )
-    .orderBy(customStates.sequence);
+  return cached(
+    CACHE_KEYS.customStates(orgId, projectId),
+    () =>
+      db
+        .select()
+        .from(customStates)
+        .where(
+          and(eq(customStates.projectId, projectId), eq(customStates.orgId, orgId))
+        )
+        .orderBy(customStates.sequence),
+    { ttlSeconds: CACHE_TTL.LONG },
+  );
 }

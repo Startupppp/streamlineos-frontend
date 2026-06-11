@@ -1,5 +1,8 @@
 
+import { SUPER_ADMIN_ROLES as CANONICAL_SUPER_ADMIN_ROLES } from "@/lib/rbac/permissions";
+
 export const ROLES = {
+  OWNER: "OWNER",
   CEO: "CEO",
   HR: "HR",
   ADMIN: "ADMIN",
@@ -14,12 +17,28 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
-export const ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR];
+export const SUPER_ADMIN_ROLES: readonly string[] = CANONICAL_SUPER_ADMIN_ROLES;
 
-export const EXPENSE_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.ADMIN];
+export const ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+  ROLES.ADMIN,
+];
 
-/** Roles permitted to manage the public blog at /blogs/admin. */
-export const BLOG_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.BLOG_EDITOR];
+export const EXPENSE_ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+  ROLES.ADMIN,
+];
+
+export const BLOG_ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+  ROLES.BLOG_EDITOR,
+];
 
 export function isBlogAdmin(role: string | undefined | null): boolean {
   return !!role && BLOG_ADMIN_ROLES.includes(role);
@@ -33,6 +52,10 @@ export function isAdminOrOwner(role: string | undefined | null): boolean {
 
 export function isCEO(role: string | undefined | null): boolean {
   return role === ROLES.CEO;
+}
+
+export function isOwner(role: string | undefined | null): boolean {
+  return role === ROLES.OWNER;
 }
 
 export function isExpenseAdmin(role: string | undefined | null): boolean {

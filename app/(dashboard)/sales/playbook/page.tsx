@@ -196,7 +196,7 @@ function CopyButton({ content }: { content: string }) {
 function PlaybookCard({ entry }: { entry: PlaybookEntry }) {
   return (
     <motion.div variants={fadeUp}>
-      <Card className="h-full flex flex-col shadow-sm hover:shadow-md hover:border-gold/30 transition-all">
+      <Card className="h-full flex flex-col shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all">
         <CardHeader className="pb-2 pt-4 px-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">

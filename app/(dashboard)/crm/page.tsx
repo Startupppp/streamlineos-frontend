@@ -27,7 +27,7 @@ const NAV_CARDS = [
   { title: "Clients", description: "Account management", href: "/crm/clients", icon: Building2, color: "text-amber-400", bg: "bg-amber-500/10" },
   { title: "Analytics", description: "Charts & metrics", href: "/crm/analytics", icon: BarChart3, color: "text-cyan-400", bg: "bg-cyan-500/10" },
   { title: "Reports", description: "Export & SLA", href: "/crm/reports", icon: FileText, color: "text-rose-400", bg: "bg-rose-500/10" },
-  { title: "Targets", description: "Goals & leaderboard", href: "/crm/targets", icon: Target, color: "text-gold", bg: "bg-gold/10" },
+  { title: "Targets", description: "Goals & leaderboard", href: "/crm/targets", icon: Target, color: "text-blue-600", bg: "bg-blue-500/10" },
   { title: "Settings", description: "Rules & SLA", href: "/crm/settings/scoring-rules", icon: Settings, color: "text-slate-400", bg: "bg-slate-500/10" },
 ] as const;
 
@@ -115,7 +115,7 @@ export default function CrmHubPage() {
           {[
             { label: "Total Leads", value: leadStats?.total ?? 0, color: "text-blue-400" },
             { label: "Active Deals", value: dealStats.active, color: "text-emerald-400" },
-            { label: "Pipeline Value", value: formatINRCompact(dealStats.pipelineValue), color: "text-gold" },
+            { label: "Pipeline Value", value: formatINRCompact(dealStats.pipelineValue), color: "text-blue-600" },
             { label: "Conversion", value: `${leadStats?.conversionRate ?? 0}%`, color: "text-amber-400" },
           ].map((s) => (
             <Card key={s.label} className="shadow-sm">
@@ -136,7 +136,7 @@ export default function CrmHubPage() {
                 <span className="font-bold text-red-400">{leadStats.unassigned}</span>
               </div>
               <div><span className="text-muted-foreground">New/Mo</span> <span className="font-bold ml-1">{leadStats.thisMonth}</span></div>
-              <div><span className="text-muted-foreground">Pipeline</span> <span className="font-bold text-gold ml-1">{formatINRCompact(leadStats.totalPotentialValue)}</span></div>
+              <div><span className="text-muted-foreground">Pipeline</span> <span className="font-bold text-blue-600 ml-1">{formatINRCompact(leadStats.totalPotentialValue)}</span></div>
               <div><span className="text-muted-foreground">Won</span> <span className="font-bold text-emerald-400 ml-1">{formatINRCompact(dealStats.wonValue)}</span></div>
               <div><span className="text-muted-foreground">Contacts</span> <span className="font-bold ml-1">{contactsData?.total ?? 0}</span></div>
               <div><span className="text-muted-foreground">Orgs</span> <span className="font-bold ml-1">{orgsData?.totalCount ?? 0}</span></div>
@@ -154,7 +154,7 @@ export default function CrmHubPage() {
         <motion.div variants={fadeUp} className="grid gap-2 grid-cols-2 md:grid-cols-4">
           {NAV_CARDS.map(card => (
             <Link key={card.href} href={card.href}>
-              <Card className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group h-full">
+              <Card className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 cursor-pointer group h-full">
                 <CardContent className="p-3 flex items-center gap-2.5">
                   <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", card.bg)}>
                     <card.icon className={cn("h-4 w-4", card.color)} />
@@ -162,7 +162,7 @@ export default function CrmHubPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold flex items-center gap-1">
                       {card.title}
-                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-gold" />
+                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-blue-600" />
                     </p>
                     <CardDescription className="text-[10px] truncate">{card.description}</CardDescription>
                   </div>

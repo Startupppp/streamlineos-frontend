@@ -79,7 +79,7 @@ export default function BranchCommandCenterPage() {
     { label: "Active", value: summary?.activeBranches ?? 0, icon: BarChart3, color: "text-green-500" },
     { label: "Total Employees", value: summary?.totalEmployees ?? 0, icon: Users, color: "text-purple-500" },
     { label: "Hours (This Month)", value: Math.round(summary?.totalWorkLogHours ?? 0), icon: Clock, color: "text-amber-500" },
-    { label: "Total Clients", value: summary?.totalClients ?? 0, icon: Briefcase, color: "text-gold" },
+    { label: "Total Clients", value: summary?.totalClients ?? 0, icon: Briefcase, color: "text-blue-600" },
   ];
 
   return (
@@ -186,7 +186,7 @@ export default function BranchCommandCenterPage() {
 function BranchCard({ branch, isSelected, onSelect }: { branch: BranchKpi; isSelected: boolean; onSelect: () => void }) {
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? "ring-2 ring-gold" : ""}`}
+      className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? "ring-2 ring-blue-500" : ""}`}
       onClick={onSelect}
     >
       <CardHeader className="pb-2">

@@ -459,7 +459,7 @@ export default function DealsPage() {
                 size="sm"
                 className={cn(
                   "rounded-r-none",
-                  view === "table" && "bg-gold hover:bg-gold/90 text-white",
+                  view === "table" && "bg-blue-500 hover:bg-blue-500/90 text-white",
                 )}
                 onClick={handleViewTable}
               >
@@ -470,7 +470,7 @@ export default function DealsPage() {
                 size="sm"
                 className={cn(
                   "rounded-l-none",
-                  view === "kanban" && "bg-gold hover:bg-gold/90 text-white",
+                  view === "kanban" && "bg-blue-500 hover:bg-blue-500/90 text-white",
                 )}
                 onClick={handleViewKanban}
               >
@@ -482,7 +482,7 @@ export default function DealsPage() {
               Export
             </Button>
             <Button
-              className="bg-gold hover:bg-gold/90 text-white"
+              className="bg-blue-500 hover:bg-blue-500/90 text-white"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />

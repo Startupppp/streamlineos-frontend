@@ -77,7 +77,7 @@ const PreviousInsightsItem = memo(function PreviousInsightsItem({ result, onRest
     <button
       type="button"
       onClick={handleRestore}
-      className="w-full text-left p-3 rounded-lg border border-border hover:border-gold/40 hover:bg-gold/5 transition-colors group"
+      className="w-full text-left p-3 rounded-lg border border-border hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors group"
       aria-label={`Restore insights from ${generatedAt.toLocaleDateString()}`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -94,7 +94,7 @@ const PreviousInsightsItem = memo(function PreviousInsightsItem({ result, onRest
           <p className="text-xs text-muted-foreground line-clamp-2">{preview}…</p>
         </div>
         <ChevronRight
-          className="h-4 w-4 text-muted-foreground group-hover:text-gold shrink-0 mt-0.5 transition-colors"
+          className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 shrink-0 mt-0.5 transition-colors"
           aria-hidden="true"
         />
       </div>
@@ -145,7 +145,7 @@ export default function AIInsightsPage() {
           <Card className="shadow-soft">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-gold" aria-hidden="true" />
+                <Sparkles className="h-4 w-4 text-blue-600" aria-hidden="true" />
                 Generate Insights
               </CardTitle>
             </CardHeader>
@@ -169,7 +169,7 @@ export default function AIInsightsPage() {
               </div>
 
               <Button
-                className="w-full bg-gold hover:bg-gold/90 text-white"
+                className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
                 onClick={handleGenerate}
                 disabled={isPending}
                 aria-label="Generate AI campaign insights"
@@ -223,7 +223,7 @@ export default function AIInsightsPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-gold" aria-hidden="true" />
+                    <Sparkles className="h-4 w-4 text-blue-600" aria-hidden="true" />
                     Marketing Performance Report
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -264,8 +264,8 @@ export default function AIInsightsPage() {
           ) : (
             <Card className="shadow-soft h-full">
               <CardContent className="flex flex-col items-center justify-center min-h-[360px] gap-4 text-center p-8">
-                <div className="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-gold" aria-hidden="true" />
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                  <Sparkles className="h-8 w-8 text-blue-600" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">No insights generated yet</p>
@@ -275,7 +275,7 @@ export default function AIInsightsPage() {
                   </p>
                 </div>
                 <Button
-                  className="bg-gold hover:bg-gold/90 text-white mt-2"
+                  className="bg-blue-500 hover:bg-blue-500/90 text-white mt-2"
                   onClick={handleGenerate}
                   disabled={isPending}
                   aria-label="Generate AI campaign insights"

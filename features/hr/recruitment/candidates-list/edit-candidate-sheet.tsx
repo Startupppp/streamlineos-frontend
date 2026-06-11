@@ -1,21 +1,45 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 
 import { useUpdateCandidate } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Candidate } from "@/types/hr";
 
-import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
-} from "@/components/ui/sheet";
+
+const editCandidateSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Invalid email"),
+  phone: z.string().optional().or(z.literal("")),
+  source: z.string(),
+  currentRole: z.string().optional().or(z.literal("")),
+  currentCompany: z.string().optional().or(z.literal("")),
+  linkedinUrl: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
+});
+
+type EditCandidateForm = z.infer<typeof editCandidateSchema>;
 
 interface EditCandidateSheetProps {
   open: boolean;
@@ -23,183 +47,222 @@ interface EditCandidateSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const EditCandidateSheet = memo(function EditCandidateSheet({
+export function EditCandidateSheet({
   open,
   candidate,
   onOpenChange,
 }: EditCandidateSheetProps) {
   const updateCandidate = useUpdateCandidate();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [currentRole, setCurrentRole] = useState("");
-  const [currentCompany, setCurrentCompany] = useState("");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [source, setSource] = useState("DIRECT");
-  const [notes, setNotes] = useState("");
+  const defaultValues = useMemo<EditCandidateForm>(
+    () => ({
+      firstName: candidate?.firstName ?? "",
+      lastName: candidate?.lastName ?? "",
+      email: candidate?.email ?? "",
+      phone: candidate?.phone ?? "",
+      source: candidate?.source ?? "DIRECT",
+      currentRole: candidate?.currentRole ?? "",
+      currentCompany: candidate?.currentCompany ?? "",
+      linkedinUrl: candidate?.linkedinUrl ?? "",
+      notes: candidate?.notes ?? "",
+    }),
+    [candidate],
+  );
 
-  useEffect(() => {
-    if (candidate) {
-      setFirstName(candidate.firstName);
-      setLastName(candidate.lastName);
-      setEmail(candidate.email);
-      setPhone(candidate.phone ?? "");
-      setCurrentRole(candidate.currentRole ?? "");
-      setCurrentCompany(candidate.currentCompany ?? "");
-      setLinkedinUrl(candidate.linkedinUrl ?? "");
-      setSource(candidate.source ?? "DIRECT");
-      setNotes(candidate.notes ?? "");
-    }
-  }, [candidate]);
-
-  const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value), []);
-  const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value), []);
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value), []);
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value), []);
-  const handleCurrentRoleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentRole(e.target.value), []);
-  const handleCurrentCompanyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCurrentCompany(e.target.value), []);
-  const handleLinkedinUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLinkedinUrl(e.target.value), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
-
-  const handleSave = useCallback(() => {
-    if (!candidate) return;
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast.error("First name, last name, and email are required");
-      return;
-    }
-    updateCandidate.mutate(
-      {
-        id: candidate.id,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim() || undefined,
-        currentRole: currentRole.trim() || undefined,
-        currentCompany: currentCompany.trim() || undefined,
-        linkedinUrl: linkedinUrl.trim() || undefined,
-        source: source || undefined,
-        notes: notes.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Candidate updated");
-          onOpenChange(false);
+  const handleSubmit = useCallback(
+    (data: EditCandidateForm) => {
+      if (!candidate) return;
+      updateCandidate.mutate(
+        {
+          id: candidate.id,
+          firstName: data.firstName.trim(),
+          lastName: data.lastName.trim(),
+          email: data.email.trim(),
+          phone: data.phone?.trim() || undefined,
+          source: data.source || undefined,
+          currentRole: data.currentRole?.trim() || undefined,
+          currentCompany: data.currentCompany?.trim() || undefined,
+          linkedinUrl: data.linkedinUrl?.trim() || undefined,
+          notes: data.notes?.trim() || undefined,
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [
-    candidate, firstName, lastName, email, phone, currentRole,
-    currentCompany, linkedinUrl, source, notes, updateCandidate, onOpenChange,
-  ]);
-
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
-
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => onOpenChange(nextOpen),
-    [onOpenChange]
+        {
+          onSuccess: () => {
+            toast.success("Candidate updated");
+            onOpenChange(false);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [candidate, updateCandidate, onOpenChange],
   );
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex flex-col p-0 gap-0">
-        <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-          <SheetTitle className="text-base">Edit Candidate</SheetTitle>
-          <SheetDescription className="text-xs">
-            Update details for {candidate?.firstName} {candidate?.lastName}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+    <EntityFormSheet<EditCandidateForm>
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Edit Candidate"
+      description={
+        candidate
+          ? `Update details for ${candidate.firstName} ${candidate.lastName}`
+          : undefined
+      }
+      resolver={zodResolver(editCandidateSchema)}
+      defaultValues={defaultValues}
+      onSubmit={handleSubmit}
+      isSubmitting={updateCandidate.isPending}
+      submitLabel={updateCandidate.isPending ? "Saving..." : "Save Changes"}
+      resetOnOpen
+    >
+      {(form) => (
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">
-                First Name <span className="text-destructive">*</span>
-              </label>
-              <Input value={firstName} onChange={handleFirstNameChange} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">
-                Last Name <span className="text-destructive">*</span>
-              </label>
-              <Input value={lastName} onChange={handleLastNameChange} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">
-              Email <span className="text-destructive">*</span>
-            </label>
-            <Input type="email" value={email} onChange={handleEmailChange} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Phone</label>
-              <Input value={phone} onChange={handlePhoneChange} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Source</label>
-              <Select value={source} onValueChange={setSource}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DIRECT">Direct</SelectItem>
-                  <SelectItem value="REFERRAL">Referral</SelectItem>
-                  <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                  <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
-                  <SelectItem value="CAMPUS">Campus</SelectItem>
-                  <SelectItem value="NAUKRI">Naukri</SelectItem>
-                  <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Current Role</label>
-              <Input
-                value={currentRole}
-                onChange={handleCurrentRoleChange}
-                placeholder="e.g. Software Engineer"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Current Company</label>
-              <Input
-                value={currentCompany}
-                onChange={handleCurrentCompanyChange}
-                placeholder="e.g. Acme Corp"
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">LinkedIn URL</label>
-            <Input
-              value={linkedinUrl}
-              onChange={handleLinkedinUrlChange}
-              placeholder="https://linkedin.com/in/..."
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name *</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name *</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Notes</label>
-            <Textarea
-              value={notes}
-              onChange={handleNotesChange}
-              rows={3}
-              placeholder="Internal notes about this candidate..."
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email *</FormLabel>
+                <FormControl>
+                  <Input {...field} type="email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="DIRECT">Direct</SelectItem>
+                      <SelectItem value="REFERRAL">Referral</SelectItem>
+                      <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
+                      <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
+                      <SelectItem value="CAMPUS">Campus</SelectItem>
+                      <SelectItem value="NAUKRI">Naukri</SelectItem>
+                      <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="currentRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Role</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Software Engineer" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="currentCompany"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Company</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Acme Corp" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="linkedinUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>LinkedIn URL</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="https://linkedin.com/in/..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    rows={3}
+                    placeholder="Internal notes about this candidate..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button className="flex-1" onClick={handleSave} disabled={updateCandidate.isPending}>
-            {updateCandidate.isPending ? "Saving..." : "Save Changes"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      )}
+    </EntityFormSheet>
   );
-});
+}

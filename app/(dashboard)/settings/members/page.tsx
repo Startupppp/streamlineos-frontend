@@ -178,7 +178,7 @@ export default function MembersSettingsPage() {
       subtitle="Manage organization members, roles, and invitations"
       badge={membersData ? String(membersData.pagination.total) : undefined}
       actions={
-        <Button onClick={handleToggleInviteForm} className="bg-gold hover:bg-gold/80 text-white">
+        <Button onClick={handleToggleInviteForm} className="bg-blue-500 hover:bg-blue-500/80 text-white">
           <UserPlus className="h-4 w-4 mr-2" />
           {showInviteForm ? "Cancel" : "Invite Member"}
         </Button>
@@ -248,7 +248,7 @@ export default function MembersSettingsPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-gold" />
+                      <Shield className="h-4 w-4 text-blue-600" />
                       Organization Members
                       {membersData && <Badge variant="secondary" className="ml-2 text-xs">{membersData.pagination.total}</Badge>}
                     </CardTitle>
@@ -424,7 +424,7 @@ function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isRese
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
             <AvatarImage src={resolveImageUrl(member.image)} />
-            <AvatarFallback className="text-xs bg-gold/10 text-gold">{member.name?.charAt(0) || "?"}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-blue-500/10 text-blue-600">{member.name?.charAt(0) || "?"}</AvatarFallback>
           </Avatar>
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-medium">{member.name || "Unknown"}</span>

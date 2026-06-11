@@ -32,7 +32,7 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
   const avatarEl = (
     <Avatar className="h-7 w-7 shrink-0 ring-1 ring-sidebar-border">
       <AvatarImage src={image} alt={name} />
-      <AvatarFallback className="text-[11px] font-bold bg-gold/15 text-gold">
+      <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
         {initials}
       </AvatarFallback>
     </Avatar>

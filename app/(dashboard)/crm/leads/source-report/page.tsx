@@ -117,7 +117,7 @@ export default function LeadSourceReportPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-gold" />
+                <BarChart3 className="h-4 w-4 text-blue-600" />
                 Source Attribution
               </CardTitle>
             </CardHeader>
@@ -173,7 +173,7 @@ export default function LeadSourceReportPage() {
                             </div>
                             <div className="text-center hidden sm:block">
                               <div className="font-semibold tabular-nums text-xs">
-                                <DollarSign className="h-3 w-3 inline mr-0.5 text-gold" />
+                                <DollarSign className="h-3 w-3 inline mr-0.5 text-blue-600" />
                                 {formatCurrency(s.totalValue)}
                               </div>
                               <div className="text-[10px] text-muted-foreground">value</div>

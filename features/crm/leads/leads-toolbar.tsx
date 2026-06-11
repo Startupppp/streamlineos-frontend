@@ -52,12 +52,12 @@ export function LeadsToolbar({
 
       <div className="flex items-center border border-border rounded-md">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-r-none h-8 px-2.5", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
+          className={cn("rounded-r-none h-8 px-2.5", view === "table" && "bg-blue-500 hover:bg-blue-500/80 text-white")}
           onClick={handleViewTable}>
           <TableIcon className="h-3.5 w-3.5" />
         </Button>
         <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-l-none h-8 px-2.5", view === "kanban" && "bg-gold hover:bg-gold/80 text-white")}
+          className={cn("rounded-l-none h-8 px-2.5", view === "kanban" && "bg-blue-500 hover:bg-blue-500/80 text-white")}
           onClick={handleViewKanban}>
           <LayoutGrid className="h-3.5 w-3.5" />
         </Button>

@@ -261,7 +261,7 @@ export default function AssignmentRulesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -344,7 +344,7 @@ export default function AssignmentRulesPage() {
                   )} />
                 )}
 
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
+                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createRule.isPending}>
                   {createRule.isPending ? "Creating..." : "Create Rule"}
                 </Button>
               </form>

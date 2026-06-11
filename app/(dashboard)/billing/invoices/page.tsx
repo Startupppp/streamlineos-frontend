@@ -148,7 +148,7 @@ function InvoicesContent() {
       title="Invoices"
       subtitle="Manage and track all invoices"
       actions={
-        <Button onClick={handleOpenCreate} className="gap-2 bg-gold hover:bg-gold/90 text-white">
+        <Button onClick={handleOpenCreate} className="gap-2 bg-blue-500 hover:bg-blue-500/90 text-white">
           <Plus className="h-4 w-4" /> New Invoice
         </Button>
       }
@@ -450,7 +450,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-gold hover:bg-gold/90 text-white">
+            <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-blue-500 hover:bg-blue-500/90 text-white">
               {createInvoice.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
               Create Invoice
             </Button>

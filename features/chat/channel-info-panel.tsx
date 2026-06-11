@@ -141,7 +141,7 @@ export function ChannelInfoPanel({
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleCancelEdit} className="flex-1 h-8 text-[12px]">Cancel</Button>
-                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-gold hover:bg-gold/90 text-white">
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-blue-500 hover:bg-blue-500/90 text-white">
                   {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                 </Button>
               </div>
@@ -151,7 +151,7 @@ export function ChannelInfoPanel({
               {channel?.type === "DIRECT" ? (
                 <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
                   <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-gold/20 to-gold/5 text-gold">
+                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
                     {getInitials(otherMember?.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -215,7 +215,7 @@ export function ChannelInfoPanel({
                       <p className="text-[11px] text-muted-foreground truncate">{m.user?.email}</p>
                     </div>
                     {m.role === "ADMIN" && (
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-gold/30 text-gold">
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600">
                         Admin
                       </Badge>
                     )}

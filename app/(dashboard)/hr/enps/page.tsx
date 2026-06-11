@@ -43,7 +43,7 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
 export default function EnpsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: surveys, isLoading } = useQuery({
     queryKey: enpsKeys.list(),

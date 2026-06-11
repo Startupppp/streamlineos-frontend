@@ -199,11 +199,11 @@ export default function IncentivesPage() {
         </div>
 
         {currentConfig && (
-          <Card className="bg-gold/5 border-gold/20">
+          <Card className="bg-blue-500/5 border-blue-500/20">
             <CardContent className="p-4 flex items-center gap-3">
-              <Percent className="h-5 w-5 text-gold" />
+              <Percent className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-gold font-bold">{currentConfig.incentiveRate}%</span></p>
+                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-blue-600 font-bold">{currentConfig.incentiveRate}%</span></p>
                 <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
               </div>
             </CardContent>

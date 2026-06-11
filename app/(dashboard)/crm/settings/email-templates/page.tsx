@@ -161,7 +161,7 @@ export default function EmailTemplatesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Template
             </Button>
@@ -201,7 +201,7 @@ export default function EmailTemplatesPage() {
                     ))}
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createTemplate.isPending}>
+                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createTemplate.isPending}>
                   {createTemplate.isPending ? "Creating..." : "Create Template"}
                 </Button>
               </form>
@@ -241,7 +241,7 @@ export default function EmailTemplatesPage() {
 
         {editingId !== null && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm border-gold/30">
+            <Card className="shadow-sm border-blue-500/30">
               <CardHeader>
                 <CardTitle className="text-base">Edit Template</CardTitle>
               </CardHeader>
@@ -279,7 +279,7 @@ export default function EmailTemplatesPage() {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-                      <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updateTemplate.isPending}>
+                      <Button type="submit" className="bg-blue-500 hover:bg-blue-500/90 text-white" disabled={updateTemplate.isPending}>
                         {updateTemplate.isPending ? "Saving..." : "Save Changes"}
                       </Button>
                     </div>

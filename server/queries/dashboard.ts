@@ -26,41 +26,48 @@ import {
 import { eq, and, desc, or, inArray, count, sql, gte, lt, isNull, gt, sum } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 
 export async function getDashboardStats(orgId: string, _userId: string) {
-  const today = getTodayString();
+  return cached(
+    CACHE_KEYS.dashboardStats(orgId),
+    async () => {
+      const today = getTodayString();
 
-  const [org, memberCountResult, projectCountResult, attendanceCountResult] =
-    await Promise.all([
-      db.query.organizations.findFirst({
-        where: eq(organizations.id, orgId),
-      }),
-      db
-        .select({ count: count() })
-        .from(organizationMembers)
-        .innerJoin(users, eq(organizationMembers.userId, users.id))
-        .where(
-          and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))
-        ),
-      db
-        .select({ count: count() })
-        .from(projects)
-        .where(eq(projects.orgId, orgId)),
-      db
-        .select({ count: count() })
-        .from(attendance)
-        .where(
-          and(eq(attendance.orgId, orgId), eq(attendance.date, today))
-        ),
-    ]);
+      const [org, memberCountResult, projectCountResult, attendanceCountResult] =
+        await Promise.all([
+          db.query.organizations.findFirst({
+            where: eq(organizations.id, orgId),
+          }),
+          db
+            .select({ count: count() })
+            .from(organizationMembers)
+            .innerJoin(users, eq(organizationMembers.userId, users.id))
+            .where(
+              and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))
+            ),
+          db
+            .select({ count: count() })
+            .from(projects)
+            .where(eq(projects.orgId, orgId)),
+          db
+            .select({ count: count() })
+            .from(attendance)
+            .where(
+              and(eq(attendance.orgId, orgId), eq(attendance.date, today))
+            ),
+        ]);
 
-  return {
-    orgName: org?.name || "Organization",
-    totalEmployees: Number(memberCountResult[0]?.count || 0),
-    activeProjects: Number(projectCountResult[0]?.count || 0),
-    presentToday: Number(attendanceCountResult[0]?.count || 0),
-    orgSlug: org?.slug || orgId.slice(0, 8),
-  };
+      return {
+        orgName: org?.name || "Organization",
+        totalEmployees: Number(memberCountResult[0]?.count || 0),
+        activeProjects: Number(projectCountResult[0]?.count || 0),
+        presentToday: Number(attendanceCountResult[0]?.count || 0),
+        orgSlug: org?.slug || orgId.slice(0, 8),
+      };
+    },
+    { ttlSeconds: CACHE_TTL.SHORT },
+  );
 }
 
 export async function getRecentProjects(orgId: string, userId: string, role?: string | null) {
@@ -274,30 +281,35 @@ export async function getTodayActivities(orgId: string) {
 }
 
 export async function getActiveAnnouncements(orgId: string) {
-  const now = new Date();
-  const rows = await db
-    .select({
-      id: announcements.id,
-      content: announcements.content,
-      isPinned: announcements.isPinned,
-      expiresAt: announcements.expiresAt,
-      createdAt: announcements.createdAt,
-      authorId: announcements.authorId,
-      authorName: users.name,
-      authorFirstName: users.firstName,
-      authorLastName: users.lastName,
-    })
-    .from(announcements)
-    .innerJoin(users, eq(announcements.authorId, users.id))
-    .where(
-      and(
-        eq(announcements.orgId, orgId),
-        or(isNull(announcements.expiresAt), gt(announcements.expiresAt, now))
-      )
-    )
-    .orderBy(desc(announcements.isPinned), desc(announcements.createdAt))
-    .limit(20);
-  return rows;
+  return cached(
+    CACHE_KEYS.announcementsList(orgId),
+    async () => {
+      const now = new Date();
+      return db
+        .select({
+          id: announcements.id,
+          content: announcements.content,
+          isPinned: announcements.isPinned,
+          expiresAt: announcements.expiresAt,
+          createdAt: announcements.createdAt,
+          authorId: announcements.authorId,
+          authorName: users.name,
+          authorFirstName: users.firstName,
+          authorLastName: users.lastName,
+        })
+        .from(announcements)
+        .innerJoin(users, eq(announcements.authorId, users.id))
+        .where(
+          and(
+            eq(announcements.orgId, orgId),
+            or(isNull(announcements.expiresAt), gt(announcements.expiresAt, now))
+          )
+        )
+        .orderBy(desc(announcements.isPinned), desc(announcements.createdAt))
+        .limit(20);
+    },
+    { ttlSeconds: CACHE_TTL.MEDIUM },
+  );
 }
 
 export async function createAnnouncement(data: {
@@ -317,6 +329,7 @@ export async function createAnnouncement(data: {
       expiresAt: data.expiresAt ?? null,
     })
     .returning();
+  await invalidateCache(CACHE_KEYS.announcementsList(data.orgId));
   return row;
 }
 
@@ -324,6 +337,7 @@ export async function deleteAnnouncement(id: number, orgId: string) {
   await db
     .delete(announcements)
     .where(and(eq(announcements.id, id), eq(announcements.orgId, orgId)));
+  await invalidateCache(CACHE_KEYS.announcementsList(orgId));
 }
 
 export async function getPersonalDashboard(orgId: string, userId: string) {
@@ -409,53 +423,59 @@ export async function getPersonalDashboard(orgId: string, userId: string) {
 }
 
 export async function getExecutiveDashboard(orgId: string) {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - 7);
+  return cached(
+    CACHE_KEYS.executiveDashboard(orgId),
+    async () => {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - 7);
 
-  const [mrrRows, pipelineRows, headcountRows, openRolesRows, newLeadsRows, activeProjectsRows, totalLeadsRows, wonLeadsRows] = await Promise.all([
-    db
-      .select({ total: sum(deals.value) })
-      .from(deals)
-      .where(and(eq(deals.orgId, orgId), eq(deals.stage, "WON"), gte(deals.updatedAt, monthStart))),
-    db
-      .select({ total: sum(deals.value) })
-      .from(deals)
-      .where(and(eq(deals.orgId, orgId), or(eq(deals.stage, "LEAD"), eq(deals.stage, "CONTACTED"), eq(deals.stage, "PROPOSAL"), eq(deals.stage, "NEGOTIATION")))),
-    db
-      .select({ cnt: count() })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))),
-    db
-      .select({ cnt: count() })
-      .from(jobPostings)
-      .where(and(eq(jobPostings.orgId, orgId), eq(jobPostings.status, "OPEN"))),
-    db
-      .select({ cnt: count() })
-      .from(leads)
-      .where(and(eq(leads.orgId, orgId), gte(leads.createdAt, weekStart))),
-    db
-      .select({ cnt: count() })
-      .from(projects)
-      .where(and(eq(projects.orgId, orgId), eq(projects.status, "ACTIVE"))),
-    db.select({ cnt: count() }).from(leads).where(eq(leads.orgId, orgId)),
-    db.select({ cnt: count() }).from(leads).where(and(eq(leads.orgId, orgId), eq(leads.status, "CONVERTED"))),
-  ]);
+      const [mrrRows, pipelineRows, headcountRows, openRolesRows, newLeadsRows, activeProjectsRows, totalLeadsRows, wonLeadsRows] = await Promise.all([
+        db
+          .select({ total: sum(deals.value) })
+          .from(deals)
+          .where(and(eq(deals.orgId, orgId), eq(deals.stage, "WON"), gte(deals.updatedAt, monthStart))),
+        db
+          .select({ total: sum(deals.value) })
+          .from(deals)
+          .where(and(eq(deals.orgId, orgId), or(eq(deals.stage, "LEAD"), eq(deals.stage, "CONTACTED"), eq(deals.stage, "PROPOSAL"), eq(deals.stage, "NEGOTIATION")))),
+        db
+          .select({ cnt: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))),
+        db
+          .select({ cnt: count() })
+          .from(jobPostings)
+          .where(and(eq(jobPostings.orgId, orgId), eq(jobPostings.status, "OPEN"))),
+        db
+          .select({ cnt: count() })
+          .from(leads)
+          .where(and(eq(leads.orgId, orgId), gte(leads.createdAt, weekStart))),
+        db
+          .select({ cnt: count() })
+          .from(projects)
+          .where(and(eq(projects.orgId, orgId), eq(projects.status, "ACTIVE"))),
+        db.select({ cnt: count() }).from(leads).where(eq(leads.orgId, orgId)),
+        db.select({ cnt: count() }).from(leads).where(and(eq(leads.orgId, orgId), eq(leads.status, "CONVERTED"))),
+      ]);
 
-  const total = Number(totalLeadsRows[0]?.cnt ?? 0);
-  const won = Number(wonLeadsRows[0]?.cnt ?? 0);
+      const total = Number(totalLeadsRows[0]?.cnt ?? 0);
+      const won = Number(wonLeadsRows[0]?.cnt ?? 0);
 
-  return {
-    mrr: Number(mrrRows[0]?.total ?? 0),
-    pipelineValue: Number(pipelineRows[0]?.total ?? 0),
-    headcount: Number(headcountRows[0]?.cnt ?? 0),
-    openRoles: Number(openRolesRows[0]?.cnt ?? 0),
-    newLeadsThisWeek: Number(newLeadsRows[0]?.cnt ?? 0),
-    activeProjects: Number(activeProjectsRows[0]?.cnt ?? 0),
-    conversionRate: total > 0 ? Math.round((won / total) * 100) : 0,
-  };
+      return {
+        mrr: Number(mrrRows[0]?.total ?? 0),
+        pipelineValue: Number(pipelineRows[0]?.total ?? 0),
+        headcount: Number(headcountRows[0]?.cnt ?? 0),
+        openRoles: Number(openRolesRows[0]?.cnt ?? 0),
+        newLeadsThisWeek: Number(newLeadsRows[0]?.cnt ?? 0),
+        activeProjects: Number(activeProjectsRows[0]?.cnt ?? 0),
+        conversionRate: total > 0 ? Math.round((won / total) * 100) : 0,
+      };
+    },
+    { ttlSeconds: CACHE_TTL.MEDIUM },
+  );
 }
 
 export async function getManagerDashboard(orgId: string, userId: string) {

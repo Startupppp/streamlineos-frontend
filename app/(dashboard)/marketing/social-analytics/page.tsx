@@ -114,7 +114,7 @@ function BarChartViz({ metrics }: { metrics: SocialMetric[] }) {
     <div className="flex items-end gap-2 h-32 w-full">
       {recent.map((r) => {
         const heightPct = Math.max((r.impressions / maxVal) * 100, 2);
-        const color = PLATFORM_COLORS[r.platform] ?? "bg-gold";
+        const color = PLATFORM_COLORS[r.platform] ?? "bg-blue-500";
         return (
           <div key={r.id} className="flex flex-col items-center gap-1 flex-1 min-w-0">
             <span className="text-[9px] text-muted-foreground font-medium">
@@ -204,7 +204,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            <BarChart2 className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Log Social Metrics
           </SheetTitle>
         </SheetHeader>
@@ -298,7 +298,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-gold hover:bg-gold/90 text-white"
+              className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white"
               disabled={isPending || !platform || !metricDate || !followers}
             >
               {isPending ? (
@@ -358,7 +358,7 @@ export default function SocialAnalyticsPage() {
       subtitle="Track engagement metrics across platforms"
       actions={
         <Button
-          className="bg-gold hover:bg-gold/90 text-white"
+          className="bg-blue-500 hover:bg-blue-500/90 text-white"
           onClick={() => setSheetOpen(true)}
           aria-label="Log new social metrics"
         >
@@ -375,8 +375,8 @@ export default function SocialAnalyticsPage() {
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
               activePlatform === p.value
-                ? "bg-gold text-white border-gold"
-                : "bg-transparent text-muted-foreground border-border hover:border-gold/50"
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-transparent text-muted-foreground border-border hover:border-blue-500/50"
             )}
             aria-pressed={activePlatform === p.value}
           >
@@ -423,7 +423,7 @@ export default function SocialAnalyticsPage() {
       <Card className="shadow-soft">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            <BarChart2 className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Impressions — Last 8 Entries
           </CardTitle>
         </CardHeader>

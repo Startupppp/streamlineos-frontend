@@ -3,8 +3,8 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
-import { ALL_ROLES } from "@/lib/constants/roles";
+import { isOwner, ALL_ROLES } from "@/lib/constants/roles";
+import { isSuperAdminRole } from "@/lib/rbac/permissions";
 import { z } from "zod";
 
 const updateRoleSchema = z.object({
@@ -16,8 +16,8 @@ export async function POST(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
-      return err("Only CEO or Admin can change user roles", 403);
+    if (!isSuperAdminRole(session.user.role)) {
+      return err("Only Owner, CEO, or CTO can change user roles", 403);
     }
 
     const { userId } = await params;
@@ -36,7 +36,7 @@ export async function POST(
       return err(`Invalid role. Valid roles: ${ALL_ROLES.join(", ")}`, 400);
     }
 
-    if (userId === session.user.id) {
+    if (userId === session.user.id && !isOwner(session.user.role)) {
       return err("You cannot change your own role", 403);
     }
 

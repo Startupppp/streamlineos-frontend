@@ -20,7 +20,7 @@ export interface ExpertResult {
 }
 
 export async function GET(req: NextRequest) {
-  return withAuth<ExpertResult[]>(async (session) => {
+  return withAuth(async (session) => {
     const q = parseQuery(req, querySchema);
     if (!q.skill) return err("skill query param is required", 400);
 

@@ -26,8 +26,8 @@ export const PlatformTab = memo(function PlatformTab({
       className={cn(
         "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
         isActive
-          ? "bg-gold text-white border-gold"
-          : "bg-transparent text-muted-foreground border-border hover:border-gold/50",
+          ? "bg-blue-500 text-white border-blue-500"
+          : "bg-transparent text-muted-foreground border-border hover:border-blue-500/50",
       )}
       aria-pressed={isActive}
     >

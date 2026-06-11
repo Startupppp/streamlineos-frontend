@@ -53,7 +53,7 @@ export function AISummarizeButton({ activityType, subject, notes, leadName, deal
           {summarizeMutation.isPending ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <Sparkles className="h-3 w-3 text-gold" />
+            <Sparkles className="h-3 w-3 text-blue-600" />
           )}
           AI Summary
         </Button>
@@ -77,7 +77,7 @@ export function AISummarizeButton({ activityType, subject, notes, leadName, deal
                 <ul className="space-y-1">
                   {result.keyPoints.map((p, i) => (
                     <li key={i} className="flex items-start gap-1.5 text-[11px]">
-                      <span className="text-gold mt-0.5">•</span>
+                      <span className="text-blue-600 mt-0.5">•</span>
                       <span>{p}</span>
                     </li>
                   ))}

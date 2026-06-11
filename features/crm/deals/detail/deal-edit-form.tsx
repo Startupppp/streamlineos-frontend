@@ -181,7 +181,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
             </div>
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-              <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={isPending}>
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-500/90 text-white" disabled={isPending}>
                 {isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>

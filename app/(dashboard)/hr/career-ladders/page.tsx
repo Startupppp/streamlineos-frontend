@@ -29,7 +29,7 @@ const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: ()
 export default function CareerLaddersPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: ladders, isLoading } = useQuery({
     queryKey: clKeys.list(),

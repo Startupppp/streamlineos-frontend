@@ -105,7 +105,7 @@ function CopyChip({
 
   const content = (
     <>
-      <Icon className="h-3.5 w-3.5 text-gold shrink-0" />
+      <Icon className="h-3.5 w-3.5 text-blue-600 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
           {label}
@@ -129,12 +129,12 @@ function CopyChip({
   return href ? (
     <a
       href={href}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-gold/40 hover:bg-gold/5 transition-all group"
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all group"
     >
       {content}
     </a>
   ) : (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-gold/40 hover:bg-gold/5 transition-all">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all">
       {content}
     </div>
   );
@@ -304,7 +304,7 @@ export function LeadInfoCard({
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-gold hover:bg-gold/80 text-white"
+                  className="bg-blue-500 hover:bg-blue-500/80 text-white"
                   disabled={isUpdatePending}
                 >
                   {isUpdatePending ? "Saving..." : "Save Changes"}
@@ -372,7 +372,7 @@ export function LeadInfoCard({
               lead.potentialValue && lead.investmentInterest
                 ? "grid-cols-2"
                 : "grid-cols-1",
-              "bg-gradient-to-r from-emerald-500/5 via-transparent to-gold/5"
+              "bg-gradient-to-r from-emerald-500/5 via-transparent to-blue-500/5"
             )}
           >
             {lead.potentialValue && (
@@ -390,7 +390,7 @@ export function LeadInfoCard({
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
                   Investment Interest
                 </p>
-                <p className="text-2xl font-bold text-gold tabular-nums">
+                <p className="text-2xl font-bold text-blue-600 tabular-nums">
                   ₹{Number(lead.investmentInterest).toLocaleString("en-IN")}
                 </p>
               </div>

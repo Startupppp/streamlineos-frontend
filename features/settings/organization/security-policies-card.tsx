@@ -109,7 +109,7 @@ export function SecurityPoliciesCard({ org }: SecurityPoliciesCardProps) {
     <Card className="rounded-xl border shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Shield className="h-4 w-4 text-gold" />
+          <Shield className="h-4 w-4 text-blue-600" />
           Security Policies
         </CardTitle>
         <CardDescription>

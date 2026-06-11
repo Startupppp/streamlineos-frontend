@@ -5,7 +5,7 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return withAdmin<unknown>(async (session) => {
+  return withAdmin(async (session) => {
     const year = Number(req.nextUrl.searchParams.get("year")) || new Date().getFullYear();
     const reportType = req.nextUrl.searchParams.get("type") || "summary";
 

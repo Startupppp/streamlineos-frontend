@@ -77,7 +77,7 @@ export function LinkParentDialog({
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                   selectedId === null
-                    ? "bg-gold/10 text-gold"
+                    ? "bg-blue-500/10 text-blue-600"
                     : "hover:bg-accent text-muted-foreground",
                 )}
               >
@@ -94,7 +94,7 @@ export function LinkParentDialog({
                   className={cn(
                     "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                     selectedId === org.id
-                      ? "bg-gold/10 text-gold"
+                      ? "bg-blue-500/10 text-blue-600"
                       : "hover:bg-accent text-foreground",
                   )}
                 >
@@ -121,7 +121,7 @@ export function LinkParentDialog({
             <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
           <Button
-            className="flex-1 bg-gold hover:bg-gold/90 text-white"
+            className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white"
             onClick={handleConfirm}
             disabled={updateMutation.isPending}
           >

@@ -29,7 +29,7 @@ const lpKeys = { all: [...queryKeys.hr.all, "learning-paths"] as const, list: ()
 export default function LearningPathsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: paths, isLoading } = useQuery({
     queryKey: lpKeys.list(),

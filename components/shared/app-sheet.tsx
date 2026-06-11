@@ -8,6 +8,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface AppSheetProps {
@@ -15,23 +16,12 @@ interface AppSheetProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
-  /** Sticky footer — action buttons (Save / Cancel) */
   footer?: React.ReactNode;
   children: React.ReactNode;
-  /** Sheet side — defaults to right */
   side?: "right" | "left" | "top" | "bottom";
-  /** Width class — defaults to sm:max-w-lg */
   className?: string;
 }
 
-/**
- * AppSheet — sheet wrapper where:
- *   - Header (title + description) is sticky and never scrolls
- *   - Footer (action buttons) is sticky at the bottom and never scrolls
- *   - Only the form/content area scrolls
- *
- * Use for forms with > 5 fields. Use <AppDialog> for shorter forms.
- */
 export function AppSheet({
   open,
   onOpenChange,
@@ -42,33 +32,54 @@ export function AppSheet({
   side = "right",
   className,
 }: AppSheetProps) {
+  const isMobile = useIsMobile();
+  const resolvedSide = isMobile ? "bottom" : side;
+
+  const sideClasses =
+    resolvedSide === "bottom"
+      ? "h-auto max-h-[92dvh] rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)]"
+      : "sm:max-w-lg";
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side={side}
-        className={cn(
-          "flex flex-col p-0 gap-0 sm:max-w-lg",
-          className
-        )}
+        side={resolvedSide}
+        className={cn("flex flex-col p-0 gap-0", sideClasses, className)}
       >
-        {/* Sticky header */}
-        <SheetHeader className="shrink-0 px-6 py-4 border-b border-border/60">
+        {resolvedSide === "bottom" && (
+          <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/25 shrink-0" />
+        )}
+
+        <SheetHeader
+          className={cn(
+            "shrink-0 border-b border-border/60 text-left gap-1",
+            resolvedSide === "bottom" ? "px-5 pt-2 pb-3" : "px-6 py-4",
+          )}
+        >
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           {description && (
-            <SheetDescription className="text-sm text-muted-foreground mt-0.5">
+            <SheetDescription className="text-sm text-muted-foreground">
               {description}
             </SheetDescription>
           )}
         </SheetHeader>
 
-        {/* Scrollable body */}
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-6 py-4">
+        <div
+          className={cn(
+            "flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-thin",
+            resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4",
+          )}
+        >
           {children}
         </div>
 
-        {/* Sticky footer */}
         {footer && (
-          <div className="shrink-0 flex items-center justify-end gap-2 px-6 py-4 border-t border-border/60 bg-muted/30">
+          <div
+            className={cn(
+              "shrink-0 flex items-center justify-end gap-2 border-t border-border/60 bg-muted/30",
+              resolvedSide === "bottom" ? "px-5 py-3" : "px-6 py-4",
+            )}
+          >
             {footer}
           </div>
         )}

@@ -89,7 +89,7 @@ export default function OrganizationSettingsPage() {
   const uploadFileMutation = useUploadFile();
 
   const role = session?.user?.role;
-  const canEdit = role === "CEO" || role === "ADMIN";
+  const canEdit = role === "OWNER" || role === "CEO" || role === "ADMIN";
 
   const { mutate: updateOrg, isPending: isUpdatingOrg } = useUpdateOrgSettings();
   const { mutate: updateSecurity, isPending: isUpdatingSecurity } = useUpdateOrgSecuritySettings();
@@ -371,7 +371,7 @@ export default function OrganizationSettingsPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-gold" />
+                  <Globe className="h-4 w-4 text-blue-600" />
                   App Configuration
                 </CardTitle>
                 {!isEditingConfig && (
@@ -631,7 +631,7 @@ export default function OrganizationSettingsPage() {
           <Card className="rounded-xl border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-gold" />
+                <Shield className="h-4 w-4 text-blue-600" />
                 Security Policies
               </CardTitle>
               <CardDescription>
@@ -740,7 +740,7 @@ export default function OrganizationSettingsPage() {
           <Card className="rounded-xl border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Network className="h-4 w-4 text-gold" />
+                <Network className="h-4 w-4 text-blue-600" />
                 IP Allowlist
               </CardTitle>
               <CardDescription>

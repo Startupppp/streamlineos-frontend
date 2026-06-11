@@ -52,7 +52,7 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? (
               <span className={cn("font-bold", scoreColor(result.score))}>{result.score}</span>
@@ -88,7 +88,7 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
           </>
         ) : (
           <>
-            <Sparkles className="h-4 w-4 mr-2 text-gold" />
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
             AI Score Lead
           </>
         )}

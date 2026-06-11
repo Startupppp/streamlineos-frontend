@@ -59,14 +59,14 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-gold" />
+          <Sparkles className="h-3.5 w-3.5 text-blue-600" />
           AI Draft Review
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl flex flex-col p-0 gap-0 max-h-[85vh]">
         <DialogHeader className="shrink-0 px-5 pt-5 pb-3 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-gold" />
+            <Sparkles className="h-4 w-4 text-blue-600" />
             AI Performance Review Draft
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -95,7 +95,7 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Overall Rating</p>
-                    <p className="text-2xl font-bold text-gold">{result.overallRating}/5</p>
+                    <p className="text-2xl font-bold text-blue-600">{result.overallRating}/5</p>
                   </div>
                   <Button size="sm" variant="outline" onClick={copyAll}>
                     <Copy className="h-3.5 w-3.5 mr-1.5" />

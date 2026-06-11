@@ -485,7 +485,7 @@ function AttendeeRow({ memberId, name, image, selected, onToggle }: AttendeeRowP
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors text-left",
-        selected ? "bg-gold/10 ring-1 ring-gold/30" : "hover:bg-muted"
+        selected ? "bg-blue-500/10 ring-1 ring-blue-500/30" : "hover:bg-muted"
       )}
     >
       <Avatar className="h-7 w-7 shrink-0">
@@ -495,7 +495,7 @@ function AttendeeRow({ memberId, name, image, selected, onToggle }: AttendeeRowP
       <span className={cn("flex-1 truncate text-sm", selected && "font-medium")}>{name}</span>
       <div className={cn(
         "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0",
-        selected ? "border-gold bg-gold" : "border-muted-foreground/30"
+        selected ? "border-blue-500 bg-blue-500" : "border-muted-foreground/30"
       )}>
         {selected && <Check className="h-2.5 w-2.5 text-white" />}
       </div>

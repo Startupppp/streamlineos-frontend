@@ -11,7 +11,7 @@ const exportSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin<unknown>(async (session) => {
+  return withAdmin(async (session) => {
     const body = exportSchema.parse(await req.json());
     const [year, monthNum] = body.month.split("-");
     const lastDay = new Date(Number(year), Number(monthNum), 0).getDate();

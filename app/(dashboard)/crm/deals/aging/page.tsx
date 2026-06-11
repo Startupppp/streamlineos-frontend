@@ -211,7 +211,7 @@ export default function DealAgingPage() {
                             <TableCell className="font-medium">
                               <Link
                                 href={`/crm/deals/${deal.id}`}
-                                className="hover:underline hover:text-gold transition-colors truncate block max-w-[200px]"
+                                className="hover:underline hover:text-blue-600 transition-colors truncate block max-w-[200px]"
                               >
                                 {deal.name}
                               </Link>

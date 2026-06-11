@@ -45,7 +45,7 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" | "d
 export default function AssetReturnsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: items, isLoading } = useQuery({
     queryKey: arKeys.list(),

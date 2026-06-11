@@ -128,7 +128,7 @@ export const PreviewStep = memo(function PreviewStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-gold" />
+          <FileText className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium">{fileName}</span>
           <Badge variant="secondary">{parsed.length} leads</Badge>
         </div>
@@ -248,7 +248,7 @@ export const PreviewStep = memo(function PreviewStep({
           </label>
 
           <Button
-            className="w-full bg-gold hover:bg-gold/80 text-white"
+            className="w-full bg-blue-500 hover:bg-blue-500/80 text-white"
             onClick={onImport}
             disabled={isImporting || !parsed.length}
           >

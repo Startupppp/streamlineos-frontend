@@ -169,14 +169,14 @@ function ResultCard({ result }: { result: SentimentResult }) {
       {result.recommendations.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <ChevronRight className="h-4 w-4 text-gold" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Recommendations
           </h3>
           <ul className="space-y-1.5">
             {result.recommendations.map((rec, i) => (
               <li key={i} className="flex gap-2.5 text-sm text-foreground">
                 <span
-                  className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-gold/10 text-gold text-xs flex items-center justify-center font-medium"
+                  className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 text-xs flex items-center justify-center font-medium"
                   aria-hidden="true"
                 >
                   {i + 1}
@@ -218,7 +218,7 @@ function HistoryItem({
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm",
         isActive
-          ? "border-gold bg-gold/5"
+          ? "border-blue-500 bg-blue-500/5"
           : "border-border hover:border-border/80 hover:bg-muted/50",
       )}
     >
@@ -299,7 +299,7 @@ export default function SentimentAnalysisPage() {
             <Card className="shadow-noir">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-gold" aria-hidden="true" />
+                  <Brain className="h-4 w-4 text-blue-600" aria-hidden="true" />
                   Input
                 </CardTitle>
               </CardHeader>
@@ -338,7 +338,7 @@ export default function SentimentAnalysisPage() {
                   <Button
                     type="submit"
                     disabled={isPending || !text.trim()}
-                    className="w-full bg-gold hover:bg-gold/90 text-white"
+                    className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
                   >
                     {isPending ? (
                       <>
@@ -382,7 +382,7 @@ export default function SentimentAnalysisPage() {
               <CardContent className="p-5">
                 {isPending ? (
                   <div className="flex flex-col items-center justify-center min-h-[360px] gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-gold" aria-hidden="true" />
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" aria-hidden="true" />
                     <p className="text-sm text-muted-foreground">Analyzing client communications…</p>
                   </div>
                 ) : activeResult ? (

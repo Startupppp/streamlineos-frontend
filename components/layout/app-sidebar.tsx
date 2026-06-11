@@ -13,10 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
-import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
+import { getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
 import { NotificationBell } from "./notification-bell";
+import { usePermissions } from "@/lib/rbac/hooks";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -43,11 +44,13 @@ export function AppSidebar({
 
   const pathname = usePathname();
 
+  const { permissions } = usePermissions();
   const navGroups = useMemo(
-    () => getNavGroupsForRole(effectiveRole),
-    [effectiveRole]
+    () => getNavGroupsForUser(effectiveRole, permissions),
+    [effectiveRole, permissions]
   );
-  const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
+  const isAdmin =
+    effectiveRole === "OWNER" || permissions.includes("settings:manage");
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {

@@ -355,9 +355,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               <div
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                   step === s
-                    ? "bg-gold text-white"
+                    ? "bg-blue-500 text-white"
                     : i < ["upload", "mapping", "preview"].indexOf(step)
-                    ? "bg-gold/30 text-gold"
+                    ? "bg-blue-500/30 text-blue-600"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -373,7 +373,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
-              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-gold/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-sm font-medium mb-1">Drop your file here</p>
@@ -408,7 +408,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
         {isParsing && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="h-8 w-8 border-2 border-gold border-t-transparent rounded-full animate-spin mb-3" />
+            <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">Parsing {fileName}...</p>
           </div>
         )}
@@ -417,7 +417,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gold" />
+                <FileText className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">{fileName}</span>
                 <Badge variant="secondary">{rawRows.length} rows detected</Badge>
               </div>
@@ -497,7 +497,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 Back
               </Button>
               <Button
-                className="flex-1 bg-gold hover:bg-gold/80 text-white gap-1"
+                className="flex-1 bg-blue-500 hover:bg-blue-500/80 text-white gap-1"
                 disabled={!hasNameMapped}
                 onClick={handleConfirmMapping}
               >
@@ -512,7 +512,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gold" />
+                <FileText className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">{fileName}</span>
                 <Badge variant="secondary">{parsed.length} leads</Badge>
               </div>
@@ -626,7 +626,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 </label>
 
                 <Button
-                  className="w-full bg-gold hover:bg-gold/80 text-white"
+                  className="w-full bg-blue-500 hover:bg-blue-500/80 text-white"
                   onClick={handleImport}
                   disabled={bulkImport.isPending || !parsed?.length}
                 >

@@ -51,7 +51,7 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
                     "h-6 w-6 rounded flex items-center justify-center shrink-0 mt-0.5",
                     isWon ? "bg-emerald-500/15 text-emerald-400" :
                     isLost ? "bg-red-500/15 text-red-400" :
-                    "bg-gold/10 text-gold",
+                    "bg-blue-500/10 text-blue-600",
                   )}>
                     {isWon ? <TrendingUp className="h-3 w-3" /> : <DollarSign className="h-3 w-3" />}
                   </div>

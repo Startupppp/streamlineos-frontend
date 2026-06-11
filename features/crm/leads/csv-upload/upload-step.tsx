@@ -52,7 +52,7 @@ export const UploadStep = memo(function UploadStep({
   if (isParsing) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="h-8 w-8 border-2 border-gold border-t-transparent rounded-full animate-spin mb-3" />
+        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-sm text-muted-foreground">Parsing {fileName}...</p>
       </div>
     );
@@ -63,7 +63,7 @@ export const UploadStep = memo(function UploadStep({
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
-        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-gold/50 transition-colors"
+        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
       >
         <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
         <p className="text-sm font-medium mb-1">Drop your file here</p>

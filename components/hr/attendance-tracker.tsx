@@ -68,7 +68,7 @@ export function AttendanceTracker({
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg border-sidebar-border bg-sidebar text-sidebar-foreground">
       <CardHeader>
-        <CardTitle className="text-center text-gold">
+        <CardTitle className="text-center text-blue-600">
           Attendance Tracker
         </CardTitle>
       </CardHeader>

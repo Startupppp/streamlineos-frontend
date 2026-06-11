@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 export async function GET(req: NextRequest) {
-  return withAuth<PaginatedEmployees | Employee[]>(async (session) => {
+  return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");

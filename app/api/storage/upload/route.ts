@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../lib/auth";
-import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
-import { logger } from "../../../../lib/logger";
+import { withAuth } from "@/lib/api/helpers";
+import { uploadFile, isStorageConfigured } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 
 const FILE_SIGNATURES: Record<string, number[][]> = {
   "image/jpeg": [[0xff, 0xd8, 0xff]],
@@ -38,13 +38,8 @@ function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+  return withAuth(async (session) => {
+    try {
     if (!isStorageConfigured()) {
       return NextResponse.json(
         { error: "File storage is not available" },
@@ -98,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     const result = await uploadFile(file, folder);
 
-    const { createAuditLog } = await import("../../../../lib/audit-log");
+    const { createAuditLog } = await import("@/lib/audit-log");
     createAuditLog({
       action: "file.upload",
       userId: session.user.id,
@@ -108,8 +103,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("File upload failed", error);
-    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
-  }
+    } catch (error) {
+      logger.error("File upload failed", error);
+      return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
+    }
+  });
 }

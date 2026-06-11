@@ -67,7 +67,7 @@ const TYPE_CONFIG: Record<
 > = {
   OFFER_LETTER: {
     label: "Offer Letter",
-    className: "bg-gold/10 text-gold border-gold/20",
+    className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
     icon: FileCheck,
   },
   NDA: {

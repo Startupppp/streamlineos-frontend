@@ -157,14 +157,14 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
                 className={cn(
                   "rounded-lg p-1.5 min-h-[64px] flex flex-col",
                   isToday
-                    ? "bg-gold/10 border border-gold/30"
+                    ? "bg-blue-500/10 border border-blue-500/30"
                     : "bg-muted/30 border border-transparent",
                 )}
               >
                 <div
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight mb-1",
-                    isToday ? "text-gold" : "text-muted-foreground",
+                    isToday ? "text-blue-600" : "text-muted-foreground",
                   )}
                 >
                   {format(day, "EEE")}
@@ -207,6 +207,8 @@ interface LeavesTabContentProps {
 export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThisWeek = [] }: LeavesTabContentProps) {
   const { data: session } = useSession();
   const isAdmin =
+    session?.user?.role === "OWNER" ||
+    session?.user?.role === "OWNER" ||
     session?.user?.role === "CEO" ||
     session?.user?.role === "HR" ||
     session?.user?.role === "ADMIN";

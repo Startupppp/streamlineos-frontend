@@ -36,12 +36,14 @@ export function err(message: string, status = 400): NextResponse<never> {
   return NextResponse.json({ error: message }, { status }) as NextResponse<never>;
 }
 
-export async function withAuth<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>
-): Promise<NextResponse<T>> {
+export type RouteResponse = NextResponse | Response;
+
+export async function withAuth(
+  handler: (session: AuthSession) => Promise<RouteResponse>
+): Promise<RouteResponse> {
   const session = (await auth()) as Session | null;
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" } as T, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let orgId: string | null | undefined = session.orgId;
@@ -52,7 +54,7 @@ export async function withAuth<T>(
     try {
       const revoked = await redis.get<boolean>(`revoked:session:${sessionId}`);
       if (revoked) {
-        return NextResponse.json({ error: "Session revoked" } as T, { status: 401 });
+        return NextResponse.json({ error: "Session revoked" }, { status: 401 });
       }
     } catch {
 
@@ -65,7 +67,7 @@ export async function withAuth<T>(
       if (cached !== null) {
 
         if (cached.isActive === false) {
-          return NextResponse.json({ error: "Account deactivated" } as T, { status: 403 });
+          return NextResponse.json({ error: "Account deactivated" }, { status: 403 });
         }
 
         if (cached.role !== undefined) session.user.role = (cached.role ?? session.user.role) as typeof session.user.role;
@@ -85,7 +87,7 @@ export async function withAuth<T>(
   }
 
   if (!orgId) {
-    return NextResponse.json({ error: "Organization not found" } as T, { status: 403 });
+    return NextResponse.json({ error: "Organization not found" }, { status: 403 });
   }
 
   const authSession: AuthSession = Object.assign(session, { orgId, branchId }) as AuthSession;
@@ -94,81 +96,81 @@ export async function withAuth<T>(
   } catch (e) {
     if (e instanceof z.ZodError) {
       const detail = e.issues.map((issue: { path: PropertyKey[]; message: string }) => `${String(issue.path.join?.(".") ?? "body")}: ${issue.message}`).join("; ");
-      return NextResponse.json({ error: `Validation failed: ${detail}` }, { status: 400 }) as NextResponse<T>;
+      return NextResponse.json({ error: `Validation failed: ${detail}` }, { status: 400 });
     }
     throw e;
   }
 }
 
-export async function withAdmin<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>
-): Promise<NextResponse<T>> {
+export async function withAdmin(
+  handler: (session: AuthSession) => Promise<RouteResponse>
+): Promise<RouteResponse> {
   return withAuth(async (session) => {
     const role = session.user.role;
     if (role !== "CEO" && role !== "HR" && role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
   });
 }
 
-export async function withBlogAdmin<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>
-): Promise<NextResponse<T>> {
+export async function withBlogAdmin(
+  handler: (session: AuthSession) => Promise<RouteResponse>
+): Promise<RouteResponse> {
   return withAuth(async (session) => {
     if (!BLOG_ADMIN_ROLES.includes(session.user.role ?? "")) {
-      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
   });
 }
 
-export async function withRoles<T>(
+export async function withRoles(
   allowed: readonly string[],
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";
     if (!allowed.includes(role)) {
-      return NextResponse.json({ error: "Forbidden" } as T, { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(session);
   });
 }
 
-export async function withCEO<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withCEO(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO"], handler);
 }
 
-export async function withHrRole<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withHrRole(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO", "HR"], handler);
 }
 
-export async function withSalesRole<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withSalesRole(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO", "HR", "SALES"], handler);
 }
 
-export async function withCrmRole<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withCrmRole(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO", "HR", "SALES"], handler);
 }
 
-export async function withMarketingRole<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withMarketingRole(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO", "HR", "DIGITAL_MARKETING"], handler);
 }
 
-export async function withSupportRole<T>(
-  handler: (session: AuthSession) => Promise<NextResponse<T>>,
-): Promise<NextResponse<T>> {
+export async function withSupportRole(
+  handler: (session: AuthSession) => Promise<RouteResponse>,
+): Promise<RouteResponse> {
   return withRoles(["CEO", "HR", "CUSTOMER_SUPPORT"], handler);
 }
 

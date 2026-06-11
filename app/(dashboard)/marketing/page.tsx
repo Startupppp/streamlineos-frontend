@@ -125,7 +125,7 @@ export default function MarketingDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-gold" />
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
                   MQL Trend
                 </CardTitle>
               </CardHeader>
@@ -144,7 +144,7 @@ export default function MarketingDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Target className="h-4 w-4 text-gold" />
+                  <Target className="h-4 w-4 text-blue-600" />
                   Lead Gen Funnel
                 </CardTitle>
               </CardHeader>
@@ -310,7 +310,7 @@ export default function MarketingDashboardPage() {
             <Card className="h-full shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gold" />
+                  <Calendar className="h-4 w-4 text-blue-600" />
                   Upcoming Events
                 </CardTitle>
               </CardHeader>
@@ -322,8 +322,8 @@ export default function MarketingDashboardPage() {
                       className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
                       variants={slideInLeft}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                        <Calendar className="h-4 w-4 text-gold" aria-hidden="true" />
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Calendar className="h-4 w-4 text-blue-600" aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{event.name}</p>

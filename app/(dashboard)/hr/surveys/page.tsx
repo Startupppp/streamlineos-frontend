@@ -74,7 +74,7 @@ export default function SurveysPage() {
   const { data: surveys, isLoading } = usePulseSurveys();
   const create = useCreateSurvey();
   const update = useUpdateSurvey();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [closeId, setCloseId] = useState<number | null>(null);

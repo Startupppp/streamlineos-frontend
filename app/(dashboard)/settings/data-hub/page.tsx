@@ -73,7 +73,7 @@ const ENTITIES: ImportEntity[] = [
     icon: CreditCard,
     description: "Export payroll records with breakdown, deductions, and net pay.",
     exportEndpoint: "/hr/payroll/export",
-    color: "text-gold",
+    color: "text-blue-600",
     supported: { import: false, export: true },
   },
   {
@@ -279,7 +279,7 @@ export default function DataHubPage() {
                     <a
                       href={entity.templateUrl}
                       download
-                      className="text-[10px] text-muted-foreground hover:text-gold transition-colors flex items-center gap-1"
+                      className="text-[10px] text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1"
                     >
                       <FileSpreadsheet className="h-3 w-3" />
                       Download template

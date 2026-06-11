@@ -91,7 +91,7 @@ export const KanbanFilterBar = memo(function KanbanFilterBar({
           aria-label="Maximum deal value"
         />
       </div>
-      <Button size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white" onClick={onApply}>
+      <Button size="sm" className="h-8 bg-blue-500 hover:bg-blue-500/90 text-white" onClick={onApply}>
         Apply
       </Button>
       {hasActiveFilters && (

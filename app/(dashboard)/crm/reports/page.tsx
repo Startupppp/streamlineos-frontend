@@ -251,7 +251,7 @@ export default function CrmReportsPage() {
               {[
                 { label: "Total Leads", value: stats.total, icon: Users, color: "text-blue-400" },
                 { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-emerald-400" },
-                { label: "Potential Value", value: `₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`, icon: Target, color: "text-gold" },
+                { label: "Potential Value", value: `₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`, icon: Target, color: "text-blue-600" },
                 { label: "Unassigned", value: stats.unassigned, icon: UserCheck, color: "text-red-400" },
                 { label: "New This Month", value: stats.thisMonth, icon: Calendar, color: "text-purple-400" },
               ].map(s => (
@@ -271,7 +271,7 @@ export default function CrmReportsPage() {
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-gold" />
+                    <BarChart3 className="h-4 w-4 text-blue-600" />
                     Pipeline Breakdown
                   </CardTitle>
                 </CardHeader>
@@ -321,7 +321,7 @@ export default function CrmReportsPage() {
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-gold" />
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
                     Conversion Funnel
                   </CardTitle>
                 </CardHeader>

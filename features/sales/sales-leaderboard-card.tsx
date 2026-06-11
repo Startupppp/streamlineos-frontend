@@ -50,7 +50,7 @@ export function SalesLeaderboardCard({
       <Card className="h-full shadow-noir">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-gold" />
+            <Trophy className="h-4 w-4 text-blue-600" />
             Sales Leaderboard
             {datePreset !== "all" && (
               <span className="ml-auto text-[10px] font-normal text-muted-foreground">
@@ -115,7 +115,7 @@ export function SalesLeaderboardCard({
                                 href={`/sales/person/${slug}`}
                                 className={cn(
                                   "text-sm font-semibold truncate block transition-colors",
-                                  isTop3 ? cn(style?.text, "hover:opacity-80") : "text-foreground hover:text-gold",
+                                  isTop3 ? cn(style?.text, "hover:opacity-80") : "text-foreground hover:text-blue-600",
                                 )}
                               >
                                 {rep.name}

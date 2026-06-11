@@ -337,7 +337,7 @@ export default function DealDetailPage({
                         <div>
                           <p className="text-xs text-muted-foreground">{item.label}</p>
                           {item.href ? (
-                            <a href={item.href} className="text-sm text-gold hover:underline">{item.value || "\u2014"}</a>
+                            <a href={item.href} className="text-sm text-blue-600 hover:underline">{item.value || "\u2014"}</a>
                           ) : (
                             <p className="text-sm">{item.value || "\u2014"}</p>
                           )}
@@ -346,13 +346,13 @@ export default function DealDetailPage({
                     ))}
                   </div>
 
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-gold/5 border border-border/50">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-blue-500/5 border border-border/50">
                     <p className="text-xs text-muted-foreground">Deal Value</p>
-                    <p className="text-3xl font-bold text-gold">{formatINR(dealValue)}</p>
+                    <p className="text-3xl font-bold text-blue-600">{formatINR(dealValue)}</p>
                     {deal.probability !== null && deal.probability > 0 && (
                       <div className="mt-2">
                         <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
+                          <div className="h-full rounded-full bg-blue-500" style={{ width: `${deal.probability}%` }} />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}
@@ -387,7 +387,7 @@ export default function DealDetailPage({
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold">
+                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600">
                       {deal.assignedTo.name?.[0] ?? "?"}
                     </div>
                     <p className="text-sm font-medium">{deal.assignedTo.name}</p>
@@ -407,7 +407,7 @@ export default function DealDetailPage({
                       {deal.lead.name?.[0] ?? "?"}
                     </div>
                     <div>
-                      <p className="text-sm font-medium group-hover:text-gold transition-colors">{deal.lead.name}</p>
+                      <p className="text-sm font-medium group-hover:text-blue-600 transition-colors">{deal.lead.name}</p>
                       {deal.lead.email && <p className="text-xs text-muted-foreground">{deal.lead.email}</p>}
                       {deal.lead.phone && <p className="text-xs text-muted-foreground">{deal.lead.phone}</p>}
                     </div>

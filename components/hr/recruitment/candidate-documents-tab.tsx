@@ -65,7 +65,7 @@ export function CandidateDocumentsTab({
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-gold" aria-hidden="true" />
+            <FileText className="h-4 w-4 text-blue-600" aria-hidden="true" />
             <span className="text-sm font-medium">Generated Documents</span>
             {docs && docs.length > 0 && (
               <Badge variant="secondary" className="text-xs">
@@ -88,7 +88,7 @@ export function CandidateDocumentsTab({
             </Button>
             <Button
               size="sm"
-              className="bg-gold hover:bg-gold/90 text-white"
+              className="bg-blue-500 hover:bg-blue-500/90 text-white"
               onClick={() => setRolloutOpen(true)}
               aria-label="Generate offer documents for candidate"
             >

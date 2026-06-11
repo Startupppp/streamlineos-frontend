@@ -30,7 +30,7 @@ const eventKeys = { all: [...queryKeys.hr.all, "team-events"] as const, list: ()
 export default function TeamEventsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "CEO" || session?.user?.role === "HR";
 
   const { data: events, isLoading } = useQuery({
     queryKey: eventKeys.list(),

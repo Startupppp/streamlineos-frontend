@@ -38,7 +38,11 @@ export function LandingFooter() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 py-12">
           <div className="col-span-2 max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5 mb-4 group" aria-label={BRAND_NAME}>
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 mb-4 group"
+              aria-label={BRAND_NAME}
+            >
               <AnimatedLogo size={36} className="rounded-xl" />
               <span className="font-display text-lg font-bold tracking-tight text-slate-900">
                 {BRAND_NAME}

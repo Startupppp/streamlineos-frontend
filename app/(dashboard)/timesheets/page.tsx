@@ -63,7 +63,7 @@ export default function TimesheetsPage() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const isCEO = session?.user?.role === "CEO";
+  const isCEO = session?.user?.role === "OWNER" || session?.user?.role === "CEO";
 
   const selectedProject = searchParams.get("project") ?? "all";
   const dateRange = searchParams.get("range") ?? "this-quarter";
@@ -289,7 +289,7 @@ export default function TimesheetsPage() {
       <button
         onClick={handleViewModeCurrent}
         className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
-          viewMode === "current" ? "bg-gold/10 text-gold" : "text-muted-foreground hover:text-foreground"
+          viewMode === "current" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         Current Quarter
@@ -297,7 +297,7 @@ export default function TimesheetsPage() {
       <button
         onClick={handleViewModeHistory}
         className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-          viewMode === "history" ? "bg-gold/10 text-gold" : "text-muted-foreground hover:text-foreground"
+          viewMode === "history" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         History
@@ -312,7 +312,7 @@ export default function TimesheetsPage() {
       actions={
         <LogTimeDialog
           trigger={
-            <Button className="bg-gold hover:bg-gold/90 text-white font-bold shadow-sm">
+            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white font-bold shadow-sm">
               <Plus className="mr-2 h-4 w-4" />
               Add New Log
             </Button>
@@ -410,7 +410,7 @@ export default function TimesheetsPage() {
                               variant={num === page ? "default" : "outline"}
                               size="icon"
                               className={`h-8 w-8 text-sm font-bold ${
-                                num === page ? "bg-gold hover:bg-gold/90 text-white border-gold" : ""
+                                num === page ? "bg-blue-500 hover:bg-blue-500/90 text-white border-blue-500" : ""
                               }`}
                               onClick={handlePageNumber}
                               {...(num === page ? { "aria-current": "page" as const } : {})}

@@ -1,6 +1,7 @@
 import { rolePermissions, userPermissions, roles } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import type { db as database } from "../db";
+import { isSuperAdminRole } from "./permissions";
 
 type DbClient = Pick<typeof database, "query">;
 
@@ -37,7 +38,7 @@ export async function checkPermission(
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  if (role === "CEO") {
+  if (isSuperAdminRole(role)) {
     return true;
   }
 

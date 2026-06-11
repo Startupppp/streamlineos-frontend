@@ -155,7 +155,7 @@ function AnalyticsPanel({ pageId }: { pageId: number }) {
                   <span className="w-28 truncate text-muted-foreground capitalize">{r.source}</span>
                   <div className="flex-1 h-1.5 rounded-full bg-muted">
                     <div
-                      className="h-1.5 rounded-full bg-gold"
+                      className="h-1.5 rounded-full bg-blue-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>

@@ -332,7 +332,7 @@ export function MessagePanel({
           {channel?.type === "DIRECT" ? (
             <div className="relative">
               <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
-                <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-gold/20 to-gold/5 text-gold">
+                <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
                   {getInitials(otherMember?.name)}
                 </AvatarFallback>
               </Avatar>

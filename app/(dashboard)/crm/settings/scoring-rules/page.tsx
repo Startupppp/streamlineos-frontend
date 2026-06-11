@@ -166,7 +166,7 @@ export default function ScoringRulesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -219,7 +219,7 @@ export default function ScoringRulesPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
+                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createRule.isPending}>
                   {createRule.isPending ? "Creating..." : "Create Rule"}
                 </Button>
               </form>
@@ -282,7 +282,7 @@ export default function ScoringRulesPage() {
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4 text-gold" />
+                <Zap className="h-4 w-4 text-blue-600" />
                 Live Preview - Sample Lead
               </CardTitle>
             </CardHeader>
@@ -295,7 +295,7 @@ export default function ScoringRulesPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-gold/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
                 <span className="text-sm font-medium">Calculated Score</span>
                 <Badge className={cn(
                   "text-lg px-4 py-1 font-bold",
@@ -356,7 +356,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
                 <FormField control={editForm.control} name="points" render={({ field }) => (
                   <Input type="number" {...field} className="h-8 w-16 text-xs" />
                 )} />
-                <Button type="submit" size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white text-xs" disabled={updatePending}>Save</Button>
+                <Button type="submit" size="sm" className="h-8 bg-blue-500 hover:bg-blue-500/90 text-white text-xs" disabled={updatePending}>Save</Button>
                 <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
               </form>
             </Form>

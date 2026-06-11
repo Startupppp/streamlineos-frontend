@@ -51,7 +51,7 @@ export function AISuggestReplyButton({ ticketId, compact }: AISuggestReplyButton
           {suggestMutation.isPending ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <Sparkles className="h-3 w-3 text-gold" />
+            <Sparkles className="h-3 w-3 text-blue-600" />
           )}
           AI Reply
         </Button>

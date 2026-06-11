@@ -42,7 +42,7 @@ export default function DigitalMarketingPage() {
         <div className="grid gap-4 md:grid-cols-3">
           {modules.map(m => (
             <Link key={m.title} href={m.href}>
-              <Card className="hover:border-gold/30 transition-colors cursor-pointer h-full">
+              <Card className="hover:border-blue-500/30 transition-colors cursor-pointer h-full">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
@@ -73,7 +73,7 @@ export default function DigitalMarketingPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gold rounded-full"
+                          className="h-full bg-blue-500 rounded-full"
                           style={{ width: `${Math.min(100, (p.count / (stats.total || 1)) * 100)}%` }}
                         />
                       </div>

@@ -102,7 +102,7 @@ export const MappingStep = memo(function MappingStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-gold" />
+          <FileText className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium">{fileName}</span>
           <Badge variant="secondary">{rawRows.length} rows detected</Badge>
         </div>
@@ -156,7 +156,7 @@ export const MappingStep = memo(function MappingStep({
           Back
         </Button>
         <Button
-          className="flex-1 bg-gold hover:bg-gold/80 text-white gap-1"
+          className="flex-1 bg-blue-500 hover:bg-blue-500/80 text-white gap-1"
           disabled={!hasNameMapped}
           onClick={onConfirm}
         >

@@ -360,7 +360,7 @@ export default function TerminationPage() {
 
   const role = session?.user?.role;
   const isHR = role === "HR";
-  const isCEO = role === "CEO";
+  const isCEO = role === "OWNER" || role === "CEO";
 
   const { data: terminations, isLoading } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });

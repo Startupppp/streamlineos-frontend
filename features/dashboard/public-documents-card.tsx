@@ -40,11 +40,11 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
     <Card className="bg-card border-border shadow-noir">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
         <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-          <FileText className="h-4 w-4 text-gold" aria-hidden="true" />
+          <FileText className="h-4 w-4 text-blue-600" aria-hidden="true" />
           Public Documents
         </CardTitle>
         <Link href="/hr/documents">
-          <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold" aria-label="View all documents">
+          <Button variant="ghost" size="sm" className="hover:bg-blue-500/10 hover:text-blue-600" aria-label="View all documents">
             View All
           </Button>
         </Link>

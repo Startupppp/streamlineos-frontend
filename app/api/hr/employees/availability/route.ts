@@ -20,7 +20,7 @@ export interface AvailabilityEntry {
 }
 
 export async function GET(req: NextRequest) {
-  return withAuth<AvailabilityEntry[]>(async (session) => {
+  return withAuth(async (session) => {
     const q = parseQuery(req, querySchema);
     const today = format(new Date(), "yyyy-MM-dd");
 

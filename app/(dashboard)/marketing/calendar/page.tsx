@@ -210,12 +210,12 @@ export default function MarketingCalendarPage() {
                         key={day}
                         className={cn(
                           "bg-background min-h-[80px] p-1 transition-colors",
-                          isToday && "bg-gold/5"
+                          isToday && "bg-blue-500/5"
                         )}
                       >
                         <div className={cn(
                           "text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full",
-                          isToday ? "bg-gold text-white" : "text-muted-foreground"
+                          isToday ? "bg-blue-500 text-white" : "text-muted-foreground"
                         )}>
                           {day}
                         </div>
@@ -269,7 +269,7 @@ export default function MarketingCalendarPage() {
             <Card className="shadow-noir">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Megaphone className="h-4 w-4 text-gold" />
+                  <Megaphone className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium">
                     {MONTH_NAMES[month]} Campaigns
                   </span>
