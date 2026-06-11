@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getDmLeads } from "@/server/queries/dm";
 import { db } from "@/lib/db";
 import { dmLeads } from "@/lib/db/schema";
@@ -33,13 +34,20 @@ export async function GET(req: NextRequest) {
       const page = toNumber(params.get("page")) ?? 1;
       const limit = toNumber(params.get("limit")) ?? 25;
 
-      const data = await getDmLeads(session.orgId, {
-        status: status ?? undefined,
-        platform,
-        search,
-        page,
-        limit,
-      });
+      const orgId = session.orgId;
+      const key = `dm:leads:${orgId}:${status ?? ""}:${platform ?? ""}:${search ?? ""}:${page}:${limit}`;
+      const data = await cached(
+        key,
+        () =>
+          getDmLeads(orgId, {
+            status: status ?? undefined,
+            platform,
+            search,
+            page,
+            limit,
+          }),
+        { ttlSeconds: CACHE_TTL.SHORT },
+      );
       return ok(data);
     } catch (error) {
       return err(
@@ -64,6 +72,8 @@ export async function POST(req: NextRequest) {
           createdBy: session.user.id,
         })
         .returning();
+
+      await invalidateCachePattern(`dm:leads:${session.orgId}:*`);
 
       return ok(lead, 201);
     } catch (error) {

@@ -1,4 +1,5 @@
 import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { interviews } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
@@ -26,17 +27,24 @@ const createInterviewSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { candidateId, upcoming, limit } = parseQuery(req, listSchema);
+    const orgId = session.orgId;
 
-    const conditions = [eq(interviews.orgId, session.orgId)];
-    if (candidateId) conditions.push(eq(interviews.candidateId, candidateId));
-    if (upcoming === "true") conditions.push(gte(interviews.scheduledAt, new Date()));
-
-    const data = await db.query.interviews.findMany({
-      where: and(...conditions),
-      with: { candidate: true, interviewer: true },
-      orderBy: [desc(interviews.scheduledAt)],
-      limit,
-    });
+    const key = `hr:interviews:list:${orgId}:${candidateId ?? ""}:${upcoming ?? ""}:${limit}`;
+    const data = await cached(
+      key,
+      () => {
+        const conditions = [eq(interviews.orgId, orgId)];
+        if (candidateId) conditions.push(eq(interviews.candidateId, candidateId));
+        if (upcoming === "true") conditions.push(gte(interviews.scheduledAt, new Date()));
+        return db.query.interviews.findMany({
+          where: and(...conditions),
+          with: { candidate: true, interviewer: true },
+          orderBy: [desc(interviews.scheduledAt)],
+          limit,
+        });
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(data);
   });
@@ -66,6 +74,8 @@ export async function POST(req: NextRequest) {
         result: "PENDING",
       })
       .returning();
+
+    await invalidateCachePattern(`hr:interviews:list:${session.orgId}:*`);
 
     return ok(interview);
   });

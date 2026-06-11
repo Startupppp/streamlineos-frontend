@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 interface ImportVariables {
   file: File;
@@ -28,12 +29,8 @@ async function importExpensesRequest({
     formData.append("categoryMapping", JSON.stringify(categoryMapping));
   }
 
-  const response = await fetch("/api/expenses/import", {
-    method: "POST",
-    body: formData,
-  });
-  const result = (await response.json()) as ImportExpensesResult;
-  if (!response.ok || !result.success) {
+  const result = await apiClient.upload<ImportExpensesResult>("/expenses/import", formData);
+  if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
   }
   return result;

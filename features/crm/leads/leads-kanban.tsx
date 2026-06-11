@@ -16,16 +16,16 @@ interface LeadsKanbanProps {
 
 export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus }: LeadsKanbanProps) {
   return (
-    <div className="overflow-x-auto pb-4 -mx-2 px-2">
+    <div className="pb-4">
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-3 min-w-[900px] lg:min-w-0">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {STATUSES.map((status) => {
             const config = STATUS_CONFIG[status];
             const StatusIcon = config.icon;
             const columnLeads: BoardLead[] = filteredBoard?.[status] ?? [];
 
             return (
-              <div key={status} className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <div key={status} className="min-w-0">
                 <div className={cn("rounded-xl border h-full flex flex-col", config.border, "bg-muted/20")}>
 
                   <div className={cn(

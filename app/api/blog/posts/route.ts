@@ -1,6 +1,8 @@
 import { type NextRequest } from "next/server";
-import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
+import { revalidateTag } from "next/cache";
+import { ok, withBlogAdmin, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
+import { CacheTag } from "@/lib/api/cache-tags";
 import { blogDb } from "@/lib/blog-db";
 import { blogPosts } from "@/lib/db/schema";
 import { getAdminPosts } from "@/server/queries/blog";
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
       .returning();
 
     await invalidateCachePattern("blog:admin:posts*");
+    revalidateTag(CacheTag.blogPosts, "default");
 
     return ok(created, 201);
   });

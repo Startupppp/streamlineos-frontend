@@ -35,31 +35,27 @@ type Severity = "ok" | "warn" | "alert" | "info";
 
 const SEVERITY_STYLES: Record<
   Severity,
-  { bar: string; iconBg: string; iconColor: string; value: string }
+  { bar: string; iconBg: string; iconColor: string }
 > = {
   ok: {
     bar: "bg-emerald-500",
     iconBg: "bg-emerald-500/10",
     iconColor: "text-emerald-600",
-    value: "text-slate-900",
   },
   warn: {
     bar: "bg-amber-500",
     iconBg: "bg-amber-500/10",
     iconColor: "text-amber-600",
-    value: "text-slate-900",
   },
   alert: {
     bar: "bg-red-500",
     iconBg: "bg-red-500/10",
     iconColor: "text-red-600",
-    value: "text-slate-900",
   },
   info: {
     bar: "bg-blue-500",
     iconBg: "bg-blue-500/10",
     iconColor: "text-blue-600",
-    value: "text-slate-900",
   },
 };
 
@@ -83,7 +79,7 @@ function HealthCard({
   const s = SEVERITY_STYLES[severity];
   return (
     <Link href={href} className="block group">
-      <div className="relative h-full rounded-xl border border-border bg-card p-4 overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)] hover:-translate-y-0.5">
+      <div className="relative h-full rounded-xl border border-border/70 bg-card shadow-noir p-4 overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.22)] hover:-translate-y-0.5">
         <div className={cn("absolute top-0 left-0 right-0 h-[2px]", s.bar)} />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -92,9 +88,8 @@ function HealthCard({
             </p>
             <p
               className={cn(
-                "font-bold mt-1 leading-none truncate",
+                "font-bold mt-1 leading-none truncate text-foreground",
                 String(value).length > 4 ? "text-2xl" : "text-3xl",
-                s.value,
               )}
             >
               {value}
@@ -232,7 +227,7 @@ export default function AdminHealthDashboardPage() {
             {kpi.progressBar && (
               <Progress
                 value={onboardingPct}
-                className="mt-3 h-1.5 bg-slate-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-cyan-500"
+                className="mt-3 h-1.5 bg-muted [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-cyan-500"
               />
             )}
           </HealthCard>

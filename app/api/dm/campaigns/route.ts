@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getDmCampaigns } from "@/server/queries/dm";
 import { db } from "@/lib/db";
 import { crmCampaigns } from "@/lib/db/schema";
@@ -20,11 +21,13 @@ export async function GET(req: NextRequest) {
       const page = toNumber(params.get("page")) ?? 1;
       const limit = toNumber(params.get("limit")) ?? 25;
 
-      const data = await getDmCampaigns(session.orgId, {
-        status,
-        page,
-        limit,
-      });
+      const orgId = session.orgId;
+      const key = `dm:campaigns:${orgId}:${status ?? ""}:${page}:${limit}`;
+      const data = await cached(
+        key,
+        () => getDmCampaigns(orgId, { status, page, limit }),
+        { ttlSeconds: CACHE_TTL.MEDIUM },
+      );
       return ok(data);
     } catch (error) {
       return err(
@@ -48,6 +51,8 @@ export async function POST(req: NextRequest) {
           ...input,
         })
         .returning();
+
+      await invalidateCachePattern(`dm:campaigns:${session.orgId}:*`);
 
       return ok(campaign, 201);
     } catch (error) {

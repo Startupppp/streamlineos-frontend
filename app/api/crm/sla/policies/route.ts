@@ -1,4 +1,5 @@
 import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { crmSla } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -15,12 +16,27 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const data = await db
-      .select()
-      .from(crmSla)
-      .where(eq(crmSla.orgId, session.orgId))
-      .orderBy(desc(crmSla.createdAt))
-      .limit(100);
+    const orgId = session.orgId;
+    const key = `crm:sla-policies:${orgId}`;
+    const data = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: crmSla.id,
+            name: crmSla.name,
+            appliesTo: crmSla.appliesTo,
+            priority: crmSla.priority,
+            firstResponseHours: crmSla.firstResponseHours,
+            resolutionHours: crmSla.resolutionHours,
+            createdAt: crmSla.createdAt,
+          })
+          .from(crmSla)
+          .where(eq(crmSla.orgId, orgId))
+          .orderBy(desc(crmSla.createdAt))
+          .limit(100),
+      { ttlSeconds: CACHE_TTL.LONG },
+    );
     return ok(data);
   });
 }
@@ -39,6 +55,7 @@ export async function POST(req: NextRequest) {
         resolutionHours: input.resolutionHours,
       })
       .returning();
+    await invalidateCachePattern(`crm:sla-policies:${session.orgId}*`);
     return ok(policy, 201);
   });
 }

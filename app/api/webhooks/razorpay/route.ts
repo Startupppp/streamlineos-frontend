@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { platformPayments, organizations } from "@/lib/db/schema";
 import { verifyWebhookSignature } from "@/lib/razorpay/client";
@@ -9,26 +10,28 @@ import { revalidateTag } from "next/cache";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RazorpayPayment = {
-  id: string;
-  order_id?: string;
-  amount: number;
-  currency: string;
-  status: string;
-  method?: string;
-  email?: string;
-  description?: string;
-  notes?: Record<string, string>;
-  invoice_id?: string;
-  created_at?: number;
-};
+const razorpayPaymentSchema = z.object({
+  id: z.string().min(1),
+  order_id: z.string().optional(),
+  amount: z.number(),
+  currency: z.string(),
+  status: z.string(),
+  method: z.string().optional(),
+  email: z.string().optional(),
+  description: z.string().optional(),
+  notes: z.record(z.string(), z.string()).optional(),
+  invoice_id: z.string().optional(),
+  created_at: z.number().optional(),
+});
 
-type WebhookEvent = {
-  event: string;
-  payload: {
-    payment?: { entity: RazorpayPayment };
-  };
-};
+const webhookEventSchema = z.object({
+  event: z.string(),
+  payload: z.object({
+    payment: z.object({ entity: razorpayPaymentSchema }).optional(),
+  }),
+});
+
+type WebhookEvent = z.infer<typeof webhookEventSchema>;
 
 async function findOrgFromNotes(notes?: Record<string, string>) {
   if (!notes) return null;
@@ -51,7 +54,12 @@ export async function POST(req: NextRequest) {
 
   let event: WebhookEvent;
   try {
-    event = JSON.parse(rawBody) as WebhookEvent;
+    const parsed = webhookEventSchema.safeParse(JSON.parse(rawBody));
+    if (!parsed.success) {
+      logger.warn("[razorpay] webhook payload validation failed", { issues: parsed.error.issues });
+      return NextResponse.json({ ok: false, error: "invalid payload" }, { status: 400 });
+    }
+    event = parsed.data;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
   }

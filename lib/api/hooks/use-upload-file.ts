@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 export interface UploadResult {
   url: string;
@@ -22,17 +23,7 @@ async function uploadFileRequest({
   formData.append("file", file);
   formData.append("folder", folder);
 
-  const response = await fetch("/api/storage/upload", {
-    method: "POST",
-    body: formData,
-  });
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null;
-    throw new Error(body?.error ?? "Upload failed");
-  }
-  const data = (await response.json()) as UploadResult;
+  const data = await apiClient.upload<UploadResult>("/storage/upload", formData);
   return {
     url: data.url,
     key: data.key,

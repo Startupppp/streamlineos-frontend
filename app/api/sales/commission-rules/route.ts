@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { commissionRules } from "@/lib/db/schema";
@@ -21,11 +22,26 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const rules = await db
-      .select()
-      .from(commissionRules)
-      .where(eq(commissionRules.orgId, session.orgId))
-      .orderBy(desc(commissionRules.createdAt));
+    const orgId = session.orgId;
+    const key = `sales:commission-rules:${orgId}`;
+    const rules = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: commissionRules.id,
+            name: commissionRules.name,
+            type: commissionRules.type,
+            flatRate: commissionRules.flatRate,
+            tiers: commissionRules.tiers,
+            appliesTo: commissionRules.appliesTo,
+            createdAt: commissionRules.createdAt,
+          })
+          .from(commissionRules)
+          .where(eq(commissionRules.orgId, orgId))
+          .orderBy(desc(commissionRules.createdAt)),
+      { ttlSeconds: CACHE_TTL.LONG },
+    );
     return ok(rules);
   });
 }
@@ -46,6 +62,8 @@ export async function POST(req: NextRequest) {
       tiers: input.tiers ?? null,
       appliesTo: input.appliesTo,
     }).returning();
+
+    await invalidateCachePattern(`sales:commission-rules:${session.orgId}*`);
 
     return ok(rule, 201);
   });

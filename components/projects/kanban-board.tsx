@@ -186,7 +186,7 @@ export function KanbanBoard({
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
 
-      <div className="flex gap-3 h-full overflow-x-auto overflow-y-hidden pb-1 px-1">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pb-1 px-1">
         {columns.map((col) => {
           const columnTickets = optimisticTickets
             .filter((t) => t.status === col.id)
@@ -199,7 +199,7 @@ export function KanbanBoard({
             <div
               key={col.id}
               className={cn(
-                "rounded-lg border bg-muted/20 min-w-[272px] w-[272px] flex flex-col flex-shrink-0 h-full",
+                "rounded-lg border bg-muted/20 flex flex-col min-w-0",
                 overWip && "border-red-400/60"
               )}
             >

@@ -43,7 +43,7 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
       type="button"
       className={cn(
         "group flex items-center gap-2.5 w-full rounded-lg outline-none transition-colors duration-150",
-        "hover:bg-blue-500/8 focus-visible:ring-1 focus-visible:ring-sidebar-ring",
+        "hover:bg-sidebar-accent focus-visible:ring-1 focus-visible:ring-sidebar-ring",
         isCollapsed ? "justify-center p-2" : "px-2.5 py-2"
       )}
     >

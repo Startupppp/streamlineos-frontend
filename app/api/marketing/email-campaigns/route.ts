@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { emailCampaigns } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -27,15 +28,36 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, listSchema);
-    const conditions = [eq(emailCampaigns.orgId, session.orgId)];
-    if (status) conditions.push(eq(emailCampaigns.status, status));
+    const orgId = session.orgId;
 
-    const campaigns = await db
-      .select()
-      .from(emailCampaigns)
-      .where(and(...conditions))
-      .orderBy(desc(emailCampaigns.createdAt))
-      .limit(limit ?? 25);
+    const key = `marketing:email-campaigns:list:${orgId}:${status ?? ""}:${limit ?? 25}`;
+    const campaigns = await cached(
+      key,
+      () => {
+        const conditions = [eq(emailCampaigns.orgId, orgId)];
+        if (status) conditions.push(eq(emailCampaigns.status, status));
+        return db
+          .select({
+            id: emailCampaigns.id,
+            name: emailCampaigns.name,
+            subject: emailCampaigns.subject,
+            status: emailCampaigns.status,
+            recipientCount: emailCampaigns.recipientCount,
+            sentCount: emailCampaigns.sentCount,
+            failedCount: emailCampaigns.failedCount,
+            openCount: emailCampaigns.openCount,
+            clickCount: emailCampaigns.clickCount,
+            scheduledAt: emailCampaigns.scheduledAt,
+            sentAt: emailCampaigns.sentAt,
+            createdAt: emailCampaigns.createdAt,
+          })
+          .from(emailCampaigns)
+          .where(and(...conditions))
+          .orderBy(desc(emailCampaigns.createdAt))
+          .limit(limit ?? 25);
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(campaigns);
   });
@@ -55,6 +77,8 @@ export async function POST(req: NextRequest) {
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       createdBy: session.user.id,
     }).returning();
+
+    await invalidateCachePattern(`marketing:email-campaigns:list:${session.orgId}:*`);
 
     return ok(campaign, 201);
   });

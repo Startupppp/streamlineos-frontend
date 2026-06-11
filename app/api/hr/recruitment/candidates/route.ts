@@ -1,4 +1,5 @@
 import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -30,16 +31,23 @@ const createCandidateSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit, offset } = parseQuery(req, listSchema);
+    const orgId = session.orgId;
 
-    const conditions = [eq(candidates.orgId, session.orgId)];
-    if (status) conditions.push(eq(candidates.status, status));
-
-    const data = await db.query.candidates.findMany({
-      where: and(...conditions),
-      orderBy: [desc(candidates.createdAt)],
-      limit,
-      offset,
-    });
+    const key = `hr:candidates:list:${orgId}:${status ?? ""}:${limit}:${offset}`;
+    const data = await cached(
+      key,
+      () => {
+        const conditions = [eq(candidates.orgId, orgId)];
+        if (status) conditions.push(eq(candidates.status, status));
+        return db.query.candidates.findMany({
+          where: and(...conditions),
+          orderBy: [desc(candidates.createdAt)],
+          limit,
+          offset,
+        });
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(data);
   });
@@ -69,6 +77,8 @@ export async function POST(req: NextRequest) {
         notes: body.notes,
       })
       .returning();
+
+    await invalidateCachePattern(`hr:candidates:list:${session.orgId}:*`);
 
     return ok(candidate);
   });

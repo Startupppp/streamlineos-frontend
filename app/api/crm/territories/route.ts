@@ -1,4 +1,5 @@
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { territories } from "@/lib/db/schema/crm";
 import { eq } from "drizzle-orm";
@@ -21,12 +22,29 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { limit } = parseQuery(req, listSchema);
-    const rows = await db
-      .select()
-      .from(territories)
-      .where(eq(territories.orgId, session.orgId))
-      .orderBy(territories.name)
-      .limit(limit);
+    const orgId = session.orgId;
+
+    const key = `crm:territories:${orgId}:${limit}`;
+    const rows = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: territories.id,
+            name: territories.name,
+            states: territories.states,
+            cities: territories.cities,
+            assignedReps: territories.assignedReps,
+            description: territories.description,
+            isActive: territories.isActive,
+            createdAt: territories.createdAt,
+          })
+          .from(territories)
+          .where(eq(territories.orgId, orgId))
+          .orderBy(territories.name)
+          .limit(limit),
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
     return ok(rows);
   });
@@ -49,6 +67,8 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
+
+    await invalidateCachePattern(`crm:territories:${session.orgId}:*`);
 
     return ok(created, 201);
   });

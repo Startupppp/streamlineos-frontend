@@ -1,4 +1,5 @@
 import { withAuth, ok } from "@/lib/api/helpers";
+import { cached, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { candidates, candidateApplications, candidateSlaTracking, jobPostings } from "@/lib/db/schema";
 import { eq, and, count, sql, isNotNull } from "drizzle-orm";
@@ -10,7 +11,12 @@ const STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] a
 export async function GET() {
   return withAuth(async (session) => {
     const orgId = session.orgId;
+    const key = `hr:recruitment-analytics:${orgId}`;
+    return ok(await cached(key, () => buildAnalytics(orgId), { ttlSeconds: CACHE_TTL.MEDIUM }));
+  });
+}
 
+async function buildAnalytics(orgId: string) {
     const timeToHireData = await db
       .select({
         stage: candidateSlaTracking.stage,
@@ -58,11 +64,10 @@ export async function GET() {
       };
     });
 
-    return ok({
+    return {
       funnel,
       hireRate,
       totalCandidates: total,
       totalHired: hired,
-    });
-  });
+    };
 }

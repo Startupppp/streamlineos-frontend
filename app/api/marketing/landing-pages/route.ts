@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { landingPages, pageViews } from "@/lib/db/schema";
 import { eq, and, desc, sql, count } from "drizzle-orm";
@@ -14,7 +15,11 @@ const createSchema = z.object({
 
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
-    const pages = await db
+    const orgId = session.orgId;
+    const key = `marketing:landing-pages:list:${orgId}`;
+    const pages = await cached(
+      key,
+      () => db
       .select({
         id: landingPages.id,
         name: landingPages.name,
@@ -34,7 +39,7 @@ export async function GET(_req: NextRequest) {
       })
       .from(landingPages)
       .leftJoin(pageViews, eq(pageViews.pageId, landingPages.id))
-      .where(eq(landingPages.orgId, session.orgId))
+      .where(eq(landingPages.orgId, orgId))
       .groupBy(
         landingPages.id,
         landingPages.name,
@@ -43,7 +48,9 @@ export async function GET(_req: NextRequest) {
         landingPages.isActive,
         landingPages.createdAt,
       )
-      .orderBy(desc(landingPages.createdAt));
+      .orderBy(desc(landingPages.createdAt)),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok({ pages });
   });
@@ -64,6 +71,8 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
+
+    await invalidateCachePattern(`marketing:landing-pages:list:${session.orgId}*`);
 
     return ok(page, 201);
   });

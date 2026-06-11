@@ -124,7 +124,7 @@ export function PageDetailContent({ pageId }: { pageId: number }) {
           <p className="text-xs font-medium text-muted-foreground">Tracking Snippet</p>
           <CopyButton text={snippet} />
         </div>
-        <pre className="text-[10px] leading-relaxed bg-muted rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-all">{snippet}</pre>
+        <pre className="text-[10px] leading-relaxed bg-muted rounded-md p-3 whitespace-pre-wrap break-all">{snippet}</pre>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
@@ -30,15 +31,22 @@ const createJobSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, listSchema);
+    const orgId = session.orgId;
 
-    const conditions = [eq(jobPostings.orgId, session.orgId)];
-    if (status) conditions.push(eq(jobPostings.status, status));
-
-    const data = await db.query.jobPostings.findMany({
-      where: and(...conditions),
-      orderBy: [desc(jobPostings.createdAt)],
-      limit,
-    });
+    const key = `hr:jobs:list:${orgId}:${status ?? ""}:${limit}`;
+    const data = await cached(
+      key,
+      () => {
+        const conditions = [eq(jobPostings.orgId, orgId)];
+        if (status) conditions.push(eq(jobPostings.status, status));
+        return db.query.jobPostings.findMany({
+          where: and(...conditions),
+          orderBy: [desc(jobPostings.createdAt)],
+          limit,
+        });
+      },
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
     return ok(data);
   });
@@ -78,6 +86,8 @@ export async function POST(req: NextRequest) {
         postedBy: session.user.id,
       })
       .returning();
+
+    await invalidateCachePattern(`hr:jobs:list:${session.orgId}:*`);
 
     return ok(job);
   });

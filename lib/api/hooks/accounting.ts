@@ -392,3 +392,31 @@ export function useAgedPayables(asOf: string) {
     staleTime: 30_000,
   });
 }
+
+export interface RecordVendorPaymentInput {
+  amount: number;
+  paymentDate: string;
+  paymentMethod: "bank_transfer" | "upi" | "cheque" | "cash" | "card" | "other";
+  referenceNumber?: string;
+  notes?: string;
+}
+
+interface VendorPaymentResult {
+  id: number;
+  billId: number;
+  amount: string;
+  paymentDate: string;
+  paymentMethod: string;
+}
+
+export function useRecordVendorPayment(billId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<VendorPaymentResult, Error, RecordVendorPaymentInput>({
+    mutationFn: (input) =>
+      apiClient.post<VendorPaymentResult>(`/accounting/purchase-bills/${billId}/payments`, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.purchaseBill(billId) });
+    },
+  });
+}

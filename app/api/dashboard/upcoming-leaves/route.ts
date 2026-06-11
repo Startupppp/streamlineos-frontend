@@ -1,4 +1,5 @@
 import { withAuth, ok } from "@/lib/api/helpers";
+import { cached, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { leaveRequests, users } from "@/lib/db/schema";
 import { and, eq, gte, lte } from "drizzle-orm";
@@ -10,27 +11,34 @@ export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const today = formatDateOnly(new Date());
     const nextWeek = formatDateOnly(addDays(new Date(), 7));
+    const orgId = session.orgId;
 
-    const rows = await db
-      .select({
-        id: leaveRequests.id,
-        startDate: leaveRequests.startDate,
-        endDate: leaveRequests.endDate,
-        leaveTypeId: leaveRequests.leaveTypeId,
-        employeeName: users.name,
-        employeeDesignation: users.designation,
-        employeeImage: users.image,
-      })
-      .from(leaveRequests)
-      .innerJoin(users, eq(leaveRequests.userId, users.id))
-      .where(
-        and(
-          eq(leaveRequests.orgId, session.orgId),
-          eq(leaveRequests.status, "APPROVED"),
-          gte(leaveRequests.startDate, today),
-          lte(leaveRequests.startDate, nextWeek)
-        )
-      );
+    const key = `dashboard:upcoming-leaves:${orgId}:${today}`;
+    const rows = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: leaveRequests.id,
+            startDate: leaveRequests.startDate,
+            endDate: leaveRequests.endDate,
+            leaveTypeId: leaveRequests.leaveTypeId,
+            employeeName: users.name,
+            employeeDesignation: users.designation,
+            employeeImage: users.image,
+          })
+          .from(leaveRequests)
+          .innerJoin(users, eq(leaveRequests.userId, users.id))
+          .where(
+            and(
+              eq(leaveRequests.orgId, orgId),
+              eq(leaveRequests.status, "APPROVED"),
+              gte(leaveRequests.startDate, today),
+              lte(leaveRequests.startDate, nextWeek)
+            )
+          ),
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
     return ok(rows);
   });

@@ -1,4 +1,5 @@
 import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { leadScoringRules } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -14,12 +15,26 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const data = await db
-      .select()
-      .from(leadScoringRules)
-      .where(eq(leadScoringRules.orgId, session.orgId))
-      .orderBy(desc(leadScoringRules.createdAt))
-      .limit(100);
+    const orgId = session.orgId;
+    const key = `crm:scoring-rules:${orgId}`;
+    const data = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: leadScoringRules.id,
+            field: leadScoringRules.field,
+            operator: leadScoringRules.operator,
+            value: leadScoringRules.value,
+            points: leadScoringRules.points,
+            createdAt: leadScoringRules.createdAt,
+          })
+          .from(leadScoringRules)
+          .where(eq(leadScoringRules.orgId, orgId))
+          .orderBy(desc(leadScoringRules.createdAt))
+          .limit(100),
+      { ttlSeconds: CACHE_TTL.LONG },
+    );
     return ok(data);
   });
 }
@@ -37,6 +52,7 @@ export async function POST(req: NextRequest) {
         points: input.points,
       })
       .returning();
+    await invalidateCachePattern(`crm:scoring-rules:${session.orgId}*`);
     return ok(rule, 201);
   });
 }

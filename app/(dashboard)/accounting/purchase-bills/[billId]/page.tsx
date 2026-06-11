@@ -1,8 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Send } from "lucide-react";
+import { ChevronLeft, CreditCard, Send } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { usePurchaseBill, usePostPurchaseBill } from "@/lib/api/hooks/accounting";
+import { RecordVendorPaymentDialog } from "@/features/accounting/record-vendor-payment-dialog";
 import type { PurchaseBillStatus } from "@/types/accounting";
 
 interface PurchaseBillDetailPageProps {
@@ -40,6 +41,7 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
   const id = Number(billId);
   const query = usePurchaseBill(id);
   const postMutation = usePostPurchaseBill(id);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
   const bill = query.data;
 
   function handlePost(): void {
@@ -49,11 +51,17 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
     });
   }
 
+  function handleOpenPaymentDialog(): void {
+    setPaymentDialogOpen(true);
+  }
+
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={query.error.message} />;
   if (!bill) return <ErrorState title="Not found" description={`Bill #${billId}`} />;
 
   const canPost = bill.status === "DRAFT";
+  const outstanding = Number(bill.total) - Number(bill.amountPaid);
+  const canRecordPayment = (bill.status === "POSTED" || bill.status === "PARTIALLY_PAID") && outstanding > 0.005;
 
   return (
     <PageWrapper
@@ -66,6 +74,12 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
             <Button size="sm" onClick={handlePost} disabled={postMutation.isPending}>
               <Send className="mr-1 h-4 w-4" />
               {postMutation.isPending ? "Posting…" : "Post bill"}
+            </Button>
+          )}
+          {canRecordPayment && (
+            <Button size="sm" variant="outline" onClick={handleOpenPaymentDialog}>
+              <CreditCard className="mr-1 h-4 w-4" />
+              Record payment
             </Button>
           )}
           <Button variant="ghost" size="sm" asChild>
@@ -162,6 +176,14 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
           </div>
         </Card>
       </div>
+
+      <RecordVendorPaymentDialog
+        billId={id}
+        billNumber={bill.billNumber}
+        remaining={outstanding}
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+      />
     </PageWrapper>
   );
 }

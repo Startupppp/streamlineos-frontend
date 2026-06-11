@@ -100,7 +100,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
   "/ai": ["settings:manage"],
-  "/calendar": ["self:attendance"],
   "/blogs/admin": ["settings:manage"],
 };
 

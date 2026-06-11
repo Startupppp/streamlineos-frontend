@@ -309,7 +309,7 @@ export function LeadDetailHeader({
         </div>
 
         <div className="px-4 pb-4 pt-1">
-          <div className="flex items-start px-2 py-2.5 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
+          <div className="flex flex-wrap items-start gap-2 px-2 py-2.5 rounded-xl bg-muted/30 border border-border/50">
             {STATUS_PIPELINE.map((status, i) => (
               <PipelineStep
                 key={status}

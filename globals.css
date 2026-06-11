@@ -86,7 +86,7 @@
   --radius: 0.625rem;
 
   /* ─── Surface ─── */
-  --background: #eef3fb;          /* page canvas (matches .surface-soft base) */
+  --background: #e7edf8;          /* page canvas (matches .surface-soft base) — slightly deeper than slate-100 for cleaner card lift */
   --foreground: #0b1220;          /* primary ink */
   --card: #ffffff;
   --card-foreground: #0b1220;
@@ -150,44 +150,56 @@
 }
 
 .dark {
-  --background: #06091a;
+  /* ─── Surface (deeper blacks for true OLED-feel) ─── */
+  --background: #07091a;          /* page canvas */
   --foreground: #f1f4fb;
-  --card: #0e1426;
+  --card: #101428;                /* elevated panel — clearly lifted from bg */
   --card-foreground: #f1f4fb;
-  --popover: #111830;
+  --popover: #141a32;
   --popover-foreground: #f1f4fb;
-
-  --primary: #ffffff;
-  --primary-foreground: #03060f;
-  --secondary: #1e293b;
-  --secondary-foreground: #f1f4fb;
   --muted: #161e36;
-  --muted-foreground: #8089a8;
-  --accent: #1e293b;
+  --muted-foreground: #94a0c0;
+  --border: rgba(148, 178, 245, 0.12);     /* subtle but visible against card */
+  --input: rgba(148, 178, 245, 0.14);
+  --ring: #60a5fa;
+
+  /* ─── CTA & Action — invert ink to white for dark ─── */
+  --primary: #f1f4fb;
+  --primary-foreground: #07091a;
+  --secondary: #1a2238;
+  --secondary-foreground: #f1f4fb;
+  --accent: #1a2238;
   --accent-foreground: #f1f4fb;
   --destructive: #ef4444;
   --destructive-foreground: #f1f4fb;
-  --border: rgba(160, 190, 255, 0.08);
-  --input: rgba(160, 190, 255, 0.10);
-  --ring: #60a5fa;
 
+  /* ─── Charts (slightly punchier in dark for legibility) ─── */
   --chart-1: #3b82f6;
   --chart-2: #06b6d4;
   --chart-3: #60a5fa;
   --chart-4: #8b5cf6;
   --chart-5: #ec4899;
 
-  --sidebar: #03060f;
-  --sidebar-foreground: #a4afca;
+  /* ─── Sidebar (deepest layer — same dark-on-dark Linear/Vercel pattern) ─── */
+  --sidebar: #0b1024;
+  --sidebar-foreground: #c4cbe0;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
-  --sidebar-accent-foreground: #f1f4fb;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
+  --sidebar-accent-foreground: #f4f7ff;
+  --sidebar-border: rgba(148, 178, 245, 0.10);
   --sidebar-ring: #60a5fa;
 
   --gold: #3b82f6;
   --blue: #1d4ed8;
+}
+
+/* ─── Shadow override for dark mode — light glass-highlight instead of dark drop ─── */
+.dark .shadow-noir {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(148, 178, 245, 0.04);
 }
 
 /* ─── Hide scrollbar utility (top-level, outside @layer so it always wins) ─── */
@@ -271,7 +283,10 @@
 }
 
 .shadow-noir {
-  box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px color-mix(in srgb, var(--primary) 6%, transparent);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 /* ─── Hover effects ──────────────────────────────────────────────────────────── */
@@ -458,7 +473,7 @@
     radial-gradient(ellipse 90% 65% at 15% 8%, rgba(96, 165, 250, 0.14) 0%, transparent 60%),
     radial-gradient(ellipse 90% 65% at 88% 92%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
     radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255, 255, 255, 0.55) 0%, transparent 70%),
-    #eef3fb;
+    #e7edf8;
   background-attachment: fixed;
 }
 

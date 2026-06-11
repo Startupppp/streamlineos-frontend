@@ -130,6 +130,10 @@ Register `queryKeys.blog`, `queryKeys.landing`, `queryKeys.publicBooking` in `li
 | `features/settings/settings-profile.tsx:69` | `apiClient.upload()` |
 | `app/(dashboard)/ceo/qr-code/page.tsx:304` | `apiClient.download()` |
 | `app/(dashboard)/settings/data-hub/page.tsx:160` | `apiClient.download()` |
+| `features/settings/organization/app-config-card.tsx:87` | `apiClient.upload()` (added in final-audit pass) |
+| `hooks/use-file-url.ts:21, 48` | `apiClient.get` + `apiClient.download()` (added in final-audit pass) |
+| `lib/api/hooks/use-upload-file.ts:25` | `apiClient.upload()` (added in final-audit pass) |
+| `lib/api/hooks/use-import-expenses.ts:31` | `apiClient.upload()` (added in final-audit pass) |
 
 ### Phase 4 — HydrationBoundary
 

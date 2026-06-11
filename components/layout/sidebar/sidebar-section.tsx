@@ -39,7 +39,7 @@ export function SidebarSection({
         <button
           type="button"
           onClick={onToggleGroup}
-          className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-blue-500/8 transition-colors"
+          className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-sidebar-accent transition-colors"
         >
           <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground group-hover/header:text-sidebar-foreground select-none transition-colors">
             {group.label}
