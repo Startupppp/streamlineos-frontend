@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useAccounts, useCreatePurchaseBill, type CreatePurchaseBillInput } from "@/lib/api/hooks/accounting";
-import { useClientAccounts } from "@/lib/api/hooks/crm/clients";
+import { useClientAccounts } from "@/lib/api/hooks/crm";
 import { INDIAN_STATES } from "@/lib/accounting/indian-states";
 
 interface DraftItem {
