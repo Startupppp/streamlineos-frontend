@@ -50,7 +50,7 @@ Grep for `role === "ADMIN"` / `ROLES.ADMIN` finds **20+ call-sites** in:
 - `app/api/onboarding/[userId]/route.ts`, `app/api/onboarding/tasks/[taskId]/route.ts`
 - `app/api/hr/attendance/logs/route.ts`
 - `app/(dashboard)/settings/organization/page.tsx`
-- `components/dashboard/widgets/{announcements,quick-actions}-widget.tsx`
+- `components/dashboard/{announcements,quick-actions}-widget.tsx`
 - `components/hr/request-wfh-dialog.tsx`
 - `server/actions/{hr-actions,holiday-actions,leave-actions,project-actions,weekly-attendance-report,monthly-expense-report}.ts`
 - `features/hr/recruitment/candidate-detail/vault-tab.tsx`

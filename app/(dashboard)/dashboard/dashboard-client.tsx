@@ -66,15 +66,15 @@ import {
   TeamAttendanceWidget,
   LeavesTodayWidget,
 } from "@/features/dashboard/hr-widgets";
-import { AnnouncementsWidget } from "@/components/dashboard/widgets/announcements-widget";
-import { MyTasksWidget } from "@/components/dashboard/widgets/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/widgets/timesheet-widget";
-import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/widgets/leave-balance-widget";
-import { ExecutiveKpiWidget } from "@/components/dashboard/widgets/executive-kpi-widget";
-import { ProjectHealthWidget } from "@/components/dashboard/widgets/project-health-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/widgets/upcoming-events-widget";
-import { QuickActionsWidget } from "@/components/dashboard/widgets/quick-actions-widget";
-import { WidgetSkeleton } from "@/components/dashboard/widgets/widget-skeleton";
+import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
+import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
+import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
+import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/leave-balance-widget";
+import { ExecutiveKpiWidget } from "@/components/dashboard/executive-kpi-widget";
+import { ProjectHealthWidget } from "@/components/dashboard/project-health-widget";
+import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
+import { QuickActionsWidget } from "@/components/dashboard/quick-actions-widget";
+import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useAbility } from "@/lib/abilities-context";
 
 export function DashboardClient() {
@@ -190,45 +190,162 @@ export function DashboardClient() {
     switch (role) {
       case "CEO":
         return [
-          { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
-          { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
-          { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
-          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+          {
+            id: "employees",
+            label: "Total Employees",
+            value: stats.totalEmployees,
+            icon: Users,
+            href: "/hr",
+          },
+          {
+            id: "projects",
+            label: "Active Projects",
+            value: stats.activeProjects,
+            icon: Briefcase,
+            href: "/projects",
+          },
+          {
+            id: "present",
+            label: "Present Today",
+            value: stats.presentToday,
+            icon: CalendarCheck,
+            href: "/hr/attendance",
+          },
+          {
+            id: "org",
+            label: "Organization",
+            value: stats.orgName,
+            icon: Building2,
+          },
         ];
       case "HR":
         return [
-          { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
-          { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
-          { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
-          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+          {
+            id: "employees",
+            label: "Total Employees",
+            value: stats.totalEmployees,
+            icon: Users,
+            href: "/hr",
+          },
+          {
+            id: "present",
+            label: "Present Today",
+            value: stats.presentToday,
+            icon: CalendarCheck,
+            href: "/hr/attendance",
+          },
+          {
+            id: "projects",
+            label: "Active Projects",
+            value: stats.activeProjects,
+            icon: Briefcase,
+            href: "/projects",
+          },
+          {
+            id: "org",
+            label: "Organization",
+            value: stats.orgName,
+            icon: Building2,
+          },
         ];
       case "SALES":
         return [
-          { id: "leads", label: "My Leads", value: rs?.myLeads ?? 0, icon: Contact2, href: "/crm/leads" },
-          { id: "converted", label: "Converted", value: rs?.myConverted ?? 0, icon: TrendingUp, href: "/crm/leads" },
-          { id: "deals", label: "My Deals", value: rs?.myDeals ?? 0, icon: Zap, href: "/crm/deals" },
-          { id: "target", label: "Target Progress", value: `${rs?.targetProgress ?? 0}%`, icon: Target, href: "/crm/targets" },
+          {
+            id: "leads",
+            label: "My Leads",
+            value: rs?.myLeads ?? 0,
+            icon: Contact2,
+            href: "/crm/leads",
+          },
+          {
+            id: "converted",
+            label: "Converted",
+            value: rs?.myConverted ?? 0,
+            icon: TrendingUp,
+            href: "/crm/leads",
+          },
+          {
+            id: "deals",
+            label: "My Deals",
+            value: rs?.myDeals ?? 0,
+            icon: Zap,
+            href: "/crm/deals",
+          },
+          {
+            id: "target",
+            label: "Target Progress",
+            value: `${rs?.targetProgress ?? 0}%`,
+            icon: Target,
+            href: "/crm/targets",
+          },
         ];
       case "CUSTOMER_SUPPORT":
         return [
-          { id: "projects", label: "My Projects", value: rs?.myProjects ?? 0, icon: Briefcase, href: "/projects" },
-          { id: "tickets", label: "My Tickets", value: rs?.myTickets ?? 0, icon: Ticket },
-          { id: "done", label: "Completed", value: rs?.myTicketsDone ?? 0, icon: CheckCircle2 },
-          { id: "inprogress", label: "In Progress", value: rs?.myTicketsInProgress ?? 0, icon: ListChecks },
+          {
+            id: "projects",
+            label: "My Projects",
+            value: rs?.myProjects ?? 0,
+            icon: Briefcase,
+            href: "/projects",
+          },
+          {
+            id: "tickets",
+            label: "My Tickets",
+            value: rs?.myTickets ?? 0,
+            icon: Ticket,
+          },
+          {
+            id: "done",
+            label: "Completed",
+            value: rs?.myTicketsDone ?? 0,
+            icon: CheckCircle2,
+          },
+          {
+            id: "inprogress",
+            label: "In Progress",
+            value: rs?.myTicketsInProgress ?? 0,
+            icon: ListChecks,
+          },
         ];
       case "ENGINEERING":
       case "DESIGN":
       case "VIDEO_EDITOR":
       case "DIGITAL_MARKETING":
         return [
-          { id: "projects", label: "My Projects", value: rs?.myProjects ?? 0, icon: Briefcase, href: "/projects" },
-          { id: "tickets", label: "My Tasks", value: rs?.myTickets ?? 0, icon: ListChecks },
-          { id: "done", label: "Completed", value: rs?.myTicketsDone ?? 0, icon: CheckCircle2 },
-          { id: "inprogress", label: "In Progress", value: rs?.myTicketsInProgress ?? 0, icon: Zap },
+          {
+            id: "projects",
+            label: "My Projects",
+            value: rs?.myProjects ?? 0,
+            icon: Briefcase,
+            href: "/projects",
+          },
+          {
+            id: "tickets",
+            label: "My Tasks",
+            value: rs?.myTickets ?? 0,
+            icon: ListChecks,
+          },
+          {
+            id: "done",
+            label: "Completed",
+            value: rs?.myTicketsDone ?? 0,
+            icon: CheckCircle2,
+          },
+          {
+            id: "inprogress",
+            label: "In Progress",
+            value: rs?.myTicketsInProgress ?? 0,
+            icon: Zap,
+          },
         ];
       default:
         return [
-          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+          {
+            id: "org",
+            label: "Organization",
+            value: stats.orgName,
+            icon: Building2,
+          },
         ];
     }
   }, [stats, role, roleStats]);
@@ -250,7 +367,9 @@ export function DashboardClient() {
     const inProgress = raw.filter(
       (t) => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW",
     );
-    const todo = raw.filter((t) => t.status === "TODO" || t.status === "BACKLOG");
+    const todo = raw.filter(
+      (t) => t.status === "TODO" || t.status === "BACKLOG",
+    );
     return [...inProgress, ...todo].map(toDashboardTicket);
   }, [myIssuesData]);
 
@@ -305,7 +424,10 @@ export function DashboardClient() {
   if (error) {
     return (
       <PageWrapper title="Dashboard" subtitle="Something went wrong">
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6" role="alert">
+        <div
+          className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+          role="alert"
+        >
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1 space-y-3">

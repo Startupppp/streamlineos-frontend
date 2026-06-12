@@ -75,7 +75,7 @@ A python regex pass migrated:
 - `app/api/onboarding/tasks/[taskId]/route.ts` — `manage hr:employees`
 - `app/api/onboarding/[userId]/route.ts` — `manage hr:employees`
 - `server/actions/project-actions.ts` (×2) — `manage projects`
-- `components/dashboard/widgets/announcements-widget.tsx` — `manage settings`
+- `components/dashboard/announcements-widget.tsx` — `manage settings`
 
 ### 6. Stray-comma import cleanup
 
