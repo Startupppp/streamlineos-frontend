@@ -420,7 +420,7 @@ export default function DocumentReviewPage() {
                               href={doc.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                              className="inline-flex items-center gap-0.5 text-blue-600 hover:text-blue-700 hover:underline"
                               aria-label={`Download ${doc.fileName}`}
                             >
                               {doc.fileName}

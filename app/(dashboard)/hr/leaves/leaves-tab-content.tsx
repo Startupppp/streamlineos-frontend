@@ -21,7 +21,7 @@ import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
 import { useAbility } from "@/lib/abilities-context";
 
-const DONUT_COLORS = ["#bd882c", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
+const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
 function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
   const data = useMemo(

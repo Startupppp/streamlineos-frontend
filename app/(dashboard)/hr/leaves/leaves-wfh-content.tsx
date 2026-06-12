@@ -120,7 +120,7 @@ export function LeavesWfhContent() {
               label="Pending Requests"
               value={pendingCount}
               icon={Clock3}
-              color="gold"
+              color="amber"
             />
             <StatCard
               label="Approved (YTD)"
@@ -180,20 +180,20 @@ export function LeavesWfhContent() {
             <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
               <TabsTrigger
                 value="my-leaves"
-                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 My Leaves
               </TabsTrigger>
               <TabsTrigger
                 value="wfh"
-                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 Work From Home
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="approvals"
-                  className="relative data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                  className="relative rounded-md px-4 py-2 text-sm font-medium transition-all"
                 >
                   Approvals
                   {totalPendingApprovals > 0 && (

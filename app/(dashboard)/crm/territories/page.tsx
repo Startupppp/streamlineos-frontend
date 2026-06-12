@@ -356,7 +356,7 @@ export default function TerritoriesPage() {
           <StatCard
             label="Cities Covered"
             value={totalCities}
-            color="gold"
+            color="amber"
             icon={MapPin}
           />
         </div>

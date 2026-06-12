@@ -17,7 +17,7 @@ export function LeadVolumeChart({ data }: LeadVolumeChartProps) {
           <XAxis dataKey="week" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
           <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-          <Line type="monotone" dataKey="leads" stroke="#bd882c" strokeWidth={2} dot={{ fill: "#bd882c", r: 3 }} />
+          <Line type="monotone" dataKey="leads" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6", r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     </AnalyticsChartCard>

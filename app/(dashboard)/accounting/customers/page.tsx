@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Users } from "lucide-react";
 import { useCustomersOutstanding } from "@/lib/api/hooks/accounting";
 
 function formatCurrency(value: string): string {
@@ -74,18 +76,17 @@ export default function CustomerLedgersPage() {
             description={query.error.message}
           />
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">
-              No customers found
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              {search
+          <EmptyState
+            icon={Users}
+            title="No customers found"
+            description={
+              search
                 ? "Try a different search term."
                 : onlyOutstanding
                   ? "No customers currently owe receivables."
-                  : "No customers yet."}
-            </p>
-          </div>
+                  : "No customers yet."
+            }
+          />
         ) : (
           <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
             <Table>

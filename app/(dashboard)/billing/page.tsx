@@ -79,7 +79,7 @@ export default function BillingPage() {
             label="Outstanding"
             value={statsLoading ? "—" : fmt(stats?.totalOutstanding ?? 0)}
             icon={Clock}
-            color="gold"
+            color="amber"
           />
           <StatCard
             label="Overdue"

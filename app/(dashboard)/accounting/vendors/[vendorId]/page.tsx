@@ -69,15 +69,15 @@ export default function VendorLedgerPage({ params }: VendorLedgerPageProps) {
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card className="p-4">
-            <div className="text-sm text-slate-600">Total billed</div>
+            <div className="text-sm text-muted-foreground">Total billed</div>
             <div className="text-xl font-mono tabular-nums">{fmt(summary.totalBilled)}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-sm text-slate-600">Total paid</div>
+            <div className="text-sm text-muted-foreground">Total paid</div>
             <div className="text-xl font-mono tabular-nums">{fmt(summary.totalPaid)}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-sm text-slate-600">Outstanding</div>
+            <div className="text-sm text-muted-foreground">Outstanding</div>
             <div className={`text-xl font-mono tabular-nums ${outstanding > 0 ? "text-rose-600 font-medium" : ""}`}>
               {fmt(summary.outstanding)}
             </div>
@@ -86,17 +86,17 @@ export default function VendorLedgerPage({ params }: VendorLedgerPageProps) {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div>
-            <label className="text-sm text-slate-600 block mb-1">From</label>
+            <label className="text-sm text-muted-foreground block mb-1">From</label>
             <Input type="date" value={from} onChange={handleFromChange} />
           </div>
           <div>
-            <label className="text-sm text-slate-600 block mb-1">To</label>
+            <label className="text-sm text-muted-foreground block mb-1">To</label>
             <Input type="date" value={to} onChange={handleToChange} />
           </div>
         </div>
 
         {dateFilteredLines.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-600">
+          <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
             No AP journal lines for this vendor in the selected range.
           </div>
         ) : (
@@ -131,7 +131,7 @@ export default function VendorLedgerPage({ params }: VendorLedgerPageProps) {
                         <span className="text-slate-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-slate-600">
+                    <TableCell className="text-sm text-muted-foreground">
                       {line.sourceType}{line.sourceEvent ? ` · ${line.sourceEvent}` : ""}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{Number(line.debit) > 0 ? fmt(line.debit) : ""}</TableCell>

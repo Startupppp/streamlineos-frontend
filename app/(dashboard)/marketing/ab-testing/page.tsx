@@ -234,7 +234,7 @@ export default function AbTestingPage() {
             label="Total Tests"
             value={totalTests}
             icon={FlaskConical}
-            color="gold"
+            color="amber"
             index={0}
           />
           <StatCard

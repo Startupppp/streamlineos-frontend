@@ -93,7 +93,7 @@ export default function SlaCompliancePage() {
           <StatCard
             label="Avg Resolution"
             value={`${s.avgResolutionHours}h`}
-            color="gold"
+            color="amber"
             icon={Clock}
           />
         </div>

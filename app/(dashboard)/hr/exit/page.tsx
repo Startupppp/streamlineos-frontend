@@ -321,7 +321,7 @@ export default function ExitManagementPage() {
           <a
             href="/Resignation Letter Template.docx"
             download
-            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
           >
             <Download className="h-3 w-3" />
             Download Resignation Letter Template

@@ -94,25 +94,25 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
       <div className="space-y-4">
         <Card className="p-4">
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <dt className="text-slate-600">Status</dt>
+            <dt className="text-muted-foreground">Status</dt>
             <dd><Badge variant={STATUS_VARIANT[bill.status]}>{bill.status}</Badge></dd>
-            <dt className="text-slate-600">Vendor</dt>
+            <dt className="text-muted-foreground">Vendor</dt>
             <dd>{bill.vendorName ?? "—"}</dd>
-            <dt className="text-slate-600">Vendor bill #</dt>
+            <dt className="text-muted-foreground">Vendor bill #</dt>
             <dd>{bill.vendorBillNumber ?? "—"}</dd>
-            <dt className="text-slate-600">Due date</dt>
+            <dt className="text-muted-foreground">Due date</dt>
             <dd>{formatDate(bill.dueDate)}</dd>
-            <dt className="text-slate-600">Place of supply</dt>
+            <dt className="text-muted-foreground">Place of supply</dt>
             <dd>{bill.placeOfSupply ?? "—"}</dd>
-            <dt className="text-slate-600">Vendor GSTIN</dt>
+            <dt className="text-muted-foreground">Vendor GSTIN</dt>
             <dd>{bill.vendorGstin ?? "—"}</dd>
-            <dt className="text-slate-600">Reverse charge</dt>
+            <dt className="text-muted-foreground">Reverse charge</dt>
             <dd>{bill.reverseCharge ? "Yes" : "No"}</dd>
-            <dt className="text-slate-600">Expense account</dt>
+            <dt className="text-muted-foreground">Expense account</dt>
             <dd>{bill.expenseAccountCode ?? "—"}</dd>
             {bill.notes && (
               <>
-                <dt className="text-slate-600">Notes</dt>
+                <dt className="text-muted-foreground">Notes</dt>
                 <dd className="col-span-3">{bill.notes}</dd>
               </>
             )}
@@ -166,7 +166,7 @@ export default function PurchaseBillDetailPage({ params }: PurchaseBillDetailPag
               <div className="border-t border-slate-200/60 pt-1 flex justify-between font-medium text-base">
                 <span>Total</span><span>{formatAmount(bill.total)}</span>
               </div>
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-muted-foreground">
                 <span>Amount paid</span><span>{formatAmount(bill.amountPaid)}</span>
               </div>
               <div className="flex justify-between font-medium">

@@ -59,11 +59,11 @@ export default function Gstr3BPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label className="text-sm text-slate-600 block mb-1">From</label>
+          <label className="text-sm text-muted-foreground block mb-1">From</label>
           <Input type="date" value={from} onChange={handleFromChange} />
         </div>
         <div>
-          <label className="text-sm text-slate-600 block mb-1">To</label>
+          <label className="text-sm text-muted-foreground block mb-1">To</label>
           <Input type="date" value={to} onChange={handleToChange} />
         </div>
       </div>
@@ -73,12 +73,12 @@ export default function Gstr3BPage() {
 
       {report && (
         <div className="space-y-4">
-          <Card className="p-4 bg-slate-50">
+          <Card className="p-4 bg-muted/40">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm tabular-nums">
-              <div><div className="text-slate-600">Net CGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.cgst)}</div></div>
-              <div><div className="text-slate-600">Net SGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.sgst)}</div></div>
-              <div><div className="text-slate-600">Net IGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.igst)}</div></div>
-              <div><div className="text-slate-600">Net tax payable</div><div className="font-mono text-base font-medium">{fmt(report.netTaxPayable.total)}</div></div>
+              <div><div className="text-muted-foreground">Net CGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.cgst)}</div></div>
+              <div><div className="text-muted-foreground">Net SGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.sgst)}</div></div>
+              <div><div className="text-muted-foreground">Net IGST</div><div className="font-mono text-base">{fmt(report.netTaxPayable.igst)}</div></div>
+              <div><div className="text-muted-foreground">Net tax payable</div><div className="font-mono text-base font-medium">{fmt(report.netTaxPayable.total)}</div></div>
             </div>
           </Card>
 
@@ -103,7 +103,7 @@ export default function Gstr3BPage() {
                 <BlockRow label="(d) Reverse charge" block={report.outward.reverseCharge} />
               </TableBody>
             </Table>
-            <div className="px-4 py-2 text-xs text-slate-600 border-t border-slate-200/60">
+            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
               {report.invoiceCount} invoice{report.invoiceCount === 1 ? "" : "s"} in period
             </div>
           </Card>
@@ -128,7 +128,7 @@ export default function Gstr3BPage() {
                 <BlockRow label="(C) Net ITC available" block={report.itc.net} />
               </TableBody>
             </Table>
-            <div className="px-4 py-2 text-xs text-slate-600 border-t border-slate-200/60">
+            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
               {report.billCount} purchase bill{report.billCount === 1 ? "" : "s"} in period
             </div>
           </Card>

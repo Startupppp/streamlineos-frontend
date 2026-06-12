@@ -43,7 +43,7 @@ const EVENT_COLORS: Record<string, string> = {
   red: "#ef4444",
   yellow: "#f59e0b",
   purple: "#a855f7",
-  gold: "#bd882c",
+  gold: "#3b82f6",
 };
 
 const EVENT_CATEGORIES = [

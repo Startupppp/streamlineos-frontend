@@ -1,9 +1,18 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Zap, Contact2, BarChart3, CalendarCheck, Users, ListChecks, Clock, Receipt } from "lucide-react";
+import { WidgetCard } from "@/components/ui/widget-card";
+import {
+  Zap,
+  Contact2,
+  BarChart3,
+  CalendarCheck,
+  Users,
+  ListChecks,
+  Clock,
+  Receipt,
+} from "lucide-react";
 import Link from "next/link";
 
 interface QuickAction {
@@ -48,12 +57,8 @@ export function QuickActionsWidget() {
   const actions = getActionsForRole(role);
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0 shrink-0">
-        <Zap className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-        <CardTitle className="text-sm font-semibold">Quick Actions</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-2">
+    <WidgetCard icon={Zap} title="Quick Actions">
+      <div className="flex flex-col gap-2">
         {actions.map((action) => {
           const Icon = action.icon;
           return (
@@ -71,7 +76,7 @@ export function QuickActionsWidget() {
             </Button>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </WidgetCard>
   );
 }

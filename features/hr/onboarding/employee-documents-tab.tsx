@@ -97,7 +97,7 @@ const DocRow = memo(function DocRow({ docType, submission, onUpload }: DocRowPro
                 href={submission.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline mt-0.5"
+                className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline mt-0.5"
                 aria-label={`View ${submission.fileName}`}
               >
                 {submission.fileName}

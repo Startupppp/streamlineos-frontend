@@ -261,15 +261,15 @@ export default function CrmAnalyticsPage() {
                 <AreaChart data={analyticsSummary.monthlyRevenue}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#bd882c" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#bd882c" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={AXIS_TICK} />
                   <YAxis tick={AXIS_TICK} />
                   <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#bd882c" strokeWidth={2} fill="url(#revenueGrad)" />
+                  <Area type="monotone" dataKey="revenue" stroke="#06b6d4" strokeWidth={2} fill="url(#revenueGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </AnalyticsChartCard>

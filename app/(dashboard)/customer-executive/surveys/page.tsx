@@ -525,7 +525,7 @@ export default function CsatSurveysPage() {
               label="Avg CSAT Score"
               value={overallAvg != null ? `${overallAvg.toFixed(1)}/5` : "—"}
               icon={Star}
-              color="gold"
+              color="amber"
             />
             <StatCard
               label="Total Responses"

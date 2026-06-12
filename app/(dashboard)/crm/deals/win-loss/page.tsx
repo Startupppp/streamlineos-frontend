@@ -85,7 +85,7 @@ export default function WinLossAnalysisPage() {
           <StatCard
             label="Win Rate"
             value={`${s.winRate}%`}
-            color="gold"
+            color="amber"
             icon={Target}
           />
           <StatCard

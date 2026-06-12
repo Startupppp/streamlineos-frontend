@@ -34,7 +34,7 @@ export const InterviewCalendarView = memo(function InterviewCalendarView({
           ? "#10b981"
           : iv.result === "FAILED"
           ? "#ef4444"
-          : "#0f2b7f",
+          : "#1e40af",
     },
   }));
 
@@ -49,7 +49,7 @@ export const InterviewCalendarView = memo(function InterviewCalendarView({
   const eventPropGetter = useCallback(
     (e: object) => ({
       style: {
-        backgroundColor: (e as BigCalEvent).resource?.color ?? "#0f2b7f",
+        backgroundColor: (e as BigCalEvent).resource?.color ?? "#1e40af",
         color: "#fff",
         borderRadius: 4,
         border: "none",

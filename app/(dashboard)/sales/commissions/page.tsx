@@ -107,7 +107,7 @@ export default function CommissionsPage() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard label="Pending" value={fmt(data?.totalPending ?? 0)} icon={Clock} color="gold" />
+          <StatCard label="Pending" value={fmt(data?.totalPending ?? 0)} icon={Clock} color="amber" />
           <StatCard label="Paid" value={fmt(data?.totalPaid ?? 0)} icon={CheckCircle2} color="green" />
         </div>
 

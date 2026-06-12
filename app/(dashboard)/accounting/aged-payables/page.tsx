@@ -35,7 +35,7 @@ export default function AgedPayablesPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label className="text-sm text-slate-600 block mb-1">As of</label>
+          <label className="text-sm text-muted-foreground block mb-1">As of</label>
           <Input type="date" value={asOf} onChange={handleAsOfChange} />
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function AgedPayablesPage() {
       {query.error && <ErrorState description={query.error.message} />}
 
       {report && report.rows.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-600">
+        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
           No outstanding payables as of {asOf}.
         </div>
       )}
@@ -79,7 +79,7 @@ export default function AgedPayablesPage() {
                   <TableCell className="text-right tabular-nums font-medium">{fmt(row.total)}</TableCell>
                 </TableRow>
               ))}
-              <TableRow className="font-medium bg-slate-50">
+              <TableRow className="font-medium bg-muted/40">
                 <TableCell>Total</TableCell>
                 <TableCell className="text-right tabular-nums">{fmt(report.totals.current)}</TableCell>
                 <TableCell className="text-right tabular-nums">{fmt(report.totals.d1_30)}</TableCell>

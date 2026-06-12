@@ -108,7 +108,7 @@ export function DashboardShell({
                   <div className="h-7 w-7 rounded-lg overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/20 flex items-center justify-center">
                     <Image src="/logo.svg" alt="StreamlineOS" width={20} height={20} className="object-contain" />
                   </div>
-                  <span className="text-sm font-bold gold-text">StreamlineOS</span>
+                  <span className="text-sm font-bold brand-text">StreamlineOS</span>
                 </div>
               </header>
             )}

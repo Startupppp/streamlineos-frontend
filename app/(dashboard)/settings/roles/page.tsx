@@ -55,9 +55,17 @@ const RESOURCE_GROUPS: Record<string, string> = {
   "crm:leads": "CRM - Leads",
   "crm:targets": "CRM - Targets",
   "crm:reports": "CRM - Reports",
+  "crm:clients": "CRM - Clients",
+  "crm:incentives": "CRM - Incentives",
   "dashboard:sales": "Dashboard - Sales",
   "dashboard:customer-executive": "Dashboard - Customer Executive",
   "dashboard:support": "Dashboard - Support",
+  "accounting": "Accounting",
+  "branch": "Branches",
+  "dm:leads": "Marketing - Leads",
+  "dm:campaigns": "Marketing - Campaigns",
+  "dm:social": "Marketing - Social",
+  "chat": "Chat",
   "self": "Self-Service",
 };
 

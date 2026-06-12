@@ -17,7 +17,7 @@ export function DealValueChart({ data }: DealValueChartProps) {
           <XAxis dataKey="stage" tick={AXIS_TICK} />
           <YAxis tick={AXIS_TICK} />
           <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${value}L`, "Value"]} />
-          <Bar dataKey="value" fill="#bd882c" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </AnalyticsChartCard>

@@ -111,7 +111,7 @@ export default function ForecastReportPage() {
             label="Total Weighted Revenue"
             value={fmtCurrency(data.totalWeighted)}
             icon={TrendingUp}
-            color="gold"
+            color="amber"
             index={0}
           />
           <StatCard

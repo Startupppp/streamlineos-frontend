@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import { getPublicDocuments } from "@/server/actions/document-actions";
 import { format } from "date-fns";
@@ -63,10 +64,12 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
             ))}
           </div>
         ) : documents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <EmptyPublicDocsIllustration className="mb-3" />
-            <p className="text-sm text-muted-foreground">No public documents shared yet</p>
-          </div>
+          <EmptyState
+            illustration={<EmptyPublicDocsIllustration className="h-24 w-24" />}
+            title="No public documents"
+            description="Public documents shared by HR will appear here."
+            compact
+          />
         ) : (
           <div className="space-y-2">
             {documents.map((doc) => (
@@ -75,8 +78,8 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                 className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
                 onClick={() => viewFile(doc.fileUrl)}
               >
-                <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                  <FileText className="h-4 w-4 text-primary" />
+                <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
+                  <FileText className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">

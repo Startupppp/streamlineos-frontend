@@ -219,7 +219,7 @@ export default function LandingPagesPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Pages" value={totalPages} icon={Globe} color="blue" />
-        <StatCard label="Total Views" value={totalViews.toLocaleString()} icon={Eye} color="gold" />
+        <StatCard label="Total Views" value={totalViews.toLocaleString()} icon={Eye} color="amber" />
         <StatCard label="Views Today" value={todayViews} icon={BarChart2} color="green" />
         <StatCard label="Views This Week" value={weekViews.toLocaleString()} icon={TrendingUp} color="purple" />
       </div>
@@ -260,7 +260,7 @@ export default function LandingPagesPage() {
                     <TableCell>
                       <button
                         onClick={() => openDetail(page)}
-                        className="text-sm font-medium hover:text-primary hover:underline underline-offset-2 text-left"
+                        className="text-sm font-medium hover:text-blue-600 hover:text-blue-700 hover:underline underline-offset-2 text-left"
                         aria-label={`View details for ${page.name}`}
                       >
                         {page.name}

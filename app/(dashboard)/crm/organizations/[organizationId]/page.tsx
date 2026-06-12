@@ -8,6 +8,7 @@ import {
   Clock, FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,34 +29,6 @@ import { LinkParentDialog } from "@/features/crm/organizations/detail/link-paren
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  color?: "gold" | "blue" | "green" | "red";
-}
-
-function StatCard({ label, value, icon: Icon, color = "gold" }: StatCardProps) {
-  const colorMap = {
-    gold: "text-blue-600 bg-blue-500/10",
-    blue: "text-blue-500 bg-blue-500/10",
-    green: "text-emerald-400 bg-emerald-500/10",
-    red: "text-red-400 bg-red-500/10",
-  };
-  return (
-    <Card className="shadow-sm">
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", colorMap[color])}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground leading-none">{label}</p>
-          <p className="text-lg font-semibold leading-tight mt-0.5">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function OrganizationDetailPage({
   params,
@@ -182,7 +155,7 @@ export default function OrganizationDetailPage({
             label="Open Deals"
             value={rollupLoading ? "..." : (rollup?.openDeals ?? 0)}
             icon={TrendingUp}
-            color="gold"
+            color="amber"
           />
           <StatCard
             label="Total Deal Value"

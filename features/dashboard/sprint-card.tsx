@@ -69,7 +69,7 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
               </div>
               <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress" aria-valuetext={`${summary.progress}% complete — ${summary.completedPoints} of ${summary.totalPoints} points`}>
                 <div
-                  className="h-full rounded-full transition-all gold-gradient"
+                  className="h-full rounded-full transition-all bg-gradient-to-r from-blue-500 to-cyan-500"
                   style={{ width: `${Math.min(100, Math.max(0, summary.progress))}%` }}
                 />
               </div>

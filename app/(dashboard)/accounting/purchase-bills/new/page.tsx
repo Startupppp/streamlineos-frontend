@@ -231,7 +231,7 @@ export default function NewPurchaseBillPage() {
         <Card className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Vendor</label>
+              <label className="text-sm text-muted-foreground block mb-1">Vendor</label>
               <Select value={vendorId} onValueChange={handleVendorChange}>
                 <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -242,11 +242,11 @@ export default function NewPurchaseBillPage() {
               </Select>
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Vendor bill #</label>
+              <label className="text-sm text-muted-foreground block mb-1">Vendor bill #</label>
               <Input value={vendorBillNumber} onChange={handleVendorBillNumberChange} placeholder="As printed on the bill" />
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Status</label>
+              <label className="text-sm text-muted-foreground block mb-1">Status</label>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -256,15 +256,15 @@ export default function NewPurchaseBillPage() {
               </Select>
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Bill date</label>
+              <label className="text-sm text-muted-foreground block mb-1">Bill date</label>
               <Input type="date" value={billDate} onChange={handleBillDateChange} />
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Due date</label>
+              <label className="text-sm text-muted-foreground block mb-1">Due date</label>
               <Input type="date" value={dueDate} onChange={handleDueDateChange} />
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Expense account</label>
+              <label className="text-sm text-muted-foreground block mb-1">Expense account</label>
               <Select value={expenseAccountCode} onValueChange={handleExpenseChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -281,7 +281,7 @@ export default function NewPurchaseBillPage() {
           <div className="text-sm font-medium mb-3">GST</div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Place of supply</label>
+              <label className="text-sm text-muted-foreground block mb-1">Place of supply</label>
               <Select value={placeOfSupply} onValueChange={handlePlaceOfSupplyChange}>
                 <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -292,11 +292,11 @@ export default function NewPurchaseBillPage() {
               </Select>
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Vendor GSTIN</label>
+              <label className="text-sm text-muted-foreground block mb-1">Vendor GSTIN</label>
               <Input value={vendorGstin} onChange={handleVendorGstinChange} placeholder="15-char GSTIN" />
             </div>
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Your GSTIN</label>
+              <label className="text-sm text-muted-foreground block mb-1">Your GSTIN</label>
               <Input value={supplierGstin} onChange={handleSupplierGstinChange} placeholder="15-char GSTIN" />
             </div>
             <div className="sm:col-span-3 flex items-center gap-2">
@@ -358,10 +358,10 @@ export default function NewPurchaseBillPage() {
         <Card className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm text-slate-600 block mb-1">Notes</label>
+              <label className="text-sm text-muted-foreground block mb-1">Notes</label>
               <Textarea value={notes} onChange={handleNotesChange} rows={3} />
               <div className="mt-4">
-                <label className="text-sm text-slate-600 block mb-1">Discount</label>
+                <label className="text-sm text-muted-foreground block mb-1">Discount</label>
                 <Input type="number" min="0" step="0.01" value={discount} onChange={handleDiscountChange} className="max-w-xs" />
               </div>
             </div>

@@ -39,13 +39,13 @@ import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 
 const CONFETTI_COLORS = [
-"#bd882c",
-"#0f2b7f",
-"#10B981",
-"#F59E0B",
-"#3B82F6",
-"#EF4444",
-"#8B5CF6",
+  "#06b6d4",
+  "#1e40af",
+  "#10B981",
+  "#F59E0B",
+  "#3B82F6",
+  "#EF4444",
+  "#8B5CF6",
 ];
 
 function ConfettiOverlay({ onDone }: { onDone: () => void }) {

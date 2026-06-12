@@ -111,7 +111,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Budget Management</h2>
+          <h2 className="text-2xl font-bold text-foreground">Budget Management</h2>
           <p className="text-slate-600 mt-1">Manage expense categories and budget limits</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="">
@@ -170,7 +170,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
             <div className="text-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <EmptyExpensesIllustration />
-                <h3 className="text-lg font-medium text-slate-900">No categories yet</h3>
+                <h3 className="text-lg font-medium text-foreground">No categories yet</h3>
                 <p className="text-slate-500 mb-4">Create expense categories to track budgets</p>
                 <Button onClick={() => setIsCreateOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />

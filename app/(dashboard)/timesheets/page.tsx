@@ -69,7 +69,7 @@ export default function TimesheetsPage() {
 
   const selectedProject = searchParams.get("project") ??"all";
   const dateRange = searchParams.get("range") ??"this-quarter";
-  const startDate = searchParams.get("from ") ??"";
+  const startDate = searchParams.get("from") ?? "";
   const endDate = searchParams.get("to") ??"";
   const page = parseInt(searchParams.get("page") ??"1") || 1;
   const viewMode = (searchParams.get("view") ??"current") as ViewMode;

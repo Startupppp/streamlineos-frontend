@@ -189,7 +189,7 @@ export default function AuditLogPage() {
     : 10) as PageSize;
   const actionFilter = searchParams.get("action") || "all";
   const targetTypeFilter = searchParams.get("target") || "all";
-  const dateFrom = searchParams.get("from ") || "";
+  const dateFrom = searchParams.get("from") || "";
   const dateTo = searchParams.get("to") || "";
 
   const updateParams = useCallback(

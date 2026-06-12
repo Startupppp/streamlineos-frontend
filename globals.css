@@ -261,18 +261,6 @@
   border-bottom: 1px solid var(--sidebar-border);
 }
 
-/* ─── Gold ───────────────────────────────────────────────────────────────────── */
-.gold-gradient {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--sidebar-primary) 50%, var(--gold) 100%);
-}
-
-.gold-text {
-  background: linear-gradient(135deg, var(--sidebar-primary) 0%, var(--gold) 60%, var(--sidebar-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* ─── Shadows ────────────────────────────────────────────────────────────────── */
 .shadow-soft {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
@@ -290,13 +278,6 @@
 }
 
 /* ─── Hover effects ──────────────────────────────────────────────────────────── */
-.glow-gold {
-  transition: box-shadow 0.25s ease;
-}
-.glow-gold:hover {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 20px color-mix(in srgb, var(--primary) 12%, transparent);
-}
-
 .press-scale {
   transition: transform 0.1s ease;
 }

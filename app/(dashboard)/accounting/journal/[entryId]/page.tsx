@@ -242,7 +242,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
                     <TableCell className="font-medium text-foreground">Total</TableCell>
                     <TableCell className="text-right font-medium tabular-nums text-foreground">
                       {formatAmount(debitTotal)}

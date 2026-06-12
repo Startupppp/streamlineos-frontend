@@ -189,7 +189,7 @@ export default function SlaReportPage() {
 }
 
 const STAGE_COLORS = [
-  "#bd882c",
+  "#06b6d4",
   "#3b82f6",
   "#ef4444",
   "#10b981",

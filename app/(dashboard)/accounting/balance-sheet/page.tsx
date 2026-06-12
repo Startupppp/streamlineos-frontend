@@ -37,7 +37,7 @@ function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-sm text-slate-600 py-6 text-center">
+              <TableCell colSpan={3} className="text-sm text-muted-foreground py-6 text-center">
                 No accounts with a balance.
               </TableCell>
             </TableRow>
@@ -57,7 +57,7 @@ function Section({ title, rows, total, accentClass, extraRow }: SectionProps) {
               <TableCell className="text-right tabular-nums">{Number(extraRow.value).toFixed(2)}</TableCell>
             </TableRow>
           )}
-          <TableRow className="font-medium bg-slate-50">
+          <TableRow className="font-medium bg-muted/40">
             <TableCell colSpan={2}>Total {title}</TableCell>
             <TableCell className="text-right tabular-nums">{Number(total).toFixed(2)}</TableCell>
           </TableRow>
@@ -84,7 +84,7 @@ export default function BalanceSheetPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label htmlFor="balance-sheet-asof" className="text-sm text-slate-600 block mb-1">As of</label>
+          <label htmlFor="balance-sheet-asof" className="text-sm text-muted-foreground block mb-1">As of</label>
           <Input id="balance-sheet-asof" type="date" value={asOf} onChange={handleAsOfChange} />
         </div>
         {report && (
@@ -126,7 +126,7 @@ export default function BalanceSheetPage() {
       )}
 
       {report && (
-        <Card className="p-4 mt-4 flex justify-between items-center bg-slate-50">
+        <Card className="p-4 mt-4 flex justify-between items-center bg-muted/40">
           <div className="font-medium">Assets — (Liabilities + Equity)</div>
           <div className="text-lg font-mono tabular-nums">
             {(Number(report.totalAssets) - Number(report.totalLiabilities) - Number(report.totalEquity)).toFixed(2)}

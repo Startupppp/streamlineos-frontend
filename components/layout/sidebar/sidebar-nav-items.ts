@@ -328,12 +328,12 @@ export const NAV_GROUPS: NavGroup[] = [
         children: [
           { label: "Organization", icon: Building2, href: "/settings/organization", requiredPermission: "settings:manage" },
           { label: "Members", icon: UserCog, href: "/settings/members", requiredPermission: "settings:manage" },
-          { label: "Branches", icon: GitBranch, href: "/settings/branches", requiredPermission: "settings:manage" },
           { label: "Notifications", icon: Bell, href: "/settings/notifications", requiredPermission: "settings:manage" },
           { label: "Custom Fields", icon: Sliders, href: "/settings/custom-fields", requiredPermission: "settings:manage" },
           { label: "Recruitment Integrations", icon: Globe, href: "/settings/integrations/recruitment", requiredPermission: "settings:manage" },
         ],
       },
+      { label: "Branches", icon: GitBranch, href: "/settings/branches", requiredPermission: ["settings:manage", "branch:read"] },
       {
         label: "Roles & Permissions", icon: Shield, href: "/settings/roles", requiredPermission: "settings:rbac:manage",
         children: [

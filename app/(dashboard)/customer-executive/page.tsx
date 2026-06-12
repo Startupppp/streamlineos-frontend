@@ -226,7 +226,7 @@ export default function CustomerExecutiveDashboardPage() {
                         {getPersonSlug(account.csm) ? (
                           <Link
                             href={`/sales/person/${getPersonSlug(account.csm)}`}
-                            className="text-primary hover:underline"
+                            className="text-blue-600 hover:text-blue-700 hover:underline"
                           >
                             {account.csm}
                           </Link>

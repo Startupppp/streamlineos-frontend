@@ -291,7 +291,7 @@ export default function DocumentTemplatesPage() {
           <StatCard label="Total Templates" value={total} icon={FileText} color="blue" index={0} />
           <StatCard label="Active" value={active} icon={FileCheck} color="green" index={1} />
           <StatCard label="NDAs" value={ndaCount} icon={FileLock} color="red" index={2} />
-          <StatCard label="Offer Letters" value={offerCount} icon={FileKey} color="gold" index={3} />
+          <StatCard label="Offer Letters" value={offerCount} icon={FileKey} color="amber" index={3} />
         </div>
 
         {list.length === 0 ? (

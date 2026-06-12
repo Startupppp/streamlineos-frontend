@@ -102,7 +102,7 @@ export default function PurchaseBillsListPage() {
       {query.error && <ErrorState description={query.error.message} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-600">
+        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
           No purchase bills yet.
         </div>
       )}

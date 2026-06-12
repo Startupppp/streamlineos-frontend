@@ -55,9 +55,7 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
             key={p}
             variant={p === page ? "default" : "ghost"}
             size="icon"
-            className={`h-8 w-8 text-sm ${
-              p === page ? "bg-blue-500 text-white hover:bg-blue-500/90" : ""
-            }`}
+            className="h-8 w-8 text-sm"
             onClick={() => onPageChange(p)}
             aria-current={p === page ? "page" : undefined}
             aria-label={`Page ${p}`}

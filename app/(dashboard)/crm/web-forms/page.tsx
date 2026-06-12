@@ -371,7 +371,7 @@ export default function WebFormsPage() {
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
-        <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="gold" />
+        <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="amber" />
       </div>
 
       {isLoading ? (

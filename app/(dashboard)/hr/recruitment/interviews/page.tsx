@@ -500,7 +500,7 @@ export default function InterviewsPage() {
                 start: new Date(iv.scheduledAt),
                 end: new Date(new Date(iv.scheduledAt).getTime() + (iv.duration ?? 60) * 60_000),
                 resource: {
-                  color: iv.result === "PASSED" ? "#10b981" : iv.result === "FAILED" ? "#ef4444" : "#0f2b7f",
+                  color: iv.result === "PASSED" ? "#10b981" : iv.result === "FAILED" ? "#ef4444" : "#1e40af",
                 },
               }))}
               date={calDate}
@@ -512,7 +512,7 @@ export default function InterviewsPage() {
                 if (iv) setFeedbackInterview(iv as Interview);
               }}
               eventPropGetter={(e) => ({
-                style: { backgroundColor: (e as BigCalEvent).resource?.color ?? "#0f2b7f", color: "#fff", borderRadius: 4, border: "none", fontSize: 11 },
+                style: { backgroundColor: (e as BigCalEvent).resource?.color ?? "#1e40af", color: "#fff", borderRadius: 4, border: "none", fontSize: 11 },
               })}
             />
           </CardContent>

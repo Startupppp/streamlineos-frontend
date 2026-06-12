@@ -359,7 +359,7 @@ export default function UpsellTrackerPage() {
           label="Pipeline Value"
           value={formatInrShort(String(pipelineValue))}
           icon={IndianRupee}
-          color="gold"
+          color="amber"
           index={1}
         />
         <StatCard

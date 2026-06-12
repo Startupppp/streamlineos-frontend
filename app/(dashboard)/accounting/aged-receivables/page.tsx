@@ -35,7 +35,7 @@ export default function AgedReceivablesPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label htmlFor="aged-asof" className="text-sm text-slate-600 block mb-1">As of</label>
+          <label htmlFor="aged-asof" className="text-sm text-muted-foreground block mb-1">As of</label>
           <Input id="aged-asof" type="date" value={asOf} onChange={handleAsOfChange} />
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function AgedReceivablesPage() {
       {query.error && <ErrorState description={query.error.message} />}
 
       {report && report.rows.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-600">
+        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
           No outstanding receivables as of {asOf}.
         </div>
       )}
@@ -79,7 +79,7 @@ export default function AgedReceivablesPage() {
                   <TableCell className="text-right tabular-nums font-medium">{formatAmount(row.total)}</TableCell>
                 </TableRow>
               ))}
-              <TableRow className="font-medium bg-slate-50">
+              <TableRow className="font-medium bg-muted/40">
                 <TableCell>Total</TableCell>
                 <TableCell className="text-right tabular-nums">{formatAmount(report.totals.current)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatAmount(report.totals.d1_30)}</TableCell>

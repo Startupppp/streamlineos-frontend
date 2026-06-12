@@ -89,7 +89,7 @@ function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
       {entry.narrative.length > 180 && (
         <button
           type="button"
-          className="text-xs text-primary hover:underline"
+          className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
           onClick={() => setExpanded((v) => !v)}
         >
           {expanded ? "Show less" : "Show more"}
@@ -195,7 +195,7 @@ export default function ReportNarratorPage() {
                   </Label>
                   <button
                     type="button"
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                     onClick={handleLoadExample}
                     aria-label="Load example data"
                   >

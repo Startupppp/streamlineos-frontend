@@ -184,7 +184,7 @@ export function OffersTab({ candidateId }: Props) {
                       href={offer.offerLetterUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline block mb-3"
+                      className="text-xs text-blue-600 hover:text-blue-700 hover:underline block mb-3"
                     >
                       View Offer Letter →
                     </a>

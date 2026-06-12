@@ -161,11 +161,11 @@ export default function NewJournalEntryPage() {
         <Card className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="entry-date" className="text-sm text-slate-600 block mb-1">Entry date</label>
+              <label htmlFor="entry-date" className="text-sm text-muted-foreground block mb-1">Entry date</label>
               <Input id="entry-date" type="date" value={entryDate} onChange={handleEntryDateChange} />
             </div>
             <div>
-              <label htmlFor="entry-status" className="text-sm text-slate-600 block mb-1">Status</label>
+              <label htmlFor="entry-status" className="text-sm text-muted-foreground block mb-1">Status</label>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger id="entry-status">
                   <SelectValue />
@@ -177,7 +177,7 @@ export default function NewJournalEntryPage() {
               </Select>
             </div>
             <div className="sm:col-span-3">
-              <label htmlFor="entry-description" className="text-sm text-slate-600 block mb-1">Description</label>
+              <label htmlFor="entry-description" className="text-sm text-muted-foreground block mb-1">Description</label>
               <Textarea
                 id="entry-description"
                 value={description}
@@ -259,13 +259,13 @@ export default function NewJournalEntryPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="bg-slate-50 font-medium">
+              <TableRow className="bg-muted/40 font-medium">
                 <TableCell>Totals</TableCell>
                 <TableCell className="text-right tabular-nums">{totals.debit.toFixed(2)}</TableCell>
                 <TableCell className="text-right tabular-nums">{totals.credit.toFixed(2)}</TableCell>
                 <TableCell>
                   {totals.debit === 0 && totals.credit === 0 ? (
-                    <span className="text-sm text-slate-600">Enter amounts</span>
+                    <span className="text-sm text-muted-foreground">Enter amounts</span>
                   ) : totals.balanced ? (
                     <span className="text-sm text-emerald-600">Balanced ✓</span>
                   ) : (

@@ -96,7 +96,7 @@ export default function LeadSourceReportPage() {
           <StatCard
             label="Sources Tracked"
             value={data?.sources.length ?? 0}
-            color="gold"
+            color="amber"
             icon={BarChart3}
           />
           <StatCard

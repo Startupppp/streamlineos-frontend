@@ -407,7 +407,7 @@ export default function SocialAnalyticsPage() {
               label="Total Impressions"
               value={summary.totalImpressions.toLocaleString()}
               icon={Eye}
-              color="gold"
+              color="amber"
             />
             <StatCard
               label="Total Clicks"

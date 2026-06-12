@@ -121,7 +121,7 @@ export default function PersonDetailPage() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-slate-900">{person.name}</h1>
+                  <h1 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-foreground">{person.name}</h1>
                   <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", badge?.color)}>
                     {badge?.label}
                   </span>

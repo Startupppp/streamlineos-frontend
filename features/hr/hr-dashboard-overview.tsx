@@ -714,7 +714,7 @@ export function HrDashboardOverview() {
           label="On Leave Today"
           value={isLoading ? "—" : (metrics?.onLeaveToday ?? 0)}
           icon={CalendarOff}
-          color="gold"
+          color="amber"
           index={2}
           href="/hr/leaves"
         />
@@ -738,7 +738,7 @@ export function HrDashboardOverview() {
           label="New Hires (Month)"
           value={isLoading ? "—" : (metrics?.monthlyHires ?? 0)}
           icon={UserPlus}
-          color="gold"
+          color="amber"
           index={5}
         />
       </div>

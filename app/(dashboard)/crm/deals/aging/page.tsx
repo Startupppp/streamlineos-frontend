@@ -160,7 +160,7 @@ export default function DealAgingPage() {
             label="Avg Days Stuck"
             value={`${stats.avgDays}d`}
             icon={Clock}
-            color="gold"
+            color="amber"
             index={1}
           />
           <StatCard
