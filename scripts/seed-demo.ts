@@ -48,12 +48,17 @@ const DEMO_EXPENSES = [
   { category: "Equipment",     amount: "2399.00", description: "Mechanical keyboard",          merchant: "Keychron India", paymentMethod: "CARD", status: "PENDING"  as const, daysAgo: 1 },
 ];
 
-const DEMO_TICKETS = [
-  { title: "Set up Postgres replica",                  type: "TASK",  status: "IN_PROGRESS", priority: "HIGH" },
-  { title: "Design onboarding empty-state",            type: "TASK",  status: "TODO",        priority: "MEDIUM" },
-  { title: "Wire up Stripe webhook for subscriptions", type: "TASK",  status: "REVIEW",      priority: "HIGH" },
+const DEMO_TICKETS: Array<{
+  title: string;
+  type: "EPIC" | "STORY" | "TASK" | "BUG";
+  status: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+}> = [
+  { title: "Set up Postgres replica",                   type: "TASK", status: "IN_PROGRESS", priority: "HIGH" },
+  { title: "Design onboarding empty-state",             type: "TASK", status: "TODO",        priority: "MEDIUM" },
+  { title: "Wire up Stripe webhook for subscriptions",  type: "TASK", status: "REVIEW",      priority: "HIGH" },
   { title: "Fix race condition in attendance check-in", type: "BUG",  status: "TODO",        priority: "URGENT" },
-  { title: "Write blog post: launch announcement",     type: "TASK",  status: "DONE",        priority: "LOW" },
+  { title: "Write blog post: launch announcement",      type: "TASK", status: "DONE",        priority: "LOW" },
 ];
 
 const DEMO_CANDIDATES = [
@@ -448,7 +453,7 @@ async function main() {
         title: t.title,
         type: t.type,
         status: t.status,
-        priority: t.priority as never,
+        priority: t.priority,
         ticketNumber: i + 1,
         sequenceId: `DEMO-${i + 1}`,
         assigneeId: i % 2 === 0 ? engId : pmId,

@@ -11,8 +11,8 @@ import {
   useRecentActivity,
   useRoleStats,
   useTodayActivities,
+  useMyIssues,
 } from "@/lib/api/hooks/dashboard";
-import { useMyIssues } from "@/lib/api/hooks/dashboard";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -71,7 +71,7 @@ import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
 import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
 import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/leave-balance-widget";
 import { ExecutiveKpiWidget } from "@/components/dashboard/executive-kpi-widget";
-import { ProjectHealthWidget } from "@/components/dashboard/project-health-widget";
+import { BusinessPulseWidget } from "@/components/dashboard/project-health-widget";
 import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
 import { QuickActionsWidget } from "@/components/dashboard/quick-actions-widget";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
@@ -174,10 +174,7 @@ export function DashboardClient() {
     [],
   );
 
-  const handleGoToDashboard = useCallback(
-    () => router.push("/dashboard"),
-    [router],
-  );
+  const handleRefresh = useCallback(() => void refetch(), [refetch]);
   const handleGoToProjects = useCallback(
     () => router.push("/projects"),
     [router],
@@ -185,7 +182,7 @@ export function DashboardClient() {
 
   const statCards = useMemo(() => {
     if (!stats) return [];
-    const rs = roleStats as Record<string, number> | undefined;
+    const rs = roleStats;
 
     switch (role) {
       case "CEO":
@@ -454,7 +451,7 @@ export function DashboardClient() {
           illustration={<EmptyActivityIllustration className="h-40 w-40" />}
           title="No data available"
           description="Dashboard statistics are not available. Please try refreshing."
-          action={{ label: "Refresh", onClick: handleGoToDashboard }}
+          action={{ label: "Refresh", onClick: handleRefresh }}
         />
       </PageWrapper>
     );
@@ -467,7 +464,6 @@ export function DashboardClient() {
       actions={<ClockInWidget />}
     >
       <div className="space-y-4">
-        {/* Stat cards — role KPIs */}
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -492,22 +488,18 @@ export function DashboardClient() {
           ))}
         </motion.div>
 
-        {/* Quick actions */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <QuickActions />
         </motion.div>
 
-        {/* ─── ADMIN view ─────────────────────────────────────────────── */}
         {isAdmin ? (
           <>
-            {/* Executive financial KPI strip */}
             <motion.div variants={fadeUp} initial="hidden" animate="visible">
               <Suspense fallback={<WidgetSkeleton rows={2} />}>
                 <ExecutiveKpiWidget />
               </Suspense>
             </motion.div>
 
-            {/* Row: ops health */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -518,14 +510,13 @@ export function DashboardClient() {
                 <AnnouncementsWidget />
               </Suspense>
               <Suspense fallback={<WidgetSkeleton rows={2} />}>
-                <ProjectHealthWidget />
+                <BusinessPulseWidget />
               </Suspense>
               <Suspense fallback={<WidgetSkeleton rows={3} />}>
                 <UpcomingEventsWidget />
               </Suspense>
             </motion.div>
 
-            {/* Row: people pulse (consolidated — was 3 redundant rows) */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -537,7 +528,6 @@ export function DashboardClient() {
               <PendingApprovalsWidget />
             </motion.div>
 
-            {/* Row: celebrations + leave context */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -549,13 +539,11 @@ export function DashboardClient() {
               <UpcomingHolidaysWidget />
             </motion.div>
 
-            {/* Public documents — wide */}
             <motion.div variants={fadeUp} initial="hidden" animate="visible">
               <PublicDocumentsCard />
             </motion.div>
           </>
         ) : (
-          // ─── EMPLOYEE view ─────────────────────────────────────────
           <>
             <motion.div
               variants={fadeUp}
@@ -593,7 +581,6 @@ export function DashboardClient() {
           </>
         )}
 
-        {/* Work focus row — applies to all roles */}
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -615,7 +602,6 @@ export function DashboardClient() {
           </div>
         </motion.div>
 
-        {/* Recents row */}
         <motion.div
           variants={fadeUp}
           initial="hidden"

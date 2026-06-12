@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { getPublicDocuments } from "@/server/actions/document-actions";
 import type {
   DashboardStats,
   RecentProject,
@@ -13,16 +14,7 @@ import type {
   MyIssue,
 } from "@/types/dashboard";
 
-export const useHrDashboardStats = (
-  options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<DashboardStats, Error>({
-    queryKey: queryKeys.dashboard.stats(),
-    queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
-    staleTime: 5 * 60 * 1000,
-    ...options,
-  });
-};
+export type PublicDoc = Awaited<ReturnType<typeof getPublicDocuments>>[number];
 
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
@@ -396,4 +388,11 @@ export const useManagerDashboard = (
     staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
+  });
+
+export const usePublicDocuments = (limit = 6) =>
+  useQuery<PublicDoc[]>({
+    queryKey: queryKeys.dashboard.publicDocuments(limit),
+    queryFn: () => getPublicDocuments(limit),
+    staleTime: 5 * 60_000,
   });

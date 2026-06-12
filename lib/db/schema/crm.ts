@@ -20,41 +20,41 @@ import { payrolls } from "./hr";
 
 export const crmCampaigns = pgTable("crm_campaigns", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
-  status: crmCampaignStatusEnum("status").default("active"),
+  status: crmCampaignStatusEnum("status").default("active").notNull(),
   channel: text("channel"),
   description: text("description"),
   startDate: date("start_date"),
   endDate: date("end_date"),
   targetAudience: text("target_audience"),
-  leads: integer("leads").default(0),
-  spend: decimal("spend").default("0"),
-  roi: decimal("roi").default("0"),
+  leads: integer("leads").default(0).notNull(),
+  spend: decimal("spend", { precision: 15, scale: 2 }).default("0").notNull(),
+  roi: decimal("roi", { precision: 8, scale: 4 }).default("0").notNull(),
   budgetAllocated: decimal("budget_allocated", { precision: 15, scale: 2 }),
   budgetSpent: decimal("budget_spent", { precision: 15, scale: 2 }),
-  ownerId: text("owner_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export const leads = pgTable("leads", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
   whatsappNumber: text("whatsapp_number"),
-  source: leadSourceEnum("source").default("other"),
-  campaignId: integer("campaign_id").references(() => crmCampaigns.id),
+  source: leadSourceEnum("source").default("other").notNull(),
+  campaignId: integer("campaign_id").references(() => crmCampaigns.id, { onDelete: "set null" }),
   status: leadPipelineStatusEnum("status").default("NEW").notNull(),
-  priority: leadPriorityEnum("priority").default("WARM"),
-  investmentInterest: decimal("investment_interest"),
-  potentialValue: decimal("potential_value"),
+  priority: leadPriorityEnum("priority").default("WARM").notNull(),
+  investmentInterest: decimal("investment_interest", { precision: 15, scale: 2 }),
+  potentialValue: decimal("potential_value", { precision: 15, scale: 2 }),
   notes: text("notes"),
-  assignedToId: text("assigned_to_id").references(() => users.id),
-  assignedById: text("assigned_by_id").references(() => users.id),
-  verifiedById: text("verified_by_id").references(() => users.id),
+  assignedToId: text("assigned_to_id").references(() => users.id, { onDelete: "set null" }),
+  assignedById: text("assigned_by_id").references(() => users.id, { onDelete: "set null" }),
+  verifiedById: text("verified_by_id").references(() => users.id, { onDelete: "set null" }),
   assignedAt: timestamp("assigned_at"),
   convertedAt: timestamp("converted_at"),
   lostReason: text("lost_reason"),
@@ -63,7 +63,7 @@ export const leads = pgTable("leads", {
   city: text("city"),
   referredBy: text("referred_by"),
   tags: text("tags").array(),
-  score: integer("score").default(0),
+  score: integer("score").default(0).notNull(),
   slaDeadline: timestamp("sla_deadline"),
   website: text("website"),
   subSource: text("sub_source"),
@@ -78,22 +78,23 @@ export const leads = pgTable("leads", {
   utmTerm: text("utm_term"),
   ipAddress: text("ip_address"),
   referrerUrl: text("referrer_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
   deletedAt: timestamp("deleted_at"),
   mergedIntoId: integer("merged_into_id"),
 }, (table) => [
-  index("idx_leads_org_status").on(table.orgId, table.status),
+  foreignKey({ columns: [table.mergedIntoId], foreignColumns: [table.id] }).onDelete("set null"),
+  index("idx_leads_org_status_created").on(table.orgId, table.status, table.createdAt),
   index("idx_leads_assigned_to").on(table.assignedToId),
-  index("idx_leads_created_at").on(table.orgId, table.createdAt),
   index("idx_leads_source").on(table.source),
   index("idx_leads_score").on(table.score),
+  index("idx_leads_deleted").on(table.deletedAt),
 ]);
 
 export const leadActivities = pgTable("lead_activities", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  leadId: integer("lead_id").references(() => leads.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
   type: leadActivityTypeEnum("type").notNull(),
   date: timestamp("date").notNull(),
   duration: integer("duration"),
@@ -104,7 +105,7 @@ export const leadActivities = pgTable("lead_activities", {
   notes: text("notes"),
   outcome: text("outcome"),
   userId: text("user_id").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_activities_lead").on(table.leadId),
   index("idx_lead_activities_user").on(table.userId),
@@ -116,7 +117,7 @@ export const leadNotes = pgTable("lead_notes", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   authorId: text("author_id").references(() => users.id).notNull(),
   body: text("body").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_notes_lead").on(table.leadId),
 ]);
@@ -129,7 +130,7 @@ export const leadTasks = pgTable("lead_tasks", {
   dueDate: date("due_date"),
   assigneeId: text("assignee_id").references(() => users.id),
   status: leadTaskStatusEnum("status").default("open").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_tasks_lead").on(table.leadId),
 ]);
@@ -143,17 +144,17 @@ export const leadEmails = pgTable("lead_emails", {
   body: text("body"),
   fromEmail: text("from_email").notNull(),
   toEmail: text("to_email").notNull(),
-  sentAt: timestamp("sent_at").defaultNow(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
   messageId: text("message_id"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_emails_lead").on(table.leadId),
 ]);
 
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  leadId: integer("lead_id").references(() => leads.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "set null" }),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -163,42 +164,43 @@ export const clients = pgTable("clients", {
   state: text("state"),
   gstin: text("gstin"),
   isVendor: boolean("is_vendor").default(false).notNull(),
-  investmentValue: decimal("investment_value"),
+  investmentValue: decimal("investment_value", { precision: 15, scale: 2 }),
   status: text("status").default("active").notNull(),
-  accountManagerId: text("account_manager_id").references(() => users.id),
+  accountManagerId: text("account_manager_id").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
-  healthScore: integer("health_score").default(50),
-  healthStatus: text("health_status").default("healthy"),
+  healthScore: integer("health_score").default(50).notNull(),
+  healthStatus: text("health_status").default("healthy").notNull(),
   lastHealthCheck: timestamp("last_health_check"),
   churnRiskScore: integer("churn_risk_score"),
   churnRiskReasoning: text("churn_risk_reasoning"),
-  convertedAt: timestamp("converted_at").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  convertedAt: timestamp("converted_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
-  index("idx_clients_org").on(table.orgId),
+  index("idx_clients_org_status").on(table.orgId, table.status),
+  index("idx_clients_account_manager").on(table.accountManagerId),
 ]);
 
 export const targets = pgTable("targets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   metricType: text("metric_type").notNull(),
-  targetValue: decimal("target_value").notNull(),
-  currentValue: decimal("current_value").default("0"),
-  period: text("period").default("daily"),
+  targetValue: decimal("target_value", { precision: 15, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 15, scale: 2 }).default("0").notNull(),
+  period: text("period").default("daily").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  setById: text("set_by_id").references(() => users.id),
+  setById: text("set_by_id").references(() => users.id, { onDelete: "set null" }),
   branchId: integer("branch_id"),
   parentTargetId: integer("parent_target_id"),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
+  foreignKey({ columns: [table.parentTargetId], foreignColumns: [table.id] }).onDelete("set null"),
   index("idx_targets_user_period").on(table.userId, table.period),
   index("idx_targets_branch").on(table.branchId),
-  foreignKey({ columns: [table.parentTargetId], foreignColumns: [table.id] }),
 ]);
 
 export const targetHistory = pgTable("target_history", {
@@ -209,40 +211,40 @@ export const targetHistory = pgTable("target_history", {
   field: text("field").notNull(),
   oldValue: text("old_value"),
   newValue: text("new_value"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_target_history_target").on(table.targetId),
 ]);
 
 export const deals = pgTable("deals", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  leadId: integer("lead_id").references(() => leads.id),
-  clientId: integer("client_id").references(() => clients.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  clientId: integer("client_id").references(() => clients.id, { onDelete: "set null" }),
   name: text("name").notNull(),
-  value: decimal("value").default("0"),
+  value: decimal("value", { precision: 15, scale: 2 }).default("0").notNull(),
   stage: dealStageEnum("stage").default("LEAD").notNull(),
-  probability: integer("probability").default(0),
+  probability: integer("probability").default(0).notNull(),
   contactPerson: text("contact_person"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
-  assignedToId: text("assigned_to_id").references(() => users.id),
+  assignedToId: text("assigned_to_id").references(() => users.id, { onDelete: "set null" }),
   lastContactDate: timestamp("last_contact_date"),
   expectedCloseDate: date("expected_close_date"),
   actualCloseDate: date("actual_close_date"),
   lostReason: text("lost_reason"),
   notes: text("notes"),
-  linkedLeadId: integer("linked_lead_id").references(() => leads.id),
-  linkedClientId: integer("linked_client_id").references(() => clients.id),
   slaDeadline: timestamp("sla_deadline"),
   followUpDate: timestamp("follow_up_date"),
   followUpNotes: text("follow_up_notes"),
   customData: jsonb("custom_data").$type<Record<string, unknown>>(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
-  index("idx_deals_org_stage").on(table.orgId, table.stage),
-  index("idx_deals_assigned_to").on(table.assignedToId),
+  index("idx_deals_org_stage_assignee").on(table.orgId, table.stage, table.assignedToId),
+  index("idx_deals_client").on(table.clientId),
+  index("idx_deals_lead").on(table.leadId),
+  index("idx_deals_close_date").on(table.expectedCloseDate),
 ]);
 
 export const dealActivities = pgTable("deal_activities", {
@@ -256,7 +258,7 @@ export const dealActivities = pgTable("deal_activities", {
   notes: text("notes"),
   duration: integer("duration"),
   userId: text("user_id").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_deal_activities_deal").on(table.dealId),
   index("idx_deal_activities_org").on(table.orgId),
@@ -264,46 +266,46 @@ export const dealActivities = pgTable("deal_activities", {
 
 export const salesQuotas = pgTable("sales_quotas", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   period: text("period").default("monthly").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  targetRevenue: decimal("target_revenue").default("0").notNull(),
-  actualRevenue: decimal("actual_revenue").default("0").notNull(),
+  targetRevenue: decimal("target_revenue", { precision: 15, scale: 2 }).default("0").notNull(),
+  actualRevenue: decimal("actual_revenue", { precision: 15, scale: 2 }).default("0").notNull(),
   notes: text("notes"),
-  setById: text("set_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  setById: text("set_by_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_sales_quotas_org_user").on(table.orgId, table.userId),
 ]);
 
 export const commissionRules = pgTable("commission_rules", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   type: text("type").default("flat_percent").notNull(),
-  flatRate: decimal("flat_rate"),
-  tiers: jsonb("tiers"),
+  flatRate: decimal("flat_rate", { precision: 5, scale: 2 }),
+  tiers: jsonb("tiers").$type<Array<{ minValue: number; maxValue?: number | null; rate: number }>>(),
   appliesTo: text("applies_to").default("all").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export const commissions = pgTable("commissions", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
-  dealId: integer("deal_id").references(() => deals.id).notNull(),
-  ruleId: integer("rule_id").references(() => commissionRules.id),
-  dealValue: decimal("deal_value").default("0").notNull(),
-  commissionRate: decimal("commission_rate").default("0").notNull(),
-  commissionAmount: decimal("commission_amount").default("0").notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "cascade" }).notNull(),
+  ruleId: integer("rule_id").references(() => commissionRules.id, { onDelete: "set null" }),
+  dealValue: decimal("deal_value", { precision: 15, scale: 2 }).default("0").notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0").notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 15, scale: 2 }).default("0").notNull(),
   status: text("status").default("pending").notNull(),
   paidAt: timestamp("paid_at"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_commissions_org_user").on(table.orgId, table.userId),
   index("idx_commissions_deal").on(table.dealId),
@@ -311,11 +313,11 @@ export const commissions = pgTable("commissions", {
 
 export const dealApprovalRules = pgTable("deal_approval_rules", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  minValue: decimal("min_value").default("0").notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  minValue: decimal("min_value", { precision: 15, scale: 2 }).default("0").notNull(),
   approverRole: text("approver_role").default("CEO").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const dealApprovals = pgTable("deal_approvals", {
@@ -327,7 +329,7 @@ export const dealApprovals = pgTable("deal_approvals", {
   status: text("status").default("pending").notNull(),
   approvedBy: text("approved_by").references(() => users.id),
   rejectionReason: text("rejection_reason"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   resolvedAt: timestamp("resolved_at"),
 }, (table) => [
   index("idx_deal_approvals_org").on(table.orgId, table.status),
@@ -351,8 +353,8 @@ export const emailCampaigns = pgTable("email_campaigns", {
   scheduledAt: timestamp("scheduled_at"),
   sentAt: timestamp("sent_at"),
   createdBy: text("created_by").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_email_campaigns_org").on(table.orgId, table.status),
 ]);
@@ -387,7 +389,7 @@ export const crmPeople = pgTable("crm_people", {
   joinDate: text("join_date"),
   bio: text("bio"),
   skills: text("skills").array(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmCompanies = pgTable("crm_companies", {
@@ -400,7 +402,7 @@ export const crmCompanies = pgTable("crm_companies", {
   renewalValue: decimal("renewal_value").default("0"),
   customerSince: text("customer_since"),
   csmId: integer("csm_id").references(() => crmPeople.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmDeals = pgTable("crm_deals", {
@@ -412,8 +414,8 @@ export const crmDeals = pgTable("crm_deals", {
   probability: integer("probability").default(0),
   closeDate: date("close_date"),
   salesRepId: integer("sales_rep_id").references(() => crmPeople.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export const crmLeads = pgTable("crm_leads", {
@@ -424,7 +426,7 @@ export const crmLeads = pgTable("crm_leads", {
   name: text("name"),
   status: crmLeadStatusEnum("status").default("lead"),
   channel: text("channel"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmContent = pgTable("crm_content", {
@@ -435,7 +437,7 @@ export const crmContent = pgTable("crm_content", {
   views: integer("views").default(0),
   leads: integer("leads").default(0),
   convRate: decimal("conv_rate").default("0"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmEvents = pgTable("crm_events", {
@@ -445,7 +447,7 @@ export const crmEvents = pgTable("crm_events", {
   date: text("date").notNull(),
   type: text("type").notNull(),
   status: crmEventStatusEnum("status").default("planning"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmActivities = pgTable("crm_activities", {
@@ -457,7 +459,7 @@ export const crmActivities = pgTable("crm_activities", {
   person: text("person"),
   personId: integer("person_id").references(() => crmPeople.id),
   category: text("category").notNull().default("sales"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmSupportTickets = pgTable("crm_support_tickets", {
@@ -467,7 +469,7 @@ export const crmSupportTickets = pgTable("crm_support_tickets", {
   priority: crmSupportTicketPriorityEnum("priority").default("medium"),
   status: crmSupportTicketStatusEnum("status").default("new"),
   assigneeId: integer("assignee_id").references(() => crmPeople.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   resolvedAt: timestamp("resolved_at"),
 });
 
@@ -480,7 +482,7 @@ export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   retention: decimal("retention").default("0"),
   csat: decimal("csat").default("0"),
   ticketVolume: integer("ticket_volume").default(0),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmTeamPerformance = pgTable("crm_team_performance", {
@@ -489,7 +491,7 @@ export const crmTeamPerformance = pgTable("crm_team_performance", {
   personId: integer("person_id").references(() => crmPeople.id).notNull(),
   month: text("month").notNull(),
   value: decimal("value").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
@@ -500,7 +502,7 @@ export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
   access: text("access").notNull(),
   avatar: text("avatar").notNull(),
   status: text("status").default("online"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmEmailTemplates = pgTable("crm_email_templates", {
@@ -510,8 +512,8 @@ export const crmEmailTemplates = pgTable("crm_email_templates", {
   subject: text("subject").notNull(),
   body: text("body").notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_crm_email_templates_org").on(table.orgId),
 ]);
@@ -523,7 +525,7 @@ export const leadScoringRules = pgTable("lead_scoring_rules", {
   operator: scoringOperatorEnum("operator").notNull(),
   value: text("value").notNull(),
   points: integer("points").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_scoring_rules_org").on(table.orgId),
 ]);
@@ -538,7 +540,7 @@ export const leadAssignmentRules = pgTable("lead_assignment_rules", {
   roundRobinUserIds: jsonb("round_robin_user_ids").$type<string[]>().default([]),
   priority: integer("priority").notNull().default(0),
   isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_assignment_rules_org").on(table.orgId),
 ]);
@@ -557,7 +559,7 @@ export const crmSla = pgTable("crm_sla_policies", {
   priority: slaPriorityEnum("priority").notNull(),
   firstResponseHours: integer("first_response_hours").notNull(),
   resolutionHours: integer("resolution_hours").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_crm_sla_org").on(table.orgId),
 ]);
@@ -573,30 +575,30 @@ export const crmViews = pgTable("crm_views", {
   sortDir: text("sort_dir").default("asc"),
   isPublic: boolean("is_public").default(false).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_crm_views_org").on(table.orgId),
 ]);
 
 export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
   title: text("title"),
   department: text("department"),
   company: text("company"),
-  organizationId: integer("organization_id"),
+  organizationId: integer("organization_id").references(() => crmOrganizations.id, { onDelete: "set null" }),
   linkedinUrl: text("linkedin_url"),
   twitterUrl: text("twitter_url"),
   websiteUrl: text("website_url"),
   avatarUrl: text("avatar_url"),
-  leadId: integer("lead_id").references(() => leads.id),
-  dealId: integer("deal_id").references(() => deals.id),
-  tags: jsonb("tags").$type<string[]>().default([]),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "set null" }),
+  tags: jsonb("tags").$type<string[]>().default([]).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_contacts_org").on(table.orgId),
   index("idx_contacts_organization").on(table.organizationId),
@@ -616,8 +618,8 @@ export const crmOrganizations = pgTable("crm_organizations", {
   healthScore: integer("health_score"),
   parentId: integer("parent_id"),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_crm_organizations_org").on(table.orgId),
   index("idx_crm_organizations_parent").on(table.orgId, table.parentId),
@@ -640,7 +642,7 @@ export const branches = pgTable("branches", {
   branchHrId: text("branch_hr_id").references(() => users.id),
   status: branchStatusEnum("status").notNull().default("ACTIVE"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_branches_org").on(table.orgId),
   uniqueIndex("uniq_branch_code_org").on(table.orgId, table.code),
@@ -670,7 +672,7 @@ export const clientAccounts = pgTable("client_accounts", {
   renewalDate: date("renewal_date"),
   renewalNotes: text("renewal_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_client_accounts_org").on(table.orgId),
   index("idx_client_accounts_sales_rep").on(table.salesRepId),
@@ -719,7 +721,7 @@ export const incentives = pgTable("incentives", {
   payrollId: integer("payroll_id").references(() => payrolls.id),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_incentives_org").on(table.orgId),
   index("idx_incentives_sales_rep").on(table.salesRepId),
@@ -745,7 +747,7 @@ export const dmLeads = pgTable("dm_leads", {
   importedLeadId: integer("imported_lead_id").references(() => leads.id),
   createdBy: text("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_dm_leads_org").on(table.orgId),
   index("idx_dm_leads_status").on(table.status),
@@ -767,7 +769,7 @@ export const socialMediaStats = pgTable("social_media_stats", {
   profileVisits: integer("profile_visits").default(0),
   enteredBy: text("entered_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   unique("uniq_social_stats_org_platform_date").on(table.orgId, table.platform, table.date),
 ]);
@@ -804,8 +806,8 @@ export const invoices = pgTable("invoices", {
   recurringInterval: text("recurring_interval"),
   nextRecurringDate: date("next_recurring_date"),
   createdBy: text("created_by").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_invoices_org_status").on(table.orgId, table.status),
   index("idx_invoices_client").on(table.clientId),
@@ -857,7 +859,7 @@ export const purchaseBills = pgTable("purchase_bills", {
   expenseAccountCode: text("expense_account_code"),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_purchase_bills_org_status").on(table.orgId, table.status),
   index("idx_purchase_bills_vendor").on(table.vendorId),
@@ -941,8 +943,8 @@ export const supportTickets = pgTable("support_tickets", {
   resolvedAt: timestamp("resolved_at"),
   closedAt: timestamp("closed_at"),
   createdBy: text("created_by").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_support_tickets_org_status").on(table.orgId, table.status),
   index("idx_support_tickets_assignee").on(table.assigneeId),
@@ -958,7 +960,7 @@ export const supportTicketMessages = pgTable("support_ticket_messages", {
   body: text("body").notNull(),
   isInternal: boolean("is_internal").default(false).notNull(),
   attachments: jsonb("attachments").$type<{ fileName: string; fileUrl: string; fileSize: number; mimeType: string }[]>().default([]),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_support_ticket_messages_ticket").on(table.ticketId),
   index("idx_support_ticket_messages_author").on(table.authorId),
@@ -1022,7 +1024,7 @@ export const dealMeetings = pgTable("deal_meetings", {
   status: text("status").default("scheduled").notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_deal_meetings_deal").on(table.dealId),
   index("idx_deal_meetings_org").on(table.orgId),
@@ -1040,7 +1042,7 @@ export const clientOpportunities = pgTable("client_opportunities", {
   expectedCloseDate: date("expected_close_date"),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_client_opps_org").on(table.orgId),
   index("idx_client_opps_client").on(table.clientId),
@@ -1059,7 +1061,7 @@ export const clientOnboardingTemplates = pgTable("client_onboarding_templates", 
   isDefault: boolean("is_default").default(false).notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_client_onboarding_templates_org").on(table.orgId),
 ]);
@@ -1077,7 +1079,7 @@ export const clientOnboardingItems = pgTable("client_onboarding_items", {
   completedBy: text("completed_by").references(() => users.id),
   sortOrder: integer("sort_order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_onboarding_items_client").on(table.clientId),
   index("idx_onboarding_items_org").on(table.orgId),
@@ -1205,7 +1207,7 @@ export const csatSurveys = pgTable("csat_surveys", {
   closedAt: timestamp("closed_at"),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_csat_surveys_org").on(table.orgId),
   uniqueIndex("idx_csat_surveys_token").on(table.publicToken),
@@ -1319,8 +1321,8 @@ export const customFieldDefinitions = pgTable("custom_field_definitions", {
   isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
   createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   uniqueIndex("cfd_org_entity_name_idx").on(table.orgId, table.entityType, table.name),
   index("idx_cfd_org_entity").on(table.orgId, table.entityType),
@@ -1341,8 +1343,8 @@ export const territories = pgTable("territories", {
   description: text("description"),
   isActive: boolean("is_active").default(true),
   createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("territories_org_id_idx").on(table.orgId),
 ]);
@@ -1364,8 +1366,8 @@ export const webLeadForms = pgTable("web_lead_forms", {
   redirectUrl: text("redirect_url"),
   totalSubmissions: integer("total_submissions").default(0),
   createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("web_lead_forms_org_id_idx").on(table.orgId),
   uniqueIndex("web_lead_forms_token_idx").on(table.publicToken),
@@ -1399,8 +1401,8 @@ export const tasks = pgTable("tasks", {
   parentTaskId: integer("parent_task_id"),
   isTemplate: boolean("is_template").notNull().default(false),
   templateName: text("template_name"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_tasks_org").on(table.orgId),
   index("idx_tasks_assignee").on(table.assigneeId),
@@ -1416,7 +1418,7 @@ export const taskSequences = pgTable("task_sequences", {
   name: text("name").notNull(),
   description: text("description"),
   createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const taskSequenceSteps = pgTable("task_sequence_steps", {
@@ -1456,7 +1458,7 @@ export const leadImportBatches = pgTable("lead_import_batches", {
   importedRows: integer("imported_rows").notNull().default(0),
   failedRows: integer("failed_rows").notNull().default(0),
   errorReport: jsonb("error_report").$type<Array<{ row: number; error: string }>>(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
 }, (table) => [
   index("idx_lead_batches_org").on(table.orgId),
@@ -1490,8 +1492,8 @@ export const quotes = pgTable("quotes", {
   rejectedAt: timestamp("rejected_at"),
   rejectionReason: text("rejection_reason"),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_quotes_org_status").on(table.orgId, table.status),
   index("idx_quotes_deal").on(table.dealId),
@@ -1509,7 +1511,7 @@ export const quoteLineItems = pgTable("quote_line_items", {
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
   taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
   displayOrder: integer("display_order").default(0),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const quotesRelations = relations(quotes, ({ one, many }) => ({

@@ -3,7 +3,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
-import { DollarSign, TrendingUp, Users, Target, Briefcase, Contact2, BarChart2 } from "lucide-react";
+import {
+  DollarSign,
+  TrendingUp,
+  Users,
+  Target,
+  Briefcase,
+  BarChart2,
+} from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();
@@ -14,8 +21,8 @@ export function ExecutiveKpiWidget() {
 
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
@@ -26,11 +33,11 @@ export function ExecutiveKpiWidget() {
     n >= 1_000_000
       ? `₹${(n / 1_000_000).toFixed(1)}M`
       : n >= 1_000
-      ? `₹${(n / 1_000).toFixed(0)}K`
-      : `₹${n}`;
+        ? `₹${(n / 1_000).toFixed(0)}K`
+        : `₹${n}`;
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <StatCard
         label="MRR (Won)"
         value={fmt(data.mrr)}
@@ -55,9 +62,9 @@ export function ExecutiveKpiWidget() {
         href="/hr"
       />
       <StatCard
-        label="New Leads (7d)"
-        value={data.newLeadsThisWeek}
-        icon={Contact2}
+        label="Conversion Rate"
+        value={`${data.conversionRate}%`}
+        icon={Target}
         color="purple"
         index={3}
         href="/crm/leads"
@@ -77,14 +84,6 @@ export function ExecutiveKpiWidget() {
         color="blue"
         index={5}
         href="/projects"
-      />
-      <StatCard
-        label="Conversion Rate"
-        value={`${data.conversionRate}%`}
-        icon={Target}
-        color="green"
-        index={6}
-        href="/crm/leads"
       />
     </div>
   );

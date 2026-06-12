@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 import Link from "next/link";
 import { FileText, Download, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
-import { getPublicDocuments } from "@/server/actions/document-actions";
+import { usePublicDocuments, type PublicDoc } from "@/lib/api/hooks/dashboard";
 import { format } from "date-fns";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
-
-type PublicDoc = Awaited<ReturnType<typeof getPublicDocuments>>[number];
 
 const DOC_TYPE_LABELS: Record<string, string> = {
   CONTRACT: "Contract",
@@ -26,16 +24,63 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
-  const [documents, setDocuments] = useState<PublicDoc[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface DocumentItemProps {
+  doc: PublicDoc;
+}
 
-  useEffect(() => {
-    getPublicDocuments(6)
-      .then(setDocuments)
-      .catch(() => setDocuments([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+function DocumentItem({ doc }: DocumentItemProps) {
+  const handleView = () => viewFile(doc.fileUrl);
+  const handleViewClick = (e: React.MouseEvent) => { e.stopPropagation(); viewFile(doc.fileUrl); };
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    downloadFile(doc.fileUrl, doc.fileName || doc.name);
+  };
+
+  return (
+    <div
+      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+      onClick={handleView}
+    >
+      <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
+        <FileText className="h-4 w-4 text-blue-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+            {DOC_TYPE_LABELS[doc.type] ?? doc.type}
+          </Badge>
+          <span className="text-[10px] text-muted-foreground">
+            {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : ""}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleViewClick}
+          aria-label="View"
+        >
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleDownload}
+          aria-label="Download"
+        >
+          <Download className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
+  const { data: documents, isLoading } = usePublicDocuments(6);
 
   return (
     <Card className="bg-card border-border shadow-noir">
@@ -63,7 +108,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
               </div>
             ))}
           </div>
-        ) : documents.length === 0 ? (
+        ) : !documents?.length ? (
           <EmptyState
             illustration={<EmptyPublicDocsIllustration className="h-24 w-24" />}
             title="No public documents"
@@ -73,48 +118,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
         ) : (
           <div className="space-y-2">
             {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
-                onClick={() => viewFile(doc.fileUrl)}
-              >
-                <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {doc.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {DOC_TYPE_LABELS[doc.type] || doc.type}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : ""}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={(e) => { e.stopPropagation(); viewFile(doc.fileUrl); }}
-                    aria-label="View"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={(e) => { e.stopPropagation(); downloadFile(doc.fileUrl, doc.fileName || doc.name); }}
-                    aria-label="Download"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
+              <DocumentItem key={doc.id} doc={doc} />
             ))}
           </div>
         )}

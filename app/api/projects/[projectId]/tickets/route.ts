@@ -116,9 +116,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     const body = await parseBody(req, createTicketSchema);
 
-    const normalizeType = (type: string) => {
+    const normalizeType = (type: string): "EPIC" | "STORY" | "TASK" | "BUG" => {
       const upper = type.toUpperCase();
-      return upper === "FEATURE" ? "STORY" : upper;
+      if (upper === "FEATURE") return "STORY";
+      if (upper === "EPIC" || upper === "STORY" || upper === "TASK" || upper === "BUG") return upper;
+      return "TASK";
     };
 
     const [ticket] = await db.transaction(async (tx) => {

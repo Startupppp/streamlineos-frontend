@@ -1,7 +1,7 @@
 
 import { pgTable, text, serial, timestamp, boolean, integer, index, date, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { users } from "./auth";
+import { organizations, users } from "./auth";
 
 
 export interface LandingPageTestimonial {
@@ -21,25 +21,27 @@ export interface LandingPageSettings {
 
 export const landingPages = pgTable("landing_pages", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   slug: text("slug"),
   title: text("title"),
   content: text("content"),
-  isPublished: boolean("is_published").default(false),
+  isPublished: boolean("is_published").default(false).notNull(),
   url: text("url").notNull(),
   description: text("description"),
-  isActive: boolean("is_active").default(true),
+  isActive: boolean("is_active").default(true).notNull(),
   settings: jsonb("settings").$type<LandingPageSettings>(),
-  createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_landing_pages_org").on(table.orgId),
+]);
 
 export const pageViews = pgTable("page_views", {
   id: serial("id").primaryKey(),
   pageId: integer("page_id").references(() => landingPages.id, { onDelete: "cascade" }),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   referrer: text("referrer"),
   country: text("country"),
   city: text("city"),
@@ -48,7 +50,7 @@ export const pageViews = pgTable("page_views", {
   utmMedium: text("utm_medium"),
   utmCampaign: text("utm_campaign"),
   abVariant: text("ab_variant"),
-  viewedAt: timestamp("viewed_at").defaultNow(),
+  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
 }, (table) => [
   index("page_views_page_id_idx").on(table.pageId),
   index("page_views_org_id_idx").on(table.orgId),
@@ -76,33 +78,33 @@ export const abTests = pgTable(
   "ab_tests",
   {
     id: serial("id").primaryKey(),
-    orgId: text("org_id").notNull(),
+    orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    status: text("status").default("draft"),
+    status: text("status").default("draft").notNull(),
     variantASubject: text("variant_a_subject").notNull(),
     variantBSubject: text("variant_b_subject").notNull(),
     variantABody: text("variant_a_body"),
     variantBBody: text("variant_b_body"),
-    splitPercent: integer("split_percent").default(50),
-    audienceSize: integer("audience_size").default(0),
-    variantASent: integer("variant_a_sent").default(0),
-    variantBSent: integer("variant_b_sent").default(0),
-    variantAOpens: integer("variant_a_opens").default(0),
-    variantBOpens: integer("variant_b_opens").default(0),
-    variantAClicks: integer("variant_a_clicks").default(0),
-    variantBClicks: integer("variant_b_clicks").default(0),
+    splitPercent: integer("split_percent").default(50).notNull(),
+    audienceSize: integer("audience_size").default(0).notNull(),
+    variantASent: integer("variant_a_sent").default(0).notNull(),
+    variantBSent: integer("variant_b_sent").default(0).notNull(),
+    variantAOpens: integer("variant_a_opens").default(0).notNull(),
+    variantBOpens: integer("variant_b_opens").default(0).notNull(),
+    variantAClicks: integer("variant_a_clicks").default(0).notNull(),
+    variantBClicks: integer("variant_b_clicks").default(0).notNull(),
     winnerVariant: text("winner_variant"),
     startedAt: timestamp("started_at"),
     endedAt: timestamp("ended_at"),
-    createdBy: text("created_by").references(() => users.id),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
   },
-  (t) => ({
-    orgIdIdx: index("ab_tests_org_id_idx").on(t.orgId),
-    statusIdx: index("ab_tests_status_idx").on(t.status),
-  })
+  (t) => [
+    index("ab_tests_org_id_idx").on(t.orgId),
+    index("ab_tests_org_status_idx").on(t.orgId, t.status),
+  ]
 );
 
 export const abTestsRelations = relations(abTests, ({ one }) => ({
@@ -117,18 +119,18 @@ export const socialMetrics = pgTable(
   "social_metrics",
   {
     id: serial("id").primaryKey(),
-    orgId: text("org_id").notNull(),
+    orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
     platform: text("platform").notNull(),
     metricDate: date("metric_date").notNull(),
-    followers: integer("followers").default(0),
-    impressions: integer("impressions").default(0),
-    engagements: integer("engagements").default(0),
-    clicks: integer("clicks").default(0),
-    shares: integer("shares").default(0),
-    comments: integer("comments").default(0),
-    reach: integer("reach").default(0),
-    recordedBy: text("recorded_by").references(() => users.id),
-    createdAt: timestamp("created_at").defaultNow(),
+    followers: integer("followers").default(0).notNull(),
+    impressions: integer("impressions").default(0).notNull(),
+    engagements: integer("engagements").default(0).notNull(),
+    clicks: integer("clicks").default(0).notNull(),
+    shares: integer("shares").default(0).notNull(),
+    comments: integer("comments").default(0).notNull(),
+    reach: integer("reach").default(0).notNull(),
+    recordedBy: text("recorded_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
     index("social_metrics_org_platform_idx").on(t.orgId, t.platform),
@@ -145,22 +147,23 @@ export const socialMetricsRelations = relations(socialMetrics, ({ one }) => ({
 
 export const contentCalendarItems = pgTable("content_calendar_items", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   contentType: text("content_type").notNull().default("blog"),
   channel: text("channel"),
-  status: text("status").default("idea"),
+  status: text("status").default("idea").notNull(),
   scheduledDate: date("scheduled_date"),
   publishedDate: date("published_date"),
-  assignedTo: text("assigned_to").references(() => users.id),
+  assignedTo: text("assigned_to").references(() => users.id, { onDelete: "set null" }),
   description: text("description"),
-  tags: text("tags").array().default([]),
-  createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  tags: text("tags").array().default([]).notNull(),
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("content_calendar_org_id_idx").on(table.orgId),
   index("content_calendar_scheduled_date_idx").on(table.scheduledDate),
+  index("content_calendar_org_status_idx").on(table.orgId, table.status),
 ]);
 
 export const contentCalendarItemsRelations = relations(contentCalendarItems, ({ one }) => ({

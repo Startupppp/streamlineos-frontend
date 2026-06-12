@@ -74,13 +74,19 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         .from(tickets)
         .where(eq(tickets.projectId, project.id));
 
+      const normalizeTicketType = (raw: string | null | undefined): "EPIC" | "STORY" | "TASK" | "BUG" => {
+        const upper = (raw ?? "TASK").toUpperCase();
+        if (upper === "EPIC" || upper === "STORY" || upper === "TASK" || upper === "BUG") return upper;
+        return "TASK";
+      };
+
       await db.insert(tickets).values(
         template.tickets.map((t, i) => ({
           orgId: session.orgId,
           projectId: project.id,
           title: t.title,
           description: t.description ?? null,
-          type: t.type ?? "TASK",
+          type: normalizeTicketType(t.type),
           status: "TODO",
           priority: (t.priority ?? "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
           ticketNumber: Number(maxTN) + i + 1,

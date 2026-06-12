@@ -1,6 +1,8 @@
 "use client";
 
 import { WidgetCard } from "@/components/ui/widget-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
 import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,21 +46,22 @@ export function TimesheetWidget() {
               )}
             >
               {ts.submitted ? (
-                <CheckCircle2
-                  className="h-4 w-4 text-emerald-600"
-                  aria-hidden="true"
-                />
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
               ) : (
-                <AlertTriangle
-                  className="h-4 w-4 text-red-600"
-                  aria-hidden="true"
-                />
+                <AlertTriangle className="h-4 w-4 text-red-600" aria-hidden="true" />
               )}
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground">{ts.weekLabel}</p>
         </div>
-      ) : null}
+      ) : (
+        <EmptyState
+          illustration={<EmptyCalendarIllustration className="h-20 w-20" />}
+          title="No timesheet this week"
+          description="Log your hours to track weekly progress."
+          compact
+        />
+      )}
     </WidgetCard>
   );
 }

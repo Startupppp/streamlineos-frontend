@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,14 +12,62 @@ import {
   useAnnouncements,
   useCreateAnnouncement,
   useDeleteAnnouncement,
+  type Announcement,
 } from "@/lib/api/hooks/dashboard";
 import { Megaphone, X, Pin, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+interface AnnouncementItemProps {
+  ann: Announcement;
+  isAdmin: boolean;
+  onDelete: (id: number) => void;
+  isDeleting: boolean;
+}
+
+function AnnouncementItem({ ann, isAdmin, onDelete, isDeleting }: AnnouncementItemProps) {
+  const authorDisplay =
+    ann.authorFirstName && ann.authorLastName
+      ? `${ann.authorFirstName} ${ann.authorLastName}`
+      : ann.authorName ?? "Team";
+
+  const handleDelete = () => onDelete(ann.id);
+
+  return (
+    <li
+      className={cn(
+        "relative rounded-lg border p-3 text-sm",
+        ann.isPinned
+          ? "border-amber-400 bg-amber-100 dark:bg-amber-900/50 dark:border-amber-600"
+          : "border-amber-200 bg-white dark:bg-amber-950/30 dark:border-amber-700/50"
+      )}
+    >
+      {ann.isPinned && (
+        <Pin className="absolute top-2 right-2 h-3 w-3 text-amber-500" aria-label="Pinned" />
+      )}
+      <p className="text-amber-900 dark:text-amber-100 leading-snug pr-4">{ann.content}</p>
+      <div className="flex items-center justify-between mt-2 gap-2">
+        <span className="text-[11px] text-amber-600 dark:text-amber-400">
+          {authorDisplay} · {format(parseISO(ann.createdAt), "MMM d, yyyy")}
+        </span>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="text-amber-500 hover:text-amber-700 transition-colors"
+            aria-label={`Delete announcement from ${authorDisplay}`}
+            disabled={isDeleting}
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
 export function AnnouncementsWidget() {
-  const { data: session } = useSession();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "settings");
 
@@ -31,6 +78,11 @@ export function AnnouncementsWidget() {
   const [showForm, setShowForm] = useState(false);
   const [content, setContent] = useState("");
   const [isPinned, setIsPinned] = useState(false);
+
+  const handleToggleForm = () => setShowForm((v) => !v);
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value);
+  const handlePinnedChange = (e: React.ChangeEvent<HTMLInputElement>) => setIsPinned(e.target.checked);
+  const handleCancelForm = () => { setShowForm(false); setContent(""); };
 
   const handleSubmit = () => {
     if (!content.trim()) return;
@@ -68,7 +120,7 @@ export function AnnouncementsWidget() {
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-amber-700 hover:text-amber-900 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/40"
-            onClick={() => setShowForm((v) => !v)}
+            onClick={handleToggleForm}
             aria-label="Add announcement"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -82,7 +134,7 @@ export function AnnouncementsWidget() {
             <Textarea
               placeholder="Write an announcement..."
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               className="text-sm min-h-[72px] resize-none bg-transparent border-amber-200 dark:border-amber-700 focus-visible:ring-amber-400"
               aria-label="Announcement content"
             />
@@ -91,7 +143,7 @@ export function AnnouncementsWidget() {
                 <input
                   type="checkbox"
                   checked={isPinned}
-                  onChange={(e) => setIsPinned(e.target.checked)}
+                  onChange={handlePinnedChange}
                   className="rounded border-amber-300 text-amber-600 focus:ring-amber-400"
                   aria-label="Pin this announcement"
                 />
@@ -102,7 +154,7 @@ export function AnnouncementsWidget() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={() => { setShowForm(false); setContent(""); }}
+                  onClick={handleCancelForm}
                 >
                   Cancel
                 </Button>
@@ -137,49 +189,15 @@ export function AnnouncementsWidget() {
           />
         ) : (
           <ul className="space-y-2 overflow-y-auto max-h-64">
-            {data.map((ann) => {
-              const authorDisplay =
-                ann.authorFirstName && ann.authorLastName
-                  ? `${ann.authorFirstName} ${ann.authorLastName}`
-                  : ann.authorName ?? "Team";
-              return (
-                <li
-                  key={ann.id}
-                  className={cn(
-                    "relative rounded-lg border p-3 text-sm",
-                    ann.isPinned
-                      ? "border-amber-400 bg-amber-100 dark:bg-amber-900/50 dark:border-amber-600"
-                      : "border-amber-200 bg-white dark:bg-amber-950/30 dark:border-amber-700/50"
-                  )}
-                >
-                  {ann.isPinned && (
-                    <Pin
-                      className="absolute top-2 right-2 h-3 w-3 text-amber-500"
-                      aria-label="Pinned"
-                    />
-                  )}
-                  <p className="text-amber-900 dark:text-amber-100 leading-snug pr-4">
-                    {ann.content}
-                  </p>
-                  <div className="flex items-center justify-between mt-2 gap-2">
-                    <span className="text-[11px] text-amber-600 dark:text-amber-400">
-                      {authorDisplay} · {format(parseISO(ann.createdAt), "MMM d, yyyy")}
-                    </span>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(ann.id)}
-                        className="text-amber-500 hover:text-amber-700 transition-colors"
-                        aria-label={`Delete announcement from ${authorDisplay}`}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <X className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+            {data.map((ann) => (
+              <AnnouncementItem
+                key={ann.id}
+                ann={ann}
+                isAdmin={isAdmin}
+                onDelete={handleDelete}
+                isDeleting={deleteMutation.isPending}
+              />
+            ))}
           </ul>
         )}
       </CardContent>

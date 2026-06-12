@@ -4,13 +4,13 @@ import { WidgetCard } from "@/components/ui/widget-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
 import { FolderKanban } from "lucide-react";
 
-export function ProjectHealthWidget() {
+export function BusinessPulseWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();
 
   return (
     <WidgetCard
       icon={FolderKanban}
-      title="Project Health"
+      title="Business Pulse"
       link={{ href: "/projects", label: "View all", ariaLabel: "View all projects" }}
       isLoading={isLoading}
       error={error}
@@ -23,11 +23,11 @@ export function ProjectHealthWidget() {
           </p>
           <p className="text-xs text-muted-foreground mt-1">Active Projects</p>
         </div>
-        <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums">
-            {data?.newLeadsThisWeek ?? 0}
+        <div className="rounded-xl border border-border/60 bg-emerald-500/5 p-4 text-center">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600">
+            {data?.conversionRate ?? 0}%
           </p>
-          <p className="text-xs text-muted-foreground mt-1">New Leads (7d)</p>
+          <p className="text-xs text-muted-foreground mt-1">Lead Conversion</p>
         </div>
       </div>
     </WidgetCard>

@@ -1,13 +1,11 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarOff,
-  CalendarClock,
   CalendarHeart,
   TreePalm,
   Clock,
@@ -20,18 +18,14 @@ import {
 } from "lucide-react";
 import {
   useLeavesToday,
-  useUpcomingLeaves,
   useUpcomingHolidays,
   useMyLeaveBalance,
-  usePendingRequests,
   useBirthdays,
   usePendingApprovals,
   useTeamAttendance,
   type LeaveToday,
-  type UpcomingLeave,
   type UpcomingHoliday,
   type LeaveBalance,
-  type PendingRequest,
   type BirthdayEntry,
 } from "@/lib/api/hooks/dashboard";
 
@@ -68,42 +62,6 @@ export function LeavesTodayWidget() {
               <p className="text-xs font-medium truncate">{l.employeeName}</p>
               <p className="text-[10px] text-muted-foreground">
                 Leave · back {format(new Date(l.endDate), "MMM d")}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </WidgetCard>
-  );
-}
-
-export function UpcomingLeavesWidget() {
-  const { data, isLoading } = useUpcomingLeaves();
-  const leaves = data ?? [];
-
-  return (
-    <WidgetCard
-      icon={CalendarClock}
-      iconClassName="text-blue-500"
-      title="Upcoming Leaves"
-      isLoading={isLoading}
-      isEmpty={!leaves.length}
-      empty={<EmptyWidget message="No upcoming leaves this week." />}
-    >
-      <ul className="space-y-2.5 overflow-y-auto max-h-60">
-        {leaves.map((l: UpcomingLeave) => (
-          <li key={l.id} className="flex items-center gap-2.5">
-            <Avatar className="h-7 w-7">
-              <AvatarImage src={resolveImageUrl(l.userImage)} />
-              <AvatarFallback className="text-[10px] bg-blue-500/10 text-blue-600">
-                {l.userName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{l.userName}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {l.leaveType} · {format(new Date(l.startDate), "MMM d")} –{" "}
-                {format(new Date(l.endDate), "MMM d")}
               </p>
             </div>
           </li>
@@ -191,47 +149,6 @@ export function LeaveBalanceWidget() {
           );
         })}
       </div>
-    </WidgetCard>
-  );
-}
-
-export function PendingRequestsWidget() {
-  const { data, isLoading } = usePendingRequests();
-  const requests = data ?? [];
-
-  return (
-    <WidgetCard
-      icon={Clock}
-      iconClassName="text-amber-500"
-      title="My Pending Requests"
-      badge={requests.length || undefined}
-      isLoading={isLoading}
-      loadingRows={2}
-      isEmpty={!requests.length}
-      empty={<EmptyWidget message="No pending requests." />}
-    >
-      <ul className="space-y-2">
-        {requests.map((r: PendingRequest) => (
-          <li
-            key={r.id}
-            className="flex items-center justify-between gap-2 p-2 rounded-md border border-border/60 text-xs"
-          >
-            <div className="flex-1 min-w-0">
-              <p className="font-medium">{r.leaveTypeName ?? "Leave"}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {format(new Date(r.startDate), "MMM d")} –{" "}
-                {format(new Date(r.endDate), "MMM d")}
-              </p>
-            </div>
-            <Badge
-              variant="outline"
-              className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-200"
-            >
-              Pending
-            </Badge>
-          </li>
-        ))}
-      </ul>
     </WidgetCard>
   );
 }

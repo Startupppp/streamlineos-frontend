@@ -3,58 +3,13 @@
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { WidgetCard } from "@/components/ui/widget-card";
-import {
-  Zap,
-  Contact2,
-  BarChart3,
-  CalendarCheck,
-  Users,
-  ListChecks,
-  Clock,
-  Receipt,
-} from "lucide-react";
+import { getQuickActionsForRole } from "@/features/dashboard/quick-actions";
+import { Zap } from "lucide-react";
 import Link from "next/link";
-
-interface QuickAction {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-}
-
-function getActionsForRole(role: string | undefined): QuickAction[] {
-  switch (role) {
-    case "CEO":
-    case "ADMIN":
-      return [
-        { label: "View Pipeline", icon: Contact2, href: "/crm/leads" },
-        { label: "Add Lead", icon: Contact2, href: "/crm/leads" },
-        { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
-      ];
-    case "HR":
-      return [
-        { label: "Approve Leaves", icon: CalendarCheck, href: "/hr/leaves" },
-        { label: "Run Payroll", icon: Receipt, href: "/hr/payroll" },
-        { label: "Add Employee", icon: Users, href: "/hr/onboarding" },
-      ];
-    case "BRANCH_MANAGER":
-    case "BRANCH_HR":
-      return [
-        { label: "Assign Task", icon: ListChecks, href: "/projects" },
-        { label: "Approve Leave", icon: CalendarCheck, href: "/hr/leaves" },
-      ];
-    default:
-      return [
-        { label: "Log Time", icon: Clock, href: "/timesheets" },
-        { label: "Request Leave", icon: CalendarCheck, href: "/hr/leaves" },
-        { label: "Log Activity", icon: ListChecks, href: "/crm/activities" },
-      ];
-  }
-}
 
 export function QuickActionsWidget() {
   const { data: session } = useSession();
-  const role = session?.user?.role;
-  const actions = getActionsForRole(role);
+  const actions = getQuickActionsForRole(session?.user?.role);
 
   return (
     <WidgetCard icon={Zap} title="Quick Actions">
