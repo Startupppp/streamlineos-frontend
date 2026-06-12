@@ -104,7 +104,7 @@ export function WorkLogFilterActions({
   }, [setDraftFilters]);
 
   const handleDraftMonthChange = useCallback((v: string) => {
-    setDraftFilters((p) => ({ ...p, month: v === "all" ? undefined : parseInt(v) }));
+    setDraftFilters((p) => ({ ...p, month: v ==="all" ? undefined : parseInt(v) }));
   }, [setDraftFilters]);
 
   const handleDraftDateFromChange = useCallback((val: string) => {
@@ -118,8 +118,8 @@ export function WorkLogFilterActions({
   const handleDraftDepartmentChange = useCallback((v: string) => {
     setDraftFilters((p) => ({
       ...p,
-      departmentId: v === "all" ? undefined : v,
-      selectedUserId: v === "all" ? p.selectedUserId : undefined,
+      departmentId: v ==="all" ? undefined : v,
+      selectedUserId: v ==="all" ? p.selectedUserId : undefined,
     }));
   }, [setDraftFilters]);
 
@@ -144,9 +144,9 @@ export function WorkLogFilterActions({
   const selectedEmployeeName = draftFilters.selectedUserId
     ? (() => {
         const emp = (employees ?? []).find((e) => e.id === draftFilters.selectedUserId);
-        return emp ? `${emp.firstName} ${emp.lastName}` : "Select employee";
+        return emp ? `${emp.firstName} ${emp.lastName}` :"Select employee";
       })()
-    : "My Logs";
+    :"My Logs";
 
   const monthOptions = (() => {
     const startMonthIdx = (draftFilters.quarter - 1) * 3;
@@ -154,7 +154,7 @@ export function WorkLogFilterActions({
       const monthIdx = startMonthIdx + offset;
       return {
         idx: monthIdx,
-        name: format(new Date(draftFilters.year, monthIdx, 1), "MMMM"),
+        name: format(new Date(draftFilters.year, monthIdx, 1),"MMMM"),
       };
     });
   })();
@@ -198,9 +198,9 @@ export function WorkLogFilterActions({
                 {filters.selectedUserId
                   ? (() => {
                       const emp = (employees ?? []).find((e) => e.id === filters.selectedUserId);
-                      return emp ? `${emp.firstName} ${emp.lastName}` : "Employee";
+                      return emp ? `${emp.firstName} ${emp.lastName}` :"Employee";
                     })()
-                  : "My Logs"}
+                  :"My Logs"}
               </span>
               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -223,7 +223,7 @@ export function WorkLogFilterActions({
                     setEmployeeSearch("");
                   }}
                 >
-                  <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ? "opacity-100" : "opacity-0")} />
+                  <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
                   My Logs
                 </CommandItem>
                 {(employees ?? []).map((emp) => (
@@ -237,7 +237,7 @@ export function WorkLogFilterActions({
                       setEmployeeSearch("");
                     }}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ? "opacity-100" : "opacity-0")} />
+                    <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
                     {emp.firstName} {emp.lastName}
                   </CommandItem>
                 ))}
@@ -294,7 +294,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">Month</Label>
               <Select
-                value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
+                value={draftFilters.month !== undefined ? draftFilters.month.toString() :"all"}
                 onValueChange={handleDraftMonthChange}
               >
                 <SelectTrigger className="w-full">
@@ -316,7 +316,7 @@ export function WorkLogFilterActions({
                 <div>
                   <Label className="text-xs text-muted-foreground">From</Label>
                   <DatePicker
-                    value={draftFilters.dateFrom || ""}
+                    value={draftFilters.dateFrom ||""}
                     onChange={handleDraftDateFromChange}
                     placeholder="From date"
                     toDate={draftFilters.dateTo ? new Date(draftFilters.dateTo) : undefined}
@@ -325,7 +325,7 @@ export function WorkLogFilterActions({
                 <div>
                   <Label className="text-xs text-muted-foreground">To</Label>
                   <DatePicker
-                    value={draftFilters.dateTo || ""}
+                    value={draftFilters.dateTo ||""}
                     onChange={handleDraftDateToChange}
                     placeholder="To date"
                     fromDate={draftFilters.dateFrom ? new Date(draftFilters.dateFrom) : undefined}
@@ -337,7 +337,7 @@ export function WorkLogFilterActions({
             {isAdminOrCeo && departments && departments.length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Department</Label>
-                <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
+                <Select value={draftFilters.departmentId ||"all"} onValueChange={handleDraftDepartmentChange}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="All departments" /></SelectTrigger>
                   <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin">
                     <SelectItem value="all">All Departments</SelectItem>
@@ -377,7 +377,7 @@ export function WorkLogFilterActions({
                       <CommandEmpty>No employee found.</CommandEmpty>
                       <CommandGroup className="max-h-60 overflow-y-auto">
                         <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
-                          <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ? "opacity-100" : "opacity-0")} />
+                          <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ?"opacity-100" :"opacity-0")} />
                           My Logs
                         </CommandItem>
                         {filteredEmployees.map((emp) => (
@@ -403,7 +403,7 @@ export function WorkLogFilterActions({
               Reset
             </Button>
             <SheetClose asChild>
-              <Button className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white" onClick={handleApplyFilters}>
+              <Button className="flex-1" onClick={handleApplyFilters}>
                 Apply Filters
               </Button>
             </SheetClose>
@@ -442,7 +442,7 @@ function EmployeeCommandItem({
 
   return (
     <CommandItem value={`${employee.firstName} ${employee.lastName}`} onSelect={handleSelect}>
-      <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+      <Check className={cn("mr-2 h-4 w-4", isSelected ?"opacity-100" :"opacity-0")} />
       {employee.firstName} {employee.lastName}
     </CommandItem>
   );

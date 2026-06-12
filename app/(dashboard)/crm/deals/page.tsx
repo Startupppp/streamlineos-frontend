@@ -39,13 +39,13 @@ import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 
 const CONFETTI_COLORS = [
-  "#bd882c",
-  "#0f2b7f",
-  "#10B981",
-  "#F59E0B",
-  "#3B82F6",
-  "#EF4444",
-  "#8B5CF6",
+"#bd882c",
+"#0f2b7f",
+"#10B981",
+"#F59E0B",
+"#3B82F6",
+"#EF4444",
+"#8B5CF6",
 ];
 
 function ConfettiOverlay({ onDone }: { onDone: () => void }) {
@@ -105,7 +105,7 @@ function ConfettiOverlay({ onDone }: { onDone: () => void }) {
   );
 }
 
-const STAGE_ORDER = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION"] as const;
+const STAGE_ORDER = ["LEAD","CONTACTED","PROPOSAL","NEGOTIATION"] as const;
 
 export default function DealsPage() {
   const searchParams = useSearchParams();
@@ -113,15 +113,15 @@ export default function DealsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const view = (searchParams.get("view") || "table") as "table" | "kanban";
-  const dealSortCol = searchParams.get("sort") || "createdAt";
-  const dealSortDir = (searchParams.get("dir") || "desc") as "asc" | "desc";
+  const view = (searchParams.get("view") ||"table") as"table" |"kanban";
+  const dealSortCol = searchParams.get("sort") ||"createdAt";
+  const dealSortDir = (searchParams.get("dir") ||"desc") as"asc" |"desc";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
+        if (value === null || value ==="") params.delete(key);
         else params.set(key, value);
       }
       startTransition(() => {
@@ -142,7 +142,7 @@ export default function DealsPage() {
   const [sidePanelDealId, setSidePanelDealId] = useState<number | null>(null);
   const [winLossDialog, setWinLossDialog] = useState<{
     id: number;
-    stage: "WON" | "LOST";
+    stage:"WON" |"LOST";
   } | null>(null);
   const [winLossCategory, setWinLossCategory] = useState("");
   const [winLossNotes, setWinLossNotes] = useState("");
@@ -169,7 +169,7 @@ export default function DealsPage() {
     assignee: string;
     minValue: string;
     maxValue: string;
-  }>({ assignee: "all", minValue: "", maxValue: "" });
+  }>({ assignee:"all", minValue:"", maxValue:"" });
 
   const handleApplyFilters = useCallback(() => {
     setAppliedFilters({
@@ -183,23 +183,23 @@ export default function DealsPage() {
     setFilterAssignee("all");
     setFilterMinValue("");
     setFilterMaxValue("");
-    setAppliedFilters({ assignee: "all", minValue: "", maxValue: "" });
+    setAppliedFilters({ assignee:"all", minValue:"", maxValue:"" });
   }, []);
 
   const hasActiveFilters =
-    appliedFilters.assignee !== "all" ||
-    appliedFilters.minValue !== "" ||
-    appliedFilters.maxValue !== "";
+    appliedFilters.assignee !=="all" ||
+    appliedFilters.minValue !=="" ||
+    appliedFilters.maxValue !=="";
 
   const handleDealSort = useCallback(
     (col: string) => {
       if (dealSortCol === col) {
         updateParams({
           sort: col,
-          dir: dealSortDir === "asc" ? "desc" : "asc",
+          dir: dealSortDir ==="asc" ?"desc" :"asc",
         });
       } else {
-        updateParams({ sort: col, dir: "desc" });
+        updateParams({ sort: col, dir:"desc" });
       }
     },
     [dealSortCol, dealSortDir, updateParams],
@@ -210,7 +210,7 @@ export default function DealsPage() {
     [updateParams],
   );
   const handleViewKanban = useCallback(
-    () => updateParams({ view: "kanban" }),
+    () => updateParams({ view:"kanban" }),
     [updateParams],
   );
 
@@ -219,30 +219,30 @@ export default function DealsPage() {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
       const rows = (allDeals || []).map((d) => ({
         name: d.name,
-        value: d.value || "0",
+        value: d.value ||"0",
         stage: d.stage,
         probability: `${d.probability ?? 0}%`,
-        contactPerson: d.contactPerson || "",
-        contactEmail: d.contactEmail || "",
-        assignedTo: d.assignedTo?.name || "Unassigned",
-        expectedClose: d.expectedCloseDate || "",
+        contactPerson: d.contactPerson ||"",
+        contactEmail: d.contactEmail ||"",
+        assignedTo: d.assignedTo?.name ||"Unassigned",
+        expectedClose: d.expectedCloseDate ||"",
         createdAt: d.createdAt
           ? new Date(d.createdAt).toLocaleDateString()
-          : "",
+          :"",
       }));
       await downloadXlsx("deals-export.xlsx", [
         {
-          name: "Deals",
+          name:"Deals",
           columns: [
-            { header: "Deal Name", key: "name", width: 25 },
-            { header: "Value (INR)", key: "value", width: 15 },
-            { header: "Stage", key: "stage", width: 14 },
-            { header: "Probability", key: "probability", width: 12 },
-            { header: "Contact Person", key: "contactPerson", width: 20 },
-            { header: "Contact Email", key: "contactEmail", width: 25 },
-            { header: "Assigned To", key: "assignedTo", width: 18 },
-            { header: "Expected Close", key: "expectedClose", width: 14 },
-            { header: "Created", key: "createdAt", width: 12 },
+            { header:"Deal Name", key:"name", width: 25 },
+            { header:"Value (INR)", key:"value", width: 15 },
+            { header:"Stage", key:"stage", width: 14 },
+            { header:"Probability", key:"probability", width: 12 },
+            { header:"Contact Person", key:"contactPerson", width: 20 },
+            { header:"Contact Email", key:"contactEmail", width: 25 },
+            { header:"Assigned To", key:"assignedTo", width: 18 },
+            { header:"Expected Close", key:"expectedClose", width: 14 },
+            { header:"Created", key:"createdAt", width: 12 },
           ],
           rows,
         },
@@ -271,8 +271,8 @@ export default function DealsPage() {
 
   const handleStageChange = useCallback(
     (id: number, stage: string) => {
-      if (stage === "WON" || stage === "LOST") {
-        setWinLossDialog({ id, stage: stage as "WON" | "LOST" });
+      if (stage ==="WON" || stage ==="LOST") {
+        setWinLossDialog({ id, stage: stage as"WON" |"LOST" });
         setWinLossCategory("");
         setWinLossNotes("");
         return;
@@ -300,12 +300,12 @@ export default function DealsPage() {
         {
           id,
           stage: stage as
-            | "LEAD"
-            | "CONTACTED"
-            | "PROPOSAL"
-            | "NEGOTIATION"
-            | "WON"
-            | "LOST",
+            |"LEAD"
+            |"CONTACTED"
+            |"PROPOSAL"
+            |"NEGOTIATION"
+            |"WON"
+            |"LOST",
           version,
         },
         {
@@ -333,14 +333,14 @@ export default function DealsPage() {
   const handleWinLossConfirm = useCallback(() => {
     if (!winLossDialog) return;
     const reason = winLossNotes
-      ? `${winLossCategory || "Other"}: ${winLossNotes}`
+      ? `${winLossCategory ||"Other"}: ${winLossNotes}`
       : winLossCategory || undefined;
     updateStageMutation.mutate(
       { id: winLossDialog.id, stage: winLossDialog.stage, lostReason: reason },
       {
         onSuccess: () => {
           toast.success(`Deal marked as ${winLossDialog.stage}`);
-          if (winLossDialog.stage === "WON") setShowConfetti(true);
+          if (winLossDialog.stage ==="WON") setShowConfetti(true);
           setWinLossDialog(null);
         },
       },
@@ -365,12 +365,12 @@ export default function DealsPage() {
       {
         id: stageSkipDialog.id,
         stage: stageSkipDialog.to as
-          | "LEAD"
-          | "CONTACTED"
-          | "PROPOSAL"
-          | "NEGOTIATION"
-          | "WON"
-          | "LOST",
+          |"LEAD"
+          |"CONTACTED"
+          |"PROPOSAL"
+          |"NEGOTIATION"
+          |"WON"
+          |"LOST",
       },
       {
         onSuccess: () => {
@@ -385,15 +385,15 @@ export default function DealsPage() {
     if (!allDeals) return [];
     return allDeals.filter((d) => {
       if (
-        appliedFilters.assignee !== "all" &&
+        appliedFilters.assignee !=="all" &&
         d.assignedToId !== appliedFilters.assignee
       )
         return false;
-      if (appliedFilters.minValue !== "") {
+      if (appliedFilters.minValue !=="") {
         const min = Number(appliedFilters.minValue);
         if (!Number.isNaN(min) && Number(d.value ?? 0) < min) return false;
       }
-      if (appliedFilters.maxValue !== "") {
+      if (appliedFilters.maxValue !=="") {
         const max = Number(appliedFilters.maxValue);
         if (!Number.isNaN(max) && Number(d.value ?? 0) > max) return false;
       }
@@ -426,12 +426,12 @@ export default function DealsPage() {
   const stats = useMemo(() => {
     if (!allDeals)
       return { total: 0, totalValue: 0, wonValue: 0, avgProbability: 0 };
-    const active = allDeals.filter((d) => d.stage !== "LOST");
+    const active = allDeals.filter((d) => d.stage !=="LOST");
     return {
       total: allDeals.length,
       totalValue: active.reduce((s, d) => s + Number(d.value || 0), 0),
       wonValue: allDeals
-        .filter((d) => d.stage === "WON")
+        .filter((d) => d.stage ==="WON")
         .reduce((s, d) => s + Number(d.value || 0), 0),
       avgProbability:
         active.length > 0
@@ -455,22 +455,22 @@ export default function DealsPage() {
           <>
             <div className="flex items-center border border-border rounded-md">
               <Button
-                variant={view === "table" ? "default" : "ghost"}
+                variant={view ==="table" ?"default" :"ghost"}
                 size="sm"
                 className={cn(
-                  "rounded-r-none",
-                  view === "table" && "bg-blue-500 hover:bg-blue-500/90 text-white",
+"rounded-r-none",
+                  view ==="table" &&"",
                 )}
                 onClick={handleViewTable}
               >
                 <TableIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant={view === "kanban" ? "default" : "ghost"}
+                variant={view ==="kanban" ?"default" :"ghost"}
                 size="sm"
                 className={cn(
-                  "rounded-l-none",
-                  view === "kanban" && "bg-blue-500 hover:bg-blue-500/90 text-white",
+"rounded-l-none",
+                  view ==="kanban" &&"",
                 )}
                 onClick={handleViewKanban}
               >
@@ -482,8 +482,7 @@ export default function DealsPage() {
               Export
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-500/90 text-white"
-              onClick={() => setCreateOpen(true)}
+                            onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
               New Deal
@@ -514,7 +513,7 @@ export default function DealsPage() {
             <DealForecastWidget deals={filteredDeals} />
           </motion.div>
 
-          {view === "table" && (
+          {view ==="table" && (
             <motion.div variants={fadeUp}>
               <DealTableView
                 deals={allDeals || []}
@@ -527,7 +526,7 @@ export default function DealsPage() {
             </motion.div>
           )}
 
-          {view === "kanban" && (
+          {view ==="kanban" && (
             <motion.div variants={fadeUp} className="space-y-3">
               <KanbanFilterBar
                 assigneeOptions={assigneeOptions}

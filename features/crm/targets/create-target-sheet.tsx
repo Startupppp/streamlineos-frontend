@@ -28,7 +28,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { Check, Plus, Target } from "lucide-react";
 
 function getInitials(name: string) {
-  return name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+  return name?.split("").map((n) => n[0]).join("").toUpperCase().slice(0, 2) ||"?";
 }
 
 interface Employee {
@@ -97,7 +97,7 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
       new Map(
         assignableEmployees.map((emp) => [
           emp.id,
-          emp.firstName ? `${emp.firstName} ${emp.lastName ?? ""}`.trim() : (emp.name ?? "Unknown"),
+          emp.firstName ? `${emp.firstName} ${emp.lastName ??""}`.trim() : (emp.name ??"Unknown"),
         ]),
       ),
     [assignableEmployees],
@@ -106,7 +106,7 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        <Button className="bg-blue-500 hover:bg-blue-500/90 text-white shadow-lg">
+        <Button className="shadow-lg">
           <Plus className="h-4 w-4 mr-2" />
           Set Target
         </Button>
@@ -138,7 +138,7 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
               </div>
               <div className="max-h-40 overflow-y-auto rounded-lg border bg-muted/30 p-1.5 space-y-0.5">
                 {assignableEmployees.map((emp) => {
-                  const empName = employeeNames.get(emp.id) ?? "Unknown";
+                  const empName = employeeNames.get(emp.id) ??"Unknown";
                   const selected = selectedUserIds.includes(emp.id);
                   return (
                     <button
@@ -147,18 +147,18 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
                       data-user-id={emp.id}
                       onClick={handleToggleUser}
                       className={cn(
-                        "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all text-left",
-                        selected ? "bg-blue-500/10 ring-1 ring-blue-500/30" : "hover:bg-muted",
+"w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all text-left",
+                        selected ?"bg-blue-500/10 ring-1 ring-blue-500/30" :"hover:bg-muted",
                       )}
                     >
                       <Avatar className="h-7 w-7 shrink-0">
                         <AvatarImage src={resolveImageUrl(emp.image)} />
                         <AvatarFallback className="text-[10px] font-medium">{getInitials(empName)}</AvatarFallback>
                       </Avatar>
-                      <span className={cn("flex-1 truncate", selected && "font-medium")}>{empName}</span>
+                      <span className={cn("flex-1 truncate", selected &&"font-medium")}>{empName}</span>
                       <div className={cn(
-                        "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-                        selected ? "border-blue-500 bg-blue-500" : "border-muted-foreground/30",
+"h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                        selected ?"border-blue-500 bg-blue-500" :"border-muted-foreground/30",
                       )}>
                         {selected && <Check className="h-3 w-3 text-white" />}
                       </div>
@@ -239,10 +239,10 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
           <Button
             type="submit"
             form="create-target-form"
-            className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white h-9"
+            className="flex-1 h-9"
             disabled={isPending || selectedUserIds.length === 0}
           >
-            {isPending ? "Creating..." : `Create Target${selectedUserIds.length > 1 ? "s" : ""}`}
+            {isPending ?"Creating..." : `Create Target${selectedUserIds.length > 1 ?"s" :""}`}
           </Button>
         </SheetFooter>
       </SheetContent>

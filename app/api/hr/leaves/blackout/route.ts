@@ -17,7 +17,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAdmin(async (session) => {
     const { searchParams } = new URL(req.url);
-    const from = searchParams.get("from");
+    const from = searchParams.get("from ");
     const to = searchParams.get("to");
 
     const conditions = [eq(leaveBlackoutDates.orgId, session.orgId)];

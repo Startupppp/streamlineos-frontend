@@ -41,7 +41,7 @@ export default function WorkLogsPage() {
       selectedUserId: searchParams.get("user") ?? undefined,
       departmentId: searchParams.get("dept") ?? undefined,
       month: monthParam !== null ? parseInt(monthParam) : undefined,
-      dateFrom: searchParams.get("from") ?? undefined,
+      dateFrom: searchParams.get("from ") ?? undefined,
       dateTo: searchParams.get("to") ?? undefined,
     };
   }, [searchParams, currentYear, currentQuarter]);
@@ -61,8 +61,8 @@ export default function WorkLogsPage() {
         else params.delete("dept");
         if (newFilters.month != null) params.set("month", String(newFilters.month));
         else params.delete("month");
-        if (newFilters.dateFrom) params.set("from", newFilters.dateFrom);
-        else params.delete("from");
+        if (newFilters.dateFrom) params.set("from ", newFilters.dateFrom);
+        else params.delete("from ");
         if (newFilters.dateTo) params.set("to", newFilters.dateTo);
         else params.delete("to");
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -79,7 +79,7 @@ export default function WorkLogsPage() {
       selectedUserId: searchParams.get("user") ?? undefined,
       departmentId: searchParams.get("dept") ?? undefined,
       month: monthParam !== null ? parseInt(monthParam) : undefined,
-      dateFrom: searchParams.get("from") ?? undefined,
+      dateFrom: searchParams.get("from ") ?? undefined,
       dateTo: searchParams.get("to") ?? undefined,
     };
   });

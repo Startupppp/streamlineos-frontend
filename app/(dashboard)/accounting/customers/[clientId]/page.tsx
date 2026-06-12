@@ -104,13 +104,13 @@ export default function CustomerLedgerDetailPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="customer-ledger-from"
+              htmlFor="customer-ledger-from "
               className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
             >
               From
             </label>
             <Input
-              id="customer-ledger-from"
+              id="customer-ledger-from "
               type="date"
               value={from}
               onChange={handleFromChange}

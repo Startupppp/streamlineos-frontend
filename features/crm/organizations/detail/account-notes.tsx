@@ -14,7 +14,7 @@ interface AccountNotesProps {
 
 export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps) {
   const [editing, setEditing] = useState(false);
-  const [notes, setNotes] = useState(initialNotes ?? "");
+  const [notes, setNotes] = useState(initialNotes ??"");
 
   const updateMutation = useUpdateCrmOrganization();
 
@@ -32,7 +32,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
   }, [organizationId, notes, updateMutation]);
 
   const handleCancel = useCallback(() => {
-    setNotes(initialNotes ?? "");
+    setNotes(initialNotes ??"");
     setEditing(false);
   }, [initialNotes]);
 
@@ -54,7 +54,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
           onClick={() => setEditing(true)}
         >
           <Pencil className="h-3 w-3" />
-          {notes ? "Edit notes" : "Add notes"}
+          {notes ?"Edit notes" :"Add notes"}
         </Button>
       </div>
     );
@@ -73,7 +73,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
       <div className="flex gap-2">
         <Button
           size="sm"
-          className="gap-1.5 bg-blue-500 hover:bg-blue-500/90 text-white"
+          className="gap-1.5"
           onClick={handleSave}
           disabled={updateMutation.isPending}
         >

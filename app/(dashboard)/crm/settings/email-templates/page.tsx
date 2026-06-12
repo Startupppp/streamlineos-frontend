@@ -29,46 +29,46 @@ import {
 import { toast } from "sonner";
 
 const VARIABLES = [
-  "{{lead.name}}",
-  "{{lead.email}}",
-  "{{lead.phone}}",
-  "{{lead.company}}",
-  "{{lead.city}}",
-  "{{lead.source}}",
-  "{{lead.potentialValue}}",
-  "{{deal.name}}",
-  "{{deal.value}}",
-  "{{deal.stage}}",
-  "{{user.name}}",
-  "{{user.email}}",
+"{{lead.name}}",
+"{{lead.email}}",
+"{{lead.phone}}",
+"{{lead.company}}",
+"{{lead.city}}",
+"{{lead.source}}",
+"{{lead.potentialValue}}",
+"{{deal.name}}",
+"{{deal.value}}",
+"{{deal.stage}}",
+"{{user.name}}",
+"{{user.email}}",
 ];
 
 const SAMPLE_DATA: Record<string, string> = {
-  "lead.name": "Rahul Sharma",
-  "lead.email": "rahul@example.com",
-  "lead.phone": "+919876543210",
-  "lead.company": "TechCorp India",
-  "lead.city": "Mumbai",
-  "lead.source": "referral",
-  "lead.potentialValue": "50,00,000",
-  "deal.name": "Enterprise License",
-  "deal.value": "25,00,000",
-  "deal.stage": "Proposal",
-  "user.name": "Priya Patel",
-  "user.email": "priya@streamlineos.app",
+"lead.name":"Rahul Sharma",
+"lead.email":"rahul@example.com",
+"lead.phone":"+919876543210",
+"lead.company":"TechCorp India",
+"lead.city":"Mumbai",
+"lead.source":"referral",
+"lead.potentialValue":"50,00,000",
+"deal.name":"Enterprise License",
+"deal.value":"25,00,000",
+"deal.stage":"Proposal",
+"user.name":"Priya Patel",
+"user.email":"priya@streamlineos.app",
 };
 
 const templateSchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  subject: z.string().min(1, "Subject required"),
-  body: z.string().min(1, "Body required"),
+  name: z.string().min(1,"Name required").max(100),
+  subject: z.string().min(1,"Subject required"),
+  body: z.string().min(1,"Body required"),
 });
 type TemplateForm = z.infer<typeof templateSchema>;
 
 function interpolate(text: string, data: Record<string, string>) {
   let result = text;
   for (const [key, value] of Object.entries(data)) {
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`,"g"), value);
   }
   return result;
 }
@@ -85,7 +85,7 @@ export default function EmailTemplatesPage() {
 
   const createForm = useForm<TemplateForm>({
     resolver: zodResolver(templateSchema),
-    defaultValues: { name: "", subject: "", body: "" },
+    defaultValues: { name:"", subject:"", body:"" },
   });
 
   const editForm = useForm<TemplateForm>({
@@ -118,8 +118,8 @@ export default function EmailTemplatesPage() {
     editForm.reset({ name: template.name, subject: template.subject, body: template.body });
   }, [editForm]);
 
-  const insertVariable = useCallback((variable: string, formType: "create" | "edit") => {
-    const f = formType === "create" ? createForm : editForm;
+  const insertVariable = useCallback((variable: string, formType:"create" |"edit") => {
+    const f = formType ==="create" ? createForm : editForm;
     const current = f.getValues("body");
     f.setValue("body", current + variable);
   }, [createForm, editForm]);
@@ -161,7 +161,7 @@ export default function EmailTemplatesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
+            <Button >
               <Plus className="h-4 w-4 mr-2" />
               New Template
             </Button>
@@ -201,8 +201,8 @@ export default function EmailTemplatesPage() {
                     ))}
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createTemplate.isPending}>
-                  {createTemplate.isPending ? "Creating..." : "Create Template"}
+                <Button type="submit" className="w-full" disabled={createTemplate.isPending}>
+                  {createTemplate.isPending ?"Creating..." :"Create Template"}
                 </Button>
               </form>
             </Form>
@@ -279,8 +279,8 @@ export default function EmailTemplatesPage() {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-                      <Button type="submit" className="bg-blue-500 hover:bg-blue-500/90 text-white" disabled={updateTemplate.isPending}>
-                        {updateTemplate.isPending ? "Saving..." : "Save Changes"}
+                      <Button type="submit" disabled={updateTemplate.isPending}>
+                        {updateTemplate.isPending ?"Saving..." :"Save Changes"}
                       </Button>
                     </div>
                   </form>
@@ -379,8 +379,8 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDelete }: TemplateC
 
 interface VariableButtonProps {
   variable: string;
-  formType: "create" | "edit";
-  onInsert: (variable: string, formType: "create" | "edit") => void;
+  formType:"create" |"edit";
+  onInsert: (variable: string, formType:"create" |"edit") => void;
 }
 
 function VariableButton({ variable, formType, onInsert }: VariableButtonProps) {

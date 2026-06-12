@@ -51,7 +51,7 @@ function StatusMoveButton({ status: s, leadId, onMoveStatus }: StatusMoveButtonP
     <Button
       size="sm"
       variant="outline"
-      className={cn("text-xs h-8 gap-1.5", STATUS_CONFIG[s].border, "hover:bg-muted/50")}
+      className={cn("text-xs h-8 gap-1.5", STATUS_CONFIG[s].border,"hover:bg-muted/50")}
       onClick={handleClick}
     >
       <ArrowRight className="h-3 w-3" />
@@ -61,20 +61,20 @@ function StatusMoveButton({ status: s, leadId, onMoveStatus }: StatusMoveButtonP
 }
 
 const FOLLOW_UP_TYPES: { value: TaskType; label: string }[] = [
-  { value: "CALL", label: "Call" },
-  { value: "EMAIL", label: "Email" },
-  { value: "MEETING", label: "Meeting" },
-  { value: "CUSTOM", label: "Other" },
+  { value:"CALL", label:"Call" },
+  { value:"EMAIL", label:"Email" },
+  { value:"MEETING", label:"Meeting" },
+  { value:"CUSTOM", label:"Other" },
 ];
 
 function formatTaskDue(dueDate: string | null): string {
-  if (!dueDate) return "No date";
+  if (!dueDate) return"No date";
   const d = new Date(dueDate);
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / 86400000);
-  const formatted = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const formatted = d.toLocaleDateString("en-IN", { day:"numeric", month:"short" });
+  const time = d.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", hour12: true });
   if (diffDays < 0) return `Overdue · ${formatted}`;
   if (diffDays === 0) return `Today · ${time}`;
   if (diffDays === 1) return `Tomorrow · ${time}`;
@@ -96,10 +96,10 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
   const createTask = useCreateTask();
   const completeTask = useCompleteTask();
   const { data: leadTasksData } = useTasks(
-    leadId ? { entityType: "LEAD", entityId: leadId, limit: 20 } : undefined,
+    leadId ? { entityType:"LEAD", entityId: leadId, limit: 20 } : undefined,
   );
-  const pendingTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status === "pending");
-  const doneTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status === "completed");
+  const pendingTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status ==="pending");
+  const doneTasks = (leadTasksData?.tasks ?? []).filter((t) => t.status ==="completed");
 
   const handleScheduleFollowUp = useCallback(async () => {
     if (!leadId) return;
@@ -107,7 +107,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
     if (!title) { toast.error("Follow-up title is required"); return; }
     if (!fuDate) { toast.error("Please pick a date"); return; }
 
-    const time = fuTime || "09:00";
+    const time = fuTime ||"09:00";
     const dueDate = new Date(`${fuDate}T${time}:00`).toISOString();
 
     try {
@@ -115,7 +115,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
         title,
         type: fuType,
         notes: fuNotes.trim() || undefined,
-        entityType: "LEAD",
+        entityType:"LEAD",
         entityId: leadId,
         dueDate,
       });
@@ -210,11 +210,11 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                   </Button>
                   <Badge
                     className={cn(
-                      "shrink-0",
+"shrink-0",
                       STATUS_CONFIG[lead.status as LeadStatus]?.bg,
                       STATUS_CONFIG[lead.status as LeadStatus]?.color,
                       STATUS_CONFIG[lead.status as LeadStatus]?.border,
-                      "border",
+"border",
                     )}
                   >
                     {STATUS_CONFIG[lead.status as LeadStatus]?.label}
@@ -249,7 +249,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Move to</p>
                 <div className="flex gap-2 flex-wrap">
-                  {STATUSES.filter(s => s !== lead.status && s !== "LOST").map(s => (
+                  {STATUSES.filter(s => s !== lead.status && s !=="LOST").map(s => (
                     <StatusMoveButton key={s} status={s} leadId={lead.id} onMoveStatus={onMoveStatus} />
                   ))}
                 </div>
@@ -289,7 +289,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       <div className="h-7 w-7 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
                         <Target className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
-                      <span className="capitalize">{lead.source.replace("_", " ")}</span>
+                      <span className="capitalize">{lead.source.replace("_","")}</span>
                     </div>
                   )}
                 </div>
@@ -326,7 +326,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={resolveImageUrl(lead.assignedTo.image)} />
                       <AvatarFallback className="text-xs">
-                        {getInitials(lead.assignedTo.name ?? "")}
+                        {getInitials(lead.assignedTo.name ??"")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -363,13 +363,13 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                       <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
                         <p className="text-[11px] text-muted-foreground mb-1">Created</p>
                         <p className="text-sm font-medium">
-                          {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
+                          {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() :"—"}
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
                         <p className="text-[11px] text-muted-foreground mb-1">Assigned</p>
                         <p className="text-sm font-medium">
-                          {lead.assignedAt ? new Date(lead.assignedAt).toLocaleDateString() : "—"}
+                          {lead.assignedAt ? new Date(lead.assignedAt).toLocaleDateString() :"—"}
                         </p>
                       </div>
                       {lead.convertedAt && (
@@ -399,23 +399,23 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                               className="flex gap-3 p-3.5 rounded-xl bg-muted/20 border border-border/30"
                             >
                               <div className={cn(
-                                "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-                                activity.type === "call" ? "bg-blue-500/15 text-blue-400" :
-                                activity.type === "email" ? "bg-purple-500/15 text-purple-400" :
-                                activity.type === "whatsapp" ? "bg-green-500/15 text-green-400" :
-                                activity.type === "meeting" ? "bg-amber-500/15 text-amber-400" :
-                                "bg-cyan-500/15 text-cyan-400",
+"h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+                                activity.type ==="call" ?"bg-blue-500/15 text-blue-400" :
+                                activity.type ==="email" ?"bg-purple-500/15 text-purple-400" :
+                                activity.type ==="whatsapp" ?"bg-green-500/15 text-green-400" :
+                                activity.type ==="meeting" ?"bg-amber-500/15 text-amber-400" :
+"bg-cyan-500/15 text-cyan-400",
                               )}>
-                                {activity.type === "call" ? <Phone className="h-4 w-4" /> :
-                                 activity.type === "email" ? <Mail className="h-4 w-4" /> :
-                                 activity.type === "whatsapp" ? <MessageSquare className="h-4 w-4" /> :
-                                 activity.type === "meeting" ? <Calendar className="h-4 w-4" /> :
+                                {activity.type ==="call" ? <Phone className="h-4 w-4" /> :
+                                 activity.type ==="email" ? <Mail className="h-4 w-4" /> :
+                                 activity.type ==="whatsapp" ? <MessageSquare className="h-4 w-4" /> :
+                                 activity.type ==="meeting" ? <Calendar className="h-4 w-4" /> :
                                  <MapPin className="h-4 w-4" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <p className="text-sm font-medium capitalize">
-                                    {activity.type.replace("_", " ")}
+                                    {activity.type.replace("_","")}
                                   </p>
                                   <span className="text-[11px] text-muted-foreground">
                                     {timeAgo(activity.date)}
@@ -521,7 +521,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
 
                       <Button
                         size="sm"
-                        className="w-full h-8 text-xs bg-blue-500 hover:bg-blue-500/90 text-white gap-1.5"
+                        className="w-full h-8 text-xs gap-1.5"
                         onClick={handleScheduleFollowUp}
                         disabled={createTask.isPending}
                       >
@@ -547,22 +547,22 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                                 className="flex items-start gap-3 p-3 rounded-lg bg-muted/20 border border-border/40"
                               >
                                 <div className={cn(
-                                  "h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
-                                  task.type === "CALL" ? "bg-blue-500/15 text-blue-400" :
-                                  task.type === "EMAIL" ? "bg-purple-500/15 text-purple-400" :
-                                  task.type === "MEETING" ? "bg-amber-500/15 text-amber-400" :
-                                  "bg-muted text-muted-foreground",
+"h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
+                                  task.type ==="CALL" ?"bg-blue-500/15 text-blue-400" :
+                                  task.type ==="EMAIL" ?"bg-purple-500/15 text-purple-400" :
+                                  task.type ==="MEETING" ?"bg-amber-500/15 text-amber-400" :
+"bg-muted text-muted-foreground",
                                 )}>
-                                  {task.type === "CALL" ? <Phone className="h-3.5 w-3.5" /> :
-                                   task.type === "EMAIL" ? <Mail className="h-3.5 w-3.5" /> :
-                                   task.type === "MEETING" ? <Calendar className="h-3.5 w-3.5" /> :
+                                  {task.type ==="CALL" ? <Phone className="h-3.5 w-3.5" /> :
+                                   task.type ==="EMAIL" ? <Mail className="h-3.5 w-3.5" /> :
+                                   task.type ==="MEETING" ? <Calendar className="h-3.5 w-3.5" /> :
                                    <Clock className="h-3.5 w-3.5" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-medium leading-tight">{task.title}</p>
                                   <p className={cn(
-                                    "text-[10px] mt-0.5",
-                                    isOverdue ? "text-red-400 font-medium" : "text-muted-foreground",
+"text-[10px] mt-0.5",
+                                    isOverdue ?"text-red-400 font-medium" :"text-muted-foreground",
                                   )}>
                                     {formatTaskDue(task.dueDate)}
                                   </p>
@@ -604,8 +604,8 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                               </span>
                               <span className="text-[10px] text-muted-foreground/50 shrink-0">
                                 {task.completedAt
-                                  ? new Date(task.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-                                  : ""}
+                                  ? new Date(task.completedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })
+                                  :""}
                               </span>
                             </div>
                           ))}

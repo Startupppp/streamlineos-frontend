@@ -121,13 +121,13 @@ export default function ProfitLossPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="pnl-from"
+              htmlFor="pnl-from "
               className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
             >
               From
             </label>
             <Input
-              id="pnl-from"
+              id="pnl-from "
               type="date"
               value={from}
               onChange={handleFromChange}

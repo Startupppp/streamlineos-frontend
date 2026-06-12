@@ -56,7 +56,7 @@ import { TimesheetTableRow, type EditEntry } from "@/features/timesheets/timeshe
 
 const ITEMS_PER_PAGE = 10;
 
-type ViewMode = "current" | "history";
+type ViewMode ="current" |"history";
 
 export default function TimesheetsPage() {
   const { data: session } = useSession();
@@ -65,14 +65,14 @@ export default function TimesheetsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const ability = useAbility();
-  const isCEO = ability.can("manage", "all");
+  const isCEO = ability.can("manage","all");
 
-  const selectedProject = searchParams.get("project") ?? "all";
-  const dateRange = searchParams.get("range") ?? "this-quarter";
-  const startDate = searchParams.get("from") ?? "";
-  const endDate = searchParams.get("to") ?? "";
-  const page = parseInt(searchParams.get("page") ?? "1") || 1;
-  const viewMode = (searchParams.get("view") ?? "current") as ViewMode;
+  const selectedProject = searchParams.get("project") ??"all";
+  const dateRange = searchParams.get("range") ??"this-quarter";
+  const startDate = searchParams.get("from ") ??"";
+  const endDate = searchParams.get("to") ??"";
+  const page = parseInt(searchParams.get("page") ??"1") || 1;
+  const viewMode = (searchParams.get("view") ??"current") as ViewMode;
 
   const [editingEntry, setEditingEntry] = useState<EditEntry | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -98,37 +98,37 @@ export default function TimesheetsPage() {
   const computedRange = useMemo(() => {
     const now = new Date();
     switch (dateRange) {
-      case "this-quarter":
+      case"this-quarter":
         return {
-          start: format(startOfQuarter(now), "yyyy-MM-dd"),
-          end: format(endOfQuarter(now), "yyyy-MM-dd"),
+          start: format(startOfQuarter(now),"yyyy-MM-dd"),
+          end: format(endOfQuarter(now),"yyyy-MM-dd"),
         };
-      case "last-quarter": {
+      case"last-quarter": {
         const s = startOfQuarter(subQuarters(now, 1));
         const e = endOfQuarter(subQuarters(now, 1));
-        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+        return { start: format(s,"yyyy-MM-dd"), end: format(e,"yyyy-MM-dd") };
       }
-      case "this-week":
+      case"this-week":
         return {
-          start: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
-          end: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+          start: format(startOfWeek(now, { weekStartsOn: 1 }),"yyyy-MM-dd"),
+          end: format(endOfWeek(now, { weekStartsOn: 1 }),"yyyy-MM-dd"),
         };
-      case "last-week": {
+      case"last-week": {
         const s = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
         const e = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
-        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+        return { start: format(s,"yyyy-MM-dd"), end: format(e,"yyyy-MM-dd") };
       }
-      case "this-month":
+      case"this-month":
         return {
-          start: format(startOfMonth(now), "yyyy-MM-dd"),
-          end: format(endOfMonth(now), "yyyy-MM-dd"),
+          start: format(startOfMonth(now),"yyyy-MM-dd"),
+          end: format(endOfMonth(now),"yyyy-MM-dd"),
         };
-      case "last-month": {
+      case"last-month": {
         const s = startOfMonth(subMonths(now, 1));
         const e = endOfMonth(subMonths(now, 1));
-        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+        return { start: format(s,"yyyy-MM-dd"), end: format(e,"yyyy-MM-dd") };
       }
-      case "custom":
+      case"custom":
         return { start: startDate || undefined, end: endDate || undefined };
       default:
         return { start: undefined, end: undefined };
@@ -136,13 +136,13 @@ export default function TimesheetsPage() {
   }, [dateRange, startDate, endDate]);
 
   const { data: entries, isLoading } = useTimeEntries({
-    projectId: selectedProject === "all" ? undefined : parseInt(selectedProject),
+    projectId: selectedProject ==="all" ? undefined : parseInt(selectedProject),
     startDate: computedRange.start,
     endDate: computedRange.end,
   });
 
   const totalHours = useMemo(
-    () => (entries ?? []).reduce((sum, e) => sum + parseFloat(e.hours?.toString() || "0"), 0),
+    () => (entries ?? []).reduce((sum, e) => sum + parseFloat(e.hours?.toString() ||"0"), 0),
     [entries],
   );
 
@@ -166,8 +166,8 @@ export default function TimesheetsPage() {
   const handleViewMode = useCallback(
     (mode: ViewMode) => {
       updateParams({
-        view: mode === "current" ? null : mode,
-        range: mode === "current" ? null : "all",
+        view: mode ==="current" ? null : mode,
+        range: mode ==="current" ? null :"all",
         page: null,
       });
     },
@@ -178,15 +178,15 @@ export default function TimesheetsPage() {
   const handleViewModeHistory = useCallback(() => handleViewMode("history"), [handleViewMode]);
 
   const handleProjectChange = useCallback(
-    (v: string) => updateParams({ project: v === "all" ? null : v, page: null }),
+    (v: string) => updateParams({ project: v ==="all" ? null : v, page: null }),
     [updateParams],
   );
   const handlePeriodChange = useCallback(
     (v: string) => {
       updateParams({
-        range: v === "this-quarter" ? null : v,
+        range: v ==="this-quarter" ? null : v,
         page: null,
-        view: v === "all" ? "history" : null,
+        view: v ==="all" ?"history" : null,
       });
     },
     [updateParams],
@@ -214,7 +214,7 @@ export default function TimesheetsPage() {
   );
   const handlePageNumber = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const num = parseInt(e.currentTarget.dataset.page ?? "1");
+      const num = parseInt(e.currentTarget.dataset.page ??"1");
       if (!isNaN(num)) updateParams({ page: num === 1 ? null : String(num) });
     },
     [updateParams],
@@ -230,7 +230,7 @@ export default function TimesheetsPage() {
           setDeleteDialogOpen(false);
           setEntryToDelete(null);
         },
-        onError: (err) => toast.error((err as Error).message || "Failed to delete"),
+        onError: (err) => toast.error((err as Error).message ||"Failed to delete"),
       },
     );
   }, [entryToDelete, deleteMutation]);
@@ -279,7 +279,7 @@ export default function TimesheetsPage() {
         </Select>
       </div>
 
-      {dateRange === "custom" && (
+      {dateRange ==="custom" && (
         <>
           <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="From date" />
           <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="To date" />
@@ -291,7 +291,7 @@ export default function TimesheetsPage() {
       <button
         onClick={handleViewModeCurrent}
         className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
-          viewMode === "current" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground hover:text-foreground"
+          viewMode ==="current" ?"bg-blue-500/10 text-blue-600" :"text-muted-foreground hover:text-foreground"
         }`}
       >
         Current Quarter
@@ -299,7 +299,7 @@ export default function TimesheetsPage() {
       <button
         onClick={handleViewModeHistory}
         className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-          viewMode === "history" ? "bg-blue-500/10 text-blue-600" : "text-muted-foreground hover:text-foreground"
+          viewMode ==="history" ?"bg-blue-500/10 text-blue-600" :"text-muted-foreground hover:text-foreground"
         }`}
       >
         History
@@ -314,7 +314,7 @@ export default function TimesheetsPage() {
       actions={
         <LogTimeDialog
           trigger={
-            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white font-bold shadow-sm">
+            <Button className="font-bold shadow-sm">
               <Plus className="mr-2 h-4 w-4" />
               Add New Log
             </Button>
@@ -327,8 +327,8 @@ export default function TimesheetsPage() {
         {entries && entries.length > 0 && (
           <motion.div variants={fadeUp}>
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{entries.length}</span>{" "}
-              {entries.length === 1 ? "entry" : "entries"} —{" "}
+              <span className="font-semibold text-foreground">{entries.length}</span>{""}
+              {entries.length === 1 ?"entry" :"entries"} —{""}
               <span className="font-semibold text-foreground">{totalHours.toFixed(1)}h</span> logged
             </p>
           </motion.div>
@@ -375,9 +375,9 @@ export default function TimesheetsPage() {
                               <div className="flex flex-col items-center gap-3">
                                 <EmptyTimeIllustration />
                                 <p>
-                                  {selectedProject !== "all" || dateRange !== "this-quarter"
-                                    ? "No work logs found matching your filters."
-                                    : "No work logs found. Add your first log!"}
+                                  {selectedProject !=="all" || dateRange !=="this-quarter"
+                                    ?"No work logs found matching your filters."
+                                    :"No work logs found. Add your first log!"}
                                 </p>
                               </div>
                             </TableCell>
@@ -409,13 +409,13 @@ export default function TimesheetsPage() {
                             <Button
                               key={num}
                               data-page={num}
-                              variant={num === page ? "default" : "outline"}
+                              variant={num === page ?"default" :"outline"}
                               size="icon"
                               className={`h-8 w-8 text-sm font-bold ${
-                                num === page ? "bg-blue-500 hover:bg-blue-500/90 text-white border-blue-500" : ""
+                                num === page ?" border-blue-500" :""
                               }`}
                               onClick={handlePageNumber}
-                              {...(num === page ? { "aria-current": "page" as const } : {})}
+                              {...(num === page ? {"aria-current":"page" as const } : {})}
                             >
                               {num}
                             </Button>

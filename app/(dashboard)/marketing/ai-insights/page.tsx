@@ -28,16 +28,16 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 
 const PERIODS = [
-  { value: "last 7 days", label: "Last 7 Days" },
-  { value: "last 30 days", label: "Last 30 Days" },
-  { value: "last quarter", label: "Last Quarter" },
+  { value:"last 7 days", label:"Last 7 Days" },
+  { value:"last 30 days", label:"Last 30 Days" },
+  { value:"last quarter", label:"Last Quarter" },
 ] as const;
 
 type Period = (typeof PERIODS)[number]["value"];
 
 
 function InsightsDisplay({ result }: { result: CampaignInsightsResult }) {
-  const paragraphs = result.insights.split("\n").filter((line) => line.trim() !== "");
+  const paragraphs = result.insights.split("\n").filter((line) => line.trim() !=="");
 
   return (
     <div className="space-y-3">
@@ -47,10 +47,10 @@ function InsightsDisplay({ result }: { result: CampaignInsightsResult }) {
           <p
             key={i}
             className={cn(
-              "text-sm leading-relaxed",
+"text-sm leading-relaxed",
               isSectionHeader
-                ? "font-semibold text-foreground mt-4 first:mt-0"
-                : "text-muted-foreground"
+                ?"font-semibold text-foreground mt-4 first:mt-0"
+                :"text-muted-foreground"
             )}
           >
             {para}
@@ -88,7 +88,7 @@ const PreviousInsightsItem = memo(function PreviousInsightsItem({ result, onRest
             </Badge>
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" aria-hidden="true" />
-              {generatedAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              {generatedAt.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
             </span>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2">{preview}…</p>
@@ -169,7 +169,7 @@ export default function AIInsightsPage() {
               </div>
 
               <Button
-                className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
+                className="w-full"
                 onClick={handleGenerate}
                 disabled={isPending}
                 aria-label="Generate AI campaign insights"
@@ -182,7 +182,7 @@ export default function AIInsightsPage() {
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {current ? "Regenerate" : "Generate Insights"}
+                    {current ?"Regenerate" :"Generate Insights"}
                   </>
                 )}
               </Button>
@@ -250,13 +250,13 @@ export default function AIInsightsPage() {
               <CardFooter className="pt-3 border-t">
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" aria-hidden="true" />
-                  Generated at{" "}
+                  Generated at{""}
                   {new Date(current.generatedAt).toLocaleString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
+                    day:"numeric",
+                    month:"short",
+                    year:"numeric",
+                    hour:"2-digit",
+                    minute:"2-digit",
                   })}
                 </p>
               </CardFooter>
@@ -275,7 +275,7 @@ export default function AIInsightsPage() {
                   </p>
                 </div>
                 <Button
-                  className="bg-blue-500 hover:bg-blue-500/90 text-white mt-2"
+                  className="mt-2"
                   onClick={handleGenerate}
                   disabled={isPending}
                   aria-label="Generate AI campaign insights"

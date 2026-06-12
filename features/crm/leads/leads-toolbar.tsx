@@ -11,8 +11,8 @@ import { STATUSES, LEAD_PRIORITIES, LEAD_SOURCES } from "./leads-constants";
 interface LeadsToolbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  view: "table" | "kanban";
-  onViewChange: (view: "table" | "kanban") => void;
+  view:"table" |"kanban";
+  onViewChange: (view:"table" |"kanban") => void;
   statusFilter?: string;
   priorityFilter?: string;
   sourceFilter?: string;
@@ -31,9 +31,9 @@ export function LeadsToolbar({
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
   const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
-  const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v === "all" ? undefined : v), [onStatusFilterChange]);
-  const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v === "all" ? undefined : v), [onPriorityFilterChange]);
-  const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v === "all" ? undefined : v), [onSourceFilterChange]);
+  const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v ==="all" ? undefined : v), [onStatusFilterChange]);
+  const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v ==="all" ? undefined : v), [onPriorityFilterChange]);
+  const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v ==="all" ? undefined : v), [onSourceFilterChange]);
 
   const hasFilters = !!(statusFilter || priorityFilter || sourceFilter);
 
@@ -51,19 +51,19 @@ export function LeadsToolbar({
       </div>
 
       <div className="flex items-center border border-border rounded-md">
-        <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-r-none h-8 px-2.5", view === "table" && "bg-blue-500 hover:bg-blue-500/80 text-white")}
+        <Button variant={view ==="table" ?"default" :"ghost"} size="sm"
+          className={cn("rounded-r-none h-8 px-2.5", view ==="table" &&"")}
           onClick={handleViewTable}>
           <TableIcon className="h-3.5 w-3.5" />
         </Button>
-        <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-l-none h-8 px-2.5", view === "kanban" && "bg-blue-500 hover:bg-blue-500/80 text-white")}
+        <Button variant={view ==="kanban" ?"default" :"ghost"} size="sm"
+          className={cn("rounded-l-none h-8 px-2.5", view ==="kanban" &&"")}
           onClick={handleViewKanban}>
           <LayoutGrid className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
+      <Select value={statusFilter ||"all"} onValueChange={handleStatusFilter}>
         <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
@@ -73,7 +73,7 @@ export function LeadsToolbar({
         </SelectContent>
       </Select>
 
-      <Select value={priorityFilter || "all"} onValueChange={handlePriorityFilter}>
+      <Select value={priorityFilter ||"all"} onValueChange={handlePriorityFilter}>
         <SelectTrigger className="w-[100px] h-8 text-[11px]"><SelectValue placeholder="Priority" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Priority</SelectItem>
@@ -83,12 +83,12 @@ export function LeadsToolbar({
         </SelectContent>
       </Select>
 
-      <Select value={sourceFilter || "all"} onValueChange={handleSourceFilter}>
+      <Select value={sourceFilter ||"all"} onValueChange={handleSourceFilter}>
         <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Source" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Sources</SelectItem>
           {LEAD_SOURCES.map(s => (
-            <SelectItem key={s} value={s} className="text-[11px]">{s.replace("_", " ")}</SelectItem>
+            <SelectItem key={s} value={s} className="text-[11px]">{s.replace("_","")}</SelectItem>
           ))}
         </SelectContent>
       </Select>

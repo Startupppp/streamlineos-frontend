@@ -32,7 +32,7 @@ export function PageHeader({
       className={cn(
         "px-4 sm:px-6 pt-4 pb-3",
         sticky &&
-          "sticky top-0 z-10 -mx-4 sm:-mx-6 bg-[#f6f8fc]/90 backdrop-blur-sm border-b border-slate-200/60",
+          "sticky top-0 z-10 -mx-4 sm:-mx-6 bg-background/90 backdrop-blur-sm border-b border-border",
         className,
       )}
     >
@@ -46,7 +46,7 @@ export function PageHeader({
           <div className="flex items-center gap-2 flex-wrap">
             <h1
               className={cn(
-                "font-display font-bold tracking-[-0.015em] text-slate-900 leading-tight",
+                "font-display font-bold tracking-[-0.015em] text-foreground leading-tight",
                 titleSize,
               )}
             >
@@ -55,7 +55,7 @@ export function PageHeader({
             {badge}
           </div>
           {description && (
-            <p className="mt-1 text-[13px] text-slate-600 leading-snug max-w-2xl">
+            <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
               {description}
             </p>
           )}

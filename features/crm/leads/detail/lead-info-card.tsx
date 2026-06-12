@@ -304,10 +304,9 @@ export function LeadInfoCard({
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-500/80 text-white"
-                  disabled={isUpdatePending}
+                                    disabled={isUpdatePending}
                 >
-                  {isUpdatePending ? "Saving..." : "Save Changes"}
+                  {isUpdatePending ?"Saving..." :"Save Changes"}
                 </Button>
               </div>
             </form>
@@ -320,31 +319,31 @@ export function LeadInfoCard({
   const contactChips = [
     {
       icon: Mail,
-      label: "Email",
+      label:"Email",
       value: lead.email,
       href: lead.email ? `mailto:${lead.email}` : undefined,
     },
     {
       icon: Phone,
-      label: "Phone",
+      label:"Phone",
       value: lead.phone,
       href: lead.phone ? `tel:${lead.phone}` : undefined,
     },
     {
       icon: MessageSquare,
-      label: "WhatsApp",
+      label:"WhatsApp",
       value: lead.whatsappNumber,
       href: lead.whatsappNumber
-        ? `https://wa.me/${lead.whatsappNumber.replace(/\D/g, "")}`
+        ? `https://wa.me/${lead.whatsappNumber.replace(/\D/g,"")}`
         : undefined,
     },
-    { icon: Building2, label: "Company", value: lead.company },
+    { icon: Building2, label:"Company", value: lead.company },
     {
       icon: Target,
-      label: "Source",
-      value: lead.source?.replace(/_/g, " "),
+      label:"Source",
+      value: lead.source?.replace(/_/g,""),
     },
-    { icon: User, label: "City", value: lead.city },
+    { icon: User, label:"City", value: lead.city },
   ];
 
   return (
@@ -368,11 +367,11 @@ export function LeadInfoCard({
         {(lead.potentialValue || lead.investmentInterest) && (
           <div
             className={cn(
-              "grid gap-4 p-4 rounded-xl border border-border/40",
+"grid gap-4 p-4 rounded-xl border border-border/40",
               lead.potentialValue && lead.investmentInterest
-                ? "grid-cols-2"
-                : "grid-cols-1",
-              "bg-gradient-to-r from-emerald-500/5 via-transparent to-blue-500/5"
+                ?"grid-cols-2"
+                :"grid-cols-1",
+"bg-gradient-to-r from-emerald-500/5 via-transparent to-blue-500/5"
             )}
           >
             {lead.potentialValue && (

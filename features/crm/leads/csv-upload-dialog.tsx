@@ -35,49 +35,49 @@ interface ParsedLead {
   tags?: string;
 }
 
-const VALID_SOURCES = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"];
-const VALID_PRIORITIES = ["HOT", "WARM", "COLD"];
-const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
+const VALID_SOURCES = ["referral","campaign","cold_call","website","social_media","walk_in","other"];
+const VALID_PRIORITIES = ["HOT","WARM","COLD"];
+const ACCEPTED_EXTENSIONS = [".csv",".xlsx",".xls"];
 
 const CRM_FIELDS: { value: string; label: string }[] = [
-  { value: "_skip", label: "— Skip —" },
-  { value: "name", label: "Name (required)" },
-  { value: "email", label: "Email" },
-  { value: "phone", label: "Phone" },
-  { value: "company", label: "Company" },
-  { value: "source", label: "Source" },
-  { value: "notes", label: "Notes / Remarks" },
-  { value: "city", label: "City / Location" },
-  { value: "designation", label: "Designation / Title" },
-  { value: "referredBy", label: "Referred By" },
-  { value: "potentialValue", label: "Potential Value" },
-  { value: "investmentInterest", label: "Investment Interest" },
-  { value: "whatsappNumber", label: "WhatsApp Number" },
-  { value: "website", label: "Website / URL" },
-  { value: "priority", label: "Priority (HOT/WARM/COLD)" },
-  { value: "tags", label: "Tags (comma-separated)" },
+  { value:"_skip", label:"— Skip —" },
+  { value:"name", label:"Name (required)" },
+  { value:"email", label:"Email" },
+  { value:"phone", label:"Phone" },
+  { value:"company", label:"Company" },
+  { value:"source", label:"Source" },
+  { value:"notes", label:"Notes / Remarks" },
+  { value:"city", label:"City / Location" },
+  { value:"designation", label:"Designation / Title" },
+  { value:"referredBy", label:"Referred By" },
+  { value:"potentialValue", label:"Potential Value" },
+  { value:"investmentInterest", label:"Investment Interest" },
+  { value:"whatsappNumber", label:"WhatsApp Number" },
+  { value:"website", label:"Website / URL" },
+  { value:"priority", label:"Priority (HOT/WARM/COLD)" },
+  { value:"tags", label:"Tags (comma-separated)" },
 ];
 
 const HEADER_ALIASES: Record<string, string[]> = {
-  name: ["name", "lead name", "full name", "contact name", "lead"],
-  email: ["email", "e-mail", "email address", "mail"],
-  phone: ["phone", "mobile", "tel", "telephone", "contact number", "phone number", "mobile number"],
-  company: ["company", "organization", "org", "firm", "company name"],
-  source: ["source", "lead source", "channel"],
-  notes: ["notes", "remarks", "comments", "description"],
-  city: ["city", "location", "area"],
-  designation: ["designation", "title", "role", "position", "job title"],
-  referredBy: ["referred by", "referral", "referred", "referrer"],
-  potentialValue: ["potential value", "value", "deal value", "amount", "budget"],
-  investmentInterest: ["investment interest", "investment", "interest"],
-  whatsappNumber: ["whatsapp", "whatsapp number", "wa number"],
-  website: ["website", "url", "web"],
-  priority: ["priority", "lead priority", "urgency"],
-  tags: ["tags", "labels", "categories"],
+  name: ["name","lead name","full name","contact name","lead"],
+  email: ["email","e-mail","email address","mail"],
+  phone: ["phone","mobile","tel","telephone","contact number","phone number","mobile number"],
+  company: ["company","organization","org","firm","company name"],
+  source: ["source","lead source","channel"],
+  notes: ["notes","remarks","comments","description"],
+  city: ["city","location","area"],
+  designation: ["designation","title","role","position","job title"],
+  referredBy: ["referred by","referral","referred","referrer"],
+  potentialValue: ["potential value","value","deal value","amount","budget"],
+  investmentInterest: ["investment interest","investment","interest"],
+  whatsappNumber: ["whatsapp","whatsapp number","wa number"],
+  website: ["website","url","web"],
+  priority: ["priority","lead priority","urgency"],
+  tags: ["tags","labels","categories"],
 };
 
 function matchHeader(header: string): string | null {
-  const h = header.toLowerCase().trim().replace(/[_\-]/g, " ");
+  const h = header.toLowerCase().trim().replace(/[_\-]/g,"");
   for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
     if (aliases.includes(h)) return field;
   }
@@ -92,8 +92,8 @@ function getFileExtension(name: string): string {
 function extractCSV(text: string): { headers: string[]; rows: string[][] } {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   if (lines.length < 2) return { headers: [], rows: [] };
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/['"]/g, ""));
-  const rows = lines.slice(1).map((l) => l.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")));
+  const headers = lines[0].split(",").map((h) => h.trim().replace(/['"]/g,""));
+  const rows = lines.slice(1).map((l) => l.split(",").map((c) => c.trim().replace(/^["']|["']$/g,"")));
   return { headers, rows };
 }
 
@@ -107,7 +107,7 @@ async function extractExcel(buffer: ArrayBuffer): Promise<{ headers: string[]; r
   const headerRow = sheet.getRow(1);
   const headers: string[] = [];
   headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber - 1] = String(cell.value ?? "").trim();
+    headers[colNumber - 1] = String(cell.value ??"").trim();
   });
 
   const rows: string[][] = [];
@@ -115,7 +115,7 @@ async function extractExcel(buffer: ArrayBuffer): Promise<{ headers: string[]; r
     const row = sheet.getRow(rowIdx);
     const cols: string[] = [];
     row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      cols[colNumber - 1] = String(cell.value ?? "").trim();
+      cols[colNumber - 1] = String(cell.value ??"").trim();
     });
     if (!cols.every((c) => !c)) rows.push(cols);
   }
@@ -130,7 +130,7 @@ function applyMapping(
 ): { leads: ParsedLead[]; errors: string[] } {
   const fieldToCol: Record<string, number> = {};
   for (const [idxStr, field] of Object.entries(fieldMappings)) {
-    if (field !== "_skip") fieldToCol[field] = Number(idxStr);
+    if (field !=="_skip") fieldToCol[field] = Number(idxStr);
   }
 
   const leads: ParsedLead[] = [];
@@ -142,28 +142,28 @@ function applyMapping(
   };
 
   rows.forEach((row, i) => {
-    const name = get(row, "name");
+    const name = get(row,"name");
     if (!name) { errors.push(`Row ${i + 2}: missing name, skipped.`); return; }
 
-    const source = get(row, "source")?.toLowerCase();
-    const priority = get(row, "priority")?.toUpperCase();
+    const source = get(row,"source")?.toLowerCase();
+    const priority = get(row,"priority")?.toUpperCase();
 
     leads.push({
       name,
-      email: get(row, "email"),
-      phone: get(row, "phone"),
-      company: get(row, "company"),
+      email: get(row,"email"),
+      phone: get(row,"phone"),
+      company: get(row,"company"),
       source: source && VALID_SOURCES.includes(source) ? source : undefined,
-      notes: get(row, "notes"),
-      city: get(row, "city"),
-      designation: get(row, "designation"),
-      referredBy: get(row, "referredBy"),
-      potentialValue: get(row, "potentialValue"),
-      investmentInterest: get(row, "investmentInterest"),
-      whatsappNumber: get(row, "whatsappNumber"),
-      website: get(row, "website"),
+      notes: get(row,"notes"),
+      city: get(row,"city"),
+      designation: get(row,"designation"),
+      referredBy: get(row,"referredBy"),
+      potentialValue: get(row,"potentialValue"),
+      investmentInterest: get(row,"investmentInterest"),
+      whatsappNumber: get(row,"whatsappNumber"),
+      website: get(row,"website"),
       priority: priority && VALID_PRIORITIES.includes(priority) ? priority : undefined,
-      tags: get(row, "tags"),
+      tags: get(row,"tags"),
     });
   });
 
@@ -172,7 +172,7 @@ function applyMapping(
 
 export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"upload" | "mapping" | "preview">("upload");
+  const [step, setStep] = useState<"upload" |"mapping" |"preview">("upload");
 
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [rawRows, setRawRows] = useState<string[][]>([]);
@@ -210,7 +210,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       let headers: string[] = [];
       let rows: string[][] = [];
 
-      if (ext === ".csv") {
+      if (ext ===".csv") {
         const text = await file.text();
         ({ headers, rows } = extractCSV(text));
       } else {
@@ -226,7 +226,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       const mappings: Record<number, string> = {};
       headers.forEach((h, i) => {
         const field = matchHeader(h);
-        mappings[i] = field ?? "_skip";
+        mappings[i] = field ??"_skip";
       });
 
       setRawHeaders(headers);
@@ -271,10 +271,10 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       {
         leads: parsed.map((l) => ({
           name: l.name,
-          email: l.email || "",
+          email: l.email ||"",
           phone: l.phone,
           company: l.company,
-          source: l.source as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
+          source: l.source as"referral" |"campaign" |"cold_call" |"website" |"social_media" |"walk_in" |"other" | undefined,
           notes: l.notes,
           city: l.city,
           designation: l.designation,
@@ -283,7 +283,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           investmentInterest: l.investmentInterest,
           whatsappNumber: l.whatsappNumber,
           website: l.website,
-          priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
+          priority: l.priority as"HOT" |"WARM" |"COLD" | undefined,
           tags: l.tags ? l.tags.split(",").map((t) => t.trim()) : undefined,
         })),
         autoDistribute,
@@ -292,7 +292,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         onSuccess: (data) => {
           setImportResult(data);
           if (data.imported > 0) {
-            toast.success(`Imported ${data.imported} leads${data.skipped ? `, ${data.skipped} skipped` : ""}`);
+            toast.success(`Imported ${data.imported} leads${data.skipped ? `, ${data.skipped} skipped` :""}`);
             onSuccess?.();
           } else if (data.skipped > 0) {
             toast.warning(`All ${data.skipped} leads were duplicates and skipped`);
@@ -305,13 +305,13 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
   const downloadTemplate = useCallback(() => {
     const csv =
-      "name,email,phone,company,source,notes,city,designation,priority,potential value,referred by\n" +
-      "John Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan,Hyderabad,CEO,HOT,500000,Ravi Kumar\n";
-    const blob = new Blob([csv], { type: "text/csv" });
+"name,email,phone,company,source,notes,city,designation,priority,potential value,referred by\n" +
+"John Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan,Hyderabad,CEO,HOT,500000,Ravi Kumar\n";
+    const blob = new Blob([csv], { type:"text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "leads-template.csv";
+    a.download ="leads-template.csv";
     a.click();
     URL.revokeObjectURL(url);
   }, []);
@@ -331,9 +331,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
 
   const stepLabel =
-    step === "upload" ? "Step 1 of 3 — Upload File" :
-    step === "mapping" ? "Step 2 of 3 — Map Columns" :
-    "Step 3 of 3 — Review & Import";
+    step ==="upload" ?"Step 1 of 3 — Upload File" :
+    step ==="mapping" ?"Step 2 of 3 — Map Columns" :
+"Step 3 of 3 — Review & Import";
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
@@ -350,15 +350,15 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         </DialogHeader>
 
         <div className="flex items-center gap-1 mb-4">
-          {["upload", "mapping", "preview"].map((s, i) => (
+          {["upload","mapping","preview"].map((s, i) => (
             <div key={s} className="flex items-center gap-1">
               <div
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                   step === s
-                    ? "bg-blue-500 text-white"
-                    : i < ["upload", "mapping", "preview"].indexOf(step)
-                    ? "bg-blue-500/30 text-blue-600"
-                    : "bg-muted text-muted-foreground"
+                    ?"bg-blue-500 text-white"
+                    : i < ["upload","mapping","preview"].indexOf(step)
+                    ?"bg-blue-500/30 text-blue-600"
+                    :"bg-muted text-muted-foreground"
                 }`}
               >
                 {i + 1}
@@ -368,7 +368,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           ))}
         </div>
 
-        {step === "upload" && !isParsing && (
+        {step ==="upload" && !isParsing && (
           <div className="space-y-4">
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -413,7 +413,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         )}
 
-        {step === "mapping" && (
+        {step ==="mapping" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -458,7 +458,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={fieldMappings[i] ?? "_skip"}
+                            value={fieldMappings[i] ??"_skip"}
                             onValueChange={(v) =>
                               setFieldMappings((prev) => ({ ...prev, [i]: v }))
                             }
@@ -497,7 +497,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 Back
               </Button>
               <Button
-                className="flex-1 bg-blue-500 hover:bg-blue-500/80 text-white gap-1"
+                className="flex-1 gap-1"
                 disabled={!hasNameMapped}
                 onClick={handleConfirmMapping}
               >
@@ -508,7 +508,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         )}
 
-        {step === "preview" && parsed !== null && (
+        {step ==="preview" && parsed !== null && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -556,14 +556,14 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                     {parsed.slice(0, 20).map((lead, i) => (
                       <TableRow key={i}>
                         <TableCell className="text-xs font-medium">{lead.name}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{lead.email || "—"}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{lead.phone || "—"}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{lead.company || "—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{lead.email ||"—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{lead.phone ||"—"}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{lead.company ||"—"}</TableCell>
                         <TableCell className="text-xs">
-                          {lead.source ? <Badge variant="outline" className="text-[10px]">{lead.source}</Badge> : "—"}
+                          {lead.source ? <Badge variant="outline" className="text-[10px]">{lead.source}</Badge> :"—"}
                         </TableCell>
                         <TableCell className="text-xs">
-                          {lead.priority ? <Badge variant="outline" className="text-[10px]">{lead.priority}</Badge> : "—"}
+                          {lead.priority ? <Badge variant="outline" className="text-[10px]">{lead.priority}</Badge> :"—"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -587,7 +587,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                   {importResult.distributed && importResult.distributed > 0 && (
                     <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                       {importResult.distributed} leads distributed to {importResult.salesPeopleCount} sales rep
-                      {(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} (
+                      {(importResult.salesPeopleCount ?? 0) > 1 ?"s" :""} (
                       {Math.floor(importResult.distributed / (importResult.salesPeopleCount || 1))} each)
                     </p>
                   )}
@@ -626,7 +626,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 </label>
 
                 <Button
-                  className="w-full bg-blue-500 hover:bg-blue-500/80 text-white"
+                  className="w-full"
                   onClick={handleImport}
                   disabled={bulkImport.isPending || !parsed?.length}
                 >

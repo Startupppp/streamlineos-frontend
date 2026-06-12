@@ -32,8 +32,8 @@ export function PageWrapper({
 }: PageWrapperProps) {
   const titleClass =
     variant === "display"
-      ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-slate-900 leading-tight"
-      : "text-base sm:text-lg font-semibold tracking-tight text-slate-900 leading-tight";
+      ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
+      : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
 
   return (
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
@@ -56,7 +56,7 @@ export function PageWrapper({
               )}
             </div>
             {subtitle && (
-              <p className="mt-1 text-[13px] text-slate-600 leading-snug max-w-2xl">
+              <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
                 {subtitle}
               </p>
             )}
@@ -71,14 +71,14 @@ export function PageWrapper({
       </div>
 
       {filters && (
-        <div className="shrink-0 border-b border-slate-200/70 bg-white/60 backdrop-blur-sm">
+        <div className="shrink-0 border-b border-border bg-card/95 backdrop-blur-sm">
           <div className="px-3 sm:px-4 py-2 flex flex-wrap items-center gap-3">
             {filters}
           </div>
         </div>
       )}
 
-      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-slate-200/70" />}
+      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border" />}
 
       {noInternalScroll ? (
         <div className={cn("flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-3 pb-4", contentClassName)}>

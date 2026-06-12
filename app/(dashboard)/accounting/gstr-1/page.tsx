@@ -204,13 +204,13 @@ export default function Gstr1Page() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="gstr1-from"
+              htmlFor="gstr1-from "
               className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
             >
               From
             </label>
             <Input
-              id="gstr1-from"
+              id="gstr1-from "
               type="date"
               value={from}
               onChange={handleFromChange}

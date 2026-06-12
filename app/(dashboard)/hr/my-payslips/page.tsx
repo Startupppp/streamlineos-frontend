@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useHrEmployeePayslips } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -12,17 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import { format, parseISO } from "date-fns";
-import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { toast } from "sonner";
 import { numberToWords } from "@/lib/format-utils";
+import { usePayslipPdf } from "@/features/hr/my-payslips/use-payslip-pdf";
+import { RecentPayslipsList } from "@/features/hr/my-payslips/recent-payslips-list";
 
 export default function MyPayslipsPage() {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const payslipRef = useRef<HTMLDivElement>(null);
+  const { download } = usePayslipPdf();
 
   const { data: payslips, isLoading } = useHrEmployeePayslips({});
 
@@ -34,112 +37,19 @@ export default function MyPayslipsPage() {
       label: format(parseISO(p.month + "-01"), "MMMM yyyy"),
     })) || [];
 
-  const handleDownload = async () => {
-    if (!payslipRef.current || !selectedPayslip) return;
-
-    toast.loading("Generating PDF...", { id: "pdf-download" });
-
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
-      const convertLabColors = (element: HTMLElement) => {
-        const unsupportedColorPattern = /lab\(|oklch\(|oklab\(|lch\(/;
-        const allElements = element.querySelectorAll("*");
-        allElements.forEach((el) => {
-          const htmlEl = el as HTMLElement;
-          const computedStyle = window.getComputedStyle(htmlEl);
-
-          const color = computedStyle.color;
-          const bgColor = computedStyle.backgroundColor;
-          const borderColor = computedStyle.borderColor;
-
-          if (color && unsupportedColorPattern.test(color)) {
-            htmlEl.style.color = "#1f2937";
-          }
-          if (bgColor && unsupportedColorPattern.test(bgColor)) {
-            htmlEl.style.backgroundColor = "transparent";
-          }
-          if (borderColor && unsupportedColorPattern.test(borderColor)) {
-            htmlEl.style.borderColor = "#e5e7eb";
-          }
-        });
-        const rootStyle = window.getComputedStyle(element);
-        if (rootStyle.color && unsupportedColorPattern.test(rootStyle.color)) {
-          element.style.color = "#1f2937";
-        }
-        if (
-          rootStyle.backgroundColor &&
-          unsupportedColorPattern.test(rootStyle.backgroundColor)
-        ) {
-          element.style.backgroundColor = "#ffffff";
-        }
-      };
-
-      const canvas = await html2canvas(payslipRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-        allowTaint: true,
-        foreignObjectRendering: false,
-        onclone: (_clonedDoc, clonedElement) => {
-          clonedElement.style.transform = "none";
-          convertLabColors(clonedElement);
-          const watermark = clonedElement.querySelector("[data-watermark]");
-          if (watermark instanceof HTMLElement) {
-            watermark.style.display = "none";
-          }
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true,
-      });
-
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const employeeName =
-        `${selectedPayslip.user?.firstName || ""}_${selectedPayslip.user?.lastName || ""}`.replace(
-          /\s+/g,
-          "_",
-        );
-      const monthYear = format(parseISO(selectedMonth + "-01"), "MMM_yyyy");
-      const fileName = `Payslip_${employeeName}_${monthYear}.pdf`;
-
-      pdf.save(fileName);
-      toast.success("Payslip downloaded successfully!", { id: "pdf-download" });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to generate PDF: ${errorMessage}`, {
-        id: "pdf-download",
-      });
-    }
+  const handleDownload = () => {
+    if (!selectedPayslip) return;
+    void download(payslipRef, selectedPayslip);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <PageWrapper title="My Payslips" subtitle="View and download your salary slips">
+        <div className="space-y-4">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-[500px] rounded-xl max-w-3xl mx-auto" />
+        </div>
+      </PageWrapper>
     );
   }
 
@@ -203,14 +113,11 @@ export default function MyPayslipsPage() {
       }
     >
       {!selectedMonth ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
-            <p className="text-muted-foreground">
-              Select a month to view your payslip
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<EmptyDocumentsIllustration className="h-32 w-32" />}
+          title="Select a month"
+          description="Pick a month from the dropdown above to view your payslip."
+        />
       ) : selectedPayslip ? (
         <div className="space-y-4">
           <div className="flex justify-end">
@@ -804,62 +711,20 @@ export default function MyPayslipsPage() {
           </div>
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
-            <p className="text-muted-foreground">
-              No payslip found for this month
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<EmptyDocumentsIllustration className="h-32 w-32" />}
+          title="No payslip found"
+          description="No payslip is available for the selected month."
+        />
       )}
 
       {payslips && payslips.length > 0 && !selectedMonth && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Payslips</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {payslips.slice(0, 6).map((payslip) => (
-                <div
-                  key={payslip.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`View payslip for ${format(parseISO(payslip.month + "-01"), "MMMM yyyy")}`}
-                  onClick={() => setSelectedMonth(payslip.month)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedMonth(payslip.month);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {format(parseISO(payslip.month + "-01"), "MMMM yyyy")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Status: {payslip.status}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">
-                      ₹{parseFloat(payslip.netSalary || "0").toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Net Salary</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-4">
+          <RecentPayslipsList
+            payslips={payslips}
+            onSelect={setSelectedMonth}
+          />
+        </div>
       )}
     </PageWrapper>
   );

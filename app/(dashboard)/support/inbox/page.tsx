@@ -51,10 +51,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority, SupportTicket } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  LOW: "bg-slate-100 text-slate-700",
-  MEDIUM: "bg-blue-100 text-blue-700",
-  HIGH: "bg-amber-100 text-amber-700",
-  URGENT: "bg-red-100 text-red-700",
+  LOW:"bg-slate-100 text-slate-700",
+  MEDIUM:"bg-blue-100 text-blue-700",
+  HIGH:"bg-amber-100 text-amber-700",
+  URGENT:"bg-red-100 text-red-700",
 };
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -66,8 +66,8 @@ const STATUS_ICONS: Record<string, typeof Clock> = {
 };
 
 function getInitials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  if (!name) return"?";
+  return name.split("").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
 function toTitleCase(str: string) {
@@ -81,7 +81,7 @@ function toSentenceCase(str: string) {
 
 export default function SupportInboxPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR", "CUSTOMER_SUPPORT"]}>
+    <DashboardGate allowedRoles={["CEO","HR","CUSTOMER_SUPPORT"]}>
       <InboxContent />
     </DashboardGate>
   );
@@ -95,12 +95,12 @@ function InboxContent() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const statusFilter = searchParams.get("status") || "all";
-  const priorityFilter = searchParams.get("priority") || "all";
+  const statusFilter = searchParams.get("status") ||"all";
+  const priorityFilter = searchParams.get("priority") ||"all";
 
   const updateFilter = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "all") params.delete(key);
+    if (value ==="all") params.delete(key);
     else params.set(key, value);
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -108,8 +108,8 @@ function InboxContent() {
   }, [searchParams, router, pathname]);
 
   const { data: ticketsData, isLoading } = useSupportTickets({
-    ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
-    ...(priorityFilter !== "all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
+    ...(statusFilter !=="all" ? { status: statusFilter as SupportTicketStatus } : {}),
+    ...(priorityFilter !=="all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
@@ -126,11 +126,11 @@ function InboxContent() {
         title="Support Inbox"
         subtitle={
           statsLoading
-            ? "Loading..."
-            : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` : ""}`
+            ?"Loading..."
+            : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` :""}`
         }
         actions={
-          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5 bg-blue-500 hover:bg-blue-500/80 text-white">
+          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5">
             <Plus className="h-3.5 w-3.5" /> New Ticket
           </Button>
         }
@@ -162,7 +162,7 @@ function InboxContent() {
         noInternalScroll
         contentClassName="flex overflow-hidden !py-0 !px-0"
       >
-        <div className={cn("w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden", selectedTicketId && "hidden md:flex")}>
+        <div className={cn("w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden", selectedTicketId &&"hidden md:flex")}>
           <ScrollArea className="flex-1">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -189,7 +189,7 @@ function InboxContent() {
           </ScrollArea>
         </div>
 
-        <div className={cn("flex-1 flex flex-col", !selectedTicketId && "hidden md:flex")}>
+        <div className={cn("flex-1 flex flex-col", !selectedTicketId &&"hidden md:flex")}>
           {selectedTicketId ? (
             <TicketDetail ticketId={selectedTicketId} onBack={handleBackFromTicket} />
           ) : (
@@ -218,21 +218,21 @@ interface TicketListItemProps {
 function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
   const handleClick = useCallback(() => onSelect(ticket.id), [ticket.id, onSelect]);
   const StatusIcon = STATUS_ICONS[ticket.status] ?? Clock;
-  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED","CLOSED"].includes(ticket.status);
 
   return (
     <button
       onClick={handleClick}
       className={cn(
-        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-        isSelected && "bg-muted/50 border-l-2 border-blue-500"
+"w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
+        isSelected &&"bg-muted/50 border-l-2 border-blue-500"
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
+            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` :""}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -246,9 +246,9 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       </div>
       <div className="flex items-center gap-2 mt-1.5">
         <StatusIcon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_", " ")}</span>
+        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_","")}</span>
         <span className="text-[10px] text-muted-foreground ml-auto">
-          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : ""}
+          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) :""}
         </span>
       </div>
     </button>
@@ -288,7 +288,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
   const handleToggleInternal = useCallback(() => setIsInternal((v) => !v), []);
   const handleReplyChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyText(e.target.value), []);
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key ==="Enter" && !e.shiftKey) {
       e.preventDefault();
       handleReply();
     }
@@ -302,7 +302,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
     );
   }
 
-  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED","CLOSED"].includes(ticket.status);
   const messages = [...(ticket.messages ?? [])].reverse();
 
   return (
@@ -313,7 +313,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             <Button variant="ghost" size="sm" onClick={onBack} className="md:hidden h-7 px-2">Back</Button>
             <div>
               <h3 className="text-sm font-bold">{toTitleCase(ticket.title)}</h3>
-              <p className="text-[11px] text-muted-foreground">#{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}</p>
+              <p className="text-[11px] text-muted-foreground">#{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` :""}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -339,7 +339,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
         )}
         <div className="space-y-3">
           {messages.map((msg) => (
-            <div key={msg.id} className={cn("flex gap-2.5", msg.isInternal && "opacity-70")}>
+            <div key={msg.id} className={cn("flex gap-2.5", msg.isInternal &&"opacity-70")}>
               <Avatar className="h-7 w-7 shrink-0 mt-0.5">
                 <AvatarImage src={resolveImageUrl(msg.author?.image)} />
                 <AvatarFallback className="text-[9px]">{getInitials(msg.author?.name)}</AvatarFallback>
@@ -353,7 +353,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
                     </Badge>
                   )}
                   <span className="text-[10px] text-muted-foreground">
-                    {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true }) : ""}
+                    {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true }) :""}
                   </span>
                 </div>
                 <p className="text-[13px] mt-0.5 whitespace-pre-wrap">{msg.body}</p>
@@ -367,14 +367,14 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
         <div className="flex items-center gap-2 mb-2">
           <Switch checked={isInternal} onCheckedChange={setIsInternal} className="h-4 w-7" />
           <Label className="text-[11px] text-muted-foreground cursor-pointer" onClick={handleToggleInternal}>
-            {isInternal ? "Internal note (not visible to client)" : "Public reply"}
+            {isInternal ?"Internal note (not visible to client)" :"Public reply"}
           </Label>
         </div>
         <div className="flex gap-2">
           <Textarea
             value={replyText}
             onChange={handleReplyChange}
-            placeholder={isInternal ? "Add internal note..." : "Type your reply..."}
+            placeholder={isInternal ?"Add internal note..." :"Type your reply..."}
             className="min-h-[60px] max-h-[120px] text-sm resize-none"
             onKeyDown={handleKeyDown}
           />
@@ -382,7 +382,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             onClick={handleReply}
             disabled={!replyText.trim() || addMessage.isPending}
             size="icon"
-            className="h-[60px] w-10 shrink-0 bg-blue-500 hover:bg-blue-500/80 text-white"
+            className="h-[60px] w-10 shrink-0"
             aria-label="Send reply"
           >
             {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -446,7 +446,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-blue-500 hover:bg-blue-500/80 text-white">
+            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} >
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>

@@ -35,9 +35,9 @@ export function ChannelInfoPanel({
   );
 
   const isAdmin = channel?.members?.some(
-    (m) => m.user?.id === currentUserId && m.role === "ADMIN"
+    (m) => m.user?.id === currentUserId && m.role ==="ADMIN"
   );
-  const isGroup = channel?.type === "GROUP";
+  const isGroup = channel?.type ==="GROUP";
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -52,9 +52,9 @@ export function ChannelInfoPanel({
   const handleEditDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditDesc(e.target.value), []);
 
   const startEditing = () => {
-    setEditName(channel?.name ?? "");
-    setEditDesc(channel?.description ?? "");
-    setEditAvatar(channel?.avatarUrl ?? "");
+    setEditName(channel?.name ??"");
+    setEditDesc(channel?.description ??"");
+    setEditAvatar(channel?.avatarUrl ??"");
     setEditing(true);
   };
 
@@ -66,12 +66,12 @@ export function ChannelInfoPanel({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "chat-avatars");
+      formData.append("folder","chat-avatars");
       const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
       if (data.url) setEditAvatar(data.url);
       else toast.error("Upload failed");
     } catch (error) { toast.error(getErrorMessage(error)); }
-    finally { setUploadingAvatar(false); if (editAvatarRef.current) editAvatarRef.current.value = ""; }
+    finally { setUploadingAvatar(false); if (editAvatarRef.current) editAvatarRef.current.value =""; }
   };
 
   const handleSaveEdit = async () => {
@@ -88,11 +88,11 @@ export function ChannelInfoPanel({
   };
 
   const otherMember =
-    channel?.type === "DIRECT"
+    channel?.type ==="DIRECT"
       ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
       : null;
   const displayName =
-    channel?.type === "DIRECT" ? otherMember?.name ?? "Unknown" : channel?.name ?? "Channel";
+    channel?.type ==="DIRECT" ? otherMember?.name ??"Unknown" : channel?.name ??"Channel";
 
   return (
     <div className="flex flex-col h-full w-80">
@@ -119,7 +119,7 @@ export function ChannelInfoPanel({
                 <button type="button" onClick={handleOpenAvatarInput} disabled={uploadingAvatar} className="relative group">
                   {editAvatar ? (
                     <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
-                      <Image src={resolveImageUrl(editAvatar) ?? ""} alt="Avatar" fill unoptimized className="object-cover" />
+                      <Image src={resolveImageUrl(editAvatar) ??""} alt="Avatar" fill unoptimized className="object-cover" />
                     </div>
                   ) : (
                     <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
@@ -141,14 +141,14 @@ export function ChannelInfoPanel({
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleCancelEdit} className="flex-1 h-8 text-[12px]">Cancel</Button>
-                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-blue-500 hover:bg-blue-500/90 text-white">
-                  {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px]">
+                  {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> :"Save"}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center text-center mb-6">
-              {channel?.type === "DIRECT" ? (
+              {channel?.type ==="DIRECT" ? (
                 <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
                   <AvatarImage src={resolveImageUrl(otherMember?.image)} />
                   <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
@@ -157,7 +157,7 @@ export function ChannelInfoPanel({
                 </Avatar>
               ) : channel?.avatarUrl ? (
                 <div className="relative h-20 w-20 rounded-2xl overflow-hidden mb-3 border-2 border-border/30 shadow-md">
-                  <Image src={resolveImageUrl(channel.avatarUrl) ?? ""} alt={channel.name} fill unoptimized className="object-cover" />
+                  <Image src={resolveImageUrl(channel.avatarUrl) ??""} alt={channel.name} fill unoptimized className="object-cover" />
                 </div>
               ) : (
                 <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center mb-3 border border-blue/10">
@@ -165,13 +165,13 @@ export function ChannelInfoPanel({
                 </div>
               )}
               <h4 className="text-[17px] font-bold">{displayName}</h4>
-              {channel?.type === "DIRECT" ? (
+              {channel?.type ==="DIRECT" ? (
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {otherMember
                     ? onlineUserIds.has(otherMember.id)
-                      ? "Online"
-                      : "Offline"
-                    : ""}
+                      ?"Online"
+                      :"Offline"
+                    :""}
                 </p>
               ) : (
                 channel?.description && (
@@ -189,7 +189,7 @@ export function ChannelInfoPanel({
             </h5>
             <div className="space-y-0.5">
               {channel?.members?.map((m) => {
-                const isOnline = onlineUserIds.has(m.user?.id ?? "");
+                const isOnline = onlineUserIds.has(m.user?.id ??"");
                 const isYou = m.user?.id === currentUserId;
                 return (
                   <div
@@ -214,7 +214,7 @@ export function ChannelInfoPanel({
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate">{m.user?.email}</p>
                     </div>
-                    {m.role === "ADMIN" && (
+                    {m.role ==="ADMIN" && (
                       <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600">
                         Admin
                       </Badge>
@@ -228,7 +228,7 @@ export function ChannelInfoPanel({
           {channel?.createdAt && (
             <div className="mt-6 pt-4 border-t border-border/30">
               <p className="text-[11px] text-muted-foreground/50 text-center">
-                {channel.type === "GROUP"
+                {channel.type ==="GROUP"
                   ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                   : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
               </p>

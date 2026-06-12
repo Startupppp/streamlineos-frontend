@@ -30,13 +30,13 @@ const LeadRow = memo(function LeadRow({ lead }: LeadRowProps) {
     <TableRow>
       <TableCell className="text-xs font-medium">{lead.name}</TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {lead.email || "—"}
+        {lead.email ||"—"}
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {lead.phone || "—"}
+        {lead.phone ||"—"}
       </TableCell>
       <TableCell className="text-xs text-muted-foreground">
-        {lead.company || "—"}
+        {lead.company ||"—"}
       </TableCell>
       <TableCell className="text-xs">
         {lead.source ? (
@@ -44,7 +44,7 @@ const LeadRow = memo(function LeadRow({ lead }: LeadRowProps) {
             {lead.source}
           </Badge>
         ) : (
-          "—"
+"—"
         )}
       </TableCell>
       <TableCell className="text-xs">
@@ -53,7 +53,7 @@ const LeadRow = memo(function LeadRow({ lead }: LeadRowProps) {
             {lead.priority}
           </Badge>
         ) : (
-          "—"
+"—"
         )}
       </TableCell>
     </TableRow>
@@ -193,17 +193,17 @@ export const PreviewStep = memo(function PreviewStep({
               Import Complete
             </p>
             <p className="text-xs text-muted-foreground">
-              {importResult.imported} imported, {importResult.skipped} skipped,{" "}
+              {importResult.imported} imported, {importResult.skipped} skipped,{""}
               {importResult.updated} updated
             </p>
             {importResult.distributed != null && importResult.distributed > 0 && (
               <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                {importResult.distributed} leads distributed to{" "}
+                {importResult.distributed} leads distributed to{""}
                 {importResult.salesPeopleCount} sales rep
-                {(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} (
+                {(importResult.salesPeopleCount ?? 0) > 1 ?"s" :""} (
                 {Math.floor(
                   importResult.distributed / (importResult.salesPeopleCount || 1),
-                )}{" "}
+                )}{""}
                 each)
               </p>
             )}
@@ -248,7 +248,7 @@ export const PreviewStep = memo(function PreviewStep({
           </label>
 
           <Button
-            className="w-full bg-blue-500 hover:bg-blue-500/80 text-white"
+            className="w-full"
             onClick={onImport}
             disabled={isImporting || !parsed.length}
           >

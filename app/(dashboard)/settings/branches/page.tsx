@@ -22,8 +22,8 @@ import { cn } from "@/lib/utils";
 import type { Branch } from "@/types/organization";
 
 const EMPTY_FORM = {
-  name: "", code: "", city: "", state: "", country: "India",
-  pincode: "", address: "", phone: "", email: "",
+  name:"", code:"", city:"", state:"", country:"India",
+  pincode:"", address:"", phone:"", email:"",
 };
 
 const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
@@ -54,28 +54,28 @@ export default function BranchManagementPage() {
   useEffect(() => {
     if (editingBranch) {
       setEditFormData({
-        name: editingBranch.name ?? "",
-        code: editingBranch.code ?? "",
-        city: editingBranch.city ?? "",
-        state: editingBranch.state ?? "",
-        country: editingBranch.country ?? "India",
-        pincode: editingBranch.pincode ?? "",
-        address: editingBranch.address ?? "",
-        phone: editingBranch.phone ?? "",
-        email: editingBranch.email ?? "",
+        name: editingBranch.name ??"",
+        code: editingBranch.code ??"",
+        city: editingBranch.city ??"",
+        state: editingBranch.state ??"",
+        country: editingBranch.country ??"India",
+        pincode: editingBranch.pincode ??"",
+        address: editingBranch.address ??"",
+        phone: editingBranch.phone ??"",
+        email: editingBranch.email ??"",
       });
       setEditFormErrors({});
     }
   }, [editingBranch]);
 
   const set = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = key === "code" ? e.target.value.toUpperCase() : e.target.value;
+    const value = key ==="code" ? e.target.value.toUpperCase() : e.target.value;
     setFormData((f) => ({ ...f, [key]: value }));
     setFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
   const setEdit = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = key === "code" ? e.target.value.toUpperCase() : e.target.value;
+    const value = key ==="code" ? e.target.value.toUpperCase() : e.target.value;
     setEditFormData((f) => ({ ...f, [key]: value }));
     setEditFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
@@ -101,24 +101,24 @@ export default function BranchManagementPage() {
 
     const errors: FormErrors = {};
 
-    if (!trimmed.name) errors.name = "Branch name is required";
-    else if (trimmed.name.length < 2) errors.name = "Branch name must be at least 2 characters";
+    if (!trimmed.name) errors.name ="Branch name is required";
+    else if (trimmed.name.length < 2) errors.name ="Branch name must be at least 2 characters";
 
-    if (!trimmed.code) errors.code = "Branch code is required";
+    if (!trimmed.code) errors.code ="Branch code is required";
     else if (!CODE_REGEX.test(trimmed.code)) {
-      errors.code = "Use 2-20 chars: A-Z, numbers, hyphen";
+      errors.code ="Use 2-20 chars: A-Z, numbers, hyphen";
     }
 
     if (trimmed.email && !EMAIL_REGEX.test(trimmed.email)) {
-      errors.email = "Enter a valid email";
+      errors.email ="Enter a valid email";
     }
 
     if (trimmed.phone && !PHONE_REGEX.test(trimmed.phone)) {
-      errors.phone = "Enter a valid phone number";
+      errors.phone ="Enter a valid phone number";
     }
 
     if (trimmed.pincode && !PINCODE_REGEX.test(trimmed.pincode)) {
-      errors.pincode = "Enter a valid pincode";
+      errors.pincode ="Enter a valid pincode";
     }
 
     setErrors(errors);
@@ -243,7 +243,7 @@ export default function BranchManagementPage() {
       subtitle="Manage your organization's branch offices"
       badge={branches.length > 0 ? String(branches.length) : undefined}
       actions={
-        <Button onClick={handleOpenCreate} className="bg-blue-500 hover:bg-blue-500/80 text-white">
+        <Button onClick={handleOpenCreate} >
           <Plus className="h-4 w-4 mr-2" />
           Add Branch
         </Button>
@@ -274,7 +274,7 @@ export default function BranchManagementPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Badge variant="outline" className={cn("text-[10px]",
-                      branch.status === "ACTIVE" ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground"
+                      branch.status ==="ACTIVE" ?"text-emerald-400 bg-emerald-500/10" :"text-muted-foreground"
                     )}>
                       {branch.status}
                     </Badge>
@@ -301,7 +301,7 @@ export default function BranchManagementPage() {
                 {(branch.city || branch.state) && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <MapPin className="h-3 w-3" />
-                    {[branch.city, branch.state, branch.country].filter(Boolean).join(", ")}
+                    {[branch.city, branch.state, branch.country].filter(Boolean).join(",")}
                     {branch.pincode && <span className="font-mono">— {branch.pincode}</span>}
                   </p>
                 )}
@@ -404,7 +404,7 @@ export default function BranchManagementPage() {
         open={!!deletingBranch}
         onOpenChange={(open) => { if (!open) setDeletingBranch(null); }}
         title="Delete Branch"
-        description={`Are you sure you want to delete "${deletingBranch?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete"${deletingBranch?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}

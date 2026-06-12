@@ -11,8 +11,8 @@ import { updateDeal, updateDealSchema } from "@/lib/services/deal-update";
 type Ctx = { params: Promise<{ dealId: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
-  const { dealId: id } = await ctx.params;
-  const dealId = Number(id);
+  const { dealId: rawDealId } = await ctx.params;
+  const dealId = Number(rawDealId);
   if (!Number.isFinite(dealId)) return err("Invalid deal id", 400);
 
   return withAuth(async (session) => {
@@ -23,8 +23,8 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
-  const { dealId: id } = await ctx.params;
-  const dealId = Number(id);
+  const { dealId: rawDealId } = await ctx.params;
+  const dealId = Number(rawDealId);
   if (!Number.isFinite(dealId)) return err("Invalid deal id", 400);
 
   return withAuth(async (session) => {
@@ -74,8 +74,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
-  const { dealId: id } = await ctx.params;
-  const dealId = Number(id);
+  const { dealId: rawDealId } = await ctx.params;
+  const dealId = Number(rawDealId);
   if (!Number.isFinite(dealId)) return err("Invalid deal id", 400);
 
   return withAdmin(async (session) => {

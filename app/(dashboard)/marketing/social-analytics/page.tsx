@@ -64,30 +64,30 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 
 const PLATFORMS = [
-  { value: "all", label: "All Platforms" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "twitter", label: "Twitter" },
-  { value: "instagram", label: "Instagram" },
-  { value: "facebook", label: "Facebook" },
-  { value: "youtube", label: "YouTube" },
+  { value:"all", label:"All Platforms" },
+  { value:"linkedin", label:"LinkedIn" },
+  { value:"twitter", label:"Twitter" },
+  { value:"instagram", label:"Instagram" },
+  { value:"facebook", label:"Facebook" },
+  { value:"youtube", label:"YouTube" },
 ] as const;
 
 type PlatformFilter = (typeof PLATFORMS)[number]["value"];
 
 const PLATFORM_COLORS: Record<string, string> = {
-  linkedin: "bg-blue-500",
-  twitter: "bg-sky-400",
-  instagram: "bg-pink-500",
-  facebook: "bg-indigo-500",
-  youtube: "bg-red-500",
+  linkedin:"bg-blue-500",
+  twitter:"bg-sky-400",
+  instagram:"bg-pink-500",
+  facebook:"bg-indigo-500",
+  youtube:"bg-red-500",
 };
 
 const PLATFORM_BADGE: Record<string, string> = {
-  linkedin: "text-blue-700 bg-blue-50 border-blue-200",
-  twitter: "text-sky-700 bg-sky-50 border-sky-200",
-  instagram: "text-pink-700 bg-pink-50 border-pink-200",
-  facebook: "text-indigo-700 bg-indigo-50 border-indigo-200",
-  youtube: "text-red-700 bg-red-50 border-red-200",
+  linkedin:"text-blue-700 bg-blue-50 border-blue-200",
+  twitter:"text-sky-700 bg-sky-50 border-sky-200",
+  instagram:"text-pink-700 bg-pink-50 border-pink-200",
+  facebook:"text-indigo-700 bg-indigo-50 border-indigo-200",
+  youtube:"text-red-700 bg-red-50 border-red-200",
 };
 
 
@@ -114,7 +114,7 @@ function BarChartViz({ metrics }: { metrics: SocialMetric[] }) {
     <div className="flex items-end gap-2 h-32 w-full">
       {recent.map((r) => {
         const heightPct = Math.max((r.impressions / maxVal) * 100, 2);
-        const color = PLATFORM_COLORS[r.platform] ?? "bg-blue-500";
+        const color = PLATFORM_COLORS[r.platform] ??"bg-blue-500";
         return (
           <div key={r.id} className="flex flex-col items-center gap-1 flex-1 min-w-0">
             <span className="text-[9px] text-muted-foreground font-medium">
@@ -219,7 +219,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
               <SelectContent>
-                {PLATFORMS.filter((p) => p.value !== "all").map((p) => (
+                {PLATFORMS.filter((p) => p.value !=="all").map((p) => (
                   <SelectItem key={p.value} value={p.value}>
                     {p.label}
                   </SelectItem>
@@ -261,12 +261,12 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
           <div className="grid grid-cols-2 gap-3">
             {(
               [
-                { id: "sm-impressions", label: "Impressions", val: impressions, set: setImpressions },
-                { id: "sm-engagements", label: "Engagements", val: engagements, set: setEngagements },
-                { id: "sm-clicks", label: "Clicks", val: clicks, set: setClicks },
-                { id: "sm-shares", label: "Shares", val: shares, set: setShares },
-                { id: "sm-comments", label: "Comments", val: comments, set: setComments },
-                { id: "sm-reach", label: "Reach", val: reach, set: setReach },
+                { id:"sm-impressions", label:"Impressions", val: impressions, set: setImpressions },
+                { id:"sm-engagements", label:"Engagements", val: engagements, set: setEngagements },
+                { id:"sm-clicks", label:"Clicks", val: clicks, set: setClicks },
+                { id:"sm-shares", label:"Shares", val: shares, set: setShares },
+                { id:"sm-comments", label:"Comments", val: comments, set: setComments },
+                { id:"sm-reach", label:"Reach", val: reach, set: setReach },
               ] as const
             ).map(({ id, label, val, set }) => (
               <div key={id} className="space-y-1.5">
@@ -298,7 +298,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white"
+              className="flex-1"
               disabled={isPending || !platform || !metricDate || !followers}
             >
               {isPending ? (
@@ -307,7 +307,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
                   Saving…
                 </>
               ) : (
-                "Log Metrics"
+"Log Metrics"
               )}
             </Button>
           </SheetFooter>
@@ -323,7 +323,7 @@ export default function SocialAnalyticsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const platform = activePlatform === "all" ? undefined : activePlatform;
+  const platform = activePlatform ==="all" ? undefined : activePlatform;
   const { data, isLoading } = useSocialMetrics(platform, 30);
   const { mutate: deleteMetric, isPending: isDeleting } = useDeleteSocialMetric();
 
@@ -358,8 +358,7 @@ export default function SocialAnalyticsPage() {
       subtitle="Track engagement metrics across platforms"
       actions={
         <Button
-          className="bg-blue-500 hover:bg-blue-500/90 text-white"
-          onClick={() => setSheetOpen(true)}
+                    onClick={() => setSheetOpen(true)}
           aria-label="Log new social metrics"
         >
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -373,10 +372,10 @@ export default function SocialAnalyticsPage() {
             key={p.value}
             onClick={() => setActivePlatform(p.value)}
             className={cn(
-              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+"px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
               activePlatform === p.value
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-transparent text-muted-foreground border-border hover:border-blue-500/50"
+                ?"bg-blue-500 text-white border-blue-500"
+                :"bg-transparent text-muted-foreground border-border hover:border-blue-500/50"
             )}
             aria-pressed={activePlatform === p.value}
           >
@@ -477,8 +476,8 @@ export default function SocialAnalyticsPage() {
                           <Badge
                             variant="outline"
                             className={cn(
-                              "text-xs capitalize",
-                              PLATFORM_BADGE[m.platform] ?? ""
+"text-xs capitalize",
+                              PLATFORM_BADGE[m.platform] ??""
                             )}
                           >
                             {m.platform}
@@ -526,7 +525,7 @@ export default function SocialAnalyticsPage() {
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              {isDeleting ?"Deleting…" :"Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -33,11 +33,11 @@ import { toast } from "sonner";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 const CONTENT_TYPES = [
-  { value: "blog", label: "Blog Post" },
-  { value: "email", label: "Email Newsletter" },
-  { value: "whitepaper", label: "Whitepaper" },
-  { value: "social", label: "Social Media Post" },
-  { value: "video", label: "Video Script" },
+  { value:"blog", label:"Blog Post" },
+  { value:"email", label:"Email Newsletter" },
+  { value:"whitepaper", label:"Whitepaper" },
+  { value:"social", label:"Social Media Post" },
+  { value:"video", label:"Video Script" },
 ] as const;
 
 function ContentBriefEmptyState() {
@@ -64,22 +64,22 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
   const handleCopy = useCallback(async () => {
     const md = [
       `# ${brief.title}`,
-      "",
+"",
       `**Estimated Word Count:** ${brief.estimatedWordCount.toLocaleString()}`,
-      "",
-      "## Content Outline",
+"",
+"## Content Outline",
       ...brief.outline.map((item, i) => `${i + 1}. ${item}`),
-      "",
-      "## Key Points",
+"",
+"## Key Points",
       ...brief.keyPoints.map((kp) => `- ${kp}`),
-      "",
-      "## SEO Keywords",
-      brief.seoKeywords.join(", "),
-      "",
-      "## Target Audience Insights",
+"",
+"## SEO Keywords",
+      brief.seoKeywords.join(","),
+"",
+"## Target Audience Insights",
       brief.targetAudienceInsights,
-      "",
-      "## Call to Action",
+"",
+"## Call to Action",
       brief.callToAction,
     ].join("\n");
 
@@ -105,7 +105,7 @@ function BriefDisplay({ brief }: BriefDisplayProps) {
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
-          <span className="ml-1.5">{copied ? "Copied!" : "Copy all"}</span>
+          <span className="ml-1.5">{copied ?"Copied!" :"Copy all"}</span>
         </Button>
       </div>
 
@@ -210,7 +210,7 @@ export default function ContentBriefPage() {
             toast.success("Content brief generated successfully");
           },
           onError: (err) => {
-            toast.error(err instanceof Error ? err.message : "Failed to generate brief");
+            toast.error(err instanceof Error ? err.message :"Failed to generate brief");
           },
         },
       );
@@ -299,7 +299,7 @@ export default function ContentBriefPage() {
                 <Button
                   type="submit"
                   disabled={isPending || !topic.trim()}
-                  className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
+                  className="w-full"
                 >
                   {isPending ? (
                     <>
@@ -321,8 +321,8 @@ export default function ContentBriefPage() {
         <div className="flex-1 min-w-0">
           <Card
             className={cn(
-              "shadow-noir h-full",
-              isPending && "animate-pulse opacity-70",
+"shadow-noir h-full",
+              isPending &&"animate-pulse opacity-70",
             )}
           >
             <CardContent className="p-5">

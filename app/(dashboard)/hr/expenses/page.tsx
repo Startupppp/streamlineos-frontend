@@ -264,7 +264,7 @@ export default function ExpensesPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
+          className="space-y-4"
         >
           <motion.div variants={fadeUp}>
             <AdminExpenseStats stats={stats} pendingCount={pendingCount} />
@@ -333,10 +333,7 @@ export default function ExpensesPage() {
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       actions={
-        <Button
-          className="bg-blue-500 hover:bg-blue-500/90 text-white font-bold shadow-sm gap-2 rounded-full px-6"
-          onClick={() => setIsCreateOpen(true)}
-        >
+        <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           Submit New Claim
         </Button>

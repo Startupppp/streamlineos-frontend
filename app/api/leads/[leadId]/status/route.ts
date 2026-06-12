@@ -9,8 +9,8 @@ import {
 type Ctx = { params: Promise<{ leadId: string }> };
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
-  const { leadId: id } = await ctx.params;
-  const leadId = Number(id);
+  const { leadId: rawLeadId } = await ctx.params;
+  const leadId = Number(rawLeadId);
   if (!Number.isFinite(leadId)) return err("Invalid lead id", 400);
 
   return withAuth(async (session) => {

@@ -133,7 +133,7 @@ export const MappingStep = memo(function MappingStep({
                 header={header}
                 colIndex={i}
                 previewValue={rawRows[0]?.[i]}
-                mappedField={fieldMappings[i] ?? "_skip"}
+                mappedField={fieldMappings[i] ??"_skip"}
                 onValueChange={onMappingChange}
               />
             ))}
@@ -156,7 +156,7 @@ export const MappingStep = memo(function MappingStep({
           Back
         </Button>
         <Button
-          className="flex-1 bg-blue-500 hover:bg-blue-500/80 text-white gap-1"
+          className="flex-1 gap-1"
           disabled={!hasNameMapped}
           onClick={onConfirm}
         >

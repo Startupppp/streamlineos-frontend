@@ -1,144 +1,60 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
+import { LayoutGrid, List, Users, UserPlus } from "lucide-react";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { resolveImageUrl } from "@/lib/utils";
-import { Search, LayoutGrid, List, Mail, Phone, Building2, X } from "lucide-react";
-import Link from "next/link";
+import { EmployeeCard } from "@/features/hr/employees/employee-card";
+import { EmployeeRow } from "@/features/hr/employees/employee-row";
+import {
+  EmployeesFilters,
+  type Department,
+} from "@/features/hr/employees/employees-filters";
+import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-skeleton";
 import type { Employee } from "@/types/hr";
 
-interface Department {
-  id: number;
-  name: string;
-}
+type ViewMode = "grid" | "list";
 
-function EmployeeCard({ emp, dept }: { emp: Employee; dept: string | null }) {
-  return (
-    <Link href={`/hr/employees/${emp.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-        <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-          <Avatar className="h-16 w-16 mt-1">
-            <AvatarImage src={resolveImageUrl(emp.image)} />
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {(emp.firstName?.[0] ?? emp.name?.[0] ?? "?").toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="w-full">
-            <p className="font-semibold text-sm leading-tight truncate">
-              {emp.firstName && emp.lastName
-                ? `${emp.firstName} ${emp.lastName}`
-                : emp.name ?? "—"}
-            </p>
-            {emp.designation && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5">{emp.designation}</p>
-            )}
-          </div>
-          {dept && (
-            <Badge variant="secondary" className="text-[10px] h-5 px-2 truncate max-w-full">
-              <Building2 className="h-3 w-3 mr-1 shrink-0" />
-              {dept}
-            </Badge>
-          )}
-          <div className="w-full space-y-1 text-[11px] text-muted-foreground">
-            {emp.email && (
-              <div className="flex items-center gap-1.5 truncate">
-                <Mail className="h-3 w-3 shrink-0" />
-                <span className="truncate">{emp.email}</span>
-              </div>
-            )}
-          </div>
-          <Badge
-            variant={emp.isActive ? "default" : "secondary"}
-            className={`text-[9px] h-4 px-1.5 ${emp.isActive ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/15" : ""}`}
-          >
-            {emp.isActive ? "Active" : "Inactive"}
-          </Badge>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function EmployeeRow({ emp, dept }: { emp: Employee; dept: string | null }) {
-  const displayName = emp.firstName && emp.lastName
-    ? `${emp.firstName} ${emp.lastName}`
-    : emp.name ?? "—";
-
-  return (
-    <TableRow className="hover:bg-muted/50 cursor-pointer">
-      <TableCell>
-        <Link href={`/hr/employees/${emp.id}`} className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={resolveImageUrl(emp.image)} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {displayName[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{displayName}</p>
-            {emp.employeeId && (
-              <p className="text-[11px] text-muted-foreground">{emp.employeeId}</p>
-            )}
-          </div>
-        </Link>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{emp.designation ?? "—"}</TableCell>
-      <TableCell>
-        {dept ? (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2">{dept}</Badge>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground truncate max-w-[180px]">
-        {emp.email}
-      </TableCell>
-      <TableCell>
-        <Badge
-          variant={emp.isActive ? "default" : "secondary"}
-          className={`text-[9px] h-4 px-1.5 ${emp.isActive ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/15" : ""}`}
-        >
-          {emp.isActive ? "Active" : "Inactive"}
-        </Badge>
-      </TableCell>
-    </TableRow>
-  );
-}
+const VIEW_OPTIONS = [
+  { value: "grid" as const, icon: LayoutGrid, label: "Grid view" },
+  { value: "list" as const, icon: List, label: "List view" },
+];
 
 export default function EmployeesPage() {
-  const router = useRouter();
   const { data: rawEmployees, isLoading } = useHrEmployees();
   const { data: departments } = useHrDepartments();
 
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [view, setView] = useState<"grid" | "list">("grid");
+  const [view, setView] = useState<ViewMode>("grid");
 
   const employees = useMemo(
-    () => (Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees as { data?: Employee[] })?.data ?? []) as Employee[],
-    [rawEmployees]
+    () =>
+      (Array.isArray(rawEmployees)
+        ? rawEmployees
+        : ((rawEmployees as { data?: Employee[] })?.data ?? [])) as Employee[],
+    [rawEmployees],
   );
+
+  const deptList = departments as Department[] | undefined;
 
   const deptMap = useMemo(() => {
     const map = new Map<number, string>();
-    (departments as Department[] | undefined)?.forEach((d) => map.set(d.id, d.name));
+    deptList?.forEach((d) => map.set(d.id, d.name));
     return map;
-  }, [departments]);
+  }, [deptList]);
 
   const filtered = useMemo(() => {
     let result = employees;
@@ -151,7 +67,7 @@ export default function EmployeesPage() {
           e.lastName?.toLowerCase().includes(lower) ||
           e.email.toLowerCase().includes(lower) ||
           e.designation?.toLowerCase().includes(lower) ||
-          e.employeeId?.toLowerCase().includes(lower)
+          e.employeeId?.toLowerCase().includes(lower),
       );
     }
     if (filterDept !== "all") {
@@ -159,28 +75,28 @@ export default function EmployeesPage() {
     }
     if (filterStatus !== "all") {
       result = result.filter((e) =>
-        filterStatus === "active" ? e.isActive : !e.isActive
+        filterStatus === "active" ? e.isActive : !e.isActive,
       );
     }
     return result;
   }, [employees, search, filterDept, filterStatus]);
 
-  const hasFilters = search !== "" || filterDept !== "all" || filterStatus !== "all";
+  const hasFilters =
+    search !== "" || filterDept !== "all" || filterStatus !== "all";
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearch("");
     setFilterDept("all");
     setFilterStatus("all");
-  };
+  }, []);
+
+  const getDept = (emp: Employee) =>
+    emp.departmentId ? (deptMap.get(emp.departmentId) ?? null) : null;
 
   if (isLoading) {
     return (
       <PageWrapper title="Employee Directory" subtitle="All team members">
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-4">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
-          ))}
-        </div>
+        <EmployeesGridSkeleton />
       </PageWrapper>
     );
   }
@@ -188,112 +104,95 @@ export default function EmployeesPage() {
   return (
     <PageWrapper
       title="Employee Directory"
-      subtitle={`${filtered.length} of ${employees.length} employee${employees.length !== 1 ? "s" : ""}`}
+      subtitle={`${filtered.length} of ${employees.length} employee${
+        employees.length !== 1 ? "s" : ""
+      }`}
       actions={
-        <div className="flex items-center border border-border rounded-md">
-          <Button
-            variant={view === "grid" ? "default" : "ghost"}
+        <div className="flex items-center gap-2">
+          <ViewToggle<ViewMode>
+            value={view}
+            onChange={setView}
+            options={VIEW_OPTIONS}
             size="sm"
-            className={`rounded-r-none ${view === "grid" ? "bg-blue-500 hover:bg-blue-500/90 text-white" : ""}`}
-            onClick={() => setView("grid")}
-            aria-label="Grid view"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={view === "list" ? "default" : "ghost"}
-            size="sm"
-            className={`rounded-l-none ${view === "list" ? "bg-blue-500 hover:bg-blue-500/90 text-white" : ""}`}
-            onClick={() => setView("list")}
-            aria-label="List view"
-          >
-            <List className="h-4 w-4" />
+          />
+          <Button size="sm" asChild>
+            <Link href="/hr/onboarding">
+              <UserPlus className="h-4 w-4" />
+              Add Employee
+            </Link>
           </Button>
         </div>
       }
       filters={
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, email, ID..."
-              className="pl-8 h-8 w-60 text-xs"
-            />
-          </div>
-          <Select value={filterDept} onValueChange={setFilterDept}>
-            <SelectTrigger className="h-8 w-44 text-xs">
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Departments</SelectItem>
-              {(departments as Department[] | undefined)?.map((d) => (
-                <SelectItem key={d.id} value={String(d.id)} className="text-xs">{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-8 w-32 text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Status</SelectItem>
-              <SelectItem value="active" className="text-xs">Active</SelectItem>
-              <SelectItem value="inactive" className="text-xs">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-          {hasFilters && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clearFilters}>
-              <X className="h-3.5 w-3.5 mr-1" />Clear
-            </Button>
-          )}
-        </div>
+        <EmployeesFilters
+          search={search}
+          filterDept={filterDept}
+          filterStatus={filterStatus}
+          departments={deptList}
+          hasFilters={hasFilters}
+          onSearchChange={setSearch}
+          onDeptChange={setFilterDept}
+          onStatusChange={setFilterStatus}
+          onClear={clearFilters}
+        />
       }
     >
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-          <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
-          <p className="text-muted-foreground text-sm">No employees found matching your filters.</p>
-          {hasFilters && (
-            <Button variant="link" size="sm" className="mt-2" onClick={clearFilters}>Clear filters</Button>
-          )}
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No employees match your filters"
+          description={
+            hasFilters
+              ? "Try adjusting your search or filters."
+              : "Your employee directory is empty. Add your first team member to get started."
+          }
+          action={
+            hasFilters
+              ? { label: "Clear filters", onClick: clearFilters }
+              : { label: "Add Employee", href: "/hr/onboarding" }
+          }
+        />
       ) : view === "grid" ? (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-4">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {filtered.map((emp) => (
             <EmployeeCard
               key={emp.id}
-              emp={emp}
-              dept={emp.departmentId ? (deptMap.get(emp.departmentId) ?? null) : null}
+              employee={emp}
+              department={getDept(emp)}
             />
           ))}
         </div>
       ) : (
-        <div className="px-4 pb-4">
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <caption className="sr-only">Employee directory</caption>
-              <TableHeader>
-                <TableRow className="text-xs">
-                  <TableHead scope="col">Employee</TableHead>
-                  <TableHead scope="col" className="w-[160px]">Designation</TableHead>
-                  <TableHead scope="col" className="w-[140px]">Department</TableHead>
-                  <TableHead scope="col" className="w-[200px]">Email</TableHead>
-                  <TableHead scope="col" className="w-[90px]">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((emp) => (
-                  <EmployeeRow
-                    key={emp.id}
-                    emp={emp}
-                    dept={emp.departmentId ? (deptMap.get(emp.departmentId) ?? null) : null}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <Table>
+            <caption className="sr-only">Employee directory</caption>
+            <TableHeader>
+              <TableRow className="text-xs">
+                <TableHead scope="col">Employee</TableHead>
+                <TableHead scope="col" className="w-[160px]">
+                  Designation
+                </TableHead>
+                <TableHead scope="col" className="w-[140px]">
+                  Department
+                </TableHead>
+                <TableHead scope="col" className="w-[200px]">
+                  Email
+                </TableHead>
+                <TableHead scope="col" className="w-[90px]">
+                  Status
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((emp) => (
+                <EmployeeRow
+                  key={emp.id}
+                  employee={emp}
+                  department={getDept(emp)}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </PageWrapper>

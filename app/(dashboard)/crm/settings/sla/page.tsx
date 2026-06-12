@@ -36,16 +36,16 @@ import {
 import { toast } from "sonner";
 
 const PRIORITY_COLORS: Record<string, { color: string; bg: string }> = {
-  low: { color: "text-blue-400", bg: "bg-blue-500/15" },
-  medium: { color: "text-amber-400", bg: "bg-amber-500/15" },
-  high: { color: "text-orange-400", bg: "bg-orange-500/15" },
-  urgent: { color: "text-red-400", bg: "bg-red-500/15" },
+  low: { color:"text-blue-400", bg:"bg-blue-500/15" },
+  medium: { color:"text-amber-400", bg:"bg-amber-500/15" },
+  high: { color:"text-orange-400", bg:"bg-orange-500/15" },
+  urgent: { color:"text-red-400", bg:"bg-red-500/15" },
 };
 
 const policySchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  appliesTo: z.enum(["lead", "deal", "both"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
+  name: z.string().min(1,"Name required").max(100),
+  appliesTo: z.enum(["lead","deal","both"]),
+  priority: z.enum(["low","medium","high","urgent"]),
   firstResponseHours: z.coerce.number().int().positive("Must be positive"),
   resolutionHours: z.coerce.number().int().positive("Must be positive"),
 });
@@ -66,7 +66,7 @@ export default function SlaPage() {
 
   const createForm = useForm<PolicyForm>({
     resolver: policyResolver,
-    defaultValues: { name: "", appliesTo: "both", priority: "medium", firstResponseHours: 4, resolutionHours: 24 },
+    defaultValues: { name:"", appliesTo:"both", priority:"medium", firstResponseHours: 4, resolutionHours: 24 },
   });
 
   const editForm = useForm<PolicyForm>({
@@ -133,7 +133,7 @@ export default function SlaPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-500/90 text-white">
+            <Button >
               <Plus className="h-4 w-4 mr-2" />
               New Policy
             </Button>
@@ -196,8 +196,8 @@ export default function SlaPage() {
                     </FormItem>
                   )} />
                 </div>
-                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createPolicy.isPending}>
-                  {createPolicy.isPending ? "Creating..." : "Create Policy"}
+                <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
+                  {createPolicy.isPending ?"Creating..." :"Create Policy"}
                 </Button>
               </form>
             </Form>
@@ -214,14 +214,14 @@ export default function SlaPage() {
         {slaReport && (
           <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
             {[
-              { label: "Total with SLA", value: slaReport.total, icon: Shield, color: "text-blue-400" },
-              { label: "Compliant", value: slaReport.compliant, icon: CheckCircle2, color: "text-emerald-400" },
-              { label: "Breached", value: slaReport.breached, icon: XCircle, color: "text-red-400" },
+              { label:"Total with SLA", value: slaReport.total, icon: Shield, color:"text-blue-400" },
+              { label:"Compliant", value: slaReport.compliant, icon: CheckCircle2, color:"text-emerald-400" },
+              { label:"Breached", value: slaReport.breached, icon: XCircle, color:"text-red-400" },
               {
-                label: "Compliance Rate",
+                label:"Compliance Rate",
                 value: `${slaReport.complianceRate}%`,
                 icon: Clock,
-                color: slaReport.complianceRate >= 80 ? "text-emerald-400" : slaReport.complianceRate >= 50 ? "text-amber-400" : "text-red-400",
+                color: slaReport.complianceRate >= 80 ?"text-emerald-400" : slaReport.complianceRate >= 50 ?"text-amber-400" :"text-red-400",
               },
             ].map(stat => (
               <Card key={stat.label} className="shadow-sm">
@@ -339,8 +339,8 @@ export default function SlaPage() {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                      <Button type="submit" className="bg-blue-500 hover:bg-blue-500/90 text-white" disabled={updatePolicy.isPending}>
-                        {updatePolicy.isPending ? "Saving..." : "Save Changes"}
+                      <Button type="submit" disabled={updatePolicy.isPending}>
+                        {updatePolicy.isPending ?"Saving..." :"Save Changes"}
                       </Button>
                     </div>
                   </form>
@@ -376,7 +376,7 @@ export default function SlaPage() {
                           <Badge variant="secondary" className="text-[10px]">{lead.status}</Badge>
                         </TableCell>
                         <TableCell className="text-xs text-right text-red-400">
-                          {lead.slaDeadline ? new Date(lead.slaDeadline).toLocaleDateString() : "N/A"}
+                          {lead.slaDeadline ? new Date(lead.slaDeadline).toLocaleDateString() :"N/A"}
                         </TableCell>
                       </TableRow>
                     ))}

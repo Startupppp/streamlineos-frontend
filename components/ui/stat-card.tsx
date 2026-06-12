@@ -19,10 +19,13 @@ interface StatCardProps {
   value: string | number;
   icon: LucideIcon;
   trend?: { value: number; isPositive: boolean; label?: string };
+  hint?: string;
   href?: string;
   className?: string;
   index?: number;
   color?: StatColor;
+  /** @deprecated — use `hint` */
+  subtitle?: string;
 }
 
 const COLOR_MAP: Record<StatColor, { bg: string; icon: string; bar: string }> = {
@@ -41,12 +44,15 @@ export function StatCard({
   value,
   icon: Icon,
   trend,
+  hint,
+  subtitle,
   href,
   className,
   index = 0,
   color = "blue",
 }: StatCardProps) {
   const c = COLOR_MAP[color];
+  const effectiveHint = hint ?? subtitle;
 
   const body = (
     <div
@@ -94,6 +100,12 @@ export function StatCard({
                 <span className="text-[11px] text-muted-foreground">{trend.label}</span>
               )}
             </div>
+          )}
+
+          {!trend && effectiveHint && (
+            <p className="text-[11px] text-muted-foreground mt-1.5 truncate">
+              {effectiveHint}
+            </p>
           )}
         </div>
 

@@ -36,7 +36,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
       {
         name: fd.get("name") as string,
         value: String(isNaN(value) ? 0 : value),
-        stage: (fd.get("stage") as DealStage) || "LEAD",
+        stage: (fd.get("stage") as DealStage) ||"LEAD",
         probability: Number(fd.get("probability") || 0),
         contactPerson: (fd.get("contactPerson") as string) || undefined,
         contactEmail: (fd.get("contactEmail") as string) || undefined,
@@ -125,8 +125,8 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
       </div>
-      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-500/90 text-white" disabled={createMutation.isPending}>
-        {createMutation.isPending ? "Creating..." : "Create Deal"}
+      <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+        {createMutation.isPending ?"Creating..." :"Create Deal"}
       </Button>
     </form>
   );

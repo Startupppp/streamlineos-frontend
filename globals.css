@@ -86,7 +86,7 @@
   --radius: 0.625rem;
 
   /* ─── Surface ─── */
-  --background: #e7edf8;          /* page canvas (matches .surface-soft base) — slightly deeper than slate-100 for cleaner card lift */
+  --background: #f8fafc;          /* page canvas — slate-50, near pure white with the barest cool hint for card lift */
   --foreground: #0b1220;          /* primary ink */
   --card: #ffffff;
   --card-foreground: #0b1220;
@@ -470,10 +470,10 @@
 
 .surface-soft {
   background:
-    radial-gradient(ellipse 90% 65% at 15% 8%, rgba(96, 165, 250, 0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 90% 65% at 88% 92%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255, 255, 255, 0.55) 0%, transparent 70%),
-    #e7edf8;
+    radial-gradient(ellipse 90% 65% at 15% 8%, rgba(96, 165, 250, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 65% at 88% 92%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255, 255, 255, 0.7) 0%, transparent 70%),
+    #f4f7fc;
   background-attachment: fixed;
 }
 

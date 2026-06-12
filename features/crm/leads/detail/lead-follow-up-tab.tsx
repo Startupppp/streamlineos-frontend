@@ -18,13 +18,13 @@ import type { Task, TaskType } from "@/lib/api/hooks/tasks";
 
 
 export function formatTaskDue(dueDate: string | null): string {
-  if (!dueDate) return "No date";
+  if (!dueDate) return"No date";
   const d = new Date(dueDate);
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / 86400000);
-  const formatted = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const formatted = d.toLocaleDateString("en-IN", { day:"numeric", month:"short" });
+  const time = d.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", hour12: true });
   if (diffDays < 0) return `Overdue · ${formatted}`;
   if (diffDays === 0) return `Today · ${time}`;
   if (diffDays === 1) return `Tomorrow · ${time}`;
@@ -32,27 +32,27 @@ export function formatTaskDue(dueDate: string | null): string {
 }
 
 const FOLLOW_UP_TYPES: { value: TaskType; label: string }[] = [
-  { value: "CALL",    label: "Call"    },
-  { value: "EMAIL",   label: "Email"   },
-  { value: "MEETING", label: "Meeting" },
-  { value: "CUSTOM",  label: "Other"   },
+  { value:"CALL",    label:"Call"    },
+  { value:"EMAIL",   label:"Email"   },
+  { value:"MEETING", label:"Meeting" },
+  { value:"CUSTOM",  label:"Other"   },
 ];
 
 function getTaskIcon(type: TaskType) {
   switch (type) {
-    case "CALL":    return <Phone className="h-3.5 w-3.5" />;
-    case "EMAIL":   return <Mail className="h-3.5 w-3.5" />;
-    case "MEETING": return <Calendar className="h-3.5 w-3.5" />;
+    case"CALL":    return <Phone className="h-3.5 w-3.5" />;
+    case"EMAIL":   return <Mail className="h-3.5 w-3.5" />;
+    case"MEETING": return <Calendar className="h-3.5 w-3.5" />;
     default:        return <Clock className="h-3.5 w-3.5" />;
   }
 }
 
 function getTaskIconColor(type: TaskType): string {
   switch (type) {
-    case "CALL":    return "bg-blue-500/15 text-blue-400";
-    case "EMAIL":   return "bg-purple-500/15 text-purple-400";
-    case "MEETING": return "bg-amber-500/15 text-amber-400";
-    default:        return "bg-muted text-muted-foreground";
+    case"CALL":    return"bg-blue-500/15 text-blue-400";
+    case"EMAIL":   return"bg-purple-500/15 text-purple-400";
+    case"MEETING": return"bg-amber-500/15 text-amber-400";
+    default:        return"bg-muted text-muted-foreground";
   }
 }
 
@@ -88,7 +88,7 @@ const PendingTaskRow = memo(function PendingTaskRow({
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/20 border border-border/40">
       <div className={cn(
-        "h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
+"h-7 w-7 rounded-md flex items-center justify-center shrink-0 mt-0.5",
         getTaskIconColor(task.type),
       )}>
         {getTaskIcon(task.type)}
@@ -96,8 +96,8 @@ const PendingTaskRow = memo(function PendingTaskRow({
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium leading-tight">{task.title}</p>
         <p className={cn(
-          "text-[10px] mt-0.5",
-          isOverdue ? "text-red-400 font-medium" : "text-muted-foreground",
+"text-[10px] mt-0.5",
+          isOverdue ?"text-red-400 font-medium" :"text-muted-foreground",
         )}>
           {formatTaskDue(task.dueDate)}
         </p>
@@ -133,8 +133,8 @@ const DoneTaskRow = memo(function DoneTaskRow({ task }: DoneTaskRowProps) {
       </span>
       <span className="text-[10px] text-muted-foreground/50 shrink-0">
         {task.completedAt
-          ? new Date(task.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-          : ""}
+          ? new Date(task.completedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })
+          :""}
       </span>
     </div>
   );
@@ -260,7 +260,7 @@ export const LeadFollowUpTab = memo(function LeadFollowUpTab({
 
         <Button
           size="sm"
-          className="w-full h-8 text-xs bg-blue-500 hover:bg-blue-500/90 text-white gap-1.5"
+          className="w-full h-8 text-xs gap-1.5"
           onClick={onSchedule}
           disabled={isScheduling}
         >

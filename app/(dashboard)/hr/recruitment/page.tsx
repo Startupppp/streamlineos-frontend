@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 
 
-const PIE_COLORS = ["#0f2b7f", "#bd882c", "#10b981", "#8b5cf6", "#f43f5e", "#06b6d4"];
+const PIE_COLORS = ["#1e40af", "#06b6d4", "#10b981", "#8b5cf6", "#f43f5e", "#3b82f6"];
 
 function SourcePieChart({ sources }: { sources: { source: string; count: number }[] }) {
   const data = sources.map((s) => ({ name: s.source, value: s.count }));

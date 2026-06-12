@@ -41,14 +41,14 @@ export function AIEmailDialog({
   const [open, setOpen] = useState(false);
   const [tone, setTone] = useState<EmailTone>("friendly");
   const [context, setContext] = useState("");
-  const [copied, setCopied] = useState<"subject" | "body" | null>(null);
+  const [copied, setCopied] = useState<"subject" |"body" | null>(null);
 
   const generateMutation = useGenerateEmail();
   const email = generateMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.email-drafting");
 
   const handleGenerate = useCallback(() => {
-    if (!featureEnabled) { toast.error(`AI email drafting requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
+    if (!featureEnabled) { toast.error(`AI email drafting requires the ${requiredPlan ??"PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     generateMutation.mutate(
       {
         leadName,
@@ -62,17 +62,17 @@ export function AIEmailDialog({
         context: context || undefined,
       },
       {
-        onError: (err) => toast.error(err.message || "Email generation failed"),
+        onError: (err) => toast.error(err.message ||"Email generation failed"),
       },
     );
   }, [generateMutation, leadName, company, designation, dealStage, lastActivityType, lastActivityDate, potentialValue, tone, context]);
 
-  const handleCopy = useCallback(async (type: "subject" | "body") => {
+  const handleCopy = useCallback(async (type:"subject" |"body") => {
     if (!email) return;
-    const text = type === "subject" ? email.subject : email.body;
+    const text = type ==="subject" ? email.subject : email.body;
     await navigator.clipboard.writeText(text);
     setCopied(type);
-    toast.success(`${type === "subject" ? "Subject" : "Body"} copied`);
+    toast.success(`${type ==="subject" ?"Subject" :"Body"} copied`);
     setTimeout(() => setCopied(null), 2000);
   }, [email]);
 
@@ -121,7 +121,7 @@ export function AIEmailDialog({
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
-                To: {leadName}{company ? ` (${company})` : ""}
+                To: {leadName}{company ? ` (${company})` :""}
               </Label>
             </div>
           </div>
@@ -140,7 +140,7 @@ export function AIEmailDialog({
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}
-            className="w-full bg-blue-500 hover:bg-blue-500/90 text-white"
+            className="w-full"
           >
             {generateMutation.isPending ? (
               <>
@@ -150,7 +150,7 @@ export function AIEmailDialog({
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                {email ? "Regenerate" : "Generate Email"}
+                {email ?"Regenerate" :"Generate Email"}
               </>
             )}
           </Button>
@@ -166,7 +166,7 @@ export function AIEmailDialog({
                     className="h-6 px-2 text-[10px]"
                     onClick={handleCopySubject}
                   >
-                    {copied === "subject" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {copied ==="subject" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
                 <p className="text-sm font-medium">{email.subject}</p>
@@ -180,7 +180,7 @@ export function AIEmailDialog({
                     className="h-6 px-2 text-[10px]"
                     onClick={handleCopyBody}
                   >
-                    {copied === "body" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {copied ==="body" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
                 <div className="text-sm whitespace-pre-wrap leading-relaxed">{email.body}</div>

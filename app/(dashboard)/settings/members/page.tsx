@@ -178,7 +178,7 @@ export default function MembersSettingsPage() {
       subtitle="Manage organization members, roles, and invitations"
       badge={membersData ? String(membersData.pagination.total) : undefined}
       actions={
-        <Button onClick={handleToggleInviteForm} className="bg-blue-500 hover:bg-blue-500/80 text-white">
+        <Button onClick={handleToggleInviteForm}>
           <UserPlus className="h-4 w-4 mr-2" />
           {showInviteForm ? "Cancel" : "Invite Member"}
         </Button>

@@ -24,7 +24,7 @@ interface PaginationProps {
   endItem: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  variant?: "admin" | "member";
+  variant?:"admin" |"member";
 }
 
 function ExpensePagination({
@@ -33,16 +33,16 @@ function ExpensePagination({
   endItem,
   totalPages,
   onPageChange,
-  variant = "member",
+  variant ="member",
 }: PaginationProps) {
   if (pagination.total === 0 || totalPages <= 1) return null;
 
-  if (variant === "admin") {
+  if (variant ==="admin") {
     return (
       <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
         <span className="text-sm text-muted-foreground">
-          Showing <strong className="text-foreground">{startItem}</strong> to{" "}
-          <strong className="text-foreground">{endItem}</strong> of{" "}
+          Showing <strong className="text-foreground">{startItem}</strong> to{""}
+          <strong className="text-foreground">{endItem}</strong> of{""}
           <strong className="text-foreground">{pagination.total}</strong> results
         </span>
         <div className="flex items-center gap-1">
@@ -65,7 +65,7 @@ function ExpensePagination({
           })().map((p) => (
             <Button
               key={p}
-              variant={p === pagination.page ? "default" : "outline"}
+              variant={p === pagination.page ?"default" :"outline"}
               size="icon"
               className="h-8 w-8 text-xs"
               onClick={() => onPageChange(p)}
@@ -91,7 +91,7 @@ function ExpensePagination({
   return (
     <div className="flex items-center justify-between px-6 py-4 border-t">
       <span className="text-sm text-muted-foreground">
-        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{" "}
+        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{""}
         <strong>{pagination.total}</strong> claims
       </span>
       <div className="flex items-center gap-2">
@@ -164,8 +164,8 @@ export function AdminExpenseList({
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h3 className="text-base font-semibold">Recent Claims</h3>
           <span className="text-sm text-muted-foreground">
-            Showing {startItem}-{endItem} of {pagination.total}{" "}
-            {statusFilter === "PENDING" ? "pending" : "total"}
+            Showing {startItem}-{endItem} of {pagination.total}{""}
+            {statusFilter ==="PENDING" ?"pending" :"total"}
           </span>
         </div>
 
@@ -174,9 +174,9 @@ export function AdminExpenseList({
             <EmptyExpensesIllustration className="mb-3" />
             <h3 className="text-lg font-medium">No expenses found</h3>
             <p className="text-muted-foreground mb-4">
-              {statusFilter !== "ALL" ? "Try adjusting your filters" : "No expense claims to review"}
+              {statusFilter !=="ALL" ?"Try adjusting your filters" :"No expense claims to review"}
             </p>
-            {statusFilter !== "ALL" && (
+            {statusFilter !=="ALL" && (
               <Button variant="outline" onClick={onShowAll}>
                 Show All Claims
               </Button>
@@ -251,16 +251,16 @@ export function MemberExpenseList({
             <EmptyExpensesIllustration className="mb-3" />
             <h3 className="text-lg font-medium">No expenses found</h3>
             <p className="text-muted-foreground mb-4">
-              {statusFilter !== "ALL" || activeFilterCount > 0
-                ? "Try adjusting your filters"
-                : "Submit your first expense claim to get started"}
+              {statusFilter !=="ALL" || activeFilterCount > 0
+                ?"Try adjusting your filters"
+                :"Submit your first expense claim to get started"}
             </p>
-            {statusFilter !== "ALL" ? (
+            {statusFilter !=="ALL" ? (
               <Button variant="outline" onClick={onShowAll}>
                 Show All Claims
               </Button>
             ) : (
-              <Button className="bg-blue-500 hover:bg-blue-500/80 text-white" onClick={onCreateNew}>
+              <Button onClick={onCreateNew}>
                 <Plus className="mr-2 h-4 w-4" />
                 Submit New Claim
               </Button>

@@ -92,10 +92,10 @@ export function ActivityForm({ onSubmit, isPending }: ActivityFormProps) {
 
       <Button
         type="submit"
-        className="w-full bg-blue-500 hover:bg-blue-500/90 text-white h-10 mt-2"
+        className="w-full h-10 mt-2"
         disabled={isPending}
       >
-        {isPending ? "Logging..." : "Log Activity"}
+        {isPending ?"Logging..." :"Log Activity"}
       </Button>
     </form>
   );

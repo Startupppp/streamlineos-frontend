@@ -136,8 +136,8 @@ export default function RootLayout({
         <GoogleTagManagerNoscript />
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
           <SessionProvider>

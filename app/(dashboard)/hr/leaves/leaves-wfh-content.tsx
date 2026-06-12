@@ -36,7 +36,7 @@ import { useAbility } from "@/lib/abilities-context";
 export function LeavesWfhContent() {
   const { data: session } = useSession();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage","hr:employees");
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
@@ -64,8 +64,8 @@ export function LeavesWfhContent() {
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
   const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
-  const pendingCount = myLeaveRequests.filter((r) => r.status === "PENDING").length;
-  const approvedCount = myLeaveRequests.filter((r) => r.status === "APPROVED").length;
+  const pendingCount = myLeaveRequests.filter((r) => r.status ==="PENDING").length;
+  const approvedCount = myLeaveRequests.filter((r) => r.status ==="APPROVED").length;
 
   if (contextLoading || myLoading) {
     return (
@@ -99,7 +99,7 @@ export function LeavesWfhContent() {
             <Button
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5 bg-blue-500 hover:bg-blue-500/80 text-white"
+              className="gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Request Leave
@@ -160,8 +160,8 @@ export function LeavesWfhContent() {
                           {leave.user?.firstName} {leave.user?.lastName}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(leave.startDate), "MMM dd")} –{" "}
-                          {format(new Date(leave.endDate), "MMM dd")}
+                          {format(new Date(leave.startDate),"MMM dd")} –{""}
+                          {format(new Date(leave.endDate),"MMM dd")}
                           {leave.leaveType && (
                             <span className="ml-1 text-amber-600 dark:text-amber-400">
                               · {leave.leaveType.name}

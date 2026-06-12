@@ -7,29 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { StatCard } from "@/components/ui/stat-card";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import {
   Users, UserPlus, TrendingUp, IndianRupee,
   CalendarCheck, Clock, Building2, Receipt,
 } from "lucide-react";
-
-function StatCard({ label, value, icon: Icon, subtitle }: {
-  label: string; value: string | number; icon: React.ComponentType<{ className?: string }>; subtitle?: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-muted-foreground">{label}</span>
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <p className="text-2xl font-bold tabular-nums">{value}</p>
-        {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
-      </CardContent>
-    </Card>
-  );
-}
 
 function formatCurrency(val: string | number) {
   const num = Number(val);
