@@ -142,7 +142,7 @@ export function DailyLogSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="bg-white/5 border-white/10">
+          <Card key={i} className="bg-muted/50 border-border/50">
             <CardHeader className="pb-2">
               <Skeleton className="h-4 w-32" />
             </CardHeader>
@@ -155,7 +155,7 @@ export function DailyLogSkeleton() {
           </Card>
         ))}
       </div>
-      <Card className="bg-white/5 border-white/10">
+      <Card className="bg-muted/50 border-border/50">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
         </CardHeader>
