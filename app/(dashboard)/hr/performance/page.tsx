@@ -918,6 +918,7 @@ function PIPTab() {
     if (!pipUserId) { toast.error("Please select an employee"); return; }
     const trimmedReason = reason.trim();
     if (!trimmedReason) { toast.error("Reason is required"); return; }
+    if (trimmedReason.length < 10) { toast.error("Reason must be at least 10 characters"); return; }
     if (trimmedReason.length > 1000) { toast.error("Reason must be at most 1000 characters"); return; }
     if (!startDate) { toast.error("Start date is required"); return; }
     if (!endDate) { toast.error("End date is required"); return; }
@@ -926,14 +927,25 @@ function PIPTab() {
 
     const validObjectives = objectives.filter((o) => o.objective.trim() && o.metric.trim() && o.deadline);
     if (validObjectives.length === 0) { toast.error("At least one complete objective (goal, metric, deadline) is required"); return; }
+    for (const o of validObjectives) {
+      const obj = o.objective.trim();
+      const met = o.metric.trim();
+      if (obj.length < 3) { toast.error("Each objective must be at least 3 characters"); return; }
+      if (obj.length > 500) { toast.error("Each objective must be at most 500 characters"); return; }
+      if (met.length < 3) { toast.error("Each success metric must be at least 3 characters"); return; }
+      if (met.length > 200) { toast.error("Each success metric must be at most 200 characters"); return; }
+      if (o.deadline < startDate) { toast.error("Objective deadlines must be within the PIP period (after start date)"); return; }
+    }
     const lateDeadline = validObjectives.find((o) => o.deadline > endDate);
     if (lateDeadline) { toast.error("Objective deadlines cannot exceed the PIP end date"); return; }
+    const trimmedNotes = notes.trim();
+    if (trimmedNotes.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
 
     const payload = {
       reason: trimmedReason,
       objectives: validObjectives.map((o) => ({ objective: o.objective.trim(), metric: o.metric.trim(), deadline: o.deadline })),
       endDate,
-      notes: notes.trim() || undefined,
+      notes: trimmedNotes || undefined,
       hrRepId: hrRepId || undefined,
     };
 
