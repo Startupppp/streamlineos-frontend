@@ -242,6 +242,8 @@ export const rolePermissions = pgTable("role_permissions", {
 }, (table) => [
   uniqueIndex("uniq_role_permissions_role_perm_org").on(table.role, table.permissionId, table.orgId),
   index("idx_role_permissions_org").on(table.orgId),
+  index("idx_role_permissions_role").on(table.role),
+  index("idx_role_permissions_org_role").on(table.orgId, table.role),
 ]);
 
 export const userPermissions = pgTable("user_permissions", {
@@ -254,6 +256,7 @@ export const userPermissions = pgTable("user_permissions", {
 }, (table) => [
   uniqueIndex("uniq_user_permissions_user_perm_org").on(table.userId, table.permissionId, table.orgId),
   index("idx_user_permissions_org").on(table.orgId),
+  index("idx_user_permissions_user_org").on(table.userId, table.orgId),
 ]);
 
 export const onboardingSteps = pgTable("onboarding_steps", {
