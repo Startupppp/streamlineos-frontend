@@ -56,7 +56,7 @@ export function DeviceFormContent({
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {employees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
                       {emp.firstName} {emp.lastName}
