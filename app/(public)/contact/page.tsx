@@ -49,7 +49,7 @@ export default function ContactPage() {
         <MarketingEyebrow>Contact us</MarketingEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
           Tell us what you&apos;re{" "}
-          <span className="brand-text">trying to solve.</span>
+          <span className="text-blue-600">trying to solve.</span>
         </h1>
         <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto">
           Pricing questions, demos, partnerships, security disclosures — every message reaches

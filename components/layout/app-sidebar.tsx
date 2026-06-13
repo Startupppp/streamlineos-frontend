@@ -199,7 +199,7 @@ export function AppSidebar({
                 />
               </div>
               <div className="min-w-0">
-                <span className="brand-text text-[17px] font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
+                <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                   StreamlineOS
                 </span>
                 {orgName ? (

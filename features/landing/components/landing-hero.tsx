@@ -64,7 +64,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-display text-5xl sm:text-6xl lg:text-[5rem] xl:text-[5.5rem] font-extrabold tracking-[-0.04em] leading-[0.96] mb-5 text-slate-900"
+            className="font-display text-5xl sm:text-6xl lg:text-[5rem] xl:text-[5.5rem] font-extrabold tracking-[-0.03em] leading-[0.98] mb-5 text-slate-900"
           >
             Run your company
             <br />

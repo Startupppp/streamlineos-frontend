@@ -101,7 +101,7 @@ export default function PricingPage() {
           <MarketingEyebrow>Pricing</MarketingEyebrow>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
             31% cheaper than Odoo.{" "}
-            <span className="brand-text">Same all-in-one bundle.</span>
+            <span className="text-blue-600">Same all-in-one bundle.</span>
           </h1>
           <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto mb-3">
             From{" "}
@@ -123,7 +123,7 @@ export default function PricingPage() {
             {PRICING_TIERS.map((tier) => (
               <div
                 key={tier.id}
-                className={`relative rounded-3xl border p-6 flex flex-col ${
+                className={`relative rounded-2xl border p-6 flex flex-col ${
                   tier.highlight
                     ? "border-blue-400/40 bg-white shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
                     : "border-slate-200 bg-white"
@@ -269,7 +269,7 @@ export default function PricingPage() {
         </section>
 
         <section className="container mx-auto px-4 lg:px-8 max-w-3xl mt-16 mb-4">
-          <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-900 to-slate-800 p-8 lg:p-10 text-center text-white shadow-[0_30px_80px_-24px_rgba(15,23,42,0.5)]">
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-900 p-8 lg:p-10 text-center text-white shadow-[0_30px_80px_-24px_rgba(15,23,42,0.5)]">
             <h2 className="font-display text-2xl lg:text-3xl font-extrabold tracking-[-0.02em] mb-3">
               Still deciding? We&apos;ll help you scope it.
             </h2>

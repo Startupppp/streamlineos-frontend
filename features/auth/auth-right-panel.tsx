@@ -25,16 +25,16 @@ export function AuthRightPanel() {
         transition={{ duration: 0.55, ease: EASE_OUT_QUART }}
         className="relative z-10 px-12 pt-14"
       >
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-sm border border-blue-100 px-3 py-1 mb-5 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-blue-600/10 border border-blue-200 px-3 py-1 mb-5">
           <Sparkles className="h-3 w-3 text-blue-600" />
-          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-700">
+          <span className="text-[12px] font-medium text-blue-700">
             One OS for every team function
           </span>
         </div>
 
         <h2 className="font-display text-[2.1rem] xl:text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.025em] text-slate-900 max-w-md">
           Run your company on{" "}
-          <span className="brand-text">one platform.</span>
+          <span className="text-blue-600">one platform.</span>
         </h2>
 
         <p className="text-[14px] text-slate-600 leading-relaxed mt-3 max-w-md">
@@ -54,8 +54,7 @@ export function AuthRightPanel() {
       >
         <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm px-5 py-4 shadow-[0_18px_44px_-22px_rgba(30,64,175,0.15)]">
           <span
-            className="h-10 w-10 rounded-full inline-flex items-center justify-center text-[12px] font-bold text-white shrink-0"
-            style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+            className="h-10 w-10 rounded-full inline-flex items-center justify-center text-[12px] font-bold text-white shrink-0 bg-blue-600"
           >
             AM
           </span>

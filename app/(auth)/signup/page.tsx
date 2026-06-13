@@ -148,7 +148,7 @@ export default function SignupPage() {
                       <span className="font-display text-[15px] font-bold text-slate-900">
                         {plan.name}
                       </span>
-                      <span className="text-[15px] font-extrabold brand-text">
+                      <span className="text-[15px] font-extrabold text-blue-600">
                         {plan.price}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500 truncate">

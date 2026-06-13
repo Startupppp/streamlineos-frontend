@@ -28,7 +28,7 @@ export default function BlogPage() {
         <MarketingEyebrow>The blog</MarketingEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
           Field notes from a team{" "}
-          <span className="brand-text">building one OS.</span>
+          <span className="text-blue-600">building one OS.</span>
         </h1>
         <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto">
           Product updates, engineering deep-dives, and operating playbooks from teams running on{" "}
@@ -67,7 +67,7 @@ export default function BlogPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-3xl mt-16">
-        <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm p-7 lg:p-9 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.15)]">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-sm p-7 lg:p-9 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.15)]">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-7">
             <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_10px_28px_-10px_rgba(59,130,246,0.5)]">
               <BookOpen className="h-6 w-6 text-white" />

@@ -15,12 +15,9 @@ export function LandingWalkthrough() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-14 lg:mb-20"
         >
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
-            From first hire to closed deal
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
             One workspace.{" "}
-            <span className="brand-text">Four moments that matter.</span>
+            <span className="text-blue-600">Four moments that matter.</span>
           </h2>
         </motion.div>
 
@@ -55,9 +52,12 @@ function WalkthroughRow({
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
         className="lg:[direction:ltr]"
       >
-        <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
-          0{index + 1} · {step.eyebrow}
-        </p>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-600 text-white text-[11px] font-bold font-mono shrink-0">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="text-[12px] font-medium text-blue-600">{step.eyebrow}</span>
+        </div>
         <h3 className="font-display text-2xl lg:text-4xl font-bold text-slate-900 tracking-[-0.02em] leading-tight mb-4">
           {step.title}
         </h3>
@@ -93,7 +93,7 @@ function WalkthroughVisual({ index }: { index: number }) {
   const visuals = [HireVisual, OnboardVisual, DeliverVisual, CloseVisual];
   const Visual = visuals[index] ?? HireVisual;
   return (
-    <div className="relative aspect-[5/4] rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-hidden p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
+    <div className="relative aspect-[5/4] rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-sm overflow-hidden p-6 shadow-[0_20px_60px_-24px_rgba(30,64,175,0.18)]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.10),_transparent_60%)]" />
       <div className="relative h-full">
         <Visual />
