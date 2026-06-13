@@ -1,7 +1,7 @@
 import { withAuth, withAbility, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTemplates } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { extractVariables } from "@/lib/utils/document-variables";
 import type { NextRequest } from "next/server";
@@ -40,6 +40,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:documents", async (session) => {
     const body = await parseBody(req, createSchema);
+
+    const [existing] = await db
+      .select({ id: documentTemplates.id })
+      .from(documentTemplates)
+      .where(
+        and(
+          eq(documentTemplates.orgId, session.orgId),
+          eq(documentTemplates.isActive, true),
+          ilike(documentTemplates.title, body.title.trim())
+        )
+      )
+      .limit(1);
+    if (existing) return err("A template with this name already exists", 409);
 
     const variables = body.variables ?? extractVariables(body.htmlContent);
 

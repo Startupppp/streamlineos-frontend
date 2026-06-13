@@ -26,6 +26,7 @@ import {
   useCreateDocumentTemplate,
   useUpdateDocumentTemplate,
   useDocumentTemplateVersions,
+  useDocumentTemplates,
   type DocumentTemplate,
 } from "@/lib/api/hooks/hr/document-templates";
 import { extractVariables, substituteVariables } from "@/lib/utils/document-variables";
@@ -134,6 +135,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   const updateMutation = useUpdateDocumentTemplate();
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const { data: versionHistory } = useDocumentTemplateVersions(template?.id ?? 0);
+  const { data: allTemplates } = useDocumentTemplates();
 
   const detectedVariables = useMemo(() => extractVariables(htmlContent), [htmlContent]);
 
@@ -172,8 +174,39 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   }, [htmlContent]);
 
   const handleSave = useCallback(() => {
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
       toast.error("Title is required");
+      return;
+    }
+    if (trimmedTitle.length < 3) {
+      toast.error("Title must be at least 3 characters");
+      return;
+    }
+    if (trimmedTitle.length > 150) {
+      toast.error("Title must be at most 150 characters");
+      return;
+    }
+    if (/[<>{}[\]\\|^~`]/.test(trimmedTitle)) {
+      toast.error("Title contains invalid special characters");
+      return;
+    }
+    if (/\s{2,}/.test(trimmedTitle)) {
+      toast.error("Title cannot have multiple consecutive spaces");
+      return;
+    }
+    if (!htmlContent.trim()) {
+      toast.error("Template content cannot be empty");
+      return;
+    }
+
+    const isDuplicate = (allTemplates ?? []).some(
+      (t) =>
+        t.title.trim().toLowerCase() === trimmedTitle.toLowerCase() &&
+        t.id !== (template?.id ?? -1)
+    );
+    if (isDuplicate) {
+      toast.error("A template with this name already exists");
       return;
     }
 

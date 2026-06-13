@@ -1,7 +1,7 @@
 import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTemplates, documentTemplateVersions } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ilike, ne } from "drizzle-orm";
 import { z } from "zod";
 import { extractVariables } from "@/lib/utils/document-variables";
 import type { NextRequest } from "next/server";
@@ -48,6 +48,22 @@ export async function PUT(req: NextRequest, { params }: Params) {
       .limit(1);
 
     if (!existing) return err("Template not found", 404);
+
+    if (body.title && body.title.trim().toLowerCase() !== existing.title.trim().toLowerCase()) {
+      const [duplicate] = await db
+        .select({ id: documentTemplates.id })
+        .from(documentTemplates)
+        .where(
+          and(
+            eq(documentTemplates.orgId, session.orgId),
+            eq(documentTemplates.isActive, true),
+            ilike(documentTemplates.title, body.title.trim()),
+            ne(documentTemplates.id, id)
+          )
+        )
+        .limit(1);
+      if (duplicate) return err("A template with this name already exists", 409);
+    }
 
     const contentChanging =
       body.htmlContent !== undefined && body.htmlContent !== existing.htmlContent;
