@@ -61,6 +61,7 @@ const AUTH_ROUTES = [
 const ALLOW_AUTHENTICATED = [
   "/invitation",
   "/reset-password",
+  "/setup-password",
 ];
 
 const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
