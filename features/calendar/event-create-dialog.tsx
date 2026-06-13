@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { format, parseISO, addHours } from "date-fns";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { format, parseISO, addHours, differenceInMinutes } from "date-fns";
 import {
   Sheet,
   SheetContent,
@@ -32,6 +32,7 @@ import {
   useCalendarOrgMembers,
   useGoogleMeetStatus,
   useCreateMeetLink,
+  useEventAttendees,
   extractEventNumericId,
 } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
@@ -126,6 +127,7 @@ interface EventCreateDialogProps {
 
 export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: EventCreateDialogProps) {
   const isEdit = !!event;
+  const editNumericId = useMemo(() => isEdit && event ? extractEventNumericId(event.id) : null, [isEdit, event]);
   const [form, setForm] = useState<FormState>(() =>
     isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot)
   );
@@ -134,12 +136,20 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   const { data: members = [] } = useCalendarOrgMembers();
   const { data: meetStatus } = useGoogleMeetStatus();
   const createMeet = useCreateMeetLink();
+  const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
 
   useEffect(() => {
     if (open) {
       setForm(isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot));
     }
   }, [open, defaultSlot, event, isEdit]);
+
+  useEffect(() => {
+    if (isEdit && existingAttendees && existingAttendees.length > 0) {
+      const ids = existingAttendees.map((a) => a.user?.id).filter((id): id is string => !!id);
+      setForm((prev) => ({ ...prev, attendeeIds: ids }));
+    }
+  }, [isEdit, existingAttendees]);
 
   const handleSheetOpenChange = useCallback(
     (v: boolean) => {
@@ -215,8 +225,33 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   }, [set]);
 
   const handleSave = useCallback(async () => {
-    if (!form.title.trim()) {
+    const trimmedTitle = form.title.trim();
+    if (!trimmedTitle) {
       toast.error("Event title is required");
+      return;
+    }
+    if (trimmedTitle.length < 3) {
+      toast.error("Event title must be at least 3 characters");
+      return;
+    }
+    if (trimmedTitle.length > 200) {
+      toast.error("Event title must be at most 200 characters");
+      return;
+    }
+    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
+      toast.error("Event title must contain at least one letter or number");
+      return;
+    }
+    if (form.description && form.description.length > 2000) {
+      toast.error("Description must be at most 2000 characters");
+      return;
+    }
+    if (!form.startDate) {
+      toast.error("Start date is required");
+      return;
+    }
+    if (!form.endDate) {
+      toast.error("End date is required");
       return;
     }
     const startDate = form.allDay
@@ -229,8 +264,12 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       toast.error("End time must be after start time");
       return;
     }
+    if (!form.allDay && differenceInMinutes(endDate, startDate) < 15) {
+      toast.error("Event duration must be at least 15 minutes");
+      return;
+    }
     const payload = {
-      title: form.title,
+      title: trimmedTitle,
       description: form.description || undefined,
       location: form.location || undefined,
       startDate: startDate.toISOString(),
