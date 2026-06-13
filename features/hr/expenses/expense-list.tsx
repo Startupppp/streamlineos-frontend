@@ -123,6 +123,7 @@ function ExpensePagination({
 
 interface AdminExpenseListProps {
   expenses: ExpenseWithRelations[];
+  currentUserId?: string;
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
   startItem: number;
   endItem: number;
@@ -142,6 +143,7 @@ interface AdminExpenseListProps {
 
 export function AdminExpenseList({
   expenses,
+  currentUserId,
   pagination,
   startItem,
   endItem,
@@ -188,6 +190,7 @@ export function AdminExpenseList({
               <AdminExpenseItem
                 key={expense.id}
                 expense={expense}
+                currentUserId={currentUserId}
                 rejectingId={rejectingId}
                 rejectionReason={rejectionReason}
                 isPending={isPending}

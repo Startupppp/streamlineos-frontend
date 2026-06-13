@@ -23,6 +23,7 @@ import {
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
+  currentUserId?: string;
   rejectingId: number | null;
   rejectionReason: string;
   isPending: boolean;
@@ -35,6 +36,7 @@ interface AdminExpenseItemProps {
 
 export function AdminExpenseItem({
   expense,
+  currentUserId,
   rejectingId,
   rejectionReason,
   isPending,
@@ -127,7 +129,11 @@ export function AdminExpenseItem({
             </AvatarFallback>
           </Avatar>
           <span className="font-medium text-foreground text-sm">
-            {expense.user?.firstName} {expense.user?.lastName}
+            {currentUserId && expense.userId === currentUserId
+              ? "Created by Me"
+              : [expense.user?.firstName, expense.user?.lastName].filter(Boolean).join(" ") ||
+                expense.user?.email ||
+                "Employee"}
           </span>
           <span className="text-muted-foreground">•</span>
           <span className="text-muted-foreground text-sm">{expense.category || "General"}</span>

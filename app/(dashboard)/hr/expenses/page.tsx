@@ -279,6 +279,7 @@ export default function ExpensesPage() {
           <motion.div variants={fadeUp}>
             <AdminExpenseList
               expenses={filteredExpenses}
+              currentUserId={session?.user?.id}
               pagination={pagination}
               startItem={startItem}
               endItem={endItem}
