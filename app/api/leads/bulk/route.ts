@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
@@ -19,7 +19,7 @@ const bulkDeleteSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("update", "crm:leads", async (session) => {
     const input = await parseBody(req, bulkUpdateSchema);
     const { leadIds, update } = input;
     const setData: Record<string, unknown> = { updatedAt: new Date() };
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("delete", "crm:leads", async (session) => {
     const input = await parseBody(req, bulkDeleteSchema);
 
     await db.delete(leads)
