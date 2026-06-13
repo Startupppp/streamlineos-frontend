@@ -17,11 +17,16 @@ import type { Employee } from "@/types/hr";
 export const deviceSchema = z.object({
   userId: z.string().min(1, "Employee is required"),
   deviceType: z.string().min(1, "Device type is required"),
-  deviceName: z.string().min(1, "Device name is required"),
-  serialNumber: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  notes: z.string().optional(),
+  deviceName: z
+    .string()
+    .min(1, "Device name is required")
+    .max(100, "Device name is too long")
+    .refine((v) => /[a-zA-Z]/.test(v), "Device name must contain at least one letter")
+    .refine((v) => !/[!@#$%^&*()_+=\[\]{};:'",<>?\\|`~]{2,}/.test(v), "Device name cannot contain multiple consecutive special characters"),
+  serialNumber: z.string().min(1, "Serial number is required").max(100, "Serial number is too long"),
+  brand: z.string().min(1, "Brand is required").max(100, "Brand is too long"),
+  model: z.string().min(1, "Model is required").max(100, "Model is too long"),
+  notes: z.string().max(500, "Notes must be at most 500 characters").optional(),
 });
 
 export type DeviceFormValues = z.infer<typeof deviceSchema>;
@@ -101,9 +106,16 @@ export function DeviceFormContent({
             name="deviceName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Device Name</FormLabel>
+                <FormLabel>Device Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="MacBook Pro 14" className="capitalize" {...field} />
+                  <Input
+                    placeholder="MacBook Pro 14"
+                    {...field}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val.replace(/\b\w/g, (c) => c.toUpperCase()));
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,9 +129,16 @@ export function DeviceFormContent({
             name="brand"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Brand</FormLabel>
+                <FormLabel>Brand <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="Apple" className="capitalize" {...field} />
+                  <Input
+                    placeholder="Apple"
+                    {...field}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val.replace(/\b\w/g, (c) => c.toUpperCase()));
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -130,9 +149,16 @@ export function DeviceFormContent({
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model</FormLabel>
+                <FormLabel>Model <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="M3 Pro" className="capitalize" {...field} />
+                  <Input
+                    placeholder="M3 Pro"
+                    {...field}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(val.replace(/\b\w/g, (c) => c.toUpperCase()));
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -145,7 +171,7 @@ export function DeviceFormContent({
           name="serialNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Serial Number</FormLabel>
+              <FormLabel>Serial Number <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input
                   placeholder="SN123456789"

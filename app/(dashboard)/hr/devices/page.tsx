@@ -54,6 +54,7 @@ export default function DevicesPage() {
   const addForm = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceSchema),
     defaultValues: { userId: "", deviceType: "", deviceName: "", serialNumber: "", brand: "", model: "", notes: "" },
+    mode: "onBlur",
   });
 
   const editForm = useForm<DeviceFormValues>({
