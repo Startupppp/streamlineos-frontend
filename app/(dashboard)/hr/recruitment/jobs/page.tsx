@@ -275,6 +275,11 @@ export default function JobPostingsPage() {
                       <SelectItem value="PART_TIME">Part Time</SelectItem>
                       <SelectItem value="CONTRACT">Contract</SelectItem>
                       <SelectItem value="INTERNSHIP">Internship</SelectItem>
+                      <SelectItem value="FREELANCE">Freelance</SelectItem>
+                      <SelectItem value="TEMPORARY">Temporary</SelectItem>
+                      <SelectItem value="CONSULTANT">Consultant</SelectItem>
+                      <SelectItem value="APPRENTICESHIP">Apprenticeship</SelectItem>
+                      <SelectItem value="COMMISSION_BASED">Commission-Based</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -402,7 +407,7 @@ export default function JobPostingsPage() {
                         </TableCell>
                         <TableCell>{departments?.find((d) => d.id === job.departmentId)?.name ?? "—"}</TableCell>
                         <TableCell>{job.location ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{job.type?.replace("_", " ")}</TableCell>
+                        <TableCell className="text-sm">{job.type?.replaceAll("_", " ")}</TableCell>
                         <TableCell>{job.openings}</TableCell>
                         <TableCell><Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge></TableCell>
                         <TableCell>
