@@ -85,7 +85,7 @@ export default function ExitManagementPage() {
   const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
 
   const hasActiveResignation = resignations?.some(
-    (r: Resignation) => r.userId === userId && ["PENDING", "HR_APPROVED"].includes(r.status ?? ""),
+    (r: Resignation) => r.userId === userId && ["SUBMITTED", "PENDING_HR", "HR_APPROVED"].includes(r.status ?? ""),
   ) ?? false;
 
   const toggleExpand = useCallback((id: number) => {
