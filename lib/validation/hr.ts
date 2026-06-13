@@ -46,8 +46,8 @@ export const createSalaryStructureInputSchema = z.object({
   hraPercentage: z.number().min(0).max(100),
   allowances: z.number().min(0),
   deductions: z.number().min(0),
-  effectiveFrom: z.date(),
-  effectiveTo: z.date().optional(),
+  effectiveFrom: z.coerce.date(),
+  effectiveTo: z.coerce.date().optional(),
 });
 
 export const createExpenseInputSchema = z.object({
@@ -55,7 +55,7 @@ export const createExpenseInputSchema = z.object({
   amount: z.number().positive(),
   description: z.string().max(1000).optional(),
   receiptUrl: fileUrlSchema.optional(),
-  expenseDate: z.date(),
+  expenseDate: z.coerce.date(),
 });
 
 export const updateExpenseStatusInputSchema = z.object({
@@ -69,7 +69,7 @@ export const createAssetInputSchema = z.object({
   type: z.string().min(1, "Asset type is required").max(100),
   serialNumber: z.string().max(100).optional(),
   assignedTo: z.string().optional(),
-  purchaseDate: z.date().optional(),
+  purchaseDate: z.coerce.date().optional(),
   purchaseCost: z.number().positive().optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(1000).optional(),
@@ -98,8 +98,8 @@ export const createDocumentInputSchema = z.object({
 export const createPerformanceReviewInputSchema = z.object({
   userId: z.string().min(1),
   reviewerId: z.string().optional(),
-  periodStart: z.date(),
-  periodEnd: z.date(),
+  periodStart: z.coerce.date(),
+  periodEnd: z.coerce.date(),
   ratings: z
     .array(
       z.object({
@@ -131,8 +131,8 @@ export const createGoalInputSchema = z.object({
   targetValue: z.number().positive().optional(),
   currentValue: z.number().min(0).default(0),
   unit: z.string().optional(),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
   parentGoalId: z.number().int().positive().optional(),
 });
 
@@ -147,7 +147,7 @@ export const updateGoalInputSchema = z.object({
 });
 
 export const upsertWorkLogInputSchema = z.object({
-  date: z.date(),
+  date: z.coerce.date(),
   description: z.string().min(1, "Log content is required"),
   hours: z.number().min(0).optional(),
 });
@@ -183,15 +183,13 @@ export const onboardEmployeeInputSchema = z.object({
     message: "Password must be at least 8 characters",
   }).optional(),
   designation: z.string().min(1, "Designation is required"),
-  departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
-    message: "Department is required",
-  }),
+  departmentId: z.coerce.number().int().positive({ message: "Department is required" }),
   role: z.string().default("ENGINEERING"),
   employeeId: z.string().optional(),
-  joiningDate: z.date(),
-  dateOfBirth: z.date(),
+  joiningDate: z.coerce.date(),
+  dateOfBirth: z.coerce.date(),
   experienceYears: z.coerce.number().min(0).optional(),
-  skills: z.string().refine((val) => !val || val.includes(","), "Please separate skills with commas (e.g., React, Node.js)").optional(),
+  skills: z.string().max(500).optional(),
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
@@ -205,7 +203,7 @@ export const onboardEmployeeInputSchema = z.object({
 });
 
 export const createWfhRequestInputSchema = z.object({
-  date: z.date(),
+  date: z.coerce.date(),
   reason: z.string().max(500).optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
@@ -223,7 +221,7 @@ export const createDeviceInputSchema = z.object({
   serialNumber: z.string().optional(),
   brand: z.string().optional(),
   model: z.string().optional(),
-  assignedDate: z.date().optional(),
+  assignedDate: z.coerce.date().optional(),
   notes: z.string().optional(),
 });
 
@@ -236,7 +234,7 @@ export const updateDeviceInputSchema = z.object({
   brand: z.string().optional(),
   model: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "LOST", "RETURNED"]).optional(),
-  returnDate: z.date().optional(),
+  returnDate: z.coerce.date().optional(),
   notes: z.string().optional(),
 });
 
