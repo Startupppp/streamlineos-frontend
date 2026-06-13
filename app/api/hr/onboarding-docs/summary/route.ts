@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes, onboardingDocuments } from "@/lib/db/schema/hr";
 import { users, organizationMembers } from "@/lib/db/schema/auth";
@@ -6,7 +6,7 @@ import { eq, and, desc } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 
 export async function GET(_req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:onboarding", async (session) => {
     const mandatoryTypes = await db
       .select({ id: documentTypes.id, name: documentTypes.name })
       .from(documentTypes)

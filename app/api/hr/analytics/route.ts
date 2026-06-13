@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
   organizationMembers, users, attendance, leaveRequests,
@@ -8,7 +8,7 @@ import { eq, and, gte, lte, sql, count, desc } from "drizzle-orm";
 import { cached, HR_CACHE, CACHE_TTL } from "@/lib/hr-cache";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const orgId = session.orgId;
     const data = await cached(HR_CACHE.analytics(orgId), async () => {
     const now = new Date();

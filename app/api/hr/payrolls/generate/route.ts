@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withModuleAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { payrolls, salaryStructures } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -20,7 +20,7 @@ const generateSinglePayrollSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withModuleAbility("hr", "manage", "hr:payrolls", async (session) => {
     const body = await parseBody(req, generateSinglePayrollSchema);
 
     const salary = await db.query.salaryStructures.findFirst({

@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { bonuses } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -35,7 +35,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:bonuses", async (session) => {
     const body = createSchema.parse(await req.json());
 
     const [record] = await db

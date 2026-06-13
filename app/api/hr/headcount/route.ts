@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseQuery } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizationMembers, users, departments } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
@@ -17,7 +17,7 @@ export interface HeadcountGroup {
 }
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:headcount", async (session) => {
     const parsed = querySchema.safeParse(
       Object.fromEntries(req.nextUrl.searchParams.entries()),
     );

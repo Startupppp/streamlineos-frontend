@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { bonuses } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -13,7 +13,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ bonusId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:bonuses", async (session) => {
     const { bonusId: id } = await params;
     const bonusId = Number(id);
     if (isNaN(bonusId)) return err("Invalid bonus ID.", 400);

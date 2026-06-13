@@ -1,10 +1,10 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { resignations, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, gte, sql, count } from "drizzle-orm";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const now = new Date();
     const yearStart = `${now.getFullYear()}-01-01`;
 

@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTemplates, documentTemplateVersions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const { templateId } = await params;
     const id = Number(templateId);
     if (!Number.isFinite(id)) return err("Invalid template ID", 400);
@@ -89,7 +89,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const { templateId } = await params;
     const id = Number(templateId);
     if (!Number.isFinite(id)) return err("Invalid template ID", 400);

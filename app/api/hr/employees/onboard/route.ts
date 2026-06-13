@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers, salaryStructures, passwordResetTokens } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -43,7 +43,7 @@ const onboardSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:employees", async (session) => {
     const body = await parseBody(req, onboardSchema);
 
     const existing = await db.query.users.findFirst({

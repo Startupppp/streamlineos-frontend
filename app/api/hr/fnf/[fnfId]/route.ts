@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { fnfSettlements } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -14,7 +14,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ fnfId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:exit", async (session) => {
     const { fnfId: id } = await params;
     const fnfId = Number(id);
     if (isNaN(fnfId)) return err("Invalid F&F settlement ID.", 400);

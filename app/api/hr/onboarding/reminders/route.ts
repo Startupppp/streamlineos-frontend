@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTasks, users, notifications } from "@/lib/db/schema";
 import { eq, and, ne, sql, count } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { createAuditLog } from "@/lib/audit-log";
 import { logger } from "@/lib/logger";
 
 export async function POST(_req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:onboarding", async (session) => {
     const incompleteUsers = await db
       .select({
         userId: onboardingTasks.userId,

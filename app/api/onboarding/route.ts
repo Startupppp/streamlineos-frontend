@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { eq, and, sql, isNull, or } from "drizzle-orm";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
   onboardingTasks,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/db/schema";
 
 export async function GET(_req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:onboarding", async (session) => {
     const rows = await db
       .select({
         userId: onboardingTasks.userId,
@@ -58,7 +58,7 @@ const DEFAULT_TASKS: { title: string; description: string; ownerRole: string; du
 ];
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:onboarding", async (session) => {
     const body = await parseBody(req, initiateSchema);
 
     const [membership] = await db

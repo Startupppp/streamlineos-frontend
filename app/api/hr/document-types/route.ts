@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes } from "@/lib/db/schema/hr";
 import { eq, and, asc } from "drizzle-orm";
@@ -47,7 +47,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const body = await parseBody(req, createSchema);
 
     const slug = toSlug(body.name);

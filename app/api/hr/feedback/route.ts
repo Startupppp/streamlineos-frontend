@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { feedbackRequests } from "@/lib/db/schema";
 import { and, eq, or, desc } from "drizzle-orm";
@@ -34,7 +34,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:feedback", async (session) => {
     const body = createSchema.parse(await req.json());
 
     if (body.subjectUserId === body.reviewerUserId && body.type !== "SELF") {

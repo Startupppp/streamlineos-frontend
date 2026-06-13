@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { emailTemplates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -17,7 +17,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ templateId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:email-templates", async (session) => {
     const { templateId: id } = await params;
     const templateId = Number(id);
     if (isNaN(templateId)) return err("Invalid template ID.", 400);
@@ -47,7 +47,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ templateId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:email-templates", async (session) => {
     const { templateId: id } = await params;
     const templateId = Number(id);
     if (isNaN(templateId)) return err("Invalid template ID.", 400);

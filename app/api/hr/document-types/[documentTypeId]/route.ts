@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes } from "@/lib/db/schema/hr";
 import { eq, and } from "drizzle-orm";
@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const { documentTypeId: rawId } = await params;
     const documentTypeId = Number(rawId);
     if (!Number.isFinite(documentTypeId)) return err("Invalid document type ID.", 400);
@@ -74,7 +74,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const { documentTypeId: rawId } = await params;
     const documentTypeId = Number(rawId);
     if (!Number.isFinite(documentTypeId)) return err("Invalid document type ID.", 400);

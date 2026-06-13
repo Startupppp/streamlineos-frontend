@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { webhookEndpoints } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -29,7 +29,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:webhooks", async (session) => {
     const body = await parseBody(req, createSchema);
     const secret = randomBytes(32).toString("hex");
     const [endpoint] = await db
