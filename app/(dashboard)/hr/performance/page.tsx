@@ -111,7 +111,7 @@ function ReviewsTab() {
   const [periodEnd, setPeriodEnd] = useState("");
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
     [employeesRaw]
   );
 
@@ -271,20 +271,32 @@ function GoalsTab() {
   const [endDate, setEndDate] = useState("");
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
     [employeesRaw]
   );
 
   const handleCreate = useCallback(() => {
-    if (!userId || !title || !startDate || !endDate) {
-      toast.error("Employee, title, and dates are required");
-      return;
+    const trimmedTitle = title.trim();
+    const trimmedDesc = description.trim();
+    if (!userId) { toast.error("Please select an employee"); return; }
+    if (!trimmedTitle) { toast.error("Goal title is required"); return; }
+    if (trimmedTitle.length < 3) { toast.error("Goal title must be at least 3 characters"); return; }
+    if (trimmedTitle.length > 200) { toast.error("Goal title must be at most 200 characters"); return; }
+    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Goal title cannot have consecutive spaces"); return; }
+    if (trimmedDesc && trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
+    if (targetValue !== "") {
+      const tv = Number(targetValue);
+      if (isNaN(tv) || tv <= 0) { toast.error("Target value must be a positive number"); return; }
+      if (tv > 9_999_999_999) { toast.error("Target value is too large (max 10 digits)"); return; }
     }
+    if (!startDate) { toast.error("Start date is required"); return; }
+    if (!endDate) { toast.error("End date is required"); return; }
+    if (endDate < startDate) { toast.error("End date must be after start date"); return; }
     createGoal.mutate({
       userId,
-      title,
-      description: description || undefined,
-      targetValue: targetValue ? Number(targetValue) : undefined,
+      title: trimmedTitle,
+      description: trimmedDesc || undefined,
+      targetValue: targetValue !== "" ? Number(targetValue) : undefined,
       currentValue: 0,
       startDate,
       endDate,
@@ -435,7 +447,7 @@ function OneOnOnesTab() {
   const [agenda, setAgenda] = useState("");
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
     [employeesRaw]
   );
 
@@ -444,8 +456,9 @@ function OneOnOnesTab() {
   const handleCreate = useCallback(() => {
     if (!empId.trim()) { toast.error("Please select an employee"); return; }
     if (!scheduledDate.trim()) { toast.error("Please select a date"); return; }
+    const localDt = new Date(`${scheduledDate}T${scheduledTime}`);
     createMeeting.mutate(
-      { employeeId: empId, scheduledAt: `${scheduledDate}T${scheduledTime}`, duration: Number(duration) || 30, agenda: agenda || undefined },
+      { employeeId: empId, scheduledAt: localDt.toISOString(), duration: Number(duration) || 30, agenda: agenda || undefined },
       {
         onSuccess: () => {
           toast.success("Meeting scheduled");
@@ -607,10 +620,20 @@ function CyclesTab() {
   }, []);
 
   const handleCreate = useCallback(() => {
-    if (!name || !periodStart || !periodEnd) { toast.error("Name and period are required"); return; }
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Cycle name is required"); return; }
+    if (trimmedName.length < 2) { toast.error("Cycle name must be at least 2 characters"); return; }
+    if (trimmedName.length > 100) { toast.error("Cycle name must be at most 100 characters"); return; }
+    if (/[^a-zA-Z0-9\s\-_().&,/]/.test(trimmedName)) { toast.error("Cycle name contains invalid characters"); return; }
+    if (!periodStart) { toast.error("Period start date is required"); return; }
+    if (!periodEnd) { toast.error("Period end date is required"); return; }
+    if (periodEnd < periodStart) { toast.error("Period end must be after period start"); return; }
+    if (deadline && (deadline < periodStart || deadline > periodEnd)) {
+      toast.error("Deadline must fall within the review period dates"); return;
+    }
     if (editCycle) {
       updateCycle.mutate(
-        { id: editCycle.id, name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { id: editCycle.id, name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
         {
           onSuccess: () => { toast.success("Cycle updated"); setSheetOpen(false); setEditCycle(null); },
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -618,7 +641,7 @@ function CyclesTab() {
       );
     } else {
       createCycle.mutate(
-        { name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
         {
           onSuccess: () => {
             toast.success("Cycle created");

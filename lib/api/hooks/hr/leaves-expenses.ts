@@ -512,11 +512,11 @@ export function useHrHelpdeskTickets(userId?: string, status?: TicketStatus) {
       Object.keys(params).length ? params : undefined,
     ),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<HelpdeskTicket[]>(
         "/hr/helpdesk",
         Object.keys(params).length ? params : undefined,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -574,11 +574,11 @@ export function useHrHolidaysForYear(year: number) {
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<
         string,
         unknown
       >),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -589,11 +589,11 @@ export function useHrHolidaysForCalendar(params: {
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<Holiday[]>(
         "/hr/holidays/calendar",
         params as Record<string, unknown>,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -656,11 +656,11 @@ export function useHrIncentives(params?: GetIncentivesInput) {
       params as Record<string, unknown> | undefined,
     ),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<IncentivesResult>(
         "/hr/incentives",
         params as Record<string, unknown> | undefined,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -727,8 +727,8 @@ export function useNotificationPreferences() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<NotificationPreferences>("/hr/notification-preferences"),
+    staleTime: 2 * 60_000,
   });
 }
 
