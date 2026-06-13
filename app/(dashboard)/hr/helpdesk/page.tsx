@@ -141,10 +141,14 @@ export default function HelpdeskPage() {
   }, [tickets]);
 
   const handleCreateTicket = useCallback(() => {
-    if (!title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Ticket title is required"); return; }
+    if (trimmedTitle.length < 5) { toast.error("Ticket title must be at least 5 characters"); return; }
+    if (trimmedTitle.length > 150) { toast.error("Ticket title must be at most 150 characters"); return; }
+    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) { toast.error("Ticket title must contain at least one letter or digit"); return; }
+    if (/^[^a-zA-Z0-9]+$/.test(trimmedTitle)) { toast.error("Ticket title cannot consist of only special characters"); return; }
+    if (/\s{2,}/.test(title)) { toast.error("Ticket title cannot have multiple consecutive spaces"); return; }
+    if (title !== trimmedTitle) { toast.error("Ticket title cannot have leading or trailing spaces"); return; }
     createTicket.mutate(
       { title: title.trim(), description: description.trim() || undefined, category: category || undefined, priority },
       {
