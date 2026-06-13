@@ -172,6 +172,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return ok({ imported, skipped, updated, errors, duplicatesFound: existingLeads.length, distributed, salesPeopleCount });
+    return ok({ imported, skipped, updated, errors, duplicatesFound: existingLeads.length, distributed, salesPeopleCount }, 201);
   });
 }

@@ -100,6 +100,6 @@ export async function POST(req: NextRequest) {
       }
     })().catch(() => {});
 
-    return ok(ticket);
+    return ok(ticket, 201);
   });
 }

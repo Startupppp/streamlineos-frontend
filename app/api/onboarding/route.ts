@@ -182,6 +182,6 @@ export async function POST(req: NextRequest) {
       };
     });
     await db.insert(onboardingTasks).values(defaultInserts);
-    return ok({ success: true, tasksCreated: defaultInserts.length });
+    return ok({ success: true, tasksCreated: defaultInserts.length }, 201);
   });
 }

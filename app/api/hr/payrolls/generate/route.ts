@@ -83,6 +83,6 @@ export async function POST(req: NextRequest) {
       metadata: { employeeId: body.userId, month: body.month, netSalary: netSalary },
     }).catch(() => {});
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

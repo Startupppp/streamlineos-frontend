@@ -76,6 +76,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(category);
+    return ok(category, 201);
   });
 }

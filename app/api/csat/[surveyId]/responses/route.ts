@@ -81,5 +81,5 @@ export async function POST(
     respondentEmail: body.respondentEmail ?? null,
   });
 
-  return ok({ submitted: true });
+  return ok({ submitted: true }, 201);
 }

@@ -94,6 +94,6 @@ export async function POST(req: NextRequest) {
       metadata: { basicSalary: body.basicSalary, effectiveFrom: body.effectiveFrom },
     }).catch(() => {});
 
-    return ok(structure);
+    return ok(structure, 201);
   });
 }

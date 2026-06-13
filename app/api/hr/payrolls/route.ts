@@ -171,6 +171,6 @@ export async function POST(req: NextRequest) {
       await db.insert(payrolls).values(newPayrolls);
     }
 
-    return ok({ generated: newPayrolls.length });
+    return ok({ generated: newPayrolls.length }, 201);
   });
 }

@@ -61,11 +61,9 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const questionId = Number(id);
     if (!Number.isFinite(questionId)) return err("Invalid ID", 400);
 
-    const existing = await getQuestion(session.orgId, questionId);
-    if (!existing) return err("Question not found", 404);
-
     await db
-      .delete(interviewQuestions)
+      .update(interviewQuestions)
+      .set({ isActive: false, updatedAt: new Date() })
       .where(and(eq(interviewQuestions.id, questionId), eq(interviewQuestions.orgId, session.orgId)));
 
     return ok({ success: true });

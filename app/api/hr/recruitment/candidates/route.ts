@@ -80,6 +80,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:candidates:list:${session.orgId}:*`);
 
-    return ok(candidate);
+    return ok(candidate, 201);
   });
 }

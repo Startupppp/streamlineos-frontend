@@ -77,6 +77,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:interviews:list:${session.orgId}:*`);
 
-    return ok(interview);
+    return ok(interview, 201);
   });
 }

@@ -76,6 +76,6 @@ export async function POST(_req: NextRequest) {
       metadata: { recipientCount: incompleteUsers.length, emailsSent: sentCount },
     }).catch(() => {});
 
-    return ok({ sent: sentCount, total: incompleteUsers.length });
+    return ok({ sent: sentCount, total: incompleteUsers.length }, 201);
   });
 }

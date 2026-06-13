@@ -158,6 +158,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

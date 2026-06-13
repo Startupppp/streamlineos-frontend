@@ -82,6 +82,6 @@ export async function POST(req: NextRequest) {
 
     await upsertOnboardingStep(session.user.id, session.orgId, `Upload ${type}`);
 
-    return ok({ url: result.url });
+    return ok({ url: result.url }, 201);
   });
 }

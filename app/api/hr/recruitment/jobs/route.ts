@@ -130,6 +130,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:jobs:list:${session.orgId}:*`);
 
-    return ok(job);
+    return ok(job, 201);
   });
 }

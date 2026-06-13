@@ -74,6 +74,6 @@ export async function POST(req: NextRequest) {
       })().catch(() => {});
     }
 
-    return ok(asset);
+    return ok(asset, 201);
   });
 }

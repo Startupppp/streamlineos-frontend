@@ -37,6 +37,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(config);
+    return ok(config, 201);
   });
 }

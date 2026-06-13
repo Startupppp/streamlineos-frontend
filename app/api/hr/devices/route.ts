@@ -70,6 +70,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(device);
+    return ok(device, 201);
   });
 }

@@ -94,6 +94,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(created);
+    return ok(created, 201);
   });
 }

@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { interviewQuestions } from "@/lib/db/schema";
-import { eq, and, ilike, or } from "drizzle-orm";
+import { eq, and, ilike, sql, desc } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     const questions = await db.query.interviewQuestions.findMany({
       where: and(...conditions),
-      orderBy: (t, { asc }) => [asc(t.category), asc(t.createdAt)],
+      orderBy: [desc(interviewQuestions.createdAt)],
       limit: 200,
     });
 
@@ -52,6 +52,18 @@ export async function POST(req: NextRequest) {
 
     const input = await parseBody(req, createSchema);
 
+    const existing = await db.query.interviewQuestions.findFirst({
+      where: and(
+        eq(interviewQuestions.orgId, session.orgId),
+        eq(interviewQuestions.isActive, true),
+        sql`lower(trim(${interviewQuestions.question})) = ${input.question.trim().toLowerCase()}`,
+      ),
+      columns: { id: true },
+    });
+    if (existing) return err("A question with this text already exists in the bank.", 409);
+
+    const dedupedTags = [...new Set(input.tags.map((t) => t.toLowerCase().trim()).filter(Boolean))];
+
     const [created] = await db
       .insert(interviewQuestions)
       .values({
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
         category: input.category,
         role: input.role ?? null,
         difficulty: input.difficulty,
-        tags: input.tags,
+        tags: dedupedTags,
         createdBy: session.user.id,
       })
       .returning();
