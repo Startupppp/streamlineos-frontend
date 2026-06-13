@@ -1,6 +1,6 @@
 
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   ticketTypeEnum, ticketPriorityEnum, projectStatusEnum,
   stateGroupEnum, cycleStatusEnum, moduleStatusEnum,
@@ -332,6 +332,7 @@ export const timesheets = pgTable("timesheets", {
 }, (table) => [
   index("idx_timesheets_user_date").on(table.userId, table.date),
   index("idx_timesheets_org_status").on(table.orgId, table.status),
+  uniqueIndex("uniq_timesheets_work_log").on(table.orgId, table.userId, table.date).where(sql`ticket_id IS NULL`),
 ]);
 
 export const reports = pgTable("reports", {

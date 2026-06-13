@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getWorkLogs } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
@@ -56,32 +56,9 @@ export async function POST(req: NextRequest) {
         )
       : body.description;
 
-    const existing = await db.query.timesheets.findFirst({
-      where: and(
-        eq(timesheets.orgId, session.orgId),
-        eq(timesheets.userId, session.user.id),
-        eq(timesheets.date, dateStr)
-      ),
-    });
-
     const workLink = body.workLink || null;
 
-    if (existing) {
-      const [updated] = await db
-        .update(timesheets)
-        .set({
-          description: normalizedDescription,
-          hours: body.hours?.toString() || existing.hours,
-          workLink,
-          status: "APPROVED",
-          updatedAt: new Date(),
-        })
-        .where(eq(timesheets.id, existing.id))
-        .returning();
-      return ok(updated);
-    }
-
-    const [created] = await db
+    const [upserted] = await db
       .insert(timesheets)
       .values({
         orgId: session.orgId,
@@ -92,8 +69,19 @@ export async function POST(req: NextRequest) {
         workLink,
         status: "APPROVED",
       })
+      .onConflictDoUpdate({
+        target: [timesheets.orgId, timesheets.userId, timesheets.date],
+        targetWhere: sql`ticket_id IS NULL`,
+        set: {
+          description: normalizedDescription,
+          hours: body.hours ? body.hours.toString() : sql`${timesheets.hours}`,
+          workLink,
+          status: "APPROVED",
+          updatedAt: new Date(),
+        },
+      })
       .returning();
 
-    return ok(created, 201);
+    return ok(upserted, 201);
   });
 }
