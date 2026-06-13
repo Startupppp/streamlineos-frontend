@@ -22,7 +22,7 @@ export async function GET() {
 
     const orgIds = memberships.map((m) => m.orgId);
     const orgs = await db
-      .select()
+      .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, logo: organizations.logo })
       .from(organizations)
       .where(inArray(organizations.id, orgIds));
 
