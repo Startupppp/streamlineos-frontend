@@ -30,6 +30,7 @@ const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
 const PINCODE_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
 const PHONE_REGEX = /^[+()\d\s-]{7,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TEXT_FIELD_REGEX = /^(?!.*[^a-zA-Z0-9\s\-&,.()'\/])[a-zA-Z][a-zA-Z0-9\s\-&,.()'\/]*$/;
 
 type FormErrors = Partial<Record<keyof typeof EMPTY_FORM, string>>;
 
@@ -83,6 +84,7 @@ export default function BranchManagementPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleCloseCreate = useCallback(() => {
     setShowCreate(false);
+    setFormData({ ...EMPTY_FORM });
     setFormErrors({});
   }, []);
 
@@ -101,24 +103,38 @@ export default function BranchManagementPage() {
 
     const errors: FormErrors = {};
 
-    if (!trimmed.name) errors.name ="Branch name is required";
-    else if (trimmed.name.length < 2) errors.name ="Branch name must be at least 2 characters";
+    if (!trimmed.name) errors.name = "Branch name is required";
+    else if (trimmed.name.length < 2) errors.name = "Branch name must be at least 2 characters";
+    else if (trimmed.name.length > 100) errors.name = "Branch name must be at most 100 characters";
+    else if (!TEXT_FIELD_REGEX.test(trimmed.name)) errors.name = "Branch name must start with a letter and contain only letters, numbers, spaces, and basic punctuation";
 
-    if (!trimmed.code) errors.code ="Branch code is required";
-    else if (!CODE_REGEX.test(trimmed.code)) {
-      errors.code ="Use 2-20 chars: A-Z, numbers, hyphen";
+    if (!trimmed.code) errors.code = "Branch code is required";
+    else if (!CODE_REGEX.test(trimmed.code)) errors.code = "Use 2–20 chars: A-Z, numbers, hyphen";
+
+    if (trimmed.city) {
+      if (trimmed.city.length < 2) errors.city = "City must be at least 2 characters";
+      else if (trimmed.city.length > 80) errors.city = "City must be at most 80 characters";
+      else if (!TEXT_FIELD_REGEX.test(trimmed.city)) errors.city = "City name must start with a letter and contain only letters, spaces, and basic punctuation";
     }
 
+    if (trimmed.state) {
+      if (trimmed.state.length < 2) errors.state = "State must be at least 2 characters";
+      else if (trimmed.state.length > 80) errors.state = "State must be at most 80 characters";
+      else if (!TEXT_FIELD_REGEX.test(trimmed.state)) errors.state = "State name must start with a letter and contain only letters, spaces, and basic punctuation";
+    }
+
+    if (trimmed.address && trimmed.address.length > 500) errors.address = "Address must be at most 500 characters";
+
     if (trimmed.email && !EMAIL_REGEX.test(trimmed.email)) {
-      errors.email ="Enter a valid email";
+      errors.email = "Enter a valid email";
     }
 
     if (trimmed.phone && !PHONE_REGEX.test(trimmed.phone)) {
-      errors.phone ="Enter a valid phone number";
+      errors.phone = "Enter a valid phone number";
     }
 
     if (trimmed.pincode && !PINCODE_REGEX.test(trimmed.pincode)) {
-      errors.pincode ="Enter a valid pincode";
+      errors.pincode = "Enter a valid pincode";
     }
 
     setErrors(errors);
@@ -198,10 +214,12 @@ export default function BranchManagementPage() {
         <div className="space-y-1.5">
           <Label className="text-xs">City</Label>
           <Input value={data.city} onChange={setter("city")} placeholder="e.g., Mumbai" />
+          {errors.city && <p className="text-[11px] text-destructive">{errors.city}</p>}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">State</Label>
           <Input value={data.state} onChange={setter("state")} placeholder="e.g., Maharashtra" />
+          {errors.state && <p className="text-[11px] text-destructive">{errors.state}</p>}
         </div>
       </div>
 
@@ -219,7 +237,8 @@ export default function BranchManagementPage() {
 
       <div className="space-y-1.5">
         <Label className="text-xs">Address</Label>
-        <Input value={data.address} onChange={setter("address")} placeholder="Full street address" />
+        <Input value={data.address} onChange={setter("address")} placeholder="Full street address" maxLength={500} />
+        {errors.address && <p className="text-[11px] text-destructive">{errors.address}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -263,7 +282,7 @@ export default function BranchManagementPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
           {branches.map((branch) => (
             <Card key={branch.id} className="hover:border-blue-500/30 transition-colors">
               <CardHeader className="pb-3">
@@ -350,7 +369,7 @@ export default function BranchManagementPage() {
       )}
       </div>
 
-      <Sheet open={showCreate} onOpenChange={setShowCreate}>
+      <Sheet open={showCreate} onOpenChange={(open) => { if (!open) handleCloseCreate(); else setShowCreate(true); }}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">
             <SheetTitle className="text-sm">Create Branch</SheetTitle>
