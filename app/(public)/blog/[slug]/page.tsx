@@ -130,7 +130,7 @@ export default async function BlogPostPage({
         <article className="container mx-auto px-4 lg:px-8 max-w-3xl">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.18em] text-slate-500 hover:text-blue-600 transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-blue-600 transition-colors mb-8"
           >
             <ArrowLeft className="h-3 w-3" />
             All posts
@@ -138,10 +138,10 @@ export default async function BlogPostPage({
 
           <header className="mb-10">
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700">
+              <span className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700">
                 {post.tag}
               </span>
-              <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400">
+              <span className="text-[13px] font-medium text-slate-400">
                 {publishedDate} · {post.readingMinutes} min read
               </span>
             </div>
