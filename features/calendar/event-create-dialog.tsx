@@ -238,8 +238,12 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       toast.error("Event title must be at most 200 characters");
       return;
     }
-    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
-      toast.error("Event title must contain at least one letter or number");
+    if (!/[a-zA-Z]/.test(trimmedTitle)) {
+      toast.error("Event title must contain at least one letter");
+      return;
+    }
+    if (/\s{2,}/.test(form.title)) {
+      toast.error("Event title cannot have multiple consecutive spaces");
       return;
     }
     if (form.description && form.description.length > 2000) {
@@ -250,8 +254,16 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       toast.error("Start date is required");
       return;
     }
+    if (!form.allDay && !form.startTime) {
+      toast.error("Start time is required");
+      return;
+    }
     if (!form.endDate) {
       toast.error("End date is required");
+      return;
+    }
+    if (!form.allDay && !form.endTime) {
+      toast.error("End time is required");
       return;
     }
     const startDate = form.allDay
