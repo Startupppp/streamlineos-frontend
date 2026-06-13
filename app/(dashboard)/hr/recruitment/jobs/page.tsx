@@ -180,6 +180,15 @@ export default function JobPostingsPage() {
     if (sm !== undefined && sm > 999_999_999) { toast.error("Minimum salary is too large"); return; }
     if (sx !== undefined && sx > 999_999_999) { toast.error("Maximum salary is too large"); return; }
     if (sm !== undefined && sx !== undefined && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
+
+    const isDuplicateJob = (jobs ?? []).some((j) =>
+      j.status !== "CLOSED" &&
+      j.title.trim().toLowerCase() === trimmedTitle.toLowerCase() &&
+      (j.type ?? "") === type &&
+      (j.location ?? "").trim().toLowerCase() === trimmedLocation.toLowerCase()
+    );
+    if (isDuplicateJob) { toast.error("A job posting with this title, type, and location already exists"); return; }
+
     createJob.mutate(
       {
         title: title.trim(),
@@ -203,7 +212,7 @@ export default function JobPostingsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [title, departmentId, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob]);
+  }, [title, departmentId, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob, jobs]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {

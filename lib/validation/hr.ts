@@ -182,13 +182,24 @@ export const onboardEmployeeInputSchema = z.object({
   password: z.string().max(128, "Password must be at most 128 characters").refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),
-  designation: z.string().min(1, "Designation is required"),
+  designation: z
+    .string()
+    .min(2, "Designation must be at least 2 characters")
+    .max(100, "Designation must be at most 100 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
+    .refine((v) => !/\s{2,}/.test(v), "Designation cannot have consecutive spaces"),
   departmentId: z.coerce.number().int().positive({ message: "Department is required" }),
   role: z.string().default("ENGINEERING"),
   employeeId: z.string().optional(),
   joiningDate: z.coerce.date(),
-  dateOfBirth: z.coerce.date(),
-  experienceYears: z.coerce.number().min(0).optional(),
+  dateOfBirth: z.coerce
+    .date()
+    .refine((d) => d <= new Date(), "Date of birth cannot be in the future")
+    .refine((d) => {
+      const ageMs = Date.now() - d.getTime();
+      return ageMs >= 16 * 365.25 * 24 * 3600 * 1000;
+    }, "Employee must be at least 16 years old"),
+  experienceYears: z.coerce.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
   skills: z.string().max(500).optional(),
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),

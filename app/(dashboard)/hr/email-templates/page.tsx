@@ -66,14 +66,24 @@ function EmailTemplatesContent() {
   const handleCreate = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) { toast.error("Template Name is required"); return; }
+    if (trimmedName.length < 3) { toast.error("Template Name must be at least 3 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
     if (/[^a-zA-Z0-9\s\-_()&,.]/.test(trimmedName)) { toast.error("Template Name contains invalid special characters"); return; }
-    if (!subject.trim()) { toast.error("Subject Line is required"); return; }
-    if (subject.trim().length > 200) { toast.error("Subject must be at most 200 characters"); return; }
-    if (!body.trim()) { toast.error("Body is required"); return; }
-    if (body.trim().length < 10) { toast.error("Body must be at least 10 characters"); return; }
+    if (/\s{2,}/.test(trimmedName)) { toast.error("Template Name cannot have multiple consecutive spaces"); return; }
+    const trimmedSubject = subject.trim();
+    if (!trimmedSubject) { toast.error("Subject Line is required"); return; }
+    if (trimmedSubject.length < 3) { toast.error("Subject must be at least 3 characters"); return; }
+    if (trimmedSubject.length > 200) { toast.error("Subject must be at most 200 characters"); return; }
+    if (/\s{2,}/.test(trimmedSubject)) { toast.error("Subject cannot have multiple consecutive spaces"); return; }
+    const trimmedBody = body.trim();
+    if (!trimmedBody) { toast.error("Body is required"); return; }
+    if (trimmedBody.length < 10) { toast.error("Body must be at least 10 characters"); return; }
+    const isDuplicate = (templates ?? []).some(
+      (t) => t.name.trim().toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (isDuplicate) { toast.error("A template with this name already exists"); return; }
     create.mutate(
-      { name: trimmedName, subject: subject.trim(), body: body.trim(), category },
+      { name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
       {
         onSuccess: () => {
           toast.success("Template created"); setSheetOpen(false);
@@ -82,7 +92,7 @@ function EmailTemplatesContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, subject, body, category, create, resetForm]);
+  }, [name, subject, body, category, create, resetForm, templates]);
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
