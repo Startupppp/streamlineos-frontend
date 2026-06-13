@@ -24,7 +24,8 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Plus, DollarSign, CheckCircle2, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, IndianRupee, CheckCircle2, Check, ChevronsUpDown } from "lucide-react";
+import { formatINR } from "@/lib/format-utils";
 import type { Employee } from "@/types/hr";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 
@@ -92,9 +93,13 @@ function BonusContent() {
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) { toast.error("Amount must be a positive number"); return; }
     if (!/^\d{1,10}(\.\d{1,2})?$/.test(amount)) { toast.error("Amount must be a valid number with up to 2 decimal places"); return; }
-    if (reason.trim().length > 500) { toast.error("Reason must be at most 500 characters"); return; }
+    const trimmedReason = reason.trim();
+    if (trimmedReason && trimmedReason.length < 3) { toast.error("Reason must be at least 3 characters"); return; }
+    if (trimmedReason.length > 500) { toast.error("Reason must be at most 500 characters"); return; }
+    if (trimmedReason && /\s{2,}/.test(trimmedReason)) { toast.error("Reason cannot have multiple consecutive spaces"); return; }
+    if (trimmedReason && /^[\s\W]+$/.test(trimmedReason)) { toast.error("Reason cannot consist of only special characters"); return; }
     create.mutate(
-      { userId, amount: parsed, type, reason: reason.trim() || undefined },
+      { userId, amount: parsed, type, reason: trimmedReason || undefined },
       {
         onSuccess: () => {
           toast.success("Bonus created"); setSheetOpen(false);
@@ -138,7 +143,7 @@ function BonusContent() {
           {bonuses.map((b: Bonus) => (
             <Card key={b.id}>
               <CardContent className="p-4 flex items-center gap-3">
-                <DollarSign className="h-5 w-5 text-muted-foreground shrink-0" />
+                <IndianRupee className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{b.employeeName ?? "Employee"}</p>
@@ -146,7 +151,7 @@ function BonusContent() {
                     <Badge variant={statusBadge(b.status)} className="text-[10px]">{b.status ?? "PENDING"}</Badge>
                   </div>
                   <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    <span className="font-medium text-foreground">${Number(b.amount).toLocaleString()}</span>
+                    <span className="font-medium text-foreground">{formatINR(b.amount)}</span>
                     {b.reason && <span className="line-clamp-1">{b.reason}</span>}
                     {b.createdAt && <span>{format(new Date(b.createdAt), "MMM d, yyyy")}</span>}
                   </div>

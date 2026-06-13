@@ -46,6 +46,7 @@ const formSchema = z.object({
     .string()
     .max(500, "Description must be at most 500 characters")
     .refine((v) => !v || VALID_TEXT_REGEX.test(v), "Description cannot consist of only special characters")
+    .refine((v) => !v || !/\s{2,}/.test(v), "Description cannot have multiple consecutive spaces")
     .optional(),
   merchant: z
     .string()
@@ -73,6 +74,7 @@ const formSchema = z.object({
     const pm = data.customPaymentMethod.trim();
     if (pm.length > 100) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method must be at most 100 characters", path: ["customPaymentMethod"] });
     if (!VALID_TEXT_REGEX.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method cannot consist of only special characters", path: ["customPaymentMethod"] });
+    if (/\s{2,}/.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method cannot have multiple consecutive spaces", path: ["customPaymentMethod"] });
   }
 });
 
