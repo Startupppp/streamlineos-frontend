@@ -15,6 +15,7 @@ import {
   FileImage,
   ArrowDown,
   Upload,
+  Pencil,
 } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,7 @@ export interface DocumentTableProps {
   searchTerm: string;
   onPageChange: (page: number) => void;
   onDelete: (documentId: number) => Promise<void>;
+  onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
 }
 
@@ -116,9 +118,10 @@ export interface DocumentTableProps {
 interface DocumentRowProps {
   doc: Document;
   onDelete: (id: number) => Promise<void>;
+  onEdit: (doc: Document) => void;
 }
 
-const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProps) {
+const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: DocumentRowProps) {
   const fileConfig = getFileIconConfig(doc.fileName || doc.name);
   const FileIcon = fileConfig.icon;
   const typeLabel =
@@ -160,6 +163,7 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
     [onDelete, doc.id],
   );
 
+  const handleEdit = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onEdit(doc); }, [onEdit, doc]);
   const handleMenuTriggerClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   return (
@@ -246,6 +250,10 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEdit}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
               {(doc.version || 1) > 1 && (
                 <DropdownMenuItem onClick={handleVersionHistory}>
                   <History className="mr-2 h-4 w-4" />
@@ -277,6 +285,7 @@ export function DocumentTable({
   searchTerm,
   onPageChange,
   onDelete,
+  onEdit,
   onOpenUpload,
 }: DocumentTableProps) {
   return (
@@ -375,7 +384,7 @@ export function DocumentTable({
               </TableRow>
             ) : (
               paginatedDocuments.map((doc) => (
-                <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} />
+                <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} onEdit={onEdit} />
               ))
             )}
           </TableBody>

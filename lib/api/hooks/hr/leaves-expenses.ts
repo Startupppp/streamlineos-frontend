@@ -438,6 +438,18 @@ export function useCreateDocument() {
   });
 }
 
+export function useUpdateDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
+      apiClient.patch<Document>(`/hr/documents/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documents() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "documentStats"] });
+    },
+  });
+}
+
 export function useDeleteDocument() {
   const qc = useQueryClient();
   return useMutation({
