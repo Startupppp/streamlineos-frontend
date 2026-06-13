@@ -115,7 +115,7 @@ export const webhookEndpoints = pgTable("webhook_endpoints", {
 export const webhookLogs = pgTable("webhook_logs", {
   id: serial("id").primaryKey(),
   endpointId: integer("endpoint_id").references(() => webhookEndpoints.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   event: text("event").notNull(),
   payload: jsonb("payload").$type<Record<string, unknown>>(),
   statusCode: integer("status_code"),

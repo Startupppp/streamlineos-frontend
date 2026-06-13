@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex, unique, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
   leadPipelineStatusEnum, leadActivityTypeEnum, leadSourceEnum, leadPriorityEnum,
@@ -114,7 +114,7 @@ export const leadActivities = pgTable("lead_activities", {
 export const leadNotes = pgTable("lead_notes", {
   id: serial("id").primaryKey(),
   leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   authorId: text("author_id").references(() => users.id).notNull(),
   body: text("body").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -125,7 +125,7 @@ export const leadNotes = pgTable("lead_notes", {
 export const leadTasks = pgTable("lead_tasks", {
   id: serial("id").primaryKey(),
   leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   dueDate: date("due_date"),
   assigneeId: text("assignee_id").references(() => users.id),
@@ -138,7 +138,7 @@ export const leadTasks = pgTable("lead_tasks", {
 export const leadEmails = pgTable("lead_emails", {
   id: serial("id").primaryKey(),
   leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   direction: leadEmailDirectionEnum("direction").notNull(),
   subject: text("subject"),
   body: text("body"),
@@ -192,7 +192,7 @@ export const targets = pgTable("targets", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   setById: text("set_by_id").references(() => users.id, { onDelete: "set null" }),
-  branchId: integer("branch_id"),
+  branchId: integer("branch_id").references((): AnyPgColumn => branches.id, { onDelete: "set null" }),
   parentTargetId: integer("parent_target_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -206,7 +206,7 @@ export const targets = pgTable("targets", {
 export const targetHistory = pgTable("target_history", {
   id: serial("id").primaryKey(),
   targetId: integer("target_id").references(() => targets.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   changedById: text("changed_by_id").references(() => users.id).notNull(),
   field: text("field").notNull(),
   oldValue: text("old_value"),
@@ -249,7 +249,7 @@ export const deals = pgTable("deals", {
 
 export const dealActivities = pgTable("deal_activities", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   dealId: integer("deal_id").references(() => deals.id, { onDelete: "cascade" }).notNull(),
   type: dealActivityTypeEnum("type").notNull(),
   previousValue: text("previous_value"),
@@ -322,7 +322,7 @@ export const dealApprovalRules = pgTable("deal_approval_rules", {
 
 export const dealApprovals = pgTable("deal_approvals", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   dealId: integer("deal_id").references(() => deals.id).notNull(),
   requestedBy: text("requested_by").references(() => users.id).notNull(),
   requestedStage: text("requested_stage").notNull(),
@@ -338,18 +338,18 @@ export const dealApprovals = pgTable("deal_approvals", {
 
 export const emailCampaigns = pgTable("email_campaigns", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
   body: text("body").notNull(),
   templateId: integer("template_id"),
   status: text("status").default("draft").notNull(),
   recipientFilter: jsonb("recipient_filter"),
-  recipientCount: integer("recipient_count").default(0),
-  sentCount: integer("sent_count").default(0),
-  failedCount: integer("failed_count").default(0),
-  openCount: integer("open_count").default(0),
-  clickCount: integer("click_count").default(0),
+  recipientCount: integer("recipient_count").default(0).notNull(),
+  sentCount: integer("sent_count").default(0).notNull(),
+  failedCount: integer("failed_count").default(0).notNull(),
+  openCount: integer("open_count").default(0).notNull(),
+  clickCount: integer("click_count").default(0).notNull(),
   scheduledAt: timestamp("scheduled_at"),
   sentAt: timestamp("sent_at"),
   createdBy: text("created_by").references(() => users.id).notNull(),
@@ -376,7 +376,7 @@ export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
 
 export const crmPeople = pgTable("crm_people", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   slug: text("slug").notNull(),
   name: text("name").notNull(),
   initials: text("initials").notNull(),
@@ -394,12 +394,12 @@ export const crmPeople = pgTable("crm_people", {
 
 export const crmCompanies = pgTable("crm_companies", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
-  health: crmHealthEnum("health").default("healthy"),
-  revenue: decimal("revenue").default("0"),
+  health: crmHealthEnum("health").default("healthy").notNull(),
+  revenue: decimal("revenue", { precision: 15, scale: 2 }).default("0").notNull(),
   renewalDate: date("renewal_date"),
-  renewalValue: decimal("renewal_value").default("0"),
+  renewalValue: decimal("renewal_value", { precision: 15, scale: 2 }).default("0").notNull(),
   customerSince: text("customer_since"),
   csmId: integer("csm_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -407,11 +407,11 @@ export const crmCompanies = pgTable("crm_companies", {
 
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   companyName: text("company_name").notNull(),
-  value: decimal("value").notNull(),
+  value: decimal("value", { precision: 15, scale: 2 }).notNull(),
   stage: crmDealStageEnum("stage").notNull(),
-  probability: integer("probability").default(0),
+  probability: integer("probability").default(0).notNull(),
   closeDate: date("close_date"),
   salesRepId: integer("sales_rep_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -420,39 +420,39 @@ export const crmDeals = pgTable("crm_deals", {
 
 export const crmLeads = pgTable("crm_leads", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   campaignId: integer("campaign_id").references(() => crmCampaigns.id),
   email: text("email"),
   name: text("name"),
-  status: crmLeadStatusEnum("status").default("lead"),
+  status: crmLeadStatusEnum("status").default("lead").notNull(),
   channel: text("channel"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmContent = pgTable("crm_content", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   type: text("type").notNull(),
-  views: integer("views").default(0),
-  leads: integer("leads").default(0),
-  convRate: decimal("conv_rate").default("0"),
+  views: integer("views").default(0).notNull(),
+  leads: integer("leads").default(0).notNull(),
+  convRate: decimal("conv_rate", { precision: 5, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmEvents = pgTable("crm_events", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   date: text("date").notNull(),
   type: text("type").notNull(),
-  status: crmEventStatusEnum("status").default("planning"),
+  status: crmEventStatusEnum("status").default("planning").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmActivities = pgTable("crm_activities", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   type: crmActivityTypeEnum("type").notNull(),
   message: text("message").notNull(),
   time: text("time").notNull(),
@@ -464,10 +464,10 @@ export const crmActivities = pgTable("crm_activities", {
 
 export const crmSupportTickets = pgTable("crm_support_tickets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title"),
-  priority: crmSupportTicketPriorityEnum("priority").default("medium"),
-  status: crmSupportTicketStatusEnum("status").default("new"),
+  priority: crmSupportTicketPriorityEnum("priority").default("medium").notNull(),
+  status: crmSupportTicketStatusEnum("status").default("new").notNull(),
   assigneeId: integer("assignee_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   resolvedAt: timestamp("resolved_at"),
@@ -475,39 +475,39 @@ export const crmSupportTickets = pgTable("crm_support_tickets", {
 
 export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   month: text("month").notNull(),
-  revenue: decimal("revenue").default("0"),
-  mqls: integer("mqls").default(0),
-  retention: decimal("retention").default("0"),
-  csat: decimal("csat").default("0"),
-  ticketVolume: integer("ticket_volume").default(0),
+  revenue: decimal("revenue", { precision: 15, scale: 2 }).default("0").notNull(),
+  mqls: integer("mqls").default(0).notNull(),
+  retention: decimal("retention", { precision: 5, scale: 2 }).default("0").notNull(),
+  csat: decimal("csat", { precision: 4, scale: 2 }).default("0").notNull(),
+  ticketVolume: integer("ticket_volume").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmTeamPerformance = pgTable("crm_team_performance", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  personId: integer("person_id").references(() => crmPeople.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  personId: integer("person_id").references(() => crmPeople.id, { onDelete: "cascade" }).notNull(),
   month: text("month").notNull(),
-  value: decimal("value").notNull(),
+  value: decimal("value", { precision: 15, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   role: text("role").notNull(),
   access: text("access").notNull(),
   avatar: text("avatar").notNull(),
-  status: text("status").default("online"),
+  status: text("status").default("online").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const crmEmailTemplates = pgTable("crm_email_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
   body: text("body").notNull(),
@@ -520,7 +520,7 @@ export const crmEmailTemplates = pgTable("crm_email_templates", {
 
 export const leadScoringRules = pgTable("lead_scoring_rules", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   field: text("field").notNull(),
   operator: scoringOperatorEnum("operator").notNull(),
   value: text("value").notNull(),
@@ -532,7 +532,7 @@ export const leadScoringRules = pgTable("lead_scoring_rules", {
 
 export const leadAssignmentRules = pgTable("lead_assignment_rules", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   conditions: jsonb("conditions").$type<{ field: string; operator: string; value: string }[]>().default([]),
   assignmentType: assignmentRuleTypeEnum("assignment_type").notNull(),
@@ -553,7 +553,7 @@ export const assignmentRuleState = pgTable("assignment_rule_state", {
 
 export const crmSla = pgTable("crm_sla_policies", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   appliesTo: slaAppliesToEnum("applies_to").notNull(),
   priority: slaPriorityEnum("priority").notNull(),
@@ -566,13 +566,13 @@ export const crmSla = pgTable("crm_sla_policies", {
 
 export const crmViews = pgTable("crm_views", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   name: text("name").notNull(),
   entityType: text("entity_type").notNull(),
   filters: jsonb("filters").$type<Record<string, unknown>>().default({}),
   sortBy: text("sort_by"),
-  sortDir: text("sort_dir").default("asc"),
+  sortDir: text("sort_dir").default("asc").notNull(),
   isPublic: boolean("is_public").default(false).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -607,7 +607,7 @@ export const contacts = pgTable("contacts", {
 
 export const crmOrganizations = pgTable("crm_organizations", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   domain: text("domain"),
   industry: text("industry"),
@@ -633,7 +633,7 @@ export const branches = pgTable("branches", {
   code: text("code").notNull(),
   city: text("city"),
   state: text("state"),
-  country: text("country").default("India"),
+  country: text("country").default("India").notNull(),
   pincode: text("pincode"),
   address: text("address"),
   phone: text("phone"),
@@ -738,7 +738,7 @@ export const dmLeads = pgTable("dm_leads", {
   sourcePlatform: text("source_platform").notNull(),
   campaignId: integer("campaign_id").references(() => crmCampaigns.id),
   campaignType: text("campaign_type"),
-  leadQuality: text("lead_quality").default("warm"),
+  leadQuality: text("lead_quality").default("warm").notNull(),
   notes: text("notes"),
   landingPageUrl: text("landing_page_url"),
   dateCaptured: timestamp("date_captured").defaultNow().notNull(),
@@ -759,14 +759,14 @@ export const socialMediaStats = pgTable("social_media_stats", {
   orgId: text("org_id").notNull().references(() => organizations.id),
   platform: socialPlatformEnum("platform").notNull(),
   date: date("date").notNull(),
-  postsPublished: integer("posts_published").default(0),
-  storiesReels: integer("stories_reels").default(0),
-  followersTotal: integer("followers_total").default(0),
+  postsPublished: integer("posts_published").default(0).notNull(),
+  storiesReels: integer("stories_reels").default(0).notNull(),
+  followersTotal: integer("followers_total").default(0).notNull(),
   engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }),
-  impressions: integer("impressions").default(0),
-  reach: integer("reach").default(0),
-  linkClicks: integer("link_clicks").default(0),
-  profileVisits: integer("profile_visits").default(0),
+  impressions: integer("impressions").default(0).notNull(),
+  reach: integer("reach").default(0).notNull(),
+  linkClicks: integer("link_clicks").default(0).notNull(),
+  profileVisits: integer("profile_visits").default(0).notNull(),
   enteredBy: text("entered_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -776,17 +776,17 @@ export const socialMediaStats = pgTable("social_media_stats", {
 
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   clientId: integer("client_id").references(() => clients.id),
   projectId: integer("project_id").references(() => projects.id),
   invoiceNumber: text("invoice_number").notNull(),
   status: invoiceStatusEnum("status").default("DRAFT").notNull(),
-  lineItems: jsonb("line_items").$type<{ description: string; quantity: number; rate: number; amount: number }[]>().default([]),
-  subtotal: decimal("subtotal").default("0").notNull(),
-  taxRate: decimal("tax_rate").default("0"),
-  taxAmount: decimal("tax_amount").default("0"),
-  discount: decimal("discount").default("0"),
-  total: decimal("total").default("0").notNull(),
+  lineItems: jsonb("line_items").$type<{ description: string; quantity: number; rate: number; amount: number }[]>().default([]).notNull(),
+  subtotal: decimal("subtotal", { precision: 18, scale: 4 }).default("0").notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0").notNull(),
+  taxAmount: decimal("tax_amount", { precision: 18, scale: 4 }).default("0").notNull(),
+  discount: decimal("discount", { precision: 18, scale: 4 }).default("0").notNull(),
+  total: decimal("total", { precision: 18, scale: 4 }).default("0").notNull(),
   currency: text("currency").default("INR").notNull(),
   dueDate: date("due_date"),
   notes: text("notes"),
@@ -835,7 +835,7 @@ export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
 
 export const purchaseBills = pgTable("purchase_bills", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   vendorId: integer("vendor_id").references(() => clients.id),
   billNumber: text("bill_number").notNull(),
   vendorBillNumber: text("vendor_bill_number"),
@@ -893,7 +893,7 @@ export const purchaseBillItemsRelations = relations(purchaseBillItems, ({ one })
 
 export const vendorPayments = pgTable("vendor_payments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   billId: integer("bill_id").references(() => purchaseBills.id, { onDelete: "cascade" }).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paymentDate: date("payment_date").notNull(),
@@ -915,7 +915,7 @@ export const vendorPaymentsRelations = relations(vendorPayments, ({ one }) => ({
 
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   invoiceId: integer("invoice_id").references(() => invoices.id, { onDelete: "cascade" }).notNull(),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   paymentDate: date("payment_date").notNull(),
@@ -932,7 +932,7 @@ export const payments = pgTable("payments", {
 
 export const supportTickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   clientId: integer("client_id").references(() => clients.id),
   assigneeId: text("assignee_id").references(() => users.id),
   title: text("title").notNull(),
@@ -1011,11 +1011,11 @@ export const targetHistoryRelations = relations(targetHistory, ({ one }) => ({
 
 export const dealMeetings = pgTable("deal_meetings", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   dealId: integer("deal_id").references(() => deals.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   scheduledAt: timestamp("scheduled_at").notNull(),
-  durationMinutes: integer("duration_minutes").default(30),
+  durationMinutes: integer("duration_minutes").default(30).notNull(),
   attendees: text("attendees").array(),
   agenda: text("agenda"),
   notes: text("notes"),
@@ -1032,7 +1032,7 @@ export const dealMeetings = pgTable("deal_meetings", {
 
 export const clientOpportunities = pgTable("client_opportunities", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   type: text("type").default("upsell").notNull(),
@@ -1055,7 +1055,7 @@ export const clientOpportunitiesRelations = relations(clientOpportunities, ({ on
 
 export const clientOnboardingTemplates = pgTable("client_onboarding_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   isDefault: boolean("is_default").default(false).notNull(),
@@ -1068,7 +1068,7 @@ export const clientOnboardingTemplates = pgTable("client_onboarding_templates", 
 
 export const clientOnboardingItems = pgTable("client_onboarding_items", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
   templateId: integer("template_id").references(() => clientOnboardingTemplates.id),
   title: text("title").notNull(),
@@ -1196,7 +1196,7 @@ export const contactsRelations = relations(contacts, ({ one }) => ({
 
 export const csatSurveys = pgTable("csat_surveys", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   question: text("question").notNull().default("How satisfied are you with our service?"),
@@ -1216,7 +1216,7 @@ export const csatSurveys = pgTable("csat_surveys", {
 export const csatResponses = pgTable("csat_responses", {
   id: serial("id").primaryKey(),
   surveyId: integer("survey_id").references(() => csatSurveys.id, { onDelete: "cascade" }).notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),
   respondentName: text("respondent_name"),
@@ -1317,9 +1317,9 @@ export const customFieldDefinitions = pgTable("custom_field_definitions", {
   label: text("label").notNull(),
   fieldType: text("field_type").notNull().default("text"),
   options: jsonb("options").$type<Array<{ value: string; label: string }>>(),
-  isRequired: boolean("is_required").default(false),
-  isActive: boolean("is_active").default(true),
-  sortOrder: integer("sort_order").default(0),
+  isRequired: boolean("is_required").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -1341,7 +1341,7 @@ export const territories = pgTable("territories", {
   cities: text("cities").array().default([]),
   assignedReps: integer("assigned_reps").array().default([]),
   description: text("description"),
-  isActive: boolean("is_active").default(true),
+  isActive: boolean("is_active").default(true).notNull(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -1361,10 +1361,10 @@ export const webLeadForms = pgTable("web_lead_forms", {
   description: text("description"),
   fields: jsonb("fields").$type<Array<{ name: string; label: string; type: string; required: boolean; options?: string[] }>>().notNull().default([]),
   publicToken: text("public_token").notNull().unique(),
-  isActive: boolean("is_active").default(true),
-  submitMessage: text("submit_message").default("Thank you! We'll be in touch soon."),
+  isActive: boolean("is_active").default(true).notNull(),
+  submitMessage: text("submit_message").default("Thank you! We'll be in touch soon.").notNull(),
   redirectUrl: text("redirect_url"),
-  totalSubmissions: integer("total_submissions").default(0),
+  totalSubmissions: integer("total_submissions").default(0).notNull(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -1380,7 +1380,7 @@ export const webLeadFormsRelations = relations(webLeadForms, ({ one }) => ({
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   notes: text("notes"),
   entityType: taskEntityTypeEnum("entity_type"),
@@ -1398,7 +1398,7 @@ export const tasks = pgTable("tasks", {
     interval: number;
     endDate?: string;
   } | null>(),
-  parentTaskId: integer("parent_task_id"),
+  parentTaskId: integer("parent_task_id").references((): AnyPgColumn => tasks.id, { onDelete: "set null" }),
   isTemplate: boolean("is_template").notNull().default(false),
   templateName: text("template_name"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1450,7 +1450,7 @@ export const taskSequenceStepsRelations = relations(taskSequenceSteps, ({ one })
 
 export const leadImportBatches = pgTable("lead_import_batches", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   filename: text("filename").notNull(),
   status: text("status").notNull().default("PROCESSING"),
@@ -1472,7 +1472,7 @@ export const leadImportBatchesRelations = relations(leadImportBatches, ({ one })
 
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   dealId: integer("deal_id").references(() => deals.id, { onDelete: "set null" }),
   clientId: integer("client_id").references(() => clientAccounts.id, { onDelete: "set null" }),
   quoteNumber: text("quote_number").notNull(),
@@ -1481,8 +1481,8 @@ export const quotes = pgTable("quotes", {
   status: quoteStatusEnum("status").default("DRAFT").notNull(),
   currency: text("currency").default("INR").notNull(),
   totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
-  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
-  discountAmount: decimal("discount_amount", { precision: 15, scale: 2 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0").notNull(),
+  discountAmount: decimal("discount_amount", { precision: 15, scale: 2 }).default("0").notNull(),
   netAmount: decimal("net_amount", { precision: 15, scale: 2 }).notNull(),
   validUntil: date("valid_until").notNull(),
   termsAndConditions: text("terms_and_conditions"),
@@ -1509,8 +1509,8 @@ export const quoteLineItems = pgTable("quote_line_items", {
   quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
   unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
   amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
-  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
-  displayOrder: integer("display_order").default(0),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0").notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

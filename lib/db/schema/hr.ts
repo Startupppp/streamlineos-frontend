@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, index, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, index, uniqueIndex, foreignKey, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
   leaveStatusEnum, payrollStatusEnum, expenseStatusEnum, assetStatusEnum,
@@ -241,13 +241,13 @@ export const documents = pgTable("documents", {
 
 export const reviewCycles = pgTable("review_cycles", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
-  type: text("type").default("QUARTERLY"),
+  type: text("type").default("QUARTERLY").notNull(),
   periodStart: date("period_start").notNull(),
   periodEnd: date("period_end").notNull(),
   deadline: date("deadline"),
-  status: reviewCycleStatusEnum("status").default("DRAFT"),
+  status: reviewCycleStatusEnum("status").default("DRAFT").notNull(),
   description: text("description"),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -258,13 +258,13 @@ export const reviewCycles = pgTable("review_cycles", {
 
 export const performanceReviews = pgTable("performance_reviews", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   reviewerId: text("reviewer_id").references(() => users.id),
   cycleId: integer("cycle_id").references(() => reviewCycles.id),
   periodStart: date("period_start").notNull(),
   periodEnd: date("period_end").notNull(),
-  status: reviewStatusEnum("status").default("DRAFT"),
+  status: reviewStatusEnum("status").default("DRAFT").notNull(),
   ratings: jsonb("ratings").$type<{ category: string; score: number; comment?: string }[]>(),
   strengths: text("strengths"),
   improvements: text("improvements"),
@@ -280,12 +280,12 @@ export const performanceReviews = pgTable("performance_reviews", {
 
 export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   managerId: text("manager_id").references(() => users.id).notNull(),
   employeeId: text("employee_id").references(() => users.id).notNull(),
   scheduledAt: timestamp("scheduled_at").notNull(),
-  duration: integer("duration").default(30),
-  status: meetingStatusEnum("status").default("SCHEDULED"),
+  duration: integer("duration").default(30).notNull(),
+  status: meetingStatusEnum("status").default("SCHEDULED").notNull(),
   notes: text("notes"),
   actionItems: jsonb("action_items").$type<{ text: string; done: boolean }[]>(),
   agenda: text("agenda"),
@@ -300,14 +300,14 @@ export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
 
 export const trainingPrograms = pgTable("training_programs", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   category: text("category"),
   duration: text("duration"),
   instructor: text("instructor"),
   maxParticipants: integer("max_participants"),
-  status: trainingStatusEnum("status").default("DRAFT"),
+  status: trainingStatusEnum("status").default("DRAFT").notNull(),
   startDate: date("start_date"),
   endDate: date("end_date"),
   location: text("location"),
@@ -322,10 +322,10 @@ export const trainingPrograms = pgTable("training_programs", {
 
 export const trainingEnrollments = pgTable("training_enrollments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   programId: integer("program_id").references(() => trainingPrograms.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
-  status: enrollmentStatusEnum("status").default("ENROLLED"),
+  status: enrollmentStatusEnum("status").default("ENROLLED").notNull(),
   completedAt: timestamp("completed_at"),
   score: integer("score"),
   feedback: text("feedback"),
@@ -338,13 +338,13 @@ export const trainingEnrollments = pgTable("training_enrollments", {
 
 export const resignations = pgTable("resignations", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   reason: text("reason"),
   reasonCategory: text("reason_category"),
   lastWorkingDate: date("last_working_date"),
-  noticePeriodDays: integer("notice_period_days").default(30),
-  status: resignationStatusEnum("status").default("SUBMITTED"),
+  noticePeriodDays: integer("notice_period_days").default(30).notNull(),
+  status: resignationStatusEnum("status").default("SUBMITTED").notNull(),
   resignationLetterUrl: text("resignation_letter_url"),
   approvedBy: text("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
@@ -354,7 +354,7 @@ export const resignations = pgTable("resignations", {
   ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
   ceoReviewedAt: timestamp("ceo_reviewed_at"),
   ceoRemarks: text("ceo_remarks"),
-  willingForExitInterview: boolean("willing_for_exit_interview").default(true),
+  willingForExitInterview: boolean("willing_for_exit_interview").default(true).notNull(),
   companyFeedback: text("company_feedback"),
   exitInterviewNotes: text("exit_interview_notes"),
   exitInterviewDate: timestamp("exit_interview_date"),
@@ -372,24 +372,24 @@ export const exitChecklists = pgTable("exit_checklists", {
   resignationId: integer("resignation_id").references(() => resignations.id, { onDelete: "cascade" }).notNull(),
   item: text("item").notNull(),
   assignedTo: text("assigned_to").references(() => users.id),
-  status: exitChecklistStatusEnum("status").default("PENDING"),
+  status: exitChecklistStatusEnum("status").default("PENDING").notNull(),
   completedAt: timestamp("completed_at"),
   notes: text("notes"),
 });
 
 export const terminations = pgTable("terminations", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   reasons: text("reasons").array().notNull().default([]),
   detailedExplanation: text("detailed_explanation").notNull(),
   effectiveDate: date("effective_date").notNull(),
   severanceAmount: decimal("severance_amount", { precision: 15, scale: 2 }),
-  noticePeriodWaived: boolean("notice_period_waived").default(false),
+  noticePeriodWaived: boolean("notice_period_waived").default(false).notNull(),
   terminationLetterUrl: text("termination_letter_url"),
   supportingDocUrls: text("supporting_doc_urls").array().default([]),
   internalNotes: text("internal_notes"),
-  status: terminationStatusEnum("status").default("DRAFT"),
+  status: terminationStatusEnum("status").default("DRAFT").notNull(),
   initiatedBy: text("initiated_by").references(() => users.id),
   ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
   ceoReviewedAt: timestamp("ceo_reviewed_at"),
@@ -406,13 +406,13 @@ export const terminations = pgTable("terminations", {
 
 export const documentTypes = pgTable("document_types", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   description: text("description"),
-  isMandatory: boolean("is_mandatory").default(true),
-  isActive: boolean("is_active").default(true),
-  sortOrder: integer("sort_order").default(0),
+  isMandatory: boolean("is_mandatory").default(true).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
   applicableRoles: text("applicable_roles").array().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -422,15 +422,15 @@ export const documentTypes = pgTable("document_types", {
 
 export const onboardingDocuments = pgTable("onboarding_documents", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   documentTypeId: integer("document_type_id").references(() => documentTypes.id).notNull(),
   fileUrl: text("file_url").notNull(),
   fileName: text("file_name").notNull(),
   fileSize: integer("file_size"),
   mimeType: text("mime_type"),
-  version: integer("version").default(1),
-  status: onboardingDocumentStatusEnum("status").default("SUBMITTED"),
+  version: integer("version").default(1).notNull(),
+  status: onboardingDocumentStatusEnum("status").default("SUBMITTED").notNull(),
   reviewedBy: text("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at"),
   remarks: text("remarks"),
@@ -443,7 +443,7 @@ export const onboardingDocuments = pgTable("onboarding_documents", {
 
 export const documentAuditLogs = pgTable("document_audit_logs", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   onboardingDocumentId: integer("onboarding_document_id").references(() => onboardingDocuments.id).notNull(),
   action: docAuditActionEnum("action").notNull(),
   performedBy: text("performed_by").references(() => users.id).notNull(),
@@ -455,12 +455,12 @@ export const documentAuditLogs = pgTable("document_audit_logs", {
 
 export const recognitions = pgTable("recognitions", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   fromUserId: text("from_user_id").references(() => users.id).notNull(),
   toUserId: text("to_user_id").references(() => users.id).notNull(),
   message: text("message").notNull(),
-  category: text("category").default("KUDOS"),
-  isPublic: boolean("is_public").default(true),
+  category: text("category").default("KUDOS").notNull(),
+  isPublic: boolean("is_public").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_recognitions_org").on(table.orgId),
@@ -469,10 +469,10 @@ export const recognitions = pgTable("recognitions", {
 
 export const policyAcknowledgments = pgTable("policy_acknowledgments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   documentId: integer("document_id").references(() => documents.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
-  status: ackStatusEnum("status").default("PENDING"),
+  status: ackStatusEnum("status").default("PENDING").notNull(),
   acknowledgedAt: timestamp("acknowledged_at"),
   ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -523,7 +523,7 @@ export const salaryLoans = pgTable("salary_loans", {
 
 export const certifications = pgTable("certifications", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   name: text("name").notNull(),
   issuingOrganization: text("issuing_organization"),
@@ -532,7 +532,7 @@ export const certifications = pgTable("certifications", {
   credentialId: text("credential_id"),
   credentialUrl: text("credential_url"),
   documentUrl: text("document_url"),
-  reminderSent: boolean("reminder_sent").default(false),
+  reminderSent: boolean("reminder_sent").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_certifications_user").on(table.userId),
@@ -541,10 +541,10 @@ export const certifications = pgTable("certifications", {
 
 export const backgroundVerifications = pgTable("background_verifications", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(),
-  status: text("status").default("PENDING"),
+  status: text("status").default("PENDING").notNull(),
   provider: text("provider"),
   referenceNumber: text("reference_number"),
   result: text("result"),
@@ -558,14 +558,14 @@ export const backgroundVerifications = pgTable("background_verifications", {
 
 export const performanceImprovementPlans = pgTable("performance_improvement_plans", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   managerId: text("manager_id").references(() => users.id).notNull(),
   reason: text("reason").notNull(),
   objectives: jsonb("objectives").$type<{ objective: string; metric: string; deadline: string }[]>(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  status: pipStatusEnum("status").default("ACTIVE"),
+  status: pipStatusEnum("status").default("ACTIVE").notNull(),
   outcome: text("outcome"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -590,10 +590,10 @@ export const keyResults = pgTable("key_results", {
 
 export const employeeSkills = pgTable("employee_skills", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   skillName: text("skill_name").notNull(),
-  level: integer("level").default(1),
+  level: integer("level").default(1).notNull(),
   verifiedBy: text("verified_by").references(() => users.id),
   verifiedAt: timestamp("verified_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -604,11 +604,11 @@ export const employeeSkills = pgTable("employee_skills", {
 
 export const skillAssessments = pgTable("skill_assessments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   skillName: text("skill_name").notNull(),
   questions: jsonb("questions").$type<{ id: string; question: string; options: string[]; correctIndex: number }[]>(),
-  passingScore: integer("passing_score").default(70),
+  passingScore: integer("passing_score").default(70).notNull(),
   timeLimit: integer("time_limit"),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -622,7 +622,7 @@ export const assessmentAttempts = pgTable("assessment_attempts", {
   userId: text("user_id").references(() => users.id).notNull(),
   answers: jsonb("answers").$type<{ questionId: string; selectedIndex: number }[]>(),
   score: integer("score"),
-  passed: boolean("passed").default(false),
+  passed: boolean("passed").default(false).notNull(),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_assessment_attempts_user").on(table.userId),
@@ -630,7 +630,7 @@ export const assessmentAttempts = pgTable("assessment_attempts", {
 
 export const learningPaths = pgTable("learning_paths", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   targetRole: text("target_role"),
@@ -643,10 +643,10 @@ export const learningPaths = pgTable("learning_paths", {
 
 export const teamEvents = pgTable("team_events", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").default("TEAM_BUILDING"),
+  type: text("type").default("TEAM_BUILDING").notNull(),
   date: date("date").notNull(),
   time: text("time"),
   location: text("location"),
@@ -661,17 +661,17 @@ export const teamEventParticipants = pgTable("team_event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").references(() => teamEvents.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
-  status: text("status").default("GOING"),
+  status: text("status").default("GOING").notNull(),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
 export const pulseSurveys = pgTable("pulse_surveys", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   questions: jsonb("questions").$type<{ id: string; text: string; type: "rating" | "text" | "choice"; options?: string[] }[]>(),
-  status: surveyStatusEnum("status").default("DRAFT"),
-  isAnonymous: boolean("is_anonymous").default(true),
+  status: surveyStatusEnum("status").default("DRAFT").notNull(),
+  isAnonymous: boolean("is_anonymous").default(true).notNull(),
   createdBy: text("created_by").references(() => users.id),
   closesAt: timestamp("closes_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -691,7 +691,7 @@ export const surveyResponses = pgTable("survey_responses", {
 
 export const feedbackRequests = pgTable("feedback_requests", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   subjectUserId: text("subject_user_id").references(() => users.id).notNull(),
   reviewerUserId: text("reviewer_user_id").references(() => users.id).notNull(),
   type: feedbackTypeEnum("type").notNull(),
@@ -700,7 +700,7 @@ export const feedbackRequests = pgTable("feedback_requests", {
   strengths: text("strengths"),
   improvements: text("improvements"),
   overallRating: integer("overall_rating"),
-  isCompleted: boolean("is_completed").default(false),
+  isCompleted: boolean("is_completed").default(false).notNull(),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
@@ -710,11 +710,11 @@ export const feedbackRequests = pgTable("feedback_requests", {
 
 export const emailTemplates = pgTable("hr_email_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   subject: text("subject").notNull(),
   body: text("body").notNull(),
-  category: text("category").default("GENERAL"),
+  category: text("category").default("GENERAL").notNull(),
   variables: text("variables").array(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -725,7 +725,7 @@ export const emailTemplates = pgTable("hr_email_templates", {
 
 export const careerLadders = pgTable("career_ladders", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   department: text("department"),
   levels: jsonb("levels").$type<{ level: number; title: string; description: string; minExperience: number; skills: string[] }[]>(),
@@ -772,11 +772,11 @@ export const fnfSettlements = pgTable("fnf_settlements", {
 
 export const assetReturns = pgTable("asset_returns", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   assetId: integer("asset_id").references(() => assets.id),
   assetName: text("asset_name").notNull(),
-  status: text("status").default("PENDING"),
+  status: text("status").default("PENDING").notNull(),
   returnedAt: timestamp("returned_at"),
   condition: text("condition"),
   notes: text("notes"),
@@ -787,14 +787,14 @@ export const assetReturns = pgTable("asset_returns", {
 
 export const alumniProfiles = pgTable("alumni_profiles", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   currentCompany: text("current_company"),
   currentRole: text("current_role"),
   linkedinUrl: text("linkedin_url"),
   email: text("email"),
   leftDate: date("left_date"),
-  isOptedIn: boolean("is_opted_in").default(true),
+  isOptedIn: boolean("is_opted_in").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_alumni_org").on(table.orgId),
@@ -802,11 +802,11 @@ export const alumniProfiles = pgTable("alumni_profiles", {
 
 export const enpsScores = pgTable("enps_scores", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id),
   score: integer("score").notNull(),
   comment: text("comment"),
-  isAnonymous: boolean("is_anonymous").default(true),
+  isAnonymous: boolean("is_anonymous").default(true).notNull(),
   period: text("period"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
@@ -815,7 +815,7 @@ export const enpsScores = pgTable("enps_scores", {
 
 export const handbookVersions = pgTable("handbook_versions", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   version: text("version").notNull(),
   documentId: integer("document_id").references(() => richDocuments.id),
   changelog: text("changelog"),
@@ -851,23 +851,23 @@ export const goals = pgTable("goals", {
 
 export const holidays = pgTable("holidays", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   date: date("date").notNull(),
   message: text("message"),
   isPublic: boolean("is_public").default(false).notNull(),
-  notificationSent: boolean("notification_sent").default(false),
+  notificationSent: boolean("notification_sent").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export const wfhRequests = pgTable("wfh_requests", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   date: date("date").notNull(),
   reason: text("reason"),
-  status: wfhRequestStatusEnum("status").default("PENDING"),
+  status: wfhRequestStatusEnum("status").default("PENDING").notNull(),
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -876,7 +876,7 @@ export const wfhRequests = pgTable("wfh_requests", {
 
 export const employeeDevices = pgTable("employee_devices", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   deviceType: text("device_type").notNull(),
   deviceName: text("device_name").notNull(),
@@ -885,7 +885,7 @@ export const employeeDevices = pgTable("employee_devices", {
   model: text("model"),
   assignedDate: date("assigned_date"),
   returnDate: date("return_date"),
-  status: deviceStatusEnum("status").default("ACTIVE"),
+  status: deviceStatusEnum("status").default("ACTIVE").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -893,13 +893,13 @@ export const employeeDevices = pgTable("employee_devices", {
 
 export const helpdeskTickets = pgTable("helpdesk_tickets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description"),
   category: text("category"),
-  priority: ticketPriorityEnum("priority").default("MEDIUM"),
-  status: ticketStatusEnum("status").default("TODO"),
+  priority: ticketPriorityEnum("priority").default("MEDIUM").notNull(),
+  status: ticketStatusEnum("status").default("TODO").notNull(),
   assigneeId: text("assignee_id").references(() => users.id),
   resolvedAt: timestamp("resolved_at"),
   resolution: text("resolution"),
@@ -909,12 +909,12 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
 
 export const richDocuments = pgTable("rich_documents", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   contentJson: jsonb("content_json"),
   templateType: text("template_type"),
-  isPublished: boolean("is_published").default(false),
-  version: integer("version").default(1),
+  isPublished: boolean("is_published").default(false).notNull(),
+  version: integer("version").default(1).notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   updatedBy: text("updated_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -925,19 +925,19 @@ export const richDocuments = pgTable("rich_documents", {
 
 export const jobPostings = pgTable("job_postings", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   departmentId: integer("department_id").references(() => departments.id),
   location: text("location"),
-  type: text("type").default("FULL_TIME"),
+  type: text("type").default("FULL_TIME").notNull(),
   experience: text("experience"),
   salaryMin: decimal("salary_min", { precision: 15, scale: 2 }),
   salaryMax: decimal("salary_max", { precision: 15, scale: 2 }),
   description: text("description"),
   requirements: text("requirements"),
   benefits: text("benefits"),
-  status: jobPostingStatusEnum("status").default("DRAFT"),
-  openings: integer("openings").default(1),
+  status: jobPostingStatusEnum("status").default("DRAFT").notNull(),
+  openings: integer("openings").default(1).notNull(),
   applicationDeadline: date("application_deadline"),
   closingDate: timestamp("closing_date"),
   postedBy: text("posted_by").references(() => users.id),
@@ -953,7 +953,7 @@ export const jobPostings = pgTable("job_postings", {
 
 export const candidateSources = pgTable("candidate_sources", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   platform: text("platform").notNull(),
   isActive: boolean("is_active").notNull().default(true),
   
@@ -961,7 +961,7 @@ export const candidateSources = pgTable("candidate_sources", {
   
   meta: jsonb("meta").$type<Record<string, unknown>>(),
   lastSyncedAt: timestamp("last_synced_at"),
-  lastSyncCount: integer("last_sync_count").default(0),
+  lastSyncCount: integer("last_sync_count").default(0).notNull(),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -972,7 +972,7 @@ export const candidateSources = pgTable("candidate_sources", {
 
 export const candidates = pgTable("candidates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull(),
@@ -984,13 +984,13 @@ export const candidates = pgTable("candidates", {
   currentRole: text("current_role"),
   experienceYears: decimal("experience_years", { precision: 5, scale: 2 }),
   skills: text("skills").array(),
-  source: text("source").default("DIRECT"),
-  status: candidateStatusEnum("status").default("NEW"),
+  source: text("source").default("DIRECT").notNull(),
+  status: candidateStatusEnum("status").default("NEW").notNull(),
   notes: text("notes"),
   rating: integer("rating"),
   referredBy: text("referred_by").references(() => users.id),
   externalId: text("external_id"),
-  duplicateOfId: integer("duplicate_of_id"),
+  duplicateOfId: integer("duplicate_of_id").references((): AnyPgColumn => candidates.id, { onDelete: "set null" }),
   resumeText: text("resume_text"),
   aiScore: integer("ai_score"),
   aiScoreBreakdown: jsonb("ai_score_breakdown").$type<Record<string, number>>(),
@@ -1013,10 +1013,10 @@ export const candidates = pgTable("candidates", {
 
 export const candidateApplications = pgTable("candidate_applications", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   jobPostingId: integer("job_posting_id").references(() => jobPostings.id, { onDelete: "cascade" }).notNull(),
-  status: applicationStatusEnum("status").default("APPLIED"),
+  status: applicationStatusEnum("status").default("APPLIED").notNull(),
   appliedAt: timestamp("applied_at").defaultNow().notNull(),
   coverLetter: text("cover_letter"),
   notes: text("notes"),
@@ -1028,16 +1028,16 @@ export const candidateApplications = pgTable("candidate_applications", {
 
 export const interviews = pgTable("interviews", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
   interviewerId: text("interviewer_id").references(() => users.id),
-  type: interviewTypeEnum("type").default("VIDEO"),
+  type: interviewTypeEnum("type").default("VIDEO").notNull(),
   scheduledAt: timestamp("scheduled_at").notNull(),
-  duration: integer("duration").default(60),
+  duration: integer("duration").default(60).notNull(),
   location: text("location"),
   meetingLink: text("meeting_link"),
-  result: interviewResultEnum("result").default("PENDING"),
+  result: interviewResultEnum("result").default("PENDING").notNull(),
   feedback: text("feedback"),
   rating: integer("rating"),
   rubric: jsonb("rubric").$type<{ category: string; score: number; maxScore: number; comment?: string }[]>(),
@@ -1058,7 +1058,7 @@ export const interviews = pgTable("interviews", {
 
 export const scorecardTemplates = pgTable("scorecard_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   criteria: jsonb("criteria").$type<Array<{ name: string; weight: number }>>().notNull().default([]),
   isActive: boolean("is_active").notNull().default(true),
@@ -1095,7 +1095,7 @@ export interface BookingSlot {
 
 export const interviewBookingLinks = pgTable("interview_booking_links", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
   token: text("token").notNull().unique(),
@@ -1118,7 +1118,7 @@ export const interviewBookingLinks = pgTable("interview_booking_links", {
 
 export const candidateReferrals = pgTable("candidate_referrals", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   referredBy: text("referred_by").references(() => users.id).notNull(),
   relationship: text("relationship"),
@@ -1135,7 +1135,7 @@ export const candidateReferrals = pgTable("candidate_referrals", {
 
 export const calibrationSessions = pgTable("calibration_sessions", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
   scheduledAt: timestamp("scheduled_at"),
@@ -1154,8 +1154,8 @@ export const calibrationSessions = pgTable("calibration_sessions", {
 
 export const candidateDocumentsVault = pgTable("candidate_documents_vault", {
   id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   filename: text("filename").notNull(),
   s3Key: text("s3_key").notNull(),
   fileUrl: text("file_url").notNull(),
@@ -1183,9 +1183,9 @@ export const vaultAccessLogs = pgTable("vault_access_logs", {
 
 export const onboardingTemplates = pgTable("onboarding_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
-  departmentId: integer("department_id"),
+  departmentId: integer("department_id").references(() => departments.id, { onDelete: "set null" }),
   description: text("description"),
   isActive: boolean("is_active").notNull().default(true),
   createdBy: text("created_by").notNull().references(() => users.id),
@@ -1541,7 +1541,7 @@ export const onboardingTasksRelations = relations(onboardingTasks, ({ one }) => 
 
 export const documentTemplates = pgTable("document_templates", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   type: text("type").notNull().default("OFFER"),
   htmlContent: text("html_content").notNull().default(""),
@@ -1557,8 +1557,8 @@ export const documentTemplates = pgTable("document_templates", {
 
 export const candidateDocuments = pgTable("candidate_documents", {
   id: serial("id").primaryKey(),
-  candidateId: integer("candidate_id").notNull(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   templateId: integer("template_id").references(() => documentTemplates.id),
   title: text("title").notNull(),
   htmlContent: text("html_content").notNull().default(""),

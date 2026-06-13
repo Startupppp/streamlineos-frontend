@@ -2,7 +2,10 @@
 
 import { TrendingUp, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 import type { Deal } from "@/types/crm";
 
 interface CrmRecentActivityProps {
@@ -17,18 +20,8 @@ const STAGE_LABELS: Record<string, string> = {
   CONTACTED: "Contact made",
 };
 
-function timeAgo(date: string | Date) {
-  const now = new Date();
-  const d = new Date(date);
-  const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
-  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
-
 export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
-  const recentDeals = [...(deals || [])]
+  const recentDeals = [...deals]
     .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? 0).getTime() - new Date(a.updatedAt ?? a.createdAt ?? 0).getTime())
     .slice(0, 6);
 
@@ -39,12 +32,18 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
       </CardHeader>
       <CardContent className="px-3 pb-3">
         {recentDeals.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground text-center py-4">No recent activity</p>
+          <EmptyState
+            illustration={<EmptyActivityIllustration className="h-20 w-20" />}
+            title="No recent activity"
+            description="Deal updates will appear here."
+            compact
+          />
         ) : (
           <div className="space-y-2">
             {recentDeals.map((deal) => {
               const isWon = deal.stage === "WON";
               const isLost = deal.stage === "LOST";
+              const updatedDate = deal.updatedAt ?? deal.createdAt;
               return (
                 <div key={deal.id} className="flex items-start gap-2">
                   <div className={cn(
@@ -63,7 +62,9 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
                     </p>
                   </div>
                   <span className="text-[9px] text-muted-foreground shrink-0 tabular-nums">
-                    {timeAgo(deal.updatedAt ?? deal.createdAt ?? new Date().toISOString())}
+                    {updatedDate
+                      ? formatDistanceToNow(new Date(updatedDate), { addSuffix: false })
+                      : "—"}
                   </span>
                 </div>
               );

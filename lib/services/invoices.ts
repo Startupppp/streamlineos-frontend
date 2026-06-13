@@ -140,7 +140,7 @@ export async function createInvoice(
         status,
         lineItems: legacyLineItemsMirror,
         subtotal: subtotal.toFixed(2),
-        taxRate: null,
+        taxRate: "0",
         taxAmount: taxPool.toFixed(2),
         discount: discount.toFixed(2),
         total: total.toFixed(2),

@@ -1,22 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Users, TrendingUp, Building2, BarChart3, Target,
   ArrowRight, UserPlus, Settings, DollarSign, AlertTriangle,
-  FileText, Briefcase,
+  FileText, Briefcase, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
 import { useLeadStats } from "@/lib/api/hooks/leads";
-import { useDeals } from "@/lib/api/hooks/crm";
-import { useContacts, useCrmOrganizations } from "@/lib/api/hooks/crm";
+import { useDeals, useDealStats, useContacts, useCrmOrganizations } from "@/lib/api/hooks/crm";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 
@@ -32,22 +31,14 @@ const NAV_CARDS = [
 ] as const;
 
 export default function CrmHubPage() {
-  const { data: leadStats, isLoading: statsLoading } = useLeadStats();
-  const { data: allDeals, isLoading: dealsLoading } = useDeals();
+  const { data: leadStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useLeadStats();
+  const { data: dealStats, isLoading: dealsLoading, error: dealsError } = useDealStats();
+  const { data: allDeals, isLoading: activityLoading } = useDeals({ limit: 6 });
   const { data: contactsData, isLoading: contactsLoading } = useContacts({ limit: 1 });
   const { data: orgsData, isLoading: orgsLoading } = useCrmOrganizations({ limit: 1 });
 
-  const isLoading = statsLoading || dealsLoading || contactsLoading || orgsLoading;
-
-  const dealStats = useMemo(() => {
-    if (!allDeals) return { active: 0, pipelineValue: 0, wonValue: 0 };
-    const active = allDeals.filter(d => d.stage !== "WON" && d.stage !== "LOST");
-    return {
-      active: active.length,
-      pipelineValue: active.reduce((s, d) => s + Number(d.value || 0), 0),
-      wonValue: allDeals.filter(d => d.stage === "WON").reduce((s, d) => s + Number(d.value || 0), 0),
-    };
-  }, [allDeals]);
+  const isLoading = statsLoading || dealsLoading || activityLoading || contactsLoading || orgsLoading;
+  const error = statsError ?? dealsError;
 
   if (isLoading) {
     return (
@@ -107,6 +98,27 @@ export default function CrmHubPage() {
     );
   }
 
+  if (error) {
+    return (
+      <PageWrapper title="CRM" subtitle="Command center">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6" role="alert">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-3">
+              <p className="text-sm text-foreground">
+                {error instanceof Error ? error.message : "Failed to load CRM data"}
+              </p>
+              <Button onClick={() => void refetchStats()} size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper title="CRM" subtitle="Command center">
       <motion.div className="space-y-4 pb-4" variants={staggerContainer} initial="hidden" animate="visible">
@@ -114,8 +126,8 @@ export default function CrmHubPage() {
         <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 md:grid-cols-4">
           {[
             { label: "Total Leads", value: leadStats?.total ?? 0, color: "text-blue-400" },
-            { label: "Active Deals", value: dealStats.active, color: "text-emerald-400" },
-            { label: "Pipeline Value", value: formatINRCompact(dealStats.pipelineValue), color: "text-blue-600" },
+            { label: "Active Deals", value: dealStats?.active ?? 0, color: "text-emerald-400" },
+            { label: "Pipeline Value", value: formatINRCompact(dealStats?.pipelineValue ?? 0), color: "text-blue-600" },
             { label: "Conversion", value: `${leadStats?.conversionRate ?? 0}%`, color: "text-amber-400" },
           ].map((s) => (
             <Card key={s.label} className="shadow-sm">
@@ -137,7 +149,7 @@ export default function CrmHubPage() {
               </div>
               <div><span className="text-muted-foreground">New/Mo</span> <span className="font-bold ml-1">{leadStats.thisMonth}</span></div>
               <div><span className="text-muted-foreground">Pipeline</span> <span className="font-bold text-blue-600 ml-1">{formatINRCompact(leadStats.totalPotentialValue)}</span></div>
-              <div><span className="text-muted-foreground">Won</span> <span className="font-bold text-emerald-400 ml-1">{formatINRCompact(dealStats.wonValue)}</span></div>
+              <div><span className="text-muted-foreground">Won</span> <span className="font-bold text-emerald-400 ml-1">{formatINRCompact(dealStats?.wonValue ?? 0)}</span></div>
               <div><span className="text-muted-foreground">Contacts</span> <span className="font-bold ml-1">{contactsData?.total ?? 0}</span></div>
               <div><span className="text-muted-foreground">Orgs</span> <span className="font-bold ml-1">{orgsData?.totalCount ?? 0}</span></div>
             </div>

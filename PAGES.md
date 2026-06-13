@@ -10,7 +10,7 @@ Ordered money-path first. Check off each page after fixing.
 ---
 
 ## CRM — Leads & Pipeline
-- [ ] `/crm` — CRM overview
+- [x] `/crm` — Replaced all-deals fetch with dedicated stats endpoint; added error state; fixed empty state and timeAgo in CrmRecentActivity; added staleTime to useDeals
 - [ ] `/crm/leads` — Leads list
 - [ ] `/crm/leads/[leadId]` — Lead detail
 - [ ] `/crm/leads/distribute` — Lead distribution

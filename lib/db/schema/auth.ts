@@ -13,9 +13,9 @@ export const organizations = pgTable("organizations", {
   logo: text("logo"),
   website: text("website"),
   industry: text("industry"),
-  timezone: text("timezone").default("Asia/Kolkata"),
-  currency: text("currency").default("INR"),
-  fiscalYearStart: integer("fiscal_year_start").default(4),
+  timezone: text("timezone").default("Asia/Kolkata").notNull(),
+  currency: text("currency").default("INR").notNull(),
+  fiscalYearStart: integer("fiscal_year_start").default(4).notNull(),
   settings: jsonb("settings").$type<Record<string, unknown>>(),
   billingEmail: text("billing_email"),
   address: jsonb("address").$type<{ line1?: string; line2?: string; city?: string; state?: string; country?: string; postalCode?: string }>(),
@@ -176,7 +176,7 @@ export const userSessions = pgTable("user_sessions", {
 
 export const apiKeys = pgTable("api_keys", {
   id: text("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   keyHash: text("key_hash").notNull(),
   keyPrefix: text("key_prefix").notNull(),

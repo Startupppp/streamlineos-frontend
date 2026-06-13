@@ -53,6 +53,21 @@ export function useDeals(filters?: DealFilters) {
   return useQuery({
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
     queryFn: () => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export interface DealStats {
+  active: number;
+  pipelineValue: number;
+  wonValue: number;
+}
+
+export function useDealStats() {
+  return useQuery<DealStats, Error>({
+    queryKey: queryKeys.deals.stats(),
+    queryFn: () => apiClient.get<DealStats>("/deals/stats"),
+    staleTime: 2 * 60_000,
   });
 }
 
