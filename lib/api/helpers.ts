@@ -117,6 +117,11 @@ export type AbilitySubject =
   | "blog:categories"
   | "crm"
   | "crm:leads"
+  | "crm:deals"
+  | "crm:contacts"
+  | "crm:clients"
+  | "crm:quotes"
+  | "crm:targets"
   | "crm:assignment-rules"
   | "crm:email-templates"
   | "crm:scoring-rules"
@@ -128,10 +133,13 @@ export type AbilitySubject =
   | "hr:documents"
   | "projects"
   | "projects:sprints"
+  | "projects:settings"
+  | "sales"
   | "settings"
   | "settings:custom-fields"
   | "settings:email-templates"
-  | "settings:webhooks";
+  | "settings:webhooks"
+  | "settings:mfa";
 
 export async function withAbility(
   verb: AbilityVerb,
