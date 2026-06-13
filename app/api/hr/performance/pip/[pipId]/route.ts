@@ -11,6 +11,13 @@ const updateSchema = z.object({
   outcome: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
   endDate: z.string().optional(),
+  reason: z.string().min(1).max(1000).optional(),
+  objectives: z.array(z.object({
+    objective: z.string().min(1),
+    metric: z.string().min(1),
+    deadline: z.string().min(1),
+  })).optional(),
+  hrRepId: z.string().nullable().optional(),
 });
 
 export async function PATCH(

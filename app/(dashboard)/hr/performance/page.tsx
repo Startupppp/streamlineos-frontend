@@ -796,7 +796,9 @@ function PIPTab() {
   const createPIP = useCreatePIP();
   const updatePIP = useUpdatePIP();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingPip, setEditingPip] = useState<PIP | null>(null);
   const [pipUserId, setPipUserId] = useState("");
+  const [hrRepId, setHrRepId] = useState("");
   const [reason, setReason] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -808,18 +810,37 @@ function PIPTab() {
     [employeesRaw]
   );
 
+  const hrEmployees = useMemo(
+    () => employees.filter((e) => e.isActive && e.role === "HR"),
+    [employees]
+  );
+
   const pipsList = useMemo(() => (Array.isArray(pips) ? pips : []) as PIP[], [pips]);
 
   const resetForm = useCallback(() => {
     setPipUserId("");
+    setHrRepId("");
     setReason("");
     setStartDate("");
     setEndDate("");
     setNotes("");
     setObjectives([{ objective: "", metric: "", deadline: "" }]);
+    setEditingPip(null);
   }, []);
 
-  const handleCreate = useCallback(() => {
+  const handleOpenEdit = useCallback((pip: PIP) => {
+    setEditingPip(pip);
+    setPipUserId(pip.userId);
+    setHrRepId(pip.hrRepId ?? "");
+    setReason(pip.reason);
+    setStartDate(pip.startDate);
+    setEndDate(pip.endDate);
+    setNotes(pip.notes ?? "");
+    setObjectives(pip.objectives && pip.objectives.length > 0 ? pip.objectives : [{ objective: "", metric: "", deadline: "" }]);
+    setSheetOpen(true);
+  }, []);
+
+  const handleSubmit = useCallback(() => {
     if (!pipUserId) { toast.error("Please select an employee"); return; }
     const trimmedReason = reason.trim();
     if (!trimmedReason) { toast.error("Reason is required"); return; }
@@ -827,28 +848,40 @@ function PIPTab() {
     if (!startDate) { toast.error("Start date is required"); return; }
     if (!endDate) { toast.error("End date is required"); return; }
     if (endDate <= startDate) { toast.error("End date must be after start date"); return; }
-
-    const existingActive = pipsList.find((p) => p.userId === pipUserId && (p.status === "ACTIVE" || p.status === "EXTENDED"));
-    if (existingActive) { toast.error("This employee already has an active PIP"); return; }
+    if (hrRepId && hrRepId === pipUserId) { toast.error("HR representative cannot be the same as the employee"); return; }
 
     const validObjectives = objectives.filter((o) => o.objective.trim() && o.metric.trim() && o.deadline);
     if (validObjectives.length === 0) { toast.error("At least one complete objective (goal, metric, deadline) is required"); return; }
 
-    createPIP.mutate(
-      {
-        userId: pipUserId,
-        reason: trimmedReason,
-        objectives: validObjectives.map((o) => ({ objective: o.objective.trim(), metric: o.metric.trim(), deadline: o.deadline })),
-        startDate,
-        endDate,
-        notes: notes.trim() || undefined,
-      },
-      {
-        onSuccess: () => { toast.success("PIP created"); setSheetOpen(false); resetForm(); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [pipUserId, reason, startDate, endDate, notes, objectives, pipsList, createPIP, resetForm]);
+    const payload = {
+      reason: trimmedReason,
+      objectives: validObjectives.map((o) => ({ objective: o.objective.trim(), metric: o.metric.trim(), deadline: o.deadline })),
+      endDate,
+      notes: notes.trim() || undefined,
+      hrRepId: hrRepId || undefined,
+    };
+
+    if (editingPip) {
+      updatePIP.mutate(
+        { id: editingPip.id, ...payload },
+        {
+          onSuccess: () => { toast.success("PIP updated"); setSheetOpen(false); resetForm(); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    } else {
+      const existingActive = pipsList.find((p) => p.userId === pipUserId && (p.status === "ACTIVE" || p.status === "EXTENDED"));
+      if (existingActive) { toast.error("This employee already has an active PIP"); return; }
+
+      createPIP.mutate(
+        { userId: pipUserId, startDate, ...payload },
+        {
+          onSuccess: () => { toast.success("PIP created"); setSheetOpen(false); resetForm(); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    }
+  }, [pipUserId, hrRepId, reason, startDate, endDate, notes, objectives, pipsList, editingPip, createPIP, updatePIP, resetForm]);
 
   const handleUpdateStatus = useCallback((id: number, status: string) => {
     updatePIP.mutate({ id, status }, {
@@ -877,7 +910,7 @@ function PIPTab() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{pipsList.length} performance improvement plans</p>
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={() => { resetForm(); setSheetOpen(true); }}>
           <Plus className="h-3.5 w-3.5 mr-1" />New PIP
         </Button>
       </div>
@@ -903,6 +936,9 @@ function PIPTab() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{pip.user?.name ?? "Employee"}</p>
                       <p className="text-[10px] text-muted-foreground">{pip.startDate} → {pip.endDate}</p>
+                      {pip.hrRep && (
+                        <p className="text-[10px] text-muted-foreground">HR Rep: {pip.hrRep.name}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -921,6 +957,9 @@ function PIPTab() {
                         <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleOpenEdit(pip)}>
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                        </DropdownMenuItem>
                         {(pip.status === "ACTIVE" || pip.status === "EXTENDED") && (
                           <>
                             <DropdownMenuItem onClick={() => handleUpdateStatus(pip.id, "COMPLETED")}>
@@ -951,17 +990,29 @@ function PIPTab() {
       <HrSheet
         open={sheetOpen}
         onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }}
-        title="Create Performance Improvement Plan"
-        onSubmit={handleCreate}
-        submitLabel="Create PIP"
-        isPending={createPIP.isPending}
+        title={editingPip ? "Edit Performance Improvement Plan" : "Create Performance Improvement Plan"}
+        onSubmit={handleSubmit}
+        submitLabel={editingPip ? "Save Changes" : "Create PIP"}
+        isPending={createPIP.isPending || updatePIP.isPending}
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
-          <Select value={pipUserId} onValueChange={setPipUserId}>
+          <Select value={pipUserId} onValueChange={setPipUserId} disabled={!!editingPip}>
             <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
             <SelectContent>
               {employees.filter((e) => e.isActive).map((e) => (
+                <SelectItem key={e.id} value={e.id}>{[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">HR Representative <span className="text-muted-foreground font-normal">(optional)</span></label>
+          <Select value={hrRepId || "none"} onValueChange={(v) => setHrRepId(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select HR representative" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {hrEmployees.filter((e) => e.id !== pipUserId).map((e) => (
                 <SelectItem key={e.id} value={e.id}>{[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}</SelectItem>
               ))}
             </SelectContent>
@@ -974,7 +1025,7 @@ function PIPTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={!!editingPip} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>

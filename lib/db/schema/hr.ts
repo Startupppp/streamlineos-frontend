@@ -562,6 +562,7 @@ export const performanceImprovementPlans = pgTable("performance_improvement_plan
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   managerId: text("manager_id").references(() => users.id).notNull(),
+  hrRepId: text("hr_rep_id").references(() => users.id),
   reason: text("reason").notNull(),
   objectives: jsonb("objectives").$type<{ objective: string; metric: string; deadline: string }[]>(),
   startDate: date("start_date").notNull(),
@@ -1421,6 +1422,7 @@ export const backgroundVerificationsRelations = relations(backgroundVerification
 export const pipRelations = relations(performanceImprovementPlans, ({ one }) => ({
   user: one(users, { fields: [performanceImprovementPlans.userId], references: [users.id] }),
   manager: one(users, { fields: [performanceImprovementPlans.managerId], references: [users.id], relationName: "pipManager" }),
+  hrRep: one(users, { fields: [performanceImprovementPlans.hrRepId], references: [users.id], relationName: "pipHrRep" }),
 }));
 
 export const keyResultsRelations = relations(keyResults, ({ one }) => ({

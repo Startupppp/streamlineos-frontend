@@ -8,6 +8,7 @@ export interface PIP {
   id: number;
   userId: string;
   managerId: string;
+  hrRepId: string | null;
   reason: string;
   objectives: { objective: string; metric: string; deadline: string }[] | null;
   startDate: string;
@@ -18,6 +19,7 @@ export interface PIP {
   createdAt: Date | string | null;
   user?: { id: string; name: string | null; image: string | null } | null;
   manager?: { id: string; name: string | null } | null;
+  hrRep?: { id: string; name: string | null } | null;
 }
 
 const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
@@ -29,7 +31,7 @@ export function usePIPs() {
 export function useCreatePIP() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { userId: string; reason: string; objectives: { objective: string; metric: string; deadline: string }[]; startDate: string; endDate: string; notes?: string }) =>
+    mutationFn: (data: { userId: string; hrRepId?: string; reason: string; objectives: { objective: string; metric: string; deadline: string }[]; startDate: string; endDate: string; notes?: string }) =>
       apiClient.post<PIP>("/hr/performance/pip", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: pipKeys.list() }),
   });
@@ -38,7 +40,7 @@ export function useCreatePIP() {
 export function useUpdatePIP() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; status?: string; outcome?: string; notes?: string }) =>
+    mutationFn: ({ id, ...data }: { id: number; status?: string; outcome?: string; notes?: string; reason?: string; objectives?: { objective: string; metric: string; deadline: string }[]; endDate?: string; hrRepId?: string | null }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/pip/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: pipKeys.list() }),
   });

@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
   userId: z.string().min(1),
+  hrRepId: z.string().optional(),
   reason: z.string().min(1).max(1000),
   objectives: z.array(z.object({
     objective: z.string().min(1),
@@ -29,7 +30,7 @@ export async function GET() {
 
     const data = await db.query.performanceImprovementPlans.findMany({
       where: and(...conditions),
-      with: { user: true, manager: true },
+      with: { user: true, manager: true, hrRep: true },
       orderBy: [desc(performanceImprovementPlans.createdAt)],
     });
     return ok(data);
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       userId: body.userId,
       managerId: session.user.id,
+      hrRepId: body.hrRepId || null,
       reason: body.reason,
       objectives: body.objectives,
       startDate: body.startDate,
