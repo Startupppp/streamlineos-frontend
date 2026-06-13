@@ -338,11 +338,12 @@ export default function WorkLogsPage() {
           <div className="space-y-4">
             {monthGroups.map((group) => {
               const filteredDays = group.days.filter(filterDay);
-              if (searchTerm.trim() && filteredDays.length === 0) return null;
+              const hasActiveFilter = !!searchTerm.trim() || filters.month !== undefined || !!filters.dateFrom || !!filters.dateTo;
+              if (hasActiveFilter && filteredDays.length === 0) return null;
 
               const isCollapsed = collapsedMonths.has(group.monthKey);
               const filled = filledCounts[group.monthKey] ?? 0;
-              const displayDays = searchTerm.trim() ? filteredDays : group.days;
+              const displayDays = hasActiveFilter ? filteredDays : group.days;
 
               return (
                 <WorkLogMonthGroup
