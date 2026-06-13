@@ -1,8 +1,8 @@
 import "server-only";
 
 import { db } from "@/lib/db";
-import { clientAccounts, clientAccountActivities, leads } from "@/lib/db/schema";
-import { eq, and, desc, sql, count, or } from "drizzle-orm";
+import { clientAccounts, clientAccountActivities } from "@/lib/db/schema";
+import { eq, and, desc, sql, count, or, inArray, isNull } from "drizzle-orm";
 import type { ClientAccountFilters } from "@/types/crm";
 import { ROLES } from "@/lib/constants/roles";
 
@@ -92,6 +92,7 @@ export async function backfillConvertedLeadsToClientAccounts(
 
 export async function backfillCrmAssignments(orgId: string) {
   const { organizationMembers } = await import("@/lib/db/schema");
+
   const csMembers = await db
     .select({ userId: organizationMembers.userId })
     .from(organizationMembers)
@@ -99,45 +100,57 @@ export async function backfillCrmAssignments(orgId: string) {
 
   if (csMembers.length === 0) return;
 
-  const unassigned = await db.query.clientAccounts.findMany({
-    where: and(
-      eq(clientAccounts.orgId, orgId),
-      sql`${clientAccounts.assignedCrmId} IS NULL`
-    ),
-    orderBy: [desc(clientAccounts.createdAt)],
-  });
+  const memberIds = csMembers.map((m) => m.userId);
 
-  if (unassigned.length === 0) return;
-
-  const counts: Record<string, number> = {};
-  for (const m of csMembers) {
-    const [result] = await db
-      .select({ count: count() })
+  const [countRows, unassigned] = await Promise.all([
+    db
+      .select({ userId: clientAccounts.assignedCrmId, activeCount: count() })
       .from(clientAccounts)
       .where(and(
         eq(clientAccounts.orgId, orgId),
-        eq(clientAccounts.assignedCrmId, m.userId),
-        sql`${clientAccounts.status} != 'INVESTED'`
-      ));
-    counts[m.userId] = result?.count ?? 0;
+        inArray(clientAccounts.assignedCrmId, memberIds),
+        sql`${clientAccounts.status} != 'INVESTED'`,
+      ))
+      .groupBy(clientAccounts.assignedCrmId),
+    db
+      .select({ id: clientAccounts.id })
+      .from(clientAccounts)
+      .where(and(eq(clientAccounts.orgId, orgId), isNull(clientAccounts.assignedCrmId)))
+      .orderBy(desc(clientAccounts.createdAt)),
+  ]);
+
+  if (unassigned.length === 0) return;
+
+  const counts: Record<string, number> = Object.fromEntries(memberIds.map((id) => [id, 0]));
+  for (const row of countRows) {
+    if (row.userId) counts[row.userId] = row.activeCount;
   }
 
+  const assignments: Record<string, number[]> = {};
   for (const account of unassigned) {
     let minCount = Infinity;
     let assignee: string | null = null;
-    for (const m of csMembers) {
-      if ((counts[m.userId] ?? 0) < minCount) {
-        minCount = counts[m.userId] ?? 0;
-        assignee = m.userId;
+    for (const id of memberIds) {
+      if ((counts[id] ?? 0) < minCount) {
+        minCount = counts[id] ?? 0;
+        assignee = id;
       }
     }
     if (assignee) {
-      await db.update(clientAccounts)
-        .set({ assignedCrmId: assignee, updatedAt: new Date() })
-        .where(eq(clientAccounts.id, account.id));
+      (assignments[assignee] ??= []).push(account.id);
       counts[assignee] = (counts[assignee] ?? 0) + 1;
     }
   }
+
+  const now = new Date();
+  await Promise.all(
+    Object.entries(assignments).map(([assigneeId, ids]) =>
+      db
+        .update(clientAccounts)
+        .set({ assignedCrmId: assigneeId, updatedAt: now })
+        .where(and(eq(clientAccounts.orgId, orgId), inArray(clientAccounts.id, ids))),
+    ),
+  );
 }
 
 
@@ -152,62 +165,43 @@ export async function getCrmAssignmentStats(orgId: string) {
     })
     .from(organizationMembers)
     .innerJoin(users, eq(users.id, organizationMembers.userId))
-    .where(
-      and(
-        eq(organizationMembers.orgId, orgId),
-        eq(organizationMembers.role, "CUSTOMER_SUPPORT")
-      )
-    );
+    .where(and(
+      eq(organizationMembers.orgId, orgId),
+      eq(organizationMembers.role, "CUSTOMER_SUPPORT"),
+    ));
 
-  const members: {
-    userId: string;
-    name: string | null;
-    image: string | null;
-    activeCount: number;
-    totalCount: number;
-  }[] = [];
+  if (csMembers.length === 0) {
+    return { members: [], unassignedCount: 0 };
+  }
 
-  for (const m of csMembers) {
-    const [active] = await db
+  const memberIds = csMembers.map((m) => m.userId);
+
+  const [countRows, [unassignedResult]] = await Promise.all([
+    db
+      .select({
+        userId: clientAccounts.assignedCrmId,
+        totalCount: count(),
+        activeCount: sql<number>`count(*) FILTER (WHERE ${clientAccounts.status} != 'INVESTED')`,
+      })
+      .from(clientAccounts)
+      .where(and(eq(clientAccounts.orgId, orgId), inArray(clientAccounts.assignedCrmId, memberIds)))
+      .groupBy(clientAccounts.assignedCrmId),
+    db
       .select({ count: count() })
       .from(clientAccounts)
-      .where(
-        and(
-          eq(clientAccounts.orgId, orgId),
-          eq(clientAccounts.assignedCrmId, m.userId),
-          sql`${clientAccounts.status} != 'INVESTED'`
-        )
-      );
-    const [total] = await db
-      .select({ count: count() })
-      .from(clientAccounts)
-      .where(
-        and(
-          eq(clientAccounts.orgId, orgId),
-          eq(clientAccounts.assignedCrmId, m.userId)
-        )
-      );
-    members.push({
+      .where(and(eq(clientAccounts.orgId, orgId), isNull(clientAccounts.assignedCrmId))),
+  ]);
+
+  const countMap = new Map(countRows.map((r) => [r.userId, r]));
+
+  return {
+    members: csMembers.map((m) => ({
       userId: m.userId,
       name: m.name,
       image: m.image,
-      activeCount: active?.count ?? 0,
-      totalCount: total?.count ?? 0,
-    });
-  }
-
-  const [unassignedResult] = await db
-    .select({ count: count() })
-    .from(clientAccounts)
-    .where(
-      and(
-        eq(clientAccounts.orgId, orgId),
-        sql`${clientAccounts.assignedCrmId} IS NULL`
-      )
-    );
-
-  return {
-    members,
+      activeCount: Number(countMap.get(m.userId)?.activeCount ?? 0),
+      totalCount: countMap.get(m.userId)?.totalCount ?? 0,
+    })),
     unassignedCount: unassignedResult?.count ?? 0,
   };
 }

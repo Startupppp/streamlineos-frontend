@@ -5,6 +5,7 @@ import { getDeal } from "@/server/queries/crm";
 import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { invalidateSalesKpiCache } from "@/server/queries/sales-dashboard";
+import { invalidateCachePattern, invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { createAuditLog } from "@/lib/audit-log";
 import { updateDeal, updateDealSchema } from "@/lib/services/deal-update";
 
@@ -45,6 +46,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       return err("Deal not found", 404);
     }
 
+    void invalidateCachePattern(`deals:list:${session.orgId}:*`).catch(() => undefined);
     if (result.stageChanged) {
       void invalidateSalesKpiCache(session.orgId).catch(() => undefined);
     }
@@ -80,6 +82,11 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
 
   return withAdmin(async (session) => {
     await db.delete(deals).where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
+
+    void Promise.all([
+      invalidateCachePattern(`deals:list:${session.orgId}:*`),
+      invalidateCache(CACHE_KEYS.dealsForecast(session.orgId)),
+    ]).catch(() => undefined);
 
     void createAuditLog({
       action: "deal.deleted",

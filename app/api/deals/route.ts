@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
-import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
+import { cached, invalidateCache, invalidateCachePattern, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { getDeals } from "@/server/queries/crm";
 import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
@@ -32,11 +32,14 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getDeals(session.orgId!, {
-      ...filters,
-      role: session.user.role ?? undefined,
-      userId: session.user.id,
-    });
+    const hash = Buffer.from(
+      JSON.stringify({ ...filters, userId: session.user.id, role: session.user.role }),
+    ).toString("base64");
+    const data = await cached(
+      CACHE_KEYS.dealsList(session.orgId, hash),
+      () => getDeals(session.orgId!, { ...filters, role: session.user.role ?? undefined, userId: session.user.id }),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
     return ok(data);
   });
 }
@@ -61,7 +64,10 @@ export async function POST(req: NextRequest) {
       clientId: input.clientId || null,
     }).returning();
 
-    await invalidateCache(CACHE_KEYS.dealsForecast(session.orgId));
+    await Promise.all([
+      invalidateCache(CACHE_KEYS.dealsForecast(session.orgId)),
+      invalidateCachePattern(`deals:list:${session.orgId}:*`),
+    ]);
     if (deal) {
       void createAuditLog({
         action: "deal.created",
