@@ -52,9 +52,16 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
   if (!isRedisEnabled() || !redis) return;
 
   try {
-    const keys = await redis.keys(pattern);
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    let cursor = 0;
+    const keysToDelete: string[] = [];
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 100 });
+      cursor = nextCursor;
+      keysToDelete.push(...keys);
+    } while (cursor !== 0);
+
+    if (keysToDelete.length > 0) {
+      await redis.del(...keysToDelete);
     }
   } catch {
 
@@ -110,6 +117,27 @@ export const CACHE_KEYS = {
 
   executiveDashboard: (orgId: string) => `dashboard:executive:${orgId}`,
   announcementsList: (orgId: string) => `dashboard:announcements:${orgId}`,
+
+  invoicesList: (orgId: string, hash: string) => `invoices:list:${orgId}:${hash}`,
+  invoiceDetail: (orgId: string, id: number) => `invoices:detail:${orgId}:${id}`,
+  invoiceStats: (orgId: string) => `invoices:stats:${orgId}`,
+
+  tasksList: (orgId: string, hash: string) => `tasks:list:${orgId}:${hash}`,
+  taskDetail: (orgId: string, id: number) => `tasks:detail:${orgId}:${id}`,
+
+  quotesList: (orgId: string, hash: string) => `quotes:list:${orgId}:${hash}`,
+  quoteDetail: (orgId: string, id: number) => `quotes:detail:${orgId}:${id}`,
+
+  supportTicketsList: (orgId: string, hash: string) => `support:list:${orgId}:${hash}`,
+  supportTicketDetail: (orgId: string, id: number) => `support:detail:${orgId}:${id}`,
+
+  calendarEvents: (orgId: string, hash: string) => `calendar:events:${orgId}:${hash}`,
+
+  targetsList: (orgId: string, hash: string) => `targets:list:${orgId}:${hash}`,
+  targetLeaderboard: (orgId: string, metricType: string) => `targets:leaderboard:${orgId}:${metricType}`,
+
+  branchesList: (orgId: string) => `branches:list:${orgId}`,
+  rolesList2: (orgId: string) => `roles:list:${orgId}`,
 } as const;
 
 export const CACHE_TTL = {
