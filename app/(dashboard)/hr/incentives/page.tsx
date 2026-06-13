@@ -141,6 +141,15 @@ export default function IncentivesPage() {
   }
 
   function handleSetRate() {
+    const parsed = parseFloat(newRate);
+    if (!newRate || isNaN(parsed) || parsed < 0 || parsed > 100) {
+      toast.error("Incentive rate must be between 0 and 100");
+      return;
+    }
+    if (!/^\d{1,5}(\.\d{1,2})?$/.test(newRate)) {
+      toast.error("Rate must have at most 2 decimal places");
+      return;
+    }
     setConfigMutation.mutate(
       { incentiveRate: newRate },
       {
@@ -346,10 +355,12 @@ export default function IncentivesPage() {
             <div className="space-y-1.5">
               <Label>New Incentive Rate (%)</Label>
               <Input
-                type="number"
-                step="0.01"
+                inputMode="decimal"
                 value={newRate}
-                onChange={(e) => setNewRate(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || /^\d{0,5}(\.\d{0,2})?$/.test(val)) setNewRate(val);
+                }}
                 placeholder="e.g., 2.50"
               />
               <p className="text-xs text-muted-foreground">
