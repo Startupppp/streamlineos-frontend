@@ -103,6 +103,7 @@ export const leaveRequests = pgTable("leave_requests", {
   index("idx_leave_requests_user_id").on(table.userId),
   index("idx_leave_requests_org_status").on(table.orgId, table.status),
   index("idx_leave_requests_dates").on(table.startDate, table.endDate),
+  index("idx_leave_requests_org_user_status").on(table.orgId, table.userId, table.status),
 ]);
 
 export const payrolls = pgTable("payrolls", {
