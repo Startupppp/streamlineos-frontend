@@ -169,11 +169,17 @@ export default function JobPostingsPage() {
       if (/\s{2,}/.test(location)) { toast.error("Location cannot have multiple consecutive spaces"); return; }
     }
 
-    const sm = salaryMin ? Number(salaryMin) : undefined;
-    const sx = salaryMax ? Number(salaryMax) : undefined;
+    const smRaw = salaryMin.trim();
+    const sxRaw = salaryMax.trim();
+    const sm = smRaw ? Number(smRaw) : undefined;
+    const sx = sxRaw ? Number(sxRaw) : undefined;
+    if (smRaw && (isNaN(Number(smRaw)) || !/^\d+$/.test(smRaw))) { toast.error("Minimum salary must be a positive whole number"); return; }
+    if (sxRaw && (isNaN(Number(sxRaw)) || !/^\d+$/.test(sxRaw))) { toast.error("Maximum salary must be a positive whole number"); return; }
     if (sm !== undefined && sm < 0) { toast.error("Minimum salary cannot be negative"); return; }
     if (sx !== undefined && sx < 0) { toast.error("Maximum salary cannot be negative"); return; }
-    if (sm && sx && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
+    if (sm !== undefined && sm > 999_999_999) { toast.error("Minimum salary is too large"); return; }
+    if (sx !== undefined && sx > 999_999_999) { toast.error("Maximum salary is too large"); return; }
+    if (sm !== undefined && sx !== undefined && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
     createJob.mutate(
       {
         title: title.trim(),
@@ -197,7 +203,7 @@ export default function JobPostingsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [title, location, type, description, openings, createJob]);
+  }, [title, departmentId, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {
@@ -348,11 +354,11 @@ export default function JobPostingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Min Salary (₹)</label>
-                  <Input type="number" min="0" placeholder="e.g. 600000" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
+                  <Input inputMode="numeric" placeholder="e.g. 600000" value={salaryMin} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMin(e.target.value); }} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Max Salary (₹)</label>
-                  <Input type="number" min="0" placeholder="e.g. 1200000" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+                  <Input inputMode="numeric" placeholder="e.g. 1200000" value={salaryMax} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMax(e.target.value); }} />
                 </div>
               </div>
               <div className="space-y-2">

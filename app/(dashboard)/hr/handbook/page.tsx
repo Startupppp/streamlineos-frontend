@@ -75,10 +75,10 @@ function HandbookContent() {
   const handleCreate = useCallback(() => {
     const trimmedVersion = version.trim();
     if (!trimmedVersion) { toast.error("Version is required"); return; }
-    if (trimmedVersion.length < 1) { toast.error("Version is required"); return; }
+    if (trimmedVersion.length < 3) { toast.error("Version must be at least 3 characters (e.g., 1.0)"); return; }
     if (trimmedVersion.length > 20) { toast.error("Version must be at most 20 characters"); return; }
     if (!VERSION_REGEX.test(trimmedVersion)) {
-      toast.error("Version must be a valid format (e.g., 1.0, 2.1.3)");
+      toast.error("Version must be a valid format (e.g., 1.0, 2.1.3) — no consecutive dots or invalid characters");
       return;
     }
     if (changelog.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
