@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, mfaBackupCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,7 +9,7 @@ import { invalidateUserSession } from "@/lib/auth";
 const schema = z.object({ userId: z.string().min(1) });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async () => {
+  return withAbility("manage", "settings:mfa", async () => {
     const body = await parseBody(req, schema);
 
     const user = await db.query.users.findFirst({

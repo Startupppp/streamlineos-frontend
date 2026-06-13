@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
-import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
+import { ok, err, withAbility, parseBody } from "@/lib/api/helpers";
 import { blogDb } from "@/lib/blog-db";
 import { blogPosts } from "@/lib/db/schema";
 import { getAdminPostById } from "@/server/queries/blog";
@@ -11,7 +11,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ entityId: string }> },
 ) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:posts", async () => {
     const { entityId: id } = await params;
     const post = await getAdminPostById(id);
     if (!post) return err("Post not found", 404);
@@ -23,7 +23,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ entityId: string }> },
 ) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:posts", async () => {
     const { entityId: id } = await params;
     const body = await parseBody(req, postUpdateSchema);
 
@@ -77,7 +77,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ entityId: string }> },
 ) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:posts", async () => {
     const { entityId: id } = await params;
     const [deleted] = await blogDb
       .delete(blogPosts)
