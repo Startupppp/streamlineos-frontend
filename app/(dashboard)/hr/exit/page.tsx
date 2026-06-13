@@ -84,6 +84,10 @@ export default function ExitManagementPage() {
 
   const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
 
+  const hasActiveResignation = resignations?.some(
+    (r: Resignation) => r.userId === userId && ["PENDING", "HR_APPROVED"].includes(r.status ?? ""),
+  ) ?? false;
+
   const toggleExpand = useCallback((id: number) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -91,6 +95,13 @@ export default function ExitManagementPage() {
       else next.add(id);
       return next;
     });
+  }, []);
+
+  const resetResignationForm = useCallback(() => {
+    setReason("");
+    setReasonCategory("");
+    setWillingForExitInterview(false);
+    setCompanyFeedback("");
   }, []);
 
   const handleSubmitResignation = useCallback(() => {
@@ -111,10 +122,7 @@ export default function ExitManagementPage() {
         onSuccess: () => {
           toast.success("Resignation submitted");
           setSheetOpen(false);
-          setReason("");
-          setReasonCategory("");
-          setWillingForExitInterview(false);
-          setCompanyFeedback("");
+          resetResignationForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
@@ -204,10 +212,14 @@ export default function ExitManagementPage() {
       subtitle="Resignations, exit interviews, and offboarding"
       badge={`${resignations?.length ?? 0} records`}
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Submit Resignation
-        </Button>
+        !isCEO && !hasActiveResignation ? (
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Submit Resignation
+          </Button>
+        ) : hasActiveResignation ? (
+          <p className="text-xs text-muted-foreground">You have a pending resignation.</p>
+        ) : null
       }
     >
       {!resignations?.length ? (
@@ -241,7 +253,7 @@ export default function ExitManagementPage() {
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(open) => { if (!open) resetResignationForm(); setSheetOpen(open); }}
         title="Submit Resignation"
         onSubmit={handleSubmitResignation}
         submitLabel="Submit"
@@ -318,14 +330,25 @@ export default function ExitManagementPage() {
           <p className="text-xs text-muted-foreground mb-2">
             Need a template? Download and attach your formal resignation letter:
           </p>
-          <a
-            href="/Resignation Letter Template.docx"
-            download
+          <button
+            type="button"
+            onClick={() => {
+              const content = `RESIGNATION LETTER TEMPLATE\n\n[Date]\n\nTo,\nThe Management,\n[Company Name]\n\nSubject: Resignation from the position of [Your Job Title]\n\nDear [Manager's Name],\n\nI am writing to formally inform you of my decision to resign from my position as [Your Job Title] at [Company Name], effective [Last Working Date].\n\nReason for leaving: [Briefly state your reason]\n\nI am grateful for the opportunities I have had during my tenure at [Company Name]. I will ensure a smooth handover of my responsibilities during the notice period.\n\nThank you for your support and guidance.\n\nSincerely,\n[Your Name]\n[Employee ID]\n[Date]`;
+              const blob = new Blob([content], { type: "text/plain" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "Resignation Letter Template.txt";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
             className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
           >
             <Download className="h-3 w-3" />
             Download Resignation Letter Template
-          </a>
+          </button>
         </div>
       </HrSheet>
 
