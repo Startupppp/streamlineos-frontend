@@ -59,19 +59,30 @@ function EmailTemplatesContent() {
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("General");
 
+  const resetForm = useCallback(() => {
+    setName(""); setSubject(""); setBody(""); setCategory("General");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!name.trim() || !subject.trim() || !body.trim()) { toast.error("Name, subject, and body are required"); return; }
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Template Name is required"); return; }
+    if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
+    if (/[^a-zA-Z0-9\s\-_()&,.]/.test(trimmedName)) { toast.error("Template Name contains invalid special characters"); return; }
+    if (!subject.trim()) { toast.error("Subject Line is required"); return; }
+    if (subject.trim().length > 200) { toast.error("Subject must be at most 200 characters"); return; }
+    if (!body.trim()) { toast.error("Body is required"); return; }
+    if (body.trim().length < 10) { toast.error("Body must be at least 10 characters"); return; }
     create.mutate(
-      { name: name.trim(), subject: subject.trim(), body: body.trim(), category },
+      { name: trimmedName, subject: subject.trim(), body: body.trim(), category },
       {
         onSuccess: () => {
           toast.success("Template created"); setSheetOpen(false);
-          setName(""); setSubject(""); setBody(""); setCategory("General");
+          resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, subject, body, category, create]);
+  }, [name, subject, body, category, create, resetForm]);
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
@@ -125,8 +136,8 @@ function EmailTemplatesContent() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold leading-tight">{t.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Subject: {t.subject}</p>
+                  <h3 className="text-sm font-semibold leading-tight truncate" title={t.name}>{t.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate" title={t.subject}>Subject: {t.subject}</p>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{t.body}</p>
                 <div className="flex gap-2">
@@ -138,7 +149,7 @@ function EmailTemplatesContent() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Email Template" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Email Template" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Template Name</label>
           <Input placeholder="e.g., Welcome Email" value={name} onChange={(e) => setName(e.target.value)} />
