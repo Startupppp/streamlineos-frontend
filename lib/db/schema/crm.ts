@@ -109,6 +109,7 @@ export const leadActivities = pgTable("lead_activities", {
 }, (table) => [
   index("idx_lead_activities_lead").on(table.leadId),
   index("idx_lead_activities_user").on(table.userId),
+  index("idx_lead_activities_org_date").on(table.orgId, table.date),
 ]);
 
 export const leadNotes = pgTable("lead_notes", {
@@ -120,6 +121,7 @@ export const leadNotes = pgTable("lead_notes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_notes_lead").on(table.leadId),
+  index("idx_lead_notes_org_created").on(table.orgId, table.createdAt),
 ]);
 
 export const leadTasks = pgTable("lead_tasks", {
@@ -133,6 +135,7 @@ export const leadTasks = pgTable("lead_tasks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_tasks_lead").on(table.leadId),
+  index("idx_lead_tasks_org_status").on(table.orgId, table.status),
 ]);
 
 export const leadEmails = pgTable("lead_emails", {
@@ -149,6 +152,7 @@ export const leadEmails = pgTable("lead_emails", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_lead_emails_lead").on(table.leadId),
+  index("idx_lead_emails_org_sent").on(table.orgId, table.sentAt),
 ]);
 
 export const clients = pgTable("clients", {
@@ -169,11 +173,11 @@ export const clients = pgTable("clients", {
   accountManagerId: text("account_manager_id").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
   healthScore: integer("health_score").default(50).notNull(),
-  healthStatus: text("health_status").default("healthy").notNull(),
+  healthStatus: crmHealthEnum("health_status").default("healthy").notNull(),
   lastHealthCheck: timestamp("last_health_check"),
   churnRiskScore: integer("churn_risk_score"),
   churnRiskReasoning: text("churn_risk_reasoning"),
-  convertedAt: timestamp("converted_at").defaultNow().notNull(),
+  convertedAt: timestamp("converted_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
@@ -214,6 +218,7 @@ export const targetHistory = pgTable("target_history", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_target_history_target").on(table.targetId),
+  index("idx_target_history_org_created").on(table.orgId, table.createdAt),
 ]);
 
 export const deals = pgTable("deals", {
@@ -372,6 +377,7 @@ export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
   errorMessage: text("error_message"),
 }, (table) => [
   index("idx_ecr_campaign").on(table.campaignId, table.status),
+  index("idx_ecr_lead").on(table.leadId),
 ]);
 
 export const crmPeople = pgTable("crm_people", {

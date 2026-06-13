@@ -185,7 +185,7 @@ function HeroPreview() {
       <motion.div
         animate={{ y: [6, -6, 6] }}
         transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
-        className="relative z-10 rounded-3xl glass-panel-strong p-6 shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
+        className="relative z-10 rounded-2xl glass-panel-strong p-6 shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
       >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
