@@ -114,6 +114,7 @@ export function HrEmployeeTable({
                   const canTerminate = canDeleteEmployee(
                     user.role,
                     user.id,
+                    user.isActive,
                     currentUserRole,
                     currentUserId,
                   );
@@ -207,6 +208,7 @@ export function HrEmployeeTable({
                             size="icon"
                             className="h-7 w-7"
                             aria-label={`Edit ${displayName}`}
+                            title={`Edit ${displayName}`}
                             asChild
                           >
                             <Link href={`/hr/employees/${user.id}?tab=profile`}>
@@ -219,6 +221,7 @@ export function HrEmployeeTable({
                               size="icon"
                               className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                               aria-label={`Terminate ${displayName}`}
+                              title={`Terminate ${displayName}`}
                               onClick={() => onRequestDelete(user)}
                             >
                               <UserX className="h-3.5 w-3.5" />

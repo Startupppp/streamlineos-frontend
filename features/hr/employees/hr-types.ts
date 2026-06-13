@@ -42,9 +42,11 @@ export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 export function canDeleteEmployee(
   targetRole: UserRole,
   targetId: string,
+  targetIsActive: boolean,
   currentRole: string | undefined,
   currentId: string | undefined,
 ): boolean {
+  if (!targetIsActive) return false;
   if (targetId === currentId) return false;
   if (currentRole === "CEO") return targetRole !== "CEO";
   if (currentRole === "HR") return targetRole !== "CEO" && targetRole !== "HR";
