@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -27,9 +27,12 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Plus, Search, MoreHorizontal, Trash2, BookOpen } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Trash2, BookOpen, Check, ChevronsUpDown } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["GENERAL", "TECHNICAL", "BEHAVIOURAL", "SITUATIONAL", "ROLE_SPECIFIC", "CULTURE_FIT"];
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
@@ -66,6 +69,8 @@ export default function QuestionBankPage() {
   const [newCategory, setNewCategory] = useState("GENERAL");
   const [newDifficulty, setNewDifficulty] = useState<"EASY" | "MEDIUM" | "HARD">("MEDIUM");
   const [newRole, setNewRole] = useState("");
+  const [rolePickerOpen, setRolePickerOpen] = useState(false);
+  const [roleInput, setRoleInput] = useState("");
   const [newTags, setNewTags] = useState("");
 
   const { data: questions, isLoading } = useInterviewQuestions({
@@ -73,6 +78,11 @@ export default function QuestionBankPage() {
     difficulty: difficulty !== "ALL" ? difficulty : undefined,
     q: search || undefined,
   });
+
+  const existingRoles = useMemo(() => {
+    const roles = (questions ?? []).map((q) => q.role).filter((r): r is string => !!r);
+    return [...new Set(roles)].sort();
+  }, [questions]);
 
   const createQuestion = useCreateInterviewQuestion();
 
@@ -97,7 +107,7 @@ export default function QuestionBankPage() {
         onSuccess: () => {
           toast.success("Question added to bank");
           setSheetOpen(false);
-          setNewQuestion(""); setNewRole(""); setNewTags("");
+          setNewQuestion(""); setNewRole(""); setRoleInput(""); setNewTags("");
           setNewCategory("GENERAL"); setNewDifficulty("MEDIUM");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -160,7 +170,64 @@ export default function QuestionBankPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">For Role <span className="text-muted-foreground font-normal">(optional)</span></label>
-                  <Input placeholder="e.g. Software Engineer, Sales Executive" value={newRole} onChange={(e) => setNewRole(e.target.value)} />
+                  <Popover open={rolePickerOpen} onOpenChange={setRolePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={rolePickerOpen}
+                        className="w-full justify-between font-normal"
+                      >
+                        {newRole || "Select or type a role..."}
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search or enter a role..."
+                          value={roleInput}
+                          onValueChange={setRoleInput}
+                        />
+                        <CommandList>
+                          <CommandEmpty>
+                            {roleInput.trim() ? (
+                              <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                                onClick={() => {
+                                  setNewRole(roleInput.trim());
+                                  setRolePickerOpen(false);
+                                }}
+                              >
+                                Use &quot;{roleInput.trim()}&quot;
+                              </button>
+                            ) : (
+                              <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
+                            )}
+                          </CommandEmpty>
+                          {existingRoles.length > 0 && (
+                            <CommandGroup heading="Existing Roles">
+                              {existingRoles.map((role) => (
+                                <CommandItem
+                                  key={role}
+                                  value={role}
+                                  onSelect={() => {
+                                    setNewRole(role);
+                                    setRoleInput("");
+                                    setRolePickerOpen(false);
+                                  }}
+                                >
+                                  <Check className={cn("mr-2 h-4 w-4", newRole === role ? "opacity-100" : "opacity-0")} />
+                                  {role}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
