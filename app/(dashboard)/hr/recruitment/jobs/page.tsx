@@ -153,10 +153,27 @@ export default function JobPostingsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Job Title is required"); return; }
+    if (!/^[a-zA-Z]/.test(trimmedTitle)) { toast.error("Job Title must start with a letter"); return; }
+    if (/[^a-zA-Z0-9\s.,&()\-+/]/.test(trimmedTitle)) { toast.error("Job Title contains invalid special characters"); return; }
+    if (/(.)\1{2,}/.test(trimmedTitle)) { toast.error("Job Title cannot have 3 or more consecutive identical characters"); return; }
+    if (/\s{2,}/.test(title)) { toast.error("Job Title cannot have multiple consecutive spaces"); return; }
+    if (title !== title.trim()) { toast.error("Job Title cannot have leading or trailing spaces"); return; }
+
+    const trimmedLocation = location.trim();
+    if (trimmedLocation) {
+      if (!/^[a-zA-Z]/.test(trimmedLocation)) { toast.error("Location must start with a letter"); return; }
+      if (/[^a-zA-Z0-9\s.,&()\-+/]/.test(trimmedLocation)) { toast.error("Location contains invalid special characters"); return; }
+      if (/(.)\1{2,}/.test(trimmedLocation)) { toast.error("Location cannot have 3 or more consecutive identical characters"); return; }
+      if (/\s{2,}/.test(location)) { toast.error("Location cannot have multiple consecutive spaces"); return; }
+    }
+
     const sm = salaryMin ? Number(salaryMin) : undefined;
     const sx = salaryMax ? Number(salaryMax) : undefined;
-    if (sm && sx && sm > sx) { toast.error("Salary min must be ≤ max"); return; }
+    if (sm !== undefined && sm < 0) { toast.error("Minimum salary cannot be negative"); return; }
+    if (sx !== undefined && sx < 0) { toast.error("Maximum salary cannot be negative"); return; }
+    if (sm && sx && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
     createJob.mutate(
       {
         title: title.trim(),
