@@ -61,7 +61,7 @@ export function LandingPricing() {
                 }`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-mono uppercase tracking-[0.18em] text-white font-bold shadow-lg whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
                     <Sparkles className="h-3 w-3" />
                     {tier.badge}
                   </div>
@@ -70,7 +70,7 @@ export function LandingPricing() {
                   <h3 className="font-display text-xl font-bold text-slate-900 mb-1">
                     {tier.name}
                   </h3>
-                  <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-blue-600">
+                  <p className="text-[11px] font-medium text-blue-600">
                     {tier.tagline}
                   </p>
                 </div>
@@ -114,7 +114,7 @@ export function LandingPricing() {
                     </Button>
                   </Link>
                 </Magnetic>
-                <p className="mt-3 text-[10.5px] font-mono uppercase tracking-[0.12em] text-slate-400 text-center">
+                <p className="mt-3 text-[11px] font-medium text-slate-400 text-center">
                   {tier.bestFor}
                 </p>
               </motion.div>

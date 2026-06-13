@@ -46,10 +46,10 @@ export default function BlogPage() {
               className="group block rounded-2xl border border-slate-200/80 bg-white/70 backdrop-blur-sm p-6 lg:p-7 hover:border-blue-300/60 hover:bg-white transition-colors"
             >
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700">
+                <span className="text-[12px] font-medium px-2.5 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700">
                   {post.tag}
                 </span>
-                <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400">
+                <span className="text-[13px] font-medium text-slate-400">
                   {formatDate(post.publishedAt)} · {post.readingMinutes} min read
                 </span>
               </div>
@@ -92,7 +92,7 @@ export default function BlogPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-3xl mt-12 text-center">
-        <p className="inline-flex items-center gap-2 text-[12px] font-mono uppercase tracking-[0.18em] text-slate-400">
+        <p className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-400">
           <Sparkles className="h-3 w-3 text-blue-500" />
           Want to write for us?{" "}
           <Link href="/contact" className="text-blue-600 hover:underline">

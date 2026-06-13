@@ -52,7 +52,7 @@ export default async function SupportPage() {
                       </p>
                     </div>
                     <span
-                      className={`text-[10px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded border shrink-0 ${
+                      className={`text-[11px] font-medium px-1.5 py-0.5 rounded border shrink-0 ${
                         m.status === "REPLIED"
                           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                           : "border-blue-200 bg-blue-50 text-blue-700"

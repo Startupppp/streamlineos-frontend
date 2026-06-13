@@ -60,7 +60,7 @@ function SummaryStat({ label, value, tone = "default" }: SummaryStatProps) {
   const valueTone = tone === "muted" ? "text-muted-foreground" : "text-foreground";
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+      <span className="text-[11px] font-medium text-slate-500 leading-none">
         {label}
       </span>
       <span className={`font-mono tabular-nums text-base font-semibold ${valueTone}`}>
@@ -205,7 +205,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-from "
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               From
             </label>
@@ -220,7 +220,7 @@ export default function Gstr1Page() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-to"
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               To
             </label>

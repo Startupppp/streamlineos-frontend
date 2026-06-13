@@ -114,7 +114,7 @@ export default async function InboxPage({
                     <p className="text-[13px] text-slate-600 line-clamp-1 mb-1.5">
                       {m.message}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em]">
+                    <div className="flex items-center gap-2 text-[11px] font-medium">
                       <span
                         className={cn(
                           "px-1.5 py-0.5 rounded border",
@@ -140,7 +140,7 @@ export default async function InboxPage({
         </div>
       )}
 
-      <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400 mt-1.5 flex items-center gap-1.5">
+      <p className="text-[12px] font-medium text-slate-400 mt-1.5 flex items-center gap-1.5">
         <Archive className="h-3 w-3" />
         {messages.length} message{messages.length === 1 ? "" : "s"}
       </p>

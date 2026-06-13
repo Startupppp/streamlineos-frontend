@@ -122,7 +122,7 @@ export default function ProfitLossPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="pnl-from "
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               From
             </label>
@@ -137,7 +137,7 @@ export default function ProfitLossPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="pnl-to"
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               To
             </label>

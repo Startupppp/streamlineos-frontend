@@ -112,7 +112,7 @@ function HireVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.15em] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
         <span>Candidates · AI scored</span>
         <span className="text-blue-600">3 new</span>
       </div>
@@ -156,7 +156,7 @@ function OnboardVisual() {
   ];
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.15em] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
         <span>Onboarding · Aarav Singh</span>
         <span className="text-blue-600">60%</span>
       </div>
@@ -226,7 +226,7 @@ function DeliverVisual() {
               : "bg-slate-50/70 border-slate-200"
           }`}
         >
-          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500 mb-1">
+          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1">
             <span>{col.title}</span>
             <span>{col.count}</span>
           </div>
@@ -254,7 +254,7 @@ function CloseVisual() {
   const maxBar = Math.max(...bars.map((b) => b.value));
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.15em] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
         <span>Forecast · Q3</span>
         <span className="text-emerald-700">$1.42M ARR</span>
       </div>

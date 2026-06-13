@@ -172,7 +172,7 @@ export default function SignupPage() {
                   </div>
 
                   {plan.highlight && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.14em] text-white font-semibold shadow-sm shrink-0">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-0.5 text-[9px] font-semibold text-white shadow-sm shrink-0">
                       <Sparkles className="h-2.5 w-2.5" />
                       Popular
                     </span>
@@ -182,7 +182,7 @@ export default function SignupPage() {
             })}
           </div>
 
-          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400 text-center pt-1">
+          <p className="text-[11px] font-medium text-slate-400 text-center pt-1">
             14-day trial · No credit card · Cancel anytime
           </p>
 

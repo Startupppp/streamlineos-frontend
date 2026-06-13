@@ -42,7 +42,7 @@ export function SavingsCalculator() {
         <div className="flex items-center justify-between mb-3">
           <label
             htmlFor="seats-slider"
-            className="text-[12px] font-mono uppercase tracking-[0.14em] text-slate-500 inline-flex items-center gap-2"
+            className="text-[12px] font-medium text-slate-500 inline-flex items-center gap-2"
           >
             <Users className="h-3.5 w-3.5" />
             Team size
@@ -63,7 +63,7 @@ export function SavingsCalculator() {
           className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-br [&::-webkit-slider-thumb]:from-blue-500 [&::-webkit-slider-thumb]:to-cyan-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
           aria-label="Number of users"
         />
-        <div className="mt-2 flex justify-between text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+        <div className="mt-2 flex justify-between text-[11px] font-medium text-slate-400">
           <span>3</span>
           <span>50</span>
           <span>100</span>
@@ -95,7 +95,7 @@ export function SavingsCalculator() {
       >
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-mono uppercase tracking-[0.18em] opacity-85 mb-1">
+            <p className="text-[11px] font-medium opacity-85 mb-1">
               You save vs Odoo
             </p>
             <p className="font-display text-3xl lg:text-4xl font-extrabold tabular-nums">
@@ -111,7 +111,7 @@ export function SavingsCalculator() {
       </motion.div>
 
       <details className="mt-5 group">
-        <summary className="cursor-pointer text-[12px] font-mono uppercase tracking-[0.14em] text-slate-500 hover:text-slate-900 transition-colors">
+        <summary className="cursor-pointer text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors">
           See per-tool stack comparison
         </summary>
         <div className="mt-4 rounded-2xl bg-slate-50/70 border border-slate-200 p-5">
@@ -166,7 +166,7 @@ function ComparisonCard({
       }`}
     >
       <p
-        className={`text-[11px] font-mono uppercase tracking-[0.14em] mb-1 ${
+        className={`text-[11px] font-medium mb-1 ${
           variant === "primary" ? "text-blue-700" : "text-slate-500"
         }`}
       >

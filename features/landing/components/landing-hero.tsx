@@ -54,7 +54,7 @@ export function LandingHero() {
             className="inline-flex items-center gap-2 rounded-full glass-panel px-3.5 py-1.5 mb-6"
           >
             <Sparkles className="h-3 w-3 text-blue-500" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-700">
+            <span className="text-[11px] font-medium text-slate-700">
               One OS for every team function
             </span>
           </motion.div>
@@ -111,7 +111,7 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-1.5 text-[11px] font-mono uppercase tracking-[0.16em] text-slate-400"
+            className="flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-1.5 text-[11px] font-medium text-slate-400"
           >
             <span>No credit card</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
@@ -145,7 +145,7 @@ function HeroPreview() {
         className="absolute -top-6 -left-10 lg:-left-16 z-20 w-[220px] rounded-2xl glass-panel-strong p-4 shadow-[0_24px_60px_-20px_rgba(30,64,175,0.25)] rotate-[-6deg] hidden sm:block"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-blue-600">
+          <span className="text-[11px] font-medium text-blue-600">
             Sprint 24
           </span>
           <span className="text-[10px] text-slate-500 font-mono">12/24</span>
@@ -190,7 +190,7 @@ function HeroPreview() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-cyan-500" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-600">
+            <span className="text-[11px] font-medium text-slate-600">
               Pipeline · Q2
             </span>
           </div>
@@ -227,7 +227,7 @@ function HeroPreview() {
           ))}
         </div>
         <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between text-[11px]">
-          <span className="text-slate-500 font-mono uppercase tracking-[0.14em]">
+          <span className="text-slate-500 font-medium">
             Forecast
           </span>
           <span className="font-mono text-slate-900 font-semibold">$2.4M ARR</span>
@@ -240,7 +240,7 @@ function HeroPreview() {
         className="absolute -bottom-8 -right-6 lg:-right-12 z-20 w-[200px] rounded-2xl glass-panel-strong p-4 shadow-[0_24px_60px_-20px_rgba(6,182,212,0.25)] rotate-[5deg] hidden sm:block"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-600">
+          <span className="text-[11px] font-medium text-cyan-600">
             Attendance
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-mono">

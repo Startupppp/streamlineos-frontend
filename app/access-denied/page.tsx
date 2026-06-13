@@ -35,7 +35,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
             <div className="rounded-lg border border-slate-200/70 bg-slate-50/60 px-4 py-3 text-left space-y-2">
               {from && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 mb-1 leading-none">
+                  <p className="text-[11px] font-medium text-blue-600 mb-1 leading-none">
                     You tried to open
                   </p>
                   <p className="font-mono text-xs text-slate-700 break-all">{from}</p>
@@ -43,7 +43,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
               )}
               {requiredList.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 mb-1 leading-none">
+                  <p className="text-[11px] font-medium text-blue-600 mb-1 leading-none">
                     Required permission{requiredList.length > 1 ? "s" : ""}
                   </p>
                   <ul className="space-y-0.5">

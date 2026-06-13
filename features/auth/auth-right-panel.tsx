@@ -90,7 +90,7 @@ function FloatingComposition() {
           transition={{ duration: 7, ease: "easeInOut", repeat: Infinity }}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-blue-600">
+            <span className="text-[10px] font-medium text-blue-600">
               Sprint 24
             </span>
             <span className="text-[9px] font-mono text-slate-400">12/24</span>
@@ -135,7 +135,7 @@ function FloatingComposition() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-600">
+              <span className="text-[11px] font-medium text-slate-600">
                 Pipeline · Q2
               </span>
             </div>
@@ -174,7 +174,7 @@ function FloatingComposition() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px]">
-            <span className="text-slate-500 font-mono uppercase tracking-[0.14em]">
+            <span className="text-slate-500 font-medium">
               Forecast
             </span>
             <span className="font-mono text-slate-900 font-semibold">$2.4M ARR</span>
@@ -195,7 +195,7 @@ function FloatingComposition() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Users className="h-3 w-3 text-cyan-600" />
-              <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-slate-600">
+              <span className="text-[10px] font-medium text-slate-600">
                 Attendance
               </span>
             </div>

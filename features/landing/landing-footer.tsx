@@ -62,7 +62,7 @@ export function LandingFooter() {
 
           {footerCols.map((col) => (
             <div key={col.title}>
-              <h4 className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400 mb-4">
+              <h4 className="text-[11px] font-semibold text-slate-500 mb-4">
                 {col.title}
               </h4>
               <ul className="space-y-2.5">
@@ -85,7 +85,7 @@ export function LandingFooter() {
           <p className="text-xs font-mono text-slate-400">
             &copy; {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
           </p>
-          <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-slate-400">
+          <p className="text-[11px] font-medium text-slate-400">
             Made for teams that ship
           </p>
         </div>

@@ -162,7 +162,7 @@ export default function PrivacyPage() {
         </p>
         <div className="not-prose overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Vendor</th>
                 <th className="px-4 py-2.5 text-left font-medium">Purpose</th>

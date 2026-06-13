@@ -23,11 +23,10 @@ export const DS = {
   textSmall: "text-[13px] text-muted-foreground",
   textXs: "text-xs text-muted-foreground",
 
-  eyebrow: "text-[11px] font-mono uppercase tracking-[0.18em] text-blue-600",
-  monoMeta: "text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground",
+  eyebrow: "text-[11px] font-medium text-muted-foreground",
+  monoMeta: "text-[11px] font-medium text-muted-foreground",
 
-  brandText:
-    "bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent",
+  brandText: "text-blue-600",
   brandGradient: "bg-gradient-to-br from-blue-500 to-cyan-500",
   brandRing:
     "ring-1 ring-blue-200 focus-visible:ring-2 focus-visible:ring-blue-300",

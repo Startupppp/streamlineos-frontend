@@ -130,13 +130,13 @@ export default function PricingPage() {
                 }`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-mono uppercase tracking-[0.18em] text-white font-bold shadow-lg whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[11px] font-semibold text-white shadow-lg whitespace-nowrap">
                     <Sparkles className="h-3 w-3" />
                     {tier.badge}
                   </div>
                 )}
                 <h3 className="font-display text-xl font-bold text-slate-900">{tier.name}</h3>
-                <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-blue-600 mb-4">
+                <p className="text-[12px] font-medium text-blue-600 mb-4">
                   {tier.tagline}
                 </p>
                 <div className="mb-5 pb-5 border-b border-slate-100">
@@ -177,7 +177,7 @@ export default function PricingPage() {
                     <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </Link>
-                <p className="mt-3 text-[10.5px] font-mono uppercase tracking-[0.12em] text-slate-400 text-center">
+                <p className="mt-3 text-[12px] font-medium text-slate-400 text-center">
                   {tier.bestFor}
                 </p>
               </div>
@@ -197,7 +197,7 @@ export default function PricingPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200">
-                    <th className="py-3 px-4 text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500 min-w-[260px]">
+                    <th className="py-3 px-4 text-[11px] font-medium text-slate-500 min-w-[260px]">
                       Feature
                     </th>
                     {PRICING_TIERS.map((tier) => (

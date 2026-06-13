@@ -64,7 +64,7 @@ export default function AboutPage() {
               <p className="font-display text-3xl lg:text-4xl font-extrabold text-blue-700 leading-none mb-1.5">
                 {n.value}
               </p>
-              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">
+              <p className="text-[12px] font-medium text-slate-500">
                 {n.label}
               </p>
             </div>
@@ -139,7 +139,7 @@ export default function AboutPage() {
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3.5 py-1.5 mb-5">
               <Users className="h-3 w-3 text-cyan-300" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-100">
+              <span className="text-[12px] font-medium text-cyan-100">
                 We&apos;re hiring soon
               </span>
             </div>
@@ -164,7 +164,7 @@ export default function AboutPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 text-center">
-        <p className="inline-flex items-center gap-2 text-[12px] font-mono uppercase tracking-[0.18em] text-slate-400">
+        <p className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-400">
           <Sparkles className="h-3 w-3 text-blue-500" />
           More about what we&apos;re shipping next on{" "}
           <Link href="/blog" className="text-blue-600 hover:underline">
