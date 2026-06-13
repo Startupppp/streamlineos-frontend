@@ -105,13 +105,26 @@ export default function ExitManagementPage() {
   }, []);
 
   const handleSubmitResignation = useCallback(() => {
-    if (!reason.trim()) {
+    if (!reasonCategory) {
+      toast.error("Please select a reason category");
+      return;
+    }
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
       toast.error("Detailed explanation is required");
+      return;
+    }
+    if (trimmedReason.length < 50) {
+      toast.error("Detailed explanation must be at least 50 characters");
+      return;
+    }
+    if (trimmedReason.length > 2000) {
+      toast.error("Detailed explanation must be at most 2000 characters");
       return;
     }
     createResignation.mutate(
       {
-        reason: reason.trim(),
+        reason: trimmedReason,
         lastWorkingDate: autoLwd,
         noticePeriodDays: NOTICE_PERIOD_DAYS,
         reasonCategory: reasonCategory || undefined,
@@ -127,7 +140,7 @@ export default function ExitManagementPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation]);
+  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation, resetResignationForm]);
 
   const handleHrApprove = useCallback(() => {
     if (!hrApproveId) return;

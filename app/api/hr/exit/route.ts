@@ -43,7 +43,23 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (ability.can("manage", "all")) {
+      return err("CEO users cannot submit a resignation through this system.", 403);
+    }
+
     const body = createSchema.parse(await req.json());
+
+    const existing = await db.query.resignations.findFirst({
+      where: and(
+        eq(resignations.orgId, session.orgId),
+        eq(resignations.userId, session.user.id),
+        inArray(resignations.status, ["PENDING_HR", "HR_APPROVED"]),
+      ),
+      columns: { id: true },
+    });
+    if (existing) return err("You already have an active resignation request pending approval.", 409);
+
     const [resignation] = await db.insert(resignations).values({
       orgId: session.orgId,
       userId: session.user.id,
