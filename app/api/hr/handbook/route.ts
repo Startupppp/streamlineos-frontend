@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
         version: body.version,
         documentId: body.documentId ?? null,
         changelog: body.changelog ?? null,
-        publishedAt: new Date(),
-        publishedBy: session.user.id,
+        publishedAt: null,
+        publishedBy: null,
       })
       .returning();
 
