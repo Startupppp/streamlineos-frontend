@@ -83,6 +83,7 @@ export function useDealForecast() {
   return useQuery({
     queryKey: queryKeys.deals.forecast(),
     queryFn: () => apiClient.get<DealForecast>("/deals/forecast"),
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -91,6 +92,7 @@ export function useDealDetail(id: number) {
     queryKey: queryKeys.deals.detail(id),
     queryFn: () => apiClient.get<Deal>(`/deals/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -149,6 +151,7 @@ export function useContacts(filters?: ContactFilters) {
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -157,6 +160,7 @@ export function useContactDetail(id: number) {
     queryKey: queryKeys.contacts.detail(id),
     queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -209,6 +213,7 @@ export function useClientAccounts(filters?: ClientAccountFilters) {
     queryKey: queryKeys.clients.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedClientAccounts>("/clients", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -217,6 +222,7 @@ export function useClientAccount(id: number) {
     queryKey: queryKeys.clients.detail(id),
     queryFn: () => apiClient.get<ClientAccountWithActivities>(`/clients/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -225,6 +231,7 @@ export function useClientActivities(clientId: number) {
     queryKey: queryKeys.clients.activities(clientId),
     queryFn: () => apiClient.get<ClientActivity[]>(`/clients/${clientId}/activities`),
     enabled: clientId > 0,
+    staleTime: 60_000,
   });
 }
 
