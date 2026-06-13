@@ -20,6 +20,10 @@ import {
   useUpdateOneOnOne,
   useDeleteOneOnOne,
   useHrEmployees,
+  usePIPs,
+  useCreatePIP,
+  useUpdatePIP,
+  type PIP,
 } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,12 +47,13 @@ import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   Plus, Star, Target, Users, Calendar, Clock, MoreHorizontal,
-  CheckCircle2, Trash2, Pencil,
+  CheckCircle2, Trash2, Pencil, AlertTriangle,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Employee, PerformanceReview, Goal, ReviewCycle, OneOnOneMeeting, MeetingStatus } from "@/types/hr";
+import { Separator } from "@/components/ui/separator";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
 export default function PerformancePage() {
@@ -87,12 +92,16 @@ function PerformanceContent() {
           <TabsTrigger value="cycles" className="text-xs gap-1.5 px-3">
             <Calendar className="h-3.5 w-3.5" />Cycles
           </TabsTrigger>
+          <TabsTrigger value="pip" className="text-xs gap-1.5 px-3">
+            <AlertTriangle className="h-3.5 w-3.5" />PIP
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reviews" className="mt-3"><ReviewsTab /></TabsContent>
         <TabsContent value="goals" className="mt-3"><GoalsTab /></TabsContent>
         <TabsContent value="one-on-ones" className="mt-3"><OneOnOnesTab /></TabsContent>
         <TabsContent value="cycles" className="mt-3"><CyclesTab /></TabsContent>
+        <TabsContent value="pip" className="mt-3"><PIPTab /></TabsContent>
       </Tabs>
     </PageWrapper>
   );
@@ -760,6 +769,232 @@ function CyclesTab() {
         onConfirm={handleDelete}
         isPending={deleteCycle.isPending}
       />
+    </div>
+  );
+}
+
+function PIPTab() {
+  const { data: pips, isLoading } = usePIPs();
+  const { data: employeesRaw } = useHrEmployees();
+  const createPIP = useCreatePIP();
+  const updatePIP = useUpdatePIP();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [pipUserId, setPipUserId] = useState("");
+  const [reason, setReason] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [objectives, setObjectives] = useState([{ objective: "", metric: "", deadline: "" }]);
+
+  const employees = useMemo(
+    () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
+    [employeesRaw]
+  );
+
+  const pipsList = useMemo(() => (Array.isArray(pips) ? pips : []) as PIP[], [pips]);
+
+  const resetForm = useCallback(() => {
+    setPipUserId("");
+    setReason("");
+    setStartDate("");
+    setEndDate("");
+    setNotes("");
+    setObjectives([{ objective: "", metric: "", deadline: "" }]);
+  }, []);
+
+  const handleCreate = useCallback(() => {
+    if (!pipUserId) { toast.error("Please select an employee"); return; }
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) { toast.error("Reason is required"); return; }
+    if (trimmedReason.length > 1000) { toast.error("Reason must be at most 1000 characters"); return; }
+    if (!startDate) { toast.error("Start date is required"); return; }
+    if (!endDate) { toast.error("End date is required"); return; }
+    if (endDate <= startDate) { toast.error("End date must be after start date"); return; }
+
+    const existingActive = pipsList.find((p) => p.userId === pipUserId && (p.status === "ACTIVE" || p.status === "EXTENDED"));
+    if (existingActive) { toast.error("This employee already has an active PIP"); return; }
+
+    const validObjectives = objectives.filter((o) => o.objective.trim() && o.metric.trim() && o.deadline);
+    if (validObjectives.length === 0) { toast.error("At least one complete objective (goal, metric, deadline) is required"); return; }
+
+    createPIP.mutate(
+      {
+        userId: pipUserId,
+        reason: trimmedReason,
+        objectives: validObjectives.map((o) => ({ objective: o.objective.trim(), metric: o.metric.trim(), deadline: o.deadline })),
+        startDate,
+        endDate,
+        notes: notes.trim() || undefined,
+      },
+      {
+        onSuccess: () => { toast.success("PIP created"); setSheetOpen(false); resetForm(); },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      }
+    );
+  }, [pipUserId, reason, startDate, endDate, notes, objectives, pipsList, createPIP, resetForm]);
+
+  const handleUpdateStatus = useCallback((id: number, status: string) => {
+    updatePIP.mutate({ id, status }, {
+      onSuccess: () => toast.success("PIP updated"),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [updatePIP]);
+
+  const addObjective = useCallback(() => {
+    setObjectives((prev) => [...prev, { objective: "", metric: "", deadline: "" }]);
+  }, []);
+
+  const removeObjective = useCallback((index: number) => {
+    setObjectives((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const updateObjectiveField = useCallback((index: number, field: "objective" | "metric" | "deadline", value: string) => {
+    setObjectives((prev) => prev.map((o, i) => (i === index ? { ...o, [field]: value } : o)));
+  }, []);
+
+  if (isLoading) {
+    return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{pipsList.length} performance improvement plans</p>
+        <Button size="sm" onClick={() => setSheetOpen(true)}>
+          <Plus className="h-3.5 w-3.5 mr-1" />New PIP
+        </Button>
+      </div>
+
+      {pipsList.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No PIPs issued yet.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {pipsList.map((pip) => (
+            <Card key={pip.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Avatar className="h-7 w-7 shrink-0">
+                      <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} />
+                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{pip.user?.name?.[0] ?? "?"}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{pip.user?.name ?? "Employee"}</p>
+                      <p className="text-[10px] text-muted-foreground">{pip.startDate} → {pip.endDate}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      variant={
+                        pip.status === "COMPLETED" ? "default" :
+                        pip.status === "TERMINATED" ? "destructive" :
+                        pip.status === "EXTENDED" ? "secondary" : "outline"
+                      }
+                      className="text-[10px]"
+                    >
+                      {pip.status ?? "ACTIVE"}
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {(pip.status === "ACTIVE" || pip.status === "EXTENDED") && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(pip.id, "COMPLETED")}>
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />Mark Completed
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(pip.id, "EXTENDED")}>
+                              <Calendar className="h-3.5 w-3.5 mr-1.5" />Extend
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(pip.id, "TERMINATED")}>
+                              <Trash2 className="h-3.5 w-3.5 mr-1.5" />Terminate
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{pip.reason}</p>
+                {pip.objectives && pip.objectives.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">{pip.objectives.length} objective{pip.objectives.length !== 1 ? "s" : ""}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }}
+        title="Create Performance Improvement Plan"
+        onSubmit={handleCreate}
+        submitLabel="Create PIP"
+        isPending={createPIP.isPending}
+      >
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <Select value={pipUserId} onValueChange={setPipUserId}>
+            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
+            <SelectContent>
+              {employees.filter((e) => e.isActive).map((e) => (
+                <SelectItem key={e.id} value={e.id}>{[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Reason <span className="text-destructive">*</span></label>
+          <Textarea placeholder="Describe the performance concerns..." value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={1000} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Objectives <span className="text-destructive">*</span></label>
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addObjective}>
+              <Plus className="h-3 w-3 mr-1" />Add
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {objectives.map((obj, idx) => (
+              <div key={idx} className="space-y-2 p-3 border rounded-lg bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Objective {idx + 1}</span>
+                  {objectives.length > 1 && (
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeObjective(idx)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="h-8 text-xs" />
+                <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="h-8 text-xs" />
+                <Input type="date" value={obj.deadline} onChange={(e) => updateObjectiveField(idx, "deadline", e.target.value)} className="h-8 text-xs" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <Separator />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Notes (optional)</label>
+          <Textarea placeholder="Additional context or manager notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={2000} />
+        </div>
+      </HrSheet>
     </div>
   );
 }
