@@ -3,7 +3,7 @@ import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike, sql } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -87,7 +87,23 @@ export async function POST(req: NextRequest) {
 
     const body = await parseBody(req, createJobSchema);
 
-    if (!body.title) return err("title is required.", 400);
+    const normalizedTitle = body.title.trim().toLowerCase();
+    const normalizedLocation = (body.location ?? "").trim().toLowerCase();
+    const normalizedType = body.type ?? "FULL_TIME";
+
+    const existing = await db.query.jobPostings.findFirst({
+      where: and(
+        eq(jobPostings.orgId, session.orgId),
+        sql`lower(trim(${jobPostings.title})) = ${normalizedTitle}`,
+        sql`lower(trim(coalesce(${jobPostings.location}, ''))) = ${normalizedLocation}`,
+        eq(jobPostings.type, normalizedType),
+      ),
+      columns: { id: true },
+    });
+
+    if (existing) {
+      return err("A job posting with the same title, location, and type already exists.", 409);
+    }
 
     const [job] = await db
       .insert(jobPostings)
