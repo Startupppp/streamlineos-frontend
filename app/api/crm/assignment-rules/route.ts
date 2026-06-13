@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leadAssignmentRules } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:assignment-rules", async (session) => {
     const input = await parseBody(req, createSchema);
     const [rule] = await db
       .insert(leadAssignmentRules)

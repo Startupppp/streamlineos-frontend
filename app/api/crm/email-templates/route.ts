@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { crmEmailTemplates } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:email-templates", async (session) => {
     const input = await parseBody(req, createSchema);
     const [template] = await db
       .insert(crmEmailTemplates)
