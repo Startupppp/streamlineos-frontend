@@ -6,15 +6,20 @@ import { employeeDevices } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { and, eq, sql } from "drizzle-orm";
 
 const postDeviceSchema = z.object({
-  userId: z.string(),
-  deviceType: z.string(),
-  deviceName: z.string(),
-  serialNumber: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  notes: z.string().optional(),
+  userId: z.string().min(1, "Employee is required"),
+  deviceType: z.string().min(1, "Device type is required"),
+  deviceName: z
+    .string()
+    .min(1, "Device name is required")
+    .max(100)
+    .refine((v) => /[a-zA-Z]/.test(v), "Device name must contain at least one letter"),
+  serialNumber: z.string().min(1, "Serial number is required").max(100),
+  brand: z.string().min(1, "Brand is required").max(100),
+  model: z.string().min(1, "Model is required").max(100),
+  notes: z.string().max(500).optional(),
   assignedDate: z.string().optional(),
 });
 
@@ -34,6 +39,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, postDeviceSchema);
+
+    const existing = await db.query.employeeDevices.findFirst({
+      where: and(
+        eq(employeeDevices.orgId, session.orgId),
+        sql`lower(trim(${employeeDevices.serialNumber})) = ${body.serialNumber.trim().toLowerCase()}`,
+      ),
+      columns: { id: true },
+    });
+
+    if (existing) {
+      return err("A device with this serial number already exists.", 409);
+    }
 
     const [device] = await db
       .insert(employeeDevices)
