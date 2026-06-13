@@ -17,13 +17,14 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileText, Eye, Trash2 } from "lucide-react";
+import { Plus, FileText, Eye, Trash2, Upload, ExternalLink } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 interface HandbookVersion {
   id: number;
   version: string;
   changelog: string | null;
+  documentUrl: string | null;
   publishedAt: string | null;
   publishedBy: string | null;
   createdAt: string;
@@ -46,7 +47,7 @@ function HandbookContent() {
   });
 
   const create = useMutation({
-    mutationFn: (data: { version: string; changelog?: string }) =>
+    mutationFn: (data: { version: string; changelog?: string; documentUrl?: string }) =>
       apiClient.post<HandbookVersion>("/hr/handbook", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
   });
@@ -66,13 +67,16 @@ function HandbookContent() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [version, setVersion] = useState("");
   const [changelog, setChangelog] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const resetForm = useCallback(() => {
     setVersion("");
     setChangelog("");
+    setUploadFile(null);
   }, []);
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback(async () => {
     const trimmedVersion = version.trim();
     if (!trimmedVersion) { toast.error("Version is required"); return; }
     if (trimmedVersion.length < 3) { toast.error("Version must be at least 3 characters (e.g., 1.0)"); return; }
@@ -83,8 +87,31 @@ function HandbookContent() {
     }
     if (changelog.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
 
+    let documentUrl: string | undefined;
+
+    if (uploadFile) {
+      setIsUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", uploadFile);
+        fd.append("folder", "handbook");
+        const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
+        const json = await res.json() as { url?: string; error?: string };
+        if (!res.ok || !json.url) {
+          toast.error(json.error ?? "File upload failed");
+          return;
+        }
+        documentUrl = json.url;
+      } catch {
+        toast.error("File upload failed");
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
     create.mutate(
-      { version: trimmedVersion, changelog: changelog.trim() || undefined },
+      { version: trimmedVersion, changelog: changelog.trim() || undefined, documentUrl },
       {
         onSuccess: () => {
           toast.success("Handbook version created");
@@ -94,7 +121,7 @@ function HandbookContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [version, changelog, create, resetForm]);
+  }, [version, changelog, uploadFile, create, resetForm]);
 
   const handlePublish = useCallback((id: number) => {
     update.mutate(
@@ -161,8 +188,20 @@ function HandbookContent() {
                         {isPublished ? "PUBLISHED" : "DRAFT"}
                       </Badge>
                     </div>
-                    <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
+                    <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
                       {v.changelog && <span className="line-clamp-1">{v.changelog}</span>}
+                      {v.documentUrl && (
+                        <a
+                          href={v.documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-2.5 w-2.5" />
+                          View Document
+                        </a>
+                      )}
                       {v.publishedAt && <span>Published {format(new Date(v.publishedAt), "MMM d, yyyy")}</span>}
                       {v.createdAt && <span>Created {format(new Date(v.createdAt), "MMM d, yyyy")}</span>}
                     </div>
@@ -213,7 +252,7 @@ function HandbookContent() {
         title="New Handbook Version"
         onSubmit={handleCreate}
         submitLabel="Create"
-        isPending={create.isPending}
+        isPending={create.isPending || isUploading}
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Version <span className="text-destructive">*</span></label>
@@ -223,6 +262,40 @@ function HandbookContent() {
             onChange={(e) => setVersion(e.target.value)}
           />
           <p className="text-[11px] text-muted-foreground">Format: major.minor.patch (e.g., 1.0, 2.1, 3.0.1)</p>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Handbook Document</label>
+          <div className="rounded-lg border border-dashed border-border p-4 space-y-2">
+            <label className="flex flex-col items-center gap-2 cursor-pointer">
+              <Upload className="h-6 w-6 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground text-center">
+                {uploadFile ? uploadFile.name : "Click to upload PDF or Word document"}
+              </span>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  if (f && f.size > 10 * 1024 * 1024) {
+                    toast.error("File must be under 10MB");
+                    return;
+                  }
+                  setUploadFile(f);
+                }}
+              />
+            </label>
+            {uploadFile && (
+              <button
+                type="button"
+                className="text-[11px] text-muted-foreground hover:text-destructive underline block mx-auto"
+                onClick={() => setUploadFile(null)}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">Accepted: PDF, DOC, DOCX (max 10MB)</p>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Changelog / Notes</label>

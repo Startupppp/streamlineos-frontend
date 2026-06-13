@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 const createSchema = z.object({
   version: z.string().min(1, "Version is required"),
   documentId: z.number().int().positive().optional(),
+  documentUrl: z.string().url().optional(),
   changelog: z.string().optional(),
 });
 
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         version: body.version,
         documentId: body.documentId ?? null,
+        documentUrl: body.documentUrl ?? null,
         changelog: body.changelog ?? null,
         publishedAt: null,
         publishedBy: null,

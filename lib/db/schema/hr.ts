@@ -821,6 +821,7 @@ export const handbookVersions = pgTable("handbook_versions", {
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   version: text("version").notNull(),
   documentId: integer("document_id").references(() => richDocuments.id),
+  documentUrl: text("document_url"),
   changelog: text("changelog"),
   publishedAt: timestamp("published_at"),
   publishedBy: text("published_by").references(() => users.id),
