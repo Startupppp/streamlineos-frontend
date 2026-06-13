@@ -100,6 +100,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       : undefined,
   });
 
+  const ability = useAbility();
+  const isOwner = ability.can("manage", "all");
+
   const updateMutation = useUpdateProject();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -202,9 +205,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       }
     );
   };
-
-  const ability = useAbility();
-  const isOwner = ability.can("manage", "all");
 
   return (
     <PageWrapper

@@ -96,7 +96,7 @@ async function main() {
   } = schema;
 
   console.log("[seed-demo] Looking up existing demo org…");
-  let demoOrg = await db.query.organizations.findFirst({
+  const demoOrg = await db.query.organizations.findFirst({
     where: eq(organizations.slug, DEMO_ORG_SLUG),
   });
 
@@ -120,7 +120,7 @@ async function main() {
 
   console.log("[seed-demo] Upserting demo OWNER user…");
   const passwordHash = await hash(DEMO_OWNER_PASSWORD, 12);
-  let ownerUser = await db.query.users.findFirst({
+  const ownerUser = await db.query.users.findFirst({
     where: eq(users.email, DEMO_OWNER_EMAIL),
   });
   let ownerId: string;
@@ -195,7 +195,7 @@ async function main() {
   const teamUserIds: Record<string, string> = {};
   const teamPasswordHash = await hash("DemoTeam@2026!", 12);
   for (const member of DEMO_TEAM) {
-    let u = await db.query.users.findFirst({ where: eq(users.email, member.email) });
+    const u = await db.query.users.findFirst({ where: eq(users.email, member.email) });
     let uid: string;
     if (u) {
       uid = u.id;
