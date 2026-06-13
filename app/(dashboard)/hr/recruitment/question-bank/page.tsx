@@ -6,7 +6,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useInterviewQuestions,
   useCreateInterviewQuestion,
+  useUpdateInterviewQuestion,
   useDeleteInterviewQuestion,
+  type InterviewQuestion,
 } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -29,8 +31,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
-import { Plus, Search, MoreHorizontal, Trash2, BookOpen, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Trash2, BookOpen, Check, ChevronsUpDown, Pencil } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -43,19 +46,241 @@ const DIFFICULTY_VARIANT: Record<string, "default" | "secondary" | "destructive"
   HARD: "destructive",
 };
 
-function DeleteButton({ questionId }: { questionId: number }) {
-  const del = useDeleteInterviewQuestion(questionId);
-  return (
-    <DropdownMenuItem
-      onClick={() => del.mutate(undefined, {
-        onSuccess: () => toast.success("Question deleted"),
+interface QuestionFormState {
+  question: string;
+  category: string;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  role: string;
+  roleInput: string;
+  tags: string;
+  sampleAnswer: string;
+  keywords: string;
+}
+
+const EMPTY_FORM: QuestionFormState = {
+  question: "",
+  category: "GENERAL",
+  difficulty: "MEDIUM",
+  role: "",
+  roleInput: "",
+  tags: "",
+  sampleAnswer: "",
+  keywords: "",
+};
+
+function EditButton({ question, existingRoles }: { question: InterviewQuestion; existingRoles: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [rolePickerOpen, setRolePickerOpen] = useState(false);
+  const [form, setForm] = useState<QuestionFormState>({
+    question: question.question,
+    category: question.category,
+    difficulty: question.difficulty as "EASY" | "MEDIUM" | "HARD",
+    role: question.role ?? "",
+    roleInput: "",
+    tags: (question.tags ?? []).join(", "),
+    sampleAnswer: question.sampleAnswer ?? "",
+    keywords: (question.keywords ?? []).join(", "),
+  });
+
+  const update = useUpdateInterviewQuestion(question.id);
+
+  const handleSave = useCallback(() => {
+    const trimmedQ = form.question.trim();
+    if (!trimmedQ) { toast.error("Question text is required"); return; }
+    if (trimmedQ.length < 10) { toast.error("Question must be at least 10 characters"); return; }
+    if (trimmedQ.length > 1000) { toast.error("Question must be at most 1000 characters"); return; }
+
+    const rawTags = form.tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+    const rawKeywords = form.keywords.split(",").map((k) => k.trim().toLowerCase()).filter(Boolean);
+
+    update.mutate(
+      {
+        question: trimmedQ,
+        category: form.category,
+        difficulty: form.difficulty,
+        role: form.role.trim() || undefined,
+        tags: rawTags,
+        sampleAnswer: form.sampleAnswer.trim() || undefined,
+        keywords: rawKeywords,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Question updated");
+          setOpen(false);
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
-      })}
-      className="text-destructive"
-      disabled={del.isPending}
-    >
-      <Trash2 className="mr-2 h-4 w-4" />Delete
-    </DropdownMenuItem>
+      }
+    );
+  }, [form, update]);
+
+  return (
+    <>
+      <DropdownMenuItem onClick={() => setOpen(true)}>
+        <Pencil className="mr-2 h-4 w-4" />Edit
+      </DropdownMenuItem>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent className="flex flex-col p-0 gap-0">
+          <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+            <SheetTitle className="text-base">Edit Question</SheetTitle>
+            <SheetDescription className="text-xs">Update this question bank entry.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Question</label>
+              <Textarea
+                placeholder="e.g. Tell me about a time you handled a conflict..."
+                value={form.question}
+                onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
+                rows={4}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Category</label>
+                <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c.replace("_", " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Difficulty</label>
+                <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v as "EASY" | "MEDIUM" | "HARD" }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DIFFICULTIES.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">For Role <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <Popover open={rolePickerOpen} onOpenChange={setRolePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={rolePickerOpen} className="w-full justify-between font-normal">
+                    {form.role || "Select or type a role..."}
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search or enter a role..."
+                      value={form.roleInput}
+                      onValueChange={(v) => setForm((f) => ({ ...f, roleInput: v }))}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {form.roleInput.trim() ? (
+                          <button
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                            onClick={() => {
+                              setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
+                              setRolePickerOpen(false);
+                            }}
+                          >
+                            Use &quot;{form.roleInput.trim()}&quot;
+                          </button>
+                        ) : (
+                          <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
+                        )}
+                      </CommandEmpty>
+                      {existingRoles.length > 0 && (
+                        <CommandGroup heading="Existing Roles">
+                          {existingRoles.map((role) => (
+                            <CommandItem
+                              key={role}
+                              value={role}
+                              onSelect={() => {
+                                setForm((f) => ({ ...f, role, roleInput: "" }));
+                                setRolePickerOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", form.role === role ? "opacity-100" : "opacity-0")} />
+                              {role}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
+              <Input
+                placeholder="e.g. leadership, problem-solving"
+                value={form.tags}
+                onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sample Answer <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <Textarea
+                placeholder="Describe what an ideal answer would include..."
+                value={form.sampleAnswer}
+                onChange={(e) => setForm((f) => ({ ...f, sampleAnswer: e.target.value }))}
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Required Keywords <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
+              <Input
+                placeholder="e.g. ownership, collaboration, metrics"
+                value={form.keywords}
+                onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+              />
+            </div>
+          </div>
+          <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button className="flex-1" onClick={handleSave} disabled={update.isPending}>
+              {update.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+function DeleteButton({ questionId }: { questionId: number }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const del = useDeleteInterviewQuestion(questionId);
+
+  const handleConfirm = useCallback(() => {
+    del.mutate(undefined, {
+      onSuccess: () => { toast.success("Question deleted"); setConfirmOpen(false); },
+      onError: (e) => { toast.error(getErrorMessage(e)); setConfirmOpen(false); },
+    });
+  }, [del]);
+
+  return (
+    <>
+      <DropdownMenuItem
+        onClick={() => setConfirmOpen(true)}
+        className="text-destructive"
+      >
+        <Trash2 className="mr-2 h-4 w-4" />Delete
+      </DropdownMenuItem>
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Question"
+        description="Are you sure you want to delete this question from the bank? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleConfirm}
+        isPending={del.isPending}
+      />
+    </>
   );
 }
 
@@ -64,14 +289,9 @@ export default function QuestionBankPage() {
   const [category, setCategory] = useState("ALL");
   const [difficulty, setDifficulty] = useState("ALL");
   const [sheetOpen, setSheetOpen] = useState(false);
-
-  const [newQuestion, setNewQuestion] = useState("");
-  const [newCategory, setNewCategory] = useState("GENERAL");
-  const [newDifficulty, setNewDifficulty] = useState<"EASY" | "MEDIUM" | "HARD">("MEDIUM");
-  const [newRole, setNewRole] = useState("");
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
-  const [roleInput, setRoleInput] = useState("");
-  const [newTags, setNewTags] = useState("");
+
+  const [form, setForm] = useState<QuestionFormState>(EMPTY_FORM);
 
   const { data: questions, isLoading } = useInterviewQuestions({
     category: category !== "ALL" ? category : undefined,
@@ -86,34 +306,41 @@ export default function QuestionBankPage() {
 
   const createQuestion = useCreateInterviewQuestion();
 
-  const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
+  const handleCloseSheet = useCallback(() => {
+    setSheetOpen(false);
+    setForm(EMPTY_FORM);
+  }, []);
 
   const handleCreate = useCallback(() => {
-    const trimmedQ = newQuestion.trim();
+    const trimmedQ = form.question.trim();
     if (!trimmedQ) { toast.error("Question text is required"); return; }
     if (trimmedQ.length < 10) { toast.error("Question must be at least 10 characters"); return; }
     if (trimmedQ.length > 1000) { toast.error("Question must be at most 1000 characters"); return; }
-    const rawTags = newTags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+
+    const rawTags = form.tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
     const uniqueTags = [...new Set(rawTags)];
+    const rawKeywords = form.keywords.split(",").map((k) => k.trim().toLowerCase()).filter(Boolean);
+    const uniqueKeywords = [...new Set(rawKeywords)];
+
     createQuestion.mutate(
       {
         question: trimmedQ,
-        category: newCategory,
-        difficulty: newDifficulty,
-        role: newRole.trim() || undefined,
+        category: form.category,
+        difficulty: form.difficulty,
+        role: form.role.trim() || undefined,
         tags: uniqueTags,
+        sampleAnswer: form.sampleAnswer.trim() || undefined,
+        keywords: uniqueKeywords,
       },
       {
         onSuccess: () => {
           toast.success("Question added to bank");
-          setSheetOpen(false);
-          setNewQuestion(""); setNewRole(""); setRoleInput(""); setNewTags("");
-          setNewCategory("GENERAL"); setNewDifficulty("MEDIUM");
+          handleCloseSheet();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [newQuestion, newCategory, newDifficulty, newRole, newTags, createQuestion]);
+  }, [form, createQuestion, handleCloseSheet]);
 
   return (
     <PageWrapper
@@ -125,7 +352,7 @@ export default function QuestionBankPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/hr/recruitment">Back</Link>
           </Button>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <Sheet open={sheetOpen} onOpenChange={(v) => { if (!v) handleCloseSheet(); else setSheetOpen(true); }}>
             <SheetTrigger asChild>
               <Button size="sm"><Plus className="mr-2 h-4 w-4" />Add Question</Button>
             </SheetTrigger>
@@ -139,15 +366,15 @@ export default function QuestionBankPage() {
                   <label className="text-sm font-medium">Question</label>
                   <Textarea
                     placeholder="e.g. Tell me about a time you handled a conflict with a colleague..."
-                    value={newQuestion}
-                    onChange={(e) => setNewQuestion(e.target.value)}
+                    value={form.question}
+                    onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
                     rows={4}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Category</label>
-                    <Select value={newCategory} onValueChange={setNewCategory}>
+                    <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {CATEGORIES.map((c) => (
@@ -158,7 +385,7 @@ export default function QuestionBankPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Difficulty</label>
-                    <Select value={newDifficulty} onValueChange={(v) => setNewDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
+                    <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v as "EASY" | "MEDIUM" | "HARD" }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {DIFFICULTIES.map((d) => (
@@ -178,7 +405,7 @@ export default function QuestionBankPage() {
                         aria-expanded={rolePickerOpen}
                         className="w-full justify-between font-normal"
                       >
-                        {newRole || "Select or type a role..."}
+                        {form.role || "Select or type a role..."}
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -186,21 +413,21 @@ export default function QuestionBankPage() {
                       <Command>
                         <CommandInput
                           placeholder="Search or enter a role..."
-                          value={roleInput}
-                          onValueChange={setRoleInput}
+                          value={form.roleInput}
+                          onValueChange={(v) => setForm((f) => ({ ...f, roleInput: v }))}
                         />
                         <CommandList>
                           <CommandEmpty>
-                            {roleInput.trim() ? (
+                            {form.roleInput.trim() ? (
                               <button
                                 type="button"
                                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
                                 onClick={() => {
-                                  setNewRole(roleInput.trim());
+                                  setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
                                   setRolePickerOpen(false);
                                 }}
                               >
-                                Use &quot;{roleInput.trim()}&quot;
+                                Use &quot;{form.roleInput.trim()}&quot;
                               </button>
                             ) : (
                               <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
@@ -213,12 +440,11 @@ export default function QuestionBankPage() {
                                   key={role}
                                   value={role}
                                   onSelect={() => {
-                                    setNewRole(role);
-                                    setRoleInput("");
+                                    setForm((f) => ({ ...f, role, roleInput: "" }));
                                     setRolePickerOpen(false);
                                   }}
                                 >
-                                  <Check className={cn("mr-2 h-4 w-4", newRole === role ? "opacity-100" : "opacity-0")} />
+                                  <Check className={cn("mr-2 h-4 w-4", form.role === role ? "opacity-100" : "opacity-0")} />
                                   {role}
                                 </CommandItem>
                               ))}
@@ -231,7 +457,28 @@ export default function QuestionBankPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
-                  <Input placeholder="e.g. leadership, problem-solving" value={newTags} onChange={(e) => setNewTags(e.target.value)} />
+                  <Input
+                    placeholder="e.g. leadership, problem-solving"
+                    value={form.tags}
+                    onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sample Answer <span className="text-muted-foreground font-normal">(optional)</span></label>
+                  <Textarea
+                    placeholder="Describe what an ideal answer would include..."
+                    value={form.sampleAnswer}
+                    onChange={(e) => setForm((f) => ({ ...f, sampleAnswer: e.target.value }))}
+                    rows={4}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Required Keywords <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
+                  <Input
+                    placeholder="e.g. ownership, collaboration, metrics"
+                    value={form.keywords}
+                    onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+                  />
                 </div>
               </div>
               <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
@@ -307,6 +554,16 @@ export default function QuestionBankPage() {
                   <TableRow key={q.id}>
                     <TableCell className="max-w-[400px]">
                       <p className="text-sm line-clamp-2">{q.question}</p>
+                      {q.keywords && q.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {q.keywords.slice(0, 3).map((kw) => (
+                            <Badge key={kw} variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">{kw}</Badge>
+                          ))}
+                          {q.keywords.length > 3 && (
+                            <Badge variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">+{q.keywords.length - 3}</Badge>
+                          )}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
@@ -336,6 +593,7 @@ export default function QuestionBankPage() {
                           <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <EditButton question={q} existingRoles={existingRoles} />
                           <DeleteButton questionId={q.id} />
                         </DropdownMenuContent>
                       </DropdownMenu>

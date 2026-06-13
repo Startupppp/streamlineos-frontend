@@ -12,6 +12,8 @@ const createSchema = z.object({
   role: z.string().max(100).optional(),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("MEDIUM"),
   tags: z.array(z.string()).default([]),
+  sampleAnswer: z.string().max(3000).optional(),
+  keywords: z.array(z.string().max(100)).default([]),
 });
 
 export async function GET(req: NextRequest) {
@@ -63,6 +65,7 @@ export async function POST(req: NextRequest) {
     if (existing) return err("A question with this text already exists in the bank.", 409);
 
     const dedupedTags = [...new Set(input.tags.map((t) => t.toLowerCase().trim()).filter(Boolean))];
+    const dedupedKeywords = [...new Set((input.keywords ?? []).map((k) => k.toLowerCase().trim()).filter(Boolean))];
 
     const [created] = await db
       .insert(interviewQuestions)
@@ -73,6 +76,8 @@ export async function POST(req: NextRequest) {
         role: input.role ?? null,
         difficulty: input.difficulty,
         tags: dedupedTags,
+        sampleAnswer: input.sampleAnswer ?? null,
+        keywords: dedupedKeywords,
         createdBy: session.user.id,
       })
       .returning();

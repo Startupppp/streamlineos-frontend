@@ -1662,6 +1662,8 @@ export const interviewQuestions = pgTable("interview_questions", {
   role: text("role"),
   difficulty: text("difficulty").notNull().default("MEDIUM"),
   tags: text("tags").array().default([]),
+  sampleAnswer: text("sample_answer"),
+  keywords: text("keywords").array().default([]),
   isActive: boolean("is_active").notNull().default(true),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

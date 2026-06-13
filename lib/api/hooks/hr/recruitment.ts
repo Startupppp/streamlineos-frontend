@@ -826,6 +826,8 @@ export interface InterviewQuestion {
   role: string | null;
   difficulty: string;
   tags: string[];
+  sampleAnswer: string | null;
+  keywords: string[];
   isActive: boolean;
   createdBy: string | null;
   createdAt: string | null;
@@ -838,6 +840,8 @@ export interface CreateQuestionInput {
   role?: string;
   difficulty?: "EASY" | "MEDIUM" | "HARD";
   tags?: string[];
+  sampleAnswer?: string;
+  keywords?: string[];
 }
 
 export function useInterviewQuestions(filters?: {
