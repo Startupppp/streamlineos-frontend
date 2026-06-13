@@ -9,6 +9,7 @@ import { z } from "zod";
 const updateSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   allDay: z.boolean().optional(),
@@ -43,6 +44,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
     const updateData: Parameters<typeof updateCalendarEvent>[3] = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.description !== undefined) updateData.description = input.description ?? null;
+    if (input.location !== undefined) updateData.location = input.location ?? null;
     if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
     if (input.endDate !== undefined) updateData.endDate = new Date(input.endDate);
     if (input.allDay !== undefined) updateData.allDay = input.allDay;
