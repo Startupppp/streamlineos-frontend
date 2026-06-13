@@ -83,7 +83,7 @@ export default function RecruitmentDashboardPage() {
           <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/pipeline">Kanban</Link>
           </Button>
-          <Button size="sm" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/hr/recruitment/jobs">Jobs</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
