@@ -60,11 +60,11 @@ export function useDocumentTemplates(type?: string) {
   return useQuery({
     queryKey: queryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
         params as Record<string, unknown> | undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -124,10 +124,10 @@ export function useDocumentTemplateVersions(templateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.documentTemplate(templateId), "versions"],
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<DocumentTemplateVersion[]>(
         `/hr/documents/templates/${templateId}/versions`
       ),
+    staleTime: 2 * 60_000,
     enabled: !!templateId,
   });
 }
@@ -136,10 +136,10 @@ export function useCandidateDocuments(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidateDocuments(candidateId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<CandidateDocument[]>(
         `/hr/recruitment/candidates/${candidateId}/documents`
       ),
+    staleTime: 2 * 60_000,
     enabled: !!candidateId,
   });
 }

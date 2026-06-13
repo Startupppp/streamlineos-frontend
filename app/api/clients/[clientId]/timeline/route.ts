@@ -21,7 +21,9 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!Number.isFinite(clientId)) return err("Invalid client id", 400);
 
   return withAuth(async (session) => {
-    const [client] = await db.select().from(clients)
+    const [client] = await db
+      .select({ id: clients.id, name: clients.name, convertedAt: clients.convertedAt, leadId: clients.leadId })
+      .from(clients)
       .where(and(eq(clients.id, clientId), eq(clients.orgId, session.orgId)));
     if (!client) return err("Client not found", 404);
 

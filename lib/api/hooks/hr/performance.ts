@@ -95,8 +95,8 @@ export function useOneOnOneMeetings(params?: { upcoming?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.oneOnOnes(params as Record<string, unknown> | undefined),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params as Record<string, unknown> | undefined),
+    staleTime: 2 * 60_000,
   });
 }
 

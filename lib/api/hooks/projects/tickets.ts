@@ -278,8 +278,8 @@ export function useTicketRelations(ticketId: number, projectId: number) {
   return useQuery({
     queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<TicketRelation[]>(`/projects/${projectId}/tickets/${ticketId}/relations`),
+    staleTime: 2 * 60_000,
     enabled: !!ticketId && !!projectId,
   });
 }

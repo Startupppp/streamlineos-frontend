@@ -87,8 +87,8 @@ export function useTasks(filters?: TasksFilters) {
   return useQuery({
     queryKey: queryKeys.tasks.list(filters as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 

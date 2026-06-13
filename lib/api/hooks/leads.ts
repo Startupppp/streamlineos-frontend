@@ -38,8 +38,8 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
   return useQuery({
     queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
@@ -65,8 +65,8 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   return useQuery({
     queryKey: queryKeys.leads.stats(filters),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -74,8 +74,8 @@ export function useLeadActivities(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.activities(leadId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<LeadActivity[]>(`/leads/${leadId}/activities`, limit ? { limit } : undefined),
+    staleTime: 2 * 60_000,
     enabled: leadId > 0,
   });
 }
@@ -84,8 +84,8 @@ export function useLeadTimeline(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.timeline(leadId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined),
+    staleTime: 2 * 60_000,
     enabled: leadId > 0,
   });
 }
@@ -105,8 +105,8 @@ export function useLeadAnalyticsSummary(filters?: {
   return useQuery({
     queryKey: queryKeys.leads.analyticsSummary(filters),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -294,8 +294,8 @@ export function useSalesLeaderboard() {
   return useQuery({
     queryKey: queryKeys.salesLeaderboard.list(),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -303,8 +303,8 @@ export function useSalesTeamCapacity() {
   return useQuery({
     queryKey: queryKeys.salesTeamCapacity.list(),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -326,11 +326,11 @@ export function useOverdueFollowUps(limit?: number) {
   return useQuery({
     queryKey: [...queryKeys.leads.all, "followUps", "overdue"] as const,
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<{ items: FollowUpLead[]; total: number }>(
         "/leads/follow-ups",
         { overdue: "true", limit: limit ?? 10 } as Record<string, unknown>,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 

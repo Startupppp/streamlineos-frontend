@@ -39,8 +39,8 @@ export function useHrSalaryStructures(userId?: string) {
   return useQuery({
     queryKey: queryKeys.hr.salaryStructures(userId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<SalaryStructure[]>("/hr/salary-structures", userId ? { userId } : undefined),
+    staleTime: 2 * 60_000,
     enabled: true,
   });
 }
@@ -61,11 +61,11 @@ export function useHrEmployeePayslips(params?: GetEmployeePayslipsInput) {
   return useQuery({
     queryKey: queryKeys.hr.employeePayslips(params?.userId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<EmployeePayslip[]>(
         "/hr/payslips",
         params as Record<string, unknown> | undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -73,8 +73,8 @@ export function useHrAllPayrolls(params: GetAllPayrollsInput) {
   return useQuery({
     queryKey: queryKeys.hr.payrolls({ month: params.month }),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<PayrollWithUser[]>("/hr/payrolls/all", params as unknown as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 

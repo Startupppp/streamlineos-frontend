@@ -23,8 +23,7 @@ export interface PIP {
 const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
 
 export function usePIPs() {
-  return useQuery({ queryKey: pipKeys.list(), queryFn: () => apiClient.get<PIP[]>("/hr/performance/pip") });
-  staleTime: 2 * 60_000,
+  return useQuery({ queryKey: pipKeys.list(), queryFn: () => apiClient.get<PIP[]>("/hr/performance/pip"), staleTime: 2 * 60_000 });
 }
 
 export function useCreatePIP() {

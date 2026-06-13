@@ -52,13 +52,13 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
   if (!isRedisEnabled() || !redis) return;
 
   try {
-    let cursor = 0;
+    let cursor: string | number = 0;
     const keysToDelete: string[] = [];
     do {
-      const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 100 });
+      const [nextCursor, keys]: [string | number, string[]] = await redis.scan(cursor, { match: pattern, count: 100 });
       cursor = nextCursor;
       keysToDelete.push(...keys);
-    } while (cursor !== 0);
+    } while (Number(cursor) !== 0);
 
     if (keysToDelete.length > 0) {
       await redis.del(...keysToDelete);

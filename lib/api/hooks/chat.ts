@@ -64,11 +64,11 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<Message[]>(
         `/chat/channels/${channelId}/messages/poll`,
         { since }
       ),
+    staleTime: 2 * 60_000,
     enabled: enabled && channelId > 0,
     refetchInterval: enabled ? 30_000 : false,
   });
@@ -107,11 +107,11 @@ export function useChatSearchMessages(query: string, channelId?: number) {
   return useQuery({
     queryKey: queryKeys.chat.search(query),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<MessageWithChannel[]>("/chat/search", {
         query,
         ...(channelId ? { channelId } : {}),
       }),
+    staleTime: 2 * 60_000,
     enabled: query.length >= 2,
   });
 }
@@ -120,8 +120,8 @@ export function useChatTyping(channelId: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.chat.typing(channelId),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<TypingIndicator[]>(`/chat/channels/${channelId}/typing`),
+    staleTime: 2 * 60_000,
     refetchInterval: 4_000,
     enabled: enabled && channelId > 0,
   });

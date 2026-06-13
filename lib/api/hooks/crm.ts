@@ -341,8 +341,8 @@ export function useTargets(filters?: TargetFilters) {
   return useQuery({
     queryKey: queryKeys.targets.list(filters as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<Target[]>("/targets", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -358,11 +358,11 @@ export function useTargetLeaderboard(metricType?: string) {
   return useQuery({
     queryKey: queryKeys.targets.leaderboard(metricType),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<TargetLeaderboardEntry[]>(
         "/targets/leaderboard",
         metricType ? { metricType } : undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -776,11 +776,11 @@ export function useDealActivities(dealId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.dealActivities.list(dealId, limit ? { limit } : undefined),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<DealActivity[]>(
         `/deals/${dealId}/activities`,
         limit ? { limit } : undefined
       ),
+    staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
 }
@@ -831,11 +831,11 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<PaginatedCrmOrganizations>(
         "/crm/organizations",
         filters as Record<string, unknown>
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1105,11 +1105,11 @@ export function useClientOpportunities(clientId?: number) {
   return useQuery({
     queryKey: ["client-opportunities", clientId],
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<ClientOpportunity[]>(
         "/clients/opportunities",
         clientId ? { clientId } : undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1465,10 +1465,10 @@ export function useCustomFields(entityType: "lead" | "deal" | "contact") {
   return useQuery({
     queryKey: ["custom-fields", entityType] as const,
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<{ fields: CustomFieldDefinition[] }>(
         `/settings/custom-fields?entityType=${entityType}`
       ),
+    staleTime: 2 * 60_000,
   });
 }
 

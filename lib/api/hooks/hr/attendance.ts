@@ -34,8 +34,8 @@ export function useHrAttendanceLogs(params?: {
   return useQuery({
     queryKey: queryKeys.hr.attendanceLogs(params),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<AttendanceLog[]>("/hr/attendance/logs", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -118,8 +118,8 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     enabled: !!params.userId,
   });
 }
@@ -128,13 +128,13 @@ export function useAttendanceHeatmap(params: { userId: string; year: number }) {
   return useQuery({
     queryKey: queryKeys.hr.attendanceHeatmap(params),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<{
         year: number;
         userId: string;
         heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
         summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
       }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     enabled: !!params.userId,
   });
 }

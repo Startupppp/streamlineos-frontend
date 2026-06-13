@@ -127,8 +127,8 @@ export function useEmailTemplates(params?: { limit?: number; offset?: number }) 
   return useQuery({
     queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -294,8 +294,8 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
   return useQuery({
     queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
     queryFn: () =>
-    staleTime: 2 * 60_000,
       apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
