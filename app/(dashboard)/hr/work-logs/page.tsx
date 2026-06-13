@@ -351,7 +351,7 @@ export default function WorkLogsPage() {
                   filled={filled}
                   searchTerm={searchTerm}
                   logs={logs}
-                  selectedUserId={selectedUserId}
+                  readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
                   isSaving={upsertLog.isPending}
                 />

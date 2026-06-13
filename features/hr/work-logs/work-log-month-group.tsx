@@ -29,7 +29,7 @@ interface WorkLogMonthGroupProps {
   filled: number;
   searchTerm: string;
   logs: WorkLog[] | undefined;
-  selectedUserId: string | undefined;
+  readOnly: boolean;
   onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
 }
@@ -44,13 +44,12 @@ export function WorkLogMonthGroup({
   filled,
   searchTerm,
   logs,
-  selectedUserId,
+  readOnly,
   onSave,
   isSaving,
 }: WorkLogMonthGroupProps) {
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
-  const isViewingOther = !!selectedUserId;
 
   return (
     <Card>
@@ -100,7 +99,7 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={isViewingOther}
+                  readOnly={readOnly}
                   status={log?.status ?? undefined}
                 />
               );
