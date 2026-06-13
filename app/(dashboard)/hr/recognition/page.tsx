@@ -2,6 +2,7 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { useRecognitions, useCreateRecognition, type Recognition } from "@/lib/api/hooks/hr";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -39,6 +40,7 @@ function getCategoryMeta(category: string | null) {
 }
 
 export default function RecognitionPage() {
+  const { data: session } = useSession();
   const { data: recognitions, isLoading } = useRecognitions();
   const { data: employeesRaw } = useHrEmployees();
   const createRecognition = useCreateRecognition();
@@ -55,12 +57,27 @@ export default function RecognitionPage() {
   );
 
   const handleSend = useCallback(() => {
-    if (!toUserId || !message.trim()) {
-      toast.error("Recipient and message are required");
+    if (!toUserId) { toast.error("Please select a recipient"); return; }
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) { toast.error("Message is required"); return; }
+    if (trimmedMessage.length < 10) { toast.error("Message must be at least 10 characters"); return; }
+    if (trimmedMessage.length > 500) { toast.error("Message must be at most 500 characters"); return; }
+
+    const currentUserId = session?.user?.id;
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+    const recentDuplicate = currentUserId && (recognitions ?? []).some((r: Recognition) =>
+      r.toUserId === toUserId &&
+      r.fromUserId === currentUserId &&
+      r.createdAt &&
+      (Date.now() - new Date(r.createdAt).getTime()) < ONE_DAY
+    );
+    if (recentDuplicate) {
+      toast.error("You already recognized this employee in the last 24 hours");
       return;
     }
+
     createRecognition.mutate(
-      { toUserId, message: message.trim(), category },
+      { toUserId, message: trimmedMessage, category },
       {
         onSuccess: () => {
           toast.success("Recognition sent!");
@@ -73,7 +90,7 @@ export default function RecognitionPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [toUserId, message, category, createRecognition]);
+  }, [toUserId, message, category, createRecognition, recognitions, session]);
 
   if (isLoading) {
     return (

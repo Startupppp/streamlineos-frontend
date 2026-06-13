@@ -413,7 +413,15 @@ function GoalsTab() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Target Value</label>
-          <Input type="number" placeholder="100" value={targetValue} onChange={(e) => setTargetValue(e.target.value)} />
+          <Input
+            inputMode="numeric"
+            placeholder="100"
+            value={targetValue}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) >= 0)) setTargetValue(v);
+            }}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
