@@ -14,9 +14,15 @@ const levelSchema = z.object({
 });
 
 const createSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z
+    .string()
+    .min(2, "Title must be at least 2 characters")
+    .max(150, "Title must be at most 150 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Title must contain at least one letter")
+    .refine((v) => !/\s{2,}/.test(v), "Title cannot have multiple consecutive spaces"),
   department: z.string().optional(),
-  levels: z.array(levelSchema).min(1, "At least one level is required"),
+  description: z.string().max(1000).optional(),
+  levels: z.array(levelSchema).optional().default([]),
 });
 
 export async function GET() {
@@ -41,7 +47,7 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         title: body.title,
         department: body.department ?? null,
-        levels: body.levels,
+        levels: body.levels ?? [],
       })
       .returning();
 

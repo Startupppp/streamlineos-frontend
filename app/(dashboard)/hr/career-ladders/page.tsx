@@ -18,6 +18,10 @@ import { Plus, TrendingUp, ArrowUpRight, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+import { useHrDepartments } from "@/lib/api/hooks/hr";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 interface CareerLadder {
   id: number; title: string; department: string | null; description: string | null;
@@ -32,6 +36,7 @@ export default function CareerLaddersPage() {
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
+  const { data: departments } = useHrDepartments();
 
   const { data: ladders, isLoading } = useQuery({
     queryKey: clKeys.list(),
@@ -50,9 +55,16 @@ export default function CareerLaddersPage() {
   const [description, setDescription] = useState("");
 
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 150) { toast.error("Title must be at most 150 characters"); return; }
+    if (!/[a-zA-Z]/.test(trimmedTitle)) { toast.error("Title must contain at least one letter"); return; }
+    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Title cannot have consecutive spaces"); return; }
+    const trimmedDesc = description.trim();
+    if (trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
     create.mutate(
-      { title: title.trim(), department: department || undefined, description: description || undefined },
+      { title: trimmedTitle, department: department || undefined, description: trimmedDesc || undefined },
       {
         onSuccess: () => {
           toast.success("Career ladder created"); setSheetOpen(false);
@@ -120,7 +132,15 @@ export default function CareerLaddersPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Department</label>
-          <Input placeholder="e.g., Engineering" value={department} onChange={(e) => setDepartment(e.target.value)} />
+          <Select value={department || "none"} onValueChange={(v) => setDepartment(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select department (optional)" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {departments?.map((d) => (
+                <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
