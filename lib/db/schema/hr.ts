@@ -730,6 +730,7 @@ export const careerLadders = pgTable("career_ladders", {
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   department: text("department"),
+  description: text("description"),
   levels: jsonb("levels").$type<{ level: number; title: string; description: string; minExperience: number; skills: string[] }[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [

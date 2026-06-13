@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         title: body.title,
         department: body.department ?? null,
+        description: body.description ?? null,
         levels: body.levels ?? [],
       })
       .returning();
