@@ -84,7 +84,7 @@ export function ContactForm() {
   };
 
   return (
-    <div className="relative rounded-3xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="relative rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div

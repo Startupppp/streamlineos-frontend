@@ -22,7 +22,7 @@ export function SavingsCalculator() {
   const startupAnnual = PRICING_TIERS[1].annual ?? 319;
 
   return (
-    <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white to-blue-50/40 p-6 lg:p-10 shadow-[0_30px_80px_-32px_rgba(30,64,175,0.18)]">
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-6 lg:p-10 shadow-[0_24px_60px_-20px_rgba(30,64,175,0.14)]">
       <div className="flex items-start gap-3 mb-7">
         <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 inline-flex items-center justify-center shrink-0 shadow-[0_10px_24px_-8px_rgba(59,130,246,0.5)]">
           <TrendingDown className="h-5 w-5 text-white" />
