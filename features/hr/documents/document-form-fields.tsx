@@ -22,7 +22,9 @@ import { cn } from "@/lib/utils";
 export const formSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
-  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
+  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const, {
+    error: "Please select a document type",
+  }),
   category: z.string().optional(),
   userId: z.string().optional(),
   isPublic: z.boolean(),
@@ -85,10 +87,10 @@ export function DocumentFormFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Document Type *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

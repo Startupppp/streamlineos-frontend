@@ -32,15 +32,20 @@ export function NewFolderDialog({
   existingTabs,
   onConfirm,
 }: NewFolderDialogProps) {
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     const trimmed = folderName.trim();
-    if (!trimmed) return;
+    if (!trimmed) { toast.error("Folder name is required"); return; }
+    if (trimmed.length < 2) { toast.error("Folder name must be at least 2 characters"); return; }
+    if (trimmed.length > 100) { toast.error("Folder name must be at most 100 characters"); return; }
+    if (!/[a-zA-Z0-9]/.test(trimmed)) { toast.error("Folder name must contain at least one letter or digit"); return; }
+    if (/\s{2,}/.test(trimmed)) { toast.error("Folder name cannot have consecutive spaces"); return; }
+    if (/[<>:"/\\|?*]/.test(trimmed)) { toast.error("Folder name contains invalid special characters"); return; }
     if (existingTabs.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
       toast.error("A folder with this name already exists");
       return;
     }
     onConfirm(trimmed);
-  }
+  }, [folderName, existingTabs, onConfirm]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

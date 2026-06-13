@@ -66,7 +66,6 @@ export function UploadDocumentDialog({
     defaultValues: {
       name: "",
       description: "",
-      type: "OTHER" as const,
       category: "",
       userId: "",
       isPublic: false,
@@ -75,9 +74,10 @@ export function UploadDocumentDialog({
   });
 
   useEffect(() => {
-    if (files.length === 1) {
+    const currentName = form.getValues("name");
+    if (files.length === 1 && !currentName) {
       form.setValue("name", files[0].name.replace(/\.[^/.]+$/, ""));
-    } else if (files.length > 1) {
+    } else if (files.length > 1 && !currentName) {
       form.setValue("name", `${files.length} files selected`);
     }
   }, [files, form]);

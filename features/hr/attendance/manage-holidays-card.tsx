@@ -59,13 +59,20 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const handleAdd = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (!name.trim()) {
-        toast.error("Enter holiday name");
-        return;
-      }
+      const trimmedName = name.trim();
+      if (!trimmedName) { toast.error("Holiday name is required"); return; }
+      if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
+      if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
+      if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
+      if (/\s{2,}/.test(trimmedName)) { toast.error("Holiday name cannot have consecutive spaces"); return; }
+      if (!date) { toast.error("Holiday date is required"); return; }
+      const duplicate = (holidaysList ?? []).find(
+        (h) => h.date === date || h.name.trim().toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (duplicate) { toast.error("A holiday with this name or date already exists"); return; }
       addMutation.mutate(
         {
-          name: name.trim(),
+          name: trimmedName,
           date: date,
           message: message.trim() || undefined,
         },
