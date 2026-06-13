@@ -149,8 +149,9 @@ export default function HelpdeskPage() {
     if (/^[^a-zA-Z0-9]+$/.test(trimmedTitle)) { toast.error("Ticket title cannot consist of only special characters"); return; }
     if (/\s{2,}/.test(title)) { toast.error("Ticket title cannot have multiple consecutive spaces"); return; }
     if (title !== trimmedTitle) { toast.error("Ticket title cannot have leading or trailing spaces"); return; }
+    if (!category) { toast.error("Please select a category"); return; }
     createTicket.mutate(
-      { title: title.trim(), description: description.trim() || undefined, category: category || undefined, priority },
+      { title: trimmedTitle, description: description.trim() || undefined, category, priority },
       {
         onSuccess: () => {
           toast.success("Ticket created successfully");
@@ -230,7 +231,7 @@ export default function HelpdeskPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Category</label>
+                    <label className="text-sm font-medium">Category <span className="text-destructive">*</span></label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
