@@ -4,7 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting } from "@/lib/api/hooks/hr";
+import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/lib/api/hooks/hr";
 import { usePublishJobToBoards, useJobShareLinks } from "@/lib/api/hooks/hr/recruitment";
 import type { JobBoardPlatform, JobShareLinks } from "@/lib/api/hooks/hr/recruitment";
 import { useGenerateJobDescription } from "@/lib/api/hooks/ai";
@@ -127,9 +127,12 @@ export default function JobPostingsPage() {
   const publishToBoards = usePublishJobToBoards();
   const generateJd = useGenerateJobDescription();
 
+  const { data: departments } = useHrDepartments();
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shareJobId, setShareJobId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
+  const [departmentId, setDepartmentId] = useState<string>("");
   const [location, setLocation] = useState("");
   const [type, setType] = useState("FULL_TIME");
   const [description, setDescription] = useState("");
@@ -157,6 +160,7 @@ export default function JobPostingsPage() {
     createJob.mutate(
       {
         title: title.trim(),
+        departmentId: departmentId ? Number(departmentId) : undefined,
         location: location || undefined,
         type,
         description: description || undefined,
@@ -170,7 +174,7 @@ export default function JobPostingsPage() {
         onSuccess: () => {
           toast.success("Job posting created");
           setSheetOpen(false);
-          setTitle(""); setLocation(""); setDescription(""); setOpenings("1");
+          setTitle(""); setDepartmentId(""); setLocation(""); setDescription(""); setOpenings("1");
           setSalaryMin(""); setSalaryMax(""); setRequirements(""); setApplicationDeadline("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -243,8 +247,19 @@ export default function JobPostingsPage() {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
+                <label className="text-sm font-medium">Job Title <span className="text-destructive">*</span></label>
                 <Input placeholder="e.g. Senior React Developer" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Department</label>
+                <Select value={departmentId} onValueChange={setDepartmentId}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    {departments?.map((d) => (
+                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location</label>
@@ -351,11 +366,12 @@ export default function JobPostingsPage() {
       <Card>
         <CardContent className="p-0">
           <ScrollArea className="w-full" type="auto">
-            <div className="min-w-[700px]">
+            <div className="min-w-[800px]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Department</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Openings</TableHead>
@@ -365,7 +381,7 @@ export default function JobPostingsPage() {
                 </TableHeader>
                 <TableBody>
                   {!jobs?.length ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyPersonIllustration className="h-36 w-36 opacity-95" />
                       <p>No job postings yet.</p>
                     </div></TableCell></TableRow>
@@ -384,6 +400,7 @@ export default function JobPostingsPage() {
                             )}
                           </div>
                         </TableCell>
+                        <TableCell>{departments?.find((d) => d.id === job.departmentId)?.name ?? "—"}</TableCell>
                         <TableCell>{job.location ?? "—"}</TableCell>
                         <TableCell className="text-sm">{job.type?.replace("_", " ")}</TableCell>
                         <TableCell>{job.openings}</TableCell>
