@@ -99,8 +99,19 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   });
 
   const onSubmit = useCallback(async (values: EmployeeFormValues) => {
+    const seenSkills = new Set<string>();
     const skillsArray = values.skills
-      ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
+      ? values.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s && /[a-zA-Z0-9]/.test(s))
+          .reduce<string[]>((acc, s) => {
+            const key = s.toLowerCase();
+            if (seenSkills.has(key)) return acc;
+            seenSkills.add(key);
+            acc.push(s.charAt(0).toUpperCase() + s.slice(1));
+            return acc;
+          }, [])
       : [];
 
     toast.promise(

@@ -74,7 +74,19 @@ export async function POST(req: NextRequest) {
         employeeId: body.employeeId,
         joiningDate: body.joiningDate ? formatDateOnly(new Date(body.joiningDate)) : undefined,
         dateOfBirth: body.dateOfBirth ? formatDateOnly(new Date(body.dateOfBirth)) : undefined,
-        skills: body.skills ? body.skills.split(",").map((s) => s.trim()) : undefined,
+        skills: body.skills ? (() => {
+          const seen = new Set<string>();
+          return body.skills.split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && /[a-zA-Z0-9]/.test(s))
+            .reduce<string[]>((acc, s) => {
+              const key = s.toLowerCase();
+              if (seen.has(key)) return acc;
+              seen.add(key);
+              acc.push(s.charAt(0).toUpperCase() + s.slice(1));
+              return acc;
+            }, []);
+        })() : undefined,
         experienceYears: body.experienceYears?.toString(),
         taxId: body.taxId,
         monthlySalary: body.monthlySalary?.toString(),
