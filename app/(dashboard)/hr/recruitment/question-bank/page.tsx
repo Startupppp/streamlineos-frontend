@@ -79,14 +79,19 @@ export default function QuestionBankPage() {
   const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
 
   const handleCreate = useCallback(() => {
-    if (!newQuestion.trim()) { toast.error("Question text is required"); return; }
+    const trimmedQ = newQuestion.trim();
+    if (!trimmedQ) { toast.error("Question text is required"); return; }
+    if (trimmedQ.length < 10) { toast.error("Question must be at least 10 characters"); return; }
+    if (trimmedQ.length > 1000) { toast.error("Question must be at most 1000 characters"); return; }
+    const rawTags = newTags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+    const uniqueTags = [...new Set(rawTags)];
     createQuestion.mutate(
       {
-        question: newQuestion.trim(),
+        question: trimmedQ,
         category: newCategory,
         difficulty: newDifficulty,
         role: newRole.trim() || undefined,
-        tags: newTags.split(",").map((t) => t.trim()).filter(Boolean),
+        tags: uniqueTags,
       },
       {
         onSuccess: () => {
