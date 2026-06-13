@@ -460,12 +460,21 @@ function OneOnOnesTab() {
     [employeesRaw]
   );
 
-  const scheduledAt = scheduledDate && scheduledTime ? `${scheduledDate}T${scheduledTime}` : "";
-
   const handleCreate = useCallback(() => {
     if (!empId.trim()) { toast.error("Please select an employee"); return; }
     if (!scheduledDate.trim()) { toast.error("Please select a date"); return; }
-    const localDt = new Date(`${scheduledDate}T${scheduledTime}`);
+
+    const [yr, mo, dy] = scheduledDate.split("-").map(Number);
+    const [hr, mn] = scheduledTime.split(":").map(Number);
+    const localDt = new Date(yr, mo - 1, dy, hr, mn, 0, 0);
+
+    const isDuplicate = (meetings ?? []).some((m: OneOnOneMeeting) => {
+      if (m.employeeId !== empId || m.status === "CANCELLED") return false;
+      const diff = Math.abs(new Date(m.scheduledAt).getTime() - localDt.getTime());
+      return diff < 60 * 60 * 1000;
+    });
+    if (isDuplicate) { toast.error("A meeting with this employee is already scheduled at this time"); return; }
+
     createMeeting.mutate(
       { employeeId: empId, scheduledAt: localDt.toISOString(), duration: Number(duration) || 30, agenda: agenda || undefined },
       {
@@ -480,7 +489,7 @@ function OneOnOnesTab() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting]);
+  }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting, meetings]);
 
   const handleStatusChange = useCallback((id: number, status: MeetingStatus) => {
     updateMeeting.mutate({ id, status }, {
