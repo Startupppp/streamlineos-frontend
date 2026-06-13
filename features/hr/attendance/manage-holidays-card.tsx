@@ -9,45 +9,16 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday } from "@/lib/api/hooks/hr";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, PartyPopper } from "lucide-react";
-
-interface HolidayRowProps {
-  id: number;
-  name: string;
-  date: string;
-  onDelete: (id: number) => void;
-  isDeleting: boolean;
-}
-
-const HolidayRow = memo(function HolidayRow({ id, name, date, onDelete, isDeleting }: HolidayRowProps) {
-  const handleDelete = useCallback(() => onDelete(id), [id, onDelete]);
-  return (
-    <li className="flex items-center justify-between gap-2 py-2.5 px-3 first:pt-2 last:pb-2">
-      <div>
-        <span className="font-medium text-foreground">{name}</span>
-        <span className="text-muted-foreground text-sm ml-2">{date}</span>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-        onClick={handleDelete}
-        disabled={isDeleting}
-        aria-label={`Remove ${name}`}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </li>
-  );
-});
 
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const currentYear = new Date().getFullYear();
   const [name, setName] = useState("");
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [message, setMessage] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const { data: holidaysList, isLoading } = useHrHolidaysForYear(currentYear);
 
@@ -90,18 +61,26 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
     [name, date, message, addMutation]
   );
 
-  const handleDelete = useCallback(
-    (holidayId: number) => {
-      deleteMutation.mutate(
-        { holidayId },
-        {
-          onSuccess: () => toast.success("Holiday removed"),
-          onError: (e) => toast.error(e.message),
-        }
-      );
-    },
-    [deleteMutation]
-  );
+  const handleDeleteRequest = useCallback((holidayId: number) => {
+    setDeleteConfirmId(holidayId);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteConfirmId) return;
+    deleteMutation.mutate(
+      { holidayId: deleteConfirmId },
+      {
+        onSuccess: () => {
+          toast.success("Holiday removed");
+          setDeleteConfirmId(null);
+        },
+        onError: (e) => {
+          toast.error(e.message);
+          setDeleteConfirmId(null);
+        },
+      }
+    );
+  }, [deleteConfirmId, deleteMutation]);
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -171,7 +150,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                    onClick={() => handleDelete(h.id)}
+                    onClick={() => handleDeleteRequest(h.id)}
                     disabled={deleteMutation.isPending}
                     aria-label={`Remove ${h.name}`}
                   >
@@ -190,6 +169,17 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           Employees see holidays on the calendar and get an in-app notification one day before.
         </p>
       </CardContent>
+
+      <ConfirmActionDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
+        title="Remove Holiday"
+        description="Are you sure you want to remove this holiday? This action cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
     </Card>
   );
 });
