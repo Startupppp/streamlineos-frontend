@@ -29,6 +29,7 @@ interface SupportFilters {
 
 interface CreateTicketInput {
   title: string;
+  category?: string;
   description?: string;
   clientId?: number;
   priority?: SupportTicketPriority;

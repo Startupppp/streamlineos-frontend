@@ -425,7 +425,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     if (/^[\W\s]+$/.test(trimmedTitle)) { toast.error("Title cannot consist of only special characters"); return; }
     if (!category) { toast.error("Please select a category"); return; }
     create.mutate(
-      { title: trimmedTitle, description: description.trim() || undefined, priority },
+      { title: trimmedTitle, category: category || undefined, description: description.trim() || undefined, priority },
       {
         onSuccess: () => {
           onOpenChange(false);

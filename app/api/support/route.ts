@@ -22,6 +22,7 @@ const createSchema = z.object({
     .max(200, "Title must be at most 200 characters")
     .refine((v) => !/\s{2,}/.test(v), "Title cannot have multiple consecutive spaces")
     .refine((v) => !/^[\W\s]+$/.test(v), "Title cannot consist of only special characters"),
+  category: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   clientId: z.number().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         .values({
           orgId: session.orgId,
           title: input.title,
+          category: input.category ?? null,
           description: input.description,
           clientId: input.clientId,
           priority: input.priority,
