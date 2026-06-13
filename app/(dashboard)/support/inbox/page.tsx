@@ -393,40 +393,69 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
   );
 }
 
+const TICKET_CATEGORIES = ["Technical Issue", "Billing", "Feature Request", "Account", "Performance", "Integration", "Other"] as const;
+type TicketCategory = (typeof TICKET_CATEGORIES)[number];
+
 function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<SupportTicketPriority>("MEDIUM");
+  const [category, setCategory] = useState<TicketCategory | "">("");
   const create = useCreateSupportTicket();
+
+  const resetForm = useCallback(() => {
+    setTitle("");
+    setDescription("");
+    setPriority("MEDIUM");
+    setCategory("");
+  }, []);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
   const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
   const handlePriorityChange = useCallback((v: string) => setPriority(v as SupportTicketPriority), []);
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const handleCategoryChange = useCallback((v: string) => setCategory(v as TicketCategory), []);
+  const handleCancel = useCallback(() => { resetForm(); onOpenChange(false); }, [resetForm, onOpenChange]);
 
   const handleCreate = useCallback(() => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Title is required"); return; }
+    if (trimmedTitle.length < 5) { toast.error("Title must be at least 5 characters"); return; }
+    if (trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
+    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Title cannot have multiple consecutive spaces"); return; }
+    if (/^[\W\s]+$/.test(trimmedTitle)) { toast.error("Title cannot consist of only special characters"); return; }
+    if (!category) { toast.error("Please select a category"); return; }
     create.mutate(
-      { title, description, priority },
+      { title: trimmedTitle, description: description.trim() || undefined, priority },
       {
         onSuccess: () => {
           onOpenChange(false);
-          setTitle("");
-          setDescription("");
-          setPriority("MEDIUM");
+          resetForm();
           toast.success("Ticket created");
         },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to create ticket"),
       }
     );
-  }, [create, title, description, priority, onOpenChange]);
+  }, [create, title, description, priority, category, onOpenChange, resetForm]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>New Support Ticket</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Title</Label>
-            <Input value={title} onChange={handleTitleChange} placeholder="Brief description of the issue" className="mt-1" />
+            <Label className="text-xs">Title <span className="text-destructive">*</span></Label>
+            <Input value={title} onChange={handleTitleChange} placeholder="Brief description of the issue" className="mt-1" maxLength={200} />
+          </div>
+          <div>
+            <Label className="text-xs">Category <span className="text-destructive">*</span></Label>
+            <Select value={category} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Select category" /></SelectTrigger>
+              <SelectContent>
+                {TICKET_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-xs">Description</Label>
@@ -446,7 +475,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} >
+            <Button onClick={handleCreate} disabled={create.isPending}>
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>
