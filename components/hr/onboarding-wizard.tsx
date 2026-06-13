@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useHrDepartments, useOnboardEmployee } from "@/lib/api/hooks/hr";
 import { useRolesList } from "@/lib/api/hooks/roles";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api-client";
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
 import { StepEmployment } from "./_onboarding/step-employment";
 import { StepSkillsPay } from "./_onboarding/step-skills-pay";
@@ -53,6 +54,8 @@ function formatDesignation(str: string) {
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const checkedEmail = useRef<string>("");
   const router = useRouter();
   const { data: departments } = useHrDepartments();
   const { data: orgRoles } = useRolesList();
@@ -90,6 +93,25 @@ export function OnboardingWizard() {
     if (fields) {
       const valid = await form.trigger(fields);
       if (!valid) return;
+    }
+    if (currentStep === 1) {
+      const email = form.getValues("email")?.toLowerCase().trim();
+      if (email && email !== checkedEmail.current) {
+        setIsCheckingEmail(true);
+        try {
+          const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
+          checkedEmail.current = email;
+          if (res.exists) {
+            form.setError("email", { message: "An employee with this email already exists" });
+            setIsCheckingEmail(false);
+            return;
+          }
+        } catch {
+          setIsCheckingEmail(false);
+        } finally {
+          setIsCheckingEmail(false);
+        }
+      }
     }
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
   }, [currentStep, form]);
@@ -195,9 +217,8 @@ export function OnboardingWizard() {
             </Button>
 
             {currentStep < STEPS.length ? (
-              <Button type="button" size="sm" onClick={handleNext} className="gap-1">
-                Next
-                <ChevronRight className="h-3.5 w-3.5" />
+              <Button type="button" size="sm" onClick={handleNext} className="gap-1" disabled={isCheckingEmail}>
+                {isCheckingEmail ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Checking...</> : <>Next<ChevronRight className="h-3.5 w-3.5" /></>}
               </Button>
             ) : (
               <Button type="submit" size="sm" disabled={onboardEmployee.isPending} className="gap-1 min-w-[100px]">
