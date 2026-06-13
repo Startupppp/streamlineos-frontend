@@ -119,6 +119,13 @@ export function ExpenseExportDialog({
   }, [employeesData]);
 
   const dateRangeError = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (dateFrom && dateFrom > today) {
+      return "From date cannot be in the future";
+    }
+    if (dateTo && dateTo > today) {
+      return "To date cannot be in the future";
+    }
     if (dateFrom && dateTo && dateFrom > dateTo) {
       return "From date must be before To date";
     }
@@ -242,11 +249,11 @@ export function ExpenseExportDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
-                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" />
+                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" toDate={new Date()} />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
-                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" />
+                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" toDate={new Date()} />
                 </div>
               </div>
               {dateRangeError && (
