@@ -22,6 +22,7 @@ const surveyKeys = { all: [...queryKeys.hr.all, "surveys"] as const, list: () =>
 
 export function usePulseSurveys() {
   return useQuery({ queryKey: surveyKeys.list(), queryFn: () => apiClient.get<PulseSurvey[]>("/hr/surveys") });
+  staleTime: 2 * 60_000,
 }
 
 export function useCreateSurvey() {

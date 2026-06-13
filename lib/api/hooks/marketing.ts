@@ -437,6 +437,7 @@ export function useContentCalendar(month?: string) {
         params as Record<string, string> | undefined
       );
     },
+    staleTime: 2 * 60_000,
   });
 }
 

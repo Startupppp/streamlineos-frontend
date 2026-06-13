@@ -38,6 +38,7 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
   return useQuery({
     queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
@@ -47,6 +48,7 @@ export function useLeadDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.leads.detail(id),
     queryFn: () => apiClient.get<LeadWithActivities>(`/leads/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -55,6 +57,7 @@ export function useLeadBoard() {
   return useQuery({
     queryKey: queryKeys.leads.board(),
     queryFn: () => apiClient.get<LeadBoard>("/leads/board"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -62,6 +65,7 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   return useQuery({
     queryKey: queryKeys.leads.stats(filters),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>),
   });
 }
@@ -70,6 +74,7 @@ export function useLeadActivities(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.activities(leadId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<LeadActivity[]>(`/leads/${leadId}/activities`, limit ? { limit } : undefined),
     enabled: leadId > 0,
   });
@@ -79,6 +84,7 @@ export function useLeadTimeline(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.timeline(leadId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined),
     enabled: leadId > 0,
   });
@@ -88,6 +94,7 @@ export function useLeadSlaAlerts() {
   return useQuery({
     queryKey: queryKeys.leads.slaAlerts(),
     queryFn: () => apiClient.get<SlaAlertResponse>("/leads/sla-alerts"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -98,6 +105,7 @@ export function useLeadAnalyticsSummary(filters?: {
   return useQuery({
     queryKey: queryKeys.leads.analyticsSummary(filters),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>),
   });
 }
@@ -106,6 +114,7 @@ export function useLeadDashboardMetrics() {
   return useQuery({
     queryKey: queryKeys.leads.dashboardMetrics(),
     queryFn: () => apiClient.get<LeadDashboardMetrics>("/leads/dashboard-metrics"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -113,6 +122,7 @@ export function useUnverifiedLeads() {
   return useQuery({
     queryKey: queryKeys.leads.unverified(),
     queryFn: () => apiClient.get<Lead[]>("/leads/unverified"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -284,6 +294,7 @@ export function useSalesLeaderboard() {
   return useQuery({
     queryKey: queryKeys.salesLeaderboard.list(),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard"),
   });
 }
@@ -292,6 +303,7 @@ export function useSalesTeamCapacity() {
   return useQuery({
     queryKey: queryKeys.salesTeamCapacity.list(),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity"),
   });
 }
@@ -314,6 +326,7 @@ export function useOverdueFollowUps(limit?: number) {
   return useQuery({
     queryKey: [...queryKeys.leads.all, "followUps", "overdue"] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<{ items: FollowUpLead[]; total: number }>(
         "/leads/follow-ups",
         { overdue: "true", limit: limit ?? 10 } as Record<string, unknown>,
@@ -347,6 +360,7 @@ export function useLeadImportStatus(batchId: number | null) {
   return useQuery({
     queryKey: [...queryKeys.leads.all, "importBatch", batchId] as const,
     queryFn: () => apiClient.get<LeadImportBatch>(`/leads/import/${batchId}`),
+    staleTime: 2 * 60_000,
     enabled: batchId !== null,
     refetchInterval: 3000,
   });

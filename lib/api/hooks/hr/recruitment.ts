@@ -23,6 +23,7 @@ export function useRecruitmentStats() {
   return useQuery({
     queryKey: queryKeys.hr.recruitmentStats(),
     queryFn: () => apiClient.get<RecruitmentStats>("/hr/recruitment/stats"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -30,6 +31,7 @@ export function useJobPostings(params?: { status?: string }) {
   return useQuery({
     queryKey: queryKeys.hr.jobPostings(params as Record<string, unknown> | undefined),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<JobPosting[]>("/hr/recruitment/jobs", params as Record<string, unknown> | undefined),
   });
 }
@@ -38,6 +40,7 @@ export function useJobPosting(id: number) {
   return useQuery({
     queryKey: queryKeys.hr.jobPosting(id),
     queryFn: () => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -78,6 +81,7 @@ export function useCandidates(params?: { status?: string; jobId?: number }) {
   return useQuery({
     queryKey: queryKeys.hr.candidates(params as Record<string, unknown> | undefined),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Candidate[]>("/hr/recruitment/candidates", params as Record<string, unknown> | undefined),
   });
 }
@@ -100,6 +104,7 @@ export function useCandidate(id: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidate(id),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<
         Candidate & {
           applications?: CandidateApplication[];
@@ -212,6 +217,7 @@ export function useInterviews(params?: { candidateId?: number; upcoming?: boolea
   return useQuery({
     queryKey: queryKeys.hr.interviews(params as Record<string, unknown> | undefined),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Interview[]>("/hr/recruitment/interviews", params as Record<string, unknown> | undefined),
   });
 }
@@ -252,6 +258,7 @@ export function useRecruitmentPipeline() {
   return useQuery({
     queryKey: queryKeys.hr.recruitmentPipeline(),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Record<string, Candidate[]>>("/hr/recruitment/pipeline"),
   });
 }
@@ -263,6 +270,7 @@ export function useAtsKanban() {
   return useQuery({
     queryKey: ATS_KANBAN_KEY,
     queryFn: () => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -381,6 +389,7 @@ export function useScorecardTemplates() {
   return useQuery({
     queryKey: queryKeys.hr.scorecardTemplates(),
     queryFn: () => apiClient.get<ScorecardTemplate[]>("/hr/recruitment/scorecard-templates"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -398,6 +407,7 @@ export function useInterviewScorecard(interviewId: number) {
   return useQuery({
     queryKey: queryKeys.hr.interviewScorecard(interviewId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<InterviewScorecard | null>(`/hr/recruitment/interviews/${interviewId}/scorecard`),
     enabled: !!interviewId,
   });
@@ -428,6 +438,7 @@ export function useInterviewScorecardSummary(interviewId: number) {
   return useQuery({
     queryKey: queryKeys.hr.interviewScorecardSummary(interviewId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<ScorecardSummary>(`/hr/recruitment/interviews/${interviewId}/scorecard/summary`),
     enabled: !!interviewId,
   });
@@ -474,6 +485,7 @@ export function useInterviewSlas() {
   return useQuery({
     queryKey: INTERVIEW_SLAS_KEY,
     queryFn: () => apiClient.get<InterviewSla[]>("/hr/recruitment/interviews/slas"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -502,6 +514,7 @@ export function useCandidateSla(candidateId: number) {
   return useQuery({
     queryKey: ["streamlineos", "hr", "candidateSla", candidateId],
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
     enabled: !!candidateId,
   });
@@ -527,6 +540,7 @@ export function useCandidateVault(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidateVault(candidateId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`),
     enabled: !!candidateId,
   });
@@ -593,6 +607,7 @@ export function useRolloutDocuments(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.rolloutDocuments(candidateId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<RolloutDocumentRecord[]>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`
       ),
@@ -649,6 +664,7 @@ export function useHrSlaReport() {
   return useQuery({
     queryKey: SLA_REPORT_KEY,
     queryFn: () => apiClient.get<HrSlaReport>("/hr/recruitment/interviews/sla-report"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -753,6 +769,7 @@ export function useSourcePortals() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "sourcePortals"] as const,
     queryFn: () => apiClient.get<SourcePortal[]>("/hr/recruitment/portals"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -779,6 +796,7 @@ export function useSourceEffectiveness() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "sourceEffectiveness"] as const,
     queryFn: () => apiClient.get<SourceEffectivenessRow[]>("/reports/source-effectiveness"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -838,6 +856,7 @@ export function useInterviewQuestions(filters?: {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "interviewQuestions", filters] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`),
   });
 }
@@ -905,6 +924,7 @@ export function useReferenceChecks(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`),
     enabled: candidateId > 0,
   });
@@ -971,6 +991,7 @@ export function useRecruitmentAnalytics() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "recruitmentAnalytics"] as const,
     queryFn: () => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -988,6 +1009,7 @@ export function useVaultAccessLogs(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<VaultAccessLog[]>(
         `/hr/recruitment/candidates/${candidateId}/vault/access-logs`
       ),
@@ -1012,6 +1034,7 @@ export function useJobShareLinks(jobId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "jobShare", jobId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`),
     enabled: jobId > 0,
   });
@@ -1042,6 +1065,7 @@ export function useCandidateOffers(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`),
     enabled: candidateId > 0,
   });
@@ -1100,6 +1124,7 @@ export function useBgvComplianceDashboard() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "bgv-compliance"],
     queryFn: () => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance"),
+    staleTime: 2 * 60_000,
   });
 }
 

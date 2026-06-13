@@ -49,6 +49,7 @@ export function useHrLeaves() {
   return useQuery({
     queryKey: queryKeys.hr.leaves(),
     queryFn: () => apiClient.get<LeavesResult>("/hr/leaves"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -56,6 +57,7 @@ export function useHrLeaveBalance() {
   return useQuery({
     queryKey: queryKeys.hr.leaveBalance(),
     queryFn: () => apiClient.get<LeaveBalance[]>("/hr/leaves/balance"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -87,6 +89,7 @@ export function useHrMyLeaves() {
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -95,6 +98,7 @@ export function useHrTeamLeaves() {
     queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
     queryFn: () =>
       apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -194,6 +198,7 @@ export function useHrLeaveContext() {
   return useQuery({
     queryKey: queryKeys.hr.leaves(),
     queryFn: () => apiClient.get<LeaveContextResult>("/hr/leaves"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -206,6 +211,7 @@ export function useHrLeaveApprovals() {
   return useQuery({
     queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -213,6 +219,7 @@ export function useHrLeavesThisWeek() {
   return useQuery({
     queryKey: [...["streamlineos"], "hr", "leavesThisWeek"] as const,
     queryFn: () => apiClient.get<unknown[]>("/hr/leaves/this-week"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -223,6 +230,7 @@ export function useHrMyLeaveRequests() {
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -230,6 +238,7 @@ export function useHrDirectory() {
   return useQuery({
     queryKey: ["hr", "directory"],
     queryFn: () => apiClient.get<unknown[]>("/hr/directory"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -318,6 +327,7 @@ export function useHrExpenses(
         limit: number;
         totalPages: number;
       }>("/hr/expenses", Object.keys(params).length ? params : undefined),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -378,6 +388,7 @@ export function useHrAssets() {
   return useQuery({
     queryKey: queryKeys.hr.assets(),
     queryFn: () => apiClient.get<Asset[]>("/hr/assets"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -413,6 +424,7 @@ export function useHrDocuments(userId?: string, type?: DocumentType) {
         "/hr/documents",
         Object.keys(params).length ? params : undefined,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -462,6 +474,7 @@ export function useHrPerformanceReviews(userId?: string) {
         "/hr/performance/reviews",
         userId ? { userId } : undefined,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -473,6 +486,7 @@ export function useHrGoals(userId?: string) {
         "/hr/performance/goals",
         userId ? { userId } : undefined,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -481,9 +495,9 @@ export function useCreateGoal() {
   return useMutation({
     mutationFn: (data: CreateGoalInput) =>
       apiClient.post<Goal>("/hr/performance/goals", data),
-    onSuccess: (_result, variables) =>
+    onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: queryKeys.hr.goals(variables.userId),
+        queryKey: [...queryKeys.hr.all, "goals"],
       }),
   });
 }
@@ -498,6 +512,7 @@ export function useHrHelpdeskTickets(userId?: string, status?: TicketStatus) {
       Object.keys(params).length ? params : undefined,
     ),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<HelpdeskTicket[]>(
         "/hr/helpdesk",
         Object.keys(params).length ? params : undefined,
@@ -519,6 +534,7 @@ export function useHrWfhRequests() {
   return useQuery({
     queryKey: queryKeys.hr.wfhRequests(),
     queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -526,6 +542,7 @@ export function useHrPendingWfhRequests() {
   return useQuery({
     queryKey: queryKeys.hr.pendingWfhRequests(),
     queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -557,6 +574,7 @@ export function useHrHolidaysForYear(year: number) {
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<
         string,
         unknown
@@ -571,6 +589,7 @@ export function useHrHolidaysForCalendar(params: {
   return useQuery({
     queryKey: queryKeys.hr.holidaysCalendar(params),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Holiday[]>(
         "/hr/holidays/calendar",
         params as Record<string, unknown>,
@@ -600,6 +619,7 @@ export function useHrDevices(params?: Record<string, unknown>) {
   return useQuery({
     queryKey: queryKeys.hr.devices(params),
     queryFn: () => apiClient.get<Device[]>("/hr/devices", params),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -636,6 +656,7 @@ export function useHrIncentives(params?: GetIncentivesInput) {
       params as Record<string, unknown> | undefined,
     ),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<IncentivesResult>(
         "/hr/incentives",
         params as Record<string, unknown> | undefined,
@@ -647,6 +668,7 @@ export function useHrIncentiveStats() {
   return useQuery({
     queryKey: queryKeys.hr.incentiveStats(),
     queryFn: () => apiClient.get<IncentiveStats>("/hr/incentives/stats"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -654,6 +676,7 @@ export function useHrIncentiveConfigs() {
   return useQuery({
     queryKey: queryKeys.hr.incentiveConfigs(),
     queryFn: () => apiClient.get<IncentiveConfig[]>("/hr/incentives/config"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -704,6 +727,7 @@ export function useNotificationPreferences() {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<NotificationPreferences>("/hr/notification-preferences"),
   });
 }

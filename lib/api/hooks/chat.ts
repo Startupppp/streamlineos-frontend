@@ -31,6 +31,7 @@ export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
+    staleTime: 2 * 60_000,
     refetchInterval: 30_000,
     enabled,
   });
@@ -40,6 +41,7 @@ export function useChatChannel(channelId: number) {
   return useQuery({
     queryKey: queryKeys.chat.channel(channelId),
     queryFn: () => apiClient.get<Channel>(`/chat/channels/${channelId}`),
+    staleTime: 2 * 60_000,
     enabled: channelId > 0,
   });
 }
@@ -62,6 +64,7 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Message[]>(
         `/chat/channels/${channelId}/messages/poll`,
         { since }
@@ -75,6 +78,7 @@ export function useChatUnreadTotal(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
+    staleTime: 2 * 60_000,
     refetchInterval: 30_000,
     enabled,
   });
@@ -94,6 +98,7 @@ export function useChatOrgUsers(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.orgUsers(),
     queryFn: () => apiClient.get<OrgUser[]>("/chat/users"),
+    staleTime: 2 * 60_000,
     enabled,
   });
 }
@@ -102,6 +107,7 @@ export function useChatSearchMessages(query: string, channelId?: number) {
   return useQuery({
     queryKey: queryKeys.chat.search(query),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<MessageWithChannel[]>("/chat/search", {
         query,
         ...(channelId ? { channelId } : {}),
@@ -114,6 +120,7 @@ export function useChatTyping(channelId: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.chat.typing(channelId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<TypingIndicator[]>(`/chat/channels/${channelId}/typing`),
     refetchInterval: 4_000,
     enabled: enabled && channelId > 0,

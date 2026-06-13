@@ -52,6 +52,7 @@ export function useAssignmentRules() {
   return useQuery({
     queryKey: queryKeys.crmSettings.assignmentRules(),
     queryFn: () => apiClient.get<AssignmentRule[]>("/crm/assignment-rules"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -126,6 +127,7 @@ export function useEmailTemplates(params?: { limit?: number; offset?: number }) 
   return useQuery({
     queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>),
   });
 }
@@ -192,6 +194,7 @@ export function useScoringRules() {
   return useQuery({
     queryKey: queryKeys.crmSettings.scoringRules(),
     queryFn: () => apiClient.get<ScoringRule[]>("/crm/scoring-rules"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -275,6 +278,7 @@ export function useSlaPolicies() {
   return useQuery({
     queryKey: queryKeys.crmSettings.slaPolicies(),
     queryFn: () => apiClient.get<SlaPolicy[]>("/crm/sla/policies"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -282,6 +286,7 @@ export function useSlaReport() {
   return useQuery({
     queryKey: queryKeys.crmSettings.slaReport(),
     queryFn: () => apiClient.get<SlaReport>("/crm/sla/report"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -289,6 +294,7 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
   return useQuery({
     queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>),
   });
 }

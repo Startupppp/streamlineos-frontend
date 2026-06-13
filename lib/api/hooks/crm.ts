@@ -294,6 +294,7 @@ export function useCrmAssignmentStats(enabled = false) {
   return useQuery({
     queryKey: queryKeys.clients.crmStats(),
     queryFn: () => apiClient.get<CrmAssignmentStats>("/clients/assign-crm"),
+    staleTime: 2 * 60_000,
     enabled,
   });
 }
@@ -314,6 +315,7 @@ export function useRenewalAccounts() {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "renewals"] as const,
     queryFn: () => apiClient.get<ClientAccount[]>("/clients/renewals"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -339,6 +341,7 @@ export function useTargets(filters?: TargetFilters) {
   return useQuery({
     queryKey: queryKeys.targets.list(filters as Record<string, unknown>),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Target[]>("/targets", filters as Record<string, unknown>),
   });
 }
@@ -347,6 +350,7 @@ export function useMyTargets() {
   return useQuery({
     queryKey: queryKeys.targets.myTargets(),
     queryFn: () => apiClient.get<Target[]>("/targets/my"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -354,6 +358,7 @@ export function useTargetLeaderboard(metricType?: string) {
   return useQuery({
     queryKey: queryKeys.targets.leaderboard(metricType),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<TargetLeaderboardEntry[]>(
         "/targets/leaderboard",
         metricType ? { metricType } : undefined
@@ -365,6 +370,7 @@ export function useTargetHistory(targetId: number) {
   return useQuery({
     queryKey: queryKeys.targets.history(targetId),
     queryFn: () => apiClient.get<TargetHistory[]>(`/targets/${targetId}/history`),
+    staleTime: 2 * 60_000,
     enabled: targetId > 0,
   });
 }
@@ -420,6 +426,7 @@ export function useSalesQuotas(params?: { userId?: string; period?: string }) {
   return useQuery({
     queryKey: queryKeys.salesQuotas.list(params as Record<string, unknown>),
     queryFn: () => apiClient.get<SalesQuota[]>("/sales/quotas", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -438,6 +445,7 @@ export function useCommissions(params?: { userId?: string; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissions", params] as const,
     queryFn: () => apiClient.get<{ items: Array<Record<string, unknown>>; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -445,6 +453,7 @@ export function useCommissionRules() {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissionRules"] as const,
     queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/sales/commission-rules"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -461,6 +470,7 @@ export function useDealApprovals(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "approvals", params] as const,
     queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/deals/approvals", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -468,6 +478,7 @@ export function useDealApprovalRules() {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "approvalRules"] as const,
     queryFn: () => apiClient.get<Array<{ id: number; minValue: string; approverRole: string; isActive: boolean; createdAt: string | null }>>("/deals/approval-rules"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -518,6 +529,7 @@ export function useClientHealth(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "health", params] as const,
     queryFn: () => apiClient.get<{ items: ClientHealth[]; summary: { healthy: number; at_risk: number; critical: number } }>("/clients/health", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -528,6 +540,7 @@ export function useChurnAlerts() {
       alerts: ClientHealth[];
       summary: { critical: number; atRisk: number; total: number };
     }>("/clients/churn-alerts"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -544,6 +557,7 @@ export function useClientTimeline(clientId: number) {
   return useQuery({
     queryKey: [...queryKeys.clients.detail(clientId), "timeline"] as const,
     queryFn: () => apiClient.get<{ events: ClientTimelineEvent[]; total: number }>(`/clients/${clientId}/timeline`),
+    staleTime: 2 * 60_000,
     enabled: clientId > 0,
   });
 }
@@ -552,6 +566,7 @@ export function useSalesDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.salesDashboard(),
     queryFn: () => apiClient.get<SalesDashboard>("/crm/sales-dashboard"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -559,6 +574,7 @@ export function useMarketingDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.marketingDashboard(),
     queryFn: () => apiClient.get<MarketingDashboard>("/crm/marketing-dashboard"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -586,6 +602,7 @@ export function useMarketingCampaigns(params?: { status?: string }) {
   return useQuery({
     queryKey: queryKeys.marketingCampaigns.list(params as Record<string, unknown>),
     queryFn: () => apiClient.get<MarketingCampaign[]>("/marketing/campaigns", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -593,6 +610,7 @@ export function useMarketingCampaignDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.marketingCampaigns.detail(id),
     queryFn: () => apiClient.get<MarketingCampaign>(`/marketing/campaigns/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -654,6 +672,7 @@ export function useEmailCampaigns(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.marketingCampaigns.all, "email", params] as const,
     queryFn: () => apiClient.get<EmailCampaign[]>("/marketing/email-campaigns", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -716,6 +735,7 @@ export function useCampaignLeads(filters: CampaignLeadFilters) {
   return useQuery({
     queryKey: [...queryKeys.marketingCampaigns.all, "campaignLeads", filters] as const,
     queryFn: () => apiClient.get<CampaignLeadsResponse>("/marketing/campaigns/leads", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -740,6 +760,7 @@ export function useUtmAttribution(params?: { source?: string }) {
   return useQuery({
     queryKey: [...queryKeys.marketingCampaigns.all, "utmAttribution", params] as const,
     queryFn: () => apiClient.get<{ attribution: Array<{ source: string | null; count: number; totalValue: number }> }>("/marketing/utm", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -747,6 +768,7 @@ export function useSupportDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.supportDashboard(),
     queryFn: () => apiClient.get<SupportDashboard>("/crm/support-dashboard"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -754,6 +776,7 @@ export function useDealActivities(dealId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.dealActivities.list(dealId, limit ? { limit } : undefined),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<DealActivity[]>(
         `/deals/${dealId}/activities`,
         limit ? { limit } : undefined
@@ -800,6 +823,7 @@ export function useClientAccountStats() {
   return useQuery({
     queryKey: queryKeys.clientStats.stats(),
     queryFn: () => apiClient.get<ClientAccountStats>("/clients/stats"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -807,6 +831,7 @@ export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<PaginatedCrmOrganizations>(
         "/crm/organizations",
         filters as Record<string, unknown>
@@ -818,6 +843,7 @@ export function useCrmOrganizationDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.detail(id),
     queryFn: () => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -860,6 +886,7 @@ export function useCrmOrgHierarchy(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.hierarchy(id),
     queryFn: () => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -868,6 +895,7 @@ export function useCrmOrgRollup(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.rollup(id),
     queryFn: () => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -876,6 +904,7 @@ export function useCrmOrgTimeline(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.timeline(id),
     queryFn: () => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -884,6 +913,7 @@ export function useCrmOrgRelatedLeads(id: number) {
   return useQuery({
     queryKey: queryKeys.crmOrganizations.relatedLeads(id),
     queryFn: () => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -892,6 +922,7 @@ export function useCrmPeopleSlugs() {
   return useQuery({
     queryKey: queryKeys.crm.peopleSlugs(),
     queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -899,6 +930,7 @@ export function useCrmPerson(slug: string) {
   return useQuery({
     queryKey: queryKeys.crm.person(slug),
     queryFn: () => apiClient.get<CrmPersonProfile | null>(`/crm/people/${slug}`),
+    staleTime: 2 * 60_000,
     enabled: !!slug,
   });
 }
@@ -907,6 +939,7 @@ export function useCustomerExecutiveDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.customerExecutiveDashboard(),
     queryFn: () => apiClient.get<CustomerExecutiveDashboard>("/crm/customer-executive"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -946,6 +979,7 @@ export function useDealMeetings(dealId: number) {
   return useQuery({
     queryKey: ["deals", dealId, "meetings"],
     queryFn: () => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`),
+    staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
 }
@@ -1000,6 +1034,7 @@ export function useWinLossAnalysis() {
   return useQuery({
     queryKey: ["deals", "win-loss"],
     queryFn: () => apiClient.get<WinLossAnalysis>("/deals/win-loss"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1021,6 +1056,7 @@ export function useLeadSourceReport() {
   return useQuery({
     queryKey: ["leads", "source-report"],
     queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1034,6 +1070,7 @@ export function useSimpleClientsList() {
   return useQuery({
     queryKey: ["clients", "simple-list"],
     queryFn: () => apiClient.get<SimpleClient[]>("/clients/list"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1068,6 +1105,7 @@ export function useClientOpportunities(clientId?: number) {
   return useQuery({
     queryKey: ["client-opportunities", clientId],
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<ClientOpportunity[]>(
         "/clients/opportunities",
         clientId ? { clientId } : undefined
@@ -1133,6 +1171,7 @@ export function useOnboardingTemplates() {
   return useQuery({
     queryKey: ["onboarding-templates"],
     queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1140,6 +1179,7 @@ export function useClientOnboardingItems(clientId: number) {
   return useQuery({
     queryKey: ["onboarding-items", clientId],
     queryFn: () => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }),
+    staleTime: 2 * 60_000,
     enabled: clientId > 0,
   });
 }
@@ -1217,6 +1257,7 @@ export function useCsatSurveys() {
   return useQuery({
     queryKey: ["csat-surveys"],
     queryFn: () => apiClient.get<CsatSurvey[]>("/csat"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1224,6 +1265,7 @@ export function useCsatSurveyResponses(surveyId: number) {
   return useQuery({
     queryKey: ["csat-responses", surveyId],
     queryFn: () => apiClient.get<CsatResponse[]>(`/csat/${surveyId}/responses`),
+    staleTime: 2 * 60_000,
     enabled: surveyId > 0,
   });
 }
@@ -1372,6 +1414,7 @@ export function useTerritories() {
   return useQuery({
     queryKey: ["territories"],
     queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1422,6 +1465,7 @@ export function useCustomFields(entityType: "lead" | "deal" | "contact") {
   return useQuery({
     queryKey: ["custom-fields", entityType] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<{ fields: CustomFieldDefinition[] }>(
         `/settings/custom-fields?entityType=${entityType}`
       ),
@@ -1540,6 +1584,7 @@ export function useWebLeadForms() {
   return useQuery({
     queryKey: queryKeys.webLeadForms.list(),
     queryFn: () => apiClient.get<WebLeadForm[]>("/crm/web-forms"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1628,6 +1673,7 @@ export function useSalesDashboardKPIs(filters: SalesDashboardFilters = {}) {
   return useQuery({
     queryKey: queryKeys.crm.salesKpis(params),
     queryFn: () => apiClient.get<SalesDashboardKPIsResult>("/sales/dashboard/kpis", params),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1640,6 +1686,7 @@ export function useSalesDashboardFunnel(filters: Omit<SalesDashboardFilters, "re
   return useQuery({
     queryKey: queryKeys.crm.salesFunnel(params),
     queryFn: () => apiClient.get<SalesFunnelStageResult[]>("/sales/dashboard/funnel", params),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1651,6 +1698,7 @@ export function useSalesDashboardLeaderboard(filters: Pick<SalesDashboardFilters
   return useQuery({
     queryKey: queryKeys.crm.salesLeaderboard(params),
     queryFn: () => apiClient.get<SalesLeaderboardEntryResult[]>("/sales/dashboard/leaderboard", params),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1659,6 +1707,7 @@ export function useRevenueVsGoal(year?: number) {
   return useQuery({
     queryKey: queryKeys.crm.revenueVsGoal(y),
     queryFn: () => apiClient.get<RevenueVsGoalEntryResult[]>("/sales/dashboard/revenue-vs-goal", { year: String(y) }),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -1687,6 +1736,7 @@ export function useDealVelocity(filters: Pick<SalesDashboardFilters, "from" | "t
   return useQuery({
     queryKey: ["sales", "velocity", params],
     queryFn: () => apiClient.get<DealVelocityResult>("/sales/dashboard/velocity", params),
+    staleTime: 2 * 60_000,
   });
 }
 

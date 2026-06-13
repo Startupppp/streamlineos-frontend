@@ -19,6 +19,7 @@ export function useHrDepartments() {
   return useQuery({
     queryKey: queryKeys.hr.departments(),
     queryFn: () => apiClient.get<Department[]>("/hr/departments"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -40,6 +41,7 @@ export function useHrEmployees(params?: {
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Employee[] | PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
   });
 }
@@ -78,6 +80,7 @@ export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -85,6 +88,7 @@ export function useHrEmployeeStats(userId: string) {
   return useQuery({
     queryKey: queryKeys.hr.employeeStats(userId),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }),
     enabled: !!userId,
   });
@@ -94,6 +98,7 @@ export function useHrEmployeeProjects(userId: string) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeProjects", userId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }),
     enabled: !!userId,
   });
@@ -103,6 +108,7 @@ export function useHrEmployeeTickets(userId: string) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeTickets", userId] as const,
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }),
     enabled: !!userId,
   });

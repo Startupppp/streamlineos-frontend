@@ -21,6 +21,7 @@ export function useReviewCycles() {
   return useQuery({
     queryKey: queryKeys.hr.reviewCycles(),
     queryFn: () => apiClient.get<ReviewCycle[]>("/hr/performance/cycles"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -94,6 +95,7 @@ export function useOneOnOneMeetings(params?: { upcoming?: boolean }) {
   return useQuery({
     queryKey: queryKeys.hr.oneOnOnes(params as Record<string, unknown> | undefined),
     queryFn: () =>
+    staleTime: 2 * 60_000,
       apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params as Record<string, unknown> | undefined),
   });
 }

@@ -24,6 +24,7 @@ export function usePolicyAcknowledgments() {
   return useQuery({
     queryKey: complianceKeys.list(),
     queryFn: () => apiClient.get<PolicyAcknowledgment[]>("/hr/compliance"),
+    staleTime: 2 * 60_000,
   });
 }
 

@@ -27,6 +27,7 @@ export function useReimbursements() {
   return useQuery({
     queryKey: reimbursementKeys.list(),
     queryFn: () => apiClient.get<Reimbursement[]>("/hr/reimbursements"),
+    staleTime: 2 * 60_000,
   });
 }
 

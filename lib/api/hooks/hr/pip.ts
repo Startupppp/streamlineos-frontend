@@ -24,6 +24,7 @@ const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pi
 
 export function usePIPs() {
   return useQuery({ queryKey: pipKeys.list(), queryFn: () => apiClient.get<PIP[]>("/hr/performance/pip") });
+  staleTime: 2 * 60_000,
 }
 
 export function useCreatePIP() {

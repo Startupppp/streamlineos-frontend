@@ -28,6 +28,7 @@ export function useRichDocuments() {
   return useQuery({
     queryKey: richDocKeys.list(),
     queryFn: () => apiClient.get<RichDocument[]>("/hr/rich-documents"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -35,6 +36,7 @@ export function useRichDocument(id: number) {
   return useQuery({
     queryKey: richDocKeys.detail(id),
     queryFn: () => apiClient.get<RichDocument>(`/hr/rich-documents/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
