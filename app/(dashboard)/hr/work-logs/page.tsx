@@ -86,8 +86,6 @@ export default function WorkLogsPage() {
 
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
-  const [employeeSearch, setEmployeeSearch] = useState("");
 
   const year = filters.year;
   const quarter = filters.quarter;
@@ -282,10 +280,6 @@ export default function WorkLogsPage() {
     employees,
     departments,
     isAdminOrCeo,
-    employeeSearchOpen,
-    setEmployeeSearchOpen,
-    employeeSearch,
-    setEmployeeSearch,
   };
 
   return (

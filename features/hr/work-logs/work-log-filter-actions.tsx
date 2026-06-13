@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
   SheetTrigger, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Users, Check, ChevronDown, Filter, CalendarDays, Download } from "lucide-react";
@@ -51,10 +51,6 @@ export interface SharedFilterProps {
   employees: WorkLogFilterEmployee[] | undefined;
   departments: WorkLogFilterDepartment[] | undefined;
   isAdminOrCeo: boolean;
-  employeeSearchOpen: boolean;
-  setEmployeeSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  employeeSearch: string;
-  setEmployeeSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface WorkLogFilterActionsProps extends SharedFilterProps {
@@ -73,12 +69,12 @@ export function WorkLogFilterActions({
   employees,
   departments,
   isAdminOrCeo,
-  employeeSearchOpen,
-  setEmployeeSearchOpen,
-  employeeSearch,
-  setEmployeeSearch,
   onExport,
 }: WorkLogFilterActionsProps) {
+  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [sheetPickerOpen, setSheetPickerOpen] = useState(false);
+  const [sheetPickerSearch, setSheetPickerSearch] = useState("");
   const handleYearChange = useCallback((v: string) => {
     const y = parseInt(v);
     setFilters((p) => ({ ...p, year: y }));
@@ -125,9 +121,9 @@ export function WorkLogFilterActions({
 
   const handleSelectMyLogs = useCallback(() => {
     setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
-    setEmployeeSearchOpen(false);
-    setEmployeeSearch("");
-  }, [setDraftFilters, setEmployeeSearchOpen, setEmployeeSearch]);
+    setSheetPickerOpen(false);
+    setSheetPickerSearch("");
+  }, [setDraftFilters]);
 
   const handleApplyFilters = useCallback(() => {
     setFilters({ ...draftFilters });
@@ -212,36 +208,38 @@ export function WorkLogFilterActions({
                 value={employeeSearch}
                 onValueChange={setEmployeeSearch}
               />
-              <CommandEmpty>No employee found.</CommandEmpty>
-              <CommandGroup className="max-h-60 overflow-y-auto">
-                <CommandItem
-                  value="My Logs"
-                  onSelect={() => {
-                    setFilters((p) => ({ ...p, selectedUserId: undefined }));
-                    setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
-                    setEmployeeSearchOpen(false);
-                    setEmployeeSearch("");
-                  }}
-                >
-                  <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
-                  My Logs
-                </CommandItem>
-                {(employees ?? []).map((emp) => (
+              <CommandList>
+                <CommandEmpty>No employee found.</CommandEmpty>
+                <CommandGroup>
                   <CommandItem
-                    key={emp.id}
-                    value={`${emp.firstName} ${emp.lastName}`}
+                    value="My Logs"
                     onSelect={() => {
-                      setFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                      setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                      setFilters((p) => ({ ...p, selectedUserId: undefined }));
+                      setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
                       setEmployeeSearchOpen(false);
                       setEmployeeSearch("");
                     }}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
-                    {emp.firstName} {emp.lastName}
+                    <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                    My Logs
                   </CommandItem>
-                ))}
-              </CommandGroup>
+                  {(employees ?? []).map((emp) => (
+                    <CommandItem
+                      key={emp.id}
+                      value={`${emp.firstName} ${emp.lastName}`}
+                      onSelect={() => {
+                        setFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                        setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                        setEmployeeSearchOpen(false);
+                        setEmployeeSearch("");
+                      }}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
+                      {emp.firstName} {emp.lastName}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
@@ -352,12 +350,12 @@ export function WorkLogFilterActions({
             {isAdminOrCeo && employees && employees.length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Employee</Label>
-                <Popover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
+                <Popover open={sheetPickerOpen} onOpenChange={setSheetPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      aria-expanded={employeeSearchOpen}
+                      aria-expanded={sheetPickerOpen}
                       className="w-full justify-between font-normal"
                     >
                       <span className="flex items-center gap-1.5 truncate">
@@ -371,26 +369,28 @@ export function WorkLogFilterActions({
                     <Command>
                       <CommandInput
                         placeholder="Search employee..."
-                        value={employeeSearch}
-                        onValueChange={setEmployeeSearch}
+                        value={sheetPickerSearch}
+                        onValueChange={setSheetPickerSearch}
                       />
-                      <CommandEmpty>No employee found.</CommandEmpty>
-                      <CommandGroup className="max-h-60 overflow-y-auto">
-                        <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
-                          <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ?"opacity-100" :"opacity-0")} />
-                          My Logs
-                        </CommandItem>
-                        {filteredEmployees.map((emp) => (
-                          <EmployeeCommandItem
-                            key={emp.id}
-                            employee={emp}
-                            isSelected={draftFilters.selectedUserId === emp.id}
-                            onSelect={setDraftFilters}
-                            onClose={setEmployeeSearchOpen}
-                            onClearSearch={setEmployeeSearch}
-                          />
-                        ))}
-                      </CommandGroup>
+                      <CommandList>
+                        <CommandEmpty>No employee found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
+                            <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                            My Logs
+                          </CommandItem>
+                          {filteredEmployees.map((emp) => (
+                            <EmployeeCommandItem
+                              key={emp.id}
+                              employee={emp}
+                              isSelected={draftFilters.selectedUserId === emp.id}
+                              onSelect={setDraftFilters}
+                              onClose={setSheetPickerOpen}
+                              onClearSearch={setSheetPickerSearch}
+                            />
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
