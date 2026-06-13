@@ -1,7 +1,7 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { recognitions, users } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { recognitions } from "@/lib/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -27,6 +27,17 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = createSchema.parse(await req.json());
     if (body.toUserId === session.user.id) return err("You cannot send kudos to yourself.", 400);
+
+    const existing = await db.query.recognitions.findFirst({
+      where: and(
+        eq(recognitions.orgId, session.orgId),
+        eq(recognitions.fromUserId, session.user.id),
+        eq(recognitions.toUserId, body.toUserId),
+        eq(recognitions.category, body.category),
+      ),
+      columns: { id: true },
+    });
+    if (existing) return err("You have already sent this recognition to this employee.", 409);
 
     const [recognition] = await db.insert(recognitions).values({
       orgId: session.orgId,

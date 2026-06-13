@@ -14,11 +14,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
-import { Heart, Plus, Award, Users, Lightbulb, Zap, Star } from "lucide-react";
+import { Heart, Plus, Award, Users, Lightbulb, Zap, Check, ChevronsUpDown } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 
@@ -41,6 +45,7 @@ export default function RecognitionPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toUserId, setToUserId] = useState("");
+  const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("KUDOS");
 
@@ -63,6 +68,7 @@ export default function RecognitionPage() {
           setToUserId("");
           setMessage("");
           setCategory("KUDOS");
+          setEmployeePickerOpen(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
@@ -133,17 +139,33 @@ export default function RecognitionPage() {
         )}
       </div>
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Give Recognition" onSubmit={handleSend} submitLabel="Send Kudos" isPending={createRecognition.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setToUserId(""); setMessage(""); setCategory("KUDOS"); } setSheetOpen(open); }} title="Give Recognition" onSubmit={handleSend} submitLabel="Send Kudos" isPending={createRecognition.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Who deserves recognition?</label>
-          <Select value={toUserId} onValueChange={setToUserId}>
-            <SelectTrigger><SelectValue placeholder="Select teammate" /></SelectTrigger>
-            <SelectContent>
-              {employees.map((e) => (
-                <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium">Who deserves recognition? <span className="text-destructive">*</span></label>
+          <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
+                {toUserId ? (employees.find((e) => e.id === toUserId)?.name ?? employees.find((e) => e.id === toUserId)?.email ?? "Select teammate") : "Select teammate"}
+                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search employees..." />
+                <CommandList>
+                  <CommandEmpty>No employees found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.filter((e) => !!e.id).map((e) => (
+                      <CommandItem key={e.id} value={e.name ?? e.email ?? e.id} onSelect={() => { setToUserId(e.id); setEmployeePickerOpen(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", toUserId === e.id ? "opacity-100" : "opacity-0")} />
+                        {e.name ?? e.email}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Category</label>
