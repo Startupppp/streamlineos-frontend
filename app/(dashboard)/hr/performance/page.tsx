@@ -38,16 +38,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import {
   Plus, Star, Target, Users, Calendar, Clock, MoreHorizontal,
-  CheckCircle2, Trash2, Pencil, AlertTriangle,
+  CheckCircle2, Trash2, Pencil, AlertTriangle, ChevronsUpDown, Check,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -115,6 +117,7 @@ function ReviewsTab() {
   const updateReview = useUpdatePerformanceReview();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
+  const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [cycleId, setCycleId] = useState("none");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
@@ -123,6 +126,17 @@ function ReviewsTab() {
     () => ((Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]).filter((e) => !!e.id),
     [employeesRaw]
   );
+
+  const handleCycleChange = useCallback((value: string) => {
+    setCycleId(value);
+    if (value !== "none") {
+      const cycle = (Array.isArray(cycles) ? cycles : []).find((c: ReviewCycle) => String(c.id) === value);
+      if (cycle) {
+        setPeriodStart(cycle.periodStart ?? "");
+        setPeriodEnd(cycle.periodEnd ?? "");
+      }
+    }
+  }, [cycles]);
 
   const handleCreate = useCallback(() => {
     if (!employeeId || !periodStart || !periodEnd) {
@@ -217,18 +231,34 @@ function ReviewsTab() {
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Review" onSubmit={handleCreate} submitLabel="Create" isPending={createReview.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Select value={employeeId} onValueChange={setEmployeeId}>
-            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent>
-              {employees.map((e) => (
-                <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
+                <span className="truncate">{employees.find((e) => e.id === employeeId)?.name ?? employees.find((e) => e.id === employeeId)?.email ?? "Select employee"}</span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search employees..." />
+                <CommandList>
+                  <CommandEmpty>No employee found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.map((e) => (
+                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmployeeId(e.id); setEmployeePickerOpen(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", employeeId === e.id ? "opacity-100" : "opacity-0")} />
+                        {e.name ?? e.email}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Review Cycle (optional)</label>
-          <Select value={cycleId} onValueChange={setCycleId}>
+          <Select value={cycleId} onValueChange={handleCycleChange}>
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
@@ -273,6 +303,7 @@ function GoalsTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
+  const [userPickerOpen, setUserPickerOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [targetValue, setTargetValue] = useState("");
@@ -398,10 +429,30 @@ function GoalsTab() {
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Goal" onSubmit={handleCreate} submitLabel="Create" isPending={createGoal.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>)}</SelectContent>
-          </Select>
+          <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={userPickerOpen} className="w-full justify-between font-normal">
+                <span className="truncate">{employees.find((e) => e.id === userId)?.name ?? employees.find((e) => e.id === userId)?.email ?? "Select employee"}</span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search employees..." />
+                <CommandList>
+                  <CommandEmpty>No employee found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.map((e) => (
+                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setUserId(e.id); setUserPickerOpen(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", userId === e.id ? "opacity-100" : "opacity-0")} />
+                        {e.name ?? e.email}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
@@ -458,6 +509,7 @@ function OneOnOnesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [empId, setEmpId] = useState("");
+  const [empPickerOpen, setEmpPickerOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("10:00");
   const [duration, setDuration] = useState("30");
@@ -576,10 +628,30 @@ function OneOnOnesTab() {
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Select value={empId} onValueChange={setEmpId}>
-            <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
-            <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>)}</SelectContent>
-          </Select>
+          <Popover open={empPickerOpen} onOpenChange={setEmpPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={empPickerOpen} className="w-full justify-between font-normal">
+                <span className="truncate">{employees.find((e) => e.id === empId)?.name ?? employees.find((e) => e.id === empId)?.email ?? "Select team member"}</span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search employees..." />
+                <CommandList>
+                  <CommandEmpty>No employee found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.map((e) => (
+                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmpId(e.id); setEmpPickerOpen(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", empId === e.id ? "opacity-100" : "opacity-0")} />
+                        {e.name ?? e.email}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -798,6 +870,8 @@ function PIPTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPip, setEditingPip] = useState<PIP | null>(null);
   const [pipUserId, setPipUserId] = useState("");
+  const [pipUserPickerOpen, setPipUserPickerOpen] = useState(false);
+  const [hrRepPickerOpen, setHrRepPickerOpen] = useState(false);
   const [hrRepId, setHrRepId] = useState("");
   const [reason, setReason] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -852,6 +926,8 @@ function PIPTab() {
 
     const validObjectives = objectives.filter((o) => o.objective.trim() && o.metric.trim() && o.deadline);
     if (validObjectives.length === 0) { toast.error("At least one complete objective (goal, metric, deadline) is required"); return; }
+    const lateDeadline = validObjectives.find((o) => o.deadline > endDate);
+    if (lateDeadline) { toast.error("Objective deadlines cannot exceed the PIP end date"); return; }
 
     const payload = {
       reason: trimmedReason,
@@ -997,26 +1073,75 @@ function PIPTab() {
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
-          <Select value={pipUserId} onValueChange={setPipUserId} disabled={!!editingPip}>
-            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent>
-              {employees.filter((e) => e.isActive).map((e) => (
-                <SelectItem key={e.id} value={e.id}>{[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={pipUserPickerOpen} onOpenChange={(o) => { if (!editingPip) setPipUserPickerOpen(o); }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={pipUserPickerOpen} className="w-full justify-between font-normal" disabled={!!editingPip}>
+                <span className="truncate">
+                  {pipUserId
+                    ? (() => { const e = employees.find((x) => x.id === pipUserId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email) : "Select employee"; })()
+                    : "Select employee"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search employees..." />
+                <CommandList>
+                  <CommandEmpty>No employee found.</CommandEmpty>
+                  <CommandGroup>
+                    {employees.filter((e) => e.isActive).map((e) => {
+                      const label = [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email;
+                      return (
+                        <CommandItem key={e.id} value={`${label} ${e.email}`} onSelect={() => { setPipUserId(e.id); setPipUserPickerOpen(false); }}>
+                          <Check className={cn("mr-2 h-4 w-4", pipUserId === e.id ? "opacity-100" : "opacity-0")} />
+                          {label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">HR Representative <span className="text-muted-foreground font-normal">(optional)</span></label>
-          <Select value={hrRepId || "none"} onValueChange={(v) => setHrRepId(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Select HR representative" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {hrEmployees.filter((e) => e.id !== pipUserId).map((e) => (
-                <SelectItem key={e.id} value={e.id}>{[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={hrRepPickerOpen} onOpenChange={setHrRepPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={hrRepPickerOpen} className="w-full justify-between font-normal">
+                <span className="truncate">
+                  {hrRepId
+                    ? (() => { const e = hrEmployees.find((x) => x.id === hrRepId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || e.email) : "Select HR representative"; })()
+                    : "None"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search HR representatives..." />
+                <CommandList>
+                  <CommandEmpty>No HR representative found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem value="none" onSelect={() => { setHrRepId(""); setHrRepPickerOpen(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", !hrRepId ? "opacity-100" : "opacity-0")} />
+                      None
+                    </CommandItem>
+                    {hrEmployees.filter((e) => e.id !== pipUserId).map((e) => {
+                      const label = [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email;
+                      return (
+                        <CommandItem key={e.id} value={`${label} ${e.email}`} onSelect={() => { setHrRepId(e.id); setHrRepPickerOpen(false); }}>
+                          <Check className={cn("mr-2 h-4 w-4", hrRepId === e.id ? "opacity-100" : "opacity-0")} />
+                          {label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Reason <span className="text-destructive">*</span></label>
