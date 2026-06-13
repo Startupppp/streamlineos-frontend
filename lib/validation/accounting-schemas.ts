@@ -53,21 +53,34 @@ export const agedReceivablesQuerySchema = z.object({
   asOf: z.string().date().optional(),
 });
 
-export const createJournalEntrySchema = z.object({
-  entryDate: z.string().date(),
-  description: z.string().min(1).max(500),
-  status: z.enum(["DRAFT", "POSTED"]).default("DRAFT"),
-  lines: z
-    .array(
-      z.object({
-        accountCode: z.string().min(1).max(20),
-        debit: z.number().nonnegative(),
-        credit: z.number().nonnegative(),
-        description: z.string().max(500).optional(),
-      }),
-    )
-    .min(2),
-});
+export const createJournalEntrySchema = z
+  .object({
+    entryDate: z.string().date(),
+    description: z.string().min(1).max(500),
+    status: z.enum(["DRAFT", "POSTED"]).default("DRAFT"),
+    lines: z
+      .array(
+        z
+          .object({
+            accountCode: z.string().min(1).max(20),
+            debit: z.number().nonnegative(),
+            credit: z.number().nonnegative(),
+            description: z.string().max(500).optional(),
+          })
+          .refine((line) => (line.debit > 0) !== (line.credit > 0), {
+            message: "Each line must have either a debit or a credit amount, not both or neither",
+          }),
+      )
+      .min(2),
+  })
+  .refine(
+    (entry) => {
+      const totalDebit = entry.lines.reduce((sum, l) => sum + l.debit, 0);
+      const totalCredit = entry.lines.reduce((sum, l) => sum + l.credit, 0);
+      return Math.abs(totalDebit - totalCredit) < 0.01;
+    },
+    { message: "Journal entry must balance: total debits must equal total credits", path: ["lines"] },
+  );
 
 export const postJournalEntrySchema = z.object({});
 
