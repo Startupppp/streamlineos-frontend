@@ -8,16 +8,11 @@ import { sendResignationSubmittedEmail } from "@/lib/email";
 import { inngest } from "@/lib/inngest/client";
 import { format } from "date-fns";
 import type { NextRequest } from "next/server";
-
-const REASON_CATEGORIES = [
-  "Better Opportunity", "Personal Reasons", "Higher Education",
-  "Work Environment", "Compensation", "Role Mismatch",
-  "Relocation", "Health Issues", "Starting Own Venture", "Other",
-] as const;
+import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
 
 const createSchema = z.object({
   reason: z.string().min(50, "Detailed reason must be at least 50 characters").max(2000),
-  reasonCategory: z.enum(REASON_CATEGORIES),
+  reasonCategory: z.enum(RESIGNATION_REASONS),
   lastWorkingDate: z.string().min(1, "Last working date is required"),
   noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
   willingForExitInterview: z.boolean().optional().default(true),
