@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -9,14 +9,11 @@ import {
   FileText,
   FilePlus2,
   Pencil,
-  Trash2,
-  Eye,
   FileCheck,
   FileLock,
   FileKey,
   Smile,
   MoreHorizontal,
-  Star,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -35,17 +32,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,7 +39,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 import {
   useDocumentTemplates,
@@ -62,8 +47,12 @@ import {
   type DocumentTemplate,
 } from "@/lib/api/hooks/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
-
+import {
+  VariableChips,
+  PreviewDialog,
+  DeleteConfirm,
+  DefaultStarButton,
+} from "@/features/hr/documents/template-table-cells";
 
 const TYPE_CONFIG: Record<
   string,
@@ -99,185 +88,6 @@ const TYPE_CONFIG: Record<
 function getTypeConfig(type: string) {
   return TYPE_CONFIG[type] ?? TYPE_CONFIG.OTHER;
 }
-
-
-function VariableChips({ variables }: { variables: string[] }) {
-  const visible = variables.slice(0, 3);
-  const rest = variables.length - 3;
-  if (!variables.length) {
-    return <span className="text-xs text-muted-foreground">—</span>;
-  }
-  return (
-    <div className="flex flex-wrap gap-1">
-      {visible.map((v) => (
-        <span
-          key={v}
-          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground border border-border/60"
-        >
-          {`{{${v}}}`}
-        </span>
-      ))}
-      {rest > 0 && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted/50 text-muted-foreground border border-border/40">
-          +{rest} more
-        </span>
-      )}
-    </div>
-  );
-}
-
-
-function PreviewDialog({ template }: { template: DocumentTemplate }) {
-  const [open, setOpen] = useState(false);
-
-  const handleSelect = useCallback((e: Event) => {
-    e.preventDefault();
-    setOpen(true);
-  }, []);
-
-  const handleOpenChange = useCallback((val: boolean) => setOpen(val), []);
-
-  return (
-    <>
-      <DropdownMenuItem onSelect={handleSelect}>
-        <Eye className="mr-2 h-3.5 w-3.5" />
-        Preview
-      </DropdownMenuItem>
-
-      {open && (
-        <AlertDialog open={open} onOpenChange={handleOpenChange}>
-          <AlertDialogContent className="max-w-3xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Preview — {template.title}</AlertDialogTitle>
-              <AlertDialogDescription>
-                Raw HTML preview with variable tokens shown as-is.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div
-              className="max-h-[60vh] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: template.htmlContent }}
-            />
-            <AlertDialogFooter>
-              <AlertDialogCancel>Close</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-    </>
-  );
-}
-
-
-function DeleteConfirm({
-  template,
-  onDelete,
-  isPending,
-}: {
-  template: DocumentTemplate;
-  onDelete: (id: number) => void;
-  isPending: boolean;
-}) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onSelect={(e) => e.preventDefault()}
-        >
-          <Trash2 className="mr-2 h-3.5 w-3.5" />
-          Delete
-        </DropdownMenuItem>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete template?</AlertDialogTitle>
-          <AlertDialogDescription>
-            &ldquo;{template.title}&rdquo; will be deactivated. This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => onDelete(template.id)}
-            disabled={isPending}
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
-
-interface DefaultStarButtonProps {
-  template: DocumentTemplate;
-  currentDefault: DocumentTemplate | undefined;
-  onSetDefault: (id: number, isDefault: boolean) => void;
-  isPending: boolean;
-}
-
-function DefaultStarButton({ template, currentDefault, onSetDefault, isPending }: DefaultStarButtonProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const isCurrentDefault = template.isDefault;
-  const hasExistingDefault = !!currentDefault && !isCurrentDefault;
-
-  const handleClick = useCallback(() => {
-    setConfirmOpen(true);
-  }, []);
-
-  const handleConfirmOpenChange = useCallback((val: boolean) => setConfirmOpen(val), []);
-
-  const handleConfirm = useCallback(() => {
-    onSetDefault(template.id, !isCurrentDefault);
-    setConfirmOpen(false);
-  }, [template.id, isCurrentDefault, onSetDefault]);
-
-  const confirmTitle = isCurrentDefault
-    ? "Remove default status?"
-    : "Set as default template?";
-
-  const confirmDescription = isCurrentDefault
-    ? "Are you sure you want to remove the default status from this template?"
-    : hasExistingDefault
-    ? `This will replace "${currentDefault.title}" as the default template. Continue?`
-    : "Set this template as the default?";
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          "h-7 w-7 shrink-0 transition-colors",
-          isCurrentDefault
-            ? "text-amber-500 hover:text-amber-600"
-            : "text-muted-foreground/40 hover:text-amber-400"
-        )}
-        onClick={handleClick}
-        disabled={isPending}
-        aria-label={isCurrentDefault ? "Remove default status" : "Set as default"}
-        title={isCurrentDefault ? "Remove default status" : "Set as default"}
-      >
-        <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
-      </Button>
-
-      <ConfirmActionDialog
-        open={confirmOpen}
-        onOpenChange={handleConfirmOpenChange}
-        title={confirmTitle}
-        description={confirmDescription}
-        confirmLabel="Confirm"
-        variant="default"
-        isPending={isPending}
-        onConfirm={handleConfirm}
-      />
-    </>
-  );
-}
-
 
 function TemplatesPageSkeleton() {
   return (
@@ -323,9 +133,115 @@ function TemplatesPageSkeleton() {
   );
 }
 
+function TemplateTableRow({
+  template,
+  currentDefault,
+  onDelete,
+  onSetDefault,
+  isDeletePending,
+  isSetDefaultPending,
+}: {
+  template: DocumentTemplate;
+  currentDefault: DocumentTemplate | undefined;
+  onDelete: (id: number) => void;
+  onSetDefault: (id: number, isDefault: boolean) => void;
+  isDeletePending: boolean;
+  isSetDefaultPending: boolean;
+}) {
+  const router = useRouter();
+  const cfg = getTypeConfig(template.type);
+  const TypeIcon = cfg.icon;
+
+  const handleEdit = useCallback(
+    () => router.push(`/hr/documents/templates/${template.id}/edit`),
+    [router, template.id],
+  );
+
+  return (
+    <TableRow className="group">
+      <TableCell>
+        <DefaultStarButton
+          template={template}
+          currentDefault={currentDefault}
+          onSetDefault={onSetDefault}
+          isPending={isSetDefaultPending}
+        />
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2 min-w-0">
+          <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="font-medium text-sm truncate">{template.title}</span>
+          {template.isDefault && (
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0"
+            >
+              Default
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant="outline"
+          className={`text-[11px] px-2 py-0.5 ${cfg.className}`}
+        >
+          {cfg.label}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <VariableChips variables={template.variables ?? []} />
+      </TableCell>
+      <TableCell className="text-center text-sm text-muted-foreground">
+        v{template.version}
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant="outline"
+          className={
+            template.isActive
+              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]"
+              : "bg-muted text-muted-foreground border-border text-[11px]"
+          }
+        >
+          {template.isActive ? "Active" : "Inactive"}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {template.createdAt ? format(new Date(template.createdAt), "MMM d, yyyy") : "—"}
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Template actions"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleEdit}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <PreviewDialog template={template} />
+            <DropdownMenuSeparator />
+            <DeleteConfirm
+              template={template}
+              onDelete={onDelete}
+              isPending={isDeletePending}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export default function DocumentTemplatesPage() {
-  const router = useRouter();
   const { data: templates, isLoading } = useDocumentTemplates();
   const deleteMutation = useDeleteDocumentTemplate();
   const setDefaultMutation = useSetDocumentTemplateDefault();
@@ -337,7 +253,7 @@ export default function DocumentTemplatesPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
-    [deleteMutation]
+    [deleteMutation],
   );
 
   const handleSetDefault = useCallback(
@@ -348,16 +264,15 @@ export default function DocumentTemplatesPage() {
           onSuccess: () =>
             toast.success(isDefault ? "Template set as default" : "Default status removed"),
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
+        },
       );
     },
-    [setDefaultMutation]
+    [setDefaultMutation],
   );
 
   if (isLoading) return <TemplatesPageSkeleton />;
 
   const list = templates ?? [];
-
   const total = list.length;
   const active = list.filter((t) => t.isActive).length;
   const ndaCount = list.filter((t) => t.type === "NDA").length;
@@ -410,95 +325,17 @@ export default function DocumentTemplatesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {list.map((template) => {
-                      const cfg = getTypeConfig(template.type);
-                      const TypeIcon = cfg.icon;
-                      return (
-                        <TableRow key={template.id} className="group">
-                          <TableCell>
-                            <DefaultStarButton
-                              template={template}
-                              currentDefault={currentDefault}
-                              onSetDefault={handleSetDefault}
-                              isPending={setDefaultMutation.isPending}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2 min-w-0">
-                              <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <span className="font-medium text-sm truncate">{template.title}</span>
-                              {template.isDefault && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0">
-                                  Default
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={`text-[11px] px-2 py-0.5 ${cfg.className}`}
-                            >
-                              {cfg.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <VariableChips variables={template.variables ?? []} />
-                          </TableCell>
-                          <TableCell className="text-center text-sm text-muted-foreground">
-                            v{template.version}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                template.isActive
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]"
-                                  : "bg-muted text-muted-foreground border-border text-[11px]"
-                              }
-                            >
-                              {template.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {template.createdAt
-                              ? format(new Date(template.createdAt), "MMM d, yyyy")
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  aria-label="Template actions"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(`/hr/documents/templates/${template.id}/edit`)
-                                  }
-                                >
-                                  <Pencil className="mr-2 h-3.5 w-3.5" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <PreviewDialog template={template} />
-                                <DropdownMenuSeparator />
-                                <DeleteConfirm
-                                  template={template}
-                                  onDelete={handleDelete}
-                                  isPending={deleteMutation.isPending}
-                                />
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {list.map((template) => (
+                      <TemplateTableRow
+                        key={template.id}
+                        template={template}
+                        currentDefault={currentDefault}
+                        onDelete={handleDelete}
+                        onSetDefault={handleSetDefault}
+                        isDeletePending={deleteMutation.isPending}
+                        isSetDefaultPending={setDefaultMutation.isPending}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </div>
