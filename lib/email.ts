@@ -63,7 +63,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${appUrl}/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - StreamlineOS",

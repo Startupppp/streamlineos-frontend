@@ -105,7 +105,7 @@ export default function WorkLogsPage() {
   );
 
   const employees = useMemo(
-    () => allEmployees.filter((e) => e.id !== session?.user?.id),
+    () => allEmployees.filter((e) => e.id !== session?.user?.id && e.isActive !== false),
     [allEmployees, session?.user?.id]
   );
 
