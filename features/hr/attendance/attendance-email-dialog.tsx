@@ -96,7 +96,7 @@ function MultiSelectField({
         <PopoverContent className="w-72 p-0" align="start">
           <Command>
             <CommandInput placeholder="Search by name or email..." className="h-8" />
-            <CommandList>
+            <CommandList className="max-h-48 overflow-y-auto">
               <CommandEmpty>No users available</CommandEmpty>
               <CommandGroup>
                 {available.map((opt) => (

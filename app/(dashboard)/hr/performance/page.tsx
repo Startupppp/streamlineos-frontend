@@ -147,6 +147,11 @@ function ReviewsTab() {
       toast.error("Period end date must be after period start date");
       return;
     }
+    const selectedEmployee = employees.find((e) => e.id === employeeId);
+    if (selectedEmployee?.joiningDate && periodStart < selectedEmployee.joiningDate.toString().slice(0, 10)) {
+      toast.error("Period start date cannot be earlier than the employee's joining date");
+      return;
+    }
     createReview.mutate({
       userId: employeeId,
       cycleId: cycleId !== "none" ? Number(cycleId) : undefined,
@@ -163,7 +168,7 @@ function ReviewsTab() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [employeeId, cycleId, periodStart, periodEnd, createReview]);
+  }, [employeeId, cycleId, periodStart, periodEnd, createReview, employees]);
 
   const handleComplete = useCallback((id: number) => {
     updateReview.mutate({ id, status: "COMPLETED" }, {
