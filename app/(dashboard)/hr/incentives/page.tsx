@@ -3,7 +3,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,7 +23,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   IndianRupee, CheckCircle2, XCircle, Clock, Settings,
-  TrendingUp, Users, Percent,
+  TrendingUp, Users, Percent, History,
 } from "lucide-react";
 import {
   useHrIncentiveStats,
@@ -214,6 +214,36 @@ export default function IncentivesPage() {
               <div>
                 <p className="text-sm font-medium">Current Incentive Rate: <span className="text-blue-600 font-bold">{currentConfig.incentiveRate}%</span></p>
                 <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {configs && configs.length > 1 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <History className="h-4 w-4 text-muted-foreground" />
+                Rate History
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {configs.map((cfg, idx) => (
+                  <div key={cfg.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className={`font-semibold tabular-nums ${idx === 0 ? "text-blue-600" : "text-foreground"}`}>
+                        {cfg.incentiveRate}%
+                      </span>
+                      {idx === 0 && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 bg-blue-500/10 text-blue-600 border-blue-500/20">Current</Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      Set on {cfg.createdAt ? new Date(cfg.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
