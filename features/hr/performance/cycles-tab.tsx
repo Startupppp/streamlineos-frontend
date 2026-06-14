@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -110,7 +111,7 @@ export function CyclesTab() {
   const handleDeadlineChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeadline(e.target.value), []);
 
   if (isLoading) {
-    return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>;
+    return <LoadingState variant="list" rows={3} />;
   }
 
   return (
@@ -123,12 +124,7 @@ export function CyclesTab() {
       </div>
 
       {!cycles?.length ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Calendar className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No review cycles yet. Create a quarterly or annual cycle.</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={Calendar} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
       ) : (
         <div className="space-y-2">
           {cycles.map((cycle: ReviewCycle) => (

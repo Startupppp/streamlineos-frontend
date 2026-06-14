@@ -14,7 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -121,7 +122,7 @@ export function GoalsTab() {
   const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
 
   if (isLoading) {
-    return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}</div>;
+    return <LoadingState variant="cards" rows={4} />;
   }
 
   const goalsList = Array.isArray(goals) ? goals : [];
@@ -136,12 +137,7 @@ export function GoalsTab() {
       </div>
 
       {goalsList.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Target className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No goals set yet.</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={Target} title="No goals set yet" compact />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {goalsList.map((goal: Goal) => (

@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import type { Termination, TerminationStatus } from "@/lib/api/hooks/hr";
 import {
@@ -312,15 +313,15 @@ export function TerminationList({
       </div>
 
       {list.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              {statusFilter === "ALL"
-                ? "No termination records found."
-                : `No ${TERMINATION_STATUS_LABELS[statusFilter as keyof typeof TERMINATION_STATUS_LABELS] ?? statusFilter} records.`}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={User}
+          title={
+            statusFilter === "ALL"
+              ? "No termination records found"
+              : `No ${TERMINATION_STATUS_LABELS[statusFilter as keyof typeof TERMINATION_STATUS_LABELS] ?? statusFilter} records`
+          }
+          compact
+        />
       ) : (
         <div className="space-y-2">
           {list.map((record: Termination) => (

@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  ArrowRightLeft, PhoneCall, StickyNote, Mail, Video, FileText, MessageSquare,
+  ArrowRightLeft, PhoneCall, StickyNote, Mail, Video, FileText, MessageSquare, Activity,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { LucideIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ interface ActivityTimelineProps {
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   if (activities.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>;
+    return <EmptyState icon={Activity} title="No activities yet" compact />;
   }
 
   return (

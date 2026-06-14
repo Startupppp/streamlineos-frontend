@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -103,7 +104,7 @@ export function MeetingsTab() {
   const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setAgenda(e.target.value), []);
 
   if (isLoading) {
-    return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>;
+    return <LoadingState variant="list" rows={3} />;
   }
 
   return (
@@ -116,12 +117,7 @@ export function MeetingsTab() {
       </div>
 
       {!meetings?.length ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No 1-on-1 meetings scheduled.</p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={Users} title="No 1-on-1 meetings scheduled" compact />
       ) : (
         <div className="space-y-2">
           {meetings.map((m: OneOnOneMeeting) => (

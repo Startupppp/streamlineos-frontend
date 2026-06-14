@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -119,7 +120,7 @@ export function ReviewsTab() {
   const handlePeriodEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value), []);
 
   if (isLoading) {
-    return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}</div>;
+    return <LoadingState variant="cards" rows={4} />;
   }
 
   const reviewsList = Array.isArray(reviews) ? reviews : [];
@@ -134,12 +135,12 @@ export function ReviewsTab() {
       </div>
 
       {reviewsList.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <EmptyLeaderboardIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No reviews yet. Create your first one.</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<EmptyLeaderboardIllustration className="h-32 w-32 opacity-95" />}
+          title="No reviews yet"
+          description="Create your first one."
+          compact
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {reviewsList.map((review: PerformanceReview) => (
