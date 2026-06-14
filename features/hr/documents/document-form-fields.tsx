@@ -20,7 +20,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
-  name: z.string(),
+  name: z.string()
+    .max(200, "Name must be at most 200 characters")
+    .refine((v) => !v || !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")
+    .refine((v) => !v || !/\s{2,}/.test(v), "Name cannot have multiple consecutive spaces")
+    .refine((v) => !v || !/[<>{}[\]\\|^~`]/.test(v), "Name contains invalid special characters"),
   description: z.string().optional(),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const, {
     error: "Please select a document type",
