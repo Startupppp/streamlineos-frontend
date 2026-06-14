@@ -145,6 +145,9 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
     quarter: input.quarter,
   };
   if (input.userId) params.userId = input.userId;
+  if (input.month !== undefined) params.month = input.month;
+  if (input.dateFrom) params.dateFrom = input.dateFrom;
+  if (input.dateTo) params.dateTo = input.dateTo;
 
   return useQuery({
     queryKey: queryKeys.hr.workLogs(params),

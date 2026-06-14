@@ -533,36 +533,46 @@ export async function getWorkLogs(
   userId: string,
   year: number,
   quarter: number,
-  filterUserId?: string
+  filterUserId?: string,
+  month?: number,
+  dateFrom?: string,
+  dateTo?: string
 ): Promise<WorkLog[]> {
   const targetUserId = filterUserId || userId;
 
   const startMonth = (quarter - 1) * 3;
-  const startDate = new Date(year, startMonth, 1);
-  const endDate = new Date(year, startMonth + 3, 0);
-  const startStr = formatDateOnly(startDate);
-  const endStr = formatDateOnly(endDate);
+  const quarterStart = formatDateOnly(new Date(year, startMonth, 1));
+  const quarterEnd = formatDateOnly(new Date(year, startMonth + 3, 0));
+
+  const effectiveFrom = dateFrom && dateFrom >= quarterStart ? dateFrom : quarterStart;
+  const effectiveTo = dateTo && dateTo <= quarterEnd ? dateTo : quarterEnd;
+
+  const conditions = [
+    eq(timesheets.orgId, orgId),
+    eq(timesheets.userId, targetUserId),
+    isNull(timesheets.ticketId),
+    gte(timesheets.date, effectiveFrom),
+    lte(timesheets.date, effectiveTo),
+  ];
+
+  if (month !== undefined) {
+    conditions.push(sql`EXTRACT(MONTH FROM ${timesheets.date}) = ${month + 1}`);
+    conditions.push(sql`EXTRACT(YEAR FROM ${timesheets.date}) = ${year}`);
+  }
 
   const logs = await db.query.timesheets.findMany({
-    where: and(
-      eq(timesheets.orgId, orgId),
-      eq(timesheets.userId, targetUserId),
-      isNull(timesheets.ticketId)
-    ),
+    where: and(...conditions),
+    orderBy: [asc(timesheets.date)],
   });
-
-  const dated = logs
-    .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
-    .filter((l) => l.date >= startStr && l.date <= endStr);
 
   const seenDates = new Set<string>();
-  const deduped = dated.filter((l) => {
-    if (seenDates.has(l.date)) return false;
-    seenDates.add(l.date);
-    return true;
-  });
-
-  return deduped as unknown as WorkLog[];
+  return logs
+    .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
+    .filter((l) => {
+      if (seenDates.has(l.date)) return false;
+      seenDates.add(l.date);
+      return true;
+    }) as unknown as WorkLog[];
 }
 
 export async function getHelpdeskTickets(
@@ -952,10 +962,21 @@ export async function getIncentiveStats(orgId: string): Promise<IncentiveStats> 
 }
 
 export async function getIncentiveConfigs(orgId: string): Promise<IncentiveConfig[]> {
-  return db.query.incentiveConfig.findMany({
-    where: and(eq(incentiveConfig.orgId, orgId), eq(incentiveConfig.isActive, true)),
-    orderBy: [desc(incentiveConfig.effectiveFrom)],
-  }) as unknown as Promise<IncentiveConfig[]>;
+  const rows = await db
+    .select({
+      id: incentiveConfig.id,
+      orgId: incentiveConfig.orgId,
+      incentiveRate: incentiveConfig.incentiveRate,
+      effectiveFrom: incentiveConfig.effectiveFrom,
+      createdAt: incentiveConfig.createdAt,
+      createdByName: users.name,
+    })
+    .from(incentiveConfig)
+    .leftJoin(users, eq(incentiveConfig.createdBy, users.id))
+    .where(and(eq(incentiveConfig.orgId, orgId), eq(incentiveConfig.isActive, true)))
+    .orderBy(desc(incentiveConfig.effectiveFrom));
+
+  return rows as IncentiveConfig[];
 }
 
 export async function getAllPayrolls(orgId: string, month: string): Promise<PayrollWithUser[]> {

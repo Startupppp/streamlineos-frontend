@@ -645,6 +645,9 @@ export interface GetWorkLogsInput {
   year: number;
   quarter: number;
   userId?: string;
+  month?: number;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface WfhRequest {
@@ -881,6 +884,7 @@ export interface IncentiveConfig {
   incentiveRate: string;
   effectiveFrom: string | Date;
   createdAt: Date | string | null;
+  createdByName: string | null;
 }
 
 export interface Incentive {

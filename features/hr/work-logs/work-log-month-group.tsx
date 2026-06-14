@@ -7,6 +7,7 @@ import { WorkLogEntryRow } from "./work-log-entry-row";
 
 interface WorkLog {
   id: number;
+  userId?: string | null;
   date: string;
   description?: string | null;
   workLink?: string | null;
@@ -30,6 +31,7 @@ interface WorkLogMonthGroupProps {
   searchTerm: string;
   logs: WorkLog[] | undefined;
   readOnly: boolean;
+  currentUserId?: string;
   onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
 }
@@ -45,6 +47,7 @@ export function WorkLogMonthGroup({
   searchTerm,
   logs,
   readOnly,
+  currentUserId,
   onSave,
   isSaving,
 }: WorkLogMonthGroupProps) {
@@ -89,6 +92,7 @@ export function WorkLogMonthGroup({
             {displayDays.map((date) => {
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
+              const isOwnLog = !log?.userId || !currentUserId || log.userId === currentUserId;
               return (
                 <WorkLogEntryRow
                   key={dateStr}
@@ -99,7 +103,7 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={readOnly}
+                  readOnly={readOnly || !isOwnLog}
                   status={log?.status ?? undefined}
                 />
               );

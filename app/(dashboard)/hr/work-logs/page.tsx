@@ -146,6 +146,9 @@ export default function WorkLogsPage() {
     year,
     quarter,
     ...(selectedUserId ? { userId: selectedUserId } : {}),
+    ...(filters.month !== undefined ? { month: filters.month } : {}),
+    ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+    ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
   });
 
   const upsertLog = useUpsertWorkLog({
@@ -373,6 +376,7 @@ export default function WorkLogsPage() {
                   filled={filled}
                   searchTerm={searchTerm}
                   logs={logs}
+                  currentUserId={session?.user?.id}
                   readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
                   isSaving={upsertLog.isPending}

@@ -24,6 +24,9 @@ export async function GET(req: NextRequest) {
     const filterUserId = searchParams.get("userId") ?? undefined;
     const year = searchParams.get("year");
     const quarter = searchParams.get("quarter");
+    const monthParam = searchParams.get("month");
+    const dateFrom = searchParams.get("dateFrom") ?? undefined;
+    const dateTo = searchParams.get("dateTo") ?? undefined;
 
     if (filterUserId && filterUserId !== session.user.id && !isAdmin) {
       return err("Not authorized to view other users' work logs.", 403);
@@ -33,12 +36,17 @@ export async function GET(req: NextRequest) {
       return err("year and quarter query params are required.", 400);
     }
 
+    const month = monthParam !== null ? Number(monthParam) : undefined;
+
     const data = await getWorkLogs(
       session.orgId,
       session.user.id,
       Number(year),
       Number(quarter),
-      filterUserId
+      filterUserId,
+      month,
+      dateFrom,
+      dateTo
     );
     return ok(data);
   });
