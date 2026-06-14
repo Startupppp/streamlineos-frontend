@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calculator, Check } from "lucide-react";
+import { Calculator, Check, Info } from "lucide-react";
 import { format } from "date-fns";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
@@ -39,10 +39,11 @@ interface PayslipDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   payslipPreview: PayslipPreview | null;
   selectedEmployeeData: Employee | null;
-  selectedMonth: string;
+  formMonth: string;
   onBackToEdit: () => void;
   onConfirmGenerate: () => void;
   isGenerating: boolean;
+  hasAttendanceData: boolean;
 }
 
 export function PayslipDetailSheet({
@@ -50,11 +51,14 @@ export function PayslipDetailSheet({
   onOpenChange,
   payslipPreview,
   selectedEmployeeData,
-  selectedMonth,
+  formMonth,
   onBackToEdit,
   onConfirmGenerate,
   isGenerating,
+  hasAttendanceData,
 }: PayslipDetailSheetProps) {
+  const payPeriodLabel = format(new Date(formMonth + "-01"), "MMMM yyyy");
+
   return (
     <HrSheet
       open={open}
@@ -89,7 +93,7 @@ export function PayslipDetailSheet({
               </p>
             </div>
             <Badge variant="outline" className="shrink-0">
-              {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
+              {payPeriodLabel}
             </Badge>
           </div>
         </CardHeader>
@@ -198,6 +202,15 @@ export function PayslipDetailSheet({
               <span className="tabular-nums">{payslipPreview?.effectiveDays}</span>
             </div>
           </div>
+
+          {!hasAttendanceData && (
+            <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                This preview uses the base salary. The actual payslip will reflect attendance once processed.
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

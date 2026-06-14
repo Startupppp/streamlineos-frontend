@@ -72,7 +72,7 @@ export default function PayrollPage() {
     [employeesRaw],
   );
 
-  const form = usePayslipForm({ selectedMonth, employees });
+  const form = usePayslipForm({ employees });
 
   const generatePayrollMutation = useGeneratePayroll();
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
@@ -111,7 +111,7 @@ export default function PayrollPage() {
     generateEmployeePayslipMutation.mutate(
       {
         userId: form.selectedEmployee,
-        month: selectedMonth,
+        month: form.formMonth,
         lopDays: parseFloat(form.lopDays) || 0,
         halfDays: parseFloat(form.halfDays) || 0,
         otherDeductions: parseFloat(form.otherDeductions) || 0,
@@ -240,10 +240,12 @@ export default function PayrollPage() {
             onOvertimeAmountChange={form.setOvertimeAmount}
             payslipPreview={form.payslipPreview}
             selectedEmployeeData={form.selectedEmployeeData}
-            selectedMonth={selectedMonth}
+            formMonth={form.formMonth}
+            onFormMonthChange={form.setFormMonth}
             onConfirmGenerate={handleGenerateForEmployee}
             isGenerating={generateEmployeePayslipMutation.isPending}
             isAttendanceLoading={form.isAttendanceLoading}
+            hasAttendanceData={form.hasAttendanceData}
           />
 
           <Button

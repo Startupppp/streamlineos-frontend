@@ -9,12 +9,20 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Eye } from "lucide-react";
+import { Eye, CalendarDays } from "lucide-react";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
 import { PayslipDetailSheet, type PayslipPreview } from "./payslip-detail-sheet";
-import { format } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { Loader2 } from "lucide-react";
+
+const FORM_MONTHS = Array.from({ length: 24 }, (_, i) => {
+  const date = subMonths(new Date(), i);
+  return {
+    value: format(date, "yyyy-MM"),
+    label: format(date, "MMMM yyyy"),
+  };
+});
 
 interface GeneratePayrollSheetProps {
   open: boolean;
@@ -43,10 +51,12 @@ interface GeneratePayrollSheetProps {
   onOvertimeAmountChange: (value: string) => void;
   payslipPreview: PayslipPreview | null;
   selectedEmployeeData: Employee | null;
-  selectedMonth: string;
+  formMonth: string;
+  onFormMonthChange: (value: string) => void;
   onConfirmGenerate: () => void;
   isGenerating: boolean;
   isAttendanceLoading?: boolean;
+  hasAttendanceData?: boolean;
 }
 
 export function GeneratePayrollSheet({
@@ -76,12 +86,14 @@ export function GeneratePayrollSheet({
   onOvertimeAmountChange,
   payslipPreview,
   selectedEmployeeData,
-  selectedMonth,
+  formMonth,
+  onFormMonthChange,
   onConfirmGenerate,
   isGenerating,
   isAttendanceLoading,
+  hasAttendanceData,
 }: GeneratePayrollSheetProps) {
-  const payPeriodLabel = format(new Date(selectedMonth + "-01"), "MMMM yyyy");
+  const payPeriodLabel = format(new Date(formMonth + "-01"), "MMMM yyyy");
 
   if (showPreview) {
     return (
@@ -90,10 +102,11 @@ export function GeneratePayrollSheet({
         onOpenChange={onOpenChange}
         payslipPreview={payslipPreview}
         selectedEmployeeData={selectedEmployeeData}
-        selectedMonth={selectedMonth}
+        formMonth={formMonth}
         onBackToEdit={onBackToEdit}
         onConfirmGenerate={onConfirmGenerate}
         isGenerating={isGenerating}
+        hasAttendanceData={hasAttendanceData ?? false}
       />
     );
   }
@@ -102,8 +115,8 @@ export function GeneratePayrollSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={`Generate Payslip — ${payPeriodLabel}`}
-      description="Select an employee. LOP and half days are pre-filled from actual attendance data and can be adjusted."
+      title="Generate Payslip"
+      description="Select a period and employee. LOP and half days are pre-filled from actual attendance data and can be adjusted."
       onSubmit={onShowPreview}
       submitLabel={
         <>
@@ -113,6 +126,29 @@ export function GeneratePayrollSheet({
       }
       isPending={false}
     >
+      <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5">
+        <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+        <span className="text-sm font-medium text-primary">
+          Generating payroll for: {payPeriodLabel}
+        </span>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Payroll Period</label>
+        <Select value={formMonth} onValueChange={onFormMonthChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select month" />
+          </SelectTrigger>
+          <SelectContent>
+            {FORM_MONTHS.map((m) => (
+              <SelectItem key={m.value} value={m.value}>
+                {m.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Employee</label>
         <Select value={selectedEmployee} onValueChange={onSelectedEmployeeChange}>

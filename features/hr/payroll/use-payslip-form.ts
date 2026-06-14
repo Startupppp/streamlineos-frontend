@@ -1,16 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
 import { useHrMonthlyAttendance } from "@/lib/api/hooks/hr";
 
 interface UsePayslipFormArgs {
-  selectedMonth: string;
   employees: Employee[];
 }
 
-export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs) {
+export function usePayslipForm({ employees }: UsePayslipFormArgs) {
   const [open, setOpen] = useState(false);
+  const [formMonth, setFormMonth] = useState<string>(format(new Date(), "yyyy-MM"));
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
   const [lopDays, setLopDays] = useState("");
@@ -22,7 +23,7 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
   const [overtimeHours, setOvertimeHours] = useState("");
   const [overtimeAmount, setOvertimeAmount] = useState("");
 
-  const [payYear, payMonthOneIndexed] = selectedMonth.split("-").map(Number);
+  const [payYear, payMonthOneIndexed] = formMonth.split("-").map(Number);
   const payMonthZeroIndexed = payMonthOneIndexed - 1;
 
   const { data: monthlyAttendance, isLoading: isAttendanceLoading } = useHrMonthlyAttendance({
@@ -124,8 +125,14 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
     overtimeAmount,
   ]);
 
+  const hasAttendanceData = useMemo(
+    () => !!monthlyAttendance && monthlyAttendance.length > 0,
+    [monthlyAttendance],
+  );
+
   const reset = useCallback(() => {
     setOpen(false);
+    setFormMonth(format(new Date(), "yyyy-MM"));
     setSelectedEmployee("");
     setShowPreview(false);
     setLopDays("");
@@ -141,6 +148,8 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
   return {
     open,
     setOpen,
+    formMonth,
+    setFormMonth,
     selectedEmployee,
     setSelectedEmployee,
     showPreview,
@@ -164,6 +173,7 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
     selectedEmployeeData,
     payslipPreview,
     isAttendanceLoading,
+    hasAttendanceData,
     reset,
   };
 }
