@@ -15,16 +15,90 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import { Plus, MapPin, Phone, Mail, Pencil, Trash2 } from "lucide-react";
+import { Plus, MapPin, Phone, Mail, Pencil, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from "@/lib/api/hooks/branches";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Branch } from "@/types/organization";
+import { COUNTRIES, STATES_BY_COUNTRY } from "@/lib/constants/geography";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const EMPTY_FORM = {
   name:"", code:"", city:"", state:"", country:"India",
   pincode:"", address:"", phone:"", email:"",
 };
+
+function CountrySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal h-9 text-sm">
+          <span className="truncate">{value || "Select country"}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[260px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search country..." />
+          <CommandList className="max-h-56">
+            <CommandEmpty>No country found.</CommandEmpty>
+            <CommandGroup>
+              {COUNTRIES.map((c) => (
+                <CommandItem key={c} value={c} onSelect={(v) => { onChange(v); setOpen(false); }}>
+                  <Check className={cn("mr-2 h-4 w-4", value === c ? "opacity-100" : "opacity-0")} />
+                  {c}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function StateSelect({ country, value, onChange, textValue, onTextChange, error }: {
+  country: string;
+  value: string;
+  onChange: (v: string) => void;
+  textValue: string;
+  onTextChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+}) {
+  const states = STATES_BY_COUNTRY[country];
+  if (!states) {
+    return (
+      <>
+        <Input value={textValue} onChange={onTextChange} placeholder="e.g., Maharashtra" />
+        {error && <p className="text-[11px] text-destructive">{error}</p>}
+      </>
+    );
+  }
+  return (
+    <>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-9 text-sm">
+          <SelectValue placeholder="Select state" />
+        </SelectTrigger>
+        <SelectContent className="max-h-56">
+          {states.map((s) => (
+            <SelectItem key={s} value={s}>{s}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-[11px] text-destructive">{error}</p>}
+    </>
+  );
+}
 
 const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
 const PINCODE_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
@@ -75,8 +149,18 @@ export default function BranchManagementPage() {
     setFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const setField = (key: keyof typeof EMPTY_FORM, value: string) => {
+    setFormData((f) => ({ ...f, [key]: value }));
+    setFormErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
   const setEdit = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = key ==="code" ? e.target.value.toUpperCase() : e.target.value;
+    setEditFormData((f) => ({ ...f, [key]: value }));
+    setEditFormErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const setEditField = (key: keyof typeof EMPTY_FORM, value: string) => {
     setEditFormData((f) => ({ ...f, [key]: value }));
     setEditFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
@@ -194,6 +278,7 @@ export default function BranchManagementPage() {
   const branchFormFields = (
     data: typeof EMPTY_FORM,
     setter: (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => void,
+    fieldSetter: (key: keyof typeof EMPTY_FORM, value: string) => void,
     errors: FormErrors
   ) => (
     <div className="px-4 py-4 space-y-4">
@@ -212,26 +297,38 @@ export default function BranchManagementPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">City</Label>
-          <Input value={data.city} onChange={setter("city")} placeholder="e.g., Mumbai" />
-          {errors.city && <p className="text-[11px] text-destructive">{errors.city}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">State</Label>
-          <Input value={data.state} onChange={setter("state")} placeholder="e.g., Maharashtra" />
-          {errors.state && <p className="text-[11px] text-destructive">{errors.state}</p>}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
           <Label className="text-xs">Country</Label>
-          <Input value={data.country} onChange={setter("country")} placeholder="e.g., India" />
+          <CountrySelect
+            value={data.country}
+            onChange={(v) => {
+              fieldSetter("country", v);
+              fieldSetter("state", "");
+            }}
+          />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Pincode</Label>
           <Input value={data.pincode} onChange={setter("pincode")} placeholder="e.g., 400001" />
           {errors.pincode && <p className="text-[11px] text-destructive">{errors.pincode}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">State</Label>
+          <StateSelect
+            country={data.country}
+            value={data.state}
+            onChange={(v) => fieldSetter("state", v)}
+            textValue={data.state}
+            onTextChange={setter("state")}
+            error={errors.state}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">City</Label>
+          <Input value={data.city} onChange={setter("city")} placeholder="e.g., Mumbai" />
+          {errors.city && <p className="text-[11px] text-destructive">{errors.city}</p>}
         </div>
       </div>
 
@@ -376,7 +473,7 @@ export default function BranchManagementPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            {branchFormFields(formData, set, formErrors)}
+            {branchFormFields(formData, set, setField, formErrors)}
           </ScrollArea>
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">
@@ -401,7 +498,7 @@ export default function BranchManagementPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            {branchFormFields(editFormData, setEdit, editFormErrors)}
+            {branchFormFields(editFormData, setEdit, setEditField, editFormErrors)}
           </ScrollArea>
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">
