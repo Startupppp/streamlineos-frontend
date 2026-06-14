@@ -15,6 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -24,26 +25,6 @@ import {
   TERMINATION_STATUSES,
 } from "@/lib/constants/hr-separation";
 
-function statusVariant(
-  status: TerminationStatus | null
-): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "DRAFT":
-      return "outline";
-    case "PENDING_CEO":
-      return "secondary";
-    case "APPROVED":
-      return "default";
-    case "REJECTED":
-      return "destructive";
-    case "SENT":
-      return "secondary";
-    case "COMPLETED":
-      return "default";
-    default:
-      return "outline";
-  }
-}
 
 function statusLabel(status: TerminationStatus | null): string {
   if (status && status in TERMINATION_STATUS_LABELS) {
@@ -107,9 +88,7 @@ function TerminationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold truncate">{employee?.name ?? "Employee"}</p>
-              <Badge variant={statusVariant(status)} className="text-[10px] shrink-0">
-                {statusLabel(status)}
-              </Badge>
+              <StatusBadge status={status} label={statusLabel(status)} className="text-[10px] shrink-0" />
               {emailStatus === "failed" && (
                 <Badge variant="destructive" className="text-[10px] shrink-0">
                   Email Failed

@@ -11,6 +11,7 @@ import { useGenerateJobDescription } from "@/lib/api/hooks/ai";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,15 +104,6 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
   );
 }
 
-function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "OPEN": return "default";
-    case "DRAFT": return "secondary";
-    case "PAUSED": return "outline";
-    case "CLOSED": case "FILLED": return "destructive";
-    default: return "secondary";
-  }
-}
 
 export default function JobPostingsPage() {
   const router = useRouter();
@@ -445,7 +437,7 @@ export default function JobPostingsPage() {
                         <TableCell>{job.location ?? "—"}</TableCell>
                         <TableCell className="text-sm">{job.type?.replaceAll("_", " ")}</TableCell>
                         <TableCell>{job.openings}</TableCell>
-                        <TableCell><Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge></TableCell>
+                        <TableCell><StatusBadge status={job.status} /></TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
