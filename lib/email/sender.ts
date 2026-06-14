@@ -54,6 +54,8 @@ export interface EmailOptions {
   text?: string;
   attachments?: EmailAttachment[];
   replyTo?: string;
+  cc?: string | string[];
+  bcc?: string | string[];
 }
 
 function normalizeRecipients(to: string | string[]): string[] {
@@ -105,6 +107,9 @@ async function sendViaResend(options: EmailOptions): Promise<void> {
     contentType: a.type,
   }));
 
+  const cc = options.cc ? normalizeRecipients(options.cc) : undefined;
+  const bcc = options.bcc ? normalizeRecipients(options.bcc) : undefined;
+
   const { data, error } = await resend.emails.send({
     from: getFromAddress(),
     to: recipients,
@@ -112,6 +117,8 @@ async function sendViaResend(options: EmailOptions): Promise<void> {
     html: options.html,
     text,
     ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+    ...(cc?.length ? { cc } : {}),
+    ...(bcc?.length ? { bcc } : {}),
     ...(attachments?.length ? { attachments } : {}),
   });
 
@@ -136,6 +143,9 @@ async function sendViaSendgrid(options: EmailOptions): Promise<void> {
 
   // SendGrid: pass an array to `to` for multi-recipient (each gets a separate copy
   // via `personalizations` under the hood); pass a single string for single recipient.
+  const sgCc = options.cc ? normalizeRecipients(options.cc) : undefined;
+  const sgBcc = options.bcc ? normalizeRecipients(options.bcc) : undefined;
+
   const msg: sgMail.MailDataRequired = {
     to: recipients.length === 1 ? recipients[0] : recipients,
     from: getFromAddress(),
@@ -143,6 +153,8 @@ async function sendViaSendgrid(options: EmailOptions): Promise<void> {
     html: options.html,
     text: options.text || htmlToText(options.html),
     ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+    ...(sgCc?.length ? { cc: sgCc.length === 1 ? sgCc[0] : sgCc } : {}),
+    ...(sgBcc?.length ? { bcc: sgBcc.length === 1 ? sgBcc[0] : sgBcc } : {}),
     ...(attachments?.length ? { attachments } : {}),
   };
 

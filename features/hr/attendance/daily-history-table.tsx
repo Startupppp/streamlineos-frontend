@@ -10,6 +10,7 @@ import { useHrAttendanceStatus } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { AttendanceLogRow } from "./attendance-log-row";
+import { AttendanceEmailDialog } from "./attendance-email-dialog";
 
 export const DailyHistoryTable = memo(function DailyHistoryTable() {
   const { data, isLoading } = useHrAttendanceStatus();
@@ -35,6 +36,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Daily History</CardTitle>
+          <div className="flex items-center gap-3">
+            <AttendanceEmailDialog />
           <button
             className="text-sm text-blue-600 hover:text-blue-600/80 font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             disabled={logs.length === 0}
@@ -70,6 +73,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
             <Download className="h-3.5 w-3.5" />
             Download Report
           </button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
