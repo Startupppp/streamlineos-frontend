@@ -28,6 +28,7 @@ export const CacheTag = {
   journal: "journal",
   trialBalance: "trial-balance",
   profitLoss: "profit-loss",
+  cashFlow: "cash-flow",
   customerLedger: "customer-ledger",
   gstr1: "gstr-1",
   balanceSheet: "balance-sheet",

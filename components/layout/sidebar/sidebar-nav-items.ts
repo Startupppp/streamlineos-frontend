@@ -195,6 +195,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Billing", icon: CreditCard, href: "/billing", requiredPermission: "settings:manage",
         children: [
           { label: "Invoices", icon: FileText, href: "/billing/invoices", requiredPermission: "settings:manage" },
+          { label: "Recurring Invoices", icon: RefreshCcw, href: "/billing/recurring", requiredPermission: "settings:manage" },
         ],
       },
     ],
@@ -250,6 +251,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Trial Balance", icon: Scale, href: "/accounting/trial-balance", requiredPermission: "accounting:view" },
           { label: "Profit & Loss", icon: TrendingUp, href: "/accounting/profit-loss", requiredPermission: "accounting:view" },
           { label: "Balance Sheet", icon: Landmark, href: "/accounting/balance-sheet", requiredPermission: "accounting:view" },
+          { label: "Cash Flow", icon: Coins, href: "/accounting/cash-flow", requiredPermission: "accounting:view" },
           { label: "Customer Ledgers", icon: Users, href: "/accounting/customers", requiredPermission: "accounting:view" },
           { label: "Aged Receivables", icon: Clock, href: "/accounting/aged-receivables", requiredPermission: "accounting:view" },
           { label: "Purchase Bills", icon: Receipt, href: "/accounting/purchase-bills", requiredPermission: "accounting:view" },

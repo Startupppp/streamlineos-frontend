@@ -134,6 +134,49 @@ export const useDeleteInvoice = () => {
   });
 };
 
+export interface RecurringInvoice {
+  id: number;
+  invoiceNumber: string;
+  clientId: number | null;
+  clientName: string | null;
+  total: string;
+  currency: string;
+  status: InvoiceStatus;
+  recurringInterval: string | null;
+  nextRecurringDate: string | null;
+  overdue: boolean;
+}
+
+interface RunRecurringResult {
+  generated: number;
+  invoiceIds: number[];
+}
+
+export const useRecurringInvoices = (
+  options?: Omit<
+    UseQueryOptions<RecurringInvoice[], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<RecurringInvoice[], Error>({
+    queryKey: queryKeys.recurringInvoices.list(),
+    queryFn: () => apiClient.get<RecurringInvoice[]>("/invoices/recurring"),
+    staleTime: 2 * 60_000,
+    ...options,
+  });
+};
+
+export const useRunRecurringInvoices = () => {
+  const queryClient = useQueryClient();
+  return useMutation<RunRecurringResult, Error, void>({
+    mutationFn: () => apiClient.post<RunRecurringResult>("/invoices/recurring/run"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recurringInvoices.all });
+    },
+  });
+};
+
 interface RecordPaymentInput {
   invoiceId: number;
   amount: number;

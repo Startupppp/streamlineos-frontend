@@ -337,6 +337,13 @@ export const queryKeys = {
     vendorsOutstanding: <P extends object>(params?: P) => [...base, "accounting", "vendorsOutstanding", params] as const,
     vendorLedger: <P extends object>(vendorId: number, params?: P) => [...base, "accounting", "vendorLedger", vendorId, params] as const,
     agedPayables: (params: { asOf: string }) => [...base, "accounting", "agedPayables", params] as const,
+    cashFlow: (params: { from: string; to: string }) => [...base, "accounting", "cashFlow", params] as const,
+  },
+
+  recurringInvoices: {
+    all: [...base, "recurringInvoices"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "recurringInvoices", "list", params] as const,
+    due: () => [...base, "recurringInvoices", "due"] as const,
   },
 
   goals: {

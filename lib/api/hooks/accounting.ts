@@ -208,6 +208,44 @@ export function useProfitLoss(from: string, to: string) {
   });
 }
 
+export type CashFlowSectionKey = "operating" | "investing" | "financing";
+
+export interface CashFlowLineItem {
+  label: string;
+  amount: string;
+}
+
+export interface CashFlowSection {
+  key: CashFlowSectionKey;
+  label: string;
+  items: CashFlowLineItem[];
+  total: string;
+}
+
+export interface CashFlowReport {
+  from: string;
+  to: string;
+  openingCash: string;
+  closingCash: string;
+  netChange: string;
+  reconciled: boolean;
+  sections: CashFlowSection[];
+}
+
+export interface CashFlowParams {
+  from: string;
+  to: string;
+}
+
+export function useCashFlow({ from, to }: CashFlowParams) {
+  return useQuery<CashFlowReport, Error>({
+    queryKey: queryKeys.accounting.cashFlow({ from, to }),
+    queryFn: () => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", { from, to }),
+    enabled: !!from && !!to,
+    staleTime: 30_000,
+  });
+}
+
 export interface ListCustomersOutstandingParams {
   page?: number;
   pageSize?: number;
