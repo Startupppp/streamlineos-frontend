@@ -93,7 +93,6 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["hr:performance:view", "hr:goals:view"],
     routes: [
       { label: "Performance", icon: Star, href: "/hr/performance", requiredPermission: "hr:performance:view" },
-      { label: "Training", icon: BookOpen, href: "/hr/training", requiredPermission: "hr:performance:view" },
       { label: "Recognition", icon: Heart, href: "/hr/recognition", requiredPermission: "hr:performance:view" },
       { label: "Assessments", icon: ClipboardCheck, href: "/hr/assessments", requiredPermission: "hr:performance:manage" },
       { label: "Certifications", icon: Award, href: "/hr/certifications", requiredPermission: "hr:performance:view" },

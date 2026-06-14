@@ -14,17 +14,19 @@ const CONFETTI_COLORS = [
 
 interface ConfettiOverlayProps {
   onDone: () => void;
+  /** Defaults to 3000ms */
+  durationMs?: number;
 }
 
-export function ConfettiOverlay({ onDone }: ConfettiOverlayProps) {
+export function ConfettiOverlay({ onDone, durationMs = 3000 }: ConfettiOverlayProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    timerRef.current = setTimeout(onDone, 3000);
+    timerRef.current = setTimeout(onDone, durationMs);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [onDone]);
+  }, [onDone, durationMs]);
 
   const dots = useMemo(
     () =>

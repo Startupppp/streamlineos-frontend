@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
-import { ProgressBar } from "@/components/ui/progress-bar";
 import { PersonalInfoTab } from "@/features/onboarding/personal-info-tab";
 import { BankDetailsTab } from "@/features/onboarding/bank-details-tab";
 import { DocumentsTab } from "@/features/onboarding/documents-tab";
@@ -119,8 +118,6 @@ export default function OnboardingPage() {
             <span className="text-sm font-medium text-muted-foreground tabular-nums">{progressPercentage}%</span>
           </div>
         </motion.div>
-
-        <ProgressBar value={progressPercentage} ariaLabel="Onboarding progress" />
 
         <nav aria-label="Onboarding steps">
           <ol className="flex items-center gap-0">
