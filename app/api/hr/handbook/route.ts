@@ -5,23 +5,23 @@ import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
-const VERSION_FORMAT = /^[a-zA-Z0-9][a-zA-Z0-9._\-]*$/;
-const CONSECUTIVE_PERIODS = /\.{2,}/;
+const VERSION_FORMAT = /^v?[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)?$/;
+const CONSECUTIVE_SPECIAL_CHARS = /[^a-zA-Z0-9 ]{2,}/;
 
 const createSchema = z.object({
   version: z
     .string()
     .min(1, "Version is required")
     .max(20, "Version must be at most 20 characters")
-    .regex(VERSION_FORMAT, "Version must start with a letter or digit and contain only letters, digits, dots, underscores, or hyphens")
-    .refine((v) => !CONSECUTIVE_PERIODS.test(v), "Version must not contain consecutive periods"),
+    .regex(VERSION_FORMAT, "Version must be a valid format (e.g., 1.0, v1.0, 2024-01)"),
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(200, "Title must be at most 200 characters")
-    .refine((v) => /[a-zA-Z]/.test(v), "Title must contain at least one letter")
+    .trim()
+    .min(2, "Title must be at least 2 characters")
+    .max(100, "Title must be at most 100 characters")
+    .refine((v) => v.length > 0, "Title is required")
     .refine((v) => !/  /.test(v), "Title must not contain consecutive spaces")
-    .refine((v) => v === v.trim(), "Title must not have leading or trailing spaces"),
+    .refine((v) => !CONSECUTIVE_SPECIAL_CHARS.test(v), "Title must not contain consecutive special characters"),
   documentId: z.number().int().positive().optional(),
   documentUrl: z
     .string()

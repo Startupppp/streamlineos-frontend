@@ -95,7 +95,7 @@ export function WorkLogFiltersPanel({
           <span className="text-xs text-muted-foreground font-medium">Active filters:</span>
           {filters.departmentId && departments && (
             <Badge variant="secondary" className="text-xs gap-1 pr-1">
-              Dept: {departments.find((d) => d.id.toString() === filters.departmentId)?.name ?? "Unknown"}
+              Dept: {departments.find((d) => d.id.toString() === filters.departmentId)?.name ?? "Not Assigned"}
               <button onClick={handleClearDepartment} className="ml-0.5 hover:text-foreground">
                 <X className="h-3 w-3" />
               </button>

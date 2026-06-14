@@ -24,7 +24,10 @@ const updateEmployeeSchema = z.object({
   hasDashboardAccess: z.boolean().optional(),
   role: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  experienceYears: z.number().optional(),
+  experienceYears: z.preprocess(
+    (val) => (val === undefined || val === null ? undefined : Number(val)),
+    z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional()
+  ),
   taxId: z.string().optional(),
   monthlySalary: z.number().optional(),
   bankDetails: z.object({

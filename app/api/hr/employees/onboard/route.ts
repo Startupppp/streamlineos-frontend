@@ -13,6 +13,8 @@ import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
 
+const MIN_AGE_MS = 16 * 365.25 * 24 * 60 * 60 * 1000;
+
 const onboardSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
@@ -27,9 +29,23 @@ const onboardSchema = z.object({
   role: z.string().optional(),
   employeeId: z.string().optional(),
   joiningDate: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true;
+      const dob = new Date(val);
+      return !isNaN(dob.getTime()) && dob < new Date();
+    }, "Date of birth cannot be in the future")
+    .refine((val) => {
+      if (!val) return true;
+      const dob = new Date(val);
+      return !isNaN(dob.getTime()) && Date.now() - dob.getTime() >= MIN_AGE_MS;
+    }, "Employee must be at least 16 years old"),
   skills: z.string().optional(),
-  experienceYears: z.number().optional(),
+  experienceYears: z.preprocess(
+    (val) => (val === undefined || val === null ? undefined : Number(val)),
+    z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional()
+  ),
   taxId: z.string().optional(),
   monthlySalary: z.number().optional(),
   bankDetails: z.object({

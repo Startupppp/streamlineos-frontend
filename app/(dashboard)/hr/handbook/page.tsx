@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -17,7 +17,7 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileText, Eye, Trash2, ExternalLink } from "lucide-react";
+import { Plus, FileText, Eye, Trash2, ExternalLink, Upload, Link2 } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 interface HandbookVersion {
@@ -31,11 +31,24 @@ interface HandbookVersion {
   createdAt: string;
 }
 
+interface StorageUploadResult {
+  url: string;
+  key: string;
+  size: number;
+  mimeType: string;
+}
+
 const hbKeys = { all: [...queryKeys.hr.all, "handbook"] as const, list: () => [...hbKeys.all, "list"] as const };
 
-const VERSION_FORMAT_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9._\-]*$/;
-const CONSECUTIVE_PERIODS_REGEX = /\.{2,}/;
+const VERSION_FORMAT_REGEX = /^v?[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)?$/;
+const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
 const URL_HTTPS_REGEX = /^https:\/\/.+/;
+
+const ACCEPTED_FILE_TYPES = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+const ACCEPTED_FILE_EXTENSIONS = [".pdf", ".docx"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+type DocumentInputMode = "url" | "file";
 
 function statusBadge(v: HandbookVersion): "default" | "secondary" {
   return v.publishedAt ? "default" : "secondary";
@@ -55,6 +68,11 @@ function HandbookContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
   });
 
+  const uploadDoc = useMutation({
+    mutationFn: (formData: FormData) =>
+      apiClient.upload<StorageUploadResult>("/storage/upload", formData),
+  });
+
   const update = useMutation({
     mutationFn: ({ id, ...data }: { id: number; status?: "PUBLISHED" | "DRAFT" }) =>
       apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
@@ -72,57 +90,95 @@ function HandbookContent() {
   const [title, setTitle] = useState("");
   const [changelog, setChangelog] = useState("");
   const [documentUrl, setDocumentUrl] = useState("");
+  const [documentInputMode, setDocumentInputMode] = useState<DocumentInputMode>("url");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = useCallback(() => {
     setVersion("");
     setTitle("");
     setChangelog("");
     setDocumentUrl("");
+    setDocumentInputMode("url");
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }, []);
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = useCallback(async () => {
     const trimmedVersion = version.trim();
     if (!trimmedVersion) { toast.error("Version is required"); return; }
+    if (trimmedVersion.length < 1) { toast.error("Version is required"); return; }
     if (trimmedVersion.length > 20) { toast.error("Version must be at most 20 characters"); return; }
     if (!VERSION_FORMAT_REGEX.test(trimmedVersion)) {
-      toast.error("Version must start with a letter or digit and contain only letters, digits, dots, underscores, or hyphens");
-      return;
-    }
-    if (CONSECUTIVE_PERIODS_REGEX.test(trimmedVersion)) {
-      toast.error("Version must not contain consecutive periods");
+      toast.error("Version must be a valid format (e.g., 1.0, v1.0, 2024-01)");
       return;
     }
 
     const trimmedTitle = title.trim();
     if (!trimmedTitle) { toast.error("Title is required"); return; }
-    if (trimmedTitle !== title) { toast.error("Title must not have leading or trailing spaces"); return; }
-    if (trimmedTitle.length < 3) { toast.error("Title must be at least 3 characters"); return; }
-    if (trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
-    if (!/[a-zA-Z]/.test(trimmedTitle)) { toast.error("Title must contain at least one letter"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Title must be at most 100 characters"); return; }
     if (/  /.test(trimmedTitle)) { toast.error("Title must not contain consecutive spaces"); return; }
-
-    const trimmedUrl = documentUrl.trim();
-    if (trimmedUrl) {
-      if (!URL_HTTPS_REGEX.test(trimmedUrl)) {
-        toast.error("Document URL must start with https://");
-        return;
-      }
-      try {
-        new URL(trimmedUrl);
-      } catch {
-        toast.error("Document URL must be a valid URL");
-        return;
-      }
+    if (CONSECUTIVE_SPECIAL_CHARS_REGEX.test(trimmedTitle)) {
+      toast.error("Title must not contain consecutive special characters");
+      return;
     }
 
     if (changelog.length > 2000) { toast.error("Notes must be at most 2000 characters"); return; }
+
+    let resolvedDocumentUrl: string | undefined;
+
+    if (documentInputMode === "url") {
+      const trimmedUrl = documentUrl.trim();
+      if (trimmedUrl) {
+        if (!URL_HTTPS_REGEX.test(trimmedUrl)) {
+          toast.error("Document URL must start with https://");
+          return;
+        }
+        try {
+          new URL(trimmedUrl);
+        } catch {
+          toast.error("Document URL must be a valid URL");
+          return;
+        }
+        resolvedDocumentUrl = trimmedUrl;
+      }
+    } else {
+      if (selectedFile) {
+        if (!ACCEPTED_FILE_TYPES.includes(selectedFile.type)) {
+          toast.error("Only PDF and DOCX files are allowed");
+          return;
+        }
+        const ext = selectedFile.name.toLowerCase().slice(selectedFile.name.lastIndexOf("."));
+        if (!ACCEPTED_FILE_EXTENSIONS.includes(ext)) {
+          toast.error("Only PDF and DOCX files are allowed");
+          return;
+        }
+        if (selectedFile.size > MAX_FILE_SIZE) {
+          toast.error("File must be smaller than 10MB");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("folder", "handbook");
+        try {
+          const result = await uploadDoc.mutateAsync(formData);
+          resolvedDocumentUrl = result.url;
+        } catch (e) {
+          toast.error(getErrorMessage(e));
+          return;
+        }
+      }
+    }
 
     create.mutate(
       {
         version: trimmedVersion,
         title: trimmedTitle,
         changelog: changelog.trim() || undefined,
-        documentUrl: trimmedUrl || undefined,
+        documentUrl: resolvedDocumentUrl,
       },
       {
         onSuccess: () => {
@@ -133,7 +189,7 @@ function HandbookContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [version, title, changelog, documentUrl, create, resetForm]);
+  }, [version, title, changelog, documentUrl, documentInputMode, selectedFile, create, uploadDoc, resetForm]);
 
   const handleVersionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setVersion(e.target.value);
@@ -149,6 +205,35 @@ function HandbookContent() {
 
   const handleDocumentUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentUrl(e.target.value);
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) { setSelectedFile(null); return; }
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      toast.error("Only PDF and DOCX files are allowed");
+      e.target.value = "";
+      setSelectedFile(null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File must be smaller than 10MB");
+      e.target.value = "";
+      setSelectedFile(null);
+      return;
+    }
+    setSelectedFile(file);
+  }, []);
+
+  const handleSwitchToUrl = useCallback(() => {
+    setDocumentInputMode("url");
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const handleSwitchToFile = useCallback(() => {
+    setDocumentInputMode("file");
+    setDocumentUrl("");
   }, []);
 
   const handlePublish = useCallback((id: number) => {
@@ -192,6 +277,12 @@ function HandbookContent() {
     setDeleteId(id);
   }, []);
 
+  const handleNewVersionClick = useCallback(() => {
+    setSheetOpen(true);
+  }, []);
+
+  const isSubmitting = create.isPending || uploadDoc.isPending;
+
   if (isLoading) {
     return (
       <PageWrapper title="Handbook" subtitle="Employee handbook versions">
@@ -205,7 +296,7 @@ function HandbookContent() {
       title="Employee Handbook"
       subtitle="Manage and publish handbook versions"
       badge={`${versions?.length ?? 0} versions`}
-      actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />New Version</Button>}
+      actions={<Button size="sm" onClick={handleNewVersionClick}><Plus className="h-3.5 w-3.5 mr-1" />New Version</Button>}
     >
       {!versions?.length ? (
         <Card>
@@ -294,7 +385,7 @@ function HandbookContent() {
         title="New Handbook Version"
         onSubmit={handleCreate}
         submitLabel="Create"
-        isPending={create.isPending}
+        isPending={isSubmitting}
       >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title <span className="text-destructive">*</span></label>
@@ -302,29 +393,82 @@ function HandbookContent() {
             placeholder="e.g., 2024 Employee Handbook"
             value={title}
             onChange={handleTitleChange}
-            maxLength={200}
+            maxLength={100}
           />
-          <p className="text-[11px] text-muted-foreground">Min 3 chars, must contain at least one letter</p>
+          <p className="text-[11px] text-muted-foreground">Min 2 chars, max 100 chars — no consecutive spaces or special characters</p>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Version <span className="text-destructive">*</span></label>
           <Input
-            placeholder="e.g., 1.0, 2.1.3, v2"
+            placeholder="e.g., 1.0, v1.0, 2024-01"
             value={version}
             onChange={handleVersionChange}
             maxLength={20}
           />
-          <p className="text-[11px] text-muted-foreground">Letters, digits, dots, underscores, or hyphens — no consecutive periods</p>
+          <p className="text-[11px] text-muted-foreground">Format: 1.0, v1.0, 2024-01, 1.0.0-beta</p>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Document URL</label>
-          <Input
-            placeholder="https://docs.example.com/handbook.pdf"
-            value={documentUrl}
-            onChange={handleDocumentUrlChange}
-            type="url"
-          />
-          <p className="text-[11px] text-muted-foreground">Must start with https:// — link to the hosted handbook document</p>
+          <label className="text-sm font-medium">Document</label>
+          <div className="flex rounded-md border overflow-hidden">
+            <button
+              type="button"
+              onClick={handleSwitchToUrl}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-colors ${
+                documentInputMode === "url"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <Link2 className="h-3 w-3" />
+              Enter URL
+            </button>
+            <button
+              type="button"
+              onClick={handleSwitchToFile}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-colors ${
+                documentInputMode === "file"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <Upload className="h-3 w-3" />
+              Upload File
+            </button>
+          </div>
+          {documentInputMode === "url" ? (
+            <>
+              <Input
+                placeholder="https://docs.example.com/handbook.pdf"
+                value={documentUrl}
+                onChange={handleDocumentUrlChange}
+                type="url"
+              />
+              <p className="text-[11px] text-muted-foreground">Must start with https://</p>
+            </>
+          ) : (
+            <>
+              <label
+                htmlFor="handbook-file-input"
+                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-md px-4 py-5 cursor-pointer hover:bg-muted/40 transition-colors"
+              >
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                {selectedFile ? (
+                  <span className="text-xs font-medium text-foreground truncate max-w-full">{selectedFile.name}</span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Click to select a PDF or DOCX file</span>
+                )}
+              </label>
+              <input
+                id="handbook-file-input"
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleFileChange}
+                className="sr-only"
+              />
+              <p className="text-[11px] text-muted-foreground">PDF or DOCX only — max 10MB</p>
+            </>
+          )}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Changelog / Notes</label>

@@ -39,6 +39,8 @@ export const PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 
+const PROTECTED_TARGET_ROLES = new Set(["CEO", "OWNER", "ADMIN"]);
+
 export function canDeleteEmployee(
   targetRole: UserRole,
   targetId: string,
@@ -48,8 +50,9 @@ export function canDeleteEmployee(
 ): boolean {
   if (!targetIsActive) return false;
   if (targetId === currentId) return false;
-  if (currentRole === "CEO") return targetRole !== "CEO";
-  if (currentRole === "HR") return targetRole !== "CEO" && targetRole !== "HR";
+  if (PROTECTED_TARGET_ROLES.has(targetRole)) return false;
+  if (currentRole === "CEO" || currentRole === "OWNER") return true;
+  if (currentRole === "HR") return targetRole !== "HR";
   return false;
 }
 
