@@ -122,11 +122,13 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
   const router = useRouter();
   const isEdit = !!template;
 
-  const [title, setTitle] = useState(template?.title ?? "");
-  const [type, setType] = useState(template?.type ?? "OFFER_LETTER");
-  const [htmlContent, setHtmlContent] = useState(
-    template?.htmlContent ?? DEFAULT_HTML.OFFER_LETTER
-  );
+  const initialTitle = template?.title ?? "";
+  const initialType = template?.type ?? "OFFER_LETTER";
+  const initialHtml = template?.htmlContent ?? DEFAULT_HTML.OFFER_LETTER;
+
+  const [title, setTitle] = useState(initialTitle);
+  const [type, setType] = useState(initialType);
+  const [htmlContent, setHtmlContent] = useState(initialHtml);
   const [showPreview, setShowPreview] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -172,6 +174,13 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       el.setSelectionRange(pos, pos);
     });
   }, [htmlContent]);
+
+  const handleCancel = useCallback(() => {
+    setTitle(initialTitle);
+    setType(initialType);
+    setHtmlContent(initialHtml);
+    setShowPreview(false);
+  }, [initialTitle, initialType, initialHtml]);
 
   const handleSave = useCallback(() => {
     const trimmedTitle = title.trim();
@@ -268,6 +277,9 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               <ArrowLeft className="mr-1 h-4 w-4" />
               Back
             </Link>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleCancel}>
+            Cancel
           </Button>
           <Button
             variant="outline"

@@ -89,7 +89,10 @@ export default function NewDocumentPage() {
 
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
+    if (trimmedTitle && trimmedTitle !== title) { toast.error("Title cannot have leading or trailing spaces"); return; }
+    if (trimmedTitle && trimmedTitle.length < 3) { toast.error("Title must be at least 3 characters"); return; }
     if (trimmedTitle && trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
+    if (trimmedTitle && !/[a-zA-Z]/.test(trimmedTitle)) { toast.error("Title must contain at least one letter"); return; }
     if (trimmedTitle && /^[^a-zA-Z0-9]+$/.test(trimmedTitle)) { toast.error("Title cannot consist of only special characters"); return; }
     if (/\s{2,}/.test(title)) { toast.error("Title cannot have multiple consecutive spaces"); return; }
     if (trimmedTitle && /[<>{}[\]\\|^~`]/.test(trimmedTitle)) { toast.error("Title contains invalid special characters"); return; }

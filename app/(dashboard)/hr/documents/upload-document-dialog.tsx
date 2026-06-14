@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -39,6 +39,7 @@ export function UploadDocumentDialog({
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const titleAutoPopulated = useRef(false);
 
   const { data: employees } = useHrEmployees(undefined);
   const createDocumentMutation = useCreateDocument();
@@ -74,11 +75,23 @@ export function UploadDocumentDialog({
   });
 
   useEffect(() => {
+    if (!open) {
+      form.reset();
+      setFiles([]);
+      setTags([]);
+      setTagInput("");
+      titleAutoPopulated.current = false;
+    }
+  }, [open, form]);
+
+  useEffect(() => {
     const currentName = form.getValues("name");
-    if (files.length === 1 && !currentName) {
+    if (files.length === 1 && (!currentName || titleAutoPopulated.current)) {
       form.setValue("name", files[0].name.replace(/\.[^/.]+$/, ""));
-    } else if (files.length > 1 && !currentName) {
+      titleAutoPopulated.current = true;
+    } else if (files.length > 1 && (!currentName || titleAutoPopulated.current)) {
       form.setValue("name", `${files.length} files selected`);
+      titleAutoPopulated.current = true;
     }
   }, [files, form]);
 
@@ -100,14 +113,20 @@ export function UploadDocumentDialog({
     if (index < 0) return;
     setFiles((prev) => {
       const updated = prev.filter((_, i) => i !== index);
-      if (updated.length === 0) form.setValue("name", "");
+      if (updated.length === 0 && titleAutoPopulated.current) {
+        form.setValue("name", "");
+        titleAutoPopulated.current = false;
+      }
       return updated;
     });
   }, [form]);
 
   const handleClearAllFiles = useCallback(() => {
     setFiles([]);
-    form.setValue("name", "");
+    if (titleAutoPopulated.current) {
+      form.setValue("name", "");
+      titleAutoPopulated.current = false;
+    }
   }, [form]);
 
   const handleTagInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,6 +163,10 @@ export function UploadDocumentDialog({
       handleAddTag();
     }
   }, [handleAddTag]);
+
+  const handleNameManualChange = useCallback(() => {
+    titleAutoPopulated.current = false;
+  }, []);
 
   const uploadFileFn = useCallback(
     async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
@@ -204,6 +227,7 @@ export function UploadDocumentDialog({
         form.reset();
         setFiles([]);
         setTags([]);
+        titleAutoPopulated.current = false;
         onSuccess();
       } else {
         toast.error("Failed to upload documents");
@@ -308,6 +332,7 @@ export function UploadDocumentDialog({
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
             onTagKeyDown={handleTagKeyDown}
+            onNameChange={handleNameManualChange}
           />
         </div>
       </Form>

@@ -21,10 +21,13 @@ import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
   name: z.string()
+    .min(3, "Name must be at least 3 characters")
     .max(200, "Name must be at most 200 characters")
-    .refine((v) => !v || !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")
-    .refine((v) => !v || !/\s{2,}/.test(v), "Name cannot have multiple consecutive spaces")
-    .refine((v) => !v || !/[<>{}[\]\\|^~`]/.test(v), "Name contains invalid special characters"),
+    .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
+    .refine((v) => !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have multiple consecutive spaces")
+    .refine((v) => v === v.trim(), "Name cannot have leading or trailing spaces")
+    .refine((v) => !/[<>{}[\]\\|^~`]/.test(v), "Name contains invalid special characters"),
   description: z.string().optional(),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const, {
     error: "Please select a document type",
@@ -50,6 +53,7 @@ interface DocumentFormFieldsProps {
   onAddTag: () => void;
   onRemoveTag: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onTagKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onNameChange?: () => void;
 }
 
 export function DocumentFormFields({
@@ -64,6 +68,7 @@ export function DocumentFormFields({
   onAddTag,
   onRemoveTag,
   onTagKeyDown,
+  onNameChange,
 }: DocumentFormFieldsProps) {
   const form = useFormContext<DocumentFormData>();
 
@@ -77,7 +82,14 @@ export function DocumentFormFields({
             <FormItem className="col-span-2">
               <FormLabel>Document Name *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Employment Contract 2024" {...field} />
+                <Input
+                  placeholder="e.g., Employment Contract 2024"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    onNameChange?.();
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
