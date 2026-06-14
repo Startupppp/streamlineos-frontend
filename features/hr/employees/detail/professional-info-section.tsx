@@ -135,7 +135,15 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   min={0}
                   max={60}
                   value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  onKeyDown={(e) => {
+                    if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+                  }}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (!raw) { field.onChange(undefined); return; }
+                    const num = parseInt(raw, 10);
+                    if (!isNaN(num) && num >= 0) field.onChange(num);
+                  }}
                 />
               </FormControl>
               <FormMessage />
