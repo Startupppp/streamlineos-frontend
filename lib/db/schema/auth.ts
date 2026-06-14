@@ -23,6 +23,9 @@ export const organizations = pgTable("organizations", {
   allowedEmailDomains: text("allowed_email_domains").array().default([]),
   passwordExpiryDays: integer("password_expiry_days"),
   enabledModules: text("enabled_modules").array(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  companySize: text("company_size"),
+  country: text("country"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
