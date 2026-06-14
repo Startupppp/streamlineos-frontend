@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const patchSchema = z.object({
-  status: z.enum(["APPROVED", "REJECTED"]),
+  status: z.enum(["APPROVED", "REJECTED", "PAID"]),
 });
 
 export async function PATCH(
@@ -31,7 +31,8 @@ export async function PATCH(
       );
 
     if (!existing) return err("Bonus not found.", 404);
-    if (existing.status !== "PENDING") return err("Bonus has already been processed.", 400);
+    if (existing.status === "PAID") return err("Bonus has already been paid.", 400);
+    if (body.status === "PAID" && existing.status === "REJECTED") return err("Cannot mark a rejected bonus as paid.", 400);
 
     const [updated] = await db
       .update(bonuses)
