@@ -231,6 +231,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "CSAT Surveys", icon: Star, href: "/customer-executive/surveys", requiredPermission: "dashboard:customer-executive:view" },
           { label: "Sentiment Analysis", icon: Brain, href: "/customer-executive/sentiment", requiredPermission: "dashboard:customer-executive:view" },
           { label: "SLA Compliance", icon: ShieldAlert, href: "/customer-executive/sla", requiredPermission: "dashboard:customer-executive:view" },
+          { label: "Account Health", icon: Heart, href: "/customer-executive/health", requiredPermission: "dashboard:customer-executive:view" },
           { label: "Account Summary", icon: FileText, href: "/customer-executive/account-summary", requiredPermission: "dashboard:customer-executive:view" },
         ],
       },
@@ -261,7 +262,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Projects & Time",
-    requiredPermission: ["projects:view", "projects:timesheets:view"],
+    requiredPermission: ["projects:view", "projects:timesheets:view", "projects:goals:view", "projects:roadmap:view"],
     routes: [
       {
         label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true, requiredPermission: "projects:view",
@@ -270,12 +271,14 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Resource Allocation", icon: Users, href: "/projects/resource-allocation", requiredPermission: "projects:update" },
         ],
       },
+      { label: "Goals & OKRs", icon: Target, href: "/goals", requiredPermission: "projects:goals:view" },
+      { label: "Roadmap", icon: Map, href: "/projects/roadmap", requiredPermission: "projects:roadmap:view" },
       { label: "Timesheets", icon: Timer, href: "/timesheets/team", requiredPermission: "projects:timesheets:view" },
     ],
   },
   {
     label: "Support",
-    requiredPermission: ["projects:tickets:view"],
+    requiredPermission: ["projects:tickets:view", "support:kb:view"],
     routes: [
       {
         label: "All Tickets", icon: LifeBuoy, href: "/support", requiredPermission: "projects:tickets:view",
@@ -283,6 +286,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Support Inbox", icon: Inbox, href: "/support/inbox", requiredPermission: "projects:tickets:view" },
         ],
       },
+      { label: "Knowledge Base", icon: BookOpen, href: "/support/kb", requiredPermission: "support:kb:view" },
     ],
   },
   {
@@ -309,6 +313,7 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       { label: "Audit Log", icon: ShieldCheck, href: "/settings/audit-log", requiredPermission: "settings:manage" },
       { label: "Webhooks", icon: Zap, href: "/settings/webhooks", requiredPermission: "settings:manage" },
+      { label: "Automations", icon: Zap, href: "/settings/automations", requiredPermission: "settings:automations:view" },
       { label: "AI Settings", icon: Brain, href: "/settings/ai", requiredPermission: "settings:manage" },
       { label: "Data Hub", icon: FileText, href: "/settings/data-hub", requiredPermission: "settings:manage" },
       { label: "Reports", icon: BarChart2, href: "/reports", requiredPermission: "reports:view" },

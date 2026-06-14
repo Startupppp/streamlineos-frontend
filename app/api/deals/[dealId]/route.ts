@@ -62,6 +62,19 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       );
     }
 
+    if (result.stageChanged) {
+      void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+        runAutomationsForEvent(session.orgId, "deal.stage_changed", {
+          id: result.deal.id,
+          name: result.deal.name,
+          value: result.deal.value,
+          stage: result.deal.stage,
+          previousStage: result.previousStage,
+          assignedToId: result.deal.assignedToId,
+        }),
+      );
+    }
+
     void createAuditLog({
       action: result.stageChanged ? "deal.stage_changed" : "deal.updated",
       userId: session.user.id,

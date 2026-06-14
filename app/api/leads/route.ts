@@ -175,6 +175,16 @@ export async function POST(req: NextRequest) {
       })
     );
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(orgId, "lead.created", {
+        id: newLead.id,
+        name: newLead.name,
+        email: newLead.email,
+        source: newLead.source,
+        assignedToId: newLead.assignedToId,
+      })
+    );
+
     void createAuditLog({
       action: "lead.created",
       userId: session.user.id,

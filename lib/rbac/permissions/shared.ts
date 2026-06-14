@@ -98,6 +98,30 @@ export const SHARED_PERMISSIONS: Permission[] = [
     description: "Create timesheet entries",
   },
   {
+    name: "projects:goals:view",
+    resource: "projects:goals",
+    action: "view",
+    description: "View goals and OKRs",
+  },
+  {
+    name: "projects:goals:manage",
+    resource: "projects:goals",
+    action: "manage",
+    description: "Create, update, and check in on goals and OKRs",
+  },
+  {
+    name: "projects:roadmap:view",
+    resource: "projects:roadmap",
+    action: "view",
+    description: "View the product roadmap, feedback, and changelog",
+  },
+  {
+    name: "projects:roadmap:manage",
+    resource: "projects:roadmap",
+    action: "manage",
+    description: "Manage roadmap items, feedback, and changelog entries",
+  },
+  {
     name: "reports:view",
     resource: "reports",
     action: "view",
@@ -144,6 +168,18 @@ export const SHARED_PERMISSIONS: Permission[] = [
     resource: "settings:rbac",
     action: "manage",
     description: "Manage RBAC permissions",
+  },
+  {
+    name: "settings:automations:view",
+    resource: "settings:automations",
+    action: "view",
+    description: "View automation rules and run history",
+  },
+  {
+    name: "settings:automations:manage",
+    resource: "settings:automations",
+    action: "manage",
+    description: "Create, edit, and run automation rules",
   },
   {
     name: "dashboard:sales:view",

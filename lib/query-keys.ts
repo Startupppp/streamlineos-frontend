@@ -339,4 +339,50 @@ export const queryKeys = {
     agedPayables: (params: { asOf: string }) => [...base, "accounting", "agedPayables", params] as const,
   },
 
+  goals: {
+    all: [...base, "goals"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "goals", "list", params] as const,
+    detail: (id: number) => [...base, "goals", "detail", id] as const,
+    stats: () => [...base, "goals", "stats"] as const,
+    keyResults: (goalId: number) => [...base, "goals", "keyResults", goalId] as const,
+  },
+
+  projectReports: {
+    all: [...base, "projectReports"] as const,
+    velocity: (projectId: number) => [...base, "projectReports", "velocity", projectId] as const,
+    burnup: (projectId: number, sprintId?: number) => [...base, "projectReports", "burnup", projectId, sprintId] as const,
+    cfd: (projectId: number, params?: Record<string, unknown>) => [...base, "projectReports", "cfd", projectId, params] as const,
+  },
+
+  kb: {
+    all: [...base, "kb"] as const,
+    categories: () => [...base, "kb", "categories"] as const,
+    articles: (params?: Record<string, unknown>) => [...base, "kb", "articles", params] as const,
+    article: (id: number) => [...base, "kb", "article", id] as const,
+    publicArticles: (params?: Record<string, unknown>) => [...base, "kb", "publicArticles", params] as const,
+    publicArticle: (orgId: string, slug: string) => [...base, "kb", "publicArticle", orgId, slug] as const,
+  },
+
+  roadmap: {
+    all: [...base, "roadmap"] as const,
+    items: (params?: Record<string, unknown>) => [...base, "roadmap", "items", params] as const,
+    item: (id: number) => [...base, "roadmap", "item", id] as const,
+    feedback: (params?: Record<string, unknown>) => [...base, "roadmap", "feedback", params] as const,
+    changelog: (params?: Record<string, unknown>) => [...base, "roadmap", "changelog", params] as const,
+    publicBoard: (orgId: string) => [...base, "roadmap", "publicBoard", orgId] as const,
+  },
+
+  csHealth: {
+    all: [...base, "csHealth"] as const,
+    scores: (params?: Record<string, unknown>) => [...base, "csHealth", "scores", params] as const,
+    config: () => [...base, "csHealth", "config"] as const,
+  },
+
+  automations: {
+    all: [...base, "automations"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "automations", "list", params] as const,
+    detail: (id: number) => [...base, "automations", "detail", id] as const,
+    runs: (ruleId: number) => [...base, "automations", "runs", ruleId] as const,
+  },
+
 } as const;

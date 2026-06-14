@@ -1,11 +1,13 @@
 import { HR_PERMISSIONS } from "./hr";
 import { CRM_PERMISSIONS } from "./crm";
 import { SHARED_PERMISSIONS } from "./shared";
+import { SUPPORT_PERMISSIONS } from "./support";
 
 export const PERMISSIONS = [
   ...HR_PERMISSIONS,
   ...CRM_PERMISSIONS,
   ...SHARED_PERMISSIONS,
+  ...SUPPORT_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [
@@ -88,6 +90,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   CUSTOMER_SUPPORT: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:support:view",
+    "support:kb:view",
+    "support:kb:manage",
+    "projects:roadmap:view",
     "projects:view",
     "projects:tickets:view",
     "projects:tickets:create",
@@ -105,6 +110,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:sprints:view",
     "projects:timesheets:view",
     "projects:timesheets:create",
+    "projects:goals:view",
+    "projects:roadmap:view",
   ],
 
   DESIGN: [

@@ -12,3 +12,5 @@ export * from "./shared";
 export * from "./blog";
 export * from "./platform";
 export * from "./accounting";
+export * from "./support";
+export * from "./automation";
