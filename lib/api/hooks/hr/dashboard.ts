@@ -180,7 +180,7 @@ export function useHrCompliance() {
   });
 }
 
-export interface HrAttendanceAnalytics {
+export interface HrDashboardAttendanceAnalytics {
   month: string;
   workingDaysSoFar: number;
   totalEmployees: number;
@@ -192,10 +192,10 @@ export interface HrAttendanceAnalytics {
   byDepartment: { name: string; presentCount: number; expectedCount: number }[];
 }
 
-export function useHrAttendanceAnalytics() {
+export function useHrDashboardAttendanceAnalytics() {
   return useQuery({
     queryKey: ["streamlineos", "hr", "dashboard", "attendance-analytics"] as const,
-    queryFn: () => apiClient.get<HrAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
+    queryFn: () => apiClient.get<HrDashboardAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
     staleTime: 60_000,
   });
 }

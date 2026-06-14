@@ -16,6 +16,7 @@ import {
   FileKey,
   Smile,
   MoreHorizontal,
+  Star,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -52,13 +53,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 import {
   useDocumentTemplates,
   useDeleteDocumentTemplate,
+  useSetDocumentTemplateDefault,
   type DocumentTemplate,
 } from "@/lib/api/hooks/hr/document-templates";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 
 const TYPE_CONFIG: Record<
@@ -125,20 +129,23 @@ function VariableChips({ variables }: { variables: string[] }) {
 
 function PreviewDialog({ template }: { template: DocumentTemplate }) {
   const [open, setOpen] = useState(false);
+
+  const handleSelect = useCallback((e: Event) => {
+    e.preventDefault();
+    setOpen(true);
+  }, []);
+
+  const handleOpenChange = useCallback((val: boolean) => setOpen(val), []);
+
   return (
     <>
-      <DropdownMenuItem
-        onSelect={(e) => {
-          e.preventDefault();
-          setOpen(true);
-        }}
-      >
+      <DropdownMenuItem onSelect={handleSelect}>
         <Eye className="mr-2 h-3.5 w-3.5" />
         Preview
       </DropdownMenuItem>
 
       {open && (
-        <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialog open={open} onOpenChange={handleOpenChange}>
           <AlertDialogContent className="max-w-3xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Preview — {template.title}</AlertDialogTitle>
@@ -204,6 +211,74 @@ function DeleteConfirm({
 }
 
 
+interface DefaultStarButtonProps {
+  template: DocumentTemplate;
+  currentDefault: DocumentTemplate | undefined;
+  onSetDefault: (id: number, isDefault: boolean) => void;
+  isPending: boolean;
+}
+
+function DefaultStarButton({ template, currentDefault, onSetDefault, isPending }: DefaultStarButtonProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const isCurrentDefault = template.isDefault;
+  const hasExistingDefault = !!currentDefault && !isCurrentDefault;
+
+  const handleClick = useCallback(() => {
+    setConfirmOpen(true);
+  }, []);
+
+  const handleConfirmOpenChange = useCallback((val: boolean) => setConfirmOpen(val), []);
+
+  const handleConfirm = useCallback(() => {
+    onSetDefault(template.id, !isCurrentDefault);
+    setConfirmOpen(false);
+  }, [template.id, isCurrentDefault, onSetDefault]);
+
+  const confirmTitle = isCurrentDefault
+    ? "Remove default status?"
+    : "Set as default template?";
+
+  const confirmDescription = isCurrentDefault
+    ? "Are you sure you want to remove the default status from this template?"
+    : hasExistingDefault
+    ? `This will replace "${currentDefault.title}" as the default template. Continue?`
+    : "Set this template as the default?";
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "h-7 w-7 shrink-0 transition-colors",
+          isCurrentDefault
+            ? "text-amber-500 hover:text-amber-600"
+            : "text-muted-foreground/40 hover:text-amber-400"
+        )}
+        onClick={handleClick}
+        disabled={isPending}
+        aria-label={isCurrentDefault ? "Remove default status" : "Set as default"}
+        title={isCurrentDefault ? "Remove default status" : "Set as default"}
+      >
+        <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
+      </Button>
+
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel="Confirm"
+        variant="default"
+        isPending={isPending}
+        onConfirm={handleConfirm}
+      />
+    </>
+  );
+}
+
+
 function TemplatesPageSkeleton() {
   return (
     <PageWrapper
@@ -253,6 +328,7 @@ export default function DocumentTemplatesPage() {
   const router = useRouter();
   const { data: templates, isLoading } = useDocumentTemplates();
   const deleteMutation = useDeleteDocumentTemplate();
+  const setDefaultMutation = useSetDocumentTemplateDefault();
 
   const handleDelete = useCallback(
     (id: number) => {
@@ -264,6 +340,20 @@ export default function DocumentTemplatesPage() {
     [deleteMutation]
   );
 
+  const handleSetDefault = useCallback(
+    (id: number, isDefault: boolean) => {
+      setDefaultMutation.mutate(
+        { id, isDefault },
+        {
+          onSuccess: () =>
+            toast.success(isDefault ? "Template set as default" : "Default status removed"),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    },
+    [setDefaultMutation]
+  );
+
   if (isLoading) return <TemplatesPageSkeleton />;
 
   const list = templates ?? [];
@@ -272,6 +362,7 @@ export default function DocumentTemplatesPage() {
   const active = list.filter((t) => t.isActive).length;
   const ndaCount = list.filter((t) => t.type === "NDA").length;
   const offerCount = list.filter((t) => t.type === "OFFER_LETTER").length;
+  const currentDefault = list.find((t) => t.isDefault);
 
   return (
     <PageWrapper
@@ -308,6 +399,7 @@ export default function DocumentTemplatesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
+                      <TableHead className="w-[32px]" />
                       <TableHead className="w-[220px]">Title</TableHead>
                       <TableHead className="w-[120px]">Type</TableHead>
                       <TableHead>Variables</TableHead>
@@ -324,9 +416,22 @@ export default function DocumentTemplatesPage() {
                       return (
                         <TableRow key={template.id} className="group">
                           <TableCell>
+                            <DefaultStarButton
+                              template={template}
+                              currentDefault={currentDefault}
+                              onSetDefault={handleSetDefault}
+                              isPending={setDefaultMutation.isPending}
+                            />
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2 min-w-0">
                               <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                               <span className="font-medium text-sm truncate">{template.title}</span>
+                              {template.isDefault && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0">
+                                  Default
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>

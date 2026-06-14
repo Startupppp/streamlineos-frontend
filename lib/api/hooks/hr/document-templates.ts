@@ -14,6 +14,7 @@ export interface DocumentTemplate {
   variables: string[];
   version: number;
   isActive: boolean;
+  isDefault: boolean;
   createdBy: string;
   createdAt: string | null;
   updatedAt: string | null;
@@ -103,6 +104,15 @@ export function useDeleteDocumentTemplate() {
   return useMutation({
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
+  });
+}
+
+export function useSetDocumentTemplateDefault() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isDefault }: { id: number; isDefault: boolean }) =>
+      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${id}`, { isDefault }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
   });
 }

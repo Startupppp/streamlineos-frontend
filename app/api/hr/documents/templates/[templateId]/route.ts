@@ -13,6 +13,10 @@ const updateSchema = z.object({
   variables: z.array(z.string()).optional(),
 });
 
+const setDefaultSchema = z.object({
+  isDefault: z.boolean(),
+});
+
 type Params = { params: Promise<{ templateId: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
@@ -30,6 +34,41 @@ export async function GET(_req: NextRequest, { params }: Params) {
     if (!template) return err("Template not found", 404);
 
     return ok(template);
+  });
+}
+
+export async function PATCH(req: NextRequest, { params }: Params) {
+  return withAbility("manage", "hr:documents", async (session) => {
+    const { templateId } = await params;
+    const id = Number(templateId);
+    if (!Number.isFinite(id)) return err("Invalid template ID", 400);
+
+    const body = await parseBody(req, setDefaultSchema);
+
+    const [existing] = await db
+      .select()
+      .from(documentTemplates)
+      .where(and(eq(documentTemplates.id, id), eq(documentTemplates.orgId, session.orgId)))
+      .limit(1);
+
+    if (!existing) return err("Template not found", 404);
+
+    if (body.isDefault) {
+      await db
+        .update(documentTemplates)
+        .set({ isDefault: false, updatedAt: new Date() })
+        .where(and(eq(documentTemplates.orgId, session.orgId), eq(documentTemplates.isDefault, true)));
+    }
+
+    const [updated] = await db
+      .update(documentTemplates)
+      .set({ isDefault: body.isDefault, updatedAt: new Date() })
+      .where(eq(documentTemplates.id, id))
+      .returning();
+
+    if (!updated) return err("Failed to update template", 500);
+
+    return ok(updated);
   });
 }
 

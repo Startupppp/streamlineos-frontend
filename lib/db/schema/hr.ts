@@ -1554,6 +1554,7 @@ export const documentTemplates = pgTable("document_templates", {
   variables: jsonb("variables").$type<string[]>().notNull().default([]),
   version: integer("version").notNull().default(1),
   isActive: boolean("is_active").notNull().default(true),
+  isDefault: boolean("is_default").notNull().default(false),
   createdBy: text("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),

@@ -11,7 +11,12 @@ const listSchema = z.object({
 });
 
 const createSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z
+    .string()
+    .min(2, "Template name must be at least 2 characters")
+    .max(100, "Template name must be at most 100 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), { message: "Template name must contain at least one letter" })
+    .refine((v) => !/\s{2,}/.test(v), { message: "Template name cannot have consecutive spaces" }),
   type: z.string().min(1, "Type is required").default("OFFER"),
   htmlContent: z.string().default(""),
   variables: z.array(z.string()).optional(),
