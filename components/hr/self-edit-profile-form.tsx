@@ -26,6 +26,28 @@ const schema = z.object({
   githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   websiteUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   newSkill: z.string().optional(),
+}).superRefine((data, ctx) => {
+  const social = [
+    { field: "linkedinUrl" as const, label: "LinkedIn" },
+    { field: "twitterUrl" as const, label: "Twitter" },
+    { field: "githubUrl" as const, label: "GitHub" },
+    { field: "websiteUrl" as const, label: "Website" },
+  ];
+  const seen = new Map<string, string>();
+  for (const { field, label } of social) {
+    const url = data[field]?.trim();
+    if (!url) continue;
+    const normalized = url.toLowerCase();
+    if (seen.has(normalized)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `This URL is already used for ${seen.get(normalized)}`,
+        path: [field],
+      });
+    } else {
+      seen.set(normalized, label);
+    }
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
