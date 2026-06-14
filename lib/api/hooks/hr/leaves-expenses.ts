@@ -510,7 +510,8 @@ export function useCreateGoal() {
       apiClient.post<Goal>("/hr/performance/goals", data),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: queryKeys.hr.goals(),
+        queryKey: [...queryKeys.hr.all, "goals"],
+        exact: false,
       }),
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   useHrPerformanceReviews,
@@ -271,7 +271,7 @@ function ReviewsTab() {
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
-              {cycles?.map((c: ReviewCycle) => (
+              {(Array.isArray(cycles) ? cycles : []).filter((c: ReviewCycle) => c.id != null && String(c.id) !== "").map((c: ReviewCycle) => (
                 <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
             </SelectContent>
@@ -363,6 +363,11 @@ function GoalsTab() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [userId, title, description, targetValue, startDate, endDate, createGoal]);
+
+  const handleTargetValueChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) >= 0)) setTargetValue(v);
+  }, []);
 
   const handleProgressUpdate = useCallback((goalId: number, progress: number) => {
     const newProgress = Math.min(100, Math.max(0, progress));
@@ -477,10 +482,7 @@ function GoalsTab() {
             inputMode="numeric"
             placeholder="100"
             value={targetValue}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) >= 0)) setTargetValue(v);
-            }}
+            onChange={handleTargetValueChange}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -892,6 +894,7 @@ function PIPTab() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [managerRating, setManagerRating] = useState("");
   const [objectives, setObjectives] = useState([{ objective: "", metric: "", deadline: "" }]);
 
   const employees = useMemo(
@@ -913,8 +916,16 @@ function PIPTab() {
     setStartDate("");
     setEndDate("");
     setNotes("");
+    setManagerRating("");
     setObjectives([{ objective: "", metric: "", deadline: "" }]);
     setEditingPip(null);
+  }, []);
+
+  const handleManagerRatingChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === "") { setManagerRating(""); return; }
+    const n = Math.min(5, Math.max(1, Math.round(Number(raw))));
+    setManagerRating(String(n));
   }, []);
 
   const handleOpenEdit = useCallback((pip: PIP) => {
@@ -925,6 +936,7 @@ function PIPTab() {
     setStartDate(pip.startDate);
     setEndDate(pip.endDate);
     setNotes(pip.notes ?? "");
+    setManagerRating("");
     setObjectives(pip.objectives && pip.objectives.length > 0 ? pip.objectives : [{ objective: "", metric: "", deadline: "" }]);
     setSheetOpen(true);
   }, []);
@@ -1213,6 +1225,18 @@ function PIPTab() {
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes (optional)</label>
           <Textarea placeholder="Additional context or manager notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={2000} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Manager Rating <span className="text-muted-foreground font-normal">(1–5, optional)</span></label>
+          <Input
+            type="number"
+            min="1"
+            max="5"
+            step="1"
+            placeholder="1–5"
+            value={managerRating}
+            onChange={handleManagerRatingChange}
+          />
         </div>
       </HrSheet>
     </div>
