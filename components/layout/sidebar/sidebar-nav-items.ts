@@ -147,9 +147,10 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Leads", icon: Contact2, href: "/crm/leads", requiredPermission: "crm:leads:view",
         children: [
           { label: "Smart Search", icon: Search, href: "/crm/leads/smart-search", requiredPermission: "crm:leads:view" },
+          { label: "Web Forms", icon: FormInput, href: "/crm/web-forms", requiredPermission: "crm:leads:create" },
           { label: "Distribute Leads", icon: Share2, href: "/crm/leads/distribute", requiredPermission: "crm:leads:assign" },
-          { label: "Source Report", icon: BarChart2, href: "/crm/leads/source-report", requiredPermission: "crm:reports:view" },
           { label: "Duplicate Detection", icon: Copy, href: "/crm/leads/duplicates", requiredPermission: "crm:leads:update" },
+          { label: "Source Report", icon: BarChart2, href: "/crm/leads/source-report", requiredPermission: "crm:reports:view" },
         ],
       },
       {
@@ -165,29 +166,26 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Clients", icon: UserCheck, href: "/crm/clients", requiredPermission: "crm:clients:read",
         children: [
+          { label: "Organizations", icon: Network, href: "/crm/organizations", requiredPermission: "crm:clients:read" },
           { label: "Territories", icon: Map, href: "/crm/territories", requiredPermission: "branch:read" },
         ],
       },
-      { label: "Organizations", icon: Network, href: "/crm/organizations", requiredPermission: "crm:clients:read" },
       { label: "Targets", icon: Trophy, href: "/crm/targets", requiredPermission: "crm:targets:view" },
-      { label: "Web Forms", icon: FormInput, href: "/crm/web-forms", requiredPermission: "crm:leads:create" },
       {
         label: "Analytics", icon: BarChart3, href: "/crm/analytics", requiredPermission: "crm:reports:view",
         children: [
           { label: "Reports", icon: BarChart2, href: "/crm/reports", requiredPermission: "crm:reports:view" },
         ],
       },
-    ],
-  },
-  {
-    label: "CRM Settings",
-    defaultCollapsed: true,
-    requiredPermission: "settings:manage",
-    routes: [
-      { label: "Assignment Rules", icon: SlidersHorizontal, href: "/crm/settings/assignment-rules", requiredPermission: "settings:manage" },
-      { label: "Email Templates", icon: MailOpen, href: "/crm/settings/email-templates", requiredPermission: "settings:manage" },
-      { label: "Scoring Rules", icon: Star, href: "/crm/settings/scoring-rules", requiredPermission: "settings:manage" },
-      { label: "SLA Rules", icon: Clock, href: "/crm/settings/sla", requiredPermission: "settings:manage" },
+      {
+        label: "Settings", icon: SlidersHorizontal, href: "/crm/settings/assignment-rules", requiredPermission: "settings:manage",
+        children: [
+          { label: "Assignment Rules", icon: SlidersHorizontal, href: "/crm/settings/assignment-rules", requiredPermission: "settings:manage" },
+          { label: "Email Templates", icon: MailOpen, href: "/crm/settings/email-templates", requiredPermission: "settings:manage" },
+          { label: "Scoring Rules", icon: Star, href: "/crm/settings/scoring-rules", requiredPermission: "settings:manage" },
+          { label: "SLA Rules", icon: Clock, href: "/crm/settings/sla", requiredPermission: "settings:manage" },
+        ],
+      },
     ],
   },
   {
