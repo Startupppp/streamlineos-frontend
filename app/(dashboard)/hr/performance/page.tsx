@@ -139,13 +139,30 @@ function ReviewsTab() {
   }, [cycles]);
 
   const handleCreate = useCallback(() => {
-    if (!employeeId || !periodStart || !periodEnd) {
-      toast.error("Employee and period dates are required");
+    if (!employeeId) {
+      toast.error("Please select an employee");
+      return;
+    }
+    if (!periodStart || !periodEnd) {
+      toast.error("Period dates are required");
       return;
     }
     if (periodEnd <= periodStart) {
       toast.error("Period end date must be after period start date");
       return;
+    }
+    if (cycleId !== "none") {
+      const selectedCycle = (Array.isArray(cycles) ? cycles : []).find((c: ReviewCycle) => String(c.id) === cycleId);
+      if (selectedCycle) {
+        if (periodStart < selectedCycle.periodStart) {
+          toast.error("Period start must be on or after the selected cycle's start date");
+          return;
+        }
+        if (periodEnd > selectedCycle.periodEnd) {
+          toast.error("Period end must be on or before the selected cycle's end date");
+          return;
+        }
+      }
     }
     const selectedEmployee = employees.find((e) => e.id === employeeId);
     if (selectedEmployee?.joiningDate && periodStart < selectedEmployee.joiningDate.toString().slice(0, 10)) {
@@ -168,7 +185,7 @@ function ReviewsTab() {
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [employeeId, cycleId, periodStart, periodEnd, createReview, employees]);
+  }, [employeeId, cycleId, periodStart, periodEnd, createReview, employees, cycles]);
 
   const handleComplete = useCallback((id: number) => {
     updateReview.mutate({ id, status: "COMPLETED" }, {
@@ -271,7 +288,7 @@ function ReviewsTab() {
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
-              {(Array.isArray(cycles) ? cycles : []).filter((c: ReviewCycle) => c.id != null && String(c.id) !== "").map((c: ReviewCycle) => (
+              {(Array.isArray(cycles) ? cycles : []).filter((c: ReviewCycle) => c.id != null && String(c.id) !== "" && c.name).map((c: ReviewCycle) => (
                 <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}
             </SelectContent>
@@ -330,7 +347,8 @@ function GoalsTab() {
     if (!userId) { toast.error("Please select an employee"); return; }
     if (!trimmedTitle) { toast.error("Goal title is required"); return; }
     if (trimmedTitle.length < 3) { toast.error("Goal title must be at least 3 characters"); return; }
-    if (trimmedTitle.length > 200) { toast.error("Goal title must be at most 200 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Goal title must be at most 100 characters"); return; }
+    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) { toast.error("Goal title must contain at least one letter or number"); return; }
     if (/\s{2,}/.test(trimmedTitle)) { toast.error("Goal title cannot have consecutive spaces"); return; }
     if (trimmedDesc && trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
     if (targetValue !== "") {
@@ -366,7 +384,7 @@ function GoalsTab() {
 
   const handleTargetValueChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
-    if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) >= 0)) setTargetValue(v);
+    if (v === "" || (/^\d{1,10}(\.\d{0,4})?$/.test(v) && Number(v) > 0)) setTargetValue(v);
   }, []);
 
   const handleProgressUpdate = useCallback((goalId: number, progress: number) => {
@@ -731,10 +749,15 @@ function CyclesTab() {
   const handleCreate = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) { toast.error("Cycle name is required"); return; }
-    if (trimmedName.length < 2) { toast.error("Cycle name must be at least 2 characters"); return; }
+    if (trimmedName.length < 3) { toast.error("Cycle name must be at least 3 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Cycle name must be at most 100 characters"); return; }
-    if (/[^a-zA-Z0-9\s\-_().&,/]/.test(trimmedName)) { toast.error("Cycle name contains invalid characters"); return; }
+    if (!/[a-zA-Z0-9]/.test(trimmedName)) { toast.error("Cycle name must contain at least one letter or number"); return; }
+    if (/\s{2,}/.test(trimmedName)) { toast.error("Cycle name cannot have consecutive spaces"); return; }
     if (!periodStart) { toast.error("Period start date is required"); return; }
+    if (!editCycle) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (periodStart < today) { toast.error("Period start date cannot be earlier than today"); return; }
+    }
     if (!periodEnd) { toast.error("Period end date is required"); return; }
     if (periodEnd < periodStart) { toast.error("Period end must be after period start"); return; }
     if (deadline && (deadline < periodStart || deadline > periodEnd)) {

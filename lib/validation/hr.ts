@@ -125,7 +125,12 @@ export const createPerformanceReviewInputSchema = z.object({
 
 export const createGoalInputSchema = z.object({
   userId: z.string().min(1),
-  title: z.string().min(1, "Goal title is required"),
+  title: z
+    .string()
+    .min(3, "Goal title must be at least 3 characters")
+    .max(100, "Goal title must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Goal title must contain at least one letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Goal title cannot have consecutive spaces"),
   description: z.string().optional(),
   type: z.string().default("OKR"),
   targetValue: z.number().positive().optional(),
@@ -256,7 +261,12 @@ export const updateDeviceInputSchema = z.object({
 });
 
 export const createReviewCycleSchema = z.object({
-  name: z.string().min(1, "Cycle name is required").max(100),
+  name: z
+    .string()
+    .min(3, "Cycle name must be at least 3 characters")
+    .max(100, "Cycle name must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v), "Cycle name must contain at least one letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Cycle name cannot have consecutive spaces"),
   type: z.enum(["QUARTERLY", "HALF_YEARLY", "ANNUAL", "CUSTOM"]).optional().default("QUARTERLY"),
   periodStart: z.string().min(1, "Start date is required"),
   periodEnd: z.string().min(1, "End date is required"),
