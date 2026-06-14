@@ -75,6 +75,32 @@ import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-wid
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useAbility } from "@/lib/abilities-context";
 
+const SALES_ROLES = ["SALES"] as const;
+const HR_ROLES = ["HR", "BRANCH_HR"] as const;
+const PROJECT_ROLES = [
+  "ENGINEERING",
+  "DESIGN",
+  "VIDEO_EDITOR",
+  "DIGITAL_MARKETING",
+  "CUSTOMER_SUPPORT",
+] as const;
+
+type SalesRole = (typeof SALES_ROLES)[number];
+type HrRole = (typeof HR_ROLES)[number];
+type ProjectRole = (typeof PROJECT_ROLES)[number];
+
+function isSalesRole(r: string | undefined): r is SalesRole {
+  return r !== undefined && (SALES_ROLES as readonly string[]).includes(r);
+}
+
+function isHrRole(r: string | undefined): r is HrRole {
+  return r !== undefined && (HR_ROLES as readonly string[]).includes(r);
+}
+
+function isProjectRole(r: string | undefined): r is ProjectRole {
+  return r !== undefined && (PROJECT_ROLES as readonly string[]).includes(r);
+}
+
 export function DashboardClient() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -527,6 +553,66 @@ export function DashboardClient() {
               <PublicDocumentsCard />
             </motion.div>
           </>
+        ) : isSalesRole(role) ? (
+          <>
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <Suspense fallback={<WidgetSkeleton rows={2} />}>
+                <ExecutiveKpiWidget />
+              </Suspense>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <AnnouncementsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <UpcomingEventsWidget />
+              </Suspense>
+            </motion.div>
+          </>
+        ) : isHrRole(role) ? (
+          <>
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <LeavesTodayWidget />
+              <TeamAttendanceWidget />
+              <PendingApprovalsWidget />
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <BirthdaysWidget />
+              <LeaveBalanceWidget />
+              <UpcomingHolidaysWidget />
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <AnnouncementsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <UpcomingEventsWidget />
+              </Suspense>
+            </motion.div>
+          </>
         ) : (
           <>
             <motion.div
@@ -562,26 +648,28 @@ export function DashboardClient() {
           </>
         )}
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="grid gap-3 grid-cols-1 lg:grid-cols-7 md:auto-rows-[22rem]"
-        >
-          <div className="lg:col-span-4 min-h-0">
-            <MyIssuesCard
-              tickets={sortedMyTickets}
-              isLoading={ticketsLoading}
-              error={ticketsError}
-            />
-          </div>
-          <div className="lg:col-span-3 min-h-0">
-            <SprintCard
-              summary={sprintSummary ?? undefined}
-              isLoading={sprintLoading}
-            />
-          </div>
-        </motion.div>
+        {(isAdmin || isProjectRole(role)) && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3 grid-cols-1 lg:grid-cols-7 md:auto-rows-[22rem]"
+          >
+            <div className="lg:col-span-4 min-h-0">
+              <MyIssuesCard
+                tickets={sortedMyTickets}
+                isLoading={ticketsLoading}
+                error={ticketsError}
+              />
+            </div>
+            <div className="lg:col-span-3 min-h-0">
+              <SprintCard
+                summary={sprintSummary ?? undefined}
+                isLoading={sprintLoading}
+              />
+            </div>
+          </motion.div>
+        )}
 
         <motion.div
           variants={fadeUp}
@@ -591,17 +679,19 @@ export function DashboardClient() {
             isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
           } md:auto-rows-[22rem]`}
         >
-          <div className="sm:col-span-1 min-h-0">
-            <RecentProjectsCard
-              projects={recentProjects?.map((p) => ({
-                ...p,
-                key: p.key ?? "",
-              }))}
-              isLoading={projectsLoading}
-              error={projectsError}
-              onCreateProject={handleGoToProjects}
-            />
-          </div>
+          {(isAdmin || isProjectRole(role)) && (
+            <div className="sm:col-span-1 min-h-0">
+              <RecentProjectsCard
+                projects={recentProjects?.map((p) => ({
+                  ...p,
+                  key: p.key ?? "",
+                }))}
+                isLoading={projectsLoading}
+                error={projectsError}
+                onCreateProject={handleGoToProjects}
+              />
+            </div>
+          )}
           <div className="sm:col-span-1 min-h-0">
             <RecentActivityCard
               items={recentActivity}
