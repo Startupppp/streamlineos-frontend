@@ -3,14 +3,14 @@ import {
   Receipt, FileText, Laptop, Timer, DollarSign, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
-  TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
+  TrendingUp, BookOpen, Heart, UserMinus, Target, Package,
   Share2, Video, Globe,
   Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award, Scale,
   MailOpen, Smile, FileCheck, Coins, Map, Landmark, RefreshCcw, Zap,
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
   GitBranch, Building2, UserCog, SlidersHorizontal, UserX,
-  FlaskConical, Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
-  FormInput, CalendarRange, FileSearch, LayoutTemplate, Grid3X3, Calculator,
+  Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
+  FormInput, FileSearch, LayoutTemplate, Grid3X3, Calculator,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -256,42 +256,6 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Aged Payables", icon: Clock, href: "/accounting/aged-payables", requiredPermission: "accounting:view" },
           { label: "GSTR-1", icon: FileText, href: "/accounting/gstr-1", requiredPermission: "accounting:view" },
           { label: "GSTR-3B", icon: BarChart2, href: "/accounting/gstr-3b", requiredPermission: "accounting:view" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Marketing",
-    defaultCollapsed: true,
-    requiredPermission: "dm:campaigns:read",
-    routes: [
-      {
-        label: "Marketing Hub", icon: Megaphone, href: "/marketing", requiredPermission: "dm:campaigns:read",
-        children: [
-          { label: "Campaigns", icon: Megaphone, href: "/marketing/campaigns", requiredPermission: "dm:campaigns:read" },
-          { label: "Email Campaigns", icon: Mail, href: "/marketing/email-campaigns", requiredPermission: "dm:campaigns:read" },
-          { label: "A/B Testing", icon: FlaskConical, href: "/marketing/ab-testing", requiredPermission: "dm:campaigns:update" },
-          { label: "Marketing Calendar", icon: CalendarDays, href: "/marketing/calendar", requiredPermission: "dm:campaigns:read" },
-          { label: "Content Calendar", icon: CalendarRange, href: "/marketing/content-calendar", requiredPermission: "dm:campaigns:read" },
-          { label: "Landing Pages", icon: BarChart2, href: "/marketing/landing-pages", requiredPermission: "dm:campaigns:read" },
-          { label: "Content Brief", icon: FileText, href: "/marketing/content-brief", requiredPermission: "dm:campaigns:read" },
-          { label: "Social Analytics", icon: BarChart2, href: "/marketing/social-analytics", requiredPermission: "dm:social:read" },
-          { label: "AI Insights", icon: Sparkles, href: "/marketing/ai-insights", requiredPermission: "dm:campaigns:read" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Digital Marketing",
-    defaultCollapsed: true,
-    requiredPermission: "dm:leads:read",
-    routes: [
-      {
-        label: "Digital Marketing", icon: BarChart3, href: "/digital-marketing", requiredPermission: "dm:leads:read",
-        children: [
-          { label: "Digital Campaigns", icon: Megaphone, href: "/digital-marketing/campaigns", requiredPermission: "dm:campaigns:read" },
-          { label: "Digital Leads", icon: Contact2, href: "/digital-marketing/leads", requiredPermission: "dm:leads:read" },
-          { label: "Social", icon: Globe, href: "/digital-marketing/social", requiredPermission: "dm:social:read" },
         ],
       },
     ],

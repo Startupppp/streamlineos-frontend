@@ -58,22 +58,6 @@ export const AI_FEATURES: AiFeature[] = [
     accent: "red",
   },
   {
-    id: "subject-lines",
-    title: "Subject Lines",
-    description: "Generate high-converting email subject line variations.",
-    icon: Mail,
-    category: "marketing",
-    accent: "indigo",
-  },
-  {
-    id: "content-brief",
-    title: "Content Brief",
-    description: "Create content outlines with keywords, CTA, and word count.",
-    icon: FileText,
-    category: "marketing",
-    accent: "teal",
-  },
-  {
     id: "sentiment",
     title: "Sentiment Analysis",
     description: "Analyze client communication for churn risk signals.",
@@ -136,7 +120,6 @@ export const AI_CATEGORIES: { value: AiCategory | "all"; label: string }[] = [
   { value: "all", label: "All Features" },
   { value: "sales", label: "Sales & CRM" },
   { value: "hr", label: "HR & People" },
-  { value: "marketing", label: "Marketing" },
   { value: "general", label: "General" },
 ];
 
@@ -163,14 +146,6 @@ export function getAiInputConfig(featureId: string): AiInputConfig {
         secondLabel: "Deal Stage",
         secondPlaceholder: "e.g., PROPOSAL, NEGOTIATION",
       };
-    case "subject-lines":
-      return {
-        label: "Topic",
-        placeholder: "Campaign topic or product name",
-        type: "text",
-      };
-    case "content-brief":
-      return { label: "Topic", placeholder: "Content topic", type: "text" };
     case "sentiment":
       return {
         label: "Text to Analyze",

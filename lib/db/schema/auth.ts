@@ -101,6 +101,7 @@ export const users = pgTable("users", {
   githubUrl: text("github_url"),
   websiteUrl: text("website_url"),
   onboardingDocStatus: onboardingDocStatusEnum("onboarding_doc_status").default("PENDING").notNull(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [

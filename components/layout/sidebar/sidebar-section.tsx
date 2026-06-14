@@ -19,6 +19,13 @@ interface SidebarSectionProps {
   onNavigate?: () => void;
 }
 
+function resolveGroupRoutes(routes: NavRoute[]): NavRoute[] {
+  if (routes.length === 1 && routes[0].children && routes[0].children.length > 0) {
+    return routes[0].children;
+  }
+  return routes;
+}
+
 function routeIsActive(route: NavRoute, pathname: string): boolean {
   if (pathname === route.href) return true;
   if (route.isProjectsList && pathname.startsWith("/projects/")) return true;
@@ -81,7 +88,7 @@ export function SidebarSection({
                   onNavigate={onNavigate}
                 />
               ))
-            : group.routes.map((route) => (
+            : (resolveGroupRoutes(group.routes)).map((route) => (
                 <ExpandedItem
                   key={route.href}
                   route={route}

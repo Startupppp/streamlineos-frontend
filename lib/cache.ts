@@ -93,7 +93,6 @@ export const CACHE_KEYS = {
     `tickets:list:${orgId}:${projectId}:${hash}`,
 
   salesDashboard: (orgId: string) => `sales:dashboard:${orgId}`,
-  marketingDashboard: (orgId: string) => `marketing:dashboard:${orgId}`,
   ceDashboard: (orgId: string) => `ce:dashboard:${orgId}`,
   supportDashboard: (orgId: string) => `support:dashboard:${orgId}`,
 
@@ -106,9 +105,6 @@ export const CACHE_KEYS = {
 
   quotasList: (orgId: string) => `sales:quotas:${orgId}`,
   commissionsList: (orgId: string) => `sales:commissions:${orgId}`,
-
-  campaignsList: (orgId: string) => `marketing:campaigns:${orgId}`,
-  emailCampaignsList: (orgId: string) => `marketing:emailCampaigns:${orgId}`,
 
   searchResults: (orgId: string, hash: string) => `search:${orgId}:${hash}`,
 

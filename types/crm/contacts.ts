@@ -199,12 +199,6 @@ export interface CustomerExecutiveDashboard {
   csatTimeline: { month: string; value: number }[];
 }
 
-export interface MarketingStats {
-  campaigns: StatWithTrend;
-  leads: StatWithTrend;
-  mqls: StatWithTrend;
-  roi: StatWithTrend;
-}
 
 export interface CampaignItem {
   name: string;
@@ -237,15 +231,6 @@ export interface UpcomingEventItem {
 
 import type { SalesFunnelItem } from "./deals";
 
-export interface MarketingDashboard {
-  marketingStats: MarketingStats;
-  mqlTimeline: { month: string; value: number }[];
-  leadFunnel: SalesFunnelItem[];
-  campaigns: CampaignItem[];
-  channelBreakdown: ChannelBreakdownItem[];
-  contentPerformance: ContentPerformanceItem[];
-  upcomingEvents: UpcomingEventItem[];
-}
 
 export interface SupportDashboardStats {
   openTickets: StatWithTrend;

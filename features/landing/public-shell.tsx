@@ -8,7 +8,7 @@ type Props = {
   className?: string;
 };
 
-export function MarketingShell({ children, className }: Props) {
+export function PublicShell({ children, className }: Props) {
   return (
     <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950 overflow-x-clip">
       <VisitTracker />
@@ -22,7 +22,7 @@ export function MarketingShell({ children, className }: Props) {
 }
 
 type EyebrowProps = { children: ReactNode };
-export function MarketingEyebrow({ children }: EyebrowProps) {
+export function PublicEyebrow({ children }: EyebrowProps) {
   return (
     <p className="text-[13px] font-medium text-blue-600 mb-3">
       {children}

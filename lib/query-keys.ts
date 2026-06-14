@@ -215,7 +215,6 @@ export const queryKeys = {
     salesFunnel: (params: Record<string, unknown>) => [...base, "crm", "salesFunnel", params] as const,
     salesLeaderboard: (params: Record<string, unknown>) => [...base, "crm", "salesLeaderboard", params] as const,
     revenueVsGoal: (year: number) => [...base, "crm", "revenueVsGoal", year] as const,
-    marketingDashboard: () => [...base, "crm", "marketingDashboard"] as const,
     supportDashboard: () => [...base, "crm", "supportDashboard"] as const,
     customerExecutiveDashboard: () => [...base, "crm", "customerExecutiveDashboard"] as const,
     person: (slug: string) => [...base, "crm", "person", slug] as const,
@@ -267,40 +266,6 @@ export const queryKeys = {
     list: () => [...base, "salesLeaderboard", "list"] as const,
   },
 
-  marketingCampaigns: {
-    all: [...base, "marketingCampaigns"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "marketingCampaigns", "list", params] as const,
-    detail: (id: number) => [...base, "marketingCampaigns", "detail", id] as const,
-  },
-
-  abTests: {
-    all: [...base, "abTests"] as const,
-    list: () => [...base, "abTests", "list"] as const,
-    detail: (id: number) => [...base, "abTests", "detail", id] as const,
-  },
-
-  dmLeads: {
-    all: [...base, "dmLeads"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "dmLeads", "list", params] as const,
-    detail: (id: number) => [...base, "dmLeads", "detail", id] as const,
-  },
-
-  dmCampaigns: {
-    all: [...base, "dmCampaigns"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "dmCampaigns", "list", params] as const,
-    detail: (id: number) => [...base, "dmCampaigns", "detail", id] as const,
-  },
-
-  socialMedia: {
-    all: [...base, "socialMedia"] as const,
-    latest: () => [...base, "socialMedia", "latest"] as const,
-  },
-
-  socialMetrics: {
-    all: [...base, "socialMetrics"] as const,
-    list: (params?: Record<string, unknown>) => [...base, "socialMetrics", "list", params] as const,
-  },
-
   auditLog: {
     all: [...base, "auditLog"] as const,
     list: (params?: Record<string, unknown>) => [...base, "auditLog", "list", params] as const,
@@ -318,28 +283,10 @@ export const queryKeys = {
     results: (query: string) => [...base, "globalSearch", query] as const,
   },
 
-  landingPages: {
-    all: [...base, "landingPages"] as const,
-    list: () => [...base, "landingPages", "list"] as const,
-    detail: (id: number) => [...base, "landingPages", "detail", id] as const,
-  },
-
-  crmPages: {
-    all: [...base, "crmPages"] as const,
-    list: () => [...base, "crmPages", "list"] as const,
-    detail: (id: number) => [...base, "crmPages", "detail", id] as const,
-    analytics: (id: number, days?: number) => [...base, "crmPages", "analytics", id, days] as const,
-  },
-
   webLeadForms: {
     all: [...base, "webLeadForms"] as const,
     list: () => [...base, "webLeadForms", "list"] as const,
     detail: (id: number) => [...base, "webLeadForms", "detail", id] as const,
-  },
-
-  contentCalendar: {
-    all: [...base, "contentCalendar"] as const,
-    list: (month?: string) => [...base, "contentCalendar", "list", month] as const,
   },
 
   quotes: {

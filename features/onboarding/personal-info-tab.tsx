@@ -16,8 +16,6 @@ import { useOnboardingSubmit } from "@/lib/hooks/use-onboarding-submit";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
 
-const MAX_EXPERIENCE_YEARS = 60;
-
 const personalSchema = z.object({
   phone: z
     .string()
@@ -25,12 +23,17 @@ const personalSchema = z.object({
     .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"], { error: "Please select a gender" }),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  experienceYears: z
+  addressLine1: z.string().optional(),
+  addressCity: z.string().optional(),
+  addressState: z.string().optional(),
+  addressPostalCode: z.string().optional(),
+  addressCountry: z.string().optional(),
+  emergencyName: z.string().min(2, "Emergency contact name is required"),
+  emergencyRelation: z.string().min(2, "Relationship is required"),
+  emergencyPhone: z
     .string()
-    .min(1, "Experience is required")
-    .refine((v) => Number(v) >= 0, "Experience cannot be negative")
-    .refine((v) => Number(v) <= MAX_EXPERIENCE_YEARS, `Experience cannot exceed ${MAX_EXPERIENCE_YEARS} years`),
-  skills: z.string().min(3, "Add at least one skill").refine((val) => val.includes(","), "Please separate skills with commas (e.g., React, Node.js)"),
+    .min(1, "Emergency contact phone is required")
+    .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
 });
 
 type PersonalFormValues = z.infer<typeof personalSchema>;
@@ -54,8 +57,14 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
       phone: "",
       gender: undefined,
       dateOfBirth: "",
-      experienceYears: "",
-      skills: "",
+      addressLine1: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: "",
+      emergencyName: "",
+      emergencyRelation: "",
+      emergencyPhone: "",
       ...defaultValues,
     },
   });
@@ -109,55 +118,98 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
               </div>
             </motion.div>
 
-            <motion.div variants={fadeUpVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div variants={fadeUpVariants} className="space-y-1.5 sm:max-w-[calc(50%-0.5rem)]">
+              <Label htmlFor="gender">Gender</Label>
+              <Controller
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="gender" className="w-full" aria-required="true" aria-invalid={!!errors.gender}>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MALE">Male</SelectItem>
+                      <SelectItem value="FEMALE">Female</SelectItem>
+                      <SelectItem value="OTHER">Other / Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.gender && <p role="alert" className="text-xs text-destructive">{errors.gender.message}</p>}
+            </motion.div>
+
+            <motion.div variants={fadeUpVariants} className="space-y-3 pt-1">
+              <h3 className="text-sm font-semibold text-foreground">Home Address <span className="text-muted-foreground font-normal">(optional)</span></h3>
               <div className="space-y-1.5">
-                <Label htmlFor="gender">Gender</Label>
-                <Controller
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="gender" className="w-full" aria-required="true" aria-invalid={!!errors.gender}>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MALE">Male</SelectItem>
-                        <SelectItem value="FEMALE">Female</SelectItem>
-                        <SelectItem value="OTHER">Other / Prefer not to say</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.gender && <p role="alert" className="text-xs text-destructive">{errors.gender.message}</p>}
+                <Label htmlFor="addressLine1">Street Address</Label>
+                <Input id="addressLine1" {...form.register("addressLine1")} placeholder="House / street" autoComplete="address-line1" />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="experienceYears">Years of Experience</Label>
-                <Input
-                  id="experienceYears"
-                  {...form.register("experienceYears")}
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max={MAX_EXPERIENCE_YEARS}
-                  inputMode="decimal"
-                  placeholder="e.g. 2.5"
-                  aria-required="true"
-                  aria-invalid={!!errors.experienceYears}
-                />
-                {errors.experienceYears && <p role="alert" className="text-xs text-destructive">{errors.experienceYears.message}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressCity">City</Label>
+                  <Input id="addressCity" {...form.register("addressCity")} placeholder="City" autoComplete="address-level2" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressState">State</Label>
+                  <Input id="addressState" {...form.register("addressState")} placeholder="State" autoComplete="address-level1" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressPostalCode">Postal Code</Label>
+                  <Input id="addressPostalCode" {...form.register("addressPostalCode")} placeholder="000000" autoComplete="postal-code" inputMode="numeric" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressCountry">Country</Label>
+                  <Input id="addressCountry" {...form.register("addressCountry")} placeholder="Country" autoComplete="country-name" />
+                </div>
               </div>
             </motion.div>
 
-            <motion.div variants={fadeUpVariants} className="space-y-1.5">
-              <Label htmlFor="skills">Skills <span className="text-muted-foreground font-normal">(comma separated)</span></Label>
-              <Input
-                id="skills"
-                {...form.register("skills")}
-                placeholder="React, Node.js, TypeScript..."
-                aria-required="true"
-                aria-invalid={!!errors.skills}
-              />
-              {errors.skills && <p role="alert" className="text-xs text-destructive">{errors.skills.message}</p>}
+            <motion.div variants={fadeUpVariants} className="space-y-3 pt-1">
+              <h3 className="text-sm font-semibold text-foreground">Emergency Contact</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="emergencyName">Full Name</Label>
+                  <Input
+                    id="emergencyName"
+                    {...form.register("emergencyName")}
+                    placeholder="Contact name"
+                    aria-required="true"
+                    aria-invalid={!!errors.emergencyName}
+                  />
+                  {errors.emergencyName && <p role="alert" className="text-xs text-destructive">{errors.emergencyName.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="emergencyRelation">Relationship</Label>
+                  <Input
+                    id="emergencyRelation"
+                    {...form.register("emergencyRelation")}
+                    placeholder="e.g. Parent, Spouse"
+                    aria-required="true"
+                    aria-invalid={!!errors.emergencyRelation}
+                  />
+                  {errors.emergencyRelation && <p role="alert" className="text-xs text-destructive">{errors.emergencyRelation.message}</p>}
+                </div>
+              </div>
+              <div className="space-y-1.5 sm:max-w-[calc(50%-0.5rem)]">
+                <Label htmlFor="emergencyPhone">Phone Number</Label>
+                <Controller
+                  control={form.control}
+                  name="emergencyPhone"
+                  render={({ field }) => (
+                    <PhoneInput
+                      id="emergencyPhone"
+                      defaultCountry="IN"
+                      placeholder="Enter phone number"
+                      value={field.value}
+                      onChange={(v) => field.onChange(v ?? "")}
+                      aria-required="true"
+                      aria-invalid={!!errors.emergencyPhone}
+                    />
+                  )}
+                />
+                {errors.emergencyPhone && <p role="alert" className="text-xs text-destructive">{errors.emergencyPhone.message}</p>}
+              </div>
             </motion.div>
 
             <motion.div variants={fadeUpVariants}>

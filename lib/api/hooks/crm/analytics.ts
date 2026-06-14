@@ -5,67 +5,9 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   SalesDashboard,
-  MarketingDashboard,
   SupportDashboard,
   CustomerExecutiveDashboard,
 } from "@/types/crm";
-
-export interface MarketingCampaign {
-  id: number;
-  orgId: string;
-  name: string;
-  status: "active" | "paused" | "completed";
-  channel: string | null;
-  description: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  targetAudience: string | null;
-  leads: number;
-  spend: string;
-  roi: string;
-  budgetAllocated: string | null;
-  budgetSpent: string | null;
-  ownerId: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
-
-export interface EmailCampaign {
-  id: number;
-  name: string;
-  subject: string;
-  body: string;
-  status: string;
-  recipientFilter: Record<string, unknown> | null;
-  recipientCount: number;
-  sentCount: number;
-  failedCount: number;
-  openCount: number;
-  clickCount: number;
-  scheduledAt: string | null;
-  sentAt: string | null;
-  createdAt: string | null;
-}
-
-export interface CampaignLead {
-  id: number;
-  name: string;
-  email: string | null;
-  company: string | null;
-  status: string;
-  source: string | null;
-}
-
-export interface CampaignLeadsResponse {
-  leads: CampaignLead[];
-  total: number;
-}
-
-export interface CampaignLeadFilters {
-  status?: string;
-  source?: string;
-  q?: string;
-}
 
 export interface SalesDashboardFilters {
   from?: string;
@@ -171,14 +113,6 @@ export function useSalesDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.salesDashboard(),
     queryFn: () => apiClient.get<SalesDashboard>("/crm/sales-dashboard"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useMarketingDashboard() {
-  return useQuery({
-    queryKey: queryKeys.crm.marketingDashboard(),
-    queryFn: () => apiClient.get<MarketingDashboard>("/crm/marketing-dashboard"),
     staleTime: 2 * 60_000,
   });
 }
@@ -307,43 +241,3 @@ export function useRepComparison(rep1Id: number | null, rep2Id: number | null) {
   });
 }
 
-export function useMarketingCampaigns(params?: { status?: string }) {
-  return useQuery({
-    queryKey: queryKeys.marketingCampaigns.list(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<MarketingCampaign[]>("/marketing/campaigns", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useMarketingCampaignDetail(id: number) {
-  return useQuery({
-    queryKey: queryKeys.marketingCampaigns.detail(id),
-    queryFn: () => apiClient.get<MarketingCampaign>(`/marketing/campaigns/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: id > 0,
-  });
-}
-
-export function useEmailCampaigns(params?: { status?: string }) {
-  return useQuery({
-    queryKey: [...queryKeys.marketingCampaigns.all, "email", params] as const,
-    queryFn: () => apiClient.get<EmailCampaign[]>("/marketing/email-campaigns", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useCampaignLeads(filters: CampaignLeadFilters) {
-  return useQuery({
-    queryKey: [...queryKeys.marketingCampaigns.all, "campaignLeads", filters] as const,
-    queryFn: () => apiClient.get<CampaignLeadsResponse>("/marketing/campaigns/leads", filters as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useUtmAttribution(params?: { source?: string }) {
-  return useQuery({
-    queryKey: [...queryKeys.marketingCampaigns.all, "utmAttribution", params] as const,
-    queryFn: () => apiClient.get<{ attribution: Array<{ source: string | null; count: number; totalValue: number }> }>("/marketing/utm", params as Record<string, unknown>),
-    staleTime: 2 * 60_000,
-  });
-}

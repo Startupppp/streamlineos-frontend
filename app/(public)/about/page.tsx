@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Compass, Heart, Layers, Lock, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MarketingShell, MarketingEyebrow } from "@/features/marketing/marketing-shell";
+import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: `About ${BRAND_NAME}`,
-  description: `${BRAND_TAGLINE} — the team and the thinking behind ${BRAND_NAME}.`,
+  description: `${BRAND_TAGLINE} â€” the team and the thinking behind ${BRAND_NAME}.`,
   alternates: { canonical: "/about" },
 };
 
@@ -37,15 +37,15 @@ const values = [
 const numbers = [
   { value: "2026", label: "Founded" },
   { value: "30+", label: "Modules shipped" },
-  { value: "₹0", label: "Below 10 seats" },
+  { value: "â‚¹0", label: "Below 10 seats" },
   { value: "100%", label: "Founder-owned" },
 ];
 
 export default function AboutPage() {
   return (
-    <MarketingShell>
+    <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <MarketingEyebrow>About {BRAND_NAME}</MarketingEyebrow>
+        <PublicEyebrow>About {BRAND_NAME}</PublicEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-6">
           We&apos;re building the operating system{" "}
           <span className="text-blue-600">teams actually use.</span>
@@ -74,21 +74,21 @@ export default function AboutPage() {
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28 grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-4">
-          <MarketingEyebrow>Our story</MarketingEyebrow>
+          <PublicEyebrow>Our story</PublicEyebrow>
           <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-slate-900">
             One workspace, because every other path felt wrong.
           </h2>
         </div>
         <div className="lg:col-span-8 space-y-5 text-[15px] lg:text-base text-slate-700 leading-relaxed">
           <p>
-            Before {BRAND_NAME}, we ran teams the way most teams still do — one SaaS for HR, one
+            Before {BRAND_NAME}, we ran teams the way most teams still do â€” one SaaS for HR, one
             for sprints, one for sales, one for chat, one for the weekly status meeting. Every
             new hire meant five logins. Every weekly report meant CSV exports and pivot tables.
           </p>
           <p>
             We tried the existing &ldquo;all in one&rdquo; platforms. They were either shallow on
             every module or built on top of bolt-on integrations that broke whenever a vendor
-            shipped a new API. We wanted something with one data model — the same employee
+            shipped a new API. We wanted something with one data model â€” the same employee
             record, the same client record, used by everything.
           </p>
           <p>
@@ -98,7 +98,7 @@ export default function AboutPage() {
             every function. No syncs. No drift. No 4 AM Zapier alerts.
           </p>
           <p>
-            We&apos;re still early. The product changes every week. But the thesis hasn&apos;t —
+            We&apos;re still early. The product changes every week. But the thesis hasn&apos;t â€”
             companies deserve software that doesn&apos;t make them sit in front of seven tabs to
             understand what&apos;s happening this Wednesday.
           </p>
@@ -107,7 +107,7 @@ export default function AboutPage() {
 
       <section className="container mx-auto px-4 lg:px-8 max-w-6xl mt-20 lg:mt-28">
         <div className="text-center mb-12">
-          <MarketingEyebrow>What we care about</MarketingEyebrow>
+          <PublicEyebrow>What we care about</PublicEyebrow>
           <h2 className="font-display text-3xl lg:text-4xl font-extrabold tracking-[-0.025em] leading-[1.05] text-slate-900">
             Four principles we won&apos;t move on.
           </h2>
@@ -147,7 +147,7 @@ export default function AboutPage() {
               Want to build with us?
             </h2>
             <p className="text-blue-100/80 text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-7">
-              We&apos;re a small founding team. If the way we work resonates, reach out — even if
+              We&apos;re a small founding team. If the way we work resonates, reach out â€” even if
               we don&apos;t have a role open in your discipline yet.
             </p>
             <Link href="/contact">
@@ -172,6 +172,6 @@ export default function AboutPage() {
           </Link>
         </p>
       </section>
-    </MarketingShell>
+    </PublicShell>
   );
 }

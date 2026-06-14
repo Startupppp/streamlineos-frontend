@@ -7,7 +7,6 @@ import {
   usePredictDeal,
   useNextBestAction,
   useObjectionHandler,
-  useGenerateSubjectLines,
   useSentimentAnalysis,
   useAIScoreCandidate,
   useAIGenerateReview,
@@ -15,7 +14,6 @@ import {
   useAIAttritionRisk,
   useGenerateJobDescription,
   useMeetingPrep,
-  useGenerateContentBrief,
 } from "@/lib/api/hooks/ai";
 
 interface RunArgs {
@@ -36,7 +34,6 @@ export function useAiFeatureMutation() {
   const predictDeal = usePredictDeal();
   const nextAction = useNextBestAction();
   const objectionHandler = useObjectionHandler();
-  const subjectLines = useGenerateSubjectLines();
   const sentiment = useSentimentAnalysis();
   const scoreCandidate = useAIScoreCandidate();
   const generateReview = useAIGenerateReview();
@@ -44,7 +41,6 @@ export function useAiFeatureMutation() {
   const attritionRisk = useAIAttritionRisk();
   const generateJD = useGenerateJobDescription();
   const meetingPrep = useMeetingPrep();
-  const contentBrief = useGenerateContentBrief();
 
   const isPending =
     scoreLead.isPending ||
@@ -52,15 +48,13 @@ export function useAiFeatureMutation() {
     predictDeal.isPending ||
     nextAction.isPending ||
     objectionHandler.isPending ||
-    subjectLines.isPending ||
     sentiment.isPending ||
     scoreCandidate.isPending ||
     generateReview.isPending ||
     helpdeskReply.isPending ||
     attritionRisk.isPending ||
     generateJD.isPending ||
-    meetingPrep.isPending ||
-    contentBrief.isPending;
+    meetingPrep.isPending;
 
   const run = useCallback(
     ({ featureId, input, secondInput, onSuccess, onError }: RunArgs) => {
@@ -79,13 +73,6 @@ export function useAiFeatureMutation() {
             { objection: input, dealStage: secondInput || "PROPOSAL" },
             cb,
           );
-        case "subject-lines":
-          return subjectLines.mutate(
-            { campaignContext: input, count: 5 },
-            cb,
-          );
-        case "content-brief":
-          return contentBrief.mutate({ topic: input, contentType: "blog" }, cb);
         case "sentiment":
           return sentiment.mutate({ text: input }, cb);
         case "score-candidate":
@@ -128,8 +115,6 @@ export function useAiFeatureMutation() {
       predictDeal,
       nextAction,
       objectionHandler,
-      subjectLines,
-      contentBrief,
       sentiment,
       scoreCandidate,
       generateReview,

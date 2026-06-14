@@ -51,6 +51,8 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 ## Feature completeness (per page)
 - For the feature/category the page belongs to, verify everything needed exists (list, create, edit, delete, filters, pagination, permissions, states). ADD what's missing; REMOVE what's not required.
 - Remove unnecessary components, cards, types, hooks, APIs — including their files — and rearrange remaining files into the proper folder structure, updating imports.
+- Onboarding/profile forms collect ONLY the fields a real HR platform asks a new joiner (personal: phone, DOB, gender, home address, emergency contact; bank/payroll; ID & document uploads). Exclude recruitment-only data (years of experience, skills).
+- The employee onboarding form is never shown to org owners or platform/super admins — gate server-side and redirect them away (owner → their setup/dashboard, platform admin → /owner).
 
 ## API & data
 - All client data fetching through TanStack Query hooks in lib/api/ — no raw fetch/axios inside components. Handle loading/error via query states.
@@ -70,6 +72,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - No hard-coded secrets — env vars (dotenv) only. Validate file uploads. Log sensitive actions without exposing data. Audit dependencies (pnpm audit).
 
 ## Next.js best practices
+- Access/role REDIRECT gating (who may land on a route, role-based home redirects) lives in middleware ONLY — never duplicate role redirects in page or layout components. This is routing UX and does NOT replace data-layer security: route handlers and server actions still verify session + permission server-side (see Security).
 - App Router conventions: server components by default; "use client" only when needed and as deep in the tree as possible.
 - next/image for all images, next/link for navigation.
 - Folder structure: route files thin; logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located. Move misplaced files into this structure when fixing a page and update imports.

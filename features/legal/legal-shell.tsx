@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { Calendar, ArrowUpRight } from "lucide-react";
-import { MarketingShell, MarketingEyebrow } from "@/features/marketing/marketing-shell";
+import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
 
 export type LegalSection = {
   id: string;
@@ -25,9 +25,9 @@ const legalNav = [
 
 export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, children }: Props) {
   return (
-    <MarketingShell>
+    <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <MarketingEyebrow>{eyebrow}</MarketingEyebrow>
+        <PublicEyebrow>{eyebrow}</PublicEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900 mb-5">
           {title}
         </h1>
@@ -82,7 +82,7 @@ export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, chi
           {children}
         </article>
       </section>
-    </MarketingShell>
+    </PublicShell>
   );
 }
 

@@ -52,6 +52,7 @@ interface UserSessionCache {
   isOrgOwner: boolean;
   enabledModules: Module[];
   orgOnboardingCompletedAt: string | null;
+  userOnboardingCompletedAt: string | null;
 }
 
 const USER_SESSION_TTL = 300;
@@ -284,6 +285,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   role: true,
                   branchId: true,
                   totpEnabled: true,
+                  onboardingCompletedAt: true,
                 },
               }),
               db.query.organizationMembers.findFirst({
@@ -337,6 +339,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   isOrgOwner: membership?.isOwner ?? false,
                   enabledModules: [...enabledModules],
                   orgOnboardingCompletedAt,
+                  userOnboardingCompletedAt: fresh.onboardingCompletedAt
+                    ? fresh.onboardingCompletedAt.toISOString()
+                    : null,
                 }
               : null;
             if (cacheValue && redis) {
@@ -360,6 +365,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isOrgOwner = dbUser.isOrgOwner ?? false;
             token.enabledModules = dbUser.enabledModules ?? [];
             token.orgOnboardingCompletedAt = dbUser.orgOnboardingCompletedAt ?? null;
+            token.userOnboardingCompletedAt = dbUser.userOnboardingCompletedAt ?? null;
             token.isPlatformAdmin = isPlatformAdminEmail(token.email as string | null | undefined);
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;

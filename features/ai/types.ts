@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-export type AiCategory = "sales" | "hr" | "marketing" | "general";
+export type AiCategory = "sales" | "hr" | "general";
 
 export type AiAccent =
   | "amber"

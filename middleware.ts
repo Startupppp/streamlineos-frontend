@@ -7,6 +7,8 @@ import {
 } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
+import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
+import { ROLES } from "@/lib/constants/roles";
 
 function isLoopbackHostname(hostname: string): boolean {
   const h = hostname.toLowerCase();
@@ -42,10 +44,8 @@ const PROTECTED_ROUTES = [
   "/support",
   "/crm",
   "/chat",
-  "/digital-marketing",
   "/reports",
   "/notifications",
-  "/marketing",
   "/ai",
   "/calendar",
 ];
@@ -85,7 +85,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/crm/targets": ["crm:targets:view"],
   "/crm/reports": ["crm:reports:view"],
   "/crm/clients": ["crm:clients:read"],
-  "/digital-marketing": ["dm:leads:read", "dm:campaigns:read"],
   "/projects": ["projects:view"],
   "/timesheets": ["projects:timesheets:view"],
   "/support": ["projects:tickets:view"],
@@ -93,7 +92,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/chat": ["chat:submit_lead", "self:attendance"],
   "/sales": ["dashboard:sales:view"],
   "/customer-executive": ["dashboard:customer-executive:view"],
-  "/marketing": ["dm:campaigns:read"],
   "/settings": ["settings:view"],
   "/settings/roles": ["settings:rbac:manage"],
   "/settings/branches": ["settings:manage"],
@@ -288,6 +286,30 @@ export default async function middleware(req: NextRequest) {
     url.pathname = "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  if (isAuthenticated && pathname.startsWith("/onboarding")) {
+    if (token?.isPlatformAdmin === true || token?.role === PLATFORM_OWNER_ROLE) {
+      const url = req.nextUrl.clone();
+      url.pathname = OWNER_HOME;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    if (
+      (token?.isOrgOwner === true || token?.role === ROLES.OWNER) &&
+      token?.orgId
+    ) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    if (token?.userOnboardingCompletedAt) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   if (

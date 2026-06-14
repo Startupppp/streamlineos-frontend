@@ -4,32 +4,68 @@ import { db } from "@/lib/db";
 import { users, documents, onboardingSteps, organizationMembers, leaveTypes, leaveBalances } from "@/lib/db/schema";
 
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
-import { auth } from "@/lib/auth";
+import { auth, invalidateUserSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+
+const personalDetailsSchema = z.object({
+  phone: z.string().trim().min(1, "Phone number is required"),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  dateOfBirth: z.string().trim().min(1, "Date of birth is required"),
+  addressLine1: z.string().trim().optional(),
+  addressCity: z.string().trim().optional(),
+  addressState: z.string().trim().optional(),
+  addressPostalCode: z.string().trim().optional(),
+  addressCountry: z.string().trim().optional(),
+  emergencyName: z.string().trim().min(1, "Emergency contact name is required"),
+  emergencyRelation: z.string().trim().min(1, "Emergency contact relationship is required"),
+  emergencyPhone: z.string().trim().min(1, "Emergency contact phone is required"),
+});
+
+const DOCUMENT_TYPE_VALUES = ["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const;
+const ALLOWED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
+const documentUploadSchema = z.object({
+  type: z.enum(DOCUMENT_TYPE_VALUES),
+  file: z
+    .instanceof(File)
+    .refine((f) => f.size > 0, "No file provided")
+    .refine((f) => f.size <= MAX_FILE_SIZE_BYTES, "File size must be under 5MB")
+    .refine((f) => (ALLOWED_MIME_TYPES as readonly string[]).includes(f.type), "Unsupported file type"),
+});
 
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   const userId = session.user.id;
 
-  const phone = formData.get("phone") as string;
-  const skills = (formData.get("skills") as string)?.split(",").map(s => s.trim()).filter(Boolean);
-  const experienceYears = formData.get("experienceYears") as string;
-  const genderRaw = formData.get("gender") as string | null;
-  const dateOfBirth = formData.get("dateOfBirth") as string | null;
+  const parsed = personalDetailsSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
+  }
+  const data = parsed.data;
 
-  const gender = genderRaw === "MALE" || genderRaw === "FEMALE" || genderRaw === "OTHER"
-    ? genderRaw
-    : undefined;
+  const address = {
+    ...(data.addressLine1 ? { line1: data.addressLine1 } : {}),
+    ...(data.addressCity ? { city: data.addressCity } : {}),
+    ...(data.addressState ? { state: data.addressState } : {}),
+    ...(data.addressPostalCode ? { postalCode: data.addressPostalCode } : {}),
+    ...(data.addressCountry ? { country: data.addressCountry } : {}),
+  };
 
   try {
     await db.update(users).set({
-      phone,
-      skills,
-      experienceYears: experienceYears ? experienceYears.toString() : undefined,
-      ...(gender ? { gender } : {}),
-      ...(dateOfBirth ? { dateOfBirth } : {}),
+      phone: data.phone,
+      gender: data.gender,
+      dateOfBirth: data.dateOfBirth,
+      ...(Object.keys(address).length > 0 ? { address } : {}),
+      emergencyContact: {
+        name: data.emergencyName,
+        relation: data.emergencyRelation,
+        phone: data.emergencyPhone,
+      },
     }).where(eq(users.id, userId));
 
     await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
@@ -70,19 +106,22 @@ export async function uploadOnboardingDocument(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
-  const file = formData.get("file") as File;
-  const docType = formData.get("type") as "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
-
-  if (!file) return { error: "No file provided" };
+  const parsed = documentUploadSchema.safeParse({
+    type: formData.get("type"),
+    file: formData.get("file"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid document" };
+  }
+  const { file, type: docType } = parsed.data;
 
   try {
     if (!isStorageConfigured()) {
       return { error: "Cloud storage (R2) is not configured. Contact your administrator." };
     }
 
-    let fileUrl = "";
     const result = await uploadFile(file, "onboarding");
-    fileUrl = result.url;
+    const fileUrl = result.url;
     const userOrg = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id),
     });
@@ -101,7 +140,6 @@ export async function uploadOnboardingDocument(formData: FormData) {
     });
     await updateOnboardingStep(session.user.id, `Upload ${docType}`, "COMPLETED", userOrg.orgId);
 
-    revalidatePath("/onboarding");
     return { success: true, url: fileUrl };
   } catch {
     return { error: "Failed to upload document" };
@@ -120,11 +158,14 @@ export async function submitOnboarding() {
 
     await updateOnboardingStep(session.user.id, "Final Review", "COMPLETED", userOrg.orgId);
     await allocateDefaultLeaves(session.user.id, userOrg.orgId);
+    await db.update(users)
+      .set({ onboardingCompletedAt: new Date() })
+      .where(eq(users.id, session.user.id));
+    await invalidateUserSession(session.user.id);
 
-    revalidatePath("/onboarding");
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to submit onboarding" };
   }
 }

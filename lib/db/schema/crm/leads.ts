@@ -3,7 +3,7 @@ import { relations } from "drizzle-orm";
 import {
   leadPipelineStatusEnum, leadActivityTypeEnum, leadSourceEnum, leadPriorityEnum,
   leadEmailDirectionEnum, leadTaskStatusEnum, scoringOperatorEnum,
-  assignmentRuleTypeEnum, dmLeadStatusEnum, socialPlatformEnum,
+  assignmentRuleTypeEnum,
 } from "../enums";
 import { organizations, users } from "../auth";
 import { crmCampaigns } from "./campaigns";
@@ -158,51 +158,6 @@ export const assignmentRuleState = pgTable("assignment_rule_state", {
   lastAssignedIndex: integer("last_assigned_index").default(0).notNull(),
 });
 
-export const dmLeads = pgTable("dm_leads", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
-  name: text("name").notNull(),
-  phone: text("phone"),
-  email: text("email"),
-  whatsappNumber: text("whatsapp_number"),
-  sourcePlatform: text("source_platform").notNull(),
-  campaignId: integer("campaign_id").references(() => crmCampaigns.id),
-  campaignType: text("campaign_type"),
-  leadQuality: text("lead_quality").default("warm").notNull(),
-  notes: text("notes"),
-  landingPageUrl: text("landing_page_url"),
-  dateCaptured: timestamp("date_captured").defaultNow().notNull(),
-  status: dmLeadStatusEnum("status").notNull().default("pending_review"),
-  verifiedBy: text("verified_by").references(() => users.id),
-  importedLeadId: integer("imported_lead_id").references(() => leads.id),
-  createdBy: text("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
-}, (table) => [
-  index("idx_dm_leads_org").on(table.orgId),
-  index("idx_dm_leads_status").on(table.status),
-  index("idx_dm_leads_platform").on(table.sourcePlatform),
-]);
-
-export const socialMediaStats = pgTable("social_media_stats", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
-  platform: socialPlatformEnum("platform").notNull(),
-  date: date("date").notNull(),
-  postsPublished: integer("posts_published").default(0).notNull(),
-  storiesReels: integer("stories_reels").default(0).notNull(),
-  followersTotal: integer("followers_total").default(0).notNull(),
-  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }),
-  impressions: integer("impressions").default(0).notNull(),
-  reach: integer("reach").default(0).notNull(),
-  linkClicks: integer("link_clicks").default(0).notNull(),
-  profileVisits: integer("profile_visits").default(0).notNull(),
-  enteredBy: text("entered_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
-}, (table) => [
-  unique("uniq_social_stats_org_platform_date").on(table.orgId, table.platform, table.date),
-]);
 
 export const leadImportBatches = pgTable("lead_import_batches", {
   id: serial("id").primaryKey(),
@@ -277,14 +232,6 @@ export const leadAssignmentRulesRelations = relations(leadAssignmentRules, ({ on
 
 export const assignmentRuleStateRelations = relations(assignmentRuleState, ({ one }) => ({
   rule: one(leadAssignmentRules, { fields: [assignmentRuleState.ruleId], references: [leadAssignmentRules.id] }),
-}));
-
-export const dmLeadsRelations = relations(dmLeads, ({ one }) => ({
-  organization: one(organizations, { fields: [dmLeads.orgId], references: [organizations.id] }),
-  campaign: one(crmCampaigns, { fields: [dmLeads.campaignId], references: [crmCampaigns.id] }),
-  verifier: one(users, { fields: [dmLeads.verifiedBy], references: [users.id], relationName: "dmLeadVerifier" }),
-  importedLead: one(leads, { fields: [dmLeads.importedLeadId], references: [leads.id] }),
-  creator: one(users, { fields: [dmLeads.createdBy], references: [users.id], relationName: "dmLeadCreator" }),
 }));
 
 export const leadImportBatchesRelations = relations(leadImportBatches, ({ one }) => ({

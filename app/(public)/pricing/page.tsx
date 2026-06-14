@@ -1,10 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check, HelpCircle, Sparkles } from "lucide-react";
-import {
-  MarketingShell,
-  MarketingEyebrow,
-} from "@/features/marketing/marketing-shell";
+import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
 import { Button } from "@/components/ui/button";
 import { BRAND_NAME, BRAND_URL } from "@/lib/branding";
 import { PRICING, PRICING_TIERS, COMPETITOR_PRICES } from "@/lib/pricing";
@@ -13,14 +10,14 @@ import { FAQJsonLd } from "@/features/seo/structured-data";
 import { SavingsCalculator } from "@/features/landing/components/savings-calculator";
 
 export const metadata: Metadata = {
-  title: `Pricing — ${BRAND_NAME}`,
-  description: `From ₹399/seat/month annual — 31% cheaper than Odoo. Free forever for 3 seats. HR, Projects, CRM, Chat in one plan.`,
+  title: `Pricing â€” ${BRAND_NAME}`,
+  description: `From â‚¹399/seat/month annual â€” 31% cheaper than Odoo. Free forever for 3 seats. HR, Projects, CRM, Chat in one plan.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     type: "website",
     url: `${BRAND_URL}/pricing`,
-    title: `Pricing — ${BRAND_NAME}`,
-    description: `From ₹399/seat/month. 31% cheaper than Odoo Standard. Free tier, no per-module fees.`,
+    title: `Pricing â€” ${BRAND_NAME}`,
+    description: `From â‚¹399/seat/month. 31% cheaper than Odoo Standard. Free tier, no per-module fees.`,
   },
 };
 
@@ -53,12 +50,12 @@ const pricingFaqs = [
   {
     question: "How are you cheaper than Odoo?",
     answer:
-      "Odoo Standard is ₹580 per seat per month for the all-apps cloud plan. Our equivalent Startup plan is ₹399 per seat per month on annual billing — 31% cheaper for the same modules (HR, Projects, CRM, Chat). We run on modern, low-cost infrastructure (Vercel + Neon + Cloudflare R2) without the legacy overhead of a 20-year-old codebase.",
+      "Odoo Standard is â‚¹580 per seat per month for the all-apps cloud plan. Our equivalent Startup plan is â‚¹399 per seat per month on annual billing â€” 31% cheaper for the same modules (HR, Projects, CRM, Chat). We run on modern, low-cost infrastructure (Vercel + Neon + Cloudflare R2) without the legacy overhead of a 20-year-old codebase.",
   },
   {
     question: "Is there really a free plan with no time limit?",
     answer:
-      "Yes. The Free plan works forever for up to 3 seats. No credit card required. You get all core modules — HR, Projects, CRM, Chat, Calendar — with a generous 5 GB storage allotment per workspace.",
+      "Yes. The Free plan works forever for up to 3 seats. No credit card required. You get all core modules â€” HR, Projects, CRM, Chat, Calendar â€” with a generous 5 GB storage allotment per workspace.",
   },
   {
     question: "How does annual billing work?",
@@ -88,7 +85,7 @@ const pricingFaqs = [
   {
     question: "How does the Enterprise plan pricing work?",
     answer:
-      "Enterprise starts at ₹999 per seat per month with a 100-seat minimum, but is fully customized based on your compliance, deployment, and SLA needs. Contact sales for a precise quote.",
+      "Enterprise starts at â‚¹999 per seat per month with a 100-seat minimum, but is fully customized based on your compliance, deployment, and SLA needs. Contact sales for a precise quote.",
   },
 ];
 
@@ -96,20 +93,20 @@ export default function PricingPage() {
   return (
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
-      <MarketingShell>
+      <PublicShell>
         <section className="container mx-auto px-4 lg:px-8 max-w-5xl text-center">
-          <MarketingEyebrow>Pricing</MarketingEyebrow>
+          <PublicEyebrow>Pricing</PublicEyebrow>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
             31% cheaper than Odoo.{" "}
             <span className="text-blue-600">Same all-in-one bundle.</span>
           </h1>
           <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto mb-3">
             From{" "}
-            <span className="font-semibold text-slate-900">₹399 per seat / month</span> (billed
-            annually) — one platform for HR, Projects, CRM, Chat, and Calendar.
+            <span className="font-semibold text-slate-900">â‚¹399 per seat / month</span> (billed
+            annually) â€” one platform for HR, Projects, CRM, Chat, and Calendar.
           </p>
           <p className="text-slate-500 text-sm">
-            Odoo Standard charges ₹{COMPETITOR_PRICES.odooStandard}/seat for the same bundle. Free
+            Odoo Standard charges â‚¹{COMPETITOR_PRICES.odooStandard}/seat for the same bundle. Free
             forever for up to {PRICING.starterSeatLimit} seats.
           </p>
         </section>
@@ -187,7 +184,7 @@ export default function PricingPage() {
 
         <section className="container mx-auto px-4 lg:px-8 max-w-6xl mt-20">
           <div className="text-center mb-8">
-            <MarketingEyebrow>Compare</MarketingEyebrow>
+            <PublicEyebrow>Compare</PublicEyebrow>
             <h2 className="font-display text-2xl lg:text-3xl font-extrabold tracking-[-0.02em] text-slate-900">
               Feature-by-feature comparison
             </h2>
@@ -226,7 +223,7 @@ export default function PricingPage() {
                             value ? (
                               <Check className="h-4 w-4 text-emerald-600 inline-block" strokeWidth={3} />
                             ) : (
-                              <span className="text-slate-300">—</span>
+                              <span className="text-slate-300">â€”</span>
                             )
                           ) : (
                             <span className="text-[12px] font-medium">{value}</span>
@@ -243,7 +240,7 @@ export default function PricingPage() {
 
         <section className="container mx-auto px-4 lg:px-8 max-w-3xl mt-20">
           <div className="text-center mb-8">
-            <MarketingEyebrow>Frequently asked</MarketingEyebrow>
+            <PublicEyebrow>Frequently asked</PublicEyebrow>
             <h2 className="font-display text-2xl lg:text-3xl font-extrabold tracking-[-0.02em] text-slate-900">
               Pricing questions
             </h2>
@@ -275,7 +272,7 @@ export default function PricingPage() {
             </h2>
             <p className="text-slate-300 text-[15px] leading-relaxed mb-6 max-w-xl mx-auto">
               30-minute call with a founder. We&apos;ll map your current stack to StreamlineOS and
-              tell you honestly whether it fits — or which competitor would.
+              tell you honestly whether it fits â€” or which competitor would.
             </p>
             <Link
               href="/contact?topic=sales"
@@ -286,7 +283,7 @@ export default function PricingPage() {
             </Link>
           </div>
         </section>
-      </MarketingShell>
+      </PublicShell>
     </>
   );
 }

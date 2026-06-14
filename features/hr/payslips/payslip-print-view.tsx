@@ -4,28 +4,28 @@ import { format, parseISO } from "date-fns";
 import { PayslipEarningsTable } from "./payslip-earnings-table";
 
 export interface PayslipUser {
-  firstName?: string;
-  lastName?: string;
-  joiningDate?: string;
-  designation?: string;
-  employeeId?: string;
-  taxId?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  joiningDate?: string | null;
+  designation?: string | null;
+  employeeId?: string | null;
+  taxId?: string | null;
   bankDetails?: unknown;
 }
 
 export interface PayslipData {
   month: string;
-  basicSalary?: string;
-  hra?: string;
-  allowances?: string;
-  grossSalary?: string;
-  deductions?: string;
-  netSalary?: string;
-  overtimeAmount?: string;
-  overtimeType?: string;
-  overtimeDays?: string;
-  overtimeHours?: string;
-  user?: PayslipUser;
+  basicSalary?: string | null;
+  hra?: string | null;
+  allowances?: string | null;
+  grossSalary?: string | null;
+  deductions?: string | null;
+  netSalary?: string | null;
+  overtimeAmount?: string | null;
+  overtimeType?: string | null;
+  overtimeDays?: string | null;
+  overtimeHours?: string | null;
+  user?: PayslipUser | null;
 }
 
 function getBankDetail(payslip: PayslipData, key: string): string {
@@ -165,7 +165,7 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
           deductions={deductions}
           netSalary={netSalary}
           overtimeAmount={overtimeAmount}
-          overtimeType={payslip.overtimeType}
+          overtimeType={payslip.overtimeType ?? undefined}
           overtimeDays={overtimeDays}
           overtimeHoursVal={overtimeHoursVal}
         />

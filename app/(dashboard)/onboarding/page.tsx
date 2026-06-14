@@ -14,14 +14,14 @@ import { ReviewTab } from "@/features/onboarding/review-tab";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Variants } from "framer-motion";
 
-export const STEP_IDS = {
+const STEP_IDS = {
   PERSONAL: "personal",
   BANK: "bank",
   DOCS: "docs",
   REVIEW: "finish",
 } as const;
 
-export type StepId = (typeof STEP_IDS)[keyof typeof STEP_IDS];
+type StepId = (typeof STEP_IDS)[keyof typeof STEP_IDS];
 
 const VALID_STEP_IDS: ReadonlySet<string> = new Set(Object.values(STEP_IDS));
 
@@ -43,7 +43,7 @@ const DATA_STEPS = [
 
 const REVIEW_STEP = { id: STEP_IDS.REVIEW, label: "Review & Sign", icon: ClipboardCheck } as const;
 
-export const ONBOARDING_STEPS = [...DATA_STEPS, REVIEW_STEP];
+const ONBOARDING_STEPS = [...DATA_STEPS, REVIEW_STEP];
 
 type FormValues = Record<string, string | undefined>;
 

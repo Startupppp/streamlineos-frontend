@@ -182,12 +182,11 @@ export const healthDotColors: Record<HealthStatus, string> = {
   critical: "bg-red-500",
 };
 
-export type CrmRole = "sales_rep" | "csm" | "marketing";
+export type CrmRole = "sales_rep" | "csm";
 
 export const roleBadgeConfig: Record<CrmRole, { label: string; color: string }> = {
   sales_rep: { label: "Sales", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
   csm: { label: "Customer Success", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
-  marketing: { label: "Marketing", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
 };
 
 const VALID_PROJECT_STATUSES: ReadonlySet<string> = new Set(["ACTIVE", "PLANNING", "COMPLETED", "ON_HOLD", "ARCHIVED"]);
