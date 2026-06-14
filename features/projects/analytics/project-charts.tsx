@@ -366,4 +366,4 @@ export function EstimateVsActualChart({ data }: EstimateChartProps) {
   );
 }
 
-export { STATE_COLORS, PRIORITY_COLORS };
+export { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS };

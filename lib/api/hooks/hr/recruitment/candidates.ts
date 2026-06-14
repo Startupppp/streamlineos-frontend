@@ -10,8 +10,9 @@ import type {
   AtsPipelineResponse,
   CreateCandidateInput,
   UpdateCandidateInput,
+  Interview,
 } from "@/types/hr";
-import type { CandidateSlaRecord } from "./interviews";
+import type { CandidateSlaRecord, InterviewScorecard } from "./interviews";
 
 export interface AiScoreBreakdown {
   technicalSkills: number;
@@ -97,6 +98,7 @@ export function useCandidate(id: number) {
         Candidate & {
           applications?: CandidateApplication[];
           slaTracking?: CandidateSlaRecord[];
+          interviews?: (Interview & { scorecards?: InterviewScorecard[] })[];
         }
       >(`/hr/recruitment/candidates/${id}`),
     staleTime: 2 * 60_000,

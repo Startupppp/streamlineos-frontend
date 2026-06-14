@@ -16,8 +16,6 @@ import { generateCSVContent } from "./csv-export";
 import { generateXLSXData, generatePDFData } from "./data-generators";
 import type { ExportOptions, ExportResult, ExportFilters } from "./types";
 
-export type { ExportOptions, ExportResult, ExportFilters };
-export type { XLSXExportData, PDFExportData } from "./types";
 
 export async function exportExpenses(
   options: ExportOptions

@@ -1,9 +1,11 @@
 import { BRAND_NAME } from "../lib/branding";
-import { buildHtml, coverUrl, PostSeed } from "./seed-blog-utils";
+import { buildHtml, coverUrl } from "./seed-blog-utils";
+import type { PostSeed } from "./seed-blog-utils";
 import { POSTS_EXT } from "./seed-blog-posts-ext";
 
 export { calcReadingTime, slugify } from "../lib/blog-utils";
-export { buildHtml, PostSeed } from "./seed-blog-utils";
+export { buildHtml } from "./seed-blog-utils";
+export type { PostSeed } from "./seed-blog-utils";
 
 const cover = coverUrl;
 
@@ -26,17 +28,6 @@ export const CATEGORIES = [
   { name: "Marketing", color: "#F59E0B", description: "Growth, content, and reaching the right people." },
   { name: "Engineering", color: "#EF4444", description: "Deep dives on how we build and scale." },
 ];
-
-export interface PostSeed {
-  title: string;
-  category: string;
-  cover: string;
-  tags: string[];
-  featured?: boolean;
-  status: "published" | "draft";
-  excerpt: string;
-  content: string;
-}
 
 const POSTS_CORE: PostSeed[] = [
   {

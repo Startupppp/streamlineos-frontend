@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-interface DealExportRow {
+interface DealExportRow extends Record<string, unknown> {
   name: string;
   value: string;
   stage: string;

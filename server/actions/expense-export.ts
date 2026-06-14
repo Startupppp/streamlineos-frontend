@@ -8,4 +8,4 @@ export type {
   ExportFilters,
   XLSXExportData,
   PDFExportData,
-} from "./expense-export/index";
+} from "./expense-export/types";

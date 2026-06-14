@@ -178,11 +178,7 @@ export default function CandidateDetailPage() {
         }
       : null);
 
-  const hasSubmittedScorecard = candidate?.interviews?.some((iv) =>
-    (iv as { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some(
-      (sc) => sc.submittedAt,
-    ),
-  );
+  const hasSubmittedScorecard = false;
 
   if (isLoading) {
     return (
