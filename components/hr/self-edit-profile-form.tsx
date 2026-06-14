@@ -61,6 +61,7 @@ interface SelfEditProfileFormProps {
 export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormProps) {
   const updateProfile = useUpdateProfile();
   const [skills, setSkills] = useState<string[]>(employee.skills ?? []);
+  const [skillError, setSkillError] = useState<string | null>(null);
 
   const fullName = `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "?";
   const initials = fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
@@ -89,15 +90,39 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
 
   function addSkill() {
     const trimmed = (newSkill ?? "").trim();
-    if (!trimmed) return;
-    if (/^[\s\W]+$/.test(trimmed)) return;
-    if (skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return;
+    if (!trimmed) {
+      setSkillError(null);
+      return;
+    }
+    if (!/[a-zA-Z]/.test(trimmed)) {
+      setSkillError("Skill must contain at least one letter");
+      return;
+    }
+    if (skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      setSkillError("This skill already exists");
+      return;
+    }
     setSkills((prev) => [...prev, trimmed]);
     setValue("newSkill", "");
+    setSkillError(null);
   }
 
   function removeSkill(skill: string) {
     setSkills((prev) => prev.filter((s) => s !== skill));
+  }
+
+  const newSkillRegistration = register("newSkill");
+
+  function handleSkillInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    newSkillRegistration.onChange(e);
+    if (skillError) setSkillError(null);
+  }
+
+  function handleSkillKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addSkill();
+    }
   }
 
   const onSubmit = (values: FormValues) => {
@@ -199,22 +224,23 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
               <p className="text-xs text-muted-foreground">No skills added yet.</p>
             )}
           </div>
-          <div className="flex gap-2">
-            <Input
-              {...register("newSkill")}
-              placeholder="Add a skill…"
-              className="h-8 text-sm flex-1"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addSkill();
-                }
-              }}
-            />
-            <Button type="button" size="sm" variant="outline" className="h-8 gap-1" onClick={addSkill}>
-              <Plus className="h-3.5 w-3.5" />
-              Add
-            </Button>
+          <div className="space-y-1">
+            <div className="flex gap-2">
+              <Input
+                {...newSkillRegistration}
+                placeholder="Add a skill…"
+                className="h-8 text-sm flex-1"
+                onChange={handleSkillInputChange}
+                onKeyDown={handleSkillKeyDown}
+              />
+              <Button type="button" size="sm" variant="outline" className="h-8 gap-1" onClick={addSkill}>
+                <Plus className="h-3.5 w-3.5" />
+                Add
+              </Button>
+            </div>
+            {skillError && (
+              <p className="text-xs text-destructive">{skillError}</p>
+            )}
           </div>
         </CardContent>
       </Card>

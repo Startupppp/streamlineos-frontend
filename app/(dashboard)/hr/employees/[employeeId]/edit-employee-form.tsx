@@ -28,11 +28,19 @@ const formSchema = z.object({
     .optional()
     .or(z.literal("")),
   departmentId: z.number().optional(),
-  phone: z.string().refine((val) => {
-    if (!val) return true;
-    const digits = val.replace(/\D/g, "");
-    return digits.length >= 7 && digits.length <= 15;
-  }, "Please enter a valid phone number").optional().or(z.literal("")),
+  phone: z
+    .string()
+    .refine((val) => {
+      if (!val) return true;
+      return !/[a-zA-Z]/.test(val);
+    }, "Phone number must not contain letters")
+    .refine((val) => {
+      if (!val) return true;
+      const digits = val.replace(/[\s+\-()]/g, "");
+      return digits.length >= 7 && digits.length <= 15;
+    }, "Phone number must be 7–15 digits")
+    .optional()
+    .or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
   experienceYears: z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
@@ -41,8 +49,8 @@ const formSchema = z.object({
     .max(500, "Skills must be at most 500 characters")
     .refine((v) => {
       if (!v?.trim()) return true;
-      return v.split(",").every((s) => !s.trim() || /[a-zA-Z0-9]/.test(s.trim()));
-    }, "Each skill must contain at least one letter or number")
+      return v.split(",").every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
+    }, "Each skill must contain at least one letter")
     .optional(),
   taxId: z.string().optional(),
   monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
@@ -52,10 +60,21 @@ const formSchema = z.object({
   ifsc: z.string().optional(),
   accountHolder: z.string().optional(),
 }).superRefine((data, ctx) => {
-  const fn = data.firstName.trim().toLowerCase();
-  const ln = data.lastName.trim().toLowerCase();
-  if (fn && ln && fn === ln) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "First name and last name cannot be identical", path: ["lastName"] });
+  if (data.skills?.trim()) {
+    const parts = data.skills.split(",").map((s) => s.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    for (const part of parts) {
+      const key = part.toLowerCase();
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate skill: "${part}" already exists`,
+          path: ["skills"],
+        });
+        break;
+      }
+      seen.add(key);
+    }
   }
 });
 
@@ -180,7 +199,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
         <div className="rounded-lg border bg-card overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-4">
