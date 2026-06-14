@@ -1,19 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Employee } from "@/types/hr";
+import { useHrMonthlyAttendance } from "@/lib/api/hooks/hr";
 
 interface UsePayslipFormArgs {
   selectedMonth: string;
   employees: Employee[];
 }
 
-/**
- * Consolidates the individual-payslip generator state machine:
- * - field state (lop, half days, deductions, bonus, overtime)
- * - derived preview calculation
- * - sheet open/close + reset
- */
 export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs) {
   const [open, setOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -27,6 +22,46 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
   const [overtimeHours, setOvertimeHours] = useState("");
   const [overtimeAmount, setOvertimeAmount] = useState("");
 
+  const [payYear, payMonthOneIndexed] = selectedMonth.split("-").map(Number);
+  const payMonthZeroIndexed = payMonthOneIndexed - 1;
+
+  const { data: monthlyAttendance, isLoading: isAttendanceLoading } = useHrMonthlyAttendance({
+    userId: selectedEmployee,
+    year: payYear,
+    month: payMonthZeroIndexed,
+  });
+
+  useEffect(() => {
+    if (!selectedEmployee || !monthlyAttendance || isAttendanceLoading) return;
+
+    const daysInMonth = new Date(payYear, payMonthOneIndexed, 0).getDate();
+    const attendedDates = new Set(monthlyAttendance.map((l) => l.date.slice(0, 10)));
+
+    let absentCount = 0;
+    let halfDayCount = 0;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${payYear}-${String(payMonthOneIndexed).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const dayOfWeek = new Date(dateStr).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+      const log = monthlyAttendance.find((l) => l.date.slice(0, 10) === dateStr);
+      if (!log && !attendedDates.has(dateStr)) {
+        absentCount++;
+      } else if (log?.status === "HALF_DAY") {
+        halfDayCount++;
+      }
+    }
+
+    setLopDays(absentCount > 0 ? String(absentCount) : "");
+    setHalfDays(halfDayCount > 0 ? String(halfDayCount) : "");
+  }, [selectedEmployee, monthlyAttendance, isAttendanceLoading, payYear, payMonthOneIndexed]);
+
+  useEffect(() => {
+    setLopDays("");
+    setHalfDays("");
+  }, [selectedEmployee]);
+
   const selectedEmployeeData = useMemo(() => {
     if (!selectedEmployee || !employees.length) return null;
     return employees.find((e) => e.id === selectedEmployee) ?? null;
@@ -36,8 +71,7 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
     if (!selectedEmployeeData) return null;
 
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
-    const [payYear, payMonthNum] = selectedMonth.split("-").map(Number);
-    const workingDays = new Date(payYear, payMonthNum, 0).getDate();
+    const workingDays = new Date(payYear, payMonthOneIndexed, 0).getDate();
     const perDaySalary = monthlySalary / workingDays;
     const lop = parseFloat(lopDays) || 0;
     const half = parseFloat(halfDays) || 0;
@@ -78,7 +112,8 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
     };
   }, [
     selectedEmployeeData,
-    selectedMonth,
+    payYear,
+    payMonthOneIndexed,
     lopDays,
     halfDays,
     otherDeductions,
@@ -128,6 +163,7 @@ export function usePayslipForm({ selectedMonth, employees }: UsePayslipFormArgs)
     setOvertimeAmount,
     selectedEmployeeData,
     payslipPreview,
+    isAttendanceLoading,
     reset,
   };
 }

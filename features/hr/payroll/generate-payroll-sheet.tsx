@@ -13,6 +13,8 @@ import { Eye } from "lucide-react";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
 import { PayslipDetailSheet, type PayslipPreview } from "./payslip-detail-sheet";
+import { format } from "date-fns";
+import { Loader2 } from "lucide-react";
 
 interface GeneratePayrollSheetProps {
   open: boolean;
@@ -44,6 +46,7 @@ interface GeneratePayrollSheetProps {
   selectedMonth: string;
   onConfirmGenerate: () => void;
   isGenerating: boolean;
+  isAttendanceLoading?: boolean;
 }
 
 export function GeneratePayrollSheet({
@@ -76,7 +79,9 @@ export function GeneratePayrollSheet({
   selectedMonth,
   onConfirmGenerate,
   isGenerating,
+  isAttendanceLoading,
 }: GeneratePayrollSheetProps) {
+  const payPeriodLabel = format(new Date(selectedMonth + "-01"), "MMMM yyyy");
 
   if (showPreview) {
     return (
@@ -97,8 +102,8 @@ export function GeneratePayrollSheet({
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Generate Payslip"
-      description="Select an employee and adjust attendance, overtime, and bonus before previewing."
+      title={`Generate Payslip — ${payPeriodLabel}`}
+      description="Select an employee. LOP and half days are pre-filled from actual attendance data and can be adjusted."
       onSubmit={onShowPreview}
       submitLabel={
         <>
@@ -129,9 +134,17 @@ export function GeneratePayrollSheet({
           <Separator />
 
           <div className="space-y-3">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              Attendance Adjustments
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                Attendance Adjustments
+              </p>
+              {isAttendanceLoading && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  Loading attendance...
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">LOP Days</label>

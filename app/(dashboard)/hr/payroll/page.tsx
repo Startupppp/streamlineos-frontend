@@ -243,6 +243,7 @@ export default function PayrollPage() {
             selectedMonth={selectedMonth}
             onConfirmGenerate={handleGenerateForEmployee}
             isGenerating={generateEmployeePayslipMutation.isPending}
+            isAttendanceLoading={form.isAttendanceLoading}
           />
 
           <Button
