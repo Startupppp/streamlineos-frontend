@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       where: and(
         eq(resignations.orgId, session.orgId),
         eq(resignations.userId, session.user.id),
-        inArray(resignations.status, ["PENDING_HR", "HR_APPROVED"]),
+        inArray(resignations.status, ["SUBMITTED", "PENDING_HR", "HR_APPROVED"]),
       ),
       columns: { id: true },
     });

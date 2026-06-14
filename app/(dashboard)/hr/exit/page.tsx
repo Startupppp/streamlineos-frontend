@@ -207,6 +207,45 @@ export default function ExitManagementPage() {
     );
   }, [withdrawId, withdrawResignation]);
 
+  const handleDownloadTemplate = useCallback(() => {
+    const content = [
+      "RESIGNATION LETTER TEMPLATE",
+      "",
+      "[Date]",
+      "",
+      "To,",
+      "The Management,",
+      "[Company Name]",
+      "",
+      "Subject: Resignation from the position of [Your Job Title]",
+      "",
+      "Dear [Manager's Name],",
+      "",
+      "I am writing to formally inform you of my decision to resign from my position as [Your Job Title] at [Company Name], effective [Last Working Date].",
+      "",
+      "Reason for leaving: [Briefly state your reason]",
+      "",
+      "I am grateful for the opportunities I have had during my tenure at [Company Name]. I will ensure a smooth handover of my responsibilities during the notice period.",
+      "",
+      "Thank you for your support and guidance.",
+      "",
+      "Sincerely,",
+      "[Your Name]",
+      "[Employee ID]",
+      "[Date]",
+    ].join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Resignation_Letter_Template.txt";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
@@ -345,18 +384,7 @@ export default function ExitManagementPage() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              const content = `RESIGNATION LETTER TEMPLATE\n\n[Date]\n\nTo,\nThe Management,\n[Company Name]\n\nSubject: Resignation from the position of [Your Job Title]\n\nDear [Manager's Name],\n\nI am writing to formally inform you of my decision to resign from my position as [Your Job Title] at [Company Name], effective [Last Working Date].\n\nReason for leaving: [Briefly state your reason]\n\nI am grateful for the opportunities I have had during my tenure at [Company Name]. I will ensure a smooth handover of my responsibilities during the notice period.\n\nThank you for your support and guidance.\n\nSincerely,\n[Your Name]\n[Employee ID]\n[Date]`;
-              const blob = new Blob([content], { type: "text/plain" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "Resignation Letter Template.txt";
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            }}
+            onClick={handleDownloadTemplate}
             className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
           >
             <Download className="h-3 w-3" />
