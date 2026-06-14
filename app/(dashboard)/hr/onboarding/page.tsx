@@ -29,7 +29,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -160,31 +159,49 @@ function UploadSheet({
   onSubmit,
   isPending,
 }: UploadSheetProps) {
-  const [fileUrl, setFileUrl] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleSubmit = useCallback(() => {
-    if (!fileUrl.trim()) {
-      toast.error("Please enter a file URL");
+  const handleSubmit = useCallback(async () => {
+    if (!selectedFile) {
+      toast.error("Please select a file to upload");
       return;
     }
-    if (!fileName.trim()) {
-      toast.error("Please enter a file name");
-      return;
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", selectedFile);
+      fd.append("folder", "onboarding-docs");
+      const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
+      const json = await res.json() as { url?: string; error?: string };
+      if (!res.ok || !json.url) {
+        toast.error(json.error ?? "File upload failed");
+        return;
+      }
+      onSubmit(json.url, selectedFile.name);
+    } catch {
+      toast.error("File upload failed");
+    } finally {
+      setIsUploading(false);
     }
-    onSubmit(fileUrl.trim(), fileName.trim());
-  }, [fileUrl, fileName, onSubmit]);
+  }, [selectedFile, onSubmit]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
-      if (!open) {
-        setFileUrl("");
-        setFileName("");
-      }
+      if (!open) setSelectedFile(null);
       onOpenChange(open);
     },
     [onOpenChange]
   );
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    if (f && f.size > 10 * 1024 * 1024) {
+      toast.error("File must be under 10MB");
+      return;
+    }
+    setSelectedFile(f);
+  }, []);
 
   return (
     <HrSheet
@@ -201,17 +218,8 @@ function UploadSheet({
       }
       onSubmit={handleSubmit}
       submitLabel="Submit Document"
-      isPending={isPending}
+      isPending={isPending || isUploading}
     >
-      <div className="rounded-md border bg-muted/40 px-3 py-2.5 text-[12px] text-muted-foreground leading-relaxed">
-        <p className="font-medium text-foreground mb-0.5">How to upload</p>
-        <p>
-          Upload your file via the{" "}
-          <strong>Files</strong> section (HR &rarr; Documents), then copy the
-          file URL and paste it below.
-        </p>
-      </div>
-
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
         <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 px-3 py-2.5 text-[12px] text-orange-800 dark:text-orange-300">
           <p className="font-medium mb-0.5">Reviewer remarks</p>
@@ -219,34 +227,34 @@ function UploadSheet({
         </div>
       )}
 
-      <Separator />
-
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">
-          File URL <span className="text-destructive">*</span>
+          Document File <span className="text-destructive">*</span>
         </Label>
-        <Input
-          type="url"
-          placeholder="https://..."
-          value={fileUrl}
-          onChange={(e) => setFileUrl(e.target.value)}
-          aria-label="File URL"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          File Name <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          placeholder="e.g. aadhaar-card.pdf"
-          value={fileName}
-          onChange={(e) => setFileName(e.target.value)}
-          aria-label="File name"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Include the file extension (e.g. .pdf, .jpg, .png).
-        </p>
+        <div className="rounded-lg border border-dashed border-border p-4 space-y-2">
+          <label className="flex flex-col items-center gap-2 cursor-pointer">
+            <Upload className="h-6 w-6 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground text-center">
+              {selectedFile ? selectedFile.name : "Click to select a file"}
+            </span>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+          {selectedFile && (
+            <button
+              type="button"
+              className="text-[11px] text-muted-foreground hover:text-destructive underline block mx-auto"
+              onClick={() => setSelectedFile(null)}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground">Accepted: PDF, DOC, DOCX, JPG, PNG (max 10MB)</p>
       </div>
     </HrSheet>
   );
