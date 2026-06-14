@@ -56,6 +56,7 @@ import type { Employee } from "@/types/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   TERMINATION_REASONS,
+  TERMINATION_REASON_OTHER,
   TERMINATION_STATUSES,
   TERMINATION_STATUS_LABELS,
 } from "@/lib/constants/hr-separation";
@@ -462,7 +463,11 @@ export default function TerminationPage() {
       return;
     }
     if (explanation.trim().length < 50) {
-      toast.error("Detailed explanation must be at least 50 characters");
+      toast.error(
+        selectedReasons.includes(TERMINATION_REASON_OTHER)
+          ? "'Other' reason requires at least 50 characters of explanation"
+          : "Detailed explanation must be at least 50 characters"
+      );
       return;
     }
     if (!effectiveDate) {
@@ -733,10 +738,22 @@ export default function TerminationPage() {
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Detailed Explanation <span className="text-destructive">*</span>
+            {selectedReasons.includes(TERMINATION_REASON_OTHER)
+              ? "Remarks for 'Other' Reason"
+              : "Detailed Explanation"}{" "}
+            <span className="text-destructive">*</span>
           </Label>
+          {selectedReasons.includes(TERMINATION_REASON_OTHER) && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+              Required: Please describe the specific reason for selecting &apos;Other&apos;.
+            </p>
+          )}
           <Textarea
-            placeholder="Minimum 50 characters. Describe the reasons and circumstances in detail..."
+            placeholder={
+              selectedReasons.includes(TERMINATION_REASON_OTHER)
+                ? "Required: Explain the specific other reason for termination (min. 50 characters)..."
+                : "Minimum 50 characters. Describe the reasons and circumstances in detail..."
+            }
             value={explanation}
             onChange={(e) => setExplanation(e.target.value)}
             rows={4}
