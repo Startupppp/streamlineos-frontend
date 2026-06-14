@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Users, Calendar, UserCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatDistanceToNow } from "date-fns";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -45,7 +46,15 @@ function SourcePieChart({ sources }: { sources: { source: string; count: number 
   );
 }
 
+const NAV_LINKS = [
+  { href: "/hr/recruitment/candidates", label: "Candidates" },
+  { href: "/hr/recruitment/pipeline", label: "Kanban" },
+  { href: "/hr/recruitment/jobs", label: "Jobs" },
+  { href: "/hr/recruitment/question-bank", label: "Question Bank" },
+] as const;
+
 export default function RecruitmentDashboardPage() {
+  const pathname = usePathname();
   const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
   const { data: recentJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
   const { data: upcomingInterviews, isLoading: interviewsLoading } = useInterviews({ upcoming: true });
@@ -77,18 +86,16 @@ export default function RecruitmentDashboardPage() {
       subtitle="Hire the best talent for your team"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/candidates">Candidates</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/pipeline">Kanban</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/jobs">Jobs</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/question-bank">Question Bank</Link>
-          </Button>
+          {NAV_LINKS.map((link) => (
+            <Button
+              key={link.href}
+              variant={pathname === link.href || pathname.startsWith(link.href + "/") ? "default" : "outline"}
+              size="sm"
+              asChild
+            >
+              <Link href={link.href}>{link.label}</Link>
+            </Button>
+          ))}
         </div>
       }
     >
