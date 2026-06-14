@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     if (!membership) return err("Employee not found.", 404);
     if (body.userId === session.user.id) return err("You cannot terminate yourself.", 400);
 
+    const isCeoInitiator = session.user.role === "CEO";
+    const now = new Date();
     const [record] = await db
       .insert(terminations)
       .values({
@@ -88,8 +90,9 @@ export async function POST(req: NextRequest) {
         severanceAmount: body.severanceAmount !== undefined ? body.severanceAmount.toString() : undefined,
         noticePeriodWaived: body.noticePeriodWaived,
         internalNotes: body.internalNotes,
-        status: "DRAFT",
+        status: isCeoInitiator ? "APPROVED" : "DRAFT",
         initiatedBy: session.user.id,
+        ...(isCeoInitiator && { ceoReviewedBy: session.user.id, ceoReviewedAt: now }),
       })
       .returning();
 

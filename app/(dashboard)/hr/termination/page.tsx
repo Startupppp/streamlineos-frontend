@@ -607,7 +607,7 @@ export default function TerminationPage() {
       subtitle="Manage employee terminations"
       badge={`${(terminations ?? []).length} records`}
       actions={
-        isHR ? (
+        isHR || isCEO ? (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             New Termination
@@ -680,9 +680,9 @@ export default function TerminationPage() {
           if (!open) resetCreateForm();
         }}
         title="New Termination"
-        description="Create a termination record. It will be saved as a draft."
+        description={isCEO ? "Create a termination record. As CEO, this will be automatically approved." : "Create a termination record. It will be saved as a draft for CEO approval."}
         onSubmit={handleCreateSubmit}
-        submitLabel="Save as Draft"
+        submitLabel={isCEO ? "Create & Approve" : "Save as Draft"}
         isPending={createTermination.isPending}
       >
         <div className="space-y-1.5">
