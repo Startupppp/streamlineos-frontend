@@ -155,17 +155,21 @@ export default function JobPostingsPage() {
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) { toast.error("Job Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Job Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Job Title must be at most 100 characters"); return; }
     if (!/^[a-zA-Z]/.test(trimmedTitle)) { toast.error("Job Title must start with a letter"); return; }
-    if (/[^a-zA-Z0-9\s.,&()\-+/]/.test(trimmedTitle)) { toast.error("Job Title contains invalid special characters"); return; }
-    if (/(.)\1{2,}/.test(trimmedTitle)) { toast.error("Job Title cannot have 3 or more consecutive identical characters"); return; }
+    if (/[^a-zA-Z0-9\s\-',]/.test(trimmedTitle)) { toast.error("Job Title may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
+    if (/(.)\1{3,}/.test(trimmedTitle)) { toast.error("Job Title cannot have 4 or more consecutive identical characters"); return; }
     if (/\s{2,}/.test(title)) { toast.error("Job Title cannot have multiple consecutive spaces"); return; }
     if (title !== title.trim()) { toast.error("Job Title cannot have leading or trailing spaces"); return; }
 
     const trimmedLocation = location.trim();
     if (trimmedLocation) {
+      if (trimmedLocation.length < 2) { toast.error("Location must be at least 2 characters"); return; }
+      if (trimmedLocation.length > 100) { toast.error("Location must be at most 100 characters"); return; }
       if (!/^[a-zA-Z]/.test(trimmedLocation)) { toast.error("Location must start with a letter"); return; }
-      if (/[^a-zA-Z0-9\s.,&()\-+/]/.test(trimmedLocation)) { toast.error("Location contains invalid special characters"); return; }
-      if (/(.)\1{2,}/.test(trimmedLocation)) { toast.error("Location cannot have 3 or more consecutive identical characters"); return; }
+      if (/[^a-zA-Z0-9\s\-',]/.test(trimmedLocation)) { toast.error("Location may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
+      if (/(.)\1{3,}/.test(trimmedLocation)) { toast.error("Location cannot have 4 or more consecutive identical characters"); return; }
       if (/\s{2,}/.test(location)) { toast.error("Location cannot have multiple consecutive spaces"); return; }
     }
 
@@ -175,8 +179,8 @@ export default function JobPostingsPage() {
     const sx = sxRaw ? Number(sxRaw) : undefined;
     if (smRaw && (isNaN(Number(smRaw)) || !/^\d+$/.test(smRaw))) { toast.error("Minimum salary must be a positive whole number"); return; }
     if (sxRaw && (isNaN(Number(sxRaw)) || !/^\d+$/.test(sxRaw))) { toast.error("Maximum salary must be a positive whole number"); return; }
-    if (sm !== undefined && sm < 0) { toast.error("Minimum salary cannot be negative"); return; }
-    if (sx !== undefined && sx < 0) { toast.error("Maximum salary cannot be negative"); return; }
+    if (sm !== undefined && sm <= 0) { toast.error("Minimum salary must be greater than 0"); return; }
+    if (sx !== undefined && sx <= 0) { toast.error("Maximum salary must be greater than 0"); return; }
     if (sm !== undefined && sm > 999_999_999) { toast.error("Minimum salary is too large"); return; }
     if (sx !== undefined && sx > 999_999_999) { toast.error("Maximum salary is too large"); return; }
     if (sm !== undefined && sx !== undefined && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }

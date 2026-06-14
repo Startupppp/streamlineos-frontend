@@ -3,7 +3,7 @@ import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
-import { eq, and, desc, ilike, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -20,24 +20,25 @@ const createJobSchema = z.object({
   title: z
     .string()
     .min(2, "Job Title must be at least 2 characters")
-    .max(150, "Job Title must be at most 150 characters")
+    .max(100, "Job Title must be at most 100 characters")
     .refine((v) => /^[a-zA-Z]/.test(v.trim()), "Job Title must start with a letter")
-    .refine((v) => !/[^a-zA-Z0-9\s.,&()\-+/]/.test(v.trim()), "Job Title contains invalid special characters")
-    .refine((v) => !/(.)\1{2,}/.test(v.trim()), "Job Title cannot have 3 or more consecutive identical characters")
+    .refine((v) => !/[^a-zA-Z0-9\s\-',]/.test(v.trim()), "Job Title may only contain letters, numbers, hyphens, apostrophes, and commas")
+    .refine((v) => !/(.)\1{3,}/.test(v.trim()), "Job Title cannot have 4 or more consecutive identical characters")
     .refine((v) => !/\s{2,}/.test(v), "Job Title cannot have multiple consecutive spaces"),
   departmentId: z.number().int().positive().optional(),
   location: z
     .string()
-    .max(200, "Location must be at most 200 characters")
+    .min(2, "Location must be at least 2 characters")
+    .max(100, "Location must be at most 100 characters")
     .refine((v) => !v || /^[a-zA-Z]/.test(v.trim()), "Location must start with a letter")
-    .refine((v) => !v || !/[^a-zA-Z0-9\s.,&()\-+/]/.test(v.trim()), "Location contains invalid special characters")
-    .refine((v) => !v || !/(.)\1{2,}/.test(v.trim()), "Location cannot have consecutive identical characters")
+    .refine((v) => !v || !/[^a-zA-Z0-9\s\-',]/.test(v.trim()), "Location may only contain letters, numbers, hyphens, apostrophes, and commas")
+    .refine((v) => !v || !/(.)\1{3,}/.test(v.trim()), "Location cannot have 4 or more consecutive identical characters")
     .refine((v) => !v || !/\s{2,}/.test(v), "Location cannot have multiple consecutive spaces")
     .optional(),
   type: z.enum(VALID_JOB_TYPES).optional(),
   experience: z.string().max(100).optional(),
-  salaryMin: z.number().min(0, "Salary cannot be negative").max(MAX_SALARY, "Salary value is too large").optional(),
-  salaryMax: z.number().min(0, "Salary cannot be negative").max(MAX_SALARY, "Salary value is too large").optional(),
+  salaryMin: z.number().min(1, "Minimum salary must be greater than 0").max(MAX_SALARY, "Salary value is too large").optional(),
+  salaryMax: z.number().min(1, "Maximum salary must be greater than 0").max(MAX_SALARY, "Salary value is too large").optional(),
   description: z.string().max(10000).optional(),
   requirements: z.string().max(5000).optional(),
   benefits: z.string().max(5000).optional(),
