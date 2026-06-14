@@ -89,7 +89,7 @@ export function DashboardShell({
             <CommandPalette />
 
             {isMobile && (
-              <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
+              <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
                   <button
                     type="button"

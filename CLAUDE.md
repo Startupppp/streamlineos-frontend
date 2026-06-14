@@ -75,6 +75,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - Access/role REDIRECT gating (who may land on a route, role-based home redirects) lives in middleware ONLY — never duplicate role redirects in page or layout components. This is routing UX and does NOT replace data-layer security: route handlers and server actions still verify session + permission server-side (see Security).
 - App Router conventions: server components by default; "use client" only when needed and as deep in the tree as possible.
 - next/image for all images, next/link for navigation.
+- Dynamic route segments and their params use DESCRIPTIVE resource names, never a bare `id` — e.g. `app/api/projects/[projectId]`, `[ticketId]`, `[goalId]`, `[whiteboardId]` — and the destructured variable matches (`const { projectId } = await ctx.params`). Never `[id]`.
 - Folder structure: route files thin; logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located. Move misplaced files into this structure when fixing a page and update imports.
 - Logging: use the repo's logger (or Winston-style structured logging server-side); global error handling, graceful 500s.
 - Code must be implicitly testable; add minimal tests if the repo has a test setup.
