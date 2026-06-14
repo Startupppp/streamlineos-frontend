@@ -1,9 +1,9 @@
 import { BRAND_NAME } from "../lib/branding";
-import { buildHtml, coverUrl, PostSeed } from "./seed-blog-utils";
+import { buildHtml, coverUrl } from "./seed-blog-utils";
 import { POSTS_EXT } from "./seed-blog-posts-ext";
 
 export { calcReadingTime, slugify } from "../lib/blog-utils";
-export { buildHtml, PostSeed } from "./seed-blog-utils";
+export { buildHtml } from "./seed-blog-utils";
 
 const cover = coverUrl;
 

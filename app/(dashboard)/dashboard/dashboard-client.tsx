@@ -302,6 +302,7 @@ export function DashboardClient() {
       actions={<ClockInWidget />}
     >
       <div className="space-y-4">
+        {statCards.length > 0 && (
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -325,6 +326,7 @@ export function DashboardClient() {
             />
           ))}
         </motion.div>
+        )}
 
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <QuickActions />

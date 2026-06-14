@@ -34,7 +34,7 @@ import {
   FileSignature,
   Users,
 } from "lucide-react";
-import type { CandidateStatus, InterviewType } from "@/types/hr";
+import type { CandidateStatus, Interview, InterviewType } from "@/types/hr";
 import { DocumentsTab } from "@/features/hr/recruitment/candidate-detail/documents-tab";
 import { VaultTab } from "@/features/hr/recruitment/candidate-detail/vault-tab";
 import { ReferenceChecksTab } from "@/features/hr/recruitment/candidate-detail/reference-checks-tab";
@@ -179,7 +179,7 @@ export default function CandidateDetailPage() {
       : null);
 
   const hasSubmittedScorecard = candidate?.interviews?.some((iv) =>
-    (iv as { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some(
+    (iv as Interview & { scorecards?: { submittedAt?: unknown }[] }).scorecards?.some(
       (sc) => sc.submittedAt,
     ),
   );
