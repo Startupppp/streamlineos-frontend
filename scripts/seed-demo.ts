@@ -3,69 +3,20 @@ import { hash } from "bcryptjs";
 import { randomUUID } from "crypto";
 import { addDays, subDays, formatISO } from "date-fns";
 
+import {
+  DEMO_ORG_SLUG,
+  DEMO_ORG_NAME,
+  DEMO_OWNER_EMAIL,
+  DEMO_OWNER_PASSWORD,
+  DEMO_TEAM,
+  DEMO_LEADS,
+  DEMO_DEALS,
+  DEMO_EXPENSES,
+  DEMO_TICKETS,
+  DEMO_CANDIDATES,
+} from "./seed-demo-data";
+
 dotenv.config({ path: ".env" });
-
-const DEMO_ORG_SLUG = "demo-streamlineos";
-const DEMO_ORG_NAME = "Demo · StreamlineOS";
-const DEMO_OWNER_EMAIL = process.env.DEMO_OWNER_EMAIL || "demo@streamlineos.in";
-const DEMO_OWNER_PASSWORD = process.env.DEMO_OWNER_PASSWORD || "Demo@2026!";
-
-interface DemoUser {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  designation: string;
-}
-
-const DEMO_TEAM: DemoUser[] = [
-  { email: "priya.hr@demo.streamlineos.in",      firstName: "Priya",  lastName: "Rao",    role: "HR_MANAGER",      designation: "HR Manager" },
-  { email: "arjun.pm@demo.streamlineos.in",      firstName: "Arjun",  lastName: "Mehta",  role: "PROJECT_MANAGER", designation: "Project Manager" },
-  { email: "neha.sales@demo.streamlineos.in",    firstName: "Neha",   lastName: "Iyer",   role: "SALES_REP",       designation: "Sales Executive" },
-  { email: "rahul.eng@demo.streamlineos.in",     firstName: "Rahul",  lastName: "Verma",  role: "MEMBER",          designation: "Software Engineer" },
-  { email: "sara.design@demo.streamlineos.in",   firstName: "Sara",   lastName: "Khan",   role: "MEMBER",          designation: "Product Designer" },
-];
-
-const DEMO_LEADS = [
-  { name: "Acme Logistics",   email: "ceo@acme.test",     phone: "+91 98100 11122", company: "Acme Logistics",   designation: "CEO",       status: "QUALIFIED",  priority: "HOT",  source: "website",      potential: 850000 },
-  { name: "Northwind Retail", email: "ops@northwind.test", phone: "+91 98100 22233", company: "Northwind Retail", designation: "COO",       status: "NEW",        priority: "WARM", source: "referral",     potential: 420000 },
-  { name: "Pioneer Studios",  email: "hello@pioneer.test", phone: "+91 98100 33344", company: "Pioneer Studios",  designation: "Founder",   status: "CONTACTED",  priority: "WARM", source: "social_media", potential: 280000 },
-  { name: "Vista Pharma",     email: "it@vista.test",      phone: "+91 98100 44455", company: "Vista Pharma",     designation: "IT Head",   status: "QUALIFIED",  priority: "HOT",  source: "campaign",     potential: 1200000 },
-  { name: "Bluepeak Capital", email: "ops@bluepeak.test",  phone: "+91 98100 55566", company: "Bluepeak Capital", designation: "Director",  status: "NEW",        priority: "COLD", source: "other",        potential: 95000 },
-];
-
-const DEMO_DEALS = [
-  { name: "Acme Logistics — Annual HRMS",   value:  850000, stage: "PROPOSAL",    probability: 60 },
-  { name: "Vista Pharma — Enterprise Plan",  value: 1200000, stage: "NEGOTIATION", probability: 75 },
-  { name: "Crestpoint Foods — Annual Plan",  value:  640000, stage: "WON",         probability: 100 },
-  { name: "Helio Health — Pilot",            value:  180000, stage: "LOST",        probability: 0 },
-];
-
-const DEMO_EXPENSES = [
-  { category: "Travel",        amount: "4250.00", description: "Client visit — Mumbai",        merchant: "IndiGo",         paymentMethod: "CARD", status: "APPROVED" as const, daysAgo: 12 },
-  { category: "Software",      amount: "1799.00", description: "Design tool annual license",   merchant: "Figma",          paymentMethod: "CARD", status: "PENDING"  as const, daysAgo: 3 },
-  { category: "Meals",         amount: "780.00",  description: "Team lunch after sprint demo", merchant: "The Big Chill",  paymentMethod: "UPI",  status: "APPROVED" as const, daysAgo: 5 },
-  { category: "Equipment",     amount: "2399.00", description: "Mechanical keyboard",          merchant: "Keychron India", paymentMethod: "CARD", status: "PENDING"  as const, daysAgo: 1 },
-];
-
-const DEMO_TICKETS: Array<{
-  title: string;
-  type: "EPIC" | "STORY" | "TASK" | "BUG";
-  status: string;
-  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-}> = [
-  { title: "Set up Postgres replica",                   type: "TASK", status: "IN_PROGRESS", priority: "HIGH" },
-  { title: "Design onboarding empty-state",             type: "TASK", status: "TODO",        priority: "MEDIUM" },
-  { title: "Wire up Stripe webhook for subscriptions",  type: "TASK", status: "REVIEW",      priority: "HIGH" },
-  { title: "Fix race condition in attendance check-in", type: "BUG",  status: "TODO",        priority: "URGENT" },
-  { title: "Write blog post: launch announcement",      type: "TASK", status: "DONE",        priority: "LOW" },
-];
-
-const DEMO_CANDIDATES = [
-  { firstName: "Vikram", lastName: "Joshi",  email: "vikram.joshi@cand.test",  currentRole: "Senior Backend Engineer",  currentCompany: "Cloudops",   experienceYears: "6.5", status: "INTERVIEW" as const, skills: ["TypeScript", "Postgres", "AWS"] },
-  { firstName: "Anita",  lastName: "Bhat",   email: "anita.bhat@cand.test",    currentRole: "Product Designer",         currentCompany: "Frontier",   experienceYears: "4.0", status: "SCREENING" as const, skills: ["Figma", "Prototyping", "Design Systems"] },
-  { firstName: "Karan",  lastName: "Singh",  email: "karan.singh@cand.test",   currentRole: "Sales Lead",               currentCompany: "Velocity",   experienceYears: "8.0", status: "OFFER" as const,     skills: ["CRM", "Pipeline Management", "SaaS"] },
-];
 
 async function main() {
   console.log("[seed-demo] Loading modules…");
