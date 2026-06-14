@@ -119,14 +119,15 @@ export function ExpenseExportDialog({
   }, [employeesData]);
 
   const dateFieldErrors = useMemo(() => {
-    const fromError =
-      dateFrom && dateTo && dateFrom > dateTo
-        ? "From date must be before To date"
-        : null;
-    const toError =
-      dateFrom && dateTo && dateFrom > dateTo
-        ? "To date must be after From date"
-        : null;
+    const today = new Date().toISOString().slice(0, 10);
+    const fromInFuture = dateFrom && dateFrom > today;
+    const rangeInvalid = dateFrom && dateTo && dateFrom > dateTo;
+    const fromError = fromInFuture
+      ? "From date cannot be in the future"
+      : rangeInvalid
+      ? "From date must be before To date"
+      : null;
+    const toError = rangeInvalid ? "To date must be after From date" : null;
     return { from: fromError, to: toError };
   }, [dateFrom, dateTo]);
 
