@@ -23,6 +23,7 @@ import {
   Diamond,
   DollarSign,
   Activity,
+  PenTool,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -70,6 +71,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
         { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
         { label: "Agile Reports", icon: Activity, href: `${baseUrl}/reports` },
+        { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
         { label: "Budget", icon: DollarSign, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },

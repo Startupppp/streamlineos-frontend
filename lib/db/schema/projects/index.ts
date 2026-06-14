@@ -5,3 +5,5 @@ export * from "./reporting";
 export * from "./relations";
 export * from "./goals";
 export * from "./roadmap";
+export * from "./whiteboards";
+export * from "./git";

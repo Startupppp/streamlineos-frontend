@@ -307,6 +307,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Notifications", icon: Bell, href: "/settings/notifications", requiredPermission: "settings:manage" },
           { label: "Custom Fields", icon: Sliders, href: "/settings/custom-fields", requiredPermission: "settings:manage" },
           { label: "Recruitment Integrations", icon: Globe, href: "/settings/integrations/recruitment", requiredPermission: "settings:manage" },
+          { label: "Git Integration", icon: GitBranch, href: "/settings/integrations/git", requiredPermission: "settings:manage" },
         ],
       },
       { label: "Branches", icon: GitBranch, href: "/settings/branches", requiredPermission: ["settings:manage", "branch:read"] },

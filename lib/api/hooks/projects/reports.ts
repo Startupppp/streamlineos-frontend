@@ -40,6 +40,22 @@ export interface CaptureSnapshotResult {
   captured: number;
 }
 
+export interface CriticalPathNode {
+  ticketId: number;
+  title: string;
+  estimate: number;
+  earliestStart: number;
+  earliestFinish: number;
+}
+
+export interface CriticalPathReport {
+  criticalPath: CriticalPathNode[];
+  totalDuration: number;
+  nodeCount: number;
+  edgeCount: number;
+  hasCycle: boolean;
+}
+
 export function useVelocityReport(projectId: number) {
   return useQuery({
     queryKey: queryKeys.projectReports.velocity(projectId),
@@ -67,6 +83,16 @@ export function useCfdReport(projectId: number, days = 30) {
     queryKey: queryKeys.projectReports.cfd(projectId, { days }),
     queryFn: () =>
       apiClient.get<CfdReport>(`/projects/${projectId}/reports/cfd`, { days }),
+    enabled: !!projectId,
+    staleTime: 60_000,
+  });
+}
+
+export function useCriticalPath(projectId: number) {
+  return useQuery({
+    queryKey: queryKeys.projectReports.criticalPath(projectId),
+    queryFn: () =>
+      apiClient.get<CriticalPathReport>(`/projects/${projectId}/reports/critical-path`),
     enabled: !!projectId,
     staleTime: 60_000,
   });

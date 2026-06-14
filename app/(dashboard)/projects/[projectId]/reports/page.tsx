@@ -26,12 +26,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Gauge, TrendingUp, Layers, Camera } from "lucide-react";
+import { Gauge, TrendingUp, Layers, Camera, Route, ChevronRight, AlertTriangle } from "lucide-react";
 import {
   useVelocityReport,
   useBurnupReport,
   useCfdReport,
   useCaptureSnapshot,
+  useCriticalPath,
 } from "@/lib/api/hooks/projects/reports";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -331,6 +332,77 @@ function CfdSection({ projectId }: { projectId: number }) {
   );
 }
 
+function CriticalPathSection({ projectId }: { projectId: number }) {
+  const { data, isLoading, isError, refetch } = useCriticalPath(projectId);
+
+  const chain = data?.criticalPath ?? [];
+
+  return (
+    <ChartCard title="Critical Path" icon={Route}>
+      {isLoading ? (
+        <LoadingState variant="cards" rows={2} />
+      ) : isError ? (
+        <ErrorState
+          title="Could not load critical path"
+          description="Something went wrong while computing the project's critical path."
+          onRetry={() => refetch()}
+          compact
+        />
+      ) : chain.length === 0 ? (
+        <EmptyState
+          icon={Route}
+          title="No dependency chain yet"
+          description="Add 'blocks' relations between tickets to compute the critical path."
+          compact
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="font-semibold text-foreground">
+              Total duration: {numberFormatter.format(data?.totalDuration ?? 0)}
+            </span>
+            <span className="text-muted-foreground">
+              {numberFormatter.format(chain.length)}{" "}
+              {chain.length === 1 ? "step" : "steps"}
+            </span>
+            <span className="text-muted-foreground">
+              {numberFormatter.format(data?.edgeCount ?? 0)} dependencies across{" "}
+              {numberFormatter.format(data?.nodeCount ?? 0)} tickets
+            </span>
+          </div>
+          {data?.hasCycle ? (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
+                A dependency cycle was detected. Cycle edges were ignored, so this path is approximate. Review the
+                &apos;blocks&apos; relations to remove the loop.
+              </span>
+            </div>
+          ) : null}
+          <ol className="flex flex-wrap items-stretch gap-2">
+            {chain.map((node, index) => (
+              <li key={node.ticketId} className="flex items-center gap-2">
+                <div className="flex min-w-[8rem] flex-col rounded-lg border border-border bg-muted/30 px-3 py-2">
+                  <span className="truncate text-xs font-medium text-foreground" title={node.title}>
+                    {node.title}
+                  </span>
+                  <span className="mt-1 text-[11px] text-muted-foreground">
+                    Estimate {numberFormatter.format(node.estimate)} · Finish{" "}
+                    {numberFormatter.format(node.earliestFinish)}
+                  </span>
+                </div>
+                {index < chain.length - 1 ? (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </ChartCard>
+  );
+}
+
 export default function ProjectReportsPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
@@ -343,6 +415,7 @@ export default function ProjectReportsPage({ params }: { params: Promise<{ proje
           <BurnupSection projectId={projectId} />
         </div>
         <CfdSection projectId={projectId} />
+        <CriticalPathSection projectId={projectId} />
       </div>
     </PageWrapper>
   );

@@ -359,6 +359,19 @@ export const queryKeys = {
     velocity: (projectId: number) => [...base, "projectReports", "velocity", projectId] as const,
     burnup: (projectId: number, sprintId?: number) => [...base, "projectReports", "burnup", projectId, sprintId] as const,
     cfd: (projectId: number, params?: Record<string, unknown>) => [...base, "projectReports", "cfd", projectId, params] as const,
+    criticalPath: (projectId: number) => [...base, "projectReports", "criticalPath", projectId] as const,
+  },
+
+  whiteboards: {
+    all: [...base, "whiteboards"] as const,
+    list: (projectId: number) => [...base, "whiteboards", "list", projectId] as const,
+    detail: (id: number) => [...base, "whiteboards", "detail", id] as const,
+  },
+
+  gitIntegration: {
+    all: [...base, "gitIntegration"] as const,
+    connections: () => [...base, "gitIntegration", "connections"] as const,
+    ticketLinks: (ticketId: number) => [...base, "gitIntegration", "ticketLinks", ticketId] as const,
   },
 
   kb: {
