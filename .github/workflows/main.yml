@@ -1,0 +1,32 @@
+ name: Build
+  
+  on:
+    push:
+      branches: [main, new-version, redesign/v2]
+    pull_request:
+      branches: [main, new-version]
+
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+
+        - uses: pnpm/action-setup@v3
+          with:
+            version: 9
+
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
+            cache: pnpm
+
+        - name: Install dependencies
+          run: pnpm install --frozen-lockfile
+
+        - name: Build
+          run: pnpm build
+          env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+            NEXTAUTH_URL: http://localhost:3000
