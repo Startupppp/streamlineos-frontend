@@ -45,6 +45,7 @@ import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAbility } from "@/lib/abilities-context";
 
 
 interface EmployeeDocSummary {
@@ -186,16 +187,28 @@ function ProgressBar({
   total: number;
 }) {
   const pct = total === 0 ? 0 : Math.round((approved / total) * 100);
+  const label =
+    total === 0
+      ? "No required documents configured"
+      : `${approved} of ${total} required document${total === 1 ? "" : "s"} approved`;
   return (
-    <div className="flex items-center gap-2 min-w-[120px]">
-      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${pct}%` }}
-        />
+    <div className="flex flex-col gap-1 min-w-[160px]">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span
+          className="text-[11px] text-muted-foreground tabular-nums shrink-0"
+          aria-label={label}
+        >
+          {approved}/{total}
+        </span>
       </div>
-      <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
-        {approved}/{total}
+      <span className="text-[10px] text-muted-foreground leading-tight">
+        {label}
       </span>
     </div>
   );
@@ -203,6 +216,8 @@ function ProgressBar({
 
 
 export default function DocumentReviewPage() {
+  const ability = useAbility();
+  const canReview = ability.can("manage", "hr:onboarding");
   const { data: summary, isLoading } = useDocReviewSummary();
   const reviewMutation = useReviewDocument();
 
@@ -283,6 +298,35 @@ export default function DocumentReviewPage() {
     );
   }, [reuploadDoc, reuploadRemarks, reviewMutation]);
 
+  const handleOpenReupload = useCallback((doc: OnboardingDoc) => {
+    setReuploadDoc(doc);
+    setReuploadRemarks("");
+  }, []);
+
+  const handleCloseReupload = useCallback((open: boolean) => {
+    if (!open) {
+      setReuploadDoc(null);
+      setReuploadRemarks("");
+    }
+  }, []);
+
+  const handleCancelReupload = useCallback(() => {
+    setReuploadDoc(null);
+    setReuploadRemarks("");
+  }, []);
+
+  const handleReuploadRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReuploadRemarks(e.target.value);
+  }, []);
+
+  const handleReviewSheetChange = useCallback((open: boolean) => {
+    if (!open) handleCloseReview();
+  }, [handleCloseReview]);
+
+  const handleCloseApprove = useCallback((open: boolean) => {
+    if (!open) setApproveDoc(null);
+  }, []);
+
 
   if (isLoading) {
     return (
@@ -345,7 +389,7 @@ export default function DocumentReviewPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
-                  <TableHead>Progress <span className="text-[10px] font-normal text-muted-foreground">(approved / required)</span></TableHead>
+                  <TableHead>Progress</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -398,16 +442,29 @@ export default function DocumentReviewPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={() => handleOpenReview(emp)}
-                        aria-label={`Review documents for ${emp.userName}`}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1" />
-                        Review
-                      </Button>
+                      {canReview ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => handleOpenReview(emp)}
+                          aria-label={`Review documents for ${emp.userName}`}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          Review
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => handleOpenReview(emp)}
+                          aria-label={`View documents for ${emp.userName}`}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          View
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -417,14 +474,16 @@ export default function DocumentReviewPage() {
         </ScrollArea>
       )}
 
-      <Sheet open={reviewUserId !== null} onOpenChange={(open) => { if (!open) handleCloseReview(); }}>
+      <Sheet open={reviewUserId !== null} onOpenChange={handleReviewSheetChange}>
         <SheetContent side="right" className="flex flex-col p-0 gap-0 sm:max-w-lg w-full">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
             <SheetTitle className="text-base">
               {reviewUserName ?? "Employee"} — Documents
             </SheetTitle>
             <SheetDescription className="text-xs">
-              Review and approve submitted onboarding documents.
+              {canReview
+                ? "Review and approve submitted onboarding documents."
+                : "View submitted onboarding documents."}
             </SheetDescription>
           </SheetHeader>
 
@@ -505,7 +564,7 @@ export default function DocumentReviewPage() {
                       </p>
                     )}
 
-                    {doc.status === "SUBMITTED" && (
+                    {doc.status === "SUBMITTED" && canReview && (
                       <>
                         <Separator />
                         <div className="flex items-center gap-2">
@@ -523,10 +582,7 @@ export default function DocumentReviewPage() {
                             size="sm"
                             variant="outline"
                             className="h-7 text-xs flex-1"
-                            onClick={() => {
-                              setReuploadDoc(doc);
-                              setReuploadRemarks("");
-                            }}
+                            onClick={() => handleOpenReupload(doc)}
                             aria-label={`Request re-upload for ${doc.documentTypeName}`}
                           >
                             <RefreshCw className="h-3.5 w-3.5 mr-1" />
@@ -545,7 +601,7 @@ export default function DocumentReviewPage() {
 
       <ConfirmActionDialog
         open={approveDoc !== null}
-        onOpenChange={(open) => { if (!open) setApproveDoc(null); }}
+        onOpenChange={handleCloseApprove}
         title="Approve Document"
         description={`Approve "${approveDoc?.documentTypeName}" submitted by ${reviewUserName ?? "this employee"}?`}
         confirmLabel="Approve"
@@ -556,12 +612,7 @@ export default function DocumentReviewPage() {
 
       <Sheet
         open={reuploadDoc !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setReuploadDoc(null);
-            setReuploadRemarks("");
-          }
-        }}
+        onOpenChange={handleCloseReupload}
       >
         <SheetContent side="right" className="flex flex-col p-0 gap-0">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
@@ -580,7 +631,7 @@ export default function DocumentReviewPage() {
               <Textarea
                 placeholder="Describe what needs to be corrected or re-submitted..."
                 value={reuploadRemarks}
-                onChange={(e) => setReuploadRemarks(e.target.value)}
+                onChange={handleReuploadRemarksChange}
                 rows={4}
                 aria-label="Re-upload remarks"
               />
@@ -591,10 +642,7 @@ export default function DocumentReviewPage() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => {
-                setReuploadDoc(null);
-                setReuploadRemarks("");
-              }}
+              onClick={handleCancelReupload}
               disabled={reviewMutation.isPending}
             >
               Cancel

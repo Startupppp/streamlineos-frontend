@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   ExternalLink,
   UserPlus,
-  Users,
   TrendingUp,
 } from "lucide-react";
 
@@ -151,6 +149,17 @@ interface UploadSheetProps {
   isPending: boolean;
 }
 
+const ACCEPTED_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/jpeg",
+  "image/png",
+]);
+
+const ACCEPTED_EXTENSIONS = ".pdf,.doc,.docx,.jpg,.jpeg,.png";
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 function UploadSheet({
   open,
   onOpenChange,
@@ -160,11 +169,16 @@ function UploadSheet({
   isPending,
 }: UploadSheetProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleSubmit = useCallback(async () => {
     if (!selectedFile) {
       toast.error("Please select a file to upload");
+      return;
+    }
+    if (fileError) {
+      toast.error(fileError);
       return;
     }
     setIsUploading(true);
@@ -184,23 +198,41 @@ function UploadSheet({
     } finally {
       setIsUploading(false);
     }
-  }, [selectedFile, onSubmit]);
+  }, [selectedFile, fileError, onSubmit]);
 
   const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) setSelectedFile(null);
-      onOpenChange(open);
+    (isOpen: boolean) => {
+      if (!isOpen) {
+        setSelectedFile(null);
+        setFileError(null);
+      }
+      onOpenChange(isOpen);
     },
     [onOpenChange]
   );
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
-    if (f && f.size > 10 * 1024 * 1024) {
-      toast.error("File must be under 10MB");
+    e.target.value = "";
+    if (!f) return;
+
+    if (!ACCEPTED_MIME_TYPES.has(f.type)) {
+      setFileError("Invalid file type. Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG.");
+      setSelectedFile(null);
       return;
     }
+    if (f.size > MAX_FILE_SIZE_BYTES) {
+      setFileError("File size must be under 10 MB.");
+      setSelectedFile(null);
+      return;
+    }
+    setFileError(null);
     setSelectedFile(f);
+  }, []);
+
+  const handleRemoveFile = useCallback(() => {
+    setSelectedFile(null);
+    setFileError(null);
   }, []);
 
   return (
@@ -231,16 +263,19 @@ function UploadSheet({
         <Label className="text-sm font-medium">
           Document File <span className="text-destructive">*</span>
         </Label>
-        <div className="rounded-lg border border-dashed border-border p-4 space-y-2">
+        <div
+          className={`rounded-lg border border-dashed p-4 space-y-2 ${fileError ? "border-destructive bg-destructive/5" : "border-border"}`}
+        >
           <label className="flex flex-col items-center gap-2 cursor-pointer">
-            <Upload className="h-6 w-6 text-muted-foreground" />
+            <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
             <span className="text-sm text-muted-foreground text-center">
               {selectedFile ? selectedFile.name : "Click to select a file"}
             </span>
             <input
               type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
+              accept={ACCEPTED_EXTENSIONS}
               className="hidden"
+              aria-label={`Upload file for ${documentType?.name ?? "document"}`}
               onChange={handleFileChange}
             />
           </label>
@@ -248,13 +283,19 @@ function UploadSheet({
             <button
               type="button"
               className="text-[11px] text-muted-foreground hover:text-destructive underline block mx-auto"
-              onClick={() => setSelectedFile(null)}
+              onClick={handleRemoveFile}
             >
               Remove
             </button>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground">Accepted: PDF, DOC, DOCX, JPG, PNG (max 10MB)</p>
+        {fileError ? (
+          <p className="text-[11px] text-destructive" role="alert">{fileError}</p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            Accepted: PDF, DOC, DOCX, JPG, JPEG, PNG — max 10 MB
+          </p>
+        )}
       </div>
     </HrSheet>
   );
@@ -464,13 +505,19 @@ function InitiateSheet({
     });
   }, [userId, initiate, onOpenChange]);
 
+  const handleSheetOpenChange = useCallback((v: boolean) => {
+    if (!v) setUserId("");
+    onOpenChange(v);
+  }, [onOpenChange]);
+
+  const handleUserIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserId(e.target.value);
+  }, []);
+
   return (
     <HrSheet
       open={open}
-      onOpenChange={(v) => {
-        if (!v) setUserId("");
-        onOpenChange(v);
-      }}
+      onOpenChange={handleSheetOpenChange}
       title="Initiate Onboarding"
       description="Create an onboarding checklist for an employee using the active template."
       onSubmit={handleSubmit}
@@ -484,7 +531,7 @@ function InitiateSheet({
         <Input
           placeholder="user_..."
           value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          onChange={handleUserIdChange}
           aria-label="Employee user ID"
         />
         <p className="text-[11px] text-muted-foreground">
@@ -641,8 +688,6 @@ function HrDocumentsTab() {
 
 
 export default function OnboardingPage() {
-  const { data: session } = useSession();
-  const role = session?.user?.role;
   const ability = useAbility();
   const isHROrCEO = ability.can("manage", "hr:employees");
 
