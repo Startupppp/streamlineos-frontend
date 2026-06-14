@@ -21,7 +21,7 @@ const createTicketSchema = z.object({
     .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Ticket title must contain at least one letter or digit")
     .refine((v) => !/\s{2,}/.test(v), "Ticket title cannot have multiple consecutive spaces"),
   description: z.string().max(2000).optional(),
-  category: z.string().optional(),
+  category: z.string().min(1, "Category is required"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
 });
 
