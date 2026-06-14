@@ -194,12 +194,12 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       toast.error("Title is required");
       return;
     }
-    if (trimmedTitle.length < 3) {
-      toast.error("Title must be at least 3 characters");
+    if (trimmedTitle.length < 2) {
+      toast.error("Title must be at least 2 characters");
       return;
     }
-    if (trimmedTitle.length > 150) {
-      toast.error("Title must be at most 150 characters");
+    if (trimmedTitle.length > 200) {
+      toast.error("Title must be at most 200 characters");
       return;
     }
     if (!/[a-zA-Z]/.test(trimmedTitle)) {
