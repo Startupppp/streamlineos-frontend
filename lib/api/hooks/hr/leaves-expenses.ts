@@ -36,6 +36,7 @@ import type {
   ProcessWfhRequestInput,
   AddHolidayInput,
   DeleteHolidayInput,
+  UpdateHolidayInput,
   CreateDeviceInput,
   UpdateDeviceInput,
   DeleteDeviceInput,
@@ -623,6 +624,15 @@ export function useDeleteHoliday() {
   return useMutation({
     mutationFn: ({ holidayId }: DeleteHolidayInput) =>
       apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+  });
+}
+
+export function useUpdateHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/holidays/${holidayId}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }

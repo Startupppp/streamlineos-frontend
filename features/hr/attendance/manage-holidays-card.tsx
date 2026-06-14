@@ -8,10 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday } from "@/lib/api/hooks/hr";
+import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/lib/api/hooks/hr";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, PartyPopper } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Check, X, PartyPopper } from "lucide-react";
+
+interface EditState {
+  id: number;
+  name: string;
+  date: string;
+  message: string;
+}
 
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const currentYear = new Date().getFullYear();
@@ -19,11 +26,13 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [message, setMessage] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [editState, setEditState] = useState<EditState | null>(null);
 
   const { data: holidaysList, isLoading } = useHrHolidaysForYear(currentYear);
 
   const addMutation = useAddHoliday();
   const deleteMutation = useDeleteHoliday();
+  const updateMutation = useUpdateHoliday();
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
 
@@ -58,7 +67,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         }
       );
     },
-    [name, date, message, addMutation]
+    [name, date, message, addMutation, holidaysList]
   );
 
   const handleDeleteRequest = useCallback((holidayId: number) => {
@@ -81,6 +90,46 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       }
     );
   }, [deleteConfirmId, deleteMutation]);
+
+  const handleEditStart = useCallback((h: { id: number; name: string; date: string; message: string | null }) => {
+    setEditState({ id: h.id, name: h.name, date: h.date, message: h.message ?? "" });
+  }, []);
+
+  const handleEditCancel = useCallback(() => {
+    setEditState(null);
+  }, []);
+
+  const handleEditSave = useCallback(() => {
+    if (!editState) return;
+    const trimmedName = editState.name.trim();
+    if (!trimmedName) { toast.error("Holiday name is required"); return; }
+    if (trimmedName.length < 2) { toast.error("Holiday name must be at least 2 characters"); return; }
+    if (trimmedName.length > 100) { toast.error("Holiday name must be at most 100 characters"); return; }
+    if (!/[a-zA-Z]/.test(trimmedName)) { toast.error("Holiday name must contain at least one letter"); return; }
+    if (/\s{2,}/.test(trimmedName)) { toast.error("Holiday name cannot have consecutive spaces"); return; }
+    if (!editState.date) { toast.error("Holiday date is required"); return; }
+    const duplicate = (holidaysList ?? []).find(
+      (h) =>
+        h.id !== editState.id &&
+        (h.date === editState.date || h.name.trim().toLowerCase() === trimmedName.toLowerCase())
+    );
+    if (duplicate) { toast.error("A holiday with this name or date already exists"); return; }
+    updateMutation.mutate(
+      {
+        holidayId: editState.id,
+        name: trimmedName,
+        date: editState.date,
+        message: editState.message.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Holiday updated");
+          setEditState(null);
+        },
+        onError: (e) => toast.error(e.message),
+      }
+    );
+  }, [editState, holidaysList, updateMutation]);
 
   return (
     <Card className="overflow-hidden border-border shadow-sm">
@@ -139,23 +188,89 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
               {holidaysList.map((h) => (
                 <li
                   key={h.id}
-                  className="flex items-center justify-between gap-2 py-2.5 px-3 first:pt-2 last:pb-2"
+                  className="flex items-start justify-between gap-2 py-2.5 px-3 first:pt-2 last:pb-2"
                 >
-                  <div>
-                    <span className="font-medium text-foreground">{h.name}</span>
-                    <span className="text-muted-foreground text-sm ml-2">{h.date}</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                    onClick={() => handleDeleteRequest(h.id)}
-                    disabled={deleteMutation.isPending}
-                    aria-label={`Remove ${h.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {editState?.id === h.id ? (
+                    <div className="flex-1 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          value={editState.name}
+                          onChange={(e) => setEditState((prev) => prev ? { ...prev, name: e.target.value } : prev)}
+                          placeholder="Holiday name"
+                          className="h-8 text-sm"
+                        />
+                        <DatePicker
+                          value={editState.date}
+                          onChange={(val) => setEditState((prev) => prev ? { ...prev, date: val } : prev)}
+                          placeholder="Select date"
+                        />
+                      </div>
+                      <Input
+                        value={editState.message}
+                        onChange={(e) => setEditState((prev) => prev ? { ...prev, message: e.target.value } : prev)}
+                        placeholder="Message (optional)"
+                        className="h-8 text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 text-xs px-3"
+                          onClick={handleEditSave}
+                          disabled={updateMutation.isPending}
+                        >
+                          {updateMutation.isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <Check className="h-3 w-3 mr-1" />
+                          )}
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs px-3"
+                          onClick={handleEditCancel}
+                          disabled={updateMutation.isPending}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <span className="font-medium text-foreground">{h.name}</span>
+                        <span className="text-muted-foreground text-sm ml-2">{h.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleEditStart(h)}
+                          disabled={deleteMutation.isPending || updateMutation.isPending}
+                          aria-label={`Edit ${h.name}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeleteRequest(h.id)}
+                          disabled={deleteMutation.isPending || updateMutation.isPending}
+                          aria-label={`Remove ${h.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

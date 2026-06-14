@@ -704,6 +704,13 @@ export interface DeleteHolidayInput {
   holidayId: number;
 }
 
+export interface UpdateHolidayInput {
+  holidayId: number;
+  name: string;
+  date: string;
+  message?: string;
+}
+
 export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
 
 export interface Device {
