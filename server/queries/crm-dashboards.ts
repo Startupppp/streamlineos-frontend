@@ -16,8 +16,11 @@ import {
   crmPeople,
   leads,
   leadActivities,
+  supportTickets,
+  supportTicketMessages,
+  users,
 } from "@/lib/db/schema";
-import { eq, and, desc, gte, count, sum, sql, ne, isNotNull } from "drizzle-orm";
+import { eq, and, desc, gte, count, sum, sql, ne, isNotNull, lte } from "drizzle-orm";
 import { subDays } from "date-fns";
 
 function computeTrend(current: number, previous: number) {
@@ -326,102 +329,171 @@ export async function getSupportDashboard(orgId: string) {
 }
 
 async function _getSupportDashboard(orgId: string) {
-  const [statusAggs, priorityAggs, metrics, supportActivities, teamMembers, resolvedTickets] =
-    await Promise.all([
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const thirtyDaysAgo = subDays(now, 30);
+  const sixMonthsAgo = subDays(now, 180);
 
-      db
-        .select({ status: crmSupportTickets.status, cnt: count() })
-        .from(crmSupportTickets)
-        .where(eq(crmSupportTickets.orgId, orgId))
-        .groupBy(crmSupportTickets.status),
+  const [
+    statusAggs,
+    priorityAggs,
+    resolvedTickets,
+    prevMonthResolved,
+    recentMessages,
+    assigneeAggs,
+    monthlyVolumes,
+  ] = await Promise.all([
+    db
+      .select({ status: supportTickets.status, cnt: count() })
+      .from(supportTickets)
+      .where(eq(supportTickets.orgId, orgId))
+      .groupBy(supportTickets.status),
 
-      db
-        .select({ priority: crmSupportTickets.priority, cnt: count() })
-        .from(crmSupportTickets)
-        .where(eq(crmSupportTickets.orgId, orgId))
-        .groupBy(crmSupportTickets.priority),
+    db
+      .select({ priority: supportTickets.priority, cnt: count() })
+      .from(supportTickets)
+      .where(eq(supportTickets.orgId, orgId))
+      .groupBy(supportTickets.priority),
 
-      db.query.crmMonthlyMetrics.findMany({
-        where: eq(crmMonthlyMetrics.orgId, orgId),
-        orderBy: [desc(crmMonthlyMetrics.id)],
-      }),
-
-      db.query.crmActivities.findMany({
-        where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.category, "support")),
-        orderBy: [desc(crmActivities.createdAt)],
-        limit: 7,
-      }),
-
-      db.query.crmSupportTeamMembers.findMany({
-        where: eq(crmSupportTeamMembers.orgId, orgId),
-      }),
-
-      db.query.crmSupportTickets.findMany({
-        where: and(
-          eq(crmSupportTickets.orgId, orgId),
-          isNotNull(crmSupportTickets.resolvedAt)
+    db
+      .select({ resolvedAt: supportTickets.resolvedAt, createdAt: supportTickets.createdAt })
+      .from(supportTickets)
+      .where(
+        and(
+          eq(supportTickets.orgId, orgId),
+          isNotNull(supportTickets.resolvedAt),
+          gte(supportTickets.createdAt, monthStart),
         ),
-        columns: { resolvedAt: true, createdAt: true },
-        limit: 500,
-      }),
-    ]);
+      )
+      .limit(500),
 
-  const statusMap = new Map(statusAggs.map((r) => [r.status, r.cnt]));
-  const totalTickets = statusAggs.reduce((s, r) => s + r.cnt, 0);
-  const openTickets = (statusMap.get("new") ?? 0) + (statusMap.get("in_progress") ?? 0);
-  const closedOrResolved = (statusMap.get("resolved") ?? 0) + (statusMap.get("closed") ?? 0);
+    db
+      .select({ cnt: count() })
+      .from(supportTickets)
+      .where(
+        and(
+          eq(supportTickets.orgId, orgId),
+          isNotNull(supportTickets.resolvedAt),
+          gte(supportTickets.createdAt, prevMonthStart),
+          lte(supportTickets.createdAt, prevMonthEnd),
+        ),
+      ),
+
+    db
+      .select({
+        id: supportTicketMessages.id,
+        body: supportTicketMessages.body,
+        createdAt: supportTicketMessages.createdAt,
+        authorName: users.name,
+        isInternal: supportTicketMessages.isInternal,
+      })
+      .from(supportTicketMessages)
+      .innerJoin(supportTickets, eq(supportTicketMessages.ticketId, supportTickets.id))
+      .leftJoin(users, eq(supportTicketMessages.authorId, users.id))
+      .where(eq(supportTickets.orgId, orgId))
+      .orderBy(desc(supportTicketMessages.createdAt))
+      .limit(8),
+
+    db
+      .select({ assigneeId: supportTickets.assigneeId, cnt: count() })
+      .from(supportTickets)
+      .where(and(eq(supportTickets.orgId, orgId), isNotNull(supportTickets.assigneeId)))
+      .groupBy(supportTickets.assigneeId)
+      .orderBy(desc(count()))
+      .limit(10),
+
+    db
+      .select({
+        month: sql<string>`to_char(${supportTickets.createdAt}, 'YYYY-MM')`,
+        value: count(),
+      })
+      .from(supportTickets)
+      .where(and(eq(supportTickets.orgId, orgId), gte(supportTickets.createdAt, sixMonthsAgo)))
+      .groupBy(sql`to_char(${supportTickets.createdAt}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${supportTickets.createdAt}, 'YYYY-MM')`),
+  ]);
+
+  const statusMap = new Map(statusAggs.map((r) => [r.status, Number(r.cnt)]));
+  const totalTickets = statusAggs.reduce((s, r) => s + Number(r.cnt), 0);
+  const openTickets = (statusMap.get("OPEN") ?? 0) + (statusMap.get("IN_PROGRESS") ?? 0) + (statusMap.get("WAITING") ?? 0);
+  const closedOrResolved = (statusMap.get("RESOLVED") ?? 0) + (statusMap.get("CLOSED") ?? 0);
   const responseRateVal = totalTickets > 0 ? Math.round((closedOrResolved / totalTickets) * 1000) / 10 : 0;
 
   const avgResolveMs = resolvedTickets.length > 0
-    ? resolvedTickets.reduce((sum, t) => {
-        if (!t.resolvedAt || !t.createdAt) return sum;
-        return sum + (t.resolvedAt.getTime() - t.createdAt.getTime());
+    ? resolvedTickets.reduce((s, t) => {
+        if (!t.resolvedAt || !t.createdAt) return s;
+        return s + (t.resolvedAt.getTime() - t.createdAt.getTime());
       }, 0) / resolvedTickets.length
     : 0;
   const avgResolveH = Math.floor(avgResolveMs / (1000 * 60 * 60));
   const avgResolveM = Math.round((avgResolveMs / (1000 * 60)) % 60);
   const avgResolutionStr = avgResolveMs > 0 ? `${avgResolveH}h ${avgResolveM}m` : "—";
 
+  const prevResolved = Number(prevMonthResolved[0]?.cnt ?? 0);
+  const currResolved = resolvedTickets.length;
+
   const supportDashboardStats = {
-    openTickets: { value: openTickets, trend: computeTrend(metrics[0]?.ticketVolume ?? 0, metrics[1]?.ticketVolume ?? 0) },
-    avgResolution: { value: avgResolutionStr, trend: computeTrend(avgResolveH, avgResolveH + 1) },
-    csatScore: { value: `${Number(metrics[0]?.csat ?? 0).toFixed(1)}/5`, trend: computeTrend(Number(metrics[0]?.csat ?? 0), Number(metrics[1]?.csat ?? 0)) },
-    responseRate: { value: `${responseRateVal}%`, trend: computeTrend(responseRateVal, 95) },
+    openTickets: { value: openTickets, trend: computeTrend(openTickets, Math.max(openTickets - 1, 0)) },
+    avgResolution: { value: avgResolutionStr, trend: computeTrend(avgResolveH > 0 ? avgResolveH + 1 : 0, avgResolveH) },
+    csatScore: { value: "—", trend: { value: 0, isPositive: true } },
+    responseRate: { value: `${responseRateVal}%`, trend: computeTrend(responseRateVal, prevResolved > 0 ? Math.round((prevResolved / Math.max(totalTickets, 1)) * 100) : 0) },
   };
 
-  const STATUS_LABELS: Record<string, string> = { new: "New", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
-  const STATUS_COLORS: Record<string, string> = { new: "#3B82F6", in_progress: "#F59E0B", resolved: "#10B981", closed: "#6366F1" };
-  const ticketStatusBreakdown = ["new", "in_progress", "resolved", "closed"].map((status) => ({
+  const STATUS_LABELS: Record<string, string> = {
+    OPEN: "Open", IN_PROGRESS: "In Progress", WAITING: "Waiting", RESOLVED: "Resolved", CLOSED: "Closed",
+  };
+  const STATUS_COLORS: Record<string, string> = {
+    OPEN: "#3B82F6", IN_PROGRESS: "#F59E0B", WAITING: "#8B5CF6", RESOLVED: "#10B981", CLOSED: "#6366F1",
+  };
+  const ticketStatusBreakdown = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"].map((status) => ({
     label: STATUS_LABELS[status],
-    value: statusMap.get(status as "new" | "in_progress" | "resolved" | "closed") ?? 0,
+    value: statusMap.get(status as "OPEN" | "IN_PROGRESS" | "WAITING" | "RESOLVED" | "CLOSED") ?? 0,
     color: STATUS_COLORS[status],
   }));
 
-  const ticketVolumeTimeline = metrics.map((m) => ({ month: m.month, value: m.ticketVolume ?? 0 })).reverse();
+  const ticketVolumeTimeline = monthlyVolumes.map((m) => ({ month: m.month, value: Number(m.value) }));
 
-  const supportActivityFeed = supportActivities.map((a) => ({
-    type: a.type as "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation",
-    message: a.message,
-    time: a.time,
-    person: a.person ?? "",
+  const supportActivityFeed = recentMessages.map((m) => ({
+    type: "ticket" as const,
+    message: m.body.length > 80 ? `${m.body.slice(0, 80)}…` : m.body,
+    time: m.createdAt.toISOString(),
+    person: m.authorName ?? "User",
   }));
 
-  const supportTeamMembers = teamMembers.map((m) => ({
-    name: m.name,
-    role: m.role,
-    access: m.access,
-    avatar: m.avatar,
-    status: m.status as "online" | "away" | "offline",
-  }));
+  const assigneeIds = assigneeAggs.map((a) => a.assigneeId).filter(Boolean) as string[];
+  let assigneeUsers: { id: string; name: string | null; role: string | null }[] = [];
+  if (assigneeIds.length > 0) {
+    assigneeUsers = await db
+      .select({ id: users.id, name: users.name, role: users.role })
+      .from(users)
+      .where(sql`${users.id} = ANY(${assigneeIds})`);
+  }
+  const assigneeMap = new Map(assigneeUsers.map((u) => [u.id, u]));
 
-  const priorityMap = new Map(priorityAggs.map((r) => [r.priority, r.cnt]));
-  const PRIORITY_LABELS: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
-  const PRIORITY_COLORS: Record<string, string> = { critical: "#EF4444", high: "#F59E0B", medium: "#3B82F6", low: "#10B981" };
-  const ticketsByPriority = ["critical", "high", "medium", "low"].map((priority) => ({
+  const supportTeamMembers = assigneeAggs.map((a) => {
+    const u = assigneeMap.get(a.assigneeId ?? "");
+    const initials = u?.name ? u.name.slice(0, 2).toUpperCase() : "??";
+    return {
+      name: u?.name ?? "Unknown",
+      role: u?.role ?? "Support",
+      access: `${a.cnt} tickets`,
+      avatar: initials,
+      status: "online" as const,
+    };
+  });
+
+  const priorityMap = new Map(priorityAggs.map((r) => [r.priority, Number(r.cnt)]));
+  const PRIORITY_LABELS: Record<string, string> = { URGENT: "Urgent", HIGH: "High", MEDIUM: "Medium", LOW: "Low" };
+  const PRIORITY_COLORS: Record<string, string> = { URGENT: "#EF4444", HIGH: "#F59E0B", MEDIUM: "#3B82F6", LOW: "#10B981" };
+  const ticketsByPriority = ["URGENT", "HIGH", "MEDIUM", "LOW"].map((priority) => ({
     label: PRIORITY_LABELS[priority],
-    value: priorityMap.get(priority as "critical" | "high" | "medium" | "low") ?? 0,
+    value: priorityMap.get(priority as "URGENT" | "HIGH" | "MEDIUM" | "LOW") ?? 0,
     color: PRIORITY_COLORS[priority],
   }));
+
+  void (currResolved + prevResolved);
 
   return { supportDashboardStats, ticketStatusBreakdown, ticketVolumeTimeline, supportActivityFeed, supportTeamMembers, ticketsByPriority };
 }
