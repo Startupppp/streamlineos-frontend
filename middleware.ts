@@ -255,7 +255,8 @@ export default async function middleware(req: NextRequest) {
   if (
     isAuthenticated &&
     pathname.startsWith("/reset-password") &&
-    !token?.forceChangePassword
+    !token?.forceChangePassword &&
+    !req.nextUrl.searchParams.get("token")
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";
