@@ -196,27 +196,9 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
-## Marketing
-- [ ] `/marketing` — Marketing overview
-- [ ] `/marketing/campaigns` — Campaigns
-- [ ] `/marketing/email-campaigns` — Email campaigns
-- [ ] `/marketing/landing-pages` — Landing pages
-- [ ] `/marketing/landing-pages/new` — New landing page
-- [ ] `/marketing/landing-pages/[pageId]/edit` — Edit landing page
-- [ ] `/marketing/calendar` — Marketing calendar
-- [ ] `/marketing/content-calendar` — Content calendar
-- [ ] `/marketing/content-brief` — Content brief
-- [ ] `/marketing/ab-testing` — A/B testing
-- [ ] `/marketing/social-analytics` — Social analytics
-- [ ] `/marketing/ai-insights` — AI insights
+~~## Marketing~~ — **REMOVED**: All `/marketing/*` pages, API routes, schema, hooks, sidebar nav, billing gates, and AI features deleted end-to-end.
 
----
-
-## Digital Marketing
-- [ ] `/digital-marketing` — Overview
-- [ ] `/digital-marketing/campaigns` — DM campaigns
-- [ ] `/digital-marketing/leads` — DM leads
-- [ ] `/digital-marketing/social` — Social media
+~~## Digital Marketing~~ — **REMOVED**: All `/digital-marketing/*` pages, API routes, DM leads/campaigns schema, hooks, and sidebar nav deleted end-to-end.
 
 ---
 
