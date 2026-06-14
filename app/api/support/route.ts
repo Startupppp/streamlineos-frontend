@@ -4,7 +4,7 @@ import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSupportTickets } from "@/server/queries/support";
 import { db } from "@/lib/db";
 import { supportTickets, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketCreatedEmail } from "@/lib/email";
 
@@ -18,12 +18,15 @@ const SLA_HOURS: Record<string, number> = {
 const createSchema = z.object({
   title: z
     .string()
+    .trim()
     .min(5, "Title must be at least 5 characters")
-    .max(200, "Title must be at most 200 characters")
+    .max(150, "Title must be at most 150 characters")
     .refine((v) => !/\s{2,}/.test(v), "Title cannot have multiple consecutive spaces")
-    .refine((v) => !/^[\W\s]+$/.test(v), "Title cannot consist of only special characters"),
+    .refine((v) => !/^[\W\s]+$/.test(v), "Title cannot consist of only special characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v), "Title must contain at least one letter or number")
+    .refine((v) => !/[<>{}|\\^`]/.test(v), "Title contains invalid characters"),
   category: z.string().min(1).max(100).optional(),
-  description: z.string().optional(),
+  description: z.string().max(5000).optional(),
   clientId: z.number().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
   assigneeId: z.string().optional(),
@@ -79,6 +82,17 @@ export async function POST(req: NextRequest) {
     try {
       const body = await req.json();
       const input = createSchema.parse(body);
+
+      const existing = await db.query.supportTickets.findFirst({
+        where: and(
+          eq(supportTickets.orgId, session.orgId),
+          sql`LOWER(${supportTickets.title}) = LOWER(${input.title})`,
+        ),
+        columns: { id: true },
+      });
+      if (existing) {
+        return err("A ticket with this title already exists. Please use a different title.", 409);
+      }
 
       const slaHours = SLA_HOURS[input.priority];
       const slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);

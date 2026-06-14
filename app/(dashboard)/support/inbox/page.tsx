@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useSupportTickets,
@@ -20,6 +20,10 @@ import {
   Pause,
   Send,
   Lock,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,10 +55,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority, SupportTicket } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
-  LOW:"bg-slate-100 text-slate-700",
-  MEDIUM:"bg-blue-100 text-blue-700",
-  HIGH:"bg-amber-100 text-amber-700",
-  URGENT:"bg-red-100 text-red-700",
+  LOW: "bg-slate-100 text-slate-700",
+  MEDIUM: "bg-blue-100 text-blue-700",
+  HIGH: "bg-amber-100 text-amber-700",
+  URGENT: "bg-red-100 text-red-700",
 };
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -65,9 +69,12 @@ const STATUS_ICONS: Record<string, typeof Clock> = {
   CLOSED: CheckCircle2,
 };
 
+const TITLE_INVALID_CHARS = /[<>{}|\\^`]/;
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
 function getInitials(name: string | null | undefined) {
-  if (!name) return"?";
-  return name.split("").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  if (!name) return "?";
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
 function toTitleCase(str: string) {
@@ -79,9 +86,14 @@ function toSentenceCase(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function fileMimeIcon(mimeType: string) {
+  if (mimeType.startsWith("image/")) return ImageIcon;
+  return FileText;
+}
+
 export default function SupportInboxPage() {
   return (
-    <DashboardGate allowedRoles={["CEO","HR","CUSTOMER_SUPPORT"]}>
+    <DashboardGate allowedRoles={["CEO", "HR", "CUSTOMER_SUPPORT"]}>
       <InboxContent />
     </DashboardGate>
   );
@@ -95,12 +107,12 @@ function InboxContent() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const statusFilter = searchParams.get("status") ||"all";
-  const priorityFilter = searchParams.get("priority") ||"all";
+  const statusFilter = searchParams.get("status") || "all";
+  const priorityFilter = searchParams.get("priority") || "all";
 
   const updateFilter = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value ==="all") params.delete(key);
+    if (value === "all") params.delete(key);
     else params.set(key, value);
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -108,8 +120,8 @@ function InboxContent() {
   }, [searchParams, router, pathname]);
 
   const { data: ticketsData, isLoading } = useSupportTickets({
-    ...(statusFilter !=="all" ? { status: statusFilter as SupportTicketStatus } : {}),
-    ...(priorityFilter !=="all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
+    ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
+    ...(priorityFilter !== "all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
@@ -126,8 +138,8 @@ function InboxContent() {
         title="Support Inbox"
         subtitle={
           statsLoading
-            ?"Loading..."
-            : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` :""}`
+            ? "Loading..."
+            : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` : ""}`
         }
         actions={
           <Button onClick={handleOpenCreate} size="sm" className="gap-1.5">
@@ -162,7 +174,7 @@ function InboxContent() {
         noInternalScroll
         contentClassName="flex overflow-hidden !py-0 !px-0"
       >
-        <div className={cn("w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden", selectedTicketId &&"hidden md:flex")}>
+        <div className={cn("w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden", selectedTicketId && "hidden md:flex")}>
           <ScrollArea className="flex-1">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -189,7 +201,7 @@ function InboxContent() {
           </ScrollArea>
         </div>
 
-        <div className={cn("flex-1 flex flex-col", !selectedTicketId &&"hidden md:flex")}>
+        <div className={cn("flex-1 flex flex-col", !selectedTicketId && "hidden md:flex")}>
           {selectedTicketId ? (
             <TicketDetail ticketId={selectedTicketId} onBack={handleBackFromTicket} />
           ) : (
@@ -218,21 +230,21 @@ interface TicketListItemProps {
 function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
   const handleClick = useCallback(() => onSelect(ticket.id), [ticket.id, onSelect]);
   const StatusIcon = STATUS_ICONS[ticket.status] ?? Clock;
-  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED","CLOSED"].includes(ticket.status);
+  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
 
   return (
     <button
       onClick={handleClick}
       className={cn(
-"w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-        isSelected &&"bg-muted/50 border-l-2 border-blue-500"
+        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
+        isSelected && "bg-muted/50 border-l-2 border-blue-500"
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` :""}
+            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -246,35 +258,84 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       </div>
       <div className="flex items-center gap-2 mt-1.5">
         <StatusIcon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_","")}</span>
+        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_", " ")}</span>
         <span className="text-[10px] text-muted-foreground ml-auto">
-          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) :""}
+          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : ""}
         </span>
       </div>
     </button>
   );
 }
 
+interface PendingAttachment {
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+}
+
 function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => void }) {
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
   const [replyText, setReplyText] = useState("");
   const [isInternal, setIsInternal] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const addMessage = useAddSupportMessage();
   const updateTicket = useUpdateSupportTicket();
 
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    const oversized = files.find((f) => f.size > MAX_ATTACHMENT_SIZE);
+    if (oversized) {
+      toast.error(`${oversized.name} exceeds 10MB limit`);
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploaded: PendingAttachment[] = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "support-attachments");
+        const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
+        const json = await res.json() as { url?: string; error?: string };
+        if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+        uploaded.push({ fileName: file.name, fileUrl: json.url, fileSize: file.size, mimeType: file.type });
+      }
+      setPendingFiles((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "File upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const handleAttachClick = useCallback(() => fileRef.current?.click(), []);
+
   const handleReply = useCallback(() => {
-    if (!replyText.trim()) return;
+    if (!replyText.trim() && pendingFiles.length === 0) return;
     addMessage.mutate(
-      { ticketId, body: replyText, isInternal },
+      { ticketId, body: replyText || "(attachment)", isInternal, attachments: pendingFiles },
       {
         onSuccess: () => {
           setReplyText("");
+          setPendingFiles([]);
           toast.success("Reply sent");
         },
       }
     );
-  }, [replyText, ticketId, isInternal, addMessage]);
+  }, [replyText, ticketId, isInternal, pendingFiles, addMessage]);
 
   const handleStatusChange = useCallback((status: SupportTicketStatus) => {
     if (!ticket) return;
@@ -288,7 +349,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
   const handleToggleInternal = useCallback(() => setIsInternal((v) => !v), []);
   const handleReplyChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyText(e.target.value), []);
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key ==="Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleReply();
     }
@@ -302,7 +363,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
     );
   }
 
-  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED","CLOSED"].includes(ticket.status);
+  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
   const messages = [...(ticket.messages ?? [])].reverse();
 
   return (
@@ -313,7 +374,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             <Button variant="ghost" size="sm" onClick={onBack} className="md:hidden h-7 px-2">Back</Button>
             <div>
               <h3 className="text-sm font-bold">{toTitleCase(ticket.title)}</h3>
-              <p className="text-[11px] text-muted-foreground">#{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` :""}</p>
+              <p className="text-[11px] text-muted-foreground">#{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -338,56 +399,132 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
           <div className="bg-muted/30 rounded-lg p-3 mb-4 text-sm">{toSentenceCase(ticket.description)}</div>
         )}
         <div className="space-y-3">
-          {messages.map((msg) => (
-            <div key={msg.id} className={cn("flex gap-2.5", msg.isInternal &&"opacity-70")}>
-              <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-                <AvatarImage src={resolveImageUrl(msg.author?.image)} />
-                <AvatarFallback className="text-[9px]">{getInitials(msg.author?.name)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold">{msg.author?.name}</span>
-                  {msg.isInternal && (
-                    <Badge variant="outline" className="text-[9px] px-1 py-0 gap-0.5 border-amber-300 text-amber-600">
-                      <Lock className="h-2.5 w-2.5" /> Internal
-                    </Badge>
+          {messages.map((msg) => {
+            const isInternalMsg = msg.isInternal;
+            const attachments = (msg.attachments ?? []) as { fileName: string; fileUrl: string; fileSize: number; mimeType: string }[];
+            return (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex gap-2.5 rounded-lg p-3",
+                  isInternalMsg
+                    ? "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40"
+                    : "bg-muted/20"
+                )}
+              >
+                <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                  <AvatarImage src={resolveImageUrl(msg.author?.image)} />
+                  <AvatarFallback className="text-[9px]">{getInitials(msg.author?.name)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold">{msg.author?.name}</span>
+                    {isInternalMsg && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 gap-0.5 border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:border-amber-700 dark:text-amber-400">
+                        <Lock className="h-2.5 w-2.5" /> Internal Note
+                      </Badge>
+                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true }) : ""}
+                    </span>
+                  </div>
+                  {msg.body && msg.body !== "(attachment)" && (
+                    <p className="text-[13px] mt-0.5 whitespace-pre-wrap">{msg.body}</p>
                   )}
-                  <span className="text-[10px] text-muted-foreground">
-                    {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true }) :""}
-                  </span>
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {attachments.map((att, i) => {
+                        const Icon = fileMimeIcon(att.mimeType);
+                        return (
+                          <a
+                            key={i}
+                            href={att.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline bg-blue-50 dark:bg-blue-950/20 rounded px-2 py-0.5 border border-blue-200 dark:border-blue-800"
+                          >
+                            <Icon className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[120px]">{att.fileName}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <p className="text-[13px] mt-0.5 whitespace-pre-wrap">{msg.body}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </ScrollArea>
 
       <div className="px-4 py-3 border-t border-border/40 shrink-0">
         <div className="flex items-center gap-2 mb-2">
-          <Switch checked={isInternal} onCheckedChange={setIsInternal} className="h-4 w-7" />
+          <Switch checked={isInternal} onCheckedChange={handleToggleInternal} className="h-4 w-7" />
           <Label className="text-[11px] text-muted-foreground cursor-pointer" onClick={handleToggleInternal}>
-            {isInternal ?"Internal note (not visible to client)" :"Public reply"}
+            {isInternal ? "Internal note (not visible to client)" : "Public reply"}
           </Label>
         </div>
+        {pendingFiles.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {pendingFiles.map((f, i) => {
+              const Icon = fileMimeIcon(f.mimeType);
+              return (
+                <div key={i} className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-0.5 border">
+                  <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <span className="truncate max-w-[100px]">{f.fileName}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(i)}
+                    className="ml-0.5 text-muted-foreground hover:text-foreground"
+                    aria-label={`Remove ${f.fileName}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="flex gap-2">
           <Textarea
             value={replyText}
             onChange={handleReplyChange}
-            placeholder={isInternal ?"Add internal note..." :"Type your reply..."}
-            className="min-h-[60px] max-h-[120px] text-sm resize-none"
+            placeholder={isInternal ? "Add internal note..." : "Type your reply..."}
+            className={cn("min-h-[60px] max-h-[120px] text-sm resize-none", isInternal && "bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-800/40")}
             onKeyDown={handleKeyDown}
           />
-          <Button
-            onClick={handleReply}
-            disabled={!replyText.trim() || addMessage.isPending}
-            size="icon"
-            className="h-[60px] w-10 shrink-0"
-            aria-label="Send reply"
-          >
-            {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+          <div className="flex flex-col gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-[28px] w-10 shrink-0"
+              onClick={handleAttachClick}
+              disabled={uploading}
+              aria-label="Attach file"
+            >
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+            </Button>
+            <Button
+              onClick={handleReply}
+              disabled={(!replyText.trim() && pendingFiles.length === 0) || addMessage.isPending}
+              size="icon"
+              className="h-[28px] w-10 shrink-0"
+              aria-label="Send reply"
+            >
+              {addMessage.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
         </div>
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={handleFileSelect}
+          aria-label="Attach files"
+        />
       </div>
     </div>
   );
@@ -396,8 +533,21 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
 const TICKET_CATEGORIES = ["Technical Issue", "Billing", "Feature Request", "Account", "Performance", "Integration", "Other"] as const;
 type TicketCategory = (typeof TICKET_CATEGORIES)[number];
 
+function validateTitle(title: string): string | null {
+  const trimmed = title.trim();
+  if (!trimmed) return "Title is required";
+  if (trimmed.length < 5) return "Title must be at least 5 characters";
+  if (trimmed.length > 150) return "Title must be at most 150 characters";
+  if (/\s{2,}/.test(trimmed)) return "Title cannot have multiple consecutive spaces";
+  if (/^[\W\s]+$/.test(trimmed)) return "Title cannot consist of only special characters";
+  if (!/[a-zA-Z0-9]/.test(trimmed)) return "Title must contain at least one letter or number";
+  if (TITLE_INVALID_CHARS.test(trimmed)) return "Title contains invalid characters (<>{}|\\^`)";
+  return null;
+}
+
 function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<SupportTicketPriority>("MEDIUM");
   const [category, setCategory] = useState<TicketCategory | "">("");
@@ -405,27 +555,33 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
   const resetForm = useCallback(() => {
     setTitle("");
+    setTitleError(null);
     setDescription("");
     setPriority("MEDIUM");
     setCategory("");
   }, []);
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+    setTitleError(null);
+  }, []);
+
+  const handleTitleBlur = useCallback(() => {
+    setTitleError(validateTitle(title));
+  }, [title]);
+
   const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
   const handlePriorityChange = useCallback((v: string) => setPriority(v as SupportTicketPriority), []);
   const handleCategoryChange = useCallback((v: string) => setCategory(v as TicketCategory), []);
   const handleCancel = useCallback(() => { resetForm(); onOpenChange(false); }, [resetForm, onOpenChange]);
 
   const handleCreate = useCallback(() => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) { toast.error("Title is required"); return; }
-    if (trimmedTitle.length < 5) { toast.error("Title must be at least 5 characters"); return; }
-    if (trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
-    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Title cannot have multiple consecutive spaces"); return; }
-    if (/^[\W\s]+$/.test(trimmedTitle)) { toast.error("Title cannot consist of only special characters"); return; }
+    const titleErr = validateTitle(title);
+    if (titleErr) { setTitleError(titleErr); return; }
     if (!category) { toast.error("Please select a category"); return; }
+
     create.mutate(
-      { title: trimmedTitle, category: category || undefined, description: description.trim() || undefined, priority },
+      { title: title.trim(), category: category || undefined, description: description.trim() || undefined, priority },
       {
         onSuccess: () => {
           onOpenChange(false);
@@ -444,7 +600,16 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         <div className="space-y-3">
           <div>
             <Label className="text-xs">Title <span className="text-destructive">*</span></Label>
-            <Input value={title} onChange={handleTitleChange} placeholder="Brief description of the issue" className="mt-1" maxLength={200} />
+            <Input
+              value={title}
+              onChange={handleTitleChange}
+              onBlur={handleTitleBlur}
+              placeholder="Brief description of the issue"
+              className={cn("mt-1", titleError && "border-destructive")}
+              maxLength={150}
+            />
+            {titleError && <p className="text-xs text-destructive mt-1">{titleError}</p>}
+            <p className="text-[10px] text-muted-foreground mt-0.5">{title.trim().length}/150 characters</p>
           </div>
           <div>
             <Label className="text-xs">Category <span className="text-destructive">*</span></Label>
@@ -459,7 +624,13 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div>
             <Label className="text-xs">Description</Label>
-            <Textarea value={description} onChange={handleDescChange} placeholder="Detailed description..." className="mt-1 min-h-[80px]" />
+            <Textarea
+              value={description}
+              onChange={handleDescChange}
+              placeholder="Detailed description..."
+              className="mt-1 min-h-[80px]"
+              maxLength={5000}
+            />
           </div>
           <div>
             <Label className="text-xs">Priority</Label>
