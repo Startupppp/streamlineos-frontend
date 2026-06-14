@@ -199,6 +199,7 @@ export default function DevicesPage() {
                 <DeviceFormContent
                   form={addForm}
                   employees={employees}
+                  devices={devices ?? []}
                   isPending={createDeviceMutation.isPending}
                   submitLabel="Add Device"
                   onSubmit={handleAddDevice}
@@ -306,6 +307,8 @@ export default function DevicesPage() {
             <DeviceFormContent
               form={editForm}
               employees={employees}
+              devices={devices ?? []}
+              currentDeviceId={editDevice?.id}
               isPending={updateDeviceMutation.isPending}
               submitLabel="Save Changes"
               onSubmit={handleUpdateDevice}

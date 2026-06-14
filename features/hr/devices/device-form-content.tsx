@@ -20,33 +20,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Employee } from "@/types/hr";
+import type { Device, Employee } from "@/types/hr";
 
 export const deviceSchema = z.object({
   userId: z.string().min(1, "Employee is required"),
   deviceType: z.string().min(1, "Device type is required"),
   deviceName: z
     .string()
-    .trim()
     .min(2, "Device name must be at least 2 characters")
     .max(100, "Device name is too long")
-    .refine((v) => /[a-zA-Z]/.test(v), "Device name must contain at least one letter")
-    .refine((v) => !/^[^a-zA-Z0-9]+$/.test(v), "Device name cannot be only special characters"),
+    .refine((v) => v === v.trim(), "Device name must not have leading or trailing spaces")
+    .refine((v) => !/\s{2,}/.test(v), "Device name cannot have multiple consecutive spaces")
+    .refine((v) => /[a-zA-Z]/.test(v), "Device name must contain at least one letter"),
   serialNumber: z
     .string()
-    .trim()
     .min(3, "Serial number must be at least 3 characters")
     .max(100, "Serial number is too long")
-    .refine((v) => /[a-zA-Z0-9]/.test(v), "Serial number must contain alphanumeric characters"),
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Serial number must contain alphanumeric characters"),
   brand: z
     .string()
-    .trim()
     .min(1, "Brand is required")
     .max(100, "Brand is too long")
-    .refine((v) => /[a-zA-Z]/.test(v), "Brand must contain at least one letter"),
+    .refine((v) => /[a-zA-Z]/.test(v.trim()), "Brand must contain at least one letter"),
   model: z
     .string()
-    .trim()
     .min(1, "Model is required")
     .max(100, "Model is too long"),
   notes: z.string().max(500, "Notes must be at most 500 characters").optional(),
@@ -57,6 +54,8 @@ export type DeviceFormValues = z.infer<typeof deviceSchema>;
 interface DeviceFormContentProps {
   form: UseFormReturn<DeviceFormValues>;
   employees: Employee[];
+  devices: Device[];
+  currentDeviceId?: number;
   isPending: boolean;
   submitLabel: string;
   onSubmit: (values: DeviceFormValues) => void;
@@ -65,6 +64,8 @@ interface DeviceFormContentProps {
 export function DeviceFormContent({
   form,
   employees,
+  devices,
+  currentDeviceId,
   isPending,
   submitLabel,
   onSubmit,
@@ -88,9 +89,23 @@ export function DeviceFormContent({
     if (!open) setEmpSearch("");
   }, []);
 
+  const handleFormSubmit = useCallback((values: DeviceFormValues) => {
+    const normalizedSerial = values.serialNumber.trim().toLowerCase();
+    const duplicate = devices.find(
+      (d) =>
+        d.serialNumber?.trim().toLowerCase() === normalizedSerial &&
+        d.id !== currentDeviceId,
+    );
+    if (duplicate) {
+      form.setError("serialNumber", { message: "A device with this serial number already exists." });
+      return;
+    }
+    onSubmit(values);
+  }, [devices, currentDeviceId, form, onSubmit]);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="userId"
@@ -224,11 +239,7 @@ export function DeviceFormContent({
             <FormItem>
               <FormLabel>Serial Number <span className="text-destructive">*</span></FormLabel>
               <FormControl>
-                <Input
-                  placeholder="SN123456789"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                />
+                <Input placeholder="SN123456789" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
