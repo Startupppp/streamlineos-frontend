@@ -125,7 +125,7 @@ export default function CareerLaddersPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Career Ladder" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setTitle(""); setDepartment(""); setDescription(""); } setSheetOpen(open); }} title="Create Career Ladder" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
           <Input placeholder="e.g., Engineering Career Path" value={title} onChange={(e) => setTitle(e.target.value)} />

@@ -22,7 +22,7 @@ const createSchema = z.object({
     .refine((v) => !/\s{2,}/.test(v), "Title cannot have multiple consecutive spaces"),
   department: z.string().optional(),
   description: z.string().max(1000).optional(),
-  levels: z.array(levelSchema).default([]),
+  levels: z.array(levelSchema).optional().default([]),
 });
 
 export async function GET() {
