@@ -21,7 +21,11 @@ const formSchema = z.object({
   role: z.string(),
   designation: z.string().optional(),
   departmentId: z.number().optional(),
-  phone: z.string().optional(),
+  phone: z.string().refine((val) => {
+    if (!val) return true;
+    const digits = val.replace(/\D/g, "");
+    return digits.length >= 7 && digits.length <= 15;
+  }, "Please enter a valid phone number").optional().or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
   experienceYears: z.number().optional(),

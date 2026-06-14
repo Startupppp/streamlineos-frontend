@@ -197,8 +197,8 @@ export const onboardEmployeeInputSchema = z.object({
     .refine((d) => d <= new Date(), "Date of birth cannot be in the future")
     .refine((d) => {
       const ageMs = Date.now() - d.getTime();
-      return ageMs >= 16 * 365.25 * 24 * 3600 * 1000;
-    }, "Employee must be at least 16 years old"),
+      return ageMs >= 18 * 365.25 * 24 * 3600 * 1000;
+    }, "Employee must be at least 18 years old"),
   experienceYears: z.coerce.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
   skills: z.string().max(500).optional(),
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),

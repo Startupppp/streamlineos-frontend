@@ -110,7 +110,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                 onChange={(v) => field.onChange(v ? new Date(v) : null)}
-                toDate={new Date()}
+                toDate={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)}
                 placeholder="Select DOB"
               />
             </FormControl>
