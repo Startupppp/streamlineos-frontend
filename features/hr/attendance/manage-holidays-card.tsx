@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/lib/api/hooks/hr";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
@@ -21,14 +22,18 @@ interface EditState {
 }
 
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
-  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [name, setName] = useState("");
-  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [date, setDate] = useState(format(today, "yyyy-MM-dd"));
   const [message, setMessage] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
 
-  const { data: holidaysList, isLoading } = useHrHolidaysForYear(currentYear);
+  const yearOptions = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
+
+  const { data: holidaysList, isLoading } = useHrHolidaysForYear(selectedYear);
 
   const addMutation = useAddHoliday();
   const deleteMutation = useDeleteHoliday();
@@ -134,12 +139,26 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   return (
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
-            <PartyPopper className="h-4 w-4 text-blue-600" />
-          </div>
-          Company Holidays
-        </CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 shrink-0">
+              <PartyPopper className="h-4 w-4 text-blue-600" />
+            </div>
+            Company Holidays
+          </CardTitle>
+          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((y) => (
+                <SelectItem key={y} value={String(y)} className="text-xs">
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 pb-6">
         <form onSubmit={handleAdd} className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
@@ -176,7 +195,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         </form>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Holidays for {currentYear}</p>
+          <p className="text-sm font-medium text-foreground">Holidays for {selectedYear}</p>
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
