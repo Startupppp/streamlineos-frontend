@@ -2,11 +2,19 @@ export {
   getLeaveRequestEmailTemplate,
   getLeaveStatusUpdateEmailTemplate,
   getLeaveCancellationEmailTemplate,
+} from "./leave";
+
+export {
   getResignationSubmittedEmailTemplate,
   getResignationApprovedEmailTemplate,
   getTerminationEmailTemplate,
-  getDocumentExpiryReminderEmailTemplate,
+} from "./exit";
+
+export { getDocumentExpiryReminderEmailTemplate } from "./documents";
+
+export {
   getCandidateRejectionEmail,
   getInterviewInviteEmail,
-  getPayslipEmailTemplate,
-} from "./hr/index";
+} from "./recruitment";
+
+export { getPayslipEmailTemplate } from "./payroll";

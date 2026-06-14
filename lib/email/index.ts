@@ -1,11 +1,16 @@
+export { sendEmail } from "./sender";
+export type { EmailOptions, EmailAttachment } from "./sender";
+
 export {
-  sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendPasswordChangeConfirmationEmail,
   sendAccountLockedEmail,
   sendNewDeviceLoginEmail,
   sendPasswordExpiryWarningEmail,
+} from "./auth";
+
+export {
   sendInvitationEmail,
   sendWelcomeEmail,
   sendAccountDeactivationEmail,
@@ -35,8 +40,14 @@ export {
   sendAssetAssignedEmail,
   sendPayrollApprovedEmail,
   sendReviewAssignedEmail,
+} from "./hr";
+
+export {
   sendDealStageChangeEmail,
   sendLeadAssignedEmail,
+} from "./crm";
+
+export {
   sendProjectAssignmentEmail,
   sendTicketAssignmentEmail,
   sendTicketReviewRequestEmail,
@@ -46,5 +57,4 @@ export {
   sendSupportTicketStatusEmail,
   sendTaskAssignedEmail,
   sendHelpdeskTicketEmail,
-} from "./email/index";
-export type { EmailOptions, EmailAttachment } from "./email/index";
+} from "./notifications";
