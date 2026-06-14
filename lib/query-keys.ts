@@ -385,4 +385,23 @@ export const queryKeys = {
     runs: (ruleId: number) => [...base, "automations", "runs", ruleId] as const,
   },
 
+  nps: {
+    all: [...base, "nps"] as const,
+    surveys: (params?: Record<string, unknown>) => [...base, "nps", "surveys", params] as const,
+    survey: (id: number) => [...base, "nps", "survey", id] as const,
+    responses: (surveyId: number) => [...base, "nps", "responses", surveyId] as const,
+    stats: () => [...base, "nps", "stats"] as const,
+    publicSurvey: (token: string) => [...base, "nps", "publicSurvey", token] as const,
+  },
+
+  supportMacros: {
+    all: [...base, "supportMacros"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "supportMacros", "list", params] as const,
+  },
+
+  supportRouting: {
+    all: [...base, "supportRouting"] as const,
+    list: () => [...base, "supportRouting", "list"] as const,
+  },
+
 } as const;

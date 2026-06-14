@@ -242,5 +242,23 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
+## New Non-HR Feature Pages (added — full vertical: schema → migration → service → API → TanStack hooks → UI)
+- [x] `/projects/[projectId]/reports` — Agile Reporting: velocity, burnup, cumulative-flow (CFD) + on-demand daily snapshots (`project_daily_snapshots`); recharts; per-section loading/empty/error states.
+- [x] `/goals` — Goals & OKRs list: stats header, status/level filters, grouped goal cards w/ progress, create via Sheet (`okr_goals`/`okr_key_results`/`okr_updates`/`okr_links`; subject `projects:goals`).
+- [x] `/goals/[goalId]` — Goal detail: key results + check-in Dialog (auto progress rollup), updates timeline, linked work items.
+- [x] `/support/kb` — Knowledge Base manager: categories + articles, status/visibility filters, search (`kb_categories`/`kb_articles`/`kb_article_feedback`; subject `support:kb`).
+- [x] `/support/kb/[articleId]` — KB article editor (title/category/excerpt/visibility/status/tags/content) + feedback summary.
+- [x] `/help/[orgId]` & `/help/[orgId]/[slug]` — Public help center (no auth): browse/search published-public articles, helpful/not-helpful feedback.
+- [x] `/projects/roadmap` — Roadmap manager: roadmap items by status, feedback (by votes), changelog (`roadmap_items`/`roadmap_votes`/`feedback_posts`/`feedback_votes`/`changelog_entries`; subject `projects:roadmap`).
+- [x] `/roadmap/[orgId]` — Public roadmap board (no auth): upvote (localStorage voterKey), submit feedback, changelog feed.
+- [x] `/customer-executive/health` — CS Health Score engine: configurable weights/thresholds (Sheet), recompute-now, per-account scores + breakdown (`health_score_config`/`client_health_scores`; reuses `crm:clients`).
+- [x] `/settings/automations` — No-code Automation Builder: trigger→condition→action rules wired into `lead.created` + deal stage-change; in-app/email/task/webhook actions; run history + test (`automation_rules`/`automation_runs`; subject `settings:automations`).
+- [x] `/customer-executive/nps` — NPS closed-loop: surveys w/ public token, overall NPS + promoter/passive/detractor split, per-survey responses, activate/close (`nps_surveys`/`nps_responses`; reuses `crm:clients`).
+- [x] `/nps/[token]` — Public NPS response page (no auth): 0–10 score + comment; server-derived category; only when survey is active.
+- [x] `/support/macros` — Canned Responses manager: create/edit/copy macros by category (`support_macros`; subject `support:macros`).
+- [x] `/support/routing` — Ticket Routing Rules: ordered condition→assignee/priority rules with enable toggle, applied on ticket creation (`support_routing_rules`; integrated into `POST /api/support`).
+
+---
+
 ## Onboarding
 - [x] `/onboarding` — Employee onboarding wizard. Fixed ID-proof upload (sent `ID` vs DB enum `ID_PROOF`); added server-side Zod validation for doc type/mime/size and personal details; trimmed personal step to standard HR fields (removed experience/skills, added home address + emergency contact); compacted document cards. All access gating moved to middleware (owners/platform admins redirected away; completed users redirected to /dashboard via new `users.onboardingCompletedAt`, set on submit + surfaced in JWT) — no page-level role checks.

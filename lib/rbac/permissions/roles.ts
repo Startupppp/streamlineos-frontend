@@ -92,6 +92,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "dashboard:support:view",
     "support:kb:view",
     "support:kb:manage",
+    "support:macros:view",
+    "support:macros:manage",
     "projects:roadmap:view",
     "projects:view",
     "projects:tickets:view",

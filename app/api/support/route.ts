@@ -7,6 +7,14 @@ import { supportTickets, users } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketCreatedEmail } from "@/lib/email";
+import { applyRoutingRules } from "@/lib/services/support-routing";
+
+const TICKET_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+type TicketPriority = (typeof TICKET_PRIORITIES)[number];
+
+function isTicketPriority(value: string): value is TicketPriority {
+  return (TICKET_PRIORITIES as readonly string[]).includes(value);
+}
 
 const SLA_HOURS: Record<string, number> = {
   LOW: 48,
@@ -94,7 +102,29 @@ export async function POST(req: NextRequest) {
         return err("A ticket with this title already exists. Please use a different title.", 409);
       }
 
-      const slaHours = SLA_HOURS[input.priority];
+      const callerSetPriority = body && typeof body === "object" && "priority" in body;
+
+      let finalPriority: TicketPriority = input.priority;
+      let finalAssigneeId = input.assigneeId;
+
+      try {
+        const routing = await applyRoutingRules(session.orgId, {
+          title: input.title,
+          category: input.category ?? null,
+          description: input.description ?? null,
+          priority: input.priority,
+        });
+        if (routing.assigneeId && !input.assigneeId) {
+          finalAssigneeId = routing.assigneeId;
+        }
+        if (routing.setPriority && !callerSetPriority && isTicketPriority(routing.setPriority)) {
+          finalPriority = routing.setPriority;
+        }
+      } catch {
+
+      }
+
+      const slaHours = SLA_HOURS[finalPriority];
       const slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);
 
       const [ticket] = await db
@@ -105,17 +135,18 @@ export async function POST(req: NextRequest) {
           category: input.category ?? null,
           description: input.description,
           clientId: input.clientId,
-          priority: input.priority,
-          assigneeId: input.assigneeId,
+          priority: finalPriority,
+          assigneeId: finalAssigneeId,
           slaDeadline,
           createdBy: session.user.id,
         })
         .returning();
 
-      if (input.assigneeId) {
+      if (finalAssigneeId) {
+        const notifyAssigneeId = finalAssigneeId;
         void (async () => {
           const assignee = await db.query.users.findFirst({
-            where: eq(users.id, input.assigneeId!),
+            where: eq(users.id, notifyAssigneeId),
             columns: { email: true, name: true },
           });
           if (assignee?.email) {
@@ -123,7 +154,7 @@ export async function POST(req: NextRequest) {
               assignee.email,
               assignee.name ?? "Team Member",
               input.title,
-              input.priority,
+              finalPriority,
               session.user.name ?? "User",
               ticket.id
             );

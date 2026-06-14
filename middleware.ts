@@ -93,6 +93,8 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support": ["projects:tickets:view"],
   "/support/inbox": ["projects:tickets:view"],
   "/support/kb": ["support:kb:view"],
+  "/support/macros": ["support:macros:view"],
+  "/support/routing": ["support:macros:view"],
   "/settings/automations": ["settings:automations:view"],
   "/chat": ["chat:submit_lead", "self:attendance"],
   "/sales": ["dashboard:sales:view"],

@@ -232,6 +232,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Sentiment Analysis", icon: Brain, href: "/customer-executive/sentiment", requiredPermission: "dashboard:customer-executive:view" },
           { label: "SLA Compliance", icon: ShieldAlert, href: "/customer-executive/sla", requiredPermission: "dashboard:customer-executive:view" },
           { label: "Account Health", icon: Heart, href: "/customer-executive/health", requiredPermission: "dashboard:customer-executive:view" },
+          { label: "NPS Surveys", icon: Smile, href: "/customer-executive/nps", requiredPermission: "dashboard:customer-executive:view" },
           { label: "Account Summary", icon: FileText, href: "/customer-executive/account-summary", requiredPermission: "dashboard:customer-executive:view" },
         ],
       },
@@ -287,6 +288,8 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       { label: "Knowledge Base", icon: BookOpen, href: "/support/kb", requiredPermission: "support:kb:view" },
+      { label: "Canned Responses", icon: MailOpen, href: "/support/macros", requiredPermission: "support:macros:view" },
+      { label: "Routing Rules", icon: Share2, href: "/support/routing", requiredPermission: "support:macros:view" },
     ],
   },
   {

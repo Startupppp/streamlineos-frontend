@@ -153,6 +153,7 @@ export type AbilitySubject =
   | "projects:goals"
   | "projects:roadmap"
   | "support:kb"
+  | "support:macros"
   | "settings:automations"
   | "sales"
   | "settings"
