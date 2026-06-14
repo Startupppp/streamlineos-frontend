@@ -76,6 +76,7 @@ export interface EmployeeData {
   skills: string[] | string | null;
   taxId: string | null;
   monthlySalary: string | number | null;
+  isActive: boolean | null;
   bankDetails: {
     accountNumber?: string;
     bankName?: string;

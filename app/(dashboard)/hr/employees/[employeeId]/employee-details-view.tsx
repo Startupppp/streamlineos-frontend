@@ -251,10 +251,16 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   }, [employee.id, employeeName, terminateMutation, router]);
 
   const employeeAsEmployee = employee as unknown as Employee;
-  const canTerminate = canDeleteEmployee(
+  const employmentStatus = typeof (employee as Record<string, unknown>).employmentStatus === "string"
+    ? ((employee as Record<string, unknown>).employmentStatus as string).toUpperCase()
+    : null;
+  const isAlreadyTerminated =
+    employee.isActive === false ||
+    employmentStatus === "TERMINATED";
+  const canTerminate = !isAlreadyTerminated && canDeleteEmployee(
     employeeAsEmployee.role ?? "",
     employee.id,
-    employeeAsEmployee.isActive ?? true,
+    true,
     session?.user?.role,
     session?.user?.id,
   );

@@ -98,19 +98,22 @@ export function OnboardingWizard() {
       const email = form.getValues("email")?.toLowerCase().trim();
       if (email && email !== checkedEmail.current) {
         setIsCheckingEmail(true);
+        let emailCheckPassed = false;
         try {
           const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
           checkedEmail.current = email;
           if (res.exists) {
-            form.setError("email", { message: "An employee with this email already exists" });
-            setIsCheckingEmail(false);
-            return;
+            form.setError("email", { message: "This email address is already registered" });
+            toast.error("This email address is already registered");
+          } else {
+            emailCheckPassed = true;
           }
         } catch {
-          setIsCheckingEmail(false);
+          toast.error("Could not verify email. Please try again.");
         } finally {
           setIsCheckingEmail(false);
         }
+        if (!emailCheckPassed) return;
       }
     }
     setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
