@@ -4,7 +4,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyTicketIllustration } from "@/components/illustrations";
-import { useSession } from "next-auth/react";
 import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/lib/api/hooks/hr";
 import { AISuggestReplyButton } from "@/features/hr/helpdesk/ai-suggest-reply-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -41,9 +40,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Search, Ticket, Clock, CheckCircle2, AlertCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { TicketPriority, TicketStatus } from "@/types/hr";
+import { Plus, Search, Ticket, Clock, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import type { TicketPriority, TicketStatus, HelpdeskTicket } from "@/types/hr";
 
 const STATUS_OPTIONS: { value: TicketStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "All Status" },
@@ -88,8 +87,92 @@ function priorityBadgeVariant(priority: string | null): "default" | "secondary" 
   }
 }
 
+function TicketDetailSheet({
+  ticket,
+  onClose,
+}: {
+  ticket: HelpdeskTicket | null;
+  onClose: () => void;
+}) {
+  if (!ticket) return null;
+  return (
+    <Sheet open={!!ticket} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
+          <SheetTitle className="text-base leading-snug pr-6">{ticket.title}</SheetTitle>
+          <SheetDescription className="text-xs">Ticket #{ticket.id} · Created {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : "—"}</SheetDescription>
+        </SheetHeader>
+        <SheetScrollArea className="flex-1 min-h-0">
+          <div className="px-5 py-5 space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Status</p>
+                <Badge variant={statusBadgeVariant(ticket.status)} className="text-xs">
+                  {(ticket.status ?? "TODO").replace("_", " ")}
+                </Badge>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Priority</p>
+                <Badge variant={priorityBadgeVariant(ticket.priority)} className="text-xs">
+                  {ticket.priority ?? "MEDIUM"}
+                </Badge>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Category</p>
+                <p className="text-sm">{ticket.category ?? "—"}</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Assigned To</p>
+                <p className="text-sm">{ticket.assigneeId ? `ID: ${ticket.assigneeId}` : "Unassigned"}</p>
+              </div>
+              {ticket.createdAt && (
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Created</p>
+                  <p className="text-sm">{format(new Date(ticket.createdAt), "MMM d, yyyy 'at' HH:mm")}</p>
+                </div>
+              )}
+              {ticket.resolvedAt && (
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Resolved</p>
+                  <p className="text-sm">{format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' HH:mm")}</p>
+                </div>
+              )}
+            </div>
+            {ticket.description && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Description</p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-lg bg-muted/50 p-3 border">
+                  {ticket.description}
+                </p>
+              </div>
+            )}
+            {ticket.resolution && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Resolution</p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-lg bg-emerald-500/5 border-emerald-500/20 border p-3">
+                  {ticket.resolution}
+                </p>
+              </div>
+            )}
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Ticket Routing</p>
+              <p className="text-xs text-muted-foreground">
+                {ticket.assigneeId
+                  ? "This ticket has been assigned to a support agent."
+                  : "This ticket is in the queue and will be assigned to a support agent based on category and availability."}
+              </p>
+            </div>
+          </div>
+        </SheetScrollArea>
+        <SheetFooter className="shrink-0 px-5 py-4 border-t">
+          <Button variant="outline" className="w-full" onClick={onClose}>Close</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export default function HelpdeskPage() {
-  const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -104,6 +187,7 @@ export default function HelpdeskPage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
+  const [selectedTicket, setSelectedTicket] = useState<HelpdeskTicket | null>(null);
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -193,6 +277,7 @@ export default function HelpdeskPage() {
   }
 
   return (
+    <>
     <PageWrapper
       title="Helpdesk"
       subtitle="Submit and track your support tickets"
@@ -331,12 +416,13 @@ export default function HelpdeskPage() {
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>AI</TableHead>
+                      <TableHead className="w-[60px]" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTickets.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           <div className="flex flex-col items-center justify-center gap-2">
                             <EmptyTicketIllustration className="h-36 w-36 opacity-95" />
                             <p>{searchQuery ? "No tickets match your search." : "No tickets yet. Create your first one!"}</p>
@@ -345,7 +431,7 @@ export default function HelpdeskPage() {
                       </TableRow>
                     ) : (
                       filteredTickets.map((ticket) => (
-                        <TableRow key={ticket.id}>
+                        <TableRow key={ticket.id} className="group">
                           <TableCell>
                             <div>
                               <p className="font-medium">{ticket.title}</p>
@@ -377,6 +463,17 @@ export default function HelpdeskPage() {
                           <TableCell>
                             <AISuggestReplyButton ticketId={ticket.id} compact />
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => setSelectedTicket(ticket)}
+                              aria-label="View ticket details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -388,5 +485,7 @@ export default function HelpdeskPage() {
         </Card>
       </div>
     </PageWrapper>
+    <TicketDetailSheet ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+    </>
   );
 }

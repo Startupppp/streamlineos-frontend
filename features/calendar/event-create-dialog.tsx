@@ -373,13 +373,18 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                         : <Video className="h-3.5 w-3.5" />}
                       Meet
                     </Button>
-                  ) : (
+                  ) : meetStatus.authUrl ? (
                     <a href={meetStatus.authUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
                       <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5">
                         <Video className="h-3.5 w-3.5" />
                         Connect
                       </Button>
                     </a>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5" disabled title="Google Meet not configured">
+                      <Video className="h-3.5 w-3.5" />
+                      Connect
+                    </Button>
                   )
                 )}
               </div>
