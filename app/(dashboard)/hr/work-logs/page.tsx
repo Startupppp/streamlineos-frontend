@@ -97,9 +97,14 @@ export default function WorkLogsPage() {
   const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
   const { data: departments } = useHrDepartments();
 
-  const employees = useMemo(
+  const allEmployees = useMemo(
     () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
     [employeesRaw]
+  );
+
+  const employees = useMemo(
+    () => allEmployees.filter((e) => e.id !== session?.user?.id),
+    [allEmployees, session?.user?.id]
   );
 
   const activeFilterCount = useMemo(() => {
@@ -114,12 +119,11 @@ export default function WorkLogsPage() {
   }, [filters, currentYear, currentQuarter]);
 
   const joiningYear = useMemo(() => {
-    if (!employees.length) return currentYear;
     const targetId = draftFilters.selectedUserId || session?.user?.id;
-    const emp = employees.find(e => e.id === targetId);
+    const emp = allEmployees.find(e => e.id === targetId);
     if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
     return currentYear;
-  }, [employees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
+  }, [allEmployees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
 
   const availableYears = useMemo(() => {
     const years = [];

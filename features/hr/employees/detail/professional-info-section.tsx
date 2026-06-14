@@ -132,6 +132,8 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                 <Input
                   type="number"
                   placeholder="0"
+                  min={0}
+                  max={60}
                   value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                 />

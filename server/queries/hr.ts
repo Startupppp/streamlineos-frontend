@@ -552,7 +552,14 @@ export async function getWorkLogs(
     .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
     .filter((l) => l.date >= startStr && l.date <= endStr);
 
-  return dated as unknown as WorkLog[];
+  const seenDates = new Set<string>();
+  const deduped = dated.filter((l) => {
+    if (seenDates.has(l.date)) return false;
+    seenDates.add(l.date);
+    return true;
+  });
+
+  return deduped as unknown as WorkLog[];
 }
 
 export async function getHelpdeskTickets(

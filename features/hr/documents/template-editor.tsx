@@ -200,6 +200,16 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       return;
     }
 
+    const invalidVar = detectedVariables.find(
+      (v) => !/^[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$/.test(v)
+    );
+    if (invalidVar) {
+      toast.error(
+        `Invalid variable name "{{${invalidVar}}}". Variable names must start with a letter, use only letters/digits/underscores, and cannot have consecutive underscores.`
+      );
+      return;
+    }
+
     const isDuplicate = (allTemplates ?? []).some(
       (t) =>
         t.title.trim().toLowerCase() === trimmedTitle.toLowerCase() &&

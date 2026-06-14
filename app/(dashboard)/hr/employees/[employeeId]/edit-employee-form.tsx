@@ -28,7 +28,7 @@ const formSchema = z.object({
   }, "Please enter a valid phone number").optional().or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
-  experienceYears: z.number().optional(),
+  experienceYears: z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
   skills: z.string().optional(),
   taxId: z.string().optional(),
   monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
