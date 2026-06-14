@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import { useHrOrgChart, useHrDepartments } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,29 +11,38 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2 } from "lucide-react";
-import type { Employee } from "@/types/hr";
+import type { OrgChartNode } from "@/types/hr";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 
 interface TreeNode {
-  employee: Employee;
+  employee: OrgChartNode;
   children: TreeNode[];
 }
 
 const ROLE_DOT: Record<string, string> = {
-  CEO: "bg-amber-500",
-  HR: "bg-purple-500",
-  ADMIN: "bg-blue-500",
+  Ceo: "bg-amber-500",
+  Hr: "bg-purple-500",
+  Admin: "bg-blue-500",
 };
 
-function buildTree(employees: Employee[]): TreeNode[] {
+function buildTree(nodes: OrgChartNode[]): TreeNode[] {
+  const seen = new Set<string>();
+  const unique: OrgChartNode[] = [];
+  for (const n of nodes) {
+    if (!seen.has(n.id)) {
+      seen.add(n.id);
+      unique.push(n);
+    }
+  }
+
   const map = new Map<string, TreeNode>();
   const roots: TreeNode[] = [];
 
-  for (const emp of employees) {
+  for (const emp of unique) {
     map.set(emp.id, { employee: emp, children: [] });
   }
 
-  for (const emp of employees) {
+  for (const emp of unique) {
     const node = map.get(emp.id)!;
     if (emp.reportingTo && map.has(emp.reportingTo) && emp.reportingTo !== emp.id) {
       map.get(emp.reportingTo)!.children.push(node);
@@ -69,20 +78,22 @@ function buildTree(employees: Employee[]): TreeNode[] {
     detectAndBreakCycles(root.employee.id);
   }
 
-  const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
-  function sortNodes(nodes: TreeNode[]) {
-    nodes.sort((a, b) => {
+  const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
+
+  function sortNodes(treeNodes: TreeNode[]) {
+    treeNodes.sort((a, b) => {
       const pa = priority[a.employee.role] ?? 99;
       const pb = priority[b.employee.role] ?? 99;
       return pa !== pb ? pa - pb : (a.employee.name ?? "").localeCompare(b.employee.name ?? "");
     });
-    nodes.forEach((n) => sortNodes(n.children));
+    treeNodes.forEach((n) => sortNodes(n.children));
   }
+
   sortNodes(roots);
   return roots;
 }
 
-function PersonCard({ emp, size = "md" }: { emp: Employee; size?: "sm" | "md" }) {
+function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md" }) {
   const isSm = size === "sm";
   return (
     <div className={cn(
@@ -156,7 +167,6 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
 }
 
 function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNode[]; dotCls?: string }) {
-
   const withChildren = roots.filter((r) => r.children.length > 0);
   const standalone = roots.filter((r) => r.children.length === 0);
 
@@ -193,9 +203,9 @@ function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNod
 
 function TreeLegend() {
   const items = [
-    { label: "CEO", cls: ROLE_DOT.CEO },
-    { label: "Admin", cls: ROLE_DOT.ADMIN },
-    { label: "HR", cls: ROLE_DOT.HR },
+    { label: "CEO", cls: ROLE_DOT.Ceo },
+    { label: "Admin", cls: ROLE_DOT.Admin },
+    { label: "HR", cls: ROLE_DOT.Hr },
     { label: "Other", cls: "bg-muted-foreground/40" },
   ];
 
@@ -212,13 +222,18 @@ function TreeLegend() {
 }
 
 export default function OrgChartPage() {
-  const { data: employeesRaw, isLoading } = useHrEmployees();
+  const { data: rawNodes, isLoading } = useHrOrgChart();
   const { data: departments } = useHrDepartments();
 
-  const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw]
-  );
+  const employees = useMemo<OrgChartNode[]>(() => {
+    if (!Array.isArray(rawNodes)) return [];
+    const seen = new Set<string>();
+    return rawNodes.filter((n) => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id);
+      return true;
+    });
+  }, [rawNodes]);
 
   const tree = useMemo(() => buildTree(employees), [employees]);
 
@@ -230,7 +245,7 @@ export default function OrgChartPage() {
       groups.get(role)!.push(root);
     }
 
-    const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
+    const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
     return Array.from(groups.entries()).sort((a, b) => {
       const pa = priority[a[0]] ?? 99;
       const pb = priority[b[0]] ?? 99;
@@ -245,7 +260,7 @@ export default function OrgChartPage() {
   }, [departments]);
 
   const deptGroups = useMemo(() => {
-    const groups = new Map<string, Employee[]>();
+    const groups = new Map<string, OrgChartNode[]>();
     for (const emp of employees) {
       const name = emp.departmentId ? (deptMap.get(emp.departmentId) ?? "Other") : "Unassigned";
       if (!groups.has(name)) groups.set(name, []);

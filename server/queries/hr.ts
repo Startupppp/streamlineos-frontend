@@ -70,7 +70,9 @@ export async function getEmployees(
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
     with: {
-      user: true,
+      user: {
+        with: { department: true },
+      },
     },
   });
 
@@ -95,6 +97,7 @@ export async function getEmployees(
       designation: u.designation,
       employeeId: u.employeeId,
       departmentId: u.departmentId,
+      department: u.department ? { id: u.department.id, name: u.department.name } : null,
       image: u.image,
       isActive: u.isActive ?? true,
       joiningDate: u.joiningDate,
@@ -589,25 +592,40 @@ export async function getHelpdeskTickets(
   }) as unknown as Promise<HelpdeskTicket[]>;
 }
 
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(/[\s_]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
     with: { user: true },
   });
 
-  return members
-    .map((m) => m.user)
-    .filter((u) => u.isActive !== false)
-    .map((u) => ({
+  const seen = new Set<string>();
+  const result: OrgChartNode[] = [];
+
+  for (const m of members) {
+    const u = m.user;
+    if (!u || seen.has(u.id) || u.isActive === false) continue;
+    seen.add(u.id);
+    result.push({
       id: u.id,
       name: u.name,
       email: u.email,
-      role: u.role ?? "EMPLOYEE",
+      role: toTitleCase(u.role ?? "Employee"),
       designation: u.designation,
       image: u.image,
       departmentId: u.departmentId,
       reportingTo: u.reportingTo,
-    }));
+    });
+  }
+
+  return result;
 }
 
 export async function getEmployeeStats(orgId: string, userId: string): Promise<EmployeeStats> {
