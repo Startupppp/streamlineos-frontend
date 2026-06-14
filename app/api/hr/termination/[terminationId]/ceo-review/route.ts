@@ -7,7 +7,7 @@ import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 
 const reviewSchema = z.object({
-  action: z.enum(["APPROVED", "REJECTED"]),
+  decision: z.enum(["approve", "reject"]),
   remarks: z.string().optional(),
 });
 
@@ -31,13 +31,14 @@ export async function PATCH(
     if (existing.status !== "PENDING_CEO") return err("Termination is not pending CEO review.", 400);
 
     const body = reviewSchema.parse(await req.json());
+    const newStatus = body.decision === "approve" ? "APPROVED" : "REJECTED";
 
-    if (body.action === "REJECTED" && !body.remarks) {
+    if (body.decision === "reject" && !body.remarks) {
       return err("Remarks are required when rejecting.", 400);
     }
 
     await db.update(terminations).set({
-      status: body.action,
+      status: newStatus,
       ceoReviewedBy: session.user.id,
       ceoReviewedAt: new Date(),
       ceoRemarks: body.remarks || null,
@@ -45,7 +46,7 @@ export async function PATCH(
     }).where(eq(terminations.id, terminationId));
 
     void writeAuditLog({
-      action: body.action === "APPROVED" ? "TERMINATION_APPROVED" : "TERMINATION_REJECTED",
+      action: newStatus === "APPROVED" ? "TERMINATION_APPROVED" : "TERMINATION_REJECTED",
       userId: session.user.id,
       orgId: session.orgId,
       targetId: String(terminationId),

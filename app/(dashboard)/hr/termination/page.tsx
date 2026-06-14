@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
-import { format } from "date-fns";
+import { format, isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
 import {
   Plus,
@@ -25,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -104,8 +103,8 @@ function buildLetterPreview(params: {
   employeeName: string;
   designation: string;
   effectiveDate: string;
-  reasons: string[];
-  explanation: string;
+  reason: string;
+  remarks: string;
   noticePeriodWaived: boolean;
   severanceAmount: string;
 }): string {
@@ -113,8 +112,8 @@ function buildLetterPreview(params: {
     employeeName,
     designation,
     effectiveDate,
-    reasons,
-    explanation,
+    reason,
+    remarks,
     noticePeriodWaived,
     severanceAmount,
   } = params;
@@ -122,8 +121,7 @@ function buildLetterPreview(params: {
   const dateStr = effectiveDate
     ? format(new Date(effectiveDate), "MMMM d, yyyy")
     : "[Date not set]";
-  const reasonList =
-    reasons.length > 0 ? reasons.join(", ") : "[No reasons selected]";
+  const reasonDisplay = reason || "[No reason selected]";
   const severanceLine =
     severanceAmount && Number(severanceAmount) > 0
       ? `\nSeverance Amount: ₹${Number(severanceAmount).toLocaleString("en-IN")}`
@@ -138,11 +136,11 @@ Dear ${employeeName || "[Employee Name]"},
 
 This letter serves as formal notice of the termination of your employment as ${designation || "[Designation]"} with our organization, effective ${dateStr}.
 
-Reason(s) for Termination:
-${reasonList}
+Reason for Termination:
+${reasonDisplay}
 
-Details:
-${explanation || "[Explanation not provided]"}
+Remarks:
+${remarks || "[No remarks provided]"}
 ${severanceLine}${noticeLine}
 
 Please ensure all company property, access credentials, and pending deliverables are handed over before your last working day.
@@ -377,8 +375,8 @@ export default function TerminationPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
-  const [explanation, setExplanation] = useState("");
+  const [selectedReason, setSelectedReason] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");
   const [noticePeriodWaived, setNoticePeriodWaived] = useState(false);
   const [severanceAmount, setSeveranceAmount] = useState("");
@@ -412,12 +410,12 @@ export default function TerminationPage() {
         employeeName: selectedEmployee?.name ?? "",
         designation: selectedEmployee?.designation ?? "",
         effectiveDate,
-        reasons: selectedReasons,
-        explanation,
+        reason: selectedReason,
+        remarks,
         noticePeriodWaived,
         severanceAmount,
       }),
-    [selectedEmployee, effectiveDate, selectedReasons, explanation, noticePeriodWaived, severanceAmount]
+    [selectedEmployee, effectiveDate, selectedReason, remarks, noticePeriodWaived, severanceAmount]
   );
 
   const list = useMemo(() => {
@@ -439,47 +437,58 @@ export default function TerminationPage() {
 
   const resetCreateForm = useCallback(() => {
     setSelectedUserId("");
-    setSelectedReasons([]);
-    setExplanation("");
+    setSelectedReason("");
+    setRemarks("");
     setEffectiveDate("");
     setNoticePeriodWaived(false);
     setSeveranceAmount("");
     setInternalNotes("");
   }, []);
 
-  const handleToggleReason = useCallback((reason: string) => {
-    setSelectedReasons((prev) =>
-      prev.includes(reason) ? prev.filter((r) => r !== reason) : [...prev, reason]
-    );
-  }, []);
+  const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
   const handleCreateSubmit = useCallback(() => {
     if (!selectedUserId) {
       toast.error("Please select an employee");
       return;
     }
-    if (selectedReasons.length === 0) {
-      toast.error("Please select at least one termination reason");
+
+    const targetEmployee = employees.find((e) => e.id === selectedUserId);
+    if (targetEmployee?.role === "CEO") {
+      toast.error("CEO cannot be terminated through this workflow");
       return;
     }
-    if (explanation.trim().length < 50) {
-      toast.error(
-        selectedReasons.includes(TERMINATION_REASON_OTHER)
-          ? "'Other' reason requires at least 50 characters of explanation"
-          : "Detailed explanation must be at least 50 characters"
-      );
+    if (targetEmployee && !targetEmployee.isActive) {
+      toast.error("This employee has already been terminated or is inactive");
       return;
     }
+
+    if (!selectedReason) {
+      toast.error("Please select a termination reason");
+      return;
+    }
+
+    if (isOtherReason && remarks.trim().length < 10) {
+      toast.error("Remarks for 'Other' reason must be at least 10 characters");
+      return;
+    }
+
     if (!effectiveDate) {
       toast.error("Please set an effective date");
+      return;
+    }
+
+    const parsedDate = parseISO(effectiveDate);
+    if (!isToday(parsedDate) && !isFuture(parsedDate)) {
+      toast.error("Effective date must be today or a future date");
       return;
     }
 
     createTermination.mutate(
       {
         userId: selectedUserId,
-        reasons: selectedReasons,
-        detailedExplanation: explanation.trim(),
+        reasons: [selectedReason],
+        detailedExplanation: remarks.trim(),
         effectiveDate,
         severanceAmount: severanceAmount ? Number(severanceAmount) : undefined,
         noticePeriodWaived,
@@ -496,8 +505,10 @@ export default function TerminationPage() {
     );
   }, [
     selectedUserId,
-    selectedReasons,
-    explanation,
+    employees,
+    selectedReason,
+    isOtherReason,
+    remarks,
     effectiveDate,
     severanceAmount,
     noticePeriodWaived,
@@ -694,74 +705,72 @@ export default function TerminationPage() {
               <SelectValue placeholder="Select an employee..." />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((emp) => (
-                <SelectItem key={emp.id} value={emp.id}>
-                  <span className="flex flex-col">
-                    <span>{emp.name ?? "Unnamed"}</span>
-                    {emp.designation && (
-                      <span className="text-xs text-muted-foreground">{emp.designation}</span>
-                    )}
-                  </span>
-                </SelectItem>
-              ))}
+              {employees
+                .filter((emp) => emp.role !== "CEO" && emp.isActive)
+                .map((emp) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    <span className="flex flex-col">
+                      <span>{emp.name ?? "Unnamed"}</span>
+                      {emp.designation && (
+                        <span className="text-xs text-muted-foreground">{emp.designation}</span>
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
 
         <Separator />
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            Termination Reasons <span className="text-destructive">*</span>
+            Termination Reason <span className="text-destructive">*</span>
           </Label>
-          <div className="grid grid-cols-1 gap-2">
-            {TERMINATION_REASONS.map((reason) => (
-              <div key={reason} className="flex items-center gap-2">
-                <Checkbox
-                  id={`reason-${reason}`}
-                  checked={selectedReasons.includes(reason)}
-                  onCheckedChange={() => handleToggleReason(reason)}
-                  aria-label={reason}
-                />
-                <Label
-                  htmlFor={`reason-${reason}`}
-                  className="text-xs font-normal cursor-pointer"
-                >
+          <Select value={selectedReason} onValueChange={setSelectedReason}>
+            <SelectTrigger aria-label="Select termination reason">
+              <SelectValue placeholder="Select a reason..." />
+            </SelectTrigger>
+            <SelectContent>
+              {TERMINATION_REASONS.map((reason) => (
+                <SelectItem key={reason} value={reason}>
                   {reason}
-                </Label>
-              </div>
-            ))}
-          </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        <Separator />
 
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
-            {selectedReasons.includes(TERMINATION_REASON_OTHER)
-              ? "Remarks for 'Other' Reason"
-              : "Detailed Explanation"}{" "}
-            <span className="text-destructive">*</span>
+            Remarks{" "}
+            {isOtherReason ? (
+              <span className="text-destructive">*</span>
+            ) : (
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            )}
           </Label>
-          {selectedReasons.includes(TERMINATION_REASON_OTHER) && (
+          {isOtherReason && (
             <p className="text-[11px] text-amber-600 dark:text-amber-400">
-              Required: Please describe the specific reason for selecting &apos;Other&apos;.
+              Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
             </p>
           )}
           <Textarea
             placeholder={
-              selectedReasons.includes(TERMINATION_REASON_OTHER)
-                ? "Required: Explain the specific other reason for termination (min. 50 characters)..."
-                : "Minimum 50 characters. Describe the reasons and circumstances in detail..."
+              isOtherReason
+                ? "Describe the specific reason (min. 10 characters)..."
+                : "Additional remarks or context..."
             }
-            value={explanation}
-            onChange={(e) => setExplanation(e.target.value)}
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
             rows={4}
-            aria-label="Detailed explanation"
+            aria-label="Remarks"
           />
-          <p className="text-[11px] text-muted-foreground">
-            {explanation.length} / 50 min characters
-          </p>
+          {isOtherReason && (
+            <p className="text-[11px] text-muted-foreground">
+              {remarks.length} / 10 min characters
+            </p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -771,9 +780,13 @@ export default function TerminationPage() {
           <Input
             type="date"
             value={effectiveDate}
+            min={format(new Date(), "yyyy-MM-dd")}
             onChange={(e) => setEffectiveDate(e.target.value)}
             aria-label="Effective date"
           />
+          <p className="text-[11px] text-muted-foreground">
+            Must be today or a future date.
+          </p>
         </div>
 
         <Separator />
