@@ -100,11 +100,11 @@ function StateSelect({ country, value, onChange, textValue, onTextChange, error 
   );
 }
 
-const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
-const PINCODE_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
-const PHONE_REGEX = /^[+()\d\s-]{7,20}$/;
+const CODE_REGEX = /^[A-Z0-9]{2,20}$/;
+const PINCODE_REGEX = /^[A-Za-z0-9]{4,10}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TEXT_FIELD_REGEX = /^(?!.*[^a-zA-Z0-9\s\-&,.()'\/])[a-zA-Z][a-zA-Z0-9\s\-&,.()'\/]*$/;
+const TEXT_FIELD_REGEX = /^(?!.*\s{2})[a-zA-Z][a-zA-Z0-9\s\-&,.()'\/]*$/;
+const HAS_LETTER_REGEX = /[a-zA-Z]/;
 
 type FormErrors = Partial<Record<keyof typeof EMPTY_FORM, string>>;
 
@@ -172,6 +172,12 @@ export default function BranchManagementPage() {
     setFormErrors({});
   }, []);
 
+  const handleCloseEdit = useCallback(() => {
+    setEditingBranch(null);
+    setEditFormData({ ...EMPTY_FORM });
+    setEditFormErrors({});
+  }, []);
+
   const validateForm = (data: typeof EMPTY_FORM, setErrors: (e: FormErrors) => void) => {
     const trimmed = {
       name: data.name.trim(),
@@ -187,38 +193,61 @@ export default function BranchManagementPage() {
 
     const errors: FormErrors = {};
 
-    if (!trimmed.name) errors.name = "Branch name is required";
-    else if (trimmed.name.length < 2) errors.name = "Branch name must be at least 2 characters";
-    else if (trimmed.name.length > 100) errors.name = "Branch name must be at most 100 characters";
-    else if (!TEXT_FIELD_REGEX.test(trimmed.name)) errors.name = "Branch name must start with a letter and contain only letters, numbers, spaces, and basic punctuation";
+    if (!trimmed.name) {
+      errors.name = "Branch name is required";
+    } else if (!HAS_LETTER_REGEX.test(trimmed.name)) {
+      errors.name = "Branch name must contain at least one letter";
+    } else if (trimmed.name.length > 100) {
+      errors.name = "Branch name must be at most 100 characters";
+    } else if (!TEXT_FIELD_REGEX.test(trimmed.name)) {
+      errors.name = "Branch name must start with a letter, no consecutive spaces, and only letters, numbers, and basic punctuation";
+    }
 
-    if (!trimmed.code) errors.code = "Branch code is required";
-    else if (!CODE_REGEX.test(trimmed.code)) errors.code = "Use 2–20 chars: A-Z, numbers, hyphen";
+    if (!trimmed.code) {
+      errors.code = "Branch code is required";
+    } else if (!CODE_REGEX.test(trimmed.code)) {
+      errors.code = "Use 2–20 alphanumeric characters (letters and numbers only)";
+    }
 
     if (trimmed.city) {
-      if (trimmed.city.length < 2) errors.city = "City must be at least 2 characters";
-      else if (trimmed.city.length > 80) errors.city = "City must be at most 80 characters";
-      else if (!TEXT_FIELD_REGEX.test(trimmed.city)) errors.city = "City name must start with a letter and contain only letters, spaces, and basic punctuation";
+      if (!HAS_LETTER_REGEX.test(trimmed.city)) {
+        errors.city = "City must contain at least one letter";
+      } else if (trimmed.city.length > 100) {
+        errors.city = "City must be at most 100 characters";
+      } else if (!TEXT_FIELD_REGEX.test(trimmed.city)) {
+        errors.city = "City name must start with a letter and contain only letters, spaces, and basic punctuation";
+      }
     }
 
     if (trimmed.state) {
-      if (trimmed.state.length < 2) errors.state = "State must be at least 2 characters";
-      else if (trimmed.state.length > 80) errors.state = "State must be at most 80 characters";
-      else if (!TEXT_FIELD_REGEX.test(trimmed.state)) errors.state = "State name must start with a letter and contain only letters, spaces, and basic punctuation";
-    }
-
-    if (trimmed.address && trimmed.address.length > 500) errors.address = "Address must be at most 500 characters";
-
-    if (trimmed.email && !EMAIL_REGEX.test(trimmed.email)) {
-      errors.email = "Enter a valid email";
-    }
-
-    if (trimmed.phone && !PHONE_REGEX.test(trimmed.phone)) {
-      errors.phone = "Enter a valid phone number";
+      if (!HAS_LETTER_REGEX.test(trimmed.state)) {
+        errors.state = "State must contain at least one letter";
+      } else if (trimmed.state.length > 100) {
+        errors.state = "State must be at most 100 characters";
+      } else if (!TEXT_FIELD_REGEX.test(trimmed.state)) {
+        errors.state = "State name must start with a letter and contain only letters, spaces, and basic punctuation";
+      }
     }
 
     if (trimmed.pincode && !PINCODE_REGEX.test(trimmed.pincode)) {
-      errors.pincode = "Enter a valid pincode";
+      errors.pincode = "Enter a valid pin code (4–10 alphanumeric characters, no spaces or special characters)";
+    }
+
+    if (trimmed.address && trimmed.address.length > 500) {
+      errors.address = "Address must be at most 500 characters";
+    }
+
+    if (trimmed.phone) {
+      const digitsOnly = trimmed.phone.replace(/[+\s-]/g, "");
+      if (/[a-zA-Z]/.test(trimmed.phone)) {
+        errors.phone = "Phone number must not contain letters";
+      } else if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+        errors.phone = "Phone number must have 7–15 digits";
+      }
+    }
+
+    if (trimmed.email && !EMAIL_REGEX.test(trimmed.email)) {
+      errors.email = "Enter a valid email address";
     }
 
     setErrors(errors);
@@ -257,7 +286,7 @@ export default function BranchManagementPage() {
       {
         onSuccess: () => {
           toast.success("Branch updated");
-          setEditingBranch(null);
+          handleCloseEdit();
         },
         onError: (err) => toast.error(err.message),
       }
@@ -290,7 +319,7 @@ export default function BranchManagementPage() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Branch Code *</Label>
-          <Input value={data.code} onChange={setter("code")} placeholder="e.g., MUM-01" />
+          <Input value={data.code} onChange={setter("code")} placeholder="e.g., MUM01" />
           {errors.code && <p className="text-[11px] text-destructive">{errors.code}</p>}
         </div>
       </div>
@@ -491,7 +520,7 @@ export default function BranchManagementPage() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={!!editingBranch} onOpenChange={(open) => { if (!open) setEditingBranch(null); }}>
+      <Sheet open={!!editingBranch} onOpenChange={(open) => { if (!open) handleCloseEdit(); }}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">
             <SheetTitle className="text-sm">Edit Branch</SheetTitle>
@@ -503,7 +532,7 @@ export default function BranchManagementPage() {
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setEditingBranch(null)}>Cancel</Button>
+              <Button variant="outline" className="flex-1" onClick={handleCloseEdit}>Cancel</Button>
               <Button
                 className="flex-1"
                 disabled={!editFormData.name || !editFormData.code || updateMutation.isPending}
