@@ -132,15 +132,6 @@ export default function BillingPage() {
             <InvoiceTable invoices={overdueInvoices} />
           </div>
         )}
-
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/billing/invoices">
-            <Button variant="outline" size="sm">All Invoices</Button>
-          </Link>
-          <Link href="/billing/invoices/new">
-            <Button variant="outline" size="sm">Create Invoice</Button>
-          </Link>
-        </div>
       </div>
     </PageWrapper>
   );

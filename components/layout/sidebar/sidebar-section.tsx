@@ -17,6 +17,18 @@ function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   return [{ ...sole, children: undefined }, ...kids];
 }
 
+/** Collapsed view flattens every route to an icon; drop hrefs that repeat (a hub parent sharing its first child's href) so React keys stay unique and no duplicate icon renders. */
+function dedupeByHref(routes: NavRoute[]): NavRoute[] {
+  const seen = new Set<string>();
+  const result: NavRoute[] = [];
+  for (const route of routes) {
+    if (seen.has(route.href)) continue;
+    seen.add(route.href);
+    result.push(route);
+  }
+  return result;
+}
+
 interface SidebarSectionProps {
   group: NavGroup;
   groupIndex: number;
@@ -80,7 +92,7 @@ export function SidebarSection({
       {showItems && (
         <div className="space-y-0.5">
           {isCollapsed
-            ? flattenNavRoutes(group.routes).map((route) => (
+            ? dedupeByHref(flattenNavRoutes(group.routes)).map((route) => (
                 <CollapsedItem
                   key={route.href}
                   route={route}
