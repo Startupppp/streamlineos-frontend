@@ -282,9 +282,9 @@ export default function BranchManagementPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           {branches.map((branch) => (
-            <Card key={branch.id} className="hover:border-blue-500/30 transition-colors">
+            <Card key={branch.id} className="hover:border-blue-500/30 transition-colors h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>

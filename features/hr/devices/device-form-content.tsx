@@ -122,7 +122,7 @@ export function DeviceFormContent({
                         value={empSearch}
                         onValueChange={setEmpSearch}
                       />
-                      <CommandList>
+                      <CommandList className="max-h-48 overflow-y-auto">
                         <CommandEmpty>No employees found</CommandEmpty>
                         <CommandGroup>
                           {filteredEmployees.map((emp) => (

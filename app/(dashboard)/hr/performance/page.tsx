@@ -250,7 +250,7 @@ function ReviewsTab() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search employees..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup>
                     {employees.map((e) => (
@@ -448,7 +448,7 @@ function GoalsTab() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search employees..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup>
                     {employees.map((e) => (
@@ -647,7 +647,7 @@ function OneOnOnesTab() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search employees..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup>
                     {employees.map((e) => (
@@ -1114,7 +1114,7 @@ function PIPTab() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search employees..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup>
                     {employees.filter((e) => e.isActive).map((e) => {
@@ -1148,7 +1148,7 @@ function PIPTab() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search HR representatives..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No HR representative found.</CommandEmpty>
                   <CommandGroup>
                     <CommandItem value="none" onSelect={() => { setHrRepId(""); setHrRepPickerOpen(false); }}>

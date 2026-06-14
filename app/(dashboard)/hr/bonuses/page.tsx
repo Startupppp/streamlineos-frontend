@@ -180,7 +180,7 @@ function BonusContent() {
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search employees..." />
-                <CommandList>
+                <CommandList className="max-h-48 overflow-y-auto">
                   <CommandEmpty>No employees found.</CommandEmpty>
                   <CommandGroup>
                     {employees.filter((e) => !!e.id).map((e) => (
