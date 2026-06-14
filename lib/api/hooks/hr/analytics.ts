@@ -29,3 +29,39 @@ export function useHrAnalytics() {
     staleTime: 60_000,
   });
 }
+
+export interface HrAttendanceAnalytics {
+  year: number;
+  month: number;
+  totalAttendanceLogs: number;
+  byDepartment: { department: string; count: number }[];
+  daily: { date: string; count: number }[];
+}
+
+export function useHrAttendanceAnalytics(year: number, month: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "analyticsAttendance", year, month] as const,
+    queryFn: () =>
+      apiClient.get<HrAttendanceAnalytics>("/hr/analytics/attendance", {
+        year: String(year),
+        month: String(month),
+      }),
+    staleTime: 60_000,
+  });
+}
+
+export interface HrAttritionAnalytics {
+  totalEmployees: number;
+  resignedThisYear: number;
+  attritionRatePercent: string;
+  byMonth: { month: string; count: number }[];
+}
+
+export function useHrAttritionAnalytics() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "analyticsAttrition"] as const,
+    queryFn: () =>
+      apiClient.get<HrAttritionAnalytics>("/hr/analytics/attrition"),
+    staleTime: 5 * 60_000,
+  });
+}
