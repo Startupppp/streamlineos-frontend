@@ -820,6 +820,7 @@ export const handbookVersions = pgTable("handbook_versions", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   version: text("version").notNull(),
+  title: text("title").notNull().default(""),
   documentId: integer("document_id").references(() => richDocuments.id),
   documentUrl: text("document_url"),
   changelog: text("changelog"),
