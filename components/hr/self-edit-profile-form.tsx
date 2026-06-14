@@ -89,7 +89,9 @@ export function SelfEditProfileForm({ employee, onSaved }: SelfEditProfileFormPr
 
   function addSkill() {
     const trimmed = (newSkill ?? "").trim();
-    if (!trimmed || skills.includes(trimmed)) return;
+    if (!trimmed) return;
+    if (/^[\s\W]+$/.test(trimmed)) return;
+    if (skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return;
     setSkills((prev) => [...prev, trimmed]);
     setValue("newSkill", "");
   }
