@@ -551,7 +551,11 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<SupportTicketPriority>("MEDIUM");
   const [category, setCategory] = useState<TicketCategory | "">("");
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const create = useCreateSupportTicket();
+  const addMessage = useAddSupportMessage();
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -559,6 +563,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     setDescription("");
     setPriority("MEDIUM");
     setCategory("");
+    setPendingFiles([]);
   }, []);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -574,6 +579,43 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   const handlePriorityChange = useCallback((v: string) => setPriority(v as SupportTicketPriority), []);
   const handleCategoryChange = useCallback((v: string) => setCategory(v as TicketCategory), []);
   const handleCancel = useCallback(() => { resetForm(); onOpenChange(false); }, [resetForm, onOpenChange]);
+  const handleAttachClick = useCallback(() => fileRef.current?.click(), []);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    const oversized = files.find((f) => f.size > MAX_ATTACHMENT_SIZE);
+    if (oversized) {
+      toast.error(`${oversized.name} exceeds 10MB limit`);
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const uploaded: PendingAttachment[] = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("folder", "support-attachments");
+        const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
+        const json = await res.json() as { url?: string; error?: string };
+        if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+        uploaded.push({ fileName: file.name, fileUrl: json.url, fileSize: file.size, mimeType: file.type });
+      }
+      setPendingFiles((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "File upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
 
   const handleCreate = useCallback(() => {
     const titleErr = validateTitle(title);
@@ -583,15 +625,35 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     create.mutate(
       { title: title.trim(), category: category || undefined, description: description.trim() || undefined, priority },
       {
-        onSuccess: () => {
-          onOpenChange(false);
-          resetForm();
-          toast.success("Ticket created");
+        onSuccess: (ticket) => {
+          if (pendingFiles.length > 0) {
+            addMessage.mutate(
+              { ticketId: ticket.id, body: "(attachment)", isInternal: false, attachments: pendingFiles },
+              {
+                onSuccess: () => {
+                  onOpenChange(false);
+                  resetForm();
+                  toast.success("Ticket created with attachments");
+                },
+                onError: () => {
+                  onOpenChange(false);
+                  resetForm();
+                  toast.success("Ticket created (attachments failed to attach)");
+                },
+              }
+            );
+          } else {
+            onOpenChange(false);
+            resetForm();
+            toast.success("Ticket created");
+          }
         },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to create ticket"),
       }
     );
-  }, [create, title, description, priority, category, onOpenChange, resetForm]);
+  }, [create, addMessage, title, description, priority, category, pendingFiles, onOpenChange, resetForm]);
+
+  const isBusy = create.isPending || addMessage.isPending || uploading;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
@@ -644,10 +706,56 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs">Attachments</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={handleAttachClick}
+                disabled={uploading}
+              >
+                {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Paperclip className="h-3 w-3" />}
+                {uploading ? "Uploading..." : "Attach Files"}
+              </Button>
+            </div>
+            {pendingFiles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {pendingFiles.map((f, i) => {
+                  const Icon = fileMimeIcon(f.mimeType);
+                  return (
+                    <div key={i} className="flex items-center gap-1 text-[11px] bg-muted rounded px-2 py-1 border">
+                      <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="truncate max-w-[120px]">{f.fileName}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(i)}
+                        className="ml-0.5 text-muted-foreground hover:text-foreground"
+                        aria-label={`Remove ${f.fileName}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={handleFileSelect}
+              aria-label="Attach files"
+            />
+          </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={create.isPending}>
-              {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            <Button variant="outline" onClick={handleCancel} disabled={isBusy}>Cancel</Button>
+            <Button onClick={handleCreate} disabled={isBusy}>
+              {isBusy && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>
           </div>

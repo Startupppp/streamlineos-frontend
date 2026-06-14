@@ -8,7 +8,7 @@ export interface Employee {
   designation: string | null;
   isActive: boolean;
   hasDashboardAccess: boolean;
-  department: { id: number; name: string } | null;
+  department?: { id: number; name: string } | null;
 }
 
 export type UserRole = string;

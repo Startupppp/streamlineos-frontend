@@ -6,11 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, Pencil, Mail, Eye, Copy, Variable,
+  Plus, Trash2, Pencil, Mail, Eye, Copy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,8 +18,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription,
 } from "@/components/ui/form";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
@@ -58,10 +60,22 @@ const SAMPLE_DATA: Record<string, string> = {
 "user.email":"priya@streamlineos.app",
 };
 
+const TEMPLATE_NAME_INVALID_CHARS = /[<>{}|\\^`]/;
+
 const templateSchema = z.object({
-  name: z.string().min(1,"Name required").max(100),
-  subject: z.string().min(1,"Subject required"),
-  body: z.string().min(1,"Body required"),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => !TEMPLATE_NAME_INVALID_CHARS.test(v), "Name contains invalid special characters (<>{}|\\^`)")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces"),
+  subject: z
+    .string()
+    .min(3, "Subject must be at least 3 characters")
+    .max(200, "Subject must be at most 200 characters"),
+  body: z
+    .string()
+    .min(10, "Body must be at least 10 characters"),
 });
 type TemplateForm = z.infer<typeof templateSchema>;
 
@@ -175,15 +189,17 @@ export default function EmailTemplatesPage() {
                 <FormField control={createForm.control} name="name" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Template Name</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Welcome Email" /></FormControl>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome Email" maxLength={100} /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
                   </FormItem>
                 )} />
                 <FormField control={createForm.control} name="subject" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" /></FormControl>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" maxLength={200} /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
                   </FormItem>
                 )} />
                 <FormField control={createForm.control} name="body" render={({ field }) => (
@@ -191,6 +207,7 @@ export default function EmailTemplatesPage() {
                     <FormLabel>Body</FormLabel>
                     <FormControl><Textarea {...field} rows={8} placeholder="Write your email body..." /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
                   </FormItem>
                 )} />
                 <div>
@@ -251,15 +268,17 @@ export default function EmailTemplatesPage() {
                     <FormField control={editForm.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Template Name</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} maxLength={100} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
                       </FormItem>
                     )} />
                     <FormField control={editForm.control} name="subject" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Subject</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} maxLength={200} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
                       </FormItem>
                     )} />
                     <FormField control={editForm.control} name="body" render={({ field }) => (
@@ -267,6 +286,7 @@ export default function EmailTemplatesPage() {
                         <FormLabel>Body</FormLabel>
                         <FormControl><Textarea {...field} rows={8} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
                       </FormItem>
                     )} />
                     <div>
@@ -346,8 +366,17 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDelete }: TemplateC
   return (
     <Card className="shadow-sm hover:shadow-md transition-all">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-sm truncate">{template.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CardTitle className="text-sm truncate min-w-0 cursor-default">{template.name}</CardTitle>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs break-words">{template.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePreviewToggle} aria-label="View">
               <Eye className="h-3.5 w-3.5" />
