@@ -187,6 +187,10 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       toast.error("Title must be at most 150 characters");
       return;
     }
+    if (!/[a-zA-Z]/.test(trimmedTitle)) {
+      toast.error("Title must contain at least one letter");
+      return;
+    }
     if (/[<>{}[\]\\|^~`]/.test(trimmedTitle)) {
       toast.error("Title contains invalid special characters");
       return;

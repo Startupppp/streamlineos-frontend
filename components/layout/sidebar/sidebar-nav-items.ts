@@ -142,9 +142,9 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "CRM",
     requiredPermission: ["crm:leads:view", "crm:targets:view", "crm:clients:read"],
     routes: [
-      { label: "CRM Hub", icon: Contact2, href: "/crm", requiredPermission: "crm:leads:view" },
+      { label: "Overview", icon: LayoutDashboard, href: "/crm", requiredPermission: "crm:leads:view" },
       {
-        label: "Lead Pipeline", icon: Contact2, href: "/crm/leads", requiredPermission: "crm:leads:view",
+        label: "Leads", icon: Contact2, href: "/crm/leads", requiredPermission: "crm:leads:view",
         children: [
           { label: "Smart Search", icon: Search, href: "/crm/leads/smart-search", requiredPermission: "crm:leads:view" },
           { label: "Distribute Leads", icon: Share2, href: "/crm/leads/distribute", requiredPermission: "crm:leads:assign" },
@@ -160,18 +160,23 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Win/Loss Analysis", icon: TrendingUp, href: "/crm/deals/win-loss", requiredPermission: "crm:reports:view" },
         ],
       },
-      { label: "Organizations", icon: Network, href: "/crm/organizations", requiredPermission: "crm:clients:read" },
+      { label: "Quotes", icon: FileText, href: "/crm/quotes", requiredPermission: "crm:leads:view" },
+      { label: "Contacts", icon: Users, href: "/crm/contacts", requiredPermission: "crm:clients:read" },
       {
         label: "Clients", icon: UserCheck, href: "/crm/clients", requiredPermission: "crm:clients:read",
         children: [
           { label: "Territories", icon: Map, href: "/crm/territories", requiredPermission: "branch:read" },
         ],
       },
+      { label: "Organizations", icon: Network, href: "/crm/organizations", requiredPermission: "crm:clients:read" },
       { label: "Targets", icon: Trophy, href: "/crm/targets", requiredPermission: "crm:targets:view" },
-      { label: "Analytics", icon: BarChart3, href: "/crm/analytics", requiredPermission: "crm:reports:view" },
-      { label: "CRM Reports", icon: BarChart2, href: "/crm/reports", requiredPermission: "crm:reports:view" },
-      { label: "Quotes", icon: FileText, href: "/crm/quotes", requiredPermission: "crm:leads:view" },
       { label: "Web Forms", icon: FormInput, href: "/crm/web-forms", requiredPermission: "crm:leads:create" },
+      {
+        label: "Analytics", icon: BarChart3, href: "/crm/analytics", requiredPermission: "crm:reports:view",
+        children: [
+          { label: "Reports", icon: BarChart2, href: "/crm/reports", requiredPermission: "crm:reports:view" },
+        ],
+      },
     ],
   },
   {
