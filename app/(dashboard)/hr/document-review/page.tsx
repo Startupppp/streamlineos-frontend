@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   RefreshCw,
   ExternalLink,
   Eye,
+  Search,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -22,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -205,6 +208,8 @@ export default function DocumentReviewPage() {
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
   const [reviewUserName, setReviewUserName] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
@@ -216,6 +221,20 @@ export default function DocumentReviewPage() {
     isLoading: docsLoading,
   } = useEmployeeOnboardingDocs(reviewUserId);
 
+
+  const filteredList = useMemo(() => {
+    let list = summary ?? [];
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter((e) => (e.userName ?? "").toLowerCase().includes(q) || (e.designation ?? "").toLowerCase().includes(q));
+    }
+    if (statusFilter !== "ALL") {
+      list = list.filter((e) => (e.onboardingDocStatus ?? "PENDING") === statusFilter);
+    }
+    return list;
+  }, [summary, searchQuery, statusFilter]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
 
   const handleOpenReview = useCallback((emp: EmployeeDocSummary) => {
     setReviewUserId(emp.userId);
@@ -287,6 +306,31 @@ export default function DocumentReviewPage() {
       title="Document Review"
       subtitle="Review employee onboarding documents"
       badge={`${list.length} employees`}
+      filters={
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search employees..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 w-[200px] text-sm"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Status</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="SUBMITTED">Submitted</SelectItem>
+              <SelectItem value="APPROVED">Approved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      }
     >
       {list.length === 0 ? (
         <EmptyState
@@ -301,13 +345,19 @@ export default function DocumentReviewPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
-                  <TableHead>Progress</TableHead>
+                  <TableHead>Progress <span className="text-[10px] font-normal text-muted-foreground">(approved / required)</span></TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map((emp) => (
+                {filteredList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-sm text-muted-foreground">
+                      No employees match your filters.
+                    </TableCell>
+                  </TableRow>
+                ) : filteredList.map((emp) => (
                   <TableRow key={emp.userId}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
