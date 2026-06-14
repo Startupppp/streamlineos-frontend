@@ -108,14 +108,14 @@ function ApplyDialog({
           <div className="space-y-1">
             <Label>Link to Entity (optional)</Label>
             <Select
-              value={entityType}
-              onValueChange={(v) => setEntityType(v as TaskEntityType | "")}
+              value={entityType || "none"}
+              onValueChange={(v) => setEntityType(v === "none" ? "" : (v as TaskEntityType))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select entity type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="LEAD">Lead</SelectItem>
                 <SelectItem value="DEAL">Deal</SelectItem>
                 <SelectItem value="CONTACT">Contact</SelectItem>

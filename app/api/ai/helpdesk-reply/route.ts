@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { ticketId } = await parseBody(req, schema);
-    const result = await aiSuggestHelpdeskReply(session.orgId, ticketId);
+    let result;
+    try {
+      result = await aiSuggestHelpdeskReply(session.orgId, ticketId);
+    } catch {
+      return err("Failed to generate AI reply. Please try again later.", 503);
+    }
 
     if (!result) {
       return err("Ticket not found or reply generation failed", 404);
