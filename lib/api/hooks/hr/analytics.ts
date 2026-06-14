@@ -20,6 +20,7 @@ export interface HrAnalyticsData {
   };
   payroll: { totalCostYTD: string };
   expenses: { approvedYTD: string };
+  joiningExitsTrend: { month: string; joins: number; exits: number }[];
 }
 
 export function useHrAnalytics() {

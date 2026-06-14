@@ -844,6 +844,8 @@ export interface HrLeaveAnalytics {
     rejected: number;
   }[];
   monthlyTrend: { month: string; count: number }[];
+  byLeaveType: { typeName: string; count: number }[];
+  avgDaysByDepartment: { department: string; avgDays: number }[];
 }
 
 export function useHrLeaveAnalytics(year?: number) {
