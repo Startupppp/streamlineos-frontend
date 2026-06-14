@@ -21,6 +21,12 @@ interface EditState {
   message: string;
 }
 
+interface PendingHoliday {
+  name: string;
+  date: string;
+  message: string;
+}
+
 export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -30,6 +36,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const [message, setMessage] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [pendingHoliday, setPendingHoliday] = useState<PendingHoliday | null>(null);
 
   const yearOptions = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
 
@@ -55,25 +62,34 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         (h) => h.date === date || h.name.trim().toLowerCase() === trimmedName.toLowerCase()
       );
       if (duplicate) { toast.error("A holiday with this name or date already exists"); return; }
-      addMutation.mutate(
-        {
-          name: trimmedName,
-          date: date,
-          message: message.trim() || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Holiday added");
-            setName("");
-            setDate(format(new Date(), "yyyy-MM-dd"));
-            setMessage("");
-          },
-          onError: (e) => toast.error(e.message),
-        }
-      );
+      setPendingHoliday({ name: trimmedName, date, message: message.trim() });
     },
-    [name, date, message, addMutation, holidaysList]
+    [name, date, message, holidaysList]
   );
+
+  const handleAddConfirm = useCallback(() => {
+    if (!pendingHoliday) return;
+    addMutation.mutate(
+      {
+        name: pendingHoliday.name,
+        date: pendingHoliday.date,
+        message: pendingHoliday.message || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Holiday added");
+          setName("");
+          setDate(format(new Date(), "yyyy-MM-dd"));
+          setMessage("");
+          setPendingHoliday(null);
+        },
+        onError: (e) => {
+          toast.error(e.message);
+          setPendingHoliday(null);
+        },
+      }
+    );
+  }, [pendingHoliday, addMutation]);
 
   const handleDeleteRequest = useCallback((holidayId: number) => {
     setDeleteConfirmId(holidayId);
@@ -303,6 +319,17 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
           Employees see holidays on the calendar and get an in-app notification one day before.
         </p>
       </CardContent>
+
+      <ConfirmActionDialog
+        open={pendingHoliday !== null}
+        onOpenChange={(open) => { if (!open) setPendingHoliday(null); }}
+        title="Add Holiday"
+        description={pendingHoliday ? `Add "${pendingHoliday.name}" on ${pendingHoliday.date} as a company holiday?` : ""}
+        confirmLabel="Add"
+        variant="default"
+        onConfirm={handleAddConfirm}
+        isPending={addMutation.isPending}
+      />
 
       <ConfirmActionDialog
         open={deleteConfirmId !== null}

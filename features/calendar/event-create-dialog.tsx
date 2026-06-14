@@ -145,11 +145,11 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   }, [open, defaultSlot, event, isEdit]);
 
   useEffect(() => {
-    if (isEdit && existingAttendees && existingAttendees.length > 0) {
+    if (open && isEdit && existingAttendees && existingAttendees.length > 0) {
       const ids = existingAttendees.map((a) => a.user?.id).filter((id): id is string => !!id);
       setForm((prev) => ({ ...prev, attendeeIds: ids }));
     }
-  }, [isEdit, existingAttendees]);
+  }, [open, isEdit, existingAttendees]);
 
   const handleSheetOpenChange = useCallback(
     (v: boolean) => {
@@ -246,9 +246,26 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       toast.error("Event title cannot have multiple consecutive spaces");
       return;
     }
-    if (form.description && form.description.length > 2000) {
-      toast.error("Description must be at most 2000 characters");
-      return;
+    if (form.description) {
+      if (form.description.trim().length < 5) {
+        toast.error("Description must be at least 5 characters");
+        return;
+      }
+      if (form.description.length > 2000) {
+        toast.error("Description must be at most 2000 characters");
+        return;
+      }
+    }
+    if (form.location) {
+      const loc = form.location.trim();
+      if (/^https?:\/\//i.test(loc)) {
+        try {
+          new URL(loc);
+        } catch {
+          toast.error("Location contains an invalid URL");
+          return;
+        }
+      }
     }
     if (!form.startDate) {
       toast.error("Start date is required");
