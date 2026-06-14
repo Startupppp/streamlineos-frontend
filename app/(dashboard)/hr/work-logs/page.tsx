@@ -305,7 +305,17 @@ export default function WorkLogsPage() {
       }
     >
       <div className="space-y-4">
-        {isLoading ? (
+        {filters.departmentId && !filters.selectedUserId ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center text-center">
+                <p className="text-sm text-muted-foreground">
+                  Department filter is applied. Select an employee from this department to view their work logs.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : isLoading ? (
           <Card>
             <CardContent className="py-12">
               <div className="flex justify-center" role="status" aria-label="Loading work logs">

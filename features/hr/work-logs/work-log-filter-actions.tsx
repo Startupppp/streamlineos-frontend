@@ -83,8 +83,18 @@ export function WorkLogFilterActions({
 
   const handleQuarterChange = useCallback((v: string) => {
     const q = parseInt(v);
-    setFilters((p) => ({ ...p, quarter: q }));
-    setDraftFilters((p) => ({ ...p, quarter: q }));
+    const quarterStartMonth = (q - 1) * 3;
+    const quarterMonths = [quarterStartMonth, quarterStartMonth + 1, quarterStartMonth + 2];
+    setFilters((p) => ({
+      ...p,
+      quarter: q,
+      month: p.month !== undefined && !quarterMonths.includes(p.month) ? undefined : p.month,
+    }));
+    setDraftFilters((p) => ({
+      ...p,
+      quarter: q,
+      month: p.month !== undefined && !quarterMonths.includes(p.month) ? undefined : p.month,
+    }));
   }, [setFilters, setDraftFilters]);
 
   const handleSheetOpen = useCallback((open: boolean) => {
@@ -112,12 +122,21 @@ export function WorkLogFilterActions({
   }, [setDraftFilters]);
 
   const handleDraftDepartmentChange = useCallback((v: string) => {
-    setDraftFilters((p) => ({
-      ...p,
-      departmentId: v ==="all" ? undefined : v,
-      selectedUserId: v ==="all" ? p.selectedUserId : undefined,
-    }));
-  }, [setDraftFilters]);
+    setDraftFilters((p) => {
+      const newDeptId = v === "all" ? undefined : v;
+      const empStillInDept =
+        !newDeptId ||
+        !p.selectedUserId ||
+        (employees ?? []).some(
+          (e) => e.id === p.selectedUserId && e.departmentId?.toString() === newDeptId
+        );
+      return {
+        ...p,
+        departmentId: newDeptId,
+        selectedUserId: empStillInDept ? p.selectedUserId : undefined,
+      };
+    });
+  }, [setDraftFilters, employees]);
 
   const handleSelectMyLogs = useCallback(() => {
     setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
