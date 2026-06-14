@@ -20,7 +20,6 @@ import {
 import {
   Users,
   Briefcase,
-  CalendarCheck,
   Building2,
   RefreshCw,
   Contact2,
@@ -201,13 +200,6 @@ export function DashboardClient() {
             href: "/projects",
           },
           {
-            id: "present",
-            label: "Present Today",
-            value: stats.presentToday,
-            icon: CalendarCheck,
-            href: "/hr/attendance",
-          },
-          {
             id: "org",
             label: "Organization",
             value: stats.orgName,
@@ -222,13 +214,6 @@ export function DashboardClient() {
             value: stats.totalEmployees,
             icon: Users,
             href: "/hr",
-          },
-          {
-            id: "present",
-            label: "Present Today",
-            value: stats.presentToday,
-            icon: CalendarCheck,
-            href: "/hr/attendance",
           },
           {
             id: "projects",

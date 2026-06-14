@@ -10,7 +10,6 @@ import {
   UserPlus,
   BarChart3,
   CalendarDays,
-  Settings,
   Contact2,
   Clock,
   Briefcase,
@@ -33,7 +32,6 @@ export function getQuickActionsForRole(role: string | undefined): QuickAction[] 
         { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
         { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
         { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
-        { label: "Settings", icon: Settings, href: "/settings" },
       ];
     case "HR":
       return [

@@ -118,19 +118,19 @@ export function ExpenseExportDialog({
     return ((employeesData as PaginatedEmployees).data ?? []) as Employee[];
   }, [employeesData]);
 
-  const dateRangeError = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    if (dateFrom && dateFrom > today) {
-      return "From date cannot be in the future";
-    }
-    if (dateTo && dateTo > today) {
-      return "To date cannot be in the future";
-    }
-    if (dateFrom && dateTo && dateFrom > dateTo) {
-      return "From date must be before To date";
-    }
-    return null;
+  const dateFieldErrors = useMemo(() => {
+    const fromError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "From date must be before To date"
+        : null;
+    const toError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "To date must be after From date"
+        : null;
+    return { from: fromError, to: toError };
   }, [dateFrom, dateTo]);
+
+  const dateRangeError = dateFieldErrors.from;
 
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
@@ -247,21 +247,27 @@ export function ExpenseExportDialog({
                 Date Range
               </Label>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground block">From</Label>
                   <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" toDate={new Date()} />
+                  {dateFieldErrors.from && (
+                    <p className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      {dateFieldErrors.from}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground block">To</Label>
                   <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" toDate={new Date()} />
+                  {dateFieldErrors.to && (
+                    <p className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      {dateFieldErrors.to}
+                    </p>
+                  )}
                 </div>
               </div>
-              {dateRangeError && (
-                <p className="flex items-center gap-1.5 text-xs text-destructive">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {dateRangeError}
-                </p>
-              )}
               {(dateFrom || dateTo) && !dateRangeError && (
                 <button
                   onClick={() => {
