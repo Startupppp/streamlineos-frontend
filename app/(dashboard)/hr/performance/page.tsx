@@ -143,6 +143,10 @@ function ReviewsTab() {
       toast.error("Employee and period dates are required");
       return;
     }
+    if (periodEnd <= periodStart) {
+      toast.error("Period end date must be after period start date");
+      return;
+    }
     createReview.mutate({
       userId: employeeId,
       cycleId: cycleId !== "none" ? Number(cycleId) : undefined,

@@ -94,12 +94,14 @@ export default function WorkLogsPage() {
   const ability = useAbility();
   const isAdminOrCeo = ability.can("manage", "hr:employees");
 
-  const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
+  const { data: employeesRaw } = useHrEmployees();
   const { data: departments } = useHrDepartments();
 
   const allEmployees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw]
+    () => (isAdminOrCeo
+      ? (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]
+      : []),
+    [employeesRaw, isAdminOrCeo]
   );
 
   const employees = useMemo(
@@ -230,8 +232,9 @@ export default function WorkLogsPage() {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Work Logs");
 
-      const employeeName = selectedUserId && employees.length
-        ? `${employees.find((e) => e.id === selectedUserId)?.firstName ?? ""} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}`.trim()
+      const selectedEmp = selectedUserId ? allEmployees.find((e) => e.id === selectedUserId) : null;
+      const employeeName = selectedEmp
+        ? `${selectedEmp.firstName ?? ""} ${selectedEmp.lastName ?? ""}`.trim()
         : "My";
 
       sheet.columns = [
@@ -270,7 +273,7 @@ export default function WorkLogsPage() {
     } catch {
       toast.error("Failed to export work logs");
     }
-  }, [days, logs, selectedUserId, employees, quarter, year, filterDay]);
+  }, [days, logs, selectedUserId, allEmployees, quarter, year, filterDay]);
 
   const sharedFilterProps = {
     filters,
@@ -290,8 +293,13 @@ export default function WorkLogsPage() {
     <PageWrapper
       title="Work Logs"
       subtitle={
-        selectedUserId && employees.length
-          ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
+        selectedUserId
+          ? (() => {
+              const emp = allEmployees.find((e) => e.id === selectedUserId);
+              return emp
+                ? `Viewing logs for ${emp.firstName ?? ""} ${emp.lastName ?? ""}.`.trim()
+                : "Track your daily tasks and activities.";
+            })()
           : "Track your daily tasks and activities."
       }
       actions={
