@@ -33,6 +33,7 @@ const PROTECTED_ROUTES = [
   "/hr",
   "/settings",
   "/onboarding",
+  "/org-setup",
   "/ceo",
   "/sales",
   "/customer-executive",
@@ -257,6 +258,31 @@ export default async function middleware(req: NextRequest) {
     pathname.startsWith("/reset-password") &&
     !token?.forceChangePassword &&
     !req.nextUrl.searchParams.get("token")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isAuthenticated &&
+    token?.isOrgOwner &&
+    !token?.orgOnboardingCompletedAt &&
+    token?.orgId &&
+    startsWithAny(pathname, PROTECTED_ROUTES) &&
+    !pathname.startsWith("/org-setup")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/org-setup";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isAuthenticated &&
+    token?.orgOnboardingCompletedAt &&
+    pathname.startsWith("/org-setup")
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";

@@ -83,7 +83,7 @@ export default function SignupPage() {
       });
 
       if (result?.ok) {
-        window.location.href = "/dashboard";
+        window.location.href = "/org-setup";
       } else {
         toast.error(
           "Account created but auto-login failed. Please sign in manually.",
