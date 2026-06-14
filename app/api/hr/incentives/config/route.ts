@@ -7,7 +7,15 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 const createIncentiveConfigSchema = z.object({
-  incentiveRate: z.string(),
+  incentiveRate: z.preprocess(
+    (val) => (typeof val === "string" ? parseFloat(val) : val),
+    z
+      .number({ message: "Incentive rate must be a number" })
+      .positive({ message: "Incentive rate must be positive" })
+      .max(100, { message: "Incentive rate cannot exceed 100%" })
+      .multipleOf(0.01, { message: "Incentive rate can have at most 2 decimal places" })
+      .transform((n) => n.toFixed(2)),
+  ),
 });
 
 export async function GET() {
