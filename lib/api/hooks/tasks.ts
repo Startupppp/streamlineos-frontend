@@ -88,6 +88,7 @@ export function useTasks(filters?: TasksFilters) {
     queryKey: queryKeys.tasks.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -95,6 +96,7 @@ export function useMyTaskQueue() {
   return useQuery({
     queryKey: queryKeys.tasks.myQueue(),
     queryFn: () => apiClient.get<TaskWithBucket[]>("/tasks/my-queue"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -102,6 +104,7 @@ export function useOverdueTasks() {
   return useQuery({
     queryKey: queryKeys.tasks.overdue(),
     queryFn: () => apiClient.get<TaskOverdueResponse>("/tasks/overdue"),
+    staleTime: 2 * 60_000,
   });
 }
 

@@ -26,7 +26,12 @@ export async function GET(req: NextRequest) {
       with: { manager: true, employee: true },
       orderBy: [desc(oneOnOneMeetings.scheduledAt)],
     });
-    return ok(data);
+    return ok(
+      data.map((m) => ({
+        ...m,
+        scheduledAt: m.scheduledAt instanceof Date ? m.scheduledAt.toISOString() : m.scheduledAt,
+      }))
+    );
   });
 }
 

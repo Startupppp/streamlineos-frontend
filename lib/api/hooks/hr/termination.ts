@@ -68,6 +68,7 @@ export function useTerminations() {
   return useQuery({
     queryKey: terminationKeys.list(),
     queryFn: () => apiClient.get<Termination[]>("/hr/termination"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -75,6 +76,7 @@ export function useTerminationDetail(id: number | null) {
   return useQuery({
     queryKey: terminationKeys.detail(id ?? 0),
     queryFn: () => apiClient.get<Termination>(`/hr/termination/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -83,6 +85,7 @@ export function useTermination(id: number) {
   return useQuery({
     queryKey: terminationKeys.detail(id),
     queryFn: () => apiClient.get<Termination>(`/hr/termination/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -91,6 +94,7 @@ export function useTerminationLetter(id: number | null) {
   return useQuery({
     queryKey: terminationKeys.letter(id ?? 0),
     queryFn: () => apiClient.get<{ html: string }>(`/hr/termination/${id}/letter`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }

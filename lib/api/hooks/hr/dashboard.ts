@@ -179,3 +179,23 @@ export function useHrCompliance() {
     staleTime: 120_000,
   });
 }
+
+export interface HrDashboardAttendanceAnalytics {
+  month: string;
+  workingDaysSoFar: number;
+  totalEmployees: number;
+  attendancePct: number;
+  absenteeismPct: number;
+  lateArrivals: number;
+  wfhApproved: number;
+  overtimeInstances: number;
+  byDepartment: { name: string; presentCount: number; expectedCount: number }[];
+}
+
+export function useHrDashboardAttendanceAnalytics() {
+  return useQuery({
+    queryKey: ["streamlineos", "hr", "dashboard", "attendance-analytics"] as const,
+    queryFn: () => apiClient.get<HrDashboardAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
+    staleTime: 60_000,
+  });
+}

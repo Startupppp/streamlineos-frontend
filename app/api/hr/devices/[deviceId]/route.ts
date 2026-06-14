@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne, sql } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -41,6 +41,20 @@ export async function PATCH(
     });
 
     if (!existing) return err("Device not found.", 404);
+
+    if (body.serialNumber !== undefined) {
+      const duplicateSerial = await db.query.employeeDevices.findFirst({
+        where: and(
+          eq(employeeDevices.orgId, session.orgId),
+          ne(employeeDevices.id, deviceId),
+          sql`lower(trim(${employeeDevices.serialNumber})) = ${body.serialNumber.trim().toLowerCase()}`,
+        ),
+        columns: { id: true },
+      });
+      if (duplicateSerial) {
+        return err("A device with this serial number already exists.", 409);
+      }
+    }
 
     await db
       .update(employeeDevices)

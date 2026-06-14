@@ -19,6 +19,7 @@ import type { Document } from "@/types/hr";
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
+import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -50,6 +51,7 @@ export default function DocumentsPage() {
   const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [customFolders, setCustomFolders] = useState<string[]>([]);
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
@@ -138,6 +140,8 @@ export default function DocumentsPage() {
     toast.success(`Folder "${name}" created`);
   };
 
+  const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
+
   if (isLoading) {
     return (
       <div className="flex-1 space-y-6">
@@ -217,6 +221,7 @@ export default function DocumentsPage() {
 
         <DocumentTable
           paginatedDocuments={paginatedDocuments}
+          allFilteredDocuments={filteredDocuments}
           folders={folders}
           page={page}
           pageSize={pageSize}
@@ -226,20 +231,11 @@ export default function DocumentsPage() {
           searchTerm={searchTerm}
           onPageChange={setPage}
           onDelete={handleDelete}
+          onEdit={handleEdit}
           onOpenUpload={() => setIsUploadOpen(true)}
         />
 
         <RichDocumentsSection />
-
-        <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="font-medium">{storagePercent}%</span>
-          </div>
-          <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${storagePercent}%` }} />
-          </div>
-          <span className="text-xs text-muted-foreground">of {maxStorageGB}GB used</span>
-        </div>
 
         <UploadDocumentDialog
           open={isUploadOpen}
@@ -256,6 +252,14 @@ export default function DocumentsPage() {
           onFolderNameChange={setNewFolderName}
           existingTabs={categoryTabs}
           onConfirm={handleNewFolder}
+        />
+        <EditDocumentSheet
+          open={!!editingDocument}
+          onOpenChange={(open) => { if (!open) setEditingDocument(null); }}
+          document={editingDocument}
+          documentTypes={DOCUMENT_TYPES}
+          categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
+          isAdmin={isAdmin}
         />
       </div>
     </PageWrapper>

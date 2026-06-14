@@ -26,7 +26,7 @@ export default async function CustomersPage() {
       ) : (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Organization</th>
                 <th className="px-4 py-2.5 text-left font-medium">Users</th>

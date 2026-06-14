@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { z } from "zod";
-import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
+import { ok, err, withAbility, parseBody } from "@/lib/api/helpers";
 import { CacheTag } from "@/lib/api/cache-tags";
 import { blogDb } from "@/lib/blog-db";
 import { blogCategories } from "@/lib/db/schema";
@@ -39,7 +39,7 @@ const createCategorySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:categories", async () => {
     const body = await parseBody(req, createCategorySchema);
     const slug = slugify(body.name);
 

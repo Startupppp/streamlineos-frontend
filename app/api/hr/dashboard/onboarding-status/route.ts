@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTasks, users } from "@/lib/db/schema";
 import { eq, count, inArray, sql } from "drizzle-orm";
@@ -6,7 +6,7 @@ import { eq, count, inArray, sql } from "drizzle-orm";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const orgId = session.orgId;
 
     const taskStats = await db

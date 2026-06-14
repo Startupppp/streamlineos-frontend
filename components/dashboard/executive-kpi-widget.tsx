@@ -3,26 +3,29 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
+import { useAbility } from "@/lib/abilities-context";
 import {
   DollarSign,
   TrendingUp,
-  Users,
   Target,
   Briefcase,
-  BarChart2,
 } from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();
+  const ability = useAbility();
+  const hasCrmAccess = ability.can("view", "crm:leads");
 
   if (error) {
     return <p className="text-sm text-destructive">Failed to load KPIs.</p>;
   }
 
+  const skeletonCount = hasCrmAccess ? 4 : 2;
+
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {Array.from({ length: skeletonCount }).map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
@@ -37,54 +40,42 @@ export function ExecutiveKpiWidget() {
         : `₹${n}`;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <StatCard
-        label="MRR (Won)"
-        value={fmt(data.mrr)}
-        icon={DollarSign}
+        label="Open Roles"
+        value={data.openRoles}
+        icon={Briefcase}
         color="gold"
         index={0}
-      />
-      <StatCard
-        label="Pipeline Value"
-        value={fmt(data.pipelineValue)}
-        icon={TrendingUp}
-        color="blue"
-        index={1}
-        href="/crm/deals"
-      />
-      <StatCard
-        label="Headcount"
-        value={data.headcount}
-        icon={Users}
-        color="green"
-        index={2}
-        href="/hr"
+        href="/hr/recruitment"
       />
       <StatCard
         label="Conversion Rate"
         value={`${data.conversionRate}%`}
         icon={Target}
         color="purple"
-        index={3}
+        index={1}
         href="/crm/leads"
       />
-      <StatCard
-        label="Open Roles"
-        value={data.openRoles}
-        icon={Briefcase}
-        color="gold"
-        index={4}
-        href="/hr/recruitment"
-      />
-      <StatCard
-        label="Active Projects"
-        value={data.activeProjects}
-        icon={BarChart2}
-        color="blue"
-        index={5}
-        href="/projects"
-      />
+      {hasCrmAccess && (
+        <>
+          <StatCard
+            label="MRR (Won)"
+            value={fmt(data.mrr)}
+            icon={DollarSign}
+            color="gold"
+            index={2}
+          />
+          <StatCard
+            label="Pipeline Value"
+            value={fmt(data.pipelineValue)}
+            icon={TrendingUp}
+            color="blue"
+            index={3}
+            href="/crm/deals"
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -67,6 +67,6 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
       sent: matchedLeads.length,
       campaignId,
       status: "sent",
-    });
+    }, 201);
   });
 }

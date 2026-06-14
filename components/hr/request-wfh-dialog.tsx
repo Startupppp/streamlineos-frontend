@@ -61,6 +61,14 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
   const handleOpen = () => setOpen(true);
 
   const handleSubmit = (data: WfhFormValues) => {
+    const [yr, mo, dy] = data.date.split("-").map(Number);
+    const selectedDate = new Date(yr, mo - 1, dy);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate <= today) {
+      toast.error("WFH date must be a future date");
+      return;
+    }
     createWfhRequest.mutate(
       {
         date: new Date(data.date),
@@ -121,6 +129,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
                     <DatePicker
                       value={field.value}
                       onChange={field.onChange}
+                      fromDate={addDays(new Date(), 1)}
                       className="w-full"
                     />
                   </FormControl>

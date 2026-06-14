@@ -26,12 +26,9 @@ export function LandingPricing() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-10"
         >
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
-            Pricing
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900 mb-3">
             Free to start.{" "}
-            <span className="brand-text">Honest as you grow.</span>
+            <span className="text-blue-600">Honest as you grow.</span>
           </h2>
           <p className="text-slate-600 text-base leading-relaxed">
             One number per seat. No per-module pricing. No surprise add-ons.{" "}
@@ -57,14 +54,14 @@ export function LandingPricing() {
                   ease: [0.22, 1, 0.36, 1] as const,
                 }}
                 whileHover={{ y: -4 }}
-                className={`relative rounded-3xl border p-6 lg:p-7 flex flex-col transition-all duration-300 ${
+                className={`relative rounded-2xl border p-6 flex flex-col transition-all duration-300 ${
                   tier.highlight
-                    ? "border-blue-400/40 bg-white shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
-                    : "border-slate-200 bg-white/70 backdrop-blur-sm hover:border-blue-300/40 hover:shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]"
+                    ? "border-blue-400/40 bg-white shadow-[0_24px_60px_-20px_rgba(30,64,175,0.24)]"
+                    : "border-slate-200 bg-white/70 backdrop-blur-sm hover:border-blue-300/40 hover:shadow-[0_16px_40px_-16px_rgba(30,64,175,0.16)]"
                 }`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-mono uppercase tracking-[0.18em] text-white font-bold shadow-lg whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
                     <Sparkles className="h-3 w-3" />
                     {tier.badge}
                   </div>
@@ -73,7 +70,7 @@ export function LandingPricing() {
                   <h3 className="font-display text-xl font-bold text-slate-900 mb-1">
                     {tier.name}
                   </h3>
-                  <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-blue-600">
+                  <p className="text-[11px] font-medium text-blue-600">
                     {tier.tagline}
                   </p>
                 </div>
@@ -117,7 +114,7 @@ export function LandingPricing() {
                     </Button>
                   </Link>
                 </Magnetic>
-                <p className="mt-3 text-[10.5px] font-mono uppercase tracking-[0.12em] text-slate-400 text-center">
+                <p className="mt-3 text-[11px] font-medium text-slate-400 text-center">
                   {tier.bestFor}
                 </p>
               </motion.div>

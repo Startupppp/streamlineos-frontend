@@ -239,10 +239,10 @@ function CreateSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
 
             <div className="space-y-1">
               <Label>Channel</Label>
-              <Select value={channel} onValueChange={setChannel}>
+              <Select value={channel || "none"} onValueChange={(v) => setChannel(v === "none" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {CHANNELS.map((c) => (
                     <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                   ))}

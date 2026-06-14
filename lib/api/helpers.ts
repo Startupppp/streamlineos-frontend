@@ -103,7 +103,7 @@ export async function withAuth(
   }
 }
 
-export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage";
+export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage" | "approve" | "generate" | "view";
 
 export type AbilitySubject =
   | "all"
@@ -115,23 +115,48 @@ export type AbilitySubject =
   | "blog"
   | "blog:posts"
   | "blog:categories"
+  | "blog:authors"
   | "crm"
   | "crm:leads"
+  | "crm:deals"
+  | "crm:contacts"
+  | "crm:clients"
+  | "crm:quotes"
+  | "crm:targets"
   | "crm:assignment-rules"
   | "crm:email-templates"
   | "crm:scoring-rules"
   | "crm:sla"
   | "hr"
   | "hr:employees"
+  | "hr:payrolls"
   | "hr:payroll"
+  | "hr:leaves"
+  | "hr:expenses"
+  | "hr:exit"
+  | "hr:onboarding"
+  | "hr:feedback"
+  | "hr:compliance"
+  | "hr:handbook"
+  | "hr:alumni"
+  | "hr:bonuses"
+  | "hr:assets"
+  | "hr:career-ladders"
+  | "hr:headcount"
+  | "hr:integrations"
+  | "hr:email-templates"
   | "hr:analytics"
   | "hr:documents"
   | "projects"
   | "projects:sprints"
+  | "projects:settings"
+  | "sales"
   | "settings"
   | "settings:custom-fields"
   | "settings:email-templates"
-  | "settings:webhooks";
+  | "settings:webhooks"
+  | "settings:onboarding"
+  | "settings:mfa";
 
 export async function withAbility(
   verb: AbilityVerb,

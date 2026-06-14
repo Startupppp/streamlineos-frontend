@@ -33,6 +33,7 @@ const PROTECTED_ROUTES = [
   "/hr",
   "/settings",
   "/onboarding",
+  "/org-setup",
   "/ceo",
   "/sales",
   "/customer-executive",
@@ -61,6 +62,7 @@ const AUTH_ROUTES = [
 const ALLOW_AUTHENTICATED = [
   "/invitation",
   "/reset-password",
+  "/setup-password",
 ];
 
 const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
@@ -254,7 +256,33 @@ export default async function middleware(req: NextRequest) {
   if (
     isAuthenticated &&
     pathname.startsWith("/reset-password") &&
-    !token?.forceChangePassword
+    !token?.forceChangePassword &&
+    !req.nextUrl.searchParams.get("token")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isAuthenticated &&
+    token?.isOrgOwner &&
+    !token?.orgOnboardingCompletedAt &&
+    token?.orgId &&
+    startsWithAny(pathname, PROTECTED_ROUTES) &&
+    !pathname.startsWith("/org-setup")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/org-setup";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isAuthenticated &&
+    token?.orgOnboardingCompletedAt &&
+    pathname.startsWith("/org-setup")
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";

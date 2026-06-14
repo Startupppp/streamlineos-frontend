@@ -64,7 +64,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Code
                     </p>
                     <p className="mt-1 text-sm font-mono text-foreground">
@@ -72,7 +72,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Name
                     </p>
                     <p className="mt-1 text-sm font-medium text-foreground">
@@ -80,7 +80,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Type
                     </p>
                     <Badge
@@ -91,7 +91,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     </Badge>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Status
                     </p>
                     <Badge
@@ -105,7 +105,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
                 {account.description && (
                   <div className="pt-4 border-t border-border/60">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Description
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed">

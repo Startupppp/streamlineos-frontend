@@ -48,6 +48,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
+import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 
 function getInitials(first?: string | null, last?: string | null) {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
@@ -250,6 +251,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   }, [employee.id, employeeName, terminateMutation, router]);
 
   const employeeAsEmployee = employee as unknown as Employee;
+  const employmentStatus = typeof (employee as Record<string, unknown>).employmentStatus === "string"
+    ? ((employee as Record<string, unknown>).employmentStatus as string).toUpperCase()
+    : null;
+  const isAlreadyTerminated =
+    employee.isActive === false ||
+    employmentStatus === "TERMINATED";
+  const canTerminate = !isAlreadyTerminated && canDeleteEmployee(
+    employeeAsEmployee.role ?? "",
+    employee.id,
+    true,
+    session?.user?.role,
+    session?.user?.id,
+  );
 
   return (
     <>
@@ -269,16 +283,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </a>
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-              onClick={handleTerminateClick}
-              disabled={terminateMutation.isPending}
-            >
-              <UserX className="h-3.5 w-3.5 mr-1" />
-              Terminate
-            </Button>
+            {canTerminate && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={handleTerminateClick}
+                disabled={terminateMutation.isPending}
+                title="Terminate employee"
+              >
+                <UserX className="h-3.5 w-3.5 mr-1" />
+                Terminate
+              </Button>
+            )}
           </div>
         }
         noInternalScroll

@@ -19,13 +19,39 @@ const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   role: z.string(),
-  designation: z.string().optional(),
+  designation: z
+    .string()
+    .min(2, "Designation must be at least 2 characters")
+    .max(100, "Designation must be at most 100 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
+    .refine((v) => !/\s{2,}/.test(v), "Designation cannot have consecutive spaces")
+    .optional()
+    .or(z.literal("")),
   departmentId: z.number().optional(),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .refine((val) => {
+      if (!val) return true;
+      return !/[a-zA-Z]/.test(val);
+    }, "Phone number must not contain letters")
+    .refine((val) => {
+      if (!val) return true;
+      const digits = val.replace(/[\s+\-()]/g, "");
+      return digits.length >= 7 && digits.length <= 15;
+    }, "Phone number must be 7–15 digits")
+    .optional()
+    .or(z.literal("")),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
-  experienceYears: z.number().optional(),
-  skills: z.string().optional(),
+  experienceYears: z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
+  skills: z
+    .string()
+    .max(500, "Skills must be at most 500 characters")
+    .refine((v) => {
+      if (!v?.trim()) return true;
+      return v.split(",").every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
+    }, "Each skill must contain at least one letter")
+    .optional(),
   taxId: z.string().optional(),
   monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
   bankAccount: z.string().optional(),
@@ -33,6 +59,23 @@ const formSchema = z.object({
   branch: z.string().optional(),
   ifsc: z.string().optional(),
   accountHolder: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.skills?.trim()) {
+    const parts = data.skills.split(",").map((s) => s.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    for (const part of parts) {
+      const key = part.toLowerCase();
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate skill: "${part}" already exists`,
+          path: ["skills"],
+        });
+        break;
+      }
+      seen.add(key);
+    }
+  }
 });
 
 export type EmployeeFormValues = z.infer<typeof formSchema>;
@@ -52,6 +95,7 @@ export interface EmployeeData {
   skills: string[] | string | null;
   taxId: string | null;
   monthlySalary: string | number | null;
+  isActive: boolean | null;
   bankDetails: {
     accountNumber?: string;
     bankName?: string;
@@ -99,8 +143,19 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   });
 
   const onSubmit = useCallback(async (values: EmployeeFormValues) => {
+    const seenSkills = new Set<string>();
     const skillsArray = values.skills
-      ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
+      ? values.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s && /[a-zA-Z0-9]/.test(s))
+          .reduce<string[]>((acc, s) => {
+            const key = s.toLowerCase();
+            if (seenSkills.has(key)) return acc;
+            seenSkills.add(key);
+            acc.push(s.charAt(0).toUpperCase() + s.slice(1));
+            return acc;
+          }, [])
       : [];
 
     toast.promise(
@@ -144,7 +199,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
         <div className="rounded-lg border bg-card overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-4">

@@ -1,4 +1,4 @@
-import { withAdmin, err, ok, parseBody } from "@/lib/api/helpers";
+import { withAbility, err, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { resignations, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -15,7 +15,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ resignationId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:exit", async (session) => {
     if (session.user.role !== "HR" && session.user.role !== "CEO") {
       return err("Only HR can perform HR review.", 403);
     }

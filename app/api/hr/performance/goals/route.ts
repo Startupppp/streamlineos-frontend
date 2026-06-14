@@ -121,6 +121,6 @@ export async function PATCH(req: NextRequest) {
         and(eq(goals.id, body.goalId), eq(goals.orgId, session.orgId))
       );
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

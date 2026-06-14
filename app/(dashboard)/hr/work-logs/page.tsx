@@ -86,8 +86,6 @@ export default function WorkLogsPage() {
 
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
-  const [employeeSearch, setEmployeeSearch] = useState("");
 
   const year = filters.year;
   const quarter = filters.quarter;
@@ -96,12 +94,19 @@ export default function WorkLogsPage() {
   const ability = useAbility();
   const isAdminOrCeo = ability.can("manage", "hr:employees");
 
-  const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
+  const { data: employeesRaw } = useHrEmployees();
   const { data: departments } = useHrDepartments();
 
+  const allEmployees = useMemo(
+    () => (isAdminOrCeo
+      ? (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]
+      : []),
+    [employeesRaw, isAdminOrCeo]
+  );
+
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw]
+    () => allEmployees.filter((e) => e.id !== session?.user?.id && e.isActive !== false),
+    [allEmployees, session?.user?.id]
   );
 
   const activeFilterCount = useMemo(() => {
@@ -116,12 +121,11 @@ export default function WorkLogsPage() {
   }, [filters, currentYear, currentQuarter]);
 
   const joiningYear = useMemo(() => {
-    if (!employees.length) return currentYear;
     const targetId = draftFilters.selectedUserId || session?.user?.id;
-    const emp = employees.find(e => e.id === targetId);
+    const emp = allEmployees.find(e => e.id === targetId);
     if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
     return currentYear;
-  }, [employees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
+  }, [allEmployees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
 
   const availableYears = useMemo(() => {
     const years = [];
@@ -142,6 +146,9 @@ export default function WorkLogsPage() {
     year,
     quarter,
     ...(selectedUserId ? { userId: selectedUserId } : {}),
+    ...(filters.month !== undefined ? { month: filters.month } : {}),
+    ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+    ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
   });
 
   const upsertLog = useUpsertWorkLog({
@@ -228,8 +235,9 @@ export default function WorkLogsPage() {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Work Logs");
 
-      const employeeName = selectedUserId && employees.length
-        ? `${employees.find((e) => e.id === selectedUserId)?.firstName ?? ""} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}`.trim()
+      const selectedEmp = selectedUserId ? allEmployees.find((e) => e.id === selectedUserId) : null;
+      const employeeName = selectedEmp
+        ? `${selectedEmp.firstName ?? ""} ${selectedEmp.lastName ?? ""}`.trim()
         : "My";
 
       sheet.columns = [
@@ -268,7 +276,7 @@ export default function WorkLogsPage() {
     } catch {
       toast.error("Failed to export work logs");
     }
-  }, [days, logs, selectedUserId, employees, quarter, year, filterDay]);
+  }, [days, logs, selectedUserId, allEmployees, quarter, year, filterDay]);
 
   const sharedFilterProps = {
     filters,
@@ -282,18 +290,19 @@ export default function WorkLogsPage() {
     employees,
     departments,
     isAdminOrCeo,
-    employeeSearchOpen,
-    setEmployeeSearchOpen,
-    employeeSearch,
-    setEmployeeSearch,
   };
 
   return (
     <PageWrapper
       title="Work Logs"
       subtitle={
-        selectedUserId && employees.length
-          ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
+        selectedUserId
+          ? (() => {
+              const emp = allEmployees.find((e) => e.id === selectedUserId);
+              return emp
+                ? `Viewing logs for ${emp.firstName ?? ""} ${emp.lastName ?? ""}.`.trim()
+                : "Track your daily tasks and activities.";
+            })()
           : "Track your daily tasks and activities."
       }
       actions={
@@ -311,7 +320,17 @@ export default function WorkLogsPage() {
       }
     >
       <div className="space-y-4">
-        {isLoading ? (
+        {filters.departmentId && !filters.selectedUserId ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center text-center">
+                <p className="text-sm text-muted-foreground">
+                  Department filter is applied. Select an employee from this department to view their work logs.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : isLoading ? (
           <Card>
             <CardContent className="py-12">
               <div className="flex justify-center" role="status" aria-label="Loading work logs">
@@ -338,11 +357,12 @@ export default function WorkLogsPage() {
           <div className="space-y-4">
             {monthGroups.map((group) => {
               const filteredDays = group.days.filter(filterDay);
-              if (searchTerm.trim() && filteredDays.length === 0) return null;
+              const hasActiveFilter = !!searchTerm.trim() || filters.month !== undefined || !!filters.dateFrom || !!filters.dateTo;
+              if (hasActiveFilter && filteredDays.length === 0) return null;
 
               const isCollapsed = collapsedMonths.has(group.monthKey);
               const filled = filledCounts[group.monthKey] ?? 0;
-              const displayDays = searchTerm.trim() ? filteredDays : group.days;
+              const displayDays = hasActiveFilter ? filteredDays : group.days;
 
               return (
                 <WorkLogMonthGroup
@@ -356,7 +376,8 @@ export default function WorkLogsPage() {
                   filled={filled}
                   searchTerm={searchTerm}
                   logs={logs}
-                  selectedUserId={selectedUserId}
+                  currentUserId={session?.user?.id}
+                  readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
                   isSaving={upsertLog.isPending}
                 />

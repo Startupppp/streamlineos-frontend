@@ -18,6 +18,7 @@ export function useKeyResults(goalId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.goals(), "keyResults", goalId] as const,
     queryFn: () => apiClient.get<KeyResult[]>("/hr/performance/key-results", { goalId }),
+    staleTime: 2 * 60_000,
     enabled: !!goalId,
   });
 }

@@ -59,19 +59,40 @@ function EmailTemplatesContent() {
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("General");
 
+  const resetForm = useCallback(() => {
+    setName(""); setSubject(""); setBody(""); setCategory("General");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!name.trim() || !subject.trim() || !body.trim()) { toast.error("Name, subject, and body are required"); return; }
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Template Name is required"); return; }
+    if (trimmedName.length < 3) { toast.error("Template Name must be at least 3 characters"); return; }
+    if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
+    if (/[^a-zA-Z0-9\s\-_()&,.]/.test(trimmedName)) { toast.error("Template Name contains invalid special characters"); return; }
+    if (/\s{2,}/.test(trimmedName)) { toast.error("Template Name cannot have multiple consecutive spaces"); return; }
+    const trimmedSubject = subject.trim();
+    if (!trimmedSubject) { toast.error("Subject Line is required"); return; }
+    if (trimmedSubject.length < 3) { toast.error("Subject must be at least 3 characters"); return; }
+    if (trimmedSubject.length > 200) { toast.error("Subject must be at most 200 characters"); return; }
+    if (/\s{2,}/.test(trimmedSubject)) { toast.error("Subject cannot have multiple consecutive spaces"); return; }
+    const trimmedBody = body.trim();
+    if (!trimmedBody) { toast.error("Body is required"); return; }
+    if (trimmedBody.length < 10) { toast.error("Body must be at least 10 characters"); return; }
+    const isDuplicate = (templates ?? []).some(
+      (t) => t.name.trim().toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (isDuplicate) { toast.error("A template with this name already exists"); return; }
     create.mutate(
-      { name: name.trim(), subject: subject.trim(), body: body.trim(), category },
+      { name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
       {
         onSuccess: () => {
           toast.success("Template created"); setSheetOpen(false);
-          setName(""); setSubject(""); setBody(""); setCategory("General");
+          resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, subject, body, category, create]);
+  }, [name, subject, body, category, create, resetForm, templates]);
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
@@ -125,8 +146,8 @@ function EmailTemplatesContent() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold leading-tight">{t.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Subject: {t.subject}</p>
+                  <h3 className="text-sm font-semibold leading-tight truncate" title={t.name}>{t.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate" title={t.subject}>Subject: {t.subject}</p>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{t.body}</p>
                 <div className="flex gap-2">
@@ -138,7 +159,7 @@ function EmailTemplatesContent() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Email Template" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Email Template" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Template Name</label>
           <Input placeholder="e.g., Welcome Email" value={name} onChange={(e) => setName(e.target.value)} />

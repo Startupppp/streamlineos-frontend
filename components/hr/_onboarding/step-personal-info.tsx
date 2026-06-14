@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
@@ -14,6 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { apiClient } from "@/lib/api-client";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -22,6 +24,23 @@ interface StepPersonalInfoProps {
 }
 
 export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
+  const checkedEmailRef = useRef<string>("");
+
+  const handleEmailBlur = useCallback(async () => {
+    const email = form.getValues("email")?.toLowerCase().trim();
+    if (!email || email === checkedEmailRef.current) return;
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!isValidEmail) return;
+    try {
+      const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
+      checkedEmailRef.current = email;
+      if (res.exists) {
+        form.setError("email", { type: "manual", message: "Email already registered" });
+      }
+    } catch {
+    }
+  }, [form]);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <FormField
@@ -57,15 +76,26 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
       <FormField
         control={form.control}
         name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
-            <FormControl>
-              <Input type="email" placeholder="john@company.com" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          function handleBlur() {
+            field.onBlur();
+            void handleEmailBlur();
+          }
+          return (
+            <FormItem>
+              <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="john@company.com"
+                  {...field}
+                  onBlur={handleBlur}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
       <FormField
         control={form.control}
@@ -110,7 +140,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                 onChange={(v) => field.onChange(v ? new Date(v) : null)}
-                toDate={new Date()}
+                toDate={new Date(Date.now() - 16 * 365.25 * 24 * 60 * 60 * 1000)}
                 placeholder="Select DOB"
               />
             </FormControl>

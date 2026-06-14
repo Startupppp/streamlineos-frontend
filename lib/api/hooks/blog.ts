@@ -60,6 +60,7 @@ export function useAdminPosts() {
   return useQuery({
     queryKey: blogKeys.posts(),
     queryFn: () => apiClient.get<BlogPostWithRelations[]>("/blog/posts"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -67,6 +68,7 @@ export function useAdminPost(id: string | undefined) {
   return useQuery({
     queryKey: blogKeys.post(id ?? ""),
     queryFn: () => apiClient.get<BlogPostWithRelations>(`/blog/posts/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -103,6 +105,7 @@ export function useCategories() {
   return useQuery({
     queryKey: blogKeys.categories(),
     queryFn: () => apiClient.get<CategoryWithCount[]>("/blog/categories"),
+    staleTime: 2 * 60_000,
   });
 }
 

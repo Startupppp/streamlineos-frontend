@@ -48,7 +48,7 @@ export default function AboutPage() {
         <MarketingEyebrow>About {BRAND_NAME}</MarketingEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-6">
           We&apos;re building the operating system{" "}
-          <span className="brand-text">teams actually use.</span>
+          <span className="text-blue-600">teams actually use.</span>
         </h1>
         <p className="text-slate-600 text-lg lg:text-xl leading-relaxed max-w-3xl">
           Most companies run on a graveyard of disconnected tools. HR in one place. Sales in
@@ -58,13 +58,13 @@ export default function AboutPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 lg:mt-24">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-3xl glass-panel-strong overflow-hidden">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl glass-panel-strong overflow-hidden">
           {numbers.map((n) => (
             <div key={n.label} className="px-6 py-8 text-center bg-white/70 backdrop-blur">
-              <p className="font-display text-3xl lg:text-4xl font-extrabold brand-text leading-none mb-1.5">
+              <p className="font-display text-3xl lg:text-4xl font-extrabold text-blue-700 leading-none mb-1.5">
                 {n.value}
               </p>
-              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">
+              <p className="text-[12px] font-medium text-slate-500">
                 {n.label}
               </p>
             </div>
@@ -132,14 +132,14 @@ export default function AboutPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-20 lg:mt-28">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-10 lg:p-14 text-center">
+        <div className="relative rounded-2xl overflow-hidden bg-slate-900 p-10 lg:p-14 text-center">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 h-[280px] w-[560px] rounded-full bg-cyan-400/20 blur-3xl" />
           </div>
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3.5 py-1.5 mb-5">
               <Users className="h-3 w-3 text-cyan-300" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-100">
+              <span className="text-[12px] font-medium text-cyan-100">
                 We&apos;re hiring soon
               </span>
             </div>
@@ -164,10 +164,10 @@ export default function AboutPage() {
       </section>
 
       <section className="container mx-auto px-4 lg:px-8 max-w-5xl mt-16 text-center">
-        <p className="inline-flex items-center gap-2 text-[12px] font-mono uppercase tracking-[0.18em] text-slate-400">
+        <p className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-400">
           <Sparkles className="h-3 w-3 text-blue-500" />
           More about what we&apos;re shipping next on{" "}
-          <Link href="/blog" className="text-blue-600 hover:underline">
+          <Link href="/blogs" className="text-blue-600 hover:underline">
             the blog
           </Link>
         </p>

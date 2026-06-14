@@ -11,7 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { useHrEmployees, useTerminateEmployee, useToggleDashboardAccess } from "@/lib/api/hooks/hr";
+import { useHrEmployees, useTerminateEmployee } from "@/lib/api/hooks/hr";
 
 import {
   type Employee,
@@ -49,7 +49,6 @@ export default function HRDashboardPage() {
 
   const { data: rawEmployees, isLoading } = useHrEmployees();
   const terminateMutation = useTerminateEmployee();
-  const toggleAccessMutation = useToggleDashboardAccess();
 
   const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
 
@@ -135,19 +134,6 @@ export default function HRDashboardPage() {
     });
   }, [employeeToDelete, terminateMutation]);
 
-  const handleToggleDashboardAccess = useCallback(
-    (userId: string, newValue: boolean) => {
-      toggleAccessMutation.mutate(
-        { userId, hasDashboardAccess: newValue },
-        {
-          onSuccess: () => toast.success(`Dashboard access ${newValue ? "enabled" : "disabled"}`),
-          onError: () => toast.error("Failed to toggle dashboard access"),
-        },
-      );
-    },
-    [toggleAccessMutation],
-  );
-
   const handleExport = useCallback(async () => {
     const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
     const rows = filteredEmployees.map((e) => ({
@@ -188,10 +174,6 @@ export default function HRDashboardPage() {
   const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, filteredEmployees.length);
   const hasActiveFilters = !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
-  const togglingAccess = toggleAccessMutation.isPending
-    ? new Set([toggleAccessMutation.variables?.userId].filter(Boolean) as string[])
-    : new Set<string>();
-
   return (
     <PageWrapper
       title="Employees"
@@ -239,10 +221,8 @@ export default function HRDashboardPage() {
           showTo={showTo}
           currentUserRole={currentUserRole}
           currentUserId={currentUserId}
-          togglingAccess={togglingAccess}
           onPageChange={setPage}
           onPageSizeChange={handlePageSizeChange}
-          onToggleDashboardAccess={handleToggleDashboardAccess}
           onRequestDelete={handleRequestDelete}
         />
       ) : hasActiveFilters ? (

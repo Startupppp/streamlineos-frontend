@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalShell, LegalSection, PlainEnglish } from "@/features/legal/legal-shell";
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
@@ -162,7 +163,7 @@ export default function PrivacyPage() {
         </p>
         <div className="not-prose overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Vendor</th>
                 <th className="px-4 py-2.5 text-left font-medium">Purpose</th>
@@ -272,9 +273,9 @@ export default function PrivacyPage() {
       <LegalSection id="security" title="How we protect it">
         <p>
           A short summary lives here; the full picture is in our{" "}
-          <a href="/legal/security" className="text-blue-600 hover:underline">
+          <Link href="/legal/security" className="text-blue-600 hover:underline">
             Security page
-          </a>
+          </Link>
           . In brief: TLS 1.2+ in transit, AES-256 at rest, MFA available on every account,
           role-based access throughout, audited dependencies, and we don&apos;t store
           plaintext passwords (bcrypt with cost-factor 12).

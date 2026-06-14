@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
         }
       })().catch(() => {});
 
-      return ok({ success: true });
+      return ok({ success: true }, 201);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Request failed";
       return err(message, 400);

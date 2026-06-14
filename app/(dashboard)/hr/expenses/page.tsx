@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import {
   useExpensePageData,
   useUpdateExpenseStatus,
   useDeleteExpense,
+  useHrEmployees,
 } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { ImportExpenseSheet } from "./import-expense-sheet";
 import ExpensesLoading from "./loading";
@@ -101,6 +103,21 @@ export default function ExpensesPage() {
 
   const updateStatusMutation = useUpdateExpenseStatus();
   const deleteMutation = useDeleteExpense();
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const employees = useMemo(() => {
+    const raw = employeesRaw
+      ? Array.isArray(employeesRaw)
+        ? (employeesRaw as Employee[])
+        : ((employeesRaw as PaginatedEmployees).data ?? [])
+      : [];
+    return (raw as Employee[])
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        id: e.id,
+        name: [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email,
+      }));
+  }, [employeesRaw]);
 
   const handleApprove = useCallback(
     (expenseId: number) => {
@@ -274,11 +291,15 @@ export default function ExpensesPage() {
               statusFilter={statusFilter}
               pendingCount={pendingCount}
               onStatusChange={setStatusFilter}
+              employees={employees}
+              selectedUserId={filters.userId}
+              onUserChange={(userId) => setFilter("userId", userId || undefined)}
             />
           </motion.div>
           <motion.div variants={fadeUp}>
             <AdminExpenseList
               expenses={filteredExpenses}
+              currentUserId={session?.user?.id}
               pagination={pagination}
               startItem={startItem}
               endItem={endItem}

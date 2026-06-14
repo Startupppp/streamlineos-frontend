@@ -13,7 +13,8 @@ import {
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/shared/loading-state";
 import {
   useCandidateOffers,
   useCreateCandidateOffer,
@@ -111,15 +112,9 @@ export function OffersTab({ candidateId }: Props) {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
-        </div>
+        <LoadingState variant="list" rows={2} />
       ) : !offers?.length ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground text-sm">
-            No offers created yet.
-          </CardContent>
-        </Card>
+        <EmptyState icon={Send} title="No offers created yet" compact />
       ) : (
         <div className="space-y-3">
           {offers.map((offer) => {

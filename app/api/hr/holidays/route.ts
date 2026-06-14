@@ -79,6 +79,6 @@ export async function POST(req: NextRequest) {
       }
     })().catch(() => {});
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

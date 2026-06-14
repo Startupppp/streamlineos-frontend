@@ -31,6 +31,7 @@ import {
   useSetTyping,
   useChatTyping,
   useChatOrgUsers,
+  useToggleReaction,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
@@ -71,6 +72,7 @@ export function MessagePanel({
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
+  const toggleReaction = useToggleReaction(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const setTyping = useSetTyping();
   const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
@@ -115,11 +117,20 @@ export function MessagePanel({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
 
+  const mentionCandidates = useMemo(() => {
+    if (!orgUsers) return [];
+    if (channel?.type === "DIRECT") {
+      const otherId = channel.members?.find((m) => m.user?.id !== currentUserId)?.user?.id;
+      return orgUsers.filter((u) => u.id === otherId);
+    }
+    return orgUsers.filter((u) => u.id !== currentUserId);
+  }, [orgUsers, channel, currentUserId]);
+
   const filteredMentions = useMemo(() => {
-    if (!orgUsers || !mentionQuery) return orgUsers ?? [];
+    if (!mentionQuery) return mentionCandidates;
     const q = mentionQuery.toLowerCase();
-    return orgUsers.filter((u) => u.name?.toLowerCase().includes(q));
-  }, [orgUsers, mentionQuery]);
+    return mentionCandidates.filter((u) => u.name?.toLowerCase().includes(q));
+  }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -264,6 +275,10 @@ export function MessagePanel({
       setEditInput("");
     } catch (error) { toast.error(getErrorMessage(error)); }
   }, [editInput, editMessage, channelId]);
+
+  const handleReact = useCallback((messageId: number, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
+  }, [toggleReaction]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentions && filteredMentions.length > 0) {
@@ -416,6 +431,7 @@ export function MessagePanel({
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
+        onReact={handleReact}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}

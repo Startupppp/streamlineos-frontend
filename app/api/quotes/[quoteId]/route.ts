@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { quotes, quoteLineItems, users, deals, clientAccounts } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -122,7 +122,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const quoteId = Number(id);
   if (!Number.isFinite(quoteId)) return err("Invalid quote id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("delete", "crm:quotes", async (session) => {
     const existing = await db.query.quotes.findFirst({
       where: and(eq(quotes.id, quoteId), eq(quotes.orgId, session.orgId)),
       columns: { quoteNumber: true },

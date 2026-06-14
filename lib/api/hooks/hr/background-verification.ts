@@ -27,6 +27,7 @@ export function useBackgroundVerifications() {
   return useQuery({
     queryKey: bgvKeys.list(),
     queryFn: () => apiClient.get<BackgroundVerification[]>("/hr/background-verification"),
+    staleTime: 2 * 60_000,
   });
 }
 

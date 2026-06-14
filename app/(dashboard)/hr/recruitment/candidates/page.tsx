@@ -9,6 +9,7 @@ import { useCandidates, useUpdateCandidateStage, useDeleteCandidate, useBulkReje
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -58,14 +59,6 @@ const SOURCE_BADGE_CLASSES: Record<string, string> = {
   DIRECT: "text-muted-foreground",
 };
 
-function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "HIRED": return "default";
-    case "INTERVIEW": case "OFFER": return "secondary";
-    case "REJECTED": return "destructive";
-    default: return "outline";
-  }
-}
 
 export default function CandidatesPage() {
   const router = useRouter();
@@ -331,7 +324,7 @@ export default function CandidatesPage() {
                       </p>
                     )}
                   </div>
-                  <Badge variant={statusBadgeVariant(candidate.status)}>{candidate.status}</Badge>
+                  <StatusBadge status={candidate.status} />
                 </div>
 
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">

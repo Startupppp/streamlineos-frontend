@@ -18,18 +18,7 @@ import {
   useUnreadNotificationCount,
 } from "@/lib/api/hooks/notifications";
 import {
-  Users,
-  Briefcase,
-  CalendarCheck,
-  Building2,
   RefreshCw,
-  Contact2,
-  Ticket,
-  Target,
-  TrendingUp,
-  CheckCircle2,
-  ListChecks,
-  Zap,
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,25 +46,39 @@ import {
 } from "@/features/dashboard/my-issues-card";
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
-import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
-import {
-  UpcomingHolidaysWidget,
-  LeaveBalanceWidget,
-  BirthdaysWidget,
-  PendingApprovalsWidget,
-  TeamAttendanceWidget,
-  LeavesTodayWidget,
-} from "@/features/dashboard/hr-widgets";
-import { AnnouncementsWidget } from "@/components/dashboard/announcements-widget";
-import { MyTasksWidget } from "@/components/dashboard/my-tasks-widget";
-import { TimesheetWidget } from "@/components/dashboard/timesheet-widget";
-import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/leave-balance-widget";
-import { ExecutiveKpiWidget } from "@/components/dashboard/executive-kpi-widget";
-import { BusinessPulseWidget } from "@/components/dashboard/project-health-widget";
-import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
-import { QuickActionsWidget } from "@/components/dashboard/quick-actions-widget";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useAbility } from "@/lib/abilities-context";
+import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
+import { HrDashboard } from "@/features/dashboard/hr-dashboard";
+import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
+import { EmployeeDashboard } from "@/features/dashboard/employee-dashboard";
+import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
+
+const SALES_ROLES = ["SALES"] as const;
+const HR_ROLES = ["HR", "BRANCH_HR"] as const;
+const PROJECT_ROLES = [
+  "ENGINEERING",
+  "DESIGN",
+  "VIDEO_EDITOR",
+  "DIGITAL_MARKETING",
+  "CUSTOMER_SUPPORT",
+] as const;
+
+type SalesRole = (typeof SALES_ROLES)[number];
+type HrRole = (typeof HR_ROLES)[number];
+type ProjectRole = (typeof PROJECT_ROLES)[number];
+
+function isSalesRole(r: string | undefined): r is SalesRole {
+  return r !== undefined && (SALES_ROLES as readonly string[]).includes(r);
+}
+
+function isHrRole(r: string | undefined): r is HrRole {
+  return r !== undefined && (HR_ROLES as readonly string[]).includes(r);
+}
+
+function isProjectRole(r: string | undefined): r is ProjectRole {
+  return r !== undefined && (PROJECT_ROLES as readonly string[]).includes(r);
+}
 
 export function DashboardClient() {
   const router = useRouter();
@@ -180,172 +183,7 @@ export function DashboardClient() {
     [router],
   );
 
-  const statCards = useMemo(() => {
-    if (!stats) return [];
-    const rs = roleStats;
-
-    switch (role) {
-      case "CEO":
-        return [
-          {
-            id: "employees",
-            label: "Total Employees",
-            value: stats.totalEmployees,
-            icon: Users,
-            href: "/hr",
-          },
-          {
-            id: "projects",
-            label: "Active Projects",
-            value: stats.activeProjects,
-            icon: Briefcase,
-            href: "/projects",
-          },
-          {
-            id: "present",
-            label: "Present Today",
-            value: stats.presentToday,
-            icon: CalendarCheck,
-            href: "/hr/attendance",
-          },
-          {
-            id: "org",
-            label: "Organization",
-            value: stats.orgName,
-            icon: Building2,
-          },
-        ];
-      case "HR":
-        return [
-          {
-            id: "employees",
-            label: "Total Employees",
-            value: stats.totalEmployees,
-            icon: Users,
-            href: "/hr",
-          },
-          {
-            id: "present",
-            label: "Present Today",
-            value: stats.presentToday,
-            icon: CalendarCheck,
-            href: "/hr/attendance",
-          },
-          {
-            id: "projects",
-            label: "Active Projects",
-            value: stats.activeProjects,
-            icon: Briefcase,
-            href: "/projects",
-          },
-          {
-            id: "org",
-            label: "Organization",
-            value: stats.orgName,
-            icon: Building2,
-          },
-        ];
-      case "SALES":
-        return [
-          {
-            id: "leads",
-            label: "My Leads",
-            value: rs?.myLeads ?? 0,
-            icon: Contact2,
-            href: "/crm/leads",
-          },
-          {
-            id: "converted",
-            label: "Converted",
-            value: rs?.myConverted ?? 0,
-            icon: TrendingUp,
-            href: "/crm/leads",
-          },
-          {
-            id: "deals",
-            label: "My Deals",
-            value: rs?.myDeals ?? 0,
-            icon: Zap,
-            href: "/crm/deals",
-          },
-          {
-            id: "target",
-            label: "Target Progress",
-            value: `${rs?.targetProgress ?? 0}%`,
-            icon: Target,
-            href: "/crm/targets",
-          },
-        ];
-      case "CUSTOMER_SUPPORT":
-        return [
-          {
-            id: "projects",
-            label: "My Projects",
-            value: rs?.myProjects ?? 0,
-            icon: Briefcase,
-            href: "/projects",
-          },
-          {
-            id: "tickets",
-            label: "My Tickets",
-            value: rs?.myTickets ?? 0,
-            icon: Ticket,
-          },
-          {
-            id: "done",
-            label: "Completed",
-            value: rs?.myTicketsDone ?? 0,
-            icon: CheckCircle2,
-          },
-          {
-            id: "inprogress",
-            label: "In Progress",
-            value: rs?.myTicketsInProgress ?? 0,
-            icon: ListChecks,
-          },
-        ];
-      case "ENGINEERING":
-      case "DESIGN":
-      case "VIDEO_EDITOR":
-      case "DIGITAL_MARKETING":
-        return [
-          {
-            id: "projects",
-            label: "My Projects",
-            value: rs?.myProjects ?? 0,
-            icon: Briefcase,
-            href: "/projects",
-          },
-          {
-            id: "tickets",
-            label: "My Tasks",
-            value: rs?.myTickets ?? 0,
-            icon: ListChecks,
-          },
-          {
-            id: "done",
-            label: "Completed",
-            value: rs?.myTicketsDone ?? 0,
-            icon: CheckCircle2,
-          },
-          {
-            id: "inprogress",
-            label: "In Progress",
-            value: rs?.myTicketsInProgress ?? 0,
-            icon: Zap,
-          },
-        ];
-      default:
-        return [
-          {
-            id: "org",
-            label: "Organization",
-            value: stats.orgName,
-            icon: Building2,
-          },
-        ];
-    }
-  }, [stats, role, roleStats]);
+  const statCards = useDashboardStatCards(stats, role, roleStats);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myIssuesData ?? [];
@@ -493,114 +331,37 @@ export function DashboardClient() {
         </motion.div>
 
         {isAdmin ? (
-          <>
-            <motion.div variants={fadeUp} initial="hidden" animate="visible">
-              <Suspense fallback={<WidgetSkeleton rows={2} />}>
-                <ExecutiveKpiWidget />
-              </Suspense>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <AnnouncementsWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={2} />}>
-                <BusinessPulseWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <UpcomingEventsWidget />
-              </Suspense>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
-              <LeavesTodayWidget />
-              <TeamAttendanceWidget />
-              <PendingApprovalsWidget />
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
-              <BirthdaysWidget />
-              <LeaveBalanceWidget />
-              <UpcomingHolidaysWidget />
-            </motion.div>
-
-            <motion.div variants={fadeUp} initial="hidden" animate="visible">
-              <PublicDocumentsCard />
-            </motion.div>
-          </>
+          <CeoDashboard />
+        ) : isSalesRole(role) ? (
+          <SalesDashboard />
+        ) : isHrRole(role) ? (
+          <HrDashboard />
         ) : (
-          <>
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
-              <Suspense fallback={<WidgetSkeleton rows={4} />}>
-                <MyTasksWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={2} />}>
-                <TimesheetWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <LeaveBalanceWidgetNew />
-              </Suspense>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-            >
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <UpcomingEventsWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <AnnouncementsWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <QuickActionsWidget />
-              </Suspense>
-            </motion.div>
-          </>
+          <EmployeeDashboard />
         )}
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="grid gap-3 grid-cols-1 lg:grid-cols-7 md:auto-rows-[22rem]"
-        >
-          <div className="lg:col-span-4 min-h-0">
-            <MyIssuesCard
-              tickets={sortedMyTickets}
-              isLoading={ticketsLoading}
-              error={ticketsError}
-            />
-          </div>
-          <div className="lg:col-span-3 min-h-0">
-            <SprintCard
-              summary={sprintSummary ?? undefined}
-              isLoading={sprintLoading}
-            />
-          </div>
-        </motion.div>
+        {(isAdmin || isProjectRole(role)) && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3 grid-cols-1 lg:grid-cols-7 md:auto-rows-[22rem]"
+          >
+            <div className="lg:col-span-4 min-h-0">
+              <MyIssuesCard
+                tickets={sortedMyTickets}
+                isLoading={ticketsLoading}
+                error={ticketsError}
+              />
+            </div>
+            <div className="lg:col-span-3 min-h-0">
+              <SprintCard
+                summary={sprintSummary ?? undefined}
+                isLoading={sprintLoading}
+              />
+            </div>
+          </motion.div>
+        )}
 
         <motion.div
           variants={fadeUp}
@@ -610,17 +371,19 @@ export function DashboardClient() {
             isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
           } md:auto-rows-[22rem]`}
         >
-          <div className="sm:col-span-1 min-h-0">
-            <RecentProjectsCard
-              projects={recentProjects?.map((p) => ({
-                ...p,
-                key: p.key ?? "",
-              }))}
-              isLoading={projectsLoading}
-              error={projectsError}
-              onCreateProject={handleGoToProjects}
-            />
-          </div>
+          {(isAdmin || isProjectRole(role)) && (
+            <div className="sm:col-span-1 min-h-0">
+              <RecentProjectsCard
+                projects={recentProjects?.map((p) => ({
+                  ...p,
+                  key: p.key ?? "",
+                }))}
+                isLoading={projectsLoading}
+                error={projectsError}
+                onCreateProject={handleGoToProjects}
+              />
+            </div>
+          )}
           <div className="sm:col-span-1 min-h-0">
             <RecentActivityCard
               items={recentActivity}

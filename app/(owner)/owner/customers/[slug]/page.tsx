@@ -29,7 +29,7 @@ export default async function CustomerDetailPage({
       <div className="mb-4">
         <Link
           href="/owner/customers"
-          className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.16em] text-slate-500 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to customers
@@ -99,7 +99,7 @@ export default async function CustomerDetailPage({
                       {u.email}
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+                  <span className="text-[11px] font-medium text-slate-400">
                     {u.role}
                   </span>
                 </li>
@@ -146,7 +146,7 @@ export default async function CustomerDetailPage({
                     <p className="font-mono font-semibold text-slate-900">
                       {fmtInr(p.amount)}
                     </p>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+                    <p className="text-[11px] font-medium text-slate-400">
                       {p.status}
                     </p>
                   </div>

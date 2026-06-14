@@ -1,10 +1,10 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizationMembers, users, departments } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const [overall, byDept, byRole] = await Promise.all([
       db.select({
         avgSalary: sql<string>`COALESCE(AVG(${users.monthlySalary}::numeric), 0)`,

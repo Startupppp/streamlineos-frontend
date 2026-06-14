@@ -29,6 +29,7 @@ interface SupportFilters {
 
 interface CreateTicketInput {
   title: string;
+  category?: string;
   description?: string;
   clientId?: number;
   priority?: SupportTicketPriority;
@@ -65,6 +66,7 @@ export const useSupportTickets = (
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -80,6 +82,7 @@ export const useSupportTicket = (
     queryKey: queryKeys.support.detail(id),
     queryFn: () => apiClient.get<SupportTicket>(`/support/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -133,6 +136,7 @@ export const useSupportStats = (
   return useQuery<SupportStats, Error>({
     queryKey: [...queryKeys.support.all, "stats"] as const,
     queryFn: () => apiClient.get<SupportStats>("/support/stats"),
+    staleTime: 5 * 60_000,
     ...options,
   });
 };

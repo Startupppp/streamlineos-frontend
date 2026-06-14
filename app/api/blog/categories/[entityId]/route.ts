@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
+import { ok, err, withAbility, parseBody } from "@/lib/api/helpers";
 import { blogDb } from "@/lib/blog-db";
 import { blogCategories } from "@/lib/db/schema";
 import { slugify } from "@/lib/blog-utils";
@@ -20,7 +20,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ entityId: string }> },
 ) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:categories", async () => {
     const { entityId: id } = await params;
     const body = await parseBody(req, updateCategorySchema);
 
@@ -47,7 +47,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ entityId: string }> },
 ) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:categories", async () => {
     const { entityId: id } = await params;
     const [deleted] = await blogDb
       .delete(blogCategories)

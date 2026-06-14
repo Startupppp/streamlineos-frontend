@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes, onboardingDocuments, documentAuditLogs } from "@/lib/db/schema/hr";
 import { users } from "@/lib/db/schema/auth";
@@ -92,7 +92,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:onboarding", async (session) => {
     const { docId: rawId } = await params;
     const docId = Number(rawId);
     if (!Number.isFinite(docId)) return err("Invalid document ID.", 400);

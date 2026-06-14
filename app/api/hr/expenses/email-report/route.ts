@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { emailExpenseReport } from "@/server/actions/expense-export";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -25,7 +25,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async () => {
+  return withAbility("read", "hr:expenses", async () => {
     const body = await parseBody(req, bodySchema);
     const result = await emailExpenseReport(body.filters, body.sendTo);
     if (!result.success) return err(result.error ?? "Failed to send email", 400);

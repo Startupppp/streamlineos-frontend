@@ -7,6 +7,7 @@ import {
   Target, UserCheck, Calendar, BarChart3, ArrowDown, X, AlertTriangle, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -248,23 +249,11 @@ export default function CrmReportsPage() {
         {stats && (
           <>
             <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              {[
-                { label: "Total Leads", value: stats.total, icon: Users, color: "text-blue-400" },
-                { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-emerald-400" },
-                { label: "Potential Value", value: `₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`, icon: Target, color: "text-blue-600" },
-                { label: "Unassigned", value: stats.unassigned, icon: UserCheck, color: "text-red-400" },
-                { label: "New This Month", value: stats.thisMonth, icon: Calendar, color: "text-purple-400" },
-              ].map(s => (
-                <Card key={s.label} className="shadow-noir">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <s.icon className={cn("h-5 w-5", s.color)} />
-                      <span className="text-2xl font-bold tabular-nums">{s.value}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              <StatCard label="Total Leads" value={stats.total} icon={Users} color="blue" index={0} />
+              <StatCard label="Conversion Rate" value={`${stats.conversionRate}%`} icon={TrendingUp} color="green" index={1} />
+              <StatCard label="Potential Value" value={`₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`} icon={Target} color="cyan" index={2} />
+              <StatCard label="Unassigned" value={stats.unassigned} icon={UserCheck} color="red" index={3} />
+              <StatCard label="New This Month" value={stats.thisMonth} icon={Calendar} color="violet" index={4} />
             </motion.div>
 
             <motion.div variants={fadeUp}>

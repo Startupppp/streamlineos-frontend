@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { withAuth, withModuleAbility, ok, parseBody, parseQuery } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withModuleAbility("projects", "create", "projects", async (session) => {
     const input = await parseBody(req, createProjectSchema);
     const { project, key } = await createProject(session.orgId, session.user.id, input);
 

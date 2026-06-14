@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { leadScoringRules } from "@/lib/db/schema";
@@ -40,7 +40,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:scoring-rules", async (session) => {
     const input = await parseBody(req, createSchema);
     const [rule] = await db
       .insert(leadScoringRules)

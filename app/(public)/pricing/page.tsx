@@ -101,7 +101,7 @@ export default function PricingPage() {
           <MarketingEyebrow>Pricing</MarketingEyebrow>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
             31% cheaper than Odoo.{" "}
-            <span className="brand-text">Same all-in-one bundle.</span>
+            <span className="text-blue-600">Same all-in-one bundle.</span>
           </h1>
           <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto mb-3">
             From{" "}
@@ -123,20 +123,20 @@ export default function PricingPage() {
             {PRICING_TIERS.map((tier) => (
               <div
                 key={tier.id}
-                className={`relative rounded-3xl border p-6 flex flex-col ${
+                className={`relative rounded-2xl border p-6 flex flex-col ${
                   tier.highlight
                     ? "border-blue-400/40 bg-white shadow-[0_30px_80px_-24px_rgba(30,64,175,0.28)]"
                     : "border-slate-200 bg-white"
                 }`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[10px] font-mono uppercase tracking-[0.18em] text-white font-bold shadow-lg whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-[11px] font-semibold text-white shadow-lg whitespace-nowrap">
                     <Sparkles className="h-3 w-3" />
                     {tier.badge}
                   </div>
                 )}
                 <h3 className="font-display text-xl font-bold text-slate-900">{tier.name}</h3>
-                <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-blue-600 mb-4">
+                <p className="text-[12px] font-medium text-blue-600 mb-4">
                   {tier.tagline}
                 </p>
                 <div className="mb-5 pb-5 border-b border-slate-100">
@@ -177,7 +177,7 @@ export default function PricingPage() {
                     <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </Link>
-                <p className="mt-3 text-[10.5px] font-mono uppercase tracking-[0.12em] text-slate-400 text-center">
+                <p className="mt-3 text-[12px] font-medium text-slate-400 text-center">
                   {tier.bestFor}
                 </p>
               </div>
@@ -197,7 +197,7 @@ export default function PricingPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200">
-                    <th className="py-3 px-4 text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500 min-w-[260px]">
+                    <th className="py-3 px-4 text-[11px] font-medium text-slate-500 min-w-[260px]">
                       Feature
                     </th>
                     {PRICING_TIERS.map((tier) => (
@@ -269,7 +269,7 @@ export default function PricingPage() {
         </section>
 
         <section className="container mx-auto px-4 lg:px-8 max-w-3xl mt-16 mb-4">
-          <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-900 to-slate-800 p-8 lg:p-10 text-center text-white shadow-[0_30px_80px_-24px_rgba(15,23,42,0.5)]">
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-900 p-8 lg:p-10 text-center text-white shadow-[0_30px_80px_-24px_rgba(15,23,42,0.5)]">
             <h2 className="font-display text-2xl lg:text-3xl font-extrabold tracking-[-0.02em] mb-3">
               Still deciding? We&apos;ll help you scope it.
             </h2>

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
+import { StatCard } from "@/components/ui/stat-card";
 import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/lib/api/hooks/leads";
 import { useQueryClient } from "@tanstack/react-query";
@@ -147,33 +148,9 @@ export default function LeadDistributionPage() {
     >
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-bold tabular-nums">{data?.totalCount || 0}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Total Leads</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <Users className="h-5 w-5 text-amber-400" />
-              <span className="text-2xl font-bold tabular-nums">{unassignedCount}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Unassigned</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <ArrowRight className="h-5 w-5 text-blue-400" />
-              <span className="text-2xl font-bold tabular-nums">{selectedIds.size}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Selected</p>
-          </CardContent>
-        </Card>
+        <StatCard label="Total Leads" value={data?.totalCount ?? 0} icon={FileSpreadsheet} color="blue" index={0} />
+        <StatCard label="Unassigned" value={unassignedCount} icon={Users} color="amber" index={1} />
+        <StatCard label="Selected" value={selectedIds.size} icon={ArrowRight} color="cyan" index={2} />
       </div>
 
       <Card>

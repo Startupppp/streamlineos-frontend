@@ -24,7 +24,7 @@ export function MarketingShell({ children, className }: Props) {
 type EyebrowProps = { children: ReactNode };
 export function MarketingEyebrow({ children }: EyebrowProps) {
   return (
-    <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
+    <p className="text-[13px] font-medium text-blue-600 mb-3">
       {children}
     </p>
   );

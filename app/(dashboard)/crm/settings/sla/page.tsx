@@ -10,6 +10,7 @@ import {
   CheckCircle2, XCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -213,27 +214,16 @@ export default function SlaPage() {
       >
         {slaReport && (
           <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            {[
-              { label:"Total with SLA", value: slaReport.total, icon: Shield, color:"text-blue-400" },
-              { label:"Compliant", value: slaReport.compliant, icon: CheckCircle2, color:"text-emerald-400" },
-              { label:"Breached", value: slaReport.breached, icon: XCircle, color:"text-red-400" },
-              {
-                label:"Compliance Rate",
-                value: `${slaReport.complianceRate}%`,
-                icon: Clock,
-                color: slaReport.complianceRate >= 80 ?"text-emerald-400" : slaReport.complianceRate >= 50 ?"text-amber-400" :"text-red-400",
-              },
-            ].map(stat => (
-              <Card key={stat.label} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <stat.icon className={cn("h-5 w-5", stat.color)} />
-                    <span className="text-2xl font-bold tabular-nums">{stat.value}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <StatCard label="Total with SLA" value={slaReport.total} icon={Shield} color="blue" index={0} />
+            <StatCard label="Compliant" value={slaReport.compliant} icon={CheckCircle2} color="green" index={1} />
+            <StatCard label="Breached" value={slaReport.breached} icon={XCircle} color="red" index={2} />
+            <StatCard
+              label="Compliance Rate"
+              value={`${slaReport.complianceRate}%`}
+              icon={Clock}
+              color={slaReport.complianceRate >= 80 ? "green" : slaReport.complianceRate >= 50 ? "amber" : "red"}
+              index={3}
+            />
           </motion.div>
         )}
 

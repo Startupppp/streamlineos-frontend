@@ -32,6 +32,6 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
     });
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

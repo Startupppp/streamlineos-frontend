@@ -29,6 +29,7 @@ export const useAttendanceReport = (
         endDate: endDate!.toISOString(),
       }),
     enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
     ...options,
   });
 };
@@ -72,6 +73,7 @@ export const useProjectReport = (
         ...(startDate ? { startDate: startDate.toISOString() } : {}),
         ...(endDate ? { endDate: endDate.toISOString() } : {}),
       }),
+    staleTime: 5 * 60_000,
     ...options,
   });
 };
@@ -92,6 +94,7 @@ export const useTeamPerformanceReport = (
         endDate: endDate!.toISOString(),
       }),
     enabled: !!startDate && !!endDate,
+    staleTime: 5 * 60_000,
     ...options,
   });
 };

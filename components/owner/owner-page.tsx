@@ -21,7 +21,7 @@ export function OwnerPage({
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             {eyebrow && (
-              <p className="text-[9.5px] font-mono uppercase tracking-[0.14em] text-blue-600 leading-none">
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">
                 {eyebrow}
               </p>
             )}

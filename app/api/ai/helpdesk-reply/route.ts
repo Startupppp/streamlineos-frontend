@@ -14,11 +14,16 @@ export async function POST(req: NextRequest) {
     const featureGuard = requireFeature(session.plan, "ai.reply-suggestion");
     if (featureGuard) return featureGuard;
     if (!isOpenAIConfigured()) {
-      return err("AI is not configured. Set OPENAI_API_KEY.", 503);
+      return err("AI reply suggestion is not available at this time. Please contact your administrator.", 503);
     }
 
     const { ticketId } = await parseBody(req, schema);
-    const result = await aiSuggestHelpdeskReply(session.orgId, ticketId);
+    let result;
+    try {
+      result = await aiSuggestHelpdeskReply(session.orgId, ticketId);
+    } catch {
+      return err("Failed to generate AI reply. Please try again later.", 503);
+    }
 
     if (!result) {
       return err("Ticket not found or reply generation failed", 404);

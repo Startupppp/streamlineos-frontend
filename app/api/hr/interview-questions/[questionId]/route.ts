@@ -12,6 +12,8 @@ const updateSchema = z.object({
   role: z.string().max(100).nullable().optional(),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
   tags: z.array(z.string()).optional(),
+  sampleAnswer: z.string().max(3000).nullable().optional(),
+  keywords: z.array(z.string().max(100)).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -40,9 +42,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const input = await parseBody(req, updateSchema);
 
+    const updateData = { ...input, updatedAt: new Date() };
+    if (input.tags) updateData.tags = [...new Set(input.tags.map((t) => t.toLowerCase().trim()).filter(Boolean))];
+    if (input.keywords) updateData.keywords = [...new Set(input.keywords.map((k) => k.toLowerCase().trim()).filter(Boolean))];
+
     await db
       .update(interviewQuestions)
-      .set({ ...input, updatedAt: new Date() })
+      .set(updateData)
       .where(and(eq(interviewQuestions.id, questionId), eq(interviewQuestions.orgId, session.orgId)));
 
     return ok({ success: true });
@@ -65,7 +71,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     if (!existing) return err("Question not found", 404);
 
     await db
-      .delete(interviewQuestions)
+      .update(interviewQuestions)
+      .set({ isActive: false, updatedAt: new Date() })
       .where(and(eq(interviewQuestions.id, questionId), eq(interviewQuestions.orgId, session.orgId)));
 
     return ok({ success: true });

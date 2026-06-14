@@ -110,6 +110,6 @@ export async function POST(req: NextRequest) {
       metadata: { name: body.name, type: body.type, targetUserId },
     }).catch(() => {});
 
-    return ok(document);
+    return ok(document, 201);
   });
 }

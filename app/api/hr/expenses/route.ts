@@ -23,7 +23,7 @@ const listExpensesSchema = z.object({
 const createExpenseSchema = z.object({
   category: z.string(),
   categoryId: z.number().int().optional(),
-  amount: z.number(),
+  amount: z.number().positive("Amount must be greater than 0").max(999_999_999.99, "Amount cannot exceed 999,999,999.99"),
   description: z.string().optional(),
   receiptUrl: z.string().optional(),
   receiptFileName: z.string().optional(),
@@ -132,6 +132,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:expenses:${session.orgId}:*`);
 
-    return ok(expense);
+    return ok(expense, 201);
   });
 }

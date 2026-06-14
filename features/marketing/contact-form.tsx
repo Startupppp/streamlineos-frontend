@@ -84,7 +84,7 @@ export function ContactForm() {
   };
 
   return (
-    <div className="relative rounded-3xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
+    <div className="relative rounded-2xl border border-slate-200/80 bg-white/85 backdrop-blur-sm p-3 lg:p-6 shadow-[0_18px_44px_-18px_rgba(30,64,175,0.18)]">
       <AnimatePresence mode="wait">
         {submitted ? (
           <motion.div
@@ -115,7 +115,7 @@ export function ContactForm() {
                 setValues(initialState);
                 setSubmitted(false);
               }}
-              className="mt-7 text-[12px] font-mono uppercase tracking-[0.16em] text-slate-500 hover:text-slate-900 transition-colors"
+              className="mt-7 text-[12px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
             >
               ← Send another message
             </button>
@@ -133,7 +133,7 @@ export function ContactForm() {
             className="space-y-5"
           >
             <div>
-              <Label className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500 mb-2 block">
+              <Label className="text-[13px] font-medium text-slate-700 mb-2 block">
                 What can we help with?
               </Label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
@@ -242,9 +242,8 @@ export function ContactForm() {
               )}
             </Button>
 
-            <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400 text-center">
-              Your message is encrypted in transit. We&apos;ll never share your
-              email.
+            <p className="text-[12px] font-medium text-slate-400 text-center">
+              Your message is encrypted in transit. We&apos;ll never share your email.
             </p>
           </motion.form>
         )}

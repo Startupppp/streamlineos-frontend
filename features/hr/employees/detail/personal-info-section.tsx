@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormControl, FormField, FormItem, FormLabel, FormMessage,
@@ -14,16 +13,15 @@ import { User } from "lucide-react";
 import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
 
 export function PersonalInfoSection() {
-  const { control } = useFormContext<EmployeeFormValues>();
+  const { control, watch } = useFormContext<EmployeeFormValues>();
 
-  const handlePhoneChange = useCallback(
-    (onChange: (v: string) => void) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = e.target.value;
-        if (/^[\d+\s-]*$/.test(v)) onChange(v);
-      },
-    []
-  );
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
+
+  const showSameNameWarning =
+    !!firstName?.trim() &&
+    !!lastName?.trim() &&
+    firstName.trim().toLowerCase() === lastName.trim().toLowerCase();
 
   return (
     <div className="space-y-4">
@@ -51,6 +49,11 @@ export function PersonalInfoSection() {
               <FormLabel>Last Name</FormLabel>
               <FormControl><Input {...field} /></FormControl>
               <FormMessage />
+              {showSameNameWarning && (
+                <p className="text-xs text-amber-600 mt-1">
+                  First name and last name appear to be the same.
+                </p>
+              )}
             </FormItem>
           )}
         />

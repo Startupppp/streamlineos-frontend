@@ -31,6 +31,7 @@ export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
+    staleTime: 2 * 60_000,
     refetchInterval: 30_000,
     enabled,
   });
@@ -40,6 +41,7 @@ export function useChatChannel(channelId: number) {
   return useQuery({
     queryKey: queryKeys.chat.channel(channelId),
     queryFn: () => apiClient.get<Channel>(`/chat/channels/${channelId}`),
+    staleTime: 2 * 60_000,
     enabled: channelId > 0,
   });
 }
@@ -66,6 +68,7 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
         `/chat/channels/${channelId}/messages/poll`,
         { since }
       ),
+    staleTime: 2 * 60_000,
     enabled: enabled && channelId > 0,
     refetchInterval: enabled ? 30_000 : false,
   });
@@ -75,6 +78,7 @@ export function useChatUnreadTotal(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
+    staleTime: 2 * 60_000,
     refetchInterval: 30_000,
     enabled,
   });
@@ -94,6 +98,7 @@ export function useChatOrgUsers(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.orgUsers(),
     queryFn: () => apiClient.get<OrgUser[]>("/chat/users"),
+    staleTime: 2 * 60_000,
     enabled,
   });
 }
@@ -106,6 +111,7 @@ export function useChatSearchMessages(query: string, channelId?: number) {
         query,
         ...(channelId ? { channelId } : {}),
       }),
+    staleTime: 2 * 60_000,
     enabled: query.length >= 2,
   });
 }
@@ -115,6 +121,7 @@ export function useChatTyping(channelId: number, enabled: boolean) {
     queryKey: queryKeys.chat.typing(channelId),
     queryFn: () =>
       apiClient.get<TypingIndicator[]>(`/chat/channels/${channelId}/typing`),
+    staleTime: 2 * 60_000,
     refetchInterval: 4_000,
     enabled: enabled && channelId > 0,
   });
@@ -316,10 +323,10 @@ export function useVotePoll() {
 }
 
 
-export function useToggleReaction(channelId: number, messageId: number) {
+export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ emoji }: { emoji: string }) =>
+    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
       apiClient.post<{ reactions: Record<string, string[]> }>(
         `/chat/channels/${channelId}/messages/${messageId}/reactions`,
         { emoji }

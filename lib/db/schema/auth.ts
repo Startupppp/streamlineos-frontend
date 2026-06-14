@@ -23,6 +23,9 @@ export const organizations = pgTable("organizations", {
   allowedEmailDomains: text("allowed_email_domains").array().default([]),
   passwordExpiryDays: integer("password_expiry_days"),
   enabledModules: text("enabled_modules").array(),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  companySize: text("company_size"),
+  country: text("country"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
@@ -242,6 +245,8 @@ export const rolePermissions = pgTable("role_permissions", {
 }, (table) => [
   uniqueIndex("uniq_role_permissions_role_perm_org").on(table.role, table.permissionId, table.orgId),
   index("idx_role_permissions_org").on(table.orgId),
+  index("idx_role_permissions_role").on(table.role),
+  index("idx_role_permissions_org_role").on(table.orgId, table.role),
 ]);
 
 export const userPermissions = pgTable("user_permissions", {
@@ -254,6 +259,7 @@ export const userPermissions = pgTable("user_permissions", {
 }, (table) => [
   uniqueIndex("uniq_user_permissions_user_perm_org").on(table.userId, table.permissionId, table.orgId),
   index("idx_user_permissions_org").on(table.orgId),
+  index("idx_user_permissions_user_org").on(table.userId, table.orgId),
 ]);
 
 export const onboardingSteps = pgTable("onboarding_steps", {

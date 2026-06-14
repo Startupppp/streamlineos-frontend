@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,45 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, Clock, TrendingUp, Pencil } from "lucide-react";
 import { useProjectBudget, useUpdateProjectBudget } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  subtext,
-  highlight,
-}: {
-  title: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  subtext?: string;
-  highlight?: "danger" | "success";
-}) {
-  return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p
-              className={`text-2xl font-bold mt-1 ${
-                highlight === "danger"
-                  ? "text-destructive"
-                  : highlight === "success"
-                  ? "text-green-600"
-                  : ""
-              }`}
-            >
-              {value}
-            </p>
-            {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
-          </div>
-          <Icon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
@@ -117,24 +79,28 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
         <StatCard
-          title="Planned Budget"
+          label="Planned Budget"
           value={fmt(budget?.plannedBudget ?? 0)}
           icon={DollarSign}
-          subtext={budget?.plannedBudget ? "Project budget" : "Not set"}
+          hint={budget?.plannedBudget ? "Project budget" : "Not set"}
+          color="blue"
+          index={0}
         />
         <StatCard
-          title="Actual Cost"
+          label="Actual Cost"
           value={fmt(budget?.actualCost ?? 0)}
           icon={TrendingUp}
-          subtext={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
-          highlight={overBudget ? "danger" : undefined}
+          hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
+          color={overBudget ? "red" : "cyan"}
+          index={1}
         />
         <StatCard
-          title="Remaining"
+          label="Remaining"
           value={fmt(Math.abs(budget?.remaining ?? 0))}
           icon={DollarSign}
-          subtext={overBudget ? "Over budget" : "Available"}
-          highlight={overBudget ? "danger" : "success"}
+          hint={overBudget ? "Over budget" : "Available"}
+          color={overBudget ? "red" : "green"}
+          index={2}
         />
       </div>
 

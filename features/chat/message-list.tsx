@@ -1,11 +1,9 @@
 "use client";
 
-import { Fragment, useRef, useCallback } from "react";
+import { Fragment, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Loader2, Send } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
 
@@ -18,6 +16,7 @@ interface MessageItemProps {
   msg: Message;
   isOwn: boolean;
   showHeader: boolean;
+  currentUserId: string;
   editingMessageId: number | undefined;
   editInput: string;
   onEditInputChange: (value: string) => void;
@@ -26,12 +25,14 @@ interface MessageItemProps {
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
+  onReact: (messageId: number, emoji: string) => void;
 }
 
 function MessageItem({
   msg,
   isOwn,
   showHeader,
+  currentUserId,
   editingMessageId,
   editInput,
   onEditInputChange,
@@ -40,16 +41,19 @@ function MessageItem({
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
   const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
   const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
+  const handleReact = useCallback((emoji: string) => onReact(msg.id, emoji), [msg.id, onReact]);
   return (
     <ChatBubble
       message={msg}
       isOwn={isOwn}
       showSender={showHeader}
+      currentUserId={currentUserId}
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
       onEditInputChange={onEditInputChange}
@@ -58,6 +62,7 @@ function MessageItem({
       onSaveEdit={handleSaveEdit}
       onReply={handleReply}
       onDelete={handleDelete}
+      onReact={handleReact}
     />
   );
 }
@@ -81,6 +86,7 @@ export interface MessageListProps {
   onSaveEdit: (messageId: number) => void;
   onReply: (msg: Message) => void;
   onDelete: (messageId: number) => void;
+  onReact: (messageId: number, emoji: string) => void;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -107,6 +113,7 @@ export function MessageList({
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -181,6 +188,7 @@ export function MessageList({
                     msg={msg}
                     isOwn={isOwn}
                     showHeader={showHeader}
+                    currentUserId={currentUserId}
                     editingMessageId={editingMessage?.id}
                     editInput={editInput}
                     onEditInputChange={onEditInputChange}
@@ -189,6 +197,7 @@ export function MessageList({
                     onSaveEdit={onSaveEdit}
                     onReply={onReply}
                     onDelete={onDelete}
+                    onReact={onReact}
                   />
                 );
               })}
@@ -217,16 +226,20 @@ export function MessageList({
 
       <AnimatePresence>
         {showScrollBtn && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            onClick={scrollToBottom}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
+            exit={{ opacity: 0, y: -10 }}
+            className="sticky top-2 z-10 flex justify-center pointer-events-none"
           >
-            <ArrowDown className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-medium">New messages</span>
-          </motion.button>
+            <button
+              onClick={scrollToBottom}
+              className="pointer-events-auto h-8 rounded-full bg-background border border-border/60 shadow-lg flex items-center gap-1.5 px-3 hover:bg-muted transition-colors"
+            >
+              <ArrowDown className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-medium">New messages</span>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

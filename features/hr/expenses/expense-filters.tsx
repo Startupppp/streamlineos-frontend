@@ -14,19 +14,30 @@ import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
 import type { ExpenseFilters, ExpenseCategory } from "@/server/actions/expense-query";
 import type { DatePreset } from "@/hooks/use-expense-filters";
 
+interface EmployeeOption {
+  id: string;
+  name: string;
+}
+
 interface AdminExpenseFiltersProps {
   statusFilter: StatusFilter;
   pendingCount: number;
   onStatusChange: (status: StatusFilter) => void;
+  employees?: EmployeeOption[];
+  selectedUserId?: string;
+  onUserChange?: (userId: string) => void;
 }
 
 export function AdminExpenseFilters({
   statusFilter,
   pendingCount,
   onStatusChange,
+  employees = [],
+  selectedUserId,
+  onUserChange,
 }: AdminExpenseFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       {([
         { key: "ALL" as StatusFilter, label: "All Claims", count: null },
         { key: "PENDING" as StatusFilter, label: "Pending", count: pendingCount },
@@ -52,6 +63,22 @@ export function AdminExpenseFilters({
           )}
         </button>
       ))}
+      {employees.length > 0 && onUserChange && (
+        <Select
+          value={selectedUserId || "all"}
+          onValueChange={(v) => onUserChange(v === "all" ? "" : v)}
+        >
+          <SelectTrigger className="h-9 w-[180px] text-sm" aria-label="Filter by employee">
+            <SelectValue placeholder="Spent By" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Employees</SelectItem>
+            {employees.map((e) => (
+              <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

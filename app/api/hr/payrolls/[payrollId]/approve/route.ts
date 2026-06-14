@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withModuleAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { payrolls, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -10,7 +10,7 @@ export async function PATCH(
   _req: NextRequest,
   { params }: { params: Promise<{ payrollId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withModuleAbility("hr", "approve", "hr:payroll", async (session) => {
     const { payrollId: id } = await params;
     const payrollId = Number(id);
     if (!payrollId) return err("Invalid payroll ID.", 400);

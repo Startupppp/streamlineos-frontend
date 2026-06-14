@@ -5,12 +5,11 @@ import {
   useMemo,
   useCallback,
   useTransition,
-  useEffect,
-  useRef,
 } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
+import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -37,75 +36,9 @@ import { KanbanFilterBar } from "@/features/crm/deals/kanban-filter-bar";
 import { KanbanColumn } from "@/features/crm/deals/kanban-column";
 import { WinLossDialog } from "@/features/crm/deals/win-loss-dialog";
 import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
+import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 
-const CONFETTI_COLORS = [
-  "#06b6d4",
-  "#1e40af",
-  "#10B981",
-  "#F59E0B",
-  "#3B82F6",
-  "#EF4444",
-  "#8B5CF6",
-];
-
-function ConfettiOverlay({ onDone }: { onDone: () => void }) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    timerRef.current = setTimeout(onDone, 3000);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [onDone]);
-
-  const dots = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, i) => ({
-        id: i,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        left: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 1.5}s`,
-        size: `${6 + Math.random() * 8}px`,
-        duration: `${1.5 + Math.random() * 1.5}s`,
-      })),
-     
-    [],
-  );
-
-  return (
-    <>
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        .confetti-dot {
-          position: fixed;
-          top: 0;
-          border-radius: 2px;
-          pointer-events: none;
-          animation: confetti-fall linear forwards;
-          z-index: 9999;
-        }
-      `}</style>
-      {dots.map((d) => (
-        <span
-          key={d.id}
-          className="confetti-dot"
-          style={{
-            left: d.left,
-            width: d.size,
-            height: d.size,
-            backgroundColor: d.color,
-            animationDuration: d.duration,
-            animationDelay: d.delay,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-const STAGE_ORDER = ["LEAD","CONTACTED","PROPOSAL","NEGOTIATION"] as const;
+const STAGE_ORDER = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION"] as const;
 
 export default function DealsPage() {
   const searchParams = useSearchParams();
@@ -113,15 +46,15 @@ export default function DealsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  const view = (searchParams.get("view") ||"table") as"table" |"kanban";
-  const dealSortCol = searchParams.get("sort") ||"createdAt";
-  const dealSortDir = (searchParams.get("dir") ||"desc") as"asc" |"desc";
+  const view = (searchParams.get("view") || "table") as "table" | "kanban";
+  const dealSortCol = searchParams.get("sort") || "createdAt";
+  const dealSortDir = (searchParams.get("dir") || "desc") as "asc" | "desc";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value ==="") params.delete(key);
+        if (value === null || value === "") params.delete(key);
         else params.set(key, value);
       }
       startTransition(() => {
@@ -137,12 +70,14 @@ export default function DealsPage() {
     ? rawEmployees
     : (rawEmployees?.data ?? []);
 
+  const handleExport = useDealsExport(allDeals);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
   const [sidePanelDealId, setSidePanelDealId] = useState<number | null>(null);
   const [winLossDialog, setWinLossDialog] = useState<{
     id: number;
-    stage:"WON" |"LOST";
+    stage: "WON" | "LOST";
   } | null>(null);
   const [winLossCategory, setWinLossCategory] = useState("");
   const [winLossNotes, setWinLossNotes] = useState("");
@@ -169,7 +104,7 @@ export default function DealsPage() {
     assignee: string;
     minValue: string;
     maxValue: string;
-  }>({ assignee:"all", minValue:"", maxValue:"" });
+  }>({ assignee: "all", minValue: "", maxValue: "" });
 
   const handleApplyFilters = useCallback(() => {
     setAppliedFilters({
@@ -183,23 +118,20 @@ export default function DealsPage() {
     setFilterAssignee("all");
     setFilterMinValue("");
     setFilterMaxValue("");
-    setAppliedFilters({ assignee:"all", minValue:"", maxValue:"" });
+    setAppliedFilters({ assignee: "all", minValue: "", maxValue: "" });
   }, []);
 
   const hasActiveFilters =
-    appliedFilters.assignee !=="all" ||
-    appliedFilters.minValue !=="" ||
-    appliedFilters.maxValue !=="";
+    appliedFilters.assignee !== "all" ||
+    appliedFilters.minValue !== "" ||
+    appliedFilters.maxValue !== "";
 
   const handleDealSort = useCallback(
     (col: string) => {
       if (dealSortCol === col) {
-        updateParams({
-          sort: col,
-          dir: dealSortDir ==="asc" ?"desc" :"asc",
-        });
+        updateParams({ sort: col, dir: dealSortDir === "asc" ? "desc" : "asc" });
       } else {
-        updateParams({ sort: col, dir:"desc" });
+        updateParams({ sort: col, dir: "desc" });
       }
     },
     [dealSortCol, dealSortDir, updateParams],
@@ -210,48 +142,9 @@ export default function DealsPage() {
     [updateParams],
   );
   const handleViewKanban = useCallback(
-    () => updateParams({ view:"kanban" }),
+    () => updateParams({ view: "kanban" }),
     [updateParams],
   );
-
-  const handleExport = useCallback(async () => {
-    try {
-      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const rows = (allDeals || []).map((d) => ({
-        name: d.name,
-        value: d.value ||"0",
-        stage: d.stage,
-        probability: `${d.probability ?? 0}%`,
-        contactPerson: d.contactPerson ||"",
-        contactEmail: d.contactEmail ||"",
-        assignedTo: d.assignedTo?.name ||"Unassigned",
-        expectedClose: d.expectedCloseDate ||"",
-        createdAt: d.createdAt
-          ? new Date(d.createdAt).toLocaleDateString()
-          :"",
-      }));
-      await downloadXlsx("deals-export.xlsx", [
-        {
-          name:"Deals",
-          columns: [
-            { header:"Deal Name", key:"name", width: 25 },
-            { header:"Value (INR)", key:"value", width: 15 },
-            { header:"Stage", key:"stage", width: 14 },
-            { header:"Probability", key:"probability", width: 12 },
-            { header:"Contact Person", key:"contactPerson", width: 20 },
-            { header:"Contact Email", key:"contactEmail", width: 25 },
-            { header:"Assigned To", key:"assignedTo", width: 18 },
-            { header:"Expected Close", key:"expectedClose", width: 14 },
-            { header:"Created", key:"createdAt", width: 12 },
-          ],
-          rows,
-        },
-      ]);
-      toast.success("Deals exported");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }, [allDeals]);
 
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
@@ -271,8 +164,8 @@ export default function DealsPage() {
 
   const handleStageChange = useCallback(
     (id: number, stage: string) => {
-      if (stage ==="WON" || stage ==="LOST") {
-        setWinLossDialog({ id, stage: stage as"WON" |"LOST" });
+      if (stage === "WON" || stage === "LOST") {
+        setWinLossDialog({ id, stage: stage as "WON" | "LOST" });
         setWinLossCategory("");
         setWinLossNotes("");
         return;
@@ -285,29 +178,14 @@ export default function DealsPage() {
       const toIdx = STAGE_ORDER.indexOf(stage as (typeof STAGE_ORDER)[number]);
       if (fromIdx !== -1 && toIdx !== -1 && toIdx > fromIdx + 1) {
         const skipped = STAGE_ORDER.slice(fromIdx + 1, toIdx);
-        setStageSkipDialog({
-          id,
-          from: currentStage!,
-          to: stage,
-          skipped: [...skipped],
-        });
+        setStageSkipDialog({ id, from: currentStage!, to: stage, skipped: [...skipped] });
         return;
       }
       const version = currentDeal?.updatedAt
         ? new Date(currentDeal.updatedAt).toISOString()
         : undefined;
       updateStageMutation.mutate(
-        {
-          id,
-          stage: stage as
-            |"LEAD"
-            |"CONTACTED"
-            |"PROPOSAL"
-            |"NEGOTIATION"
-            |"WON"
-            |"LOST",
-          version,
-        },
+        { id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST", version },
         {
           onSuccess: () => toast.success("Deal stage updated"),
           onError: (e) => toast.error(getErrorMessage(e)),
@@ -321,11 +199,10 @@ export default function DealsPage() {
     (result: DropResult) => {
       const { draggableId, destination } = result;
       if (!destination) return;
-      const newStage = destination.droppableId;
       const dealId = Number(draggableId);
       const currentDeal = allDeals?.find((d) => d.id === dealId);
-      if (!currentDeal || currentDeal.stage === newStage) return;
-      handleStageChange(dealId, newStage);
+      if (!currentDeal || currentDeal.stage === destination.droppableId) return;
+      handleStageChange(dealId, destination.droppableId);
     },
     [allDeals, handleStageChange],
   );
@@ -333,14 +210,14 @@ export default function DealsPage() {
   const handleWinLossConfirm = useCallback(() => {
     if (!winLossDialog) return;
     const reason = winLossNotes
-      ? `${winLossCategory ||"Other"}: ${winLossNotes}`
+      ? `${winLossCategory || "Other"}: ${winLossNotes}`
       : winLossCategory || undefined;
     updateStageMutation.mutate(
       { id: winLossDialog.id, stage: winLossDialog.stage, lostReason: reason },
       {
         onSuccess: () => {
           toast.success(`Deal marked as ${winLossDialog.stage}`);
-          if (winLossDialog.stage ==="WON") setShowConfetti(true);
+          if (winLossDialog.stage === "WON") setShowConfetti(true);
           setWinLossDialog(null);
         },
       },
@@ -350,28 +227,16 @@ export default function DealsPage() {
   const handleWinLossDialogChange = useCallback((open: boolean) => {
     if (!open) setWinLossDialog(null);
   }, []);
-
   const handleWinLossCancel = useCallback(() => setWinLossDialog(null), []);
-
   const handleStageSkipDialogClose = useCallback((open: boolean) => {
     if (!open) setStageSkipDialog(null);
   }, []);
-
   const handleCancelSkip = useCallback(() => setStageSkipDialog(null), []);
 
   const handleConfirmSkip = useCallback(() => {
     if (!stageSkipDialog) return;
     updateStageMutation.mutate(
-      {
-        id: stageSkipDialog.id,
-        stage: stageSkipDialog.to as
-          |"LEAD"
-          |"CONTACTED"
-          |"PROPOSAL"
-          |"NEGOTIATION"
-          |"WON"
-          |"LOST",
-      },
+      { id: stageSkipDialog.id, stage: stageSkipDialog.to as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" },
       {
         onSuccess: () => {
           toast.success("Deal stage updated");
@@ -384,16 +249,12 @@ export default function DealsPage() {
   const filteredDeals = useMemo(() => {
     if (!allDeals) return [];
     return allDeals.filter((d) => {
-      if (
-        appliedFilters.assignee !=="all" &&
-        d.assignedToId !== appliedFilters.assignee
-      )
-        return false;
-      if (appliedFilters.minValue !=="") {
+      if (appliedFilters.assignee !== "all" && d.assignedToId !== appliedFilters.assignee) return false;
+      if (appliedFilters.minValue !== "") {
         const min = Number(appliedFilters.minValue);
         if (!Number.isNaN(min) && Number(d.value ?? 0) < min) return false;
       }
-      if (appliedFilters.maxValue !=="") {
+      if (appliedFilters.maxValue !== "") {
         const max = Number(appliedFilters.maxValue);
         if (!Number.isNaN(max) && Number(d.value ?? 0) > max) return false;
       }
@@ -404,9 +265,7 @@ export default function DealsPage() {
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
     for (const s of DEAL_STAGES) map[s.key] = [];
-    filteredDeals.forEach((d) => {
-      if (map[d.stage]) map[d.stage]!.push(d);
-    });
+    filteredDeals.forEach((d) => { if (map[d.stage]) map[d.stage]!.push(d); });
     return map;
   }, [filteredDeals]);
 
@@ -424,22 +283,15 @@ export default function DealsPage() {
   }, [allDeals]);
 
   const stats = useMemo(() => {
-    if (!allDeals)
-      return { total: 0, totalValue: 0, wonValue: 0, avgProbability: 0 };
-    const active = allDeals.filter((d) => d.stage !=="LOST");
+    if (!allDeals) return { total: 0, totalValue: 0, wonValue: 0, avgProbability: 0 };
+    const active = allDeals.filter((d) => d.stage !== "LOST");
     return {
       total: allDeals.length,
       totalValue: active.reduce((s, d) => s + Number(d.value || 0), 0),
-      wonValue: allDeals
-        .filter((d) => d.stage ==="WON")
-        .reduce((s, d) => s + Number(d.value || 0), 0),
-      avgProbability:
-        active.length > 0
-          ? Math.round(
-              active.reduce((s, d) => s + (d.probability || 0), 0) /
-                active.length,
-            )
-          : 0,
+      wonValue: allDeals.filter((d) => d.stage === "WON").reduce((s, d) => s + Number(d.value || 0), 0),
+      avgProbability: active.length > 0
+        ? Math.round(active.reduce((s, d) => s + (d.probability || 0), 0) / active.length)
+        : 0,
     };
   }, [allDeals]);
 
@@ -455,23 +307,17 @@ export default function DealsPage() {
           <>
             <div className="flex items-center border border-border rounded-md">
               <Button
-                variant={view ==="table" ?"default" :"ghost"}
+                variant={view === "table" ? "default" : "ghost"}
                 size="sm"
-                className={cn(
-"rounded-r-none",
-                  view ==="table" &&"",
-                )}
+                className={cn("rounded-r-none", view === "table" && "")}
                 onClick={handleViewTable}
               >
                 <TableIcon className="h-4 w-4" />
               </Button>
               <Button
-                variant={view ==="kanban" ?"default" :"ghost"}
+                variant={view === "kanban" ? "default" : "ghost"}
                 size="sm"
-                className={cn(
-"rounded-l-none",
-                  view ==="kanban" &&"",
-                )}
+                className={cn("rounded-l-none", view === "kanban" && "")}
                 onClick={handleViewKanban}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -481,9 +327,7 @@ export default function DealsPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button
-                            onClick={() => setCreateOpen(true)}
-            >
+            <Button onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Deal
             </Button>
@@ -496,16 +340,8 @@ export default function DealsPage() {
           </>
         }
       >
-        <motion.div
-          className="space-y-6"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            variants={fadeUp}
-            className="sticky top-0 z-10 bg-background pb-2"
-          >
+        <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+          <motion.div variants={fadeUp} className="sticky top-0 z-10 bg-background pb-2">
             <DealsStatsBar {...stats} />
           </motion.div>
 
@@ -513,7 +349,7 @@ export default function DealsPage() {
             <DealForecastWidget deals={filteredDeals} />
           </motion.div>
 
-          {view ==="table" && (
+          {view === "table" && (
             <motion.div variants={fadeUp}>
               <DealTableView
                 deals={allDeals || []}
@@ -526,7 +362,7 @@ export default function DealsPage() {
             </motion.div>
           )}
 
-          {view ==="kanban" && (
+          {view === "kanban" && (
             <motion.div variants={fadeUp} className="space-y-3">
               <KanbanFilterBar
                 assigneeOptions={assigneeOptions}

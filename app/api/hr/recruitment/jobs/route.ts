@@ -3,7 +3,7 @@ import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -13,20 +13,46 @@ const listSchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
+const VALID_JOB_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "FREELANCE", "TEMPORARY", "CONSULTANT", "APPRENTICESHIP", "COMMISSION_BASED"] as const;
+const MAX_SALARY = 999_999_999;
+
 const createJobSchema = z.object({
-  title: z.string(),
-  departmentId: z.number().optional(),
-  location: z.string().optional(),
-  type: z.string().optional(),
-  experience: z.string().optional(),
-  salaryMin: z.number().optional(),
-  salaryMax: z.number().optional(),
-  description: z.string().optional(),
-  requirements: z.string().optional(),
-  benefits: z.string().optional(),
-  openings: z.number().optional(),
+  title: z
+    .string()
+    .min(2, "Job Title must be at least 2 characters")
+    .max(100, "Job Title must be at most 100 characters")
+    .refine((v) => /^[a-zA-Z]/.test(v.trim()), "Job Title must start with a letter")
+    .refine((v) => !/[^a-zA-Z0-9\s\-',]/.test(v.trim()), "Job Title may only contain letters, numbers, hyphens, apostrophes, and commas")
+    .refine((v) => !/(.)\1{3,}/.test(v.trim()), "Job Title cannot have 4 or more consecutive identical characters")
+    .refine((v) => !/\s{2,}/.test(v), "Job Title cannot have multiple consecutive spaces"),
+  departmentId: z.number().int().positive().optional(),
+  location: z
+    .string()
+    .min(2, "Location must be at least 2 characters")
+    .max(100, "Location must be at most 100 characters")
+    .refine((v) => !v || /^[a-zA-Z]/.test(v.trim()), "Location must start with a letter")
+    .refine((v) => !v || !/[^a-zA-Z0-9\s\-',]/.test(v.trim()), "Location may only contain letters, numbers, hyphens, apostrophes, and commas")
+    .refine((v) => !v || !/(.)\1{3,}/.test(v.trim()), "Location cannot have 4 or more consecutive identical characters")
+    .refine((v) => !v || !/\s{2,}/.test(v), "Location cannot have multiple consecutive spaces")
+    .optional(),
+  type: z.enum(VALID_JOB_TYPES).optional(),
+  experience: z.string().max(100).optional(),
+  salaryMin: z.number().min(1, "Minimum salary must be greater than 0").max(MAX_SALARY, "Salary value is too large").optional(),
+  salaryMax: z.number().min(1, "Maximum salary must be greater than 0").max(MAX_SALARY, "Salary value is too large").optional(),
+  description: z.string().max(10000).optional(),
+  requirements: z.string().max(5000).optional(),
+  benefits: z.string().max(5000).optional(),
+  openings: z.number().int().min(1).max(9999).optional(),
   applicationDeadline: z.string().optional(),
-});
+}).refine(
+  (d) => {
+    if (d.salaryMin !== undefined && d.salaryMax !== undefined) {
+      return d.salaryMin <= d.salaryMax;
+    }
+    return true;
+  },
+  { message: "Minimum salary must be ≤ maximum salary", path: ["salaryMin"] }
+);
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -62,7 +88,23 @@ export async function POST(req: NextRequest) {
 
     const body = await parseBody(req, createJobSchema);
 
-    if (!body.title) return err("title is required.", 400);
+    const normalizedTitle = body.title.trim().toLowerCase();
+    const normalizedLocation = (body.location ?? "").trim().toLowerCase();
+    const normalizedType = body.type ?? "FULL_TIME";
+
+    const existing = await db.query.jobPostings.findFirst({
+      where: and(
+        eq(jobPostings.orgId, session.orgId),
+        sql`lower(trim(${jobPostings.title})) = ${normalizedTitle}`,
+        sql`lower(trim(coalesce(${jobPostings.location}, ''))) = ${normalizedLocation}`,
+        eq(jobPostings.type, normalizedType),
+      ),
+      columns: { id: true },
+    });
+
+    if (existing) {
+      return err("A job posting with the same title, location, and type already exists.", 409);
+    }
 
     const [job] = await db
       .insert(jobPostings)
@@ -89,6 +131,6 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:jobs:list:${session.orgId}:*`);
 
-    return ok(job);
+    return ok(job, 201);
   });
 }

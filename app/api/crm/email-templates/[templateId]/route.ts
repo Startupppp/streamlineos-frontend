@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { crmEmailTemplates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -12,7 +12,7 @@ const updateSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ templateId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:email-templates", async (session) => {
     const { templateId } = await params;
     const id = Number(templateId);
     if (!Number.isFinite(id)) return err("Invalid template id", 400);
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ te
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ templateId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:email-templates", async (session) => {
     const { templateId } = await params;
     const id = Number(templateId);
     if (!Number.isFinite(id)) return err("Invalid template id", 400);

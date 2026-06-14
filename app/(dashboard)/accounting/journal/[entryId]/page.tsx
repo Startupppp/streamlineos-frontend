@@ -176,7 +176,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Date
                     </p>
                     <p className="mt-1 text-sm font-medium text-foreground tabular-nums">
@@ -184,7 +184,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Source
                     </p>
                     <p className="mt-1 text-sm text-foreground">
@@ -192,7 +192,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Status
                     </p>
                     <Badge variant={STATUS_VARIANT[entry.status]} className="mt-1">
@@ -200,7 +200,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
                     </Badge>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Description
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">

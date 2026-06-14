@@ -46,8 +46,8 @@ export const createSalaryStructureInputSchema = z.object({
   hraPercentage: z.number().min(0).max(100),
   allowances: z.number().min(0),
   deductions: z.number().min(0),
-  effectiveFrom: z.date(),
-  effectiveTo: z.date().optional(),
+  effectiveFrom: z.coerce.date(),
+  effectiveTo: z.coerce.date().optional(),
 });
 
 export const createExpenseInputSchema = z.object({
@@ -55,7 +55,7 @@ export const createExpenseInputSchema = z.object({
   amount: z.number().positive(),
   description: z.string().max(1000).optional(),
   receiptUrl: fileUrlSchema.optional(),
-  expenseDate: z.date(),
+  expenseDate: z.coerce.date(),
 });
 
 export const updateExpenseStatusInputSchema = z.object({
@@ -69,7 +69,7 @@ export const createAssetInputSchema = z.object({
   type: z.string().min(1, "Asset type is required").max(100),
   serialNumber: z.string().max(100).optional(),
   assignedTo: z.string().optional(),
-  purchaseDate: z.date().optional(),
+  purchaseDate: z.coerce.date().optional(),
   purchaseCost: z.number().positive().optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(1000).optional(),
@@ -98,8 +98,8 @@ export const createDocumentInputSchema = z.object({
 export const createPerformanceReviewInputSchema = z.object({
   userId: z.string().min(1),
   reviewerId: z.string().optional(),
-  periodStart: z.date(),
-  periodEnd: z.date(),
+  periodStart: z.coerce.date(),
+  periodEnd: z.coerce.date(),
   ratings: z
     .array(
       z.object({
@@ -125,14 +125,19 @@ export const createPerformanceReviewInputSchema = z.object({
 
 export const createGoalInputSchema = z.object({
   userId: z.string().min(1),
-  title: z.string().min(1, "Goal title is required"),
+  title: z
+    .string()
+    .min(3, "Goal title must be at least 3 characters")
+    .max(100, "Goal title must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Goal title must contain at least one letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Goal title cannot have consecutive spaces"),
   description: z.string().optional(),
   type: z.string().default("OKR"),
   targetValue: z.number().positive().optional(),
   currentValue: z.number().min(0).default(0),
   unit: z.string().optional(),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
   parentGoalId: z.number().int().positive().optional(),
 });
 
@@ -147,7 +152,7 @@ export const updateGoalInputSchema = z.object({
 });
 
 export const upsertWorkLogInputSchema = z.object({
-  date: z.date(),
+  date: z.coerce.date(),
   description: z.string().min(1, "Log content is required"),
   hours: z.number().min(0).optional(),
 });
@@ -182,30 +187,45 @@ export const onboardEmployeeInputSchema = z.object({
   password: z.string().max(128, "Password must be at most 128 characters").refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),
-  designation: z.string().min(1, "Designation is required"),
-  departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
-    message: "Department is required",
-  }),
+  designation: z
+    .string()
+    .min(2, "Designation must be at least 2 characters")
+    .max(100, "Designation must be at most 100 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
+    .refine((v) => !/\s{2,}/.test(v), "Designation cannot have consecutive spaces"),
+  departmentId: z.coerce.number().int().positive({ message: "Department is required" }),
   role: z.string().default("ENGINEERING"),
   employeeId: z.string().optional(),
-  joiningDate: z.date(),
-  dateOfBirth: z.date(),
-  experienceYears: z.coerce.number().min(0).optional(),
-  skills: z.string().refine((val) => !val || val.includes(","), "Please separate skills with commas (e.g., React, Node.js)").optional(),
+  joiningDate: z.coerce.date(),
+  dateOfBirth: z.coerce
+    .date()
+    .refine((d) => d < new Date(), "Date of birth cannot be in the future")
+    .refine((d) => {
+      const ageMs = Date.now() - d.getTime();
+      return ageMs >= 16 * 365.25 * 24 * 3600 * 1000;
+    }, "Employee must be at least 16 years old"),
+  experienceYears: z.coerce.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
+  skills: z.string().max(500).optional(),
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
-    accountNumber: z.string().min(1, "Account number is required").regex(/^\d+$/, "Account number must contain only digits"),
-    bankName: z.string().min(1, "Bank name is required").regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters"),
-    branch: z.string().min(1, "Branch name is required").regex(/^[A-Za-z\s]+$/, "Branch must contain only letters"),
-    ifsc: z.string().min(1, "IFSC code is required").regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC format (e.g., SBIN0001234)"),
-    accountHolder: z.string().min(1, "Account holder name is required").regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters"),
+    accountNumber: z.string().regex(/^\d+$/, "Account number must contain only digits").optional().or(z.literal("")),
+    bankName: z.string().regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters").optional().or(z.literal("")),
+    branch: z.string().regex(/^[A-Za-z\s]+$/, "Branch name must contain only letters").optional().or(z.literal("")),
+    ifsc: z.string().regex(/^[A-Z0-9]{4,34}$/, "Invalid routing/IFSC code format").optional().or(z.literal("")),
+    accountHolder: z.string().regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters").optional().or(z.literal("")),
     pfUanNumber: z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits").optional().or(z.literal("")),
-  }),
+  }).optional(),
+}).superRefine((data, ctx) => {
+  const fn = data.firstName.trim().toLowerCase();
+  const ln = data.lastName.trim().toLowerCase();
+  if (fn && ln && fn === ln) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "First name and last name cannot be identical", path: ["lastName"] });
+  }
 });
 
 export const createWfhRequestInputSchema = z.object({
-  date: z.date(),
+  date: z.coerce.date(),
   reason: z.string().max(500).optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
@@ -223,7 +243,7 @@ export const createDeviceInputSchema = z.object({
   serialNumber: z.string().optional(),
   brand: z.string().optional(),
   model: z.string().optional(),
-  assignedDate: z.date().optional(),
+  assignedDate: z.coerce.date().optional(),
   notes: z.string().optional(),
 });
 
@@ -236,12 +256,17 @@ export const updateDeviceInputSchema = z.object({
   brand: z.string().optional(),
   model: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "LOST", "RETURNED"]).optional(),
-  returnDate: z.date().optional(),
+  returnDate: z.coerce.date().optional(),
   notes: z.string().optional(),
 });
 
 export const createReviewCycleSchema = z.object({
-  name: z.string().min(1, "Cycle name is required").max(100),
+  name: z
+    .string()
+    .min(3, "Cycle name must be at least 3 characters")
+    .max(100, "Cycle name must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v), "Cycle name must contain at least one letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Cycle name cannot have consecutive spaces"),
   type: z.enum(["QUARTERLY", "HALF_YEARLY", "ANNUAL", "CUSTOM"]).optional().default("QUARTERLY"),
   periodStart: z.string().min(1, "Start date is required"),
   periodEnd: z.string().min(1, "End date is required"),

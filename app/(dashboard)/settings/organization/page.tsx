@@ -1,63 +1,19 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Shield, Clock, Globe, DollarSign, CalendarRange, Image, Users, X, Plus, Upload, Palette, Network } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings, useUpdateOrgSecuritySettings } from "@/lib/api/hooks/organization";
 import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-
-const CURRENCIES = [
-  { value: "USD", label: "USD — US Dollar" },
-  { value: "EUR", label: "EUR — Euro" },
-  { value: "INR", label: "INR — Indian Rupee" },
-  { value: "GBP", label: "GBP — British Pound" },
-  { value: "AED", label: "AED — UAE Dirham" },
-] as const;
-
-const TIMEZONES = [
-  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST, UTC+5:30)" },
-  { value: "UTC", label: "UTC" },
-  { value: "America/New_York", label: "America/New_York (EST/EDT)" },
-  { value: "America/Los_Angeles", label: "America/Los_Angeles (PST/PDT)" },
-  { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
-  { value: "Europe/London", label: "Europe/London (GMT/BST)" },
-  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
-  { value: "Asia/Dubai", label: "Asia/Dubai (GST, UTC+4)" },
-  { value: "Asia/Singapore", label: "Asia/Singapore (SGT, UTC+8)" },
-  { value: "Asia/Tokyo", label: "Asia/Tokyo (JST, UTC+9)" },
-  { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
-] as const;
-
-const MONTHS = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
-] as const;
+import { OrgProfileSection } from "@/features/settings/organization/org-profile-section";
+import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
+import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
 export default function OrganizationSettingsPage() {
-  const { data: session } = useSession();
   const { data: org, isLoading } = useOrgSettings();
 
   const [editName, setEditName] = useState("");
@@ -88,7 +44,6 @@ export default function OrganizationSettingsPage() {
   const domainInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileMutation = useUploadFile();
-
   const ability = useAbility();
   const canEdit = ability.can("manage", "settings");
 
@@ -132,7 +87,10 @@ export default function OrganizationSettingsPage() {
   }, [org]);
 
   const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
-  const handleEditSlugChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")), []);
+  const handleEditSlugChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")),
+    [],
+  );
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
   const handleSave = useCallback(() => {
@@ -147,7 +105,7 @@ export default function OrganizationSettingsPage() {
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : "Failed to update organization");
         },
-      }
+      },
     );
   }, [editName, editSlug, updateOrg]);
 
@@ -190,7 +148,7 @@ export default function OrganizationSettingsPage() {
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : "Failed to save configuration");
         },
-      }
+      },
     );
   }, [logoUrl, timezone, currency, fiscalYearStart, directoryPublic, primaryColor, loginBgUrl, updateOrg]);
 
@@ -211,7 +169,7 @@ export default function OrganizationSettingsPage() {
       {
         onSuccess: () => toast.success("IP allowlist saved"),
         onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
-      }
+      },
     );
   }, [ipAllowlist, updateOrg]);
 
@@ -229,7 +187,18 @@ export default function OrganizationSettingsPage() {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = "";
     }
-  }, []);
+  }, [uploadFileMutation]);
+
+  const handleLogoUploadClick = useCallback(() => logoInputRef.current?.click(), []);
+
+  const handleLogoUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLogoUrl(e.target.value), []);
+  const handleTimezoneChange = useCallback((value: string) => setTimezone(value), []);
+  const handleCurrencyChange = useCallback((value: string) => setCurrency(value), []);
+  const handleFiscalYearStartChange = useCallback((value: string) => setFiscalYearStart(value), []);
+  const handleDirectoryPublicChange = useCallback((checked: boolean) => setDirectoryPublic(checked), []);
+  const handlePrimaryColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value), []);
+  const handleLoginBgUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoginBgUrl(e.target.value), []);
+  const handlePasswordExpiryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPasswordExpiryDays(e.target.value), []);
 
   const handleAddDomain = useCallback(() => {
     const domain = domainInput.trim().toLowerCase().replace(/^@/, "");
@@ -243,6 +212,16 @@ export default function OrganizationSettingsPage() {
     setAllowedEmailDomains((prev) => prev.filter((d) => d !== domain));
   }, []);
 
+  const handleDomainInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDomainInput(e.target.value), []);
+  const handleDomainInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") { e.preventDefault(); handleAddDomain(); }
+  }, [handleAddDomain]);
+
+  const handleIpInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setIpInput(e.target.value), []);
+  const handleIpInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") { e.preventDefault(); handleAddIp(); }
+  }, [handleAddIp]);
+
   const handleSaveSecurity = useCallback(() => {
     const expiryDaysNum = passwordExpiryDays ? parseInt(passwordExpiryDays, 10) : null;
     if (passwordExpiryDays && (isNaN(expiryDaysNum!) || expiryDaysNum! < 30 || expiryDaysNum! > 365)) {
@@ -254,7 +233,7 @@ export default function OrganizationSettingsPage() {
       {
         onSuccess: () => toast.success("Security settings saved"),
         onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save security settings"),
-      }
+      },
     );
   }, [mfaEnforced, passwordExpiryDays, allowedEmailDomains, updateSecurity]);
 
@@ -301,501 +280,73 @@ export default function OrganizationSettingsPage() {
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
       <div className="space-y-6">
-        <Card className="rounded-xl border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Organization Details</CardTitle>
-            <CardDescription>
-              Update your workspace name and slug used across the platform.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pb-5">
-            <div className="space-y-2">
-              <Label htmlFor="name">Organization Name</Label>
-              {isEditing ? (
-                <Input
-                  id="name"
-                  value={editName}
-                  onChange={handleEditNameChange}
-                  aria-label="Organization name"
-                />
-              ) : (
-                <Input id="name" value={org.name} disabled className="bg-muted" aria-label="Organization name" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              {isEditing ? (
-                <Input
-                  id="slug"
-                  value={editSlug}
-                  onChange={handleEditSlugChange}
-                  aria-label="Organization slug"
-                />
-              ) : (
-                <Input id="slug" value={org.slug} disabled className="bg-muted" aria-label="Organization slug" />
-              )}
-            </div>
-            <div className="flex gap-2">
-              {canEdit && !isEditing && (
-                <Button variant="outline"
-                  disabled={isUpdatingOrg}
-                  onClick={handleStartEdit}>
-                  Edit Organization
-                </Button>
-              )}
-              {isEditing && (
-                <>
-                  <Button onClick={handleSave} disabled={isUpdatingOrg || !editName.trim()}>
-                    {isUpdatingOrg ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
-                  <Button variant="ghost" onClick={handleCancelEdit} disabled={isUpdatingOrg}>
-                    Cancel
-                  </Button>
-                </>
-              )}
-              {!canEdit && (
-                <p className="text-sm text-muted-foreground">Only Owners and Admins can edit organization settings.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <OrgProfileSection
+          org={org}
+          isEditing={isEditing}
+          editName={editName}
+          editSlug={editSlug}
+          isUpdating={isUpdatingOrg}
+          canEdit={canEdit}
+          onStartEdit={handleStartEdit}
+          onEditNameChange={handleEditNameChange}
+          onEditSlugChange={handleEditSlugChange}
+          onSave={handleSave}
+          onCancel={handleCancelEdit}
+        />
 
         {canEdit && (
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-blue-600" />
-                  App Configuration
-                </CardTitle>
-                {!isEditingConfig && (
-                  <Button variant="outline" size="sm" onClick={handleStartEditConfig}>
-                    Edit
-                  </Button>
-                )}
-              </div>
-              <CardDescription>
-                Branding, currency, timezone, and fiscal year settings for your organization.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="logo-url" className="text-sm flex items-center gap-1.5">
-                  <Image className="h-3.5 w-3.5 text-muted-foreground" />
-                  Logo
-                </Label>
-                {isEditingConfig ? (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Input
-                        id="logo-url"
-                        value={logoUrl}
-                        onChange={(e) => setLogoUrl(e.target.value)}
-                        placeholder="https://example.com/logo.png"
-                        aria-label="Logo URL"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0"
-                        disabled={logoUploading}
-                        onClick={() => logoInputRef.current?.click()}
-                      >
-                        {logoUploading ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Upload className="h-3.5 w-3.5 mr-1" />
-                        )}
-                        Upload
-                      </Button>
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={handleLogoUpload}
-                      />
-                    </div>
-                    {logoUrl && (
-                      <img src={logoUrl} alt="Logo preview" className="h-10 w-auto rounded border border-border object-contain" />
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    {org.logo && (
-                      <img src={org.logo} alt="Org logo" className="h-8 w-auto rounded border border-border object-contain" />
-                    )}
-                    <Input
-                      id="logo-url"
-                      value={org.logo ?? ""}
-                      disabled
-                      className="bg-muted"
-                      aria-label="Logo URL"
-                      placeholder="Not set"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="timezone" className="text-sm flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                    Timezone
-                  </Label>
-                  {isEditingConfig ? (
-                    <Select value={timezone} onValueChange={setTimezone}>
-                      <SelectTrigger id="timezone" aria-label="Timezone">
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIMEZONES.map((tz) => (
-                          <SelectItem key={tz.value} value={tz.value}>
-                            {tz.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id="timezone"
-                      value={org.timezone ?? "Asia/Kolkata"}
-                      disabled
-                      className="bg-muted"
-                      aria-label="Timezone"
-                    />
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="currency" className="text-sm flex items-center gap-1.5">
-                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                    Default Currency
-                  </Label>
-                  {isEditingConfig ? (
-                    <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger id="currency" aria-label="Default currency">
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CURRENCIES.map((c) => (
-                          <SelectItem key={c.value} value={c.value}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id="currency"
-                      value={org.currency ?? "INR"}
-                      disabled
-                      className="bg-muted"
-                      aria-label="Default currency"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="fiscal-year" className="text-sm flex items-center gap-1.5">
-                  <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />
-                  Fiscal Year Start
-                </Label>
-                {isEditingConfig ? (
-                  <Select value={fiscalYearStart} onValueChange={setFiscalYearStart}>
-                    <SelectTrigger id="fiscal-year" aria-label="Fiscal year start month" className="w-48">
-                      <SelectValue placeholder="Select month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MONTHS.map((m) => (
-                        <SelectItem key={m.value} value={String(m.value)}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id="fiscal-year"
-                    value={MONTHS.find((m) => m.value === (org.fiscalYearStart ?? 4))?.label ?? "April"}
-                    disabled
-                    className="bg-muted w-48"
-                    aria-label="Fiscal year start month"
-                  />
-                )}
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                    Public Employee Directory
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allow members to view the full employee directory. When off, only HR and admins can browse it.
-                  </p>
-                </div>
-                <Switch
-                  checked={isEditingConfig ? directoryPublic : (org.directoryPublic ?? false)}
-                  onCheckedChange={isEditingConfig ? setDirectoryPublic : () => undefined}
-                  disabled={!isEditingConfig}
-                  aria-label="Public employee directory"
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label className="text-sm flex items-center gap-1.5 font-semibold">
-                  <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                  Branding
-                </Label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="primary-color" className="text-sm text-muted-foreground">Primary Color</Label>
-                    {isEditingConfig ? (
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          id="primary-color"
-                          value={primaryColor}
-                          onChange={(e) => setPrimaryColor(e.target.value)}
-                          placeholder="#bd882c"
-                          className="flex-1 font-mono text-sm"
-                          aria-label="Primary brand color"
-                        />
-                        {primaryColor && /^#[0-9a-fA-F]{6}$/.test(primaryColor) && (
-                          <div className="h-8 w-8 rounded border border-border shrink-0" style={{ backgroundColor: primaryColor }} />
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex gap-2 items-center">
-                        <Input value={org.primaryColor ?? ""} disabled className="bg-muted flex-1 font-mono text-sm" placeholder="Not set" />
-                        {org.primaryColor && (
-                          <div className="h-8 w-8 rounded border border-border shrink-0" style={{ backgroundColor: org.primaryColor }} />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="login-bg" className="text-sm text-muted-foreground">Login Page Background URL</Label>
-                    {isEditingConfig ? (
-                      <Input
-                        id="login-bg"
-                        value={loginBgUrl}
-                        onChange={(e) => setLoginBgUrl(e.target.value)}
-                        placeholder="https://example.com/bg.jpg"
-                        aria-label="Login background image URL"
-                      />
-                    ) : (
-                      <Input value={org.loginBgUrl ?? ""} disabled className="bg-muted text-sm" placeholder="Not set" />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {isEditingConfig && (
-                <div className="flex gap-2 pt-1">
-                  <Button onClick={handleSaveConfig} disabled={isUpdatingOrg} size="sm">
-                    {isUpdatingOrg ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      "Save Configuration"
-                    )}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleCancelEditConfig} disabled={isUpdatingOrg}>
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <OrgConfigSection
+            org={org}
+            isEditingConfig={isEditingConfig}
+            logoUrl={logoUrl}
+            logoUploading={logoUploading}
+            timezone={timezone}
+            currency={currency}
+            fiscalYearStart={fiscalYearStart}
+            directoryPublic={directoryPublic}
+            primaryColor={primaryColor}
+            loginBgUrl={loginBgUrl}
+            isUpdating={isUpdatingOrg}
+            logoInputRef={logoInputRef}
+            onStartEdit={handleStartEditConfig}
+            onCancel={handleCancelEditConfig}
+            onSave={handleSaveConfig}
+            onLogoUrlChange={handleLogoUrlChange}
+            onLogoUpload={handleLogoUpload}
+            onLogoUploadClick={handleLogoUploadClick}
+            onTimezoneChange={handleTimezoneChange}
+            onCurrencyChange={handleCurrencyChange}
+            onFiscalYearStartChange={handleFiscalYearStartChange}
+            onDirectoryPublicChange={handleDirectoryPublicChange}
+            onPrimaryColorChange={handlePrimaryColorChange}
+            onLoginBgUrlChange={handleLoginBgUrlChange}
+          />
         )}
 
         {canEdit && (
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-blue-600" />
-                Security Policies
-              </CardTitle>
-              <CardDescription>
-                Configure authentication and password policies for your organization.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Require MFA for all members</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Members without MFA enabled will be redirected to set it up on their next login.
-                  </p>
-                </div>
-                <Switch
-                  checked={mfaEnforced}
-                  onCheckedChange={setMfaEnforced}
-                  aria-label="Require MFA for all members"
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <Label htmlFor="password-expiry" className="text-sm font-medium">
-                    Password expires every N days
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Leave empty to disable password expiry. Allowed range: 30–365 days.
-                </p>
-                <Input
-                  id="password-expiry"
-                  type="number"
-                  min={30}
-                  max={365}
-                  placeholder="e.g. 90"
-                  value={passwordExpiryDays}
-                  onChange={(e) => setPasswordExpiryDays(e.target.value)}
-                  className="w-40"
-                  aria-label="Password expiry days"
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-sm font-medium">Allowed Email Domains</Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Restrict invitations to specific email domains (e.g. <code>company.com</code>). Leave empty to allow any domain.
-                </p>
-                <div className="flex flex-wrap gap-2 min-h-8">
-                  {allowedEmailDomains.map((domain) => (
-                    <Badge key={domain} variant="secondary" className="gap-1 pr-1">
-                      @{domain}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDomain(domain)}
-                        className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                        aria-label={`Remove ${domain}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    ref={domainInputRef}
-                    placeholder="e.g. company.com"
-                    value={domainInput}
-                    onChange={(e) => setDomainInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddDomain(); } }}
-                  className="w-full max-w-sm"
-                    aria-label="Email domain to add"
-                  />
-                  <Button type="button" variant="outline" size="sm" onClick={handleAddDomain}>
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    Add
-                  </Button>
-                </div>
-              </div>
-
-              <div className="pt-1">
-                <Button onClick={handleSaveSecurity} disabled={isUpdatingSecurity} size="sm">
-                  {isUpdatingSecurity ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Security Settings"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {canEdit && (
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Network className="h-4 w-4 text-blue-600" />
-                IP Allowlist
-              </CardTitle>
-              <CardDescription>
-                Restrict dashboard access to specific IP addresses or prefixes. Leave empty to allow access from any IP.
-                Add exact IPs (e.g. <code>203.0.113.5</code>) or prefixes (e.g. <code>192.168.1.</code>).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2 min-h-8">
-                {ipAllowlist.map((ip) => (
-                  <Badge key={ip} variant="secondary" className="gap-1 pr-1 font-mono text-xs">
-                    {ip}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveIp(ip)}
-                      className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                      aria-label={`Remove ${ip}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                {ipAllowlist.length === 0 && (
-                  <span className="text-xs text-muted-foreground">No IP restrictions — all IPs allowed.</span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g. 203.0.113.5 or 192.168.1."
-                  value={ipInput}
-                  onChange={(e) => setIpInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddIp(); } }}
-                  className="w-full max-w-sm font-mono text-sm"
-                  aria-label="IP address or prefix to add"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={handleAddIp}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Add
-                </Button>
-              </div>
-              <div className="pt-1">
-                <Button onClick={handleSaveIpAllowlist} disabled={isUpdatingOrg} size="sm">
-                  {isUpdatingOrg ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save IP Allowlist"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <OrgSecuritySection
+            mfaEnforced={mfaEnforced}
+            passwordExpiryDays={passwordExpiryDays}
+            allowedEmailDomains={allowedEmailDomains}
+            domainInput={domainInput}
+            domainInputRef={domainInputRef}
+            ipAllowlist={ipAllowlist}
+            ipInput={ipInput}
+            isUpdatingSecurity={isUpdatingSecurity}
+            isUpdatingOrg={isUpdatingOrg}
+            onMfaChange={setMfaEnforced}
+            onPasswordExpiryChange={handlePasswordExpiryChange}
+            onDomainInputChange={handleDomainInputChange}
+            onDomainInputKeyDown={handleDomainInputKeyDown}
+            onAddDomain={handleAddDomain}
+            onRemoveDomain={handleRemoveDomain}
+            onSaveSecurity={handleSaveSecurity}
+            onIpInputChange={handleIpInputChange}
+            onIpInputKeyDown={handleIpInputKeyDown}
+            onAddIp={handleAddIp}
+            onRemoveIp={handleRemoveIp}
+            onSaveIpAllowlist={handleSaveIpAllowlist}
+          />
         )}
       </div>
     </PageWrapper>

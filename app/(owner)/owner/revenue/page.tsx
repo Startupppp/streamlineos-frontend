@@ -90,7 +90,7 @@ export default async function RevenuePage() {
           </p>
         ) : (
           <table className="w-full text-[13px]">
-            <thead className="bg-slate-50 text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+            <thead className="bg-slate-50 text-[11px] font-medium text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium">Payment</th>
                 <th className="px-4 py-2.5 text-left font-medium">Customer</th>
@@ -123,7 +123,7 @@ export default async function RevenuePage() {
                   </td>
                   <td className="px-4 py-2.5 text-slate-600">{p.method ?? "—"}</td>
                   <td className="px-4 py-2.5">
-                    <span className="inline-block px-2 py-0.5 rounded border text-[10px] font-mono uppercase tracking-[0.14em] border-emerald-200 bg-emerald-50 text-emerald-700">
+                    <span className="inline-block px-2 py-0.5 rounded border text-[11px] font-medium border-emerald-200 bg-emerald-50 text-emerald-700">
                       {p.status}
                     </span>
                   </td>

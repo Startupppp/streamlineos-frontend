@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { webhookEndpoints } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const webhookId = Number(id);
   if (!Number.isFinite(webhookId)) return err("Invalid webhook id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:webhooks", async (session) => {
     const input = await parseBody(req, updateSchema);
     const [updated] = await db
       .update(webhookEndpoints)
@@ -62,7 +62,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const webhookId = Number(id);
   if (!Number.isFinite(webhookId)) return err("Invalid webhook id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:webhooks", async (session) => {
     const [deleted] = await db
       .delete(webhookEndpoints)
       .where(

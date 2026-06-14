@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { crmSla } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -14,7 +14,7 @@ const updateSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ policyId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:sla", async (session) => {
     const { policyId } = await params;
     const id = Number(policyId);
     if (!Number.isFinite(id)) return err("Invalid policy id", 400);
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ po
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ policyId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:sla", async (session) => {
     const { policyId } = await params;
     const id = Number(policyId);
     if (!Number.isFinite(id)) return err("Invalid policy id", 400);

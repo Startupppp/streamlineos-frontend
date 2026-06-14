@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { emailTemplates } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -14,7 +14,7 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:email-templates", async (session) => {
     const data = await db
       .select()
       .from(emailTemplates)
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:email-templates", async (session) => {
     const body = createSchema.parse(await req.json());
 
     const [record] = await db

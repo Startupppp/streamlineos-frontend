@@ -1,7 +1,7 @@
 
 
 import { NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withModuleAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { sprints } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function POST(req: NextRequest, { params }: RouteParams) {
-  return withAdmin(async (session) => {
+  return withModuleAbility("projects", "manage", "projects:sprints", async (session) => {
     const { projectId: id } = await params;
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);

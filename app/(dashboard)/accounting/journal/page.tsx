@@ -107,7 +107,7 @@ export default function JournalListPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="journal-from "
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               From
             </label>
@@ -122,7 +122,7 @@ export default function JournalListPage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="journal-to"
-              className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none"
+              className="text-[11px] font-medium text-slate-500 leading-none"
             >
               To
             </label>
@@ -135,7 +135,7 @@ export default function JournalListPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-blue-600 leading-none">
+            <span className="text-[11px] font-medium text-slate-500 leading-none">
               Source
             </span>
             <Select value={sourceType} onValueChange={handleSourceTypeChange}>

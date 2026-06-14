@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { payrolls, users, expenses } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -11,7 +11,7 @@ const exportSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:integrations", async (session) => {
     const body = exportSchema.parse(await req.json());
     const [year, monthNum] = body.month.split("-");
     const lastDay = new Date(Number(year), Number(monthNum), 0).getDate();

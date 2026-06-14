@@ -67,6 +67,7 @@ export const useInvoices = (
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -82,6 +83,7 @@ export const useInvoice = (
     queryKey: queryKeys.invoice.detail(id),
     queryFn: () => apiClient.get<Invoice>(`/invoices/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -95,6 +97,7 @@ export const useInvoiceStats = (
   return useQuery<InvoiceStats, Error>({
     queryKey: queryKeys.invoice.stats(),
     queryFn: () => apiClient.get<InvoiceStats>("/invoices/stats"),
+    staleTime: 5 * 60_000,
     ...options,
   });
 };

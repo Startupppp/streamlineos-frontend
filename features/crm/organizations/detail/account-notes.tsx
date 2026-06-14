@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Pencil, Save, X, FileText } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateCrmOrganization } from "@/lib/api/hooks/crm";
@@ -42,10 +43,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
         {notes ? (
           <p className="text-sm text-foreground whitespace-pre-wrap">{notes}</p>
         ) : (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <FileText className="h-7 w-7 text-muted-foreground/40 mb-1.5" />
-            <p className="text-sm text-muted-foreground">No notes yet</p>
-          </div>
+          <EmptyState icon={FileText} title="No notes yet" compact />
         )}
         <Button
           variant="ghost"

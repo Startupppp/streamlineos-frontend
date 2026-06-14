@@ -26,6 +26,7 @@ export function useRecognitions() {
   return useQuery({
     queryKey: recognitionKeys.list(),
     queryFn: () => apiClient.get<Recognition[]>("/hr/recognition"),
+    staleTime: 2 * 60_000,
   });
 }
 

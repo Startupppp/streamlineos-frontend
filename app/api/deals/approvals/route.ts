@@ -113,11 +113,14 @@ export async function POST(req: NextRequest) {
 
     const { dealId, requestedStage } = requestSchema.parse(body);
 
-    const [deal] = await db.select().from(deals).where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
+    const [deal] = await db
+      .select({ id: deals.id, value: deals.value })
+      .from(deals)
+      .where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
     if (!deal) return err("Deal not found", 404);
 
     const rules = await db
-      .select()
+      .select({ id: dealApprovalRules.id, minValue: dealApprovalRules.minValue })
       .from(dealApprovalRules)
       .where(and(eq(dealApprovalRules.orgId, session.orgId), eq(dealApprovalRules.isActive, true)));
 

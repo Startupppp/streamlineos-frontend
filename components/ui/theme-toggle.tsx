@@ -49,7 +49,7 @@ export function ThemeToggle({
   if (variant === "menu-item") {
     return (
       <div className={cn("px-1 py-0.5", className)}>
-        <p className="px-1.5 py-1 text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="px-1.5 py-1 text-[10px] font-medium text-muted-foreground">
           Theme
         </p>
         <div className="grid grid-cols-3 gap-1">

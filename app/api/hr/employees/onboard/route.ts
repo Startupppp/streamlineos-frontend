@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers, salaryStructures, passwordResetTokens } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -12,6 +12,8 @@ import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
+
+const MIN_AGE_MS = 16 * 365.25 * 24 * 60 * 60 * 1000;
 
 const onboardSchema = z.object({
   firstName: z.string(),
@@ -27,9 +29,23 @@ const onboardSchema = z.object({
   role: z.string().optional(),
   employeeId: z.string().optional(),
   joiningDate: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true;
+      const dob = new Date(val);
+      return !isNaN(dob.getTime()) && dob < new Date();
+    }, "Date of birth cannot be in the future")
+    .refine((val) => {
+      if (!val) return true;
+      const dob = new Date(val);
+      return !isNaN(dob.getTime()) && Date.now() - dob.getTime() >= MIN_AGE_MS;
+    }, "Employee must be at least 16 years old"),
   skills: z.string().optional(),
-  experienceYears: z.number().optional(),
+  experienceYears: z.preprocess(
+    (val) => (val === undefined || val === null ? undefined : Number(val)),
+    z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional()
+  ),
   taxId: z.string().optional(),
   monthlySalary: z.number().optional(),
   bankDetails: z.object({
@@ -43,7 +59,7 @@ const onboardSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:employees", async (session) => {
     const body = await parseBody(req, onboardSchema);
 
     const existing = await db.query.users.findFirst({
@@ -74,7 +90,19 @@ export async function POST(req: NextRequest) {
         employeeId: body.employeeId,
         joiningDate: body.joiningDate ? formatDateOnly(new Date(body.joiningDate)) : undefined,
         dateOfBirth: body.dateOfBirth ? formatDateOnly(new Date(body.dateOfBirth)) : undefined,
-        skills: body.skills ? body.skills.split(",").map((s) => s.trim()) : undefined,
+        skills: body.skills ? (() => {
+          const seen = new Set<string>();
+          return body.skills.split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && /[a-zA-Z0-9]/.test(s))
+            .reduce<string[]>((acc, s) => {
+              const key = s.toLowerCase();
+              if (seen.has(key)) return acc;
+              seen.add(key);
+              acc.push(s.charAt(0).toUpperCase() + s.slice(1));
+              return acc;
+            }, []);
+        })() : undefined,
         experienceYears: body.experienceYears?.toString(),
         taxId: body.taxId,
         monthlySalary: body.monthlySalary?.toString(),
@@ -158,6 +186,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

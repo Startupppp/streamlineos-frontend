@@ -18,11 +18,8 @@ export function LandingFAQ() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-10"
         >
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
-            Frequently asked
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
-            Answers <span className="brand-text">first.</span>
+            Frequently asked <span className="text-blue-600">questions.</span>
           </h2>
         </motion.div>
 

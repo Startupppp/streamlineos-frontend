@@ -1,31 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  Globe,
-  Loader2,
-  ExternalLink,
-  CheckCircle2,
-  Clock,
-  Plus,
-  Trash2,
-  Star,
-} from "lucide-react";
-
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import {
   Tabs,
   TabsContent,
@@ -39,16 +16,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   useCreateCrmPage,
   useUpdateCrmPage,
-  useCrmPageAnalytics,
   type CrmPage,
   type CrmPageTestimonial,
 } from "@/lib/api/hooks/marketing";
 import { getErrorMessage } from "@/lib/get-error-message";
-
+import { PageBuilderToolbar } from "./page-builder-toolbar";
+import { PageBuilderCanvas } from "./page-builder-canvas";
+import { AnalyticsPanel, TestimonialsEditor } from "./page-builder-blocks";
 
 function slugify(value: string): string {
   return value
@@ -59,123 +37,6 @@ function slugify(value: string): string {
     .replace(/-+/g, "-")
     .slice(0, 120);
 }
-
-
-function AnalyticsPanel({ pageId }: { pageId: number }) {
-  const { data, isLoading } = useCrmPageAnalytics(pageId, 30);
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-3 gap-4 animate-pulse">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 rounded-lg bg-muted" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { summary, dailyViews, deviceBreakdown, utmSourceBreakdown } = data;
-  const maxViews = Math.max(...dailyViews.map((d) => d.views), 1);
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-lg border bg-muted/40 p-4 text-center">
-          <p className="text-2xl font-bold">{summary.totalViews.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total Views</p>
-        </div>
-        <div className="rounded-lg border bg-muted/40 p-4 text-center">
-          <p className="text-2xl font-bold">{summary.totalLeads.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">Leads Generated</p>
-        </div>
-        <div className="rounded-lg border bg-muted/40 p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {summary.conversionRate}%
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Conversion Rate</p>
-        </div>
-      </div>
-
-      {dailyViews.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Daily Views (30 days)</p>
-          <div className="flex items-end gap-0.5 h-20 bg-muted/30 rounded-md p-2">
-            {dailyViews.slice(-30).map((d) => {
-              const pct = Math.round((d.views / maxViews) * 100);
-              return (
-                <div
-                  key={d.date}
-                  className="flex-1 rounded-sm bg-primary/70 hover:bg-primary transition-colors cursor-default"
-                  style={{ height: `${Math.max(pct, 3)}%` }}
-                  title={`${d.date}: ${d.views} views`}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {deviceBreakdown.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Device Breakdown</p>
-          <div className="space-y-2">
-            {deviceBreakdown.map((d) => {
-              const total = deviceBreakdown.reduce((s, x) => s + x.count, 0);
-              const pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
-              return (
-                <div key={d.type} className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="capitalize text-muted-foreground">{d.type}</span>
-                    <span className="font-medium">{pct}%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-muted">
-                    <div
-                      className="h-1.5 rounded-full bg-primary"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {utmSourceBreakdown.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Lead Sources</p>
-          <div className="space-y-1.5">
-            {utmSourceBreakdown.slice(0, 8).map((r) => {
-              const total = utmSourceBreakdown.reduce((s, x) => s + x.count, 0);
-              const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
-              return (
-                <div key={r.source} className="flex items-center gap-2 text-xs">
-                  <span className="w-28 truncate text-muted-foreground capitalize">{r.source}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-muted">
-                    <div
-                      className="h-1.5 rounded-full bg-blue-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="w-8 text-right font-medium">{r.count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {dailyViews.length === 0 && deviceBreakdown.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No analytics data yet — publish the page to start tracking visits.
-        </p>
-      )}
-    </div>
-  );
-}
-
 
 function buildPreviewHtml(title: string, description: string, content: string): string {
   return `<!DOCTYPE html>
@@ -222,12 +83,9 @@ function buildPreviewHtml(title: string, description: string, content: string): 
 </html>`;
 }
 
-
 interface PageBuilderProps {
-  
   page?: CrmPage;
 }
-
 
 export function PageBuilder({ page }: PageBuilderProps) {
   const router = useRouter();
@@ -239,10 +97,10 @@ export function PageBuilder({ page }: PageBuilderProps) {
   const [content, setContent] = useState(page?.content ?? "");
   const [isPublished, setIsPublished] = useState(page?.isPublished ?? false);
   const [testimonials, setTestimonials] = useState<CrmPageTestimonial[]>(
-    page?.settings?.testimonials ?? []
+    page?.settings?.testimonials ?? [],
   );
   const [showTrustSection, setShowTrustSection] = useState(
-    page?.settings?.showTrustSection ?? false
+    page?.settings?.showTrustSection ?? false,
   );
   const [slugTouched, setSlugTouched] = useState(isEditing);
   const [showPreview, setShowPreview] = useState(false);
@@ -278,7 +136,15 @@ export function PageBuilder({ page }: PageBuilderProps) {
 
       if (isEditing) {
         updatePage.mutate(
-          { id: page.id, title: title.trim(), slug, description: description.trim() || null, content: content || null, isPublished: effectivePublished, settings },
+          {
+            id: page.id,
+            title: title.trim(),
+            slug,
+            description: description.trim() || null,
+            content: content || null,
+            isPublished: effectivePublished,
+            settings,
+          },
           {
             onSuccess: () => {
               toast.success(effectivePublished ? "Page saved and published." : "Page saved.");
@@ -289,7 +155,13 @@ export function PageBuilder({ page }: PageBuilderProps) {
         );
       } else {
         createPage.mutate(
-          { title: title.trim(), slug, description: description.trim() || undefined, content: content || undefined, isPublished: effectivePublished },
+          {
+            title: title.trim(),
+            slug,
+            description: description.trim() || undefined,
+            content: content || undefined,
+            isPublished: effectivePublished,
+          },
           {
             onSuccess: (created) => {
               toast.success("Landing page created.");
@@ -305,96 +177,40 @@ export function PageBuilder({ page }: PageBuilderProps) {
 
   const publicUrl = slug ? `/${slug}` : null;
 
+  const handleTogglePreview = useCallback(() => setShowPreview((p) => !p), []);
+  const handleSaveDraft = useCallback(() => handleSave(false), [handleSave]);
+  const handlePublish = useCallback(() => handleSave(true), [handleSave]);
+  const handleTogglePublish = useCallback((checked: boolean) => handleSave(checked), [handleSave]);
+  const handleTabChange = useCallback(
+    (v: string) => setActiveTab(v as "editor" | "testimonials" | "analytics"),
+    [],
+  );
+
   return (
     <PageWrapper
       title={isEditing ? (page.title ?? "Edit Page") : "New Landing Page"}
-      subtitle={isEditing ? `Editing /${page.slug ?? ""}` : "Build a CRM-hosted landing page"}
+      subtitle={
+        isEditing
+          ? `Editing /${page.slug ?? ""}`
+          : "Build a CRM-hosted landing page"
+      }
       actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/marketing/landing-pages">
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-
-          {isEditing && publicUrl && (
-            <Button variant="ghost" size="sm" asChild>
-              <a href={publicUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-1.5 h-4 w-4" />
-                View Live
-              </a>
-            </Button>
-          )}
-
-          <Button variant="outline" size="sm" onClick={() => setShowPreview((p) => !p)}>
-            {showPreview ? <EyeOff className="mr-1.5 h-4 w-4" /> : <Eye className="mr-1.5 h-4 w-4" />}
-            {showPreview ? "Hide Preview" : "Preview"}
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleSave(false)}
-            disabled={isPending}
-          >
-            {isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Clock className="mr-1.5 h-4 w-4" />}
-            Save Draft
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => handleSave(true)}
-            disabled={isPending}
-          >
-            {isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Globe className="mr-1.5 h-4 w-4" />}
-            {isPublished ? "Update & Publish" : "Publish"}
-          </Button>
-        </div>
+        <PageBuilderToolbar
+          isEditing={isEditing}
+          isPublished={isPublished}
+          showPreview={showPreview}
+          isPending={isPending}
+          publicUrl={publicUrl}
+          slug={slug}
+          onTogglePreview={handleTogglePreview}
+          onSaveDraft={handleSaveDraft}
+          onPublish={handlePublish}
+          onTogglePublish={handleTogglePublish}
+        />
       }
     >
-      {isEditing && (
-        <div className="flex items-center gap-3 rounded-lg border px-4 py-2.5 mb-4 bg-card">
-          <div className="flex items-center gap-2 flex-1">
-            {isPublished ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                  Published
-                </span>
-                {publicUrl && (
-                  <a
-                    href={publicUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground hover:text-foreground ml-2 underline-offset-2 hover:underline"
-                  >
-                    {publicUrl}
-                  </a>
-                )}
-              </>
-            ) : (
-              <>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Draft — not visible publicly</span>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {isPublished ? "Unpublish" : "Publish"}
-            </span>
-            <Switch
-              checked={isPublished}
-              onCheckedChange={(checked) => handleSave(checked)}
-              disabled={isPending}
-            />
-          </div>
-        </div>
-      )}
-
       {isEditing ? (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "editor" | "testimonials" | "analytics")}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="mb-4">
             <TabsTrigger value="editor">Editor</TabsTrigger>
             <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
@@ -402,17 +218,17 @@ export function PageBuilder({ page }: PageBuilderProps) {
           </TabsList>
 
           <TabsContent value="editor">
-            <EditorLayout
+            <PageBuilderCanvas
               title={title}
-              setTitle={setTitle}
               slug={slug}
-              handleSlugChange={handleSlugChange}
               description={description}
-              setDescription={setDescription}
               content={content}
-              setContent={setContent}
               showPreview={showPreview}
               previewHtml={previewHtml}
+              onTitleChange={setTitle}
+              onSlugChange={handleSlugChange}
+              onDescriptionChange={setDescription}
+              onContentChange={setContent}
             />
           </TabsContent>
 
@@ -442,257 +258,19 @@ export function PageBuilder({ page }: PageBuilderProps) {
           </TabsContent>
         </Tabs>
       ) : (
-        <EditorLayout
+        <PageBuilderCanvas
           title={title}
-          setTitle={setTitle}
           slug={slug}
-          handleSlugChange={handleSlugChange}
           description={description}
-          setDescription={setDescription}
           content={content}
-          setContent={setContent}
           showPreview={showPreview}
           previewHtml={previewHtml}
+          onTitleChange={setTitle}
+          onSlugChange={handleSlugChange}
+          onDescriptionChange={setDescription}
+          onContentChange={setContent}
         />
       )}
     </PageWrapper>
-  );
-}
-
-
-interface EditorLayoutProps {
-  title: string;
-  setTitle: (v: string) => void;
-  slug: string;
-  handleSlugChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  description: string;
-  setDescription: (v: string) => void;
-  content: string;
-  setContent: (v: string) => void;
-  showPreview: boolean;
-  previewHtml: string;
-}
-
-function EditorLayout({
-  title, setTitle,
-  slug, handleSlugChange,
-  description, setDescription,
-  content, setContent,
-  showPreview, previewHtml,
-}: EditorLayoutProps) {
-  return (
-    <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "max-w-2xl"}`}>
-      <div className="space-y-5">
-        <div className="space-y-1.5">
-          <Label htmlFor="lp-title">
-            Page Title <span className="text-destructive" aria-hidden="true">*</span>
-          </Label>
-          <Input
-            id="lp-title"
-            placeholder="e.g. Get a Free Consultation"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="lp-slug">
-            URL Slug <span className="text-destructive" aria-hidden="true">*</span>
-          </Label>
-          <div className="flex items-center rounded-md border border-input overflow-hidden focus-within:ring-2 focus-within:ring-ring bg-background">
-            <span className="px-3 py-2 text-sm text-muted-foreground bg-muted border-r border-input shrink-0">
-              /
-            </span>
-            <input
-              id="lp-slug"
-              value={slug}
-              onChange={handleSlugChange}
-              placeholder="my-landing-page"
-              className="flex-1 px-3 py-2 text-sm bg-transparent outline-none"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Only lowercase letters, numbers, and hyphens. Public URL: <code className="text-xs">/{slug || "…"}</code>
-          </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="lp-desc">Sub-headline / Description</Label>
-          <Input
-            id="lp-desc"
-            placeholder="Shown below the hero title — keep it under 160 characters"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="lp-content">Body Content (HTML)</Label>
-            <Badge variant="outline" className="text-xs">HTML</Badge>
-          </div>
-          <Textarea
-            id="lp-content"
-            placeholder={`<h2>Why Choose Us?</h2>\n<p>We provide...</p>\n<ul>\n  <li>Point one</li>\n  <li>Point two</li>\n</ul>`}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={16}
-            className="font-mono text-xs resize-y"
-          />
-          <p className="text-xs text-muted-foreground">
-            HTML content rendered in the body. A contact form is automatically appended below.
-          </p>
-        </div>
-      </div>
-
-      {showPreview && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Live Preview</p>
-            <Badge variant="secondary" className="text-xs">Approximate</Badge>
-          </div>
-          <div className="flex-1 border rounded-lg overflow-hidden min-h-[600px]">
-            <iframe
-              key={previewHtml}
-              srcDoc={previewHtml}
-              title="Page Preview"
-              className="w-full h-full min-h-[600px]"
-              sandbox="allow-same-origin"
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-interface TestimonialsEditorProps {
-  testimonials: CrmPageTestimonial[];
-  setTestimonials: (t: CrmPageTestimonial[]) => void;
-  showTrustSection: boolean;
-  setShowTrustSection: (v: boolean) => void;
-  onSave: () => void;
-  isSaving: boolean;
-}
-
-function TestimonialsEditor({
-  testimonials,
-  setTestimonials,
-  showTrustSection,
-  setShowTrustSection,
-  onSave,
-  isSaving,
-}: TestimonialsEditorProps) {
-  const addTestimonial = useCallback(() => {
-    setTestimonials([
-      ...testimonials,
-      { id: crypto.randomUUID(), name: "", text: "", rating: 5 },
-    ]);
-  }, [testimonials, setTestimonials]);
-
-  const removeTestimonial = useCallback((id: string) => {
-    setTestimonials(testimonials.filter((t) => t.id !== id));
-  }, [testimonials, setTestimonials]);
-
-  const updateTestimonial = useCallback(
-    (id: string, field: keyof CrmPageTestimonial, value: string | number) => {
-      setTestimonials(testimonials.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
-    },
-    [testimonials, setTestimonials]
-  );
-
-  return (
-    <div className="max-w-2xl space-y-5">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-sm">Trust & Social Proof Section</CardTitle>
-              <CardDescription>Show testimonials below the hero on your landing page.</CardDescription>
-            </div>
-            <Switch checked={showTrustSection} onCheckedChange={setShowTrustSection} />
-          </div>
-        </CardHeader>
-      </Card>
-
-      <div className="space-y-3">
-        {testimonials.map((t) => (
-          <Card key={t.id}>
-            <CardContent className="pt-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Name</Label>
-                    <Input
-                      value={t.name}
-                      onChange={(e) => updateTestimonial(t.id, "name", e.target.value)}
-                      placeholder="Jane Doe"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Role / Company</Label>
-                    <Input
-                      value={t.role ?? ""}
-                      onChange={(e) => updateTestimonial(t.id, "role", e.target.value)}
-                      placeholder="CEO, Acme Corp"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive mt-5"
-                  onClick={() => removeTestimonial(t.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Testimonial Text</Label>
-                <Textarea
-                  value={t.text}
-                  onChange={(e) => updateTestimonial(t.id, "text", e.target.value)}
-                  placeholder="This service transformed our business..."
-                  rows={3}
-                  className="text-sm resize-none"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Rating</Label>
-                <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => updateTestimonial(t.id, "rating", star)}
-                      className="focus:outline-none"
-                    >
-                      <Star
-                        className={`h-4 w-4 ${(t.rating ?? 0) >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        <Button variant="outline" size="sm" onClick={addTestimonial} className="gap-2 w-full">
-          <Plus className="h-4 w-4" />
-          Add Testimonial
-        </Button>
-      </div>
-
-      <Button size="sm" onClick={onSave} disabled={isSaving} className="gap-2">
-        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Save Testimonials
-      </Button>
-    </div>
   );
 }

@@ -51,6 +51,7 @@ interface UserSessionCache {
   plan: Plan | null;
   isOrgOwner: boolean;
   enabledModules: Module[];
+  orgOnboardingCompletedAt: string | null;
 }
 
 const USER_SESSION_TTL = 300;
@@ -293,13 +294,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
             let mfaEnforcedValue = false;
             let orgEnabledModulesOverride: string[] | null = null;
+            let orgOnboardingCompletedAt: string | null = null;
             if (membership?.orgId) {
               const orgRow = await db.query.organizations.findFirst({
                 where: eq(organizations.id, membership.orgId),
-                columns: { mfaEnforced: true, enabledModules: true },
+                columns: { mfaEnforced: true, enabledModules: true, onboardingCompletedAt: true },
               });
               mfaEnforcedValue = orgRow?.mfaEnforced ?? false;
               orgEnabledModulesOverride = orgRow?.enabledModules ?? null;
+              orgOnboardingCompletedAt = orgRow?.onboardingCompletedAt?.toISOString() ?? null;
             }
 
             let permissions: string[] = [];
@@ -333,6 +336,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   plan,
                   isOrgOwner: membership?.isOwner ?? false,
                   enabledModules: [...enabledModules],
+                  orgOnboardingCompletedAt,
                 }
               : null;
             if (cacheValue && redis) {
@@ -355,6 +359,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.plan = dbUser.plan ?? null;
             token.isOrgOwner = dbUser.isOrgOwner ?? false;
             token.enabledModules = dbUser.enabledModules ?? [];
+            token.orgOnboardingCompletedAt = dbUser.orgOnboardingCompletedAt ?? null;
             token.isPlatformAdmin = isPlatformAdminEmail(token.email as string | null | undefined);
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;

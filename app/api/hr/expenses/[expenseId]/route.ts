@@ -15,7 +15,7 @@ const updateStatusSchema = z.object({
 
 const updateDetailsSchema = z.object({
   category: z.string().optional(),
-  amount: z.number().optional(),
+  amount: z.number().positive("Amount must be greater than 0").max(999_999_999.99, "Amount cannot exceed 999,999,999.99").optional(),
   description: z.string().optional(),
   merchant: z.string().optional(),
   paymentMethod: z.string().optional(),

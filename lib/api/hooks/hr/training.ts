@@ -41,6 +41,7 @@ export function useTrainingPrograms() {
   return useQuery({
     queryKey: trainingKeys.list(),
     queryFn: () => apiClient.get<TrainingProgram[]>("/hr/training"),
+    staleTime: 2 * 60_000,
   });
 }
 

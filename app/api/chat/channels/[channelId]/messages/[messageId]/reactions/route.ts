@@ -49,19 +49,21 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     const { emoji } = body;
     const userId = session.user.id;
     const current: Record<string, string[]> = (message.reactions ?? {}) as Record<string, string[]>;
-    const existing = current[emoji] ?? [];
+
+    const withoutUser: Record<string, string[]> = {};
+    for (const [key, users] of Object.entries(current)) {
+      const filtered = users.filter((id) => id !== userId);
+      if (filtered.length > 0) withoutUser[key] = filtered;
+    }
+
+    const userHadThisEmoji = (current[emoji] ?? []).includes(userId);
 
     let updated: Record<string, string[]>;
-    if (existing.includes(userId)) {
-      const filtered = existing.filter((id) => id !== userId);
-      if (filtered.length === 0) {
-        const { [emoji]: _removed, ...rest } = current;
-        updated = rest;
-      } else {
-        updated = { ...current, [emoji]: filtered };
-      }
+    if (userHadThisEmoji) {
+      updated = withoutUser;
     } else {
-      updated = { ...current, [emoji]: [...existing, userId] };
+      const existing = withoutUser[emoji] ?? [];
+      updated = { ...withoutUser, [emoji]: [...existing, userId] };
     }
 
     await db

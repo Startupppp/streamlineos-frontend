@@ -1,4 +1,4 @@
-import { withAuth, withAdmin, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { alumniProfiles } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:alumni", async (session) => {
     const body = await parseBody(req, createSchema);
 
     const [record] = await db
