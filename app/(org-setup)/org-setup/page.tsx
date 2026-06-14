@@ -16,10 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Building2, User, PartyPopper } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, Building2, User } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 
 export const dynamic = "force-dynamic";
 
@@ -75,18 +76,18 @@ const setupSchema = z.object({
 
 type SetupValues = z.infer<typeof setupSchema>;
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 
 const STEPS = [
   { id: 1 as const, label: "Company Profile", icon: Building2 },
   { id: 2 as const, label: "Your Profile", icon: User },
-  { id: 3 as const, label: "Done", icon: PartyPopper },
 ] as const;
 
 export default function OrgSetupPage() {
   const { data: session } = useSession();
   const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const form = useForm<SetupValues>({
     resolver: zodResolver(setupSchema),
@@ -115,7 +116,8 @@ export default function OrgSetupPage() {
     setIsSubmitting(true);
     try {
       await apiClient.patch("/org/setup", data);
-      setStep(3);
+      toast.success("Workspace ready — welcome to StreamlineOS!");
+      setShowCelebration(true);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -123,14 +125,17 @@ export default function OrgSetupPage() {
     }
   }
 
-  function handleGoToDashboard() {
+  const goToDashboard = () => {
     window.location.href = "/dashboard";
-  }
+  };
 
   const currentStepIndex = step - 1;
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md relative">
+      {showCelebration && (
+        <ConfettiOverlay durationMs={2200} onDone={goToDashboard} />
+      )}
       <div className="mb-8 text-center">
         <h1 className="font-display text-2xl sm:text-[1.7rem] font-extrabold tracking-[-0.02em] text-slate-900 leading-tight">
           Welcome aboard
@@ -361,24 +366,6 @@ export default function OrgSetupPage() {
           </form>
         )}
 
-        {step === 3 && (
-          <div className="text-center space-y-5 py-4">
-            <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-              </div>
-            </div>
-            <div>
-              <h2 className="font-display text-xl font-bold text-slate-900">You&apos;re all set!</h2>
-              <p className="text-[13px] text-slate-500 mt-1.5">
-                Your workspace is ready. Let&apos;s take you to the dashboard.
-              </p>
-            </div>
-            <Button onClick={handleGoToDashboard} className="w-full h-11">
-              Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

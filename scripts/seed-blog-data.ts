@@ -22,11 +22,32 @@ export const AUTHORS = [
 ];
 
 export const CATEGORIES = [
-  { name: "Technology", color: "#3B82F6", description: "Architecture, tooling, and the tech that powers modern teams." },
-  { name: "Design", color: "#8B5CF6", description: "Product design, accessibility, and craft." },
-  { name: "Business", color: "#10B981", description: "Company building, operations, and leadership." },
-  { name: "Marketing", color: "#F59E0B", description: "Growth, content, and reaching the right people." },
-  { name: "Engineering", color: "#EF4444", description: "Deep dives on how we build and scale." },
+  {
+    name: "Technology",
+    color: "#3B82F6",
+    description:
+      "Architecture, tooling, and the tech that powers modern teams.",
+  },
+  {
+    name: "Design",
+    color: "#8B5CF6",
+    description: "Product design, accessibility, and craft.",
+  },
+  {
+    name: "Business",
+    color: "#10B981",
+    description: "Company building, operations, and leadership.",
+  },
+  {
+    name: "Marketing",
+    color: "#F59E0B",
+    description: "Growth, content, and reaching the right people.",
+  },
+  {
+    name: "Engineering",
+    color: "#EF4444",
+    description: "Deep dives on how we build and scale.",
+  },
 ];
 
 const POSTS_CORE: PostSeed[] = [
@@ -131,7 +152,7 @@ const POSTS_CORE: PostSeed[] = [
       "Good design is invisible. These are the principles we return to whenever we are unsure how something should look or behave.",
     content: buildHtml(
       [
-        "Design principles are only useful if they help you make decisions. Vague values like \"delightful\" or \"intuitive\" sound nice but settle no arguments.",
+        'Design principles are only useful if they help you make decisions. Vague values like "delightful" or "intuitive" sound nice but settle no arguments.',
         "Ours are deliberately opinionated, because opinions are what let a small team move quickly and stay consistent.",
       ],
       [
@@ -148,7 +169,8 @@ const POSTS_CORE: PostSeed[] = [
             "Empty states, loading states, and error states are not edge cases - they are most of the experience for a new user. We design them first, not last.",
             "A thoughtful empty state teaches people what to do next. A thoughtless one leaves them stuck.",
           ],
-          quote: "If the happy path is the only path you designed, you have only designed half the product.",
+          quote:
+            "If the happy path is the only path you designed, you have only designed half the product.",
         },
         {
           h2: "Respect the reader",
@@ -189,7 +211,7 @@ const POSTS_CORE: PostSeed[] = [
         {
           h2: "Make the default deny",
           body: [
-            "Every check should start from \"no\" and grant access only when a rule explicitly allows it. Fail-open systems are how data leaks happen.",
+            'Every check should start from "no" and grant access only when a rule explicitly allows it. Fail-open systems are how data leaks happen.',
             "Defense in depth matters too: enforce access at the route layer and again at the data layer, so a missed check in one place is caught in another.",
           ],
           code: "function canAccess(role, route) {\n  if (role === 'CEO') return true; // explicit super-role\n  const allowed = ROUTE_ROLE_MAP[route] ?? [];\n  return allowed.includes(role); // default deny\n}",
@@ -214,7 +236,7 @@ const POSTS_CORE: PostSeed[] = [
       "Meetings feel productive and often are not. A bias toward writing makes distributed teams faster, fairer, and far less exhausted.",
     content: buildHtml(
       [
-        "When your team spans time zones, the default of \"let's hop on a call\" quietly breaks down. Someone is always inconvenienced, and the people on the call are rarely the ones who needed to be there.",
+        'When your team spans time zones, the default of "let\'s hop on a call" quietly breaks down. Someone is always inconvenienced, and the people on the call are rarely the ones who needed to be there.',
         "Async communication is not about never talking. It is about defaulting to writing and reserving live time for the conversations that truly need it.",
       ],
       [
@@ -222,9 +244,10 @@ const POSTS_CORE: PostSeed[] = [
           h2: "Writing forces clarity",
           body: [
             "A vague idea survives a meeting. It does not survive being written down. The act of writing a proposal exposes the gaps in your thinking before you ship them.",
-            "Written decisions are also searchable, which means the answer to \"why did we do this?\" is one query away six months later.",
+            'Written decisions are also searchable, which means the answer to "why did we do this?" is one query away six months later.',
           ],
-          quote: "If it is important, write it down. If it is not important enough to write down, it is probably not important.",
+          quote:
+            "If it is important, write it down. If it is not important enough to write down, it is probably not important.",
         },
         {
           h2: "Respect deep work",
@@ -285,7 +308,7 @@ const POSTS_CORE: PostSeed[] = [
         {
           h2: "Design tokens keep you honest",
           body: [
-            "Encode your palette as semantic tokens - \"foreground\", \"muted\", \"destructive\" - rather than raw hex values sprinkled through the code.",
+            'Encode your palette as semantic tokens - "foreground", "muted", "destructive" - rather than raw hex values sprinkled through the code.',
             "Tokens let you tune the whole system, support dark mode, and guarantee that accessible pairings stay accessible everywhere.",
           ],
         },
@@ -325,7 +348,7 @@ const POSTS_CORE: PostSeed[] = [
           h2: "Connections are a finite resource",
           body: [
             "In serverless environments it is easy to exhaust your connection pool. Reuse a single client and size your pool to the runtime you are actually deploying to.",
-            "Most \"the database is down\" incidents are really \"the database ran out of connections\" incidents.",
+            'Most "the database is down" incidents are really "the database ran out of connections" incidents.',
           ],
         },
       ],

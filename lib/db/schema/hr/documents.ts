@@ -1,6 +1,6 @@
 import { pgTable, text, serial, timestamp, boolean, jsonb, integer, date, index, foreignKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { documentTypeEnum, ackStatusEnum, trainingStatusEnum, enrollmentStatusEnum } from "../enums";
+import { documentTypeEnum, ackStatusEnum } from "../enums";
 import { organizations, users } from "../auth";
 import { departments } from "./employees";
 
@@ -107,51 +107,13 @@ export const careerLadders = pgTable("career_ladders", {
   index("idx_career_ladders_org").on(table.orgId),
 ]);
 
-export const trainingPrograms = pgTable("training_programs", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  category: text("category"),
-  duration: text("duration"),
-  instructor: text("instructor"),
-  maxParticipants: integer("max_participants"),
-  status: trainingStatusEnum("status").default("DRAFT").notNull(),
-  startDate: date("start_date"),
-  endDate: date("end_date"),
-  location: text("location"),
-  meetingLink: text("meeting_link"),
-  materials: text("materials"),
-  createdBy: text("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
-}, (table) => [
-  index("idx_training_programs_org").on(table.orgId),
-]);
-
-export const trainingEnrollments = pgTable("training_enrollments", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
-  programId: integer("program_id").references(() => trainingPrograms.id, { onDelete: "cascade" }).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
-  status: enrollmentStatusEnum("status").default("ENROLLED").notNull(),
-  completedAt: timestamp("completed_at"),
-  score: integer("score"),
-  feedback: text("feedback"),
-  certificateUrl: text("certificate_url"),
-  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_enrollments_program").on(table.programId),
-  index("idx_enrollments_user").on(table.userId),
-]);
-
 export const learningPaths = pgTable("learning_paths", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   targetRole: text("target_role"),
-  steps: jsonb("steps").$type<{ order: number; type: "training" | "assessment" | "certification"; referenceId: number; title: string }[]>(),
+  steps: jsonb("steps").$type<{ order: number; type: "assessment" | "certification"; referenceId: number; title: string }[]>(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
@@ -205,17 +167,6 @@ export const policyAcknowledgmentsRelations = relations(policyAcknowledgments, (
 
 export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
   creator: one(users, { fields: [emailTemplates.createdBy], references: [users.id] }),
-}));
-
-export const trainingProgramsRelations = relations(trainingPrograms, ({ one, many }) => ({
-  organization: one(organizations, { fields: [trainingPrograms.orgId], references: [organizations.id] }),
-  creator: one(users, { fields: [trainingPrograms.createdBy], references: [users.id] }),
-  enrollments: many(trainingEnrollments),
-}));
-
-export const trainingEnrollmentsRelations = relations(trainingEnrollments, ({ one }) => ({
-  program: one(trainingPrograms, { fields: [trainingEnrollments.programId], references: [trainingPrograms.id] }),
-  user: one(users, { fields: [trainingEnrollments.userId], references: [users.id] }),
 }));
 
 export const learningPathsRelations = relations(learningPaths, ({ one }) => ({

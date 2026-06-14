@@ -12,7 +12,7 @@ interface PayslipEarningsTableProps {
   deductions: number;
   netSalary: number;
   overtimeAmount: number;
-  overtimeType: string | undefined;
+  overtimeType: string | null | undefined;
   overtimeDays: number;
   overtimeHoursVal: number;
 }

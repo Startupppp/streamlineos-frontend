@@ -11,14 +11,17 @@ import { getTodayString } from "@/lib/date-utils";
 import { sendMonthlyExpenseReportEmail } from "@/lib/email";
 import type { MonthlyExpenseReportRow } from "@/lib/email-templates";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import { buildExportConditions, fetchExpensesForExport, fetchExportStats } from "./query";
+import {
+  buildExportConditions,
+  fetchExpensesForExport,
+  fetchExportStats,
+} from "./query";
 import { generateCSVContent } from "./csv-export";
 import { generateXLSXData, generatePDFData } from "./data-generators";
 import type { ExportOptions, ExportResult, ExportFilters } from "./types";
 
-
 export async function exportExpenses(
-  options: ExportOptions
+  options: ExportOptions,
 ): Promise<ExportResult> {
   const authResult = await getAuthenticatedMember();
   if (isAuthError(authResult)) {
@@ -32,7 +35,7 @@ export async function exportExpenses(
       options.filters,
       orgId,
       isAdmin,
-      userId
+      userId,
     );
 
     const [expenseList, stats] = await Promise.all([
@@ -85,13 +88,18 @@ export async function exportExpenses(
 
 export async function emailExpenseReport(
   filters: ExportFilters,
-  sendTo: "CEO" | "HR" | "BOTH" = "BOTH"
+  sendTo: "CEO" | "HR" | "BOTH" = "BOTH",
 ): Promise<{ success: boolean; error?: string }> {
   const authResult = await getAuthenticatedMember();
-  if (isAuthError(authResult)) return { success: false, error: authResult.error };
+  if (isAuthError(authResult))
+    return { success: false, error: authResult.error };
 
   const { isAdmin, userId, orgId } = authResult;
-  if (!isAdmin) return { success: false, error: "Only HR and CEO can send expense reports" };
+  if (!isAdmin)
+    return {
+      success: false,
+      error: "Only HR and CEO can send expense reports",
+    };
 
   try {
     const conditions = buildExportConditions(filters, orgId, isAdmin, userId);
@@ -100,12 +108,14 @@ export async function emailExpenseReport(
       fetchExportStats(conditions),
     ]);
 
-    if (expenseList.length === 0) return { success: false, error: "No expenses found for the selected filters" };
+    if (expenseList.length === 0)
+      return {
+        success: false,
+        error: "No expenses found for the selected filters",
+      };
 
     const adminMembers = await db.query.organizationMembers.findMany({
-      where: and(
-        eq(organizationMembers.orgId, orgId),
-      ),
+      where: and(eq(organizationMembers.orgId, orgId)),
       with: { user: true },
     });
 
@@ -118,17 +128,19 @@ export async function emailExpenseReport(
       .map((m) => m.user?.email)
       .filter((e): e is string => !!e);
 
-    if (recipientEmails.length === 0) return { success: false, error: "No CEO/HR email addresses found" };
+    if (recipientEmails.length === 0)
+      return { success: false, error: "No CEO/HR email addresses found" };
 
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, orgId),
     });
 
-    const periodLabel = filters.startDate && filters.endDate
-      ? `${filters.startDate} to ${filters.endDate}`
-      : filters.startDate
-        ? `From ${filters.startDate}`
-        : "All Time";
+    const periodLabel =
+      filters.startDate && filters.endDate
+        ? `${filters.startDate} to ${filters.endDate}`
+        : filters.startDate
+          ? `From ${filters.startDate}`
+          : "All Time";
 
     const rows: MonthlyExpenseReportRow[] = expenseList.map((e) => ({
       employeeName: e.userName,

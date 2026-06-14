@@ -103,7 +103,6 @@ Ordered money-path first. Check off each page after fixing.
 - [ ] `/hr/enps` — eNPS
 - [ ] `/hr/assessments` — Assessments
 - [ ] `/hr/learning-paths` — Learning paths
-- [ ] `/hr/training` — Training
 - [ ] `/hr/skills` — Skills
 - [ ] `/hr/certifications` — Certifications
 - [ ] `/hr/career-ladders` — Career ladders

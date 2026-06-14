@@ -8,6 +8,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { flattenNavRoutes, type NavGroup, type NavRoute } from "./sidebar-nav-items";
 
+/** When a section has only one top-level route with children, show the hub link + children as peers (no extra expand level). */
+function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
+  if (routes.length !== 1) return routes;
+  const [sole] = routes;
+  const kids = sole.children;
+  if (!kids?.length) return routes;
+  return [{ ...sole, children: undefined }, ...kids];
+}
+
 interface SidebarSectionProps {
   group: NavGroup;
   groupIndex: number;
@@ -17,13 +26,6 @@ interface SidebarSectionProps {
   pendingLeaves: number;
   unreadChatCount: number;
   onNavigate?: () => void;
-}
-
-function resolveGroupRoutes(routes: NavRoute[]): NavRoute[] {
-  if (routes.length === 1 && routes[0].children && routes[0].children.length > 0) {
-    return routes[0].children;
-  }
-  return routes;
 }
 
 function routeIsActive(route: NavRoute, pathname: string): boolean {
@@ -88,7 +90,7 @@ export function SidebarSection({
                   onNavigate={onNavigate}
                 />
               ))
-            : (resolveGroupRoutes(group.routes)).map((route) => (
+            : hoistSingletonParentRoutes(group.routes).map((route) => (
                 <ExpandedItem
                   key={route.href}
                   route={route}

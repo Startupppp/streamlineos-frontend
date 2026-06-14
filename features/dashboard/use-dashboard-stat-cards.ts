@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import {
   Users,
   Briefcase,
-  Building2,
   Contact2,
   Ticket,
   Target,
@@ -66,12 +65,6 @@ export function useDashboardStatCards(
             value: stats.activeProjects,
             icon: Briefcase,
             href: "/projects",
-          },
-          {
-            id: "org",
-            label: "Organization",
-            value: stats.orgName,
-            icon: Building2,
           },
         ];
       case "SALES":
@@ -165,14 +158,7 @@ export function useDashboardStatCards(
           },
         ];
       default:
-        return [
-          {
-            id: "org",
-            label: "Organization",
-            value: stats.orgName,
-            icon: Building2,
-          },
-        ];
+        return [];
     }
   }, [stats, role, roleStats]);
 }
