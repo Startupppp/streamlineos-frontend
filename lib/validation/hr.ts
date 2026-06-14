@@ -204,13 +204,19 @@ export const onboardEmployeeInputSchema = z.object({
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
-    accountNumber: z.string().min(1, "Account number is required").regex(/^\d+$/, "Account number must contain only digits"),
-    bankName: z.string().min(1, "Bank name is required").regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters"),
-    branch: z.string().min(1, "Branch name is required").regex(/^[A-Za-z\s]+$/, "Branch must contain only letters"),
-    ifsc: z.string().min(1, "IFSC code is required").regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC format (e.g., SBIN0001234)"),
-    accountHolder: z.string().min(1, "Account holder name is required").regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters"),
+    accountNumber: z.string().regex(/^\d+$/, "Account number must contain only digits").optional().or(z.literal("")),
+    bankName: z.string().regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters").optional().or(z.literal("")),
+    branch: z.string().regex(/^[A-Za-z\s]+$/, "Branch name must contain only letters").optional().or(z.literal("")),
+    ifsc: z.string().regex(/^[A-Z0-9]{4,34}$/, "Invalid routing/IFSC code format").optional().or(z.literal("")),
+    accountHolder: z.string().regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters").optional().or(z.literal("")),
     pfUanNumber: z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits").optional().or(z.literal("")),
-  }),
+  }).optional(),
+}).superRefine((data, ctx) => {
+  const fn = data.firstName.trim().toLowerCase();
+  const ln = data.lastName.trim().toLowerCase();
+  if (fn && ln && fn === ln) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "First name and last name cannot be identical", path: ["lastName"] });
+  }
 });
 
 export const createWfhRequestInputSchema = z.object({

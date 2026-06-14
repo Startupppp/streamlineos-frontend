@@ -19,7 +19,14 @@ const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   role: z.string(),
-  designation: z.string().optional(),
+  designation: z
+    .string()
+    .min(2, "Designation must be at least 2 characters")
+    .max(100, "Designation must be at most 100 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
+    .refine((v) => !/\s{2,}/.test(v), "Designation cannot have consecutive spaces")
+    .optional()
+    .or(z.literal("")),
   departmentId: z.number().optional(),
   phone: z.string().refine((val) => {
     if (!val) return true;
@@ -37,6 +44,12 @@ const formSchema = z.object({
   branch: z.string().optional(),
   ifsc: z.string().optional(),
   accountHolder: z.string().optional(),
+}).superRefine((data, ctx) => {
+  const fn = data.firstName.trim().toLowerCase();
+  const ln = data.lastName.trim().toLowerCase();
+  if (fn && ln && fn === ln) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "First name and last name cannot be identical", path: ["lastName"] });
+  }
 });
 
 export type EmployeeFormValues = z.infer<typeof formSchema>;
