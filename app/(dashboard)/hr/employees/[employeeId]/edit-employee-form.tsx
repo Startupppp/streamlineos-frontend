@@ -36,7 +36,14 @@ const formSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
   experienceYears: z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional(),
-  skills: z.string().optional(),
+  skills: z
+    .string()
+    .max(500, "Skills must be at most 500 characters")
+    .refine((v) => {
+      if (!v?.trim()) return true;
+      return v.split(",").every((s) => !s.trim() || /[a-zA-Z0-9]/.test(s.trim()));
+    }, "Each skill must contain at least one letter or number")
+    .optional(),
   taxId: z.string().optional(),
   monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
   bankAccount: z.string().optional(),

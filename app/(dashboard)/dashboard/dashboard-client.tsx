@@ -73,7 +73,6 @@ import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashbo
 import { ExecutiveKpiWidget } from "@/components/dashboard/executive-kpi-widget";
 import { BusinessPulseWidget } from "@/components/dashboard/project-health-widget";
 import { UpcomingEventsWidget } from "@/components/dashboard/upcoming-events-widget";
-import { QuickActionsWidget } from "@/components/dashboard/quick-actions-widget";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -566,16 +565,13 @@ export function DashboardClient() {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              className="grid gap-3 grid-cols-1 md:grid-cols-2"
             >
               <Suspense fallback={<WidgetSkeleton rows={3} />}>
                 <UpcomingEventsWidget />
               </Suspense>
               <Suspense fallback={<WidgetSkeleton rows={3} />}>
                 <AnnouncementsWidget />
-              </Suspense>
-              <Suspense fallback={<WidgetSkeleton rows={3} />}>
-                <QuickActionsWidget />
               </Suspense>
             </motion.div>
           </>
