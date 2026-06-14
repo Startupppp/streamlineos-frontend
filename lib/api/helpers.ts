@@ -115,6 +115,7 @@ export type AbilitySubject =
   | "blog"
   | "blog:posts"
   | "blog:categories"
+  | "blog:authors"
   | "crm"
   | "crm:leads"
   | "crm:deals"

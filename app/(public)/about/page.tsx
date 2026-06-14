@@ -167,7 +167,7 @@ export default function AboutPage() {
         <p className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-400">
           <Sparkles className="h-3 w-3 text-blue-500" />
           More about what we&apos;re shipping next on{" "}
-          <Link href="/blog" className="text-blue-600 hover:underline">
+          <Link href="/blogs" className="text-blue-600 hover:underline">
             the blog
           </Link>
         </p>

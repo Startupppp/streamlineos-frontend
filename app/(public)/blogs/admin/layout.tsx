@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { BLOG_ADMIN_ROLES } from "@/lib/constants/roles";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { BlogAdminNav } from "@/components/blog/blog-admin-nav";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,8 @@ export default async function BlogAdminLayout({
   if (!session?.user) {
     redirect("/signin?callbackUrl=/blogs/admin");
   }
-  if (!BLOG_ADMIN_ROLES.includes(session.user.role ?? "")) {
+  const ability = await getSessionAbility();
+  if (!ability.can("manage", "blog:posts")) {
     redirect("/blogs");
   }
 
