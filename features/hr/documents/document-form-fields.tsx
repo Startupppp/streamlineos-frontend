@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
   name: z.string()
-    .min(3, "Name must be at least 3 characters")
+    .min(2, "Name must be at least 2 characters")
     .max(200, "Name must be at most 200 characters")
     .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
     .refine((v) => !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")

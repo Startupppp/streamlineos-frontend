@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState } from "react";
 import { format } from "date-fns";
+import JSZip from "jszip";
 import {
   FileText,
   Folder,
@@ -16,6 +17,7 @@ import {
   ArrowDown,
   Upload,
   Pencil,
+  Loader2,
 } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
@@ -101,6 +103,7 @@ export interface FolderItem {
 
 export interface DocumentTableProps {
   paginatedDocuments: Document[];
+  allFilteredDocuments: Document[];
   folders: FolderItem[];
   page: number;
   pageSize: number;
@@ -276,6 +279,7 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: Documen
 
 export function DocumentTable({
   paginatedDocuments,
+  allFilteredDocuments,
   folders,
   page,
   pageSize,
@@ -288,6 +292,44 @@ export function DocumentTable({
   onEdit,
   onOpenUpload,
 }: DocumentTableProps) {
+  const [isZipping, setIsZipping] = useState(false);
+
+  const filesWithUrl = allFilteredDocuments.filter((d) => !!d.fileUrl);
+
+  const handleDownloadZip = useCallback(async () => {
+    if (filesWithUrl.length === 0) return;
+    setIsZipping(true);
+    try {
+      const zip = new JSZip();
+      const results = await Promise.allSettled(
+        filesWithUrl.map(async (doc) => {
+          const response = await fetch(doc.fileUrl);
+          if (!response.ok) throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
+          const blob = await response.blob();
+          const fileName = doc.fileName ?? `${doc.name}.bin`;
+          zip.file(fileName, blob);
+        })
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "documents.zip";
+      anchor.click();
+      URL.revokeObjectURL(url);
+      if (failed > 0) {
+        toast.warning(`${filesWithUrl.length - failed} file(s) downloaded; ${failed} could not be fetched.`);
+      } else {
+        toast.success(`${filesWithUrl.length} file(s) packaged into ZIP`);
+      }
+    } catch {
+      toast.error("Failed to create ZIP archive");
+    } finally {
+      setIsZipping(false);
+    }
+  }, [filesWithUrl]);
+
   return (
     <Card className="shadow-sm border overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
@@ -394,17 +436,35 @@ export function DocumentTable({
 
         {totalFiltered > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
-            <span className="text-sm text-muted-foreground">
-              Showing{" "}
-              <strong className="text-foreground">
-                {Math.min((page - 1) * pageSize + 1, totalFiltered)}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-foreground">
-                {Math.min(page * pageSize, totalFiltered)}
-              </strong>{" "}
-              of <strong className="text-foreground">{totalFiltered}</strong> results
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                Showing{" "}
+                <strong className="text-foreground">
+                  {Math.min((page - 1) * pageSize + 1, totalFiltered)}
+                </strong>{" "}
+                to{" "}
+                <strong className="text-foreground">
+                  {Math.min(page * pageSize, totalFiltered)}
+                </strong>{" "}
+                of <strong className="text-foreground">{totalFiltered}</strong> results
+              </span>
+              {filesWithUrl.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={handleDownloadZip}
+                  disabled={isZipping}
+                >
+                  {isZipping ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  Download ZIP ({filesWithUrl.length})
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

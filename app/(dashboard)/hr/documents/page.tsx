@@ -221,6 +221,7 @@ export default function DocumentsPage() {
 
         <DocumentTable
           paginatedDocuments={paginatedDocuments}
+          allFilteredDocuments={filteredDocuments}
           folders={folders}
           page={page}
           pageSize={pageSize}

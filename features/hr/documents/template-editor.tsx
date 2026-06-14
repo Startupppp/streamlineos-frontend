@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Eye, EyeOff, Wand2, History } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, Wand2, History, X } from "lucide-react";
 import Link from "next/link";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -174,6 +174,12 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       el.setSelectionRange(pos, pos);
     });
   }, [htmlContent]);
+
+  const handleDeleteVariable = useCallback((varName: string) => {
+    const pattern = new RegExp(`\\{\\{${varName}\\}\\}`, "g");
+    setHtmlContent((prev) => prev.replace(pattern, ""));
+    toast.warning("Variable removed from template content");
+  }, []);
 
   const handleCancel = useCallback(() => {
     setTitle(initialTitle);
@@ -389,9 +395,17 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                         <Badge
                           key={v}
                           variant="outline"
-                          className="text-[10px] font-mono px-1.5 bg-blue/5 border-blue/20 text-blue"
+                          className="text-[10px] font-mono pl-1.5 pr-0.5 gap-1 bg-blue/5 border-blue/20 text-blue flex items-center"
                         >
                           {`{{${v}}}`}
+                          <button
+                            type="button"
+                            className="rounded-sm hover:bg-blue/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ml-0.5"
+                            onClick={() => handleDeleteVariable(v)}
+                            aria-label={`Remove variable ${v}`}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
                         </Badge>
                       ))}
                     </div>

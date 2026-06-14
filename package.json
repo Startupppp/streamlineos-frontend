@@ -74,6 +74,7 @@
     "html2canvas": "^1.4.1",
     "inngest": "^4.1.1",
     "jspdf": "^4.2.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.556.0",
     "nanoid": "^5.1.6",
     "next": "16.1.7",
