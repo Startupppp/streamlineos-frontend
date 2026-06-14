@@ -10,7 +10,7 @@ export async function PATCH(
   _req: NextRequest,
   { params }: { params: Promise<{ payrollId: string }> }
 ) {
-  return withModuleAbility("hr", "manage", "hr:payrolls", async (session) => {
+  return withModuleAbility("hr", "approve", "hr:payroll", async (session) => {
     const { payrollId: id } = await params;
     const payrollId = Number(id);
     if (!payrollId) return err("Invalid payroll ID.", 400);

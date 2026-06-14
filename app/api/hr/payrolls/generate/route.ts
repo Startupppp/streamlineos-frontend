@@ -20,7 +20,7 @@ const generateSinglePayrollSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withModuleAbility("hr", "manage", "hr:payrolls", async (session) => {
+  return withModuleAbility("hr", "generate", "hr:payroll", async (session) => {
     const body = await parseBody(req, generateSinglePayrollSchema);
 
     const salary = await db.query.salaryStructures.findFirst({

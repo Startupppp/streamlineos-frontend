@@ -27,7 +27,7 @@ export async function GET(
     const ability = await getSessionAbility();
 
 
-    const isAdmin = ability.can("approve", "hr:payroll");
+    const isAdmin = ability.can("approve", "hr:payroll") || ability.can("generate", "hr:payroll");
     if (!isAdmin && payroll.userId !== session.user.id) {
       return err("Access denied.", 403);
     }

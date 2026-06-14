@@ -103,7 +103,7 @@ export async function withAuth(
   }
 }
 
-export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage";
+export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage" | "approve" | "generate" | "view";
 
 export type AbilitySubject =
   | "all"

@@ -33,7 +33,9 @@ import { useCreateExpense, useUpdateExpense } from "@/lib/api/hooks/hr";
 import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const VALID_TEXT_REGEX = /^(?![\s\W]+$).+/;
+const CONTAINS_LETTER_REGEX = /[a-zA-Z]/;
+const CONTAINS_LETTER_OR_NUMBER_REGEX = /[a-zA-Z0-9]/;
+const NO_CONSECUTIVE_SPACES_REGEX = /\s{2,}/;
 
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -41,18 +43,18 @@ const formSchema = z.object({
   amount: z
     .number()
     .positive("Amount must be greater than 0")
-    .max(9_999_999.99, "Amount cannot exceed 99,99,999.99"),
+    .max(999_999_999.99, "Amount cannot exceed ₹99,99,99,999.99"),
   description: z
     .string()
-    .max(500, "Description must be at most 500 characters")
-    .refine((v) => !v || VALID_TEXT_REGEX.test(v), "Description cannot consist of only special characters")
-    .refine((v) => !v || !/\s{2,}/.test(v), "Description cannot have multiple consecutive spaces")
+    .max(100, "Description must be at most 100 characters")
+    .refine((v) => !v || CONTAINS_LETTER_OR_NUMBER_REGEX.test(v), "Description must contain at least one letter or number")
+    .refine((v) => !v || !NO_CONSECUTIVE_SPACES_REGEX.test(v), "Description cannot have consecutive spaces")
     .optional(),
   merchant: z
     .string()
-    .max(200, "Merchant name must be at most 200 characters")
-    .refine((v) => !v || VALID_TEXT_REGEX.test(v), "Merchant name cannot consist of only special characters")
-    .refine((v) => !v || !/\s{2,}/.test(v), "Merchant name cannot have multiple consecutive spaces")
+    .max(100, "Merchant name must be at most 100 characters")
+    .refine((v) => !v || CONTAINS_LETTER_OR_NUMBER_REGEX.test(v), "Merchant name must contain at least one letter or number")
+    .refine((v) => !v || !NO_CONSECUTIVE_SPACES_REGEX.test(v), "Merchant name cannot have consecutive spaces")
     .optional(),
   paymentMethod: z.string().optional(),
   customPaymentMethod: z.string().optional(),
@@ -63,18 +65,18 @@ const formSchema = z.object({
   }
   if (data.customCategory) {
     const ct = data.customCategory.trim();
-    if (ct.length > 100) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category must be at most 100 characters", path: ["customCategory"] });
-    if (!VALID_TEXT_REGEX.test(ct)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category cannot consist of only special characters", path: ["customCategory"] });
-    if (/\s{2,}/.test(ct)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category cannot have multiple consecutive spaces", path: ["customCategory"] });
+    if (ct.length > 50) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category must be at most 50 characters", path: ["customCategory"] });
+    if (!CONTAINS_LETTER_REGEX.test(ct)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category must contain at least one letter", path: ["customCategory"] });
+    if (NO_CONSECUTIVE_SPACES_REGEX.test(ct)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Category cannot have consecutive spaces", path: ["customCategory"] });
   }
   if (data.paymentMethod === "Other" && !data.customPaymentMethod?.trim()) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please specify the payment method", path: ["customPaymentMethod"] });
   }
   if (data.customPaymentMethod) {
     const pm = data.customPaymentMethod.trim();
-    if (pm.length > 100) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method must be at most 100 characters", path: ["customPaymentMethod"] });
-    if (!VALID_TEXT_REGEX.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method cannot consist of only special characters", path: ["customPaymentMethod"] });
-    if (/\s{2,}/.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method cannot have multiple consecutive spaces", path: ["customPaymentMethod"] });
+    if (pm.length > 50) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method must be at most 50 characters", path: ["customPaymentMethod"] });
+    if (!CONTAINS_LETTER_REGEX.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method must contain at least one letter", path: ["customPaymentMethod"] });
+    if (NO_CONSECUTIVE_SPACES_REGEX.test(pm)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Payment method cannot have consecutive spaces", path: ["customPaymentMethod"] });
   }
 });
 
@@ -118,9 +120,9 @@ function AmountInput({ value, onChange }: { value: number; onChange: (v: number)
       value={display}
       onChange={(e) => {
         const raw = e.target.value;
-        if (raw === "" || /^\d{0,10}(\.\d{0,2})?$/.test(raw)) {
+        if (raw === "" || /^\d{0,12}(\.\d{0,2})?$/.test(raw)) {
           const num = parseFloat(raw);
-          if (!isNaN(num) && num > 9_999_999.99) return;
+          if (!isNaN(num) && num > 999_999_999.99) return;
           setDisplay(raw);
           onChange(isNaN(num) ? 0 : num);
         }

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const ability = await getSessionAbility();
 
-    if (!ability.can("approve", "hr:payroll")) {
+    if (!ability.can("generate", "hr:payroll")) {
       return err("Only admins can generate payroll.", 403);
     }
 
