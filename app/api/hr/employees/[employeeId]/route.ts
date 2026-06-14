@@ -81,15 +81,19 @@ export async function PATCH(
     const ability = await getSessionAbility();
 
     const isOwnerOrAdmin = ability.can("manage", "hr:employees");
-    if (!isSelf && !isOwnerOrAdmin) {
+    const canManageEmployees = isOwnerOrAdmin || session.user.role === "HR" || session.user.role === "CEO";
+    if (!isSelf && !canManageEmployees) {
       return err("You can only update your own profile.", 403);
     }
 
     const body = await parseBody(req, updateEmployeeSchema);
 
     if (body.isActive === false) {
-      if (!isOwnerOrAdmin) return err("Only admins can terminate employees.", 403);
+      if (!canManageEmployees) return err("Only HR or CEO can terminate employees.", 403);
       if (isSelf) return err("You cannot terminate your own account.", 400);
+      if (targetMember.role === "CEO" || targetMember.isOwner) {
+        return err("CEO cannot be terminated through this workflow.", 400);
+      }
     }
 
     if (body.reportingTo !== undefined && body.reportingTo !== null) {

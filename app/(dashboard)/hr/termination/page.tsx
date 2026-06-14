@@ -361,7 +361,7 @@ export default function TerminationPage() {
 
   const role = session?.user?.role;
   const isHR = role === "HR";
-  const isCEO = ability.can("manage", "all");
+  const isCEO = role === "CEO" || ability.can("manage", "all");
 
   const { data: terminations, isLoading } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });

@@ -59,7 +59,9 @@ export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const ability = await getSessionAbility();
 
-    if (!ability.can("manage", "hr:employees"))  return err("Forbidden", 403);
+    if (session.user.role !== "HR" && session.user.role !== "CEO" && !ability.can("manage", "hr:employees")) {
+      return err("Forbidden", 403);
+    }
 
     const rows = await db
       .select({
