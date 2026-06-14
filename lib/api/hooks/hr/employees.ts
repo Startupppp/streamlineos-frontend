@@ -149,15 +149,24 @@ export interface ExpertResult {
   name: string | null;
   image: string | null;
   designation: string | null;
-  skills: string[];
+  department: string | null;
+  role: string | null;
+  skills: { name: string; level: number }[];
   matchedSkill: string;
+  matchedLevel: number;
 }
 
-export function useFindExpert(skill: string) {
+export interface FindExpertParams {
+  skill: string;
+  department?: string;
+  role?: string;
+}
+
+export function useFindExpert(params: FindExpertParams) {
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "findExpert", skill] as const,
-    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", { skill }),
-    enabled: skill.trim().length > 0,
+    queryKey: [...queryKeys.hr.all, "findExpert", params] as const,
+    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>),
+    enabled: params.skill.trim().length > 0,
     staleTime: 2 * 60_000,
   });
 }
