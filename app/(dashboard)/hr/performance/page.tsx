@@ -825,12 +825,18 @@ function CyclesTab() {
           <Select value={type} onValueChange={setType}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="QUARTERLY">Quarterly</SelectItem>
-              <SelectItem value="HALF_YEARLY">Half-Yearly</SelectItem>
-              <SelectItem value="ANNUAL">Annual</SelectItem>
-              <SelectItem value="CUSTOM">Custom</SelectItem>
+              <SelectItem value="QUARTERLY">Quarterly — 3-month cycle</SelectItem>
+              <SelectItem value="HALF_YEARLY">Half-Yearly — 6-month cycle</SelectItem>
+              <SelectItem value="ANNUAL">Annual — Full-year cycle</SelectItem>
+              <SelectItem value="CUSTOM">Custom — Define your own period</SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-[11px] text-muted-foreground">
+            {type === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
+            {type === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
+            {type === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}
+            {type === "CUSTOM" && "Flexible review period tailored to your team's schedule. Define any start/end dates and deadline that fits your workflow."}
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">

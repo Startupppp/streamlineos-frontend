@@ -543,30 +543,16 @@ export async function getWorkLogs(
   const logs = await db.query.timesheets.findMany({
     where: and(
       eq(timesheets.orgId, orgId),
-      eq(timesheets.userId, targetUserId)
+      eq(timesheets.userId, targetUserId),
+      isNull(timesheets.ticketId)
     ),
-    with: {
-      ticket: {
-        columns: { id: true, title: true, ticketNumber: true },
-        with: {
-          project: { columns: { id: true, name: true, key: true } },
-        },
-      },
-    },
   });
 
   const dated = logs
     .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
     .filter((l) => l.date >= startStr && l.date <= endStr);
 
-  const byDate = new Map<string, typeof dated[number]>();
-  for (const l of dated) {
-    const existing = byDate.get(l.date);
-    if (!existing || new Date(l.updatedAt) > new Date(existing.updatedAt)) {
-      byDate.set(l.date, l);
-    }
-  }
-  return Array.from(byDate.values()) as unknown as WorkLog[];
+  return dated as unknown as WorkLog[];
 }
 
 export async function getHelpdeskTickets(

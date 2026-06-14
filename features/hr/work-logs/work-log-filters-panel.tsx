@@ -103,7 +103,7 @@ export function WorkLogFiltersPanel({
           )}
           {filters.selectedUserId && employees && (
             <Badge variant="secondary" className="text-xs gap-1 pr-1">
-              Employee: {employees.find((e) => e.id === filters.selectedUserId)?.firstName ?? "Selected"}
+              Employee: {(() => { const e = employees.find((emp) => emp.id === filters.selectedUserId); return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || "Selected") : "Selected"; })()}
               <button onClick={handleClearEmployee} className="ml-0.5 hover:text-foreground">
                 <X className="h-3 w-3" />
               </button>

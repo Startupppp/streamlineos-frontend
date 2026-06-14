@@ -159,9 +159,9 @@ export function WorkLogFilterActions({
   const selectedEmployeeName = draftFilters.selectedUserId
     ? (() => {
         const emp = (employees ?? []).find((e) => e.id === draftFilters.selectedUserId);
-        return emp ? `${emp.firstName} ${emp.lastName}` :"Select employee";
+        return emp ? ([emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown") : "Select employee";
       })()
-    :"My Logs";
+    : "My Logs";
 
   const monthOptions = (() => {
     const startMonthIdx = (draftFilters.quarter - 1) * 3;
@@ -213,9 +213,9 @@ export function WorkLogFilterActions({
                 {filters.selectedUserId
                   ? (() => {
                       const emp = (employees ?? []).find((e) => e.id === filters.selectedUserId);
-                      return emp ? `${emp.firstName} ${emp.lastName}` :"Employee";
+                      return emp ? ([emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Employee") : "Employee";
                     })()
-                  :"My Logs"}
+                  : "My Logs"}
               </span>
               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -242,21 +242,24 @@ export function WorkLogFilterActions({
                     <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
                     My Logs
                   </CommandItem>
-                  {(employees ?? []).map((emp) => (
-                    <CommandItem
-                      key={emp.id}
-                      value={`${emp.firstName} ${emp.lastName}`}
-                      onSelect={() => {
-                        setFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                        setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                        setEmployeeSearchOpen(false);
-                        setEmployeeSearch("");
-                      }}
-                    >
-                      <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
-                      {emp.firstName} {emp.lastName}
-                    </CommandItem>
-                  ))}
+                  {(employees ?? []).map((emp) => {
+                      const empName = [emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown";
+                      return (
+                      <CommandItem
+                        key={emp.id}
+                        value={empName}
+                        onSelect={() => {
+                          setFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                          setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                          setEmployeeSearchOpen(false);
+                          setEmployeeSearch("");
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
+                        {empName}
+                      </CommandItem>
+                      );
+                    })}
                 </CommandGroup>
               </CommandList>
             </Command>
@@ -399,7 +402,7 @@ export function WorkLogFilterActions({
                             My Logs
                           </CommandItem>
                           {filteredEmployees.map((emp) => (
-                            <EmployeeCommandItem
+                                <EmployeeCommandItem
                               key={emp.id}
                               employee={emp}
                               isSelected={draftFilters.selectedUserId === emp.id}
@@ -460,9 +463,9 @@ function EmployeeCommandItem({
   }, [employee.id, onSelect, onClose, onClearSearch]);
 
   return (
-    <CommandItem value={`${employee.firstName} ${employee.lastName}`} onSelect={handleSelect}>
+    <CommandItem value={[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"} onSelect={handleSelect}>
       <Check className={cn("mr-2 h-4 w-4", isSelected ?"opacity-100" :"opacity-0")} />
-      {employee.firstName} {employee.lastName}
+      {[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"}
     </CommandItem>
   );
 }
