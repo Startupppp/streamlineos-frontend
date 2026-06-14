@@ -372,6 +372,13 @@
       "when": 1781288058100,
       "tag": "0113_remaining_org_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0120_drop_hr_training_module",
+      "breakpoints": true
     }
   ]
 }

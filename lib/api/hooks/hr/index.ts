@@ -7,7 +7,6 @@ export * from "./recruitment";
 export * from "./rich-documents";
 export * from "./performance";
 export * from "./analytics";
-export * from "./training";
 export * from "./exit";
 export * from "./termination";
 export * from "./recognition";

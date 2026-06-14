@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -89,10 +89,6 @@ export default function OrgSetupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  const goToDashboard = useCallback(() => {
-    window.location.href = "/dashboard";
-  }, []);
-
   const form = useForm<SetupValues>({
     resolver: zodResolver(setupSchema),
     defaultValues: {
@@ -129,6 +125,10 @@ export default function OrgSetupPage() {
     }
   }
 
+  const goToDashboard = () => {
+    window.location.href = "/dashboard";
+  };
+
   const currentStepIndex = step - 1;
 
   return (
@@ -150,8 +150,8 @@ export default function OrgSetupPage() {
         <ol className="flex items-center gap-0">
           {STEPS.map((s, index) => {
             const StepIcon = s.icon;
-            const isCompleted = showCelebration || s.id < step;
-            const isCurrent = !showCelebration && s.id === step;
+            const isCompleted = s.id < step;
+            const isCurrent = s.id === step;
 
             return (
               <li key={s.id} className="flex items-center flex-1 last:flex-initial min-w-0">
@@ -185,7 +185,7 @@ export default function OrgSetupPage() {
                   <div
                     className={cn(
                       "flex-1 h-0.5 mx-1 mt-[-0.75rem] hidden sm:block transition-colors",
-                      showCelebration || s.id < step ? "bg-emerald-500" : "bg-border",
+                      s.id < step ? "bg-emerald-500" : "bg-border",
                     )}
                     aria-hidden="true"
                   />
@@ -199,12 +199,7 @@ export default function OrgSetupPage() {
         </div>
       </nav>
 
-      <div
-        className={cn(
-          "bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 transition-opacity duration-300",
-          showCelebration && "pointer-events-none opacity-50",
-        )}
-      >
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
         {step === 1 && (
           <div className="space-y-4">
             <div>
@@ -363,7 +358,7 @@ export default function OrgSetupPage() {
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button type="submit" disabled={isSubmitting || showCelebration} className="flex-1 h-11">
+              <Button type="submit" disabled={isSubmitting} className="flex-1 h-11">
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {isSubmitting ? "Saving…" : "Finish setup"}
               </Button>

@@ -21,7 +21,7 @@ Every `isAdminOrOwner` / `isExpenseAdmin` / `isBlogAdmin` / role-string-equality
 | `app/api/hr/payrolls`, `hr/bonuses`, `hr/fnf` | 3 | `approve hr:payroll` |
 | `app/api/hr/loans`, `hr/reimbursements` | 4 | `approve hr:expenses` |
 | `app/api/hr/employees/**`, `hr/departments`, `hr/termination/**`, `hr/recruitment/**`, `hr/interview-questions`, `hr/background-verification`, `hr/team-events`, `hr/helpdesk` | 14 | `manage hr:employees` |
-| `app/api/hr/performance/**`, `hr/training`, `hr/learning-paths`, `hr/surveys`, `hr/assessments`, `hr/enps`, `hr/employees/[id]/manager-scorecard` | 14 | `manage hr:performance` |
+| `app/api/hr/performance/**`, `hr/learning-paths`, `hr/surveys`, `hr/assessments`, `hr/enps`, `hr/employees/[id]/manager-scorecard` | 14 | `manage hr:performance` |
 | `app/api/hr/devices/**`, `hr/assets/**`, `hr/asset-returns` | 5 | `manage hr:assets` |
 | `app/api/hr/documents/**`, `hr/compliance` | 4 | `manage hr:documents` |
 | `app/api/hr/work-logs/**`, `hr/holidays/**` | 5 | `manage hr:attendance` |

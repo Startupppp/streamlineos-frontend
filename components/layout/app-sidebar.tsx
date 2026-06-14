@@ -140,10 +140,7 @@ export function AppSidebar({
     );
   }, []);
 
-  if (
-    !hasEverLoadedRef.current &&
-    (status === "loading" || (status === "authenticated" && !role))
-  ) {
+  if (status === "loading") {
     return (
       <div className="flex flex-col h-full bg-sidebar">
         <div className="px-3 py-4 flex-1 space-y-6">
@@ -181,7 +178,7 @@ export function AppSidebar({
         <div
           className={cn(
             "flex items-center h-14 shrink-0 border-b border-sidebar-border",
-            isCollapsed ? "justify-center px-0" : "justify-between px-4"
+            isCollapsed ? "relative justify-center px-0" : "justify-between px-4"
           )}
         >
           {!isCollapsed && (
@@ -190,7 +187,7 @@ export function AppSidebar({
               onClick={onNavigate}
               className="flex items-center gap-3 min-w-0 group"
             >
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/30 shrink-0">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden shrink-0">
                 <Image
                   src="/logo.svg"
                   alt="StreamlineOS"
@@ -216,20 +213,32 @@ export function AppSidebar({
           )}
 
           {isCollapsed && (
-            <Link
-              href="/dashboard"
-              onClick={onNavigate}
-              className="h-10 w-10 rounded-xl overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/30 flex items-center justify-center"
-              aria-label="Go to dashboard"
-            >
-              <Image
-                src="/logo.svg"
-                alt="StreamlineOS"
-                width={26}
-                height={26}
-                className="object-contain"
-              />
-            </Link>
+            <>
+              <Link
+                href="/dashboard"
+                onClick={onNavigate}
+                className="h-10 w-10 rounded-xl overflow-hidden flex items-center justify-center"
+                aria-label="Go to dashboard"
+              >
+                <Image
+                  src="/logo.svg"
+                  alt="StreamlineOS"
+                  width={26}
+                  height={26}
+                  className="object-contain"
+                />
+              </Link>
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  aria-label="Expand sidebar"
+                  className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar transition-colors"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </>
           )}
 
           {onToggleCollapse && !isCollapsed && (
@@ -243,17 +252,6 @@ export function AppSidebar({
             </button>
           )}
         </div>
-
-        {onToggleCollapse && isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
-            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar transition-colors"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        )}
 
         <ScrollArea className="flex-1 min-h-0">
           <nav

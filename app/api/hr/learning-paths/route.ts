@@ -16,7 +16,7 @@ const createSchema = z.object({
   targetRole: z.string().max(100).optional(),
   steps: z.array(z.object({
     order: z.number().int().min(1),
-    type: z.enum(["training", "assessment", "certification"]),
+    type: z.enum(["assessment", "certification"]),
     referenceId: z.number().int().positive(),
     title: z.string().min(1),
   })).min(1),
