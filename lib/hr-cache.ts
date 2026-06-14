@@ -10,6 +10,7 @@ export const HR_CACHE = {
   heatmap: (orgId: string, userId: string, year: number) => `hr:heatmap:${orgId}:${userId}:${year}`,
   dashboardMetrics: (orgId: string) => `hr:dashboard:metrics:${orgId}`,
   headcountTrends: (orgId: string) => `hr:dashboard:headcount-trends:${orgId}`,
+  attendanceAnalytics: (orgId: string) => `hr:dashboard:attendance-analytics:${orgId}`,
 } as const;
 
 

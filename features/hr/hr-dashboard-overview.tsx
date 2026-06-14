@@ -15,6 +15,7 @@ import {
   useHrPayrollSummary,
   useHrSalaryBands,
   useHrCompliance,
+  useHrAttendanceAnalytics,
 } from "@/lib/api/hooks/hr/dashboard";
 import { useHrLeaveAnalytics } from "@/lib/api/hooks/hr/leaves-expenses";
 import { useAnniversaryFeed } from "@/lib/api/hooks/hr";
@@ -38,6 +39,10 @@ import {
   Download,
   PartyPopper,
   Trophy,
+  Activity,
+  Home,
+  AlarmClock,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -685,6 +690,113 @@ function AnniversaryFeedWidget() {
   );
 }
 
+function AttendanceAnalyticsWidget() {
+  const { data, isLoading } = useHrAttendanceAnalytics();
+
+  const statItems = [
+    {
+      label: "Attendance Rate",
+      value: isLoading ? "—" : `${data?.attendancePct ?? 0}%`,
+      icon: Activity,
+      color: "text-green-600",
+      bg: "bg-green-50 dark:bg-green-950/30",
+    },
+    {
+      label: "Absenteeism Rate",
+      value: isLoading ? "—" : `${data?.absenteeismPct ?? 0}%`,
+      icon: TrendingDown,
+      color: "text-red-600",
+      bg: "bg-red-50 dark:bg-red-950/30",
+    },
+    {
+      label: "Late Arrivals",
+      value: isLoading ? "—" : (data?.lateArrivals ?? 0),
+      icon: AlarmClock,
+      color: "text-amber-600",
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+    },
+    {
+      label: "WFH Approved",
+      value: isLoading ? "—" : (data?.wfhApproved ?? 0),
+      icon: Home,
+      color: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      label: "Overtime Sessions",
+      value: isLoading ? "—" : (data?.overtimeInstances ?? 0),
+      icon: Zap,
+      color: "text-purple-600",
+      bg: "bg-purple-50 dark:bg-purple-950/30",
+    },
+    {
+      label: "Working Days So Far",
+      value: isLoading ? "—" : (data?.workingDaysSoFar ?? 0),
+      icon: Clock,
+      color: "text-muted-foreground",
+      bg: "bg-muted/50",
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-medium">Attendance Analytics (This Month)</CardTitle>
+        <Link href="/hr/attendance" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          View details
+        </Link>
+      </CardHeader>
+      <CardContent className="p-4 pt-2 space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {statItems.map((item) => (
+            <div key={item.label} className="flex flex-col gap-1.5 rounded-lg border p-3">
+              <div className={`h-7 w-7 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
+                <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-tight">{item.label}</p>
+              <p className="text-lg font-semibold leading-none">{item.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {!isLoading && data && data.byDepartment.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Department-wise Attendance</p>
+            <div className="space-y-2">
+              {data.byDepartment.slice(0, 6).map((dept) => {
+                const pct = dept.expectedCount > 0
+                  ? Math.round((dept.presentCount / dept.expectedCount) * 100)
+                  : 0;
+                const barColor = pct >= 80 ? "bg-green-500" : pct >= 60 ? "bg-amber-500" : "bg-red-500";
+                return (
+                  <div key={dept.name} className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground w-28 truncate shrink-0">{dept.name}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${barColor} transition-all`}
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] tabular-nums text-muted-foreground w-8 text-right shrink-0">
+                      {pct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-3 rounded w-full" />)}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function HrDashboardOverview() {
   const { data: session } = useSession();
   const role = session?.user?.role;
@@ -764,6 +876,8 @@ export function HrDashboardOverview() {
       </div>
 
       <LeaveAnalyticsWidget />
+
+      <AttendanceAnalyticsWidget />
 
       <AnniversaryFeedWidget />
     </div>
