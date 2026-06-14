@@ -32,7 +32,7 @@ export function ChannelItem({
       ? onlineUserIds.has(otherMember.id)
       : false;
 
-  const hasUnread = channel.unreadCount > 0;
+  const hasUnread = channel.unreadCount > 0 && !isActive;
 
   return (
     <button

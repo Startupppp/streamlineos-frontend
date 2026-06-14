@@ -323,10 +323,10 @@ export function useVotePoll() {
 }
 
 
-export function useToggleReaction(channelId: number, messageId: number) {
+export function useToggleReaction(channelId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ emoji }: { emoji: string }) =>
+    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
       apiClient.post<{ reactions: Record<string, string[]> }>(
         `/chat/channels/${channelId}/messages/${messageId}/reactions`,
         { emoji }
