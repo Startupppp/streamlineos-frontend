@@ -13,12 +13,22 @@ const postDeviceSchema = z.object({
   deviceType: z.string().min(1, "Device type is required"),
   deviceName: z
     .string()
-    .min(1, "Device name is required")
-    .max(100)
+    .min(2, "Device name must be at least 2 characters")
+    .max(100, "Device name is too long")
+    .refine((v) => v === v.trim(), "Device name must not have leading or trailing spaces")
+    .refine((v) => !/\s{2,}/.test(v), "Device name cannot have consecutive spaces")
     .refine((v) => /[a-zA-Z]/.test(v), "Device name must contain at least one letter"),
-  serialNumber: z.string().min(1, "Serial number is required").max(100),
-  brand: z.string().min(1, "Brand is required").max(100),
-  model: z.string().min(1, "Model is required").max(100),
+  serialNumber: z
+    .string()
+    .min(3, "Serial number must be at least 3 characters")
+    .max(100, "Serial number is too long")
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Serial number must contain alphanumeric characters"),
+  brand: z
+    .string()
+    .min(1, "Brand is required")
+    .max(100, "Brand is too long")
+    .refine((v) => /[a-zA-Z]/.test(v.trim()), "Brand must contain at least one letter"),
+  model: z.string().min(1, "Model is required").max(100, "Model is too long"),
   notes: z.string().max(500).optional(),
   assignedDate: z.string().optional(),
 });
