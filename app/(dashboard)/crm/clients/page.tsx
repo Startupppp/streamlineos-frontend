@@ -10,6 +10,7 @@ import {
   ChevronRight, LayoutGrid, List, MessageSquare,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -281,25 +282,11 @@ export default function ClientAccountsPage() {
       <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
 
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-5">
-        {[
-          { label: "Total", value: stats?.total ?? 0, icon: Users, color: "text-foreground" },
-          { label: "Account Opening", value: stats?.accountOpening ?? 0, icon: ClipboardList, color: "text-blue-400" },
-          { label: "Queries", value: stats?.queries ?? 0, icon: MessageSquare, color: "text-amber-400" },
-          { label: "Plan Selected", value: stats?.planSelected ?? 0, icon: FileCheck, color: "text-purple-400" },
-          { label: "Invested", value: stats?.invested ?? 0, icon: IndianRupee, color: "text-emerald-400" },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <s.icon className={cn("h-5 w-5", s.color)} />
-                <span className={cn("text-2xl font-bold tabular-nums", s.color)}>
-                  {statsLoading ? <Skeleton className="h-7 w-8" /> : s.value}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard label="Total" value={statsLoading ? "…" : (stats?.total ?? 0)} icon={Users} color="blue" index={0} />
+        <StatCard label="Account Opening" value={statsLoading ? "…" : (stats?.accountOpening ?? 0)} icon={ClipboardList} color="cyan" index={1} />
+        <StatCard label="Queries" value={statsLoading ? "…" : (stats?.queries ?? 0)} icon={MessageSquare} color="amber" index={2} />
+        <StatCard label="Plan Selected" value={statsLoading ? "…" : (stats?.planSelected ?? 0)} icon={FileCheck} color="violet" index={3} />
+        <StatCard label="Invested" value={statsLoading ? "…" : (stats?.invested ?? 0)} icon={IndianRupee} color="green" index={4} />
       </motion.div>
 
       {viewMode === "kanban" && (

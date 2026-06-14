@@ -10,6 +10,7 @@ import {
 import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
 import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,52 +107,10 @@ export default function EpicsPage({ params }: PageProps) {
       <div className="space-y-8" aria-live="polite" aria-atomic="true">
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold">{epics.length}</p>
-                <p className="text-sm text-muted-foreground">Epics</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold">{stories.length}</p>
-                <p className="text-sm text-muted-foreground">Stories</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-slate-500" />
-              <div>
-                <p className="text-2xl font-bold">{tasks.length}</p>
-                <p className="text-sm text-muted-foreground">Tasks</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold">
-                  {tickets.filter(t => t.status === "DONE").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Completed</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
+        <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
+        <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
+        <StatCard label="Completed" value={tickets.filter(t => t.status === "DONE").length} icon={CheckCircle2} color="green" index={3} />
       </div>
 
       <div className="space-y-4">

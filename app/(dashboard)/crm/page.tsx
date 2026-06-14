@@ -8,6 +8,7 @@ import {
   FileText, Briefcase, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -124,19 +125,10 @@ export default function CrmHubPage() {
       <motion.div className="space-y-4 pb-4" variants={staggerContainer} initial="hidden" animate="visible">
 
         <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          {[
-            { label: "Total Leads", value: leadStats?.total ?? 0, color: "text-blue-400" },
-            { label: "Active Deals", value: dealStats?.active ?? 0, color: "text-emerald-400" },
-            { label: "Pipeline Value", value: formatINRCompact(dealStats?.pipelineValue ?? 0), color: "text-blue-600" },
-            { label: "Conversion", value: `${leadStats?.conversionRate ?? 0}%`, color: "text-amber-400" },
-          ].map((s) => (
-            <Card key={s.label} className="shadow-sm">
-              <CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</p>
-                <p className={cn("text-xl font-bold tabular-nums mt-0.5", s.color)}>{s.value}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <StatCard label="Total Leads" value={leadStats?.total ?? 0} icon={UserPlus} color="blue" index={0} />
+          <StatCard label="Active Deals" value={dealStats?.active ?? 0} icon={Briefcase} color="green" index={1} />
+          <StatCard label="Pipeline Value" value={formatINRCompact(dealStats?.pipelineValue ?? 0)} icon={DollarSign} color="cyan" index={2} />
+          <StatCard label="Conversion" value={`${leadStats?.conversionRate ?? 0}%`} icon={TrendingUp} color="amber" index={3} />
         </motion.div>
 
         {leadStats && (
