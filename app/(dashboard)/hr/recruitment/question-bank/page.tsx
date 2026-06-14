@@ -10,6 +10,7 @@ import {
   useDeleteInterviewQuestion,
   type InterviewQuestion,
 } from "@/lib/api/hooks/hr/recruitment";
+import { useJobPostings } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,76 @@ const EMPTY_FORM: QuestionFormState = {
   keywords: "",
 };
 
-function EditButton({ question, existingRoles }: { question: InterviewQuestion; existingRoles: string[] }) {
+function RolePicker({
+  value,
+  roleInput,
+  options,
+  open,
+  onOpenChange,
+  onSelect,
+  onInputChange,
+  onUseCustom,
+}: {
+  value: string;
+  roleInput: string;
+  options: string[];
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSelect: (role: string) => void;
+  onInputChange: (v: string) => void;
+  onUseCustom: () => void;
+}) {
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+          {value || "Select or type a role..."}
+          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command>
+          <CommandInput
+            placeholder="Search or enter a role..."
+            value={roleInput}
+            onValueChange={onInputChange}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {roleInput.trim() ? (
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                  onClick={onUseCustom}
+                >
+                  Use &quot;{roleInput.trim()}&quot;
+                </button>
+              ) : (
+                <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
+              )}
+            </CommandEmpty>
+            {options.length > 0 && (
+              <CommandGroup heading="Roles">
+                {options.map((role) => (
+                  <CommandItem
+                    key={role}
+                    value={role}
+                    onSelect={() => onSelect(role)}
+                  >
+                    <Check className={cn("mr-2 h-4 w-4", value === role ? "opacity-100" : "opacity-0")} />
+                    {role}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function EditButton({ question, roleOptions }: { question: InterviewQuestion; roleOptions: string[] }) {
   const [open, setOpen] = useState(false);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const [form, setForm] = useState<QuestionFormState>({
@@ -112,6 +182,20 @@ function EditButton({ question, existingRoles }: { question: InterviewQuestion; 
       }
     );
   }, [form, update]);
+
+  const handleRoleSelect = useCallback((role: string) => {
+    setForm((f) => ({ ...f, role, roleInput: "" }));
+    setRolePickerOpen(false);
+  }, []);
+
+  const handleRoleInputChange = useCallback((v: string) => {
+    setForm((f) => ({ ...f, roleInput: v }));
+  }, []);
+
+  const handleUseCustomRole = useCallback(() => {
+    setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
+    setRolePickerOpen(false);
+  }, []);
 
   return (
     <>
@@ -160,58 +244,16 @@ function EditButton({ question, existingRoles }: { question: InterviewQuestion; 
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">For Role <span className="text-muted-foreground font-normal">(optional)</span></label>
-              <Popover open={rolePickerOpen} onOpenChange={setRolePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={rolePickerOpen} className="w-full justify-between font-normal">
-                    {form.role || "Select or type a role..."}
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput
-                      placeholder="Search or enter a role..."
-                      value={form.roleInput}
-                      onValueChange={(v) => setForm((f) => ({ ...f, roleInput: v }))}
-                    />
-                    <CommandList>
-                      <CommandEmpty>
-                        {form.roleInput.trim() ? (
-                          <button
-                            type="button"
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
-                            onClick={() => {
-                              setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
-                              setRolePickerOpen(false);
-                            }}
-                          >
-                            Use &quot;{form.roleInput.trim()}&quot;
-                          </button>
-                        ) : (
-                          <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
-                        )}
-                      </CommandEmpty>
-                      {existingRoles.length > 0 && (
-                        <CommandGroup heading="Existing Roles">
-                          {existingRoles.map((role) => (
-                            <CommandItem
-                              key={role}
-                              value={role}
-                              onSelect={() => {
-                                setForm((f) => ({ ...f, role, roleInput: "" }));
-                                setRolePickerOpen(false);
-                              }}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", form.role === role ? "opacity-100" : "opacity-0")} />
-                              {role}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <RolePicker
+                value={form.role}
+                roleInput={form.roleInput}
+                options={roleOptions}
+                open={rolePickerOpen}
+                onOpenChange={setRolePickerOpen}
+                onSelect={handleRoleSelect}
+                onInputChange={handleRoleInputChange}
+                onUseCustom={handleUseCustomRole}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
@@ -251,36 +293,70 @@ function EditButton({ question, existingRoles }: { question: InterviewQuestion; 
   );
 }
 
-function DeleteButton({ questionId }: { questionId: number }) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const del = useDeleteInterviewQuestion(questionId);
-
-  const handleConfirm = useCallback(() => {
-    del.mutate(undefined, {
-      onSuccess: () => { toast.success("Question deleted"); setConfirmOpen(false); },
-      onError: (e) => { toast.error(getErrorMessage(e)); setConfirmOpen(false); },
-    });
-  }, [del]);
+function QuestionRow({
+  question,
+  roleOptions,
+  onDeleteRequest,
+}: {
+  question: InterviewQuestion;
+  roleOptions: string[];
+  onDeleteRequest: (id: number) => void;
+}) {
+  const handleDeleteClick = useCallback(() => {
+    onDeleteRequest(question.id);
+  }, [question.id, onDeleteRequest]);
 
   return (
-    <>
-      <DropdownMenuItem
-        onClick={() => setConfirmOpen(true)}
-        className="text-destructive"
-      >
-        <Trash2 className="mr-2 h-4 w-4" />Delete
-      </DropdownMenuItem>
-      <ConfirmActionDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="Delete Question"
-        description="Are you sure you want to delete this question from the bank? This action cannot be undone."
-        confirmLabel="Delete"
-        variant="destructive"
-        onConfirm={handleConfirm}
-        isPending={del.isPending}
-      />
-    </>
+    <TableRow>
+      <TableCell className="max-w-[400px]">
+        <p className="text-sm line-clamp-2">{question.question}</p>
+        {question.keywords && question.keywords.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {question.keywords.slice(0, 3).map((kw) => (
+              <Badge key={kw} variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">{kw}</Badge>
+            ))}
+            {question.keywords.length > 3 && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">+{question.keywords.length - 3}</Badge>
+            )}
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className="text-xs">
+          <BookOpen className="mr-1 h-3 w-3" />
+          {question.category.replace("_", " ")}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <Badge variant={DIFFICULTY_VARIANT[question.difficulty] ?? "secondary"} className="text-xs">
+          {question.difficulty}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">{question.role ?? "—"}</TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {(question.tags ?? []).slice(0, 3).map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-[10px] px-1 py-0">{tag}</Badge>
+          ))}
+          {(question.tags ?? []).length > 3 && (
+            <Badge variant="secondary" className="text-[10px] px-1 py-0">+{(question.tags ?? []).length - 3}</Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <EditButton question={question} roleOptions={roleOptions} />
+            <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -290,6 +366,7 @@ export default function QuestionBankPage() {
   const [difficulty, setDifficulty] = useState("ALL");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const [form, setForm] = useState<QuestionFormState>(EMPTY_FORM);
 
@@ -299,12 +376,16 @@ export default function QuestionBankPage() {
     q: search || undefined,
   });
 
-  const existingRoles = useMemo(() => {
-    const roles = (questions ?? []).map((q) => q.role).filter((r): r is string => !!r);
-    return [...new Set(roles)].sort();
-  }, [questions]);
+  const { data: jobPostings } = useJobPostings({ status: "OPEN" });
+
+  const roleOptions = useMemo(() => {
+    const fromQuestions = (questions ?? []).map((q) => q.role).filter((r): r is string => !!r);
+    const fromJobs = (jobPostings ?? []).map((j) => j.title).filter(Boolean);
+    return [...new Set([...fromQuestions, ...fromJobs])].sort();
+  }, [questions, jobPostings]);
 
   const createQuestion = useCreateInterviewQuestion();
+  const deleteQuestion = useDeleteInterviewQuestion(deleteTargetId ?? 0);
 
   const handleCloseSheet = useCallback(() => {
     setSheetOpen(false);
@@ -341,6 +422,42 @@ export default function QuestionBankPage() {
       }
     );
   }, [form, createQuestion, handleCloseSheet]);
+
+  const handleDeleteRequest = useCallback((id: number) => {
+    setDeleteTargetId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (deleteTargetId === null) return;
+    deleteQuestion.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("Question deleted");
+        setDeleteTargetId(null);
+      },
+      onError: (e) => {
+        toast.error(getErrorMessage(e));
+        setDeleteTargetId(null);
+      },
+    });
+  }, [deleteTargetId, deleteQuestion]);
+
+  const handleDeleteCancel = useCallback((open: boolean) => {
+    if (!open) setDeleteTargetId(null);
+  }, []);
+
+  const handleRoleSelect = useCallback((role: string) => {
+    setForm((f) => ({ ...f, role, roleInput: "" }));
+    setRolePickerOpen(false);
+  }, []);
+
+  const handleRoleInputChange = useCallback((v: string) => {
+    setForm((f) => ({ ...f, roleInput: v }));
+  }, []);
+
+  const handleUseCustomRole = useCallback(() => {
+    setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
+    setRolePickerOpen(false);
+  }, []);
 
   return (
     <PageWrapper
@@ -397,63 +514,16 @@ export default function QuestionBankPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">For Role <span className="text-muted-foreground font-normal">(optional)</span></label>
-                  <Popover open={rolePickerOpen} onOpenChange={setRolePickerOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={rolePickerOpen}
-                        className="w-full justify-between font-normal"
-                      >
-                        {form.role || "Select or type a role..."}
-                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search or enter a role..."
-                          value={form.roleInput}
-                          onValueChange={(v) => setForm((f) => ({ ...f, roleInput: v }))}
-                        />
-                        <CommandList>
-                          <CommandEmpty>
-                            {form.roleInput.trim() ? (
-                              <button
-                                type="button"
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
-                                onClick={() => {
-                                  setForm((f) => ({ ...f, role: f.roleInput.trim(), roleInput: "" }));
-                                  setRolePickerOpen(false);
-                                }}
-                              >
-                                Use &quot;{form.roleInput.trim()}&quot;
-                              </button>
-                            ) : (
-                              <p className="py-2 text-center text-sm text-muted-foreground">No roles found. Type to add.</p>
-                            )}
-                          </CommandEmpty>
-                          {existingRoles.length > 0 && (
-                            <CommandGroup heading="Existing Roles">
-                              {existingRoles.map((role) => (
-                                <CommandItem
-                                  key={role}
-                                  value={role}
-                                  onSelect={() => {
-                                    setForm((f) => ({ ...f, role, roleInput: "" }));
-                                    setRolePickerOpen(false);
-                                  }}
-                                >
-                                  <Check className={cn("mr-2 h-4 w-4", form.role === role ? "opacity-100" : "opacity-0")} />
-                                  {role}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <RolePicker
+                    value={form.role}
+                    roleInput={form.roleInput}
+                    options={roleOptions}
+                    open={rolePickerOpen}
+                    onOpenChange={setRolePickerOpen}
+                    onSelect={handleRoleSelect}
+                    onInputChange={handleRoleInputChange}
+                    onUseCustom={handleUseCustomRole}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tags <span className="text-muted-foreground font-normal">(comma-separated)</span></label>
@@ -551,60 +621,29 @@ export default function QuestionBankPage() {
               </TableHeader>
               <TableBody>
                 {questions.map((q) => (
-                  <TableRow key={q.id}>
-                    <TableCell className="max-w-[400px]">
-                      <p className="text-sm line-clamp-2">{q.question}</p>
-                      {q.keywords && q.keywords.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {q.keywords.slice(0, 3).map((kw) => (
-                            <Badge key={kw} variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">{kw}</Badge>
-                          ))}
-                          {q.keywords.length > 3 && (
-                            <Badge variant="outline" className="text-[10px] px-1 py-0 border-amber-400/60 text-amber-600">+{q.keywords.length - 3}</Badge>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        <BookOpen className="mr-1 h-3 w-3" />
-                        {q.category.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={DIFFICULTY_VARIANT[q.difficulty] ?? "secondary"} className="text-xs">
-                        {q.difficulty}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{q.role ?? "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(q.tags ?? []).slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-[10px] px-1 py-0">{tag}</Badge>
-                        ))}
-                        {(q.tags ?? []).length > 3 && (
-                          <Badge variant="secondary" className="text-[10px] px-1 py-0">+{(q.tags ?? []).length - 3}</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <EditButton question={q} existingRoles={existingRoles} />
-                          <DeleteButton questionId={q.id} />
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                  <QuestionRow
+                    key={q.id}
+                    question={q}
+                    roleOptions={roleOptions}
+                    onDeleteRequest={handleDeleteRequest}
+                  />
                 ))}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
+
+      <ConfirmActionDialog
+        open={deleteTargetId !== null}
+        onOpenChange={handleDeleteCancel}
+        title="Delete Question"
+        description="Are you sure you want to delete this question from the bank? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteQuestion.isPending}
+      />
     </PageWrapper>
   );
 }
