@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow, startOfMonth } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import { Heart, Plus, Award, Users, Lightbulb, Zap, Check, ChevronsUpDown, Trophy, TrendingUp } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
@@ -161,39 +162,9 @@ export default function RecognitionPage() {
     >
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-xl font-bold">{stats.total}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Heart className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">This Month</p>
-                <p className="text-xl font-bold">{stats.thisMonth}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                <Award className="h-4 w-4 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">My Given</p>
-                <p className="text-xl font-bold">{stats.myGiven}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard label="Total" value={stats.total} icon={TrendingUp} color="blue" index={0} />
+          <StatCard label="This Month" value={stats.thisMonth} icon={Heart} color="cyan" index={1} />
+          <StatCard label="My Given" value={stats.myGiven} icon={Award} color="amber" index={2} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">

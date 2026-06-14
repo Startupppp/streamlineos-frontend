@@ -25,6 +25,7 @@ import {
   IndianRupee, CheckCircle2, XCircle, Clock, Settings,
   TrendingUp, Users, Percent, History,
 } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   useHrIncentiveStats,
   useHrIncentives,
@@ -249,23 +250,11 @@ export default function IncentivesPage() {
       <div className="space-y-6">
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
-          {[
-            { label: "This Month", value: formatINR(stats?.thisMonth), icon: IndianRupee, color: "text-emerald-400" },
-            { label: "Total Revenue", value: formatINR(stats?.totalRevenue), icon: TrendingUp, color: "text-blue-400" },
-            { label: "Avg / Conversion", value: formatINR(stats?.avgPerConversion), icon: Users, color: "text-purple-400" },
-            { label: "Pending", value: stats?.pending ?? 0, icon: Clock, color: "text-amber-400" },
-            { label: "Approved", value: stats?.approved ?? 0, icon: CheckCircle2, color: "text-emerald-400" },
-          ].map(s => (
-            <Card key={s.label}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <s.icon className={cn("h-5 w-5", s.color)} />
-                  <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <StatCard label="This Month" value={formatINR(stats?.thisMonth)} icon={IndianRupee} color="green" index={0} />
+          <StatCard label="Total Revenue" value={formatINR(stats?.totalRevenue)} icon={TrendingUp} color="blue" index={1} />
+          <StatCard label="Avg / Conversion" value={formatINR(stats?.avgPerConversion)} icon={Users} color="violet" index={2} />
+          <StatCard label="Pending" value={stats?.pending ?? 0} icon={Clock} color="amber" index={3} />
+          <StatCard label="Approved" value={stats?.approved ?? 0} icon={CheckCircle2} color="green" index={4} />
         </div>
 
         {currentConfig && (

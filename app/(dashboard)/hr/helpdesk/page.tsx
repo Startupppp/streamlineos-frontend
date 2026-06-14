@@ -8,8 +8,8 @@ import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/lib/api/hooks/h
 import { AISuggestReplyButton } from "@/features/hr/helpdesk/ai-suggest-reply-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Search, Ticket, Clock, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import { formatDistanceToNow, format } from "date-fns";
 import type { TicketPriority, TicketStatus, HelpdeskTicket } from "@/types/hr";
 
@@ -69,23 +70,6 @@ const CATEGORY_OPTIONS = [
   "Other",
 ];
 
-function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "DONE": return "default";
-    case "IN_PROGRESS": return "secondary";
-    case "IN_REVIEW": return "outline";
-    default: return "destructive";
-  }
-}
-
-function priorityBadgeVariant(priority: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (priority) {
-    case "URGENT": return "destructive";
-    case "HIGH": return "default";
-    case "MEDIUM": return "secondary";
-    default: return "outline";
-  }
-}
 
 function TicketDetailSheet({
   ticket,
@@ -107,15 +91,11 @@ function TicketDetailSheet({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-0.5">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Status</p>
-                <Badge variant={statusBadgeVariant(ticket.status)} className="text-xs">
-                  {(ticket.status ?? "TODO").replace("_", " ")}
-                </Badge>
+                <StatusBadge status={ticket.status ?? "TODO"} />
               </div>
               <div className="space-y-0.5">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Priority</p>
-                <Badge variant={priorityBadgeVariant(ticket.priority)} className="text-xs">
-                  {ticket.priority ?? "MEDIUM"}
-                </Badge>
+                <StatusBadge status={ticket.priority ?? "MEDIUM"} type="priority" />
               </div>
               <div className="space-y-0.5">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Category</p>
@@ -385,22 +365,10 @@ export default function HelpdeskPage() {
       <div className="space-y-6">
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: "Total", value: stats.total, icon: Ticket, color: "" },
-            { label: "Open", value: stats.open, icon: AlertCircle, color: "text-orange-500" },
-            { label: "In Progress", value: stats.inProgress, icon: Clock, color: "text-blue-500" },
-            { label: "Resolved", value: stats.resolved, icon: CheckCircle2, color: "text-green-500" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Icon className={`h-3.5 w-3.5 ${color}`} />
-                  <span className="text-xs">{label}</span>
-                </div>
-                <p className="text-xl font-bold">{value}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <StatCard label="Total" value={stats.total} icon={Ticket} color="blue" index={0} />
+          <StatCard label="Open" value={stats.open} icon={AlertCircle} color="amber" index={1} />
+          <StatCard label="In Progress" value={stats.inProgress} icon={Clock} color="cyan" index={2} />
+          <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle2} color="green" index={3} />
         </div>
 
         <Card>
@@ -446,14 +414,10 @@ export default function HelpdeskPage() {
                             <span className="text-sm">{ticket.category ?? "—"}</span>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={priorityBadgeVariant(ticket.priority)}>
-                              {ticket.priority ?? "MEDIUM"}
-                            </Badge>
+                            <StatusBadge status={ticket.priority ?? "MEDIUM"} type="priority" />
                           </TableCell>
                           <TableCell>
-                            <Badge variant={statusBadgeVariant(ticket.status)}>
-                              {(ticket.status ?? "TODO").replace("_", " ")}
-                            </Badge>
+                            <StatusBadge status={ticket.status ?? "TODO"} />
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {ticket.createdAt
