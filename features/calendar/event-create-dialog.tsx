@@ -71,6 +71,7 @@ interface FormState {
   endDate: string;
   endTime: string;
   attendeeIds: string[];
+  locationError: string;
 }
 
 function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
@@ -88,6 +89,7 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
+    locationError: "",
   };
 }
 
@@ -106,7 +108,17 @@ function toEditForm(event: CalendarListItem): FormState {
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
     attendeeIds: [],
+    locationError: "",
   };
+}
+
+function isValidUrl(value: string): boolean {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function getMemberName(member: { firstName: string | null; lastName: string | null; name: string | null }) {
@@ -193,7 +205,13 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   }, [set]);
 
   const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    set("location", e.target.value);
+    const value = e.target.value;
+    set("location", value);
+    if (value && /^https?:\/\//i.test(value) && !isValidUrl(value)) {
+      setForm((prev) => ({ ...prev, locationError: "Invalid URL format" }));
+    } else {
+      setForm((prev) => ({ ...prev, locationError: "" }));
+    }
   }, [set]);
 
   const handleAllDayChange = useCallback((v: boolean) => {
@@ -230,20 +248,24 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
       toast.error("Event title is required");
       return;
     }
-    if (trimmedTitle.length < 3) {
-      toast.error("Event title must be at least 3 characters");
+    if (!/^[a-zA-Z0-9]/.test(trimmedTitle)) {
+      toast.error("Event title must start with a letter or number");
       return;
     }
-    if (trimmedTitle.length > 200) {
-      toast.error("Event title must be at most 200 characters");
+    if (!/[a-zA-Z0-9]/.test(trimmedTitle)) {
+      toast.error("Event title must contain at least one letter or number");
       return;
     }
-    if (!/[a-zA-Z]/.test(trimmedTitle)) {
-      toast.error("Event title must contain at least one letter");
+    if (trimmedTitle.length < 2) {
+      toast.error("Event title must be at least 2 characters");
+      return;
+    }
+    if (trimmedTitle.length > 100) {
+      toast.error("Event title must be at most 100 characters");
       return;
     }
     if (/\s{2,}/.test(form.title)) {
-      toast.error("Event title cannot have multiple consecutive spaces");
+      toast.error("Event title cannot have consecutive spaces");
       return;
     }
     if (form.description) {
@@ -258,13 +280,9 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
     }
     if (form.location) {
       const loc = form.location.trim();
-      if (/^https?:\/\//i.test(loc)) {
-        try {
-          new URL(loc);
-        } catch {
-          toast.error("Location contains an invalid URL");
-          return;
-        }
+      if (/^https?:\/\//i.test(loc) && !isValidUrl(loc)) {
+        toast.error("Location contains an invalid URL");
+        return;
       }
     }
     if (!form.startDate) {
@@ -373,7 +391,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                   value={form.location}
                   onChange={handleLocationChange}
                   placeholder="Room A, Zoom link, https://meet.google.com/..."
-                  className="h-9 flex-1"
+                  className={cn("h-9 flex-1", form.locationError && "border-destructive")}
                 />
                 {meetStatus && (
                   meetStatus.connected ? (
@@ -391,8 +409,20 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                       Meet
                     </Button>
                   ) : meetStatus.authUrl ? (
-                    <a href={meetStatus.authUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                      <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5">
+                    <a
+                      href={form.location.trim() ? meetStatus.authUrl : undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn("shrink-0", !form.location.trim() && "pointer-events-none")}
+                      aria-disabled={!form.location.trim()}
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-1.5"
+                        disabled={!form.location.trim()}
+                      >
                         <Video className="h-3.5 w-3.5" />
                         Connect
                       </Button>
@@ -405,7 +435,10 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                   )
                 )}
               </div>
-              {meetStatus?.connected && meetStatus.googleEmail && (
+              {form.locationError && (
+                <p className="text-[11px] text-destructive">{form.locationError}</p>
+              )}
+              {!form.locationError && meetStatus?.connected && meetStatus.googleEmail && (
                 <p className="text-[11px] text-muted-foreground">Google: {meetStatus.googleEmail}</p>
               )}
             </div>
