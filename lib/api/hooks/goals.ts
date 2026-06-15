@@ -226,7 +226,7 @@ export function useCreateKeyResult(goalId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
       qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.list() });
+      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
     },
   });
@@ -240,7 +240,7 @@ export function useUpdateKeyResult(goalId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
       qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.list() });
+      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
     },
   });
@@ -253,7 +253,7 @@ export function useDeleteKeyResult(goalId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
       qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.list() });
+      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
     },
   });
@@ -266,7 +266,7 @@ export function useCheckIn(goalId: number) {
       apiClient.post<GoalListItem>(`/goals/${goalId}/check-in`, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.list() });
+      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
     },
   });

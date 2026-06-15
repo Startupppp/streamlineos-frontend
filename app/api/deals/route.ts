@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
 
     await Promise.all([
       invalidateCache(CACHE_KEYS.dealsForecast(session.orgId)),
+      invalidateCache(CACHE_KEYS.salesDashboard(session.orgId)),
       invalidateCachePattern(`deals:list:${session.orgId}:*`),
     ]);
     if (deal) {

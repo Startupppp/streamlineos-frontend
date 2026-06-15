@@ -39,6 +39,14 @@ export default function PublicHelpCenterPage() {
     setSearch(event.target.value);
   }
 
+  function handleSelectAllCategories() {
+    setActiveCategory(CATEGORY_ALL);
+  }
+
+  function handleSelectCategory(categoryId: number) {
+    setActiveCategory(String(categoryId));
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <section className="gradient-brand text-white">
@@ -70,11 +78,12 @@ export default function PublicHelpCenterPage() {
         ) : (
           <>
             {categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-6">
                 <Button
                   variant={activeCategory === CATEGORY_ALL ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setActiveCategory(CATEGORY_ALL)}
+                  onClick={handleSelectAllCategories}
+                  className="w-full"
                 >
                   All
                 </Button>
@@ -83,10 +92,11 @@ export default function PublicHelpCenterPage() {
                     key={category.id}
                     variant={activeCategory === String(category.id) ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setActiveCategory(String(category.id))}
+                    onClick={() => handleSelectCategory(category.id)}
+                    className="w-full justify-start min-w-0"
                   >
-                    <FolderTree className="h-3.5 w-3.5 mr-1" />
-                    {category.name}
+                    <FolderTree className="h-3.5 w-3.5 mr-1 shrink-0" />
+                    <span className="truncate">{category.name}</span>
                   </Button>
                 ))}
               </div>

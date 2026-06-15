@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { use, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,7 @@ import {
   FileText,
   ImageIcon,
   Download,
+  History,
 } from "lucide-react";
 import {
   useKbArticle,
@@ -78,6 +79,7 @@ import {
 import { getApiError } from "@/lib/api-client";
 import { resolveImageUrl } from "@/lib/utils";
 import { formatFileSize } from "@/lib/format-utils";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -86,6 +88,69 @@ const ATTACHMENT_ACCEPT =
 const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
 
 const CATEGORY_NONE = "none";
+
+interface ArticleDraft {
+  title: string;
+  categoryId: string;
+  excerpt: string;
+  content: string;
+  status: KbArticleStatus;
+  visibility: KbArticleVisibility;
+  tagsInput: string;
+}
+
+function draftStorageKey(articleId: number): string {
+  return `kb-draft-${articleId}`;
+}
+
+function isArticleStatus(value: unknown): value is KbArticleStatus {
+  return value === "draft" || value === "published" || value === "archived";
+}
+
+function isArticleVisibility(value: unknown): value is KbArticleVisibility {
+  return value === "internal" || value === "public";
+}
+
+function parseDraft(value: unknown): ArticleDraft | null {
+  if (typeof value !== "object" || value === null) return null;
+  const record: Record<string, unknown> = { ...value };
+  const { title, categoryId, excerpt, content, status, visibility, tagsInput } = record;
+  if (
+    typeof title !== "string" ||
+    typeof categoryId !== "string" ||
+    typeof excerpt !== "string" ||
+    typeof content !== "string" ||
+    typeof tagsInput !== "string" ||
+    !isArticleStatus(status) ||
+    !isArticleVisibility(visibility)
+  ) {
+    return null;
+  }
+  return { title, categoryId, excerpt, content, status, visibility, tagsInput };
+}
+
+function readDraft(articleId: number): ArticleDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(draftStorageKey(articleId));
+    if (!raw) return null;
+    return parseDraft(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function articleToDraft(article: KbArticleDetail): ArticleDraft {
+  return {
+    title: article.title,
+    categoryId: article.categoryId ? String(article.categoryId) : CATEGORY_NONE,
+    excerpt: article.excerpt ?? "",
+    content: article.content ?? "",
+    status: article.status,
+    visibility: article.visibility,
+    tagsInput: (article.tags ?? []).join(", "),
+  };
+}
 
 function ArticleFeedbackPanel({ article }: { article: KbArticleDetail }) {
   const feedbackQuery = useKbArticleFeedback(article.id);
@@ -496,6 +561,49 @@ function ArticleEditor({
   const [visibility, setVisibility] = useState<KbArticleVisibility>(article.visibility);
   const [tagsInput, setTagsInput] = useState((article.tags ?? []).join(", "));
 
+  const baseline = useMemo(() => articleToDraft(article), [article]);
+  const [pendingDraft, setPendingDraft] = useState<ArticleDraft | null>(() => {
+    const stored = readDraft(article.id);
+    if (!stored) return null;
+    return JSON.stringify(stored) === JSON.stringify(articleToDraft(article)) ? null : stored;
+  });
+
+  const currentDraft = useMemo<ArticleDraft>(
+    () => ({ title, categoryId, excerpt, content, status, visibility, tagsInput }),
+    [title, categoryId, excerpt, content, status, visibility, tagsInput],
+  );
+  const debouncedDraft = useDebouncedValue(currentDraft, 1000);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = draftStorageKey(article.id);
+    if (JSON.stringify(debouncedDraft) === JSON.stringify(baseline)) {
+      window.localStorage.removeItem(key);
+      return;
+    }
+    window.localStorage.setItem(key, JSON.stringify(debouncedDraft));
+  }, [debouncedDraft, baseline, article.id]);
+
+  function handleRestoreDraft() {
+    if (!pendingDraft) return;
+    setTitle(pendingDraft.title);
+    setCategoryId(pendingDraft.categoryId);
+    setExcerpt(pendingDraft.excerpt);
+    setContent(pendingDraft.content);
+    setStatus(pendingDraft.status);
+    setVisibility(pendingDraft.visibility);
+    setTagsInput(pendingDraft.tagsInput);
+    setPendingDraft(null);
+    toast.success("Draft restored");
+  }
+
+  function handleDiscardDraft() {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(draftStorageKey(article.id));
+    }
+    setPendingDraft(null);
+  }
+
   const tags = useMemo(
     () =>
       tagsInput
@@ -538,7 +646,13 @@ function ArticleEditor({
         tags: tags.length > 0 ? tags : null,
       },
       {
-        onSuccess: () => toast.success("Article saved"),
+        onSuccess: () => {
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(draftStorageKey(article.id));
+          }
+          setPendingDraft(null);
+          toast.success("Article saved");
+        },
         onError: (e) => toast.error(getApiError(e)),
       },
     );
@@ -565,6 +679,25 @@ function ArticleEditor({
         </>
       }
     >
+      {pendingDraft && (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/20 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2 min-w-0">
+            <History className="h-4 w-4 mt-0.5 shrink-0" />
+            <p className="text-sm">
+              Unsaved changes from a previous session were found. Restore them?
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="outline" onClick={handleDiscardDraft}>
+              Discard
+            </Button>
+            <Button size="sm" onClick={handleRestoreDraft}>
+              Restore
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <div className="space-y-1">

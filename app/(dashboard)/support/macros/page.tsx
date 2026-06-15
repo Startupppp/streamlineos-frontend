@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,9 +41,11 @@ import { toast } from "sonner";
 
 function MacroDialog({
   macro,
+  categoryOptions,
   onClose,
 }: {
   macro?: SupportMacro;
+  categoryOptions: string[];
   onClose: () => void;
 }) {
   const isEdit = !!macro;
@@ -108,10 +110,21 @@ function MacroDialog({
             <Label htmlFor="macro-category">Category</Label>
             <Input
               id="macro-category"
+              list="macro-category-options"
               placeholder="e.g. Billing"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             />
+            {categoryOptions.length > 0 && (
+              <datalist id="macro-category-options">
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Pick an existing category to keep grouping consistent, or type a new one.
+            </p>
           </div>
           <div className="space-y-1">
             <Label htmlFor="macro-body">Body *</Label>
@@ -195,6 +208,17 @@ export default function SupportMacrosPage() {
   );
   const deleteMacro = useDeleteMacro();
 
+  const categoryOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const macro of macros ?? []) {
+      const value = macro.category?.trim();
+      if (value && !seen.has(value.toLowerCase())) {
+        seen.set(value.toLowerCase(), value);
+      }
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }, [macros]);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<SupportMacro | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SupportMacro | null>(null);
@@ -269,8 +293,16 @@ export default function SupportMacrosPage() {
         />
       )}
 
-      {createOpen && <MacroDialog onClose={() => setCreateOpen(false)} />}
-      {editTarget && <MacroDialog macro={editTarget} onClose={() => setEditTarget(null)} />}
+      {createOpen && (
+        <MacroDialog categoryOptions={categoryOptions} onClose={() => setCreateOpen(false)} />
+      )}
+      {editTarget && (
+        <MacroDialog
+          macro={editTarget}
+          categoryOptions={categoryOptions}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

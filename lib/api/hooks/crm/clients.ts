@@ -280,8 +280,11 @@ export function useUpdateRenewal() {
   return useMutation({
     mutationFn: ({ accountId, ...data }: UpdateRenewalInput) =>
       apiClient.patch<ClientAccount>(`/clients/renewals/${accountId}`, data),
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [...queryKeys.clients.all, "renewals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.accountId) });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
     },
   });
 }

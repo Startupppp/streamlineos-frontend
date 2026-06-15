@@ -173,6 +173,17 @@ export default function PublicNpsPage() {
               <p className="text-sm text-slate-500">
                 Thank you for taking the time to share your thoughts. We truly appreciate it.
               </p>
+              {score !== null && score >= 9 && (
+                <p className="text-sm text-slate-500 pt-1">
+                  Loving the product? Pass it on — share your experience with a colleague.
+                </p>
+              )}
+              {score !== null && score < 7 && (
+                <p className="text-sm text-slate-500 pt-1">
+                  We&rsquo;d love to make things better. Our team reviews every response and follows up on
+                  what we can improve.
+                </p>
+              )}
             </div>
           )}
         </Card>

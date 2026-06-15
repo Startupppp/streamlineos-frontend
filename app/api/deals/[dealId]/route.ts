@@ -47,6 +47,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     }
 
     void invalidateCachePattern(`deals:list:${session.orgId}:*`).catch(() => undefined);
+    void invalidateCache(CACHE_KEYS.salesDashboard(session.orgId)).catch(() => undefined);
     if (result.stageChanged) {
       void invalidateSalesKpiCache(session.orgId).catch(() => undefined);
     }

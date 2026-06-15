@@ -24,6 +24,8 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (!ability.can("view", "sales")) return err("You do not have access to commission rules", 403);
     const orgId = session.orgId;
     const key = `sales:commission-rules:${orgId}`;
     const rules = await cached(

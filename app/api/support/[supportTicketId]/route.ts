@@ -6,7 +6,7 @@ import { supportTickets, supportTicketActivity, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketStatusEmail, sendSupportTicketCreatedEmail } from "@/lib/email";
-import { invalidateCachePattern } from "@/lib/cache";
+import { invalidateCache, invalidateCachePattern, CACHE_KEYS } from "@/lib/cache";
 import { logger } from "@/lib/logger";
 
 const updateSchema = z.object({
@@ -165,6 +165,8 @@ export async function PATCH(
       await logTicketActivity(session.orgId, ticketId, session.user.id, ticket, input);
 
       await invalidateCachePattern(`support:tickets:${session.orgId}:*`);
+      await invalidateCache(CACHE_KEYS.supportDashboard(session.orgId));
+      await invalidateCache(CACHE_KEYS.ceDashboard(session.orgId));
 
       if (input.status) {
         void (async () => {

@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { invalidateCachePattern } from "@/lib/cache";
+import { invalidateCachePattern, invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { createAuditLog } from "@/lib/audit-log";
 import {
   transitionLeadStatus,
@@ -29,6 +29,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     }
 
     await invalidateCachePattern(`leads:*:${session.orgId}:*`);
+    await invalidateCache(CACHE_KEYS.salesDashboard(session.orgId));
 
     void createAuditLog({
       action: "lead.status_changed",

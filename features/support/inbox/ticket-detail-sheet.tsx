@@ -172,7 +172,9 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+      const isPlainEnter = e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey;
+      const isModifierEnter = e.key === "Enter" && (e.metaKey || e.ctrlKey);
+      if (isPlainEnter || isModifierEnter) {
         e.preventDefault();
         handleReply();
       }

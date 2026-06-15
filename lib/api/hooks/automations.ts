@@ -151,7 +151,9 @@ export function useTestAutomation() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
       apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload }),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.automations.all });
+    },
   });
 }
