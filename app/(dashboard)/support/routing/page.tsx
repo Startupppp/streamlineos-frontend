@@ -101,12 +101,12 @@ interface ConditionRowProps {
 function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProps) {
   const handleRemove = useCallback(() => onRemove(index), [index, onRemove]);
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex flex-wrap items-start gap-2 rounded-lg border border-border/60 p-2 sm:border-0 sm:p-0">
       <FormField
         control={control}
         name={`conditions.${index}.field`}
         render={({ field }) => (
-          <FormItem className="w-32">
+          <FormItem className="w-[calc(50%-0.25rem)] sm:w-32">
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger className="h-8 text-xs">
@@ -129,7 +129,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
         control={control}
         name={`conditions.${index}.op`}
         render={({ field }) => (
-          <FormItem className="w-32">
+          <FormItem className="w-[calc(50%-0.25rem)] sm:w-32">
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger className="h-8 text-xs">
@@ -152,7 +152,7 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
         control={control}
         name={`conditions.${index}.value`}
         render={({ field }) => (
-          <FormItem className="flex-1">
+          <FormItem className="flex-1 min-w-[140px]">
             <FormControl>
               <Input {...field} className="h-8 text-xs" placeholder="Value" />
             </FormControl>

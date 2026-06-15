@@ -170,7 +170,8 @@ export function LeadDetailHeader({
   return (
     <Card className="shadow-noir border-t-2 border-t-gold overflow-hidden">
       <CardContent className="p-0">
-        <div className="flex items-start gap-4 p-4 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 pb-3">
+          <div className="flex items-start gap-3 sm:contents">
           <div className="shrink-0 h-12 w-12 rounded-full ring-2 ring-blue-500/50 bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold text-lg select-none">
             {initials || "?"}
           </div>
@@ -204,9 +205,10 @@ export function LeadDetailHeader({
               </p>
             )}
           </div>
+          </div>
 
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 flex-wrap sm:justify-end">
               <Badge
                 variant="outline"
                 className={cn(
@@ -248,7 +250,7 @@ export function LeadDetailHeader({
               )}
             </div>
 
-            <div className="flex items-center gap-1 flex-wrap justify-end">
+            <div className="flex items-center gap-1 flex-wrap sm:justify-end">
               <AIScoreButton
                 leadId={(lead as Record<string, unknown>).id as number}
                 currentScore={

@@ -60,7 +60,7 @@ function SummaryStat({ label, value, tone = "default" }: SummaryStatProps) {
   const valueTone = tone === "muted" ? "text-muted-foreground" : "text-foreground";
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-slate-500 leading-none">
+      <span className="text-[11px] font-medium text-muted-foreground leading-none">
         {label}
       </span>
       <span className={`font-mono tabular-nums text-base font-semibold ${valueTone}`}>
@@ -119,8 +119,8 @@ interface SectionTableProps {
 function SectionTable({ title, description, tint, section }: SectionTableProps) {
   const tintClass =
     tint === "b2b"
-      ? "bg-violet-50 text-violet-800 border-violet-200/70"
-      : "bg-amber-50 text-amber-800 border-amber-200/70";
+      ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
+      : "bg-amber-500/10 text-amber-700 border-amber-500/20";
 
   return (
     <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
@@ -133,7 +133,8 @@ function SectionTable({ title, description, tint, section }: SectionTableProps) 
           No {title.toLowerCase()} supplies in this period.
         </div>
       ) : (
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">Place of supply</TableHead>
@@ -171,6 +172,7 @@ function SectionTable({ title, description, tint, section }: SectionTableProps) 
             </TableRow>
           </TableBody>
         </Table>
+        </div>
       )}
     </div>
   );
@@ -204,23 +206,23 @@ export default function Gstr1Page() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="gstr1-from "
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              htmlFor="gstr1-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               From
             </label>
             <Input
-              id="gstr1-from "
+              id="gstr1-from"
               type="date"
               value={from}
               onChange={handleFromChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="gstr1-to"
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               To
             </label>
@@ -229,7 +231,7 @@ export default function Gstr1Page() {
               type="date"
               value={to}
               onChange={handleToChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
         </div>

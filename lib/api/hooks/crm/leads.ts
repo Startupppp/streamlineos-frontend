@@ -72,10 +72,15 @@ export function useMergeLead() {
 }
 
 export function useUpdateLeadCustomData() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
       apiClient.patch<{ customData: Record<string, unknown> }>(`/leads/${id}/custom-data`, {
         customData,
       }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
   });
 }

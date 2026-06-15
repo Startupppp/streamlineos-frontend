@@ -200,7 +200,7 @@ export function KanbanBoard({
               key={col.id}
               className={cn(
                 "rounded-lg border bg-muted/20 flex flex-col min-w-0",
-                overWip && "border-red-400/60"
+                overWip && "border-destructive/60"
               )}
             >
 

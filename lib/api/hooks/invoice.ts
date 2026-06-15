@@ -117,8 +117,10 @@ export const useUpdateInvoice = () => {
   return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(vars.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
     },
   });
 };

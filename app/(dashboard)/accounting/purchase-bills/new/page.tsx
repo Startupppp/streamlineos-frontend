@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -66,6 +67,7 @@ export default function NewPurchaseBillPage() {
   const [expenseAccountCode, setExpenseAccountCode] = useState<string>("5990");
   const [items, setItems] = useState<DraftItem[]>([emptyItem(0)]);
   const [nextKey, setNextKey] = useState<number>(1);
+  const [confirmPostOpen, setConfirmPostOpen] = useState<boolean>(false);
 
   const computed = useMemo(() => {
     const lines = items.map((it) => {
@@ -167,7 +169,7 @@ export default function NewPurchaseBillPage() {
     setNotes(event.target.value);
   }
 
-  async function handleSubmit(): Promise<void> {
+  function handleSubmit(): void {
     if (!vendorId) {
       toast.error("Select a vendor");
       return;
@@ -176,6 +178,24 @@ export default function NewPurchaseBillPage() {
       toast.error("Bill date is required");
       return;
     }
+    const validItems = items.filter((it) => it.description.trim().length > 0 && num(it.quantity) > 0 && num(it.rate) >= 0);
+    if (validItems.length === 0) {
+      toast.error("At least one line item is required");
+      return;
+    }
+    if (status === "POSTED") {
+      setConfirmPostOpen(true);
+      return;
+    }
+    void performCreate();
+  }
+
+  function handleConfirmPost(): void {
+    setConfirmPostOpen(false);
+    void performCreate();
+  }
+
+  async function performCreate(): Promise<void> {
     const validItems = items.filter((it) => it.description.trim().length > 0 && num(it.quantity) > 0 && num(it.rate) >= 0);
     if (validItems.length === 0) {
       toast.error("At least one line item is required");
@@ -307,7 +327,8 @@ export default function NewPurchaseBillPage() {
         </Card>
 
         <Card className="overflow-hidden">
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Description</TableHead>
@@ -347,7 +368,8 @@ export default function NewPurchaseBillPage() {
               })}
             </TableBody>
           </Table>
-          <div className="p-3 border-t border-slate-200/60">
+          </div>
+          <div className="p-3 border-t border-border">
             <Button type="button" variant="outline" size="sm" onClick={handleAddItem}>
               <Plus className="size-4 mr-1" />
               Add line
@@ -377,22 +399,32 @@ export default function NewPurchaseBillPage() {
               {!computed.intra && computed.igst > 0 && (
                 <div className="flex justify-between"><span>IGST</span><span>{computed.igst.toFixed(2)}</span></div>
               )}
-              <div className="border-t border-slate-200/60 pt-1 flex justify-between font-medium text-base">
+              <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
                 <span>Total</span><span>{computed.total.toFixed(2)}</span>
               </div>
             </div>
           </div>
         </Card>
 
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => router.push("/accounting/purchase-bills")}>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.push("/accounting/purchase-bills")}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={createMutation.isPending}>
+          <Button type="button" className="w-full sm:w-auto" onClick={handleSubmit} disabled={createMutation.isPending}>
             {createMutation.isPending ? "Saving…" : status === "POSTED" ? "Create and post" : "Save as draft"}
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmPostOpen}
+        onOpenChange={setConfirmPostOpen}
+        title="Post this bill immediately?"
+        description="Posting records journal entries (AP, expense, and Input GST) and locks the bill. This cannot be undone. Continue?"
+        confirmLabel="Create and post"
+        isPending={createMutation.isPending}
+        onConfirm={handleConfirmPost}
+      />
     </PageWrapper>
   );
 }

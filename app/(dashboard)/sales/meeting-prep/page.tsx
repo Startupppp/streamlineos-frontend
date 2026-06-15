@@ -383,7 +383,7 @@ export default function MeetingPrepPage() {
         <Card className="mt-4">
           <CardContent className="pt-4">
             <p className="text-xs font-medium text-foreground mb-2">The brief will include</p>
-            <ul className="grid grid-cols-2 gap-1.5">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {[
                 "Meeting overview & objectives",
                 "Attendee background & history",

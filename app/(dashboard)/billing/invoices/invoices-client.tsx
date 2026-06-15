@@ -146,7 +146,7 @@ export function InvoicesClient() {
       filters={filtersBar}
     >
       <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
@@ -173,7 +173,7 @@ export function InvoicesClient() {
             <Clock className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats?.overdue ?? 0}</div>
+            <div className="text-2xl font-bold text-destructive">{stats?.overdue ?? 0}</div>
             <p className="text-xs text-muted-foreground">Need attention</p>
           </CardContent>
         </Card>
@@ -212,10 +212,15 @@ export function InvoicesClient() {
                 </TableRow>
               ) : invoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12">
-                    <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
-                    <p className="text-sm font-medium text-foreground">No invoices yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Create your first invoice to get started</p>
+                  <TableCell colSpan={7} className="py-10">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <EmptyDocumentsIllustration className="mb-3 w-28 h-28" />
+                      <p className="text-sm font-medium text-foreground">No invoices yet</p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">Create your first invoice to get started</p>
+                      <Button size="sm" onClick={handleOpenCreate}>
+                        <Plus className="h-3.5 w-3.5 mr-1" /> New Invoice
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -435,7 +440,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           <div className="border-t pt-3 space-y-1 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Tax ({taxRate}%)</span><span>{formatCurrency(taxAmount)}</span></div>
-            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-red-500">-{formatCurrency(discount)}</span></div>}
+            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-destructive">-{formatCurrency(discount)}</span></div>}
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total</span><span>{formatCurrency(total)}</span></div>
           </div>
 

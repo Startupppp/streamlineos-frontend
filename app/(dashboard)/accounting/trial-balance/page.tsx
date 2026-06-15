@@ -46,7 +46,7 @@ export default function TrialBalancePage() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tb-as-of"
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               As of
             </label>
@@ -55,20 +55,20 @@ export default function TrialBalancePage() {
               type="date"
               value={asOf}
               onChange={handleAsOfChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
           {tb ? (
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium text-slate-500 leading-none">
+              <span className="text-[11px] font-medium text-muted-foreground leading-none">
                 Status
               </span>
               {tb.balanced ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200/70">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-700 text-xs font-medium border border-emerald-500/20">
                   Balanced ✓
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200/70">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
                   Imbalanced
                 </span>
               )}
@@ -85,14 +85,14 @@ export default function TrialBalancePage() {
             onRetry={handleRetry}
           />
         ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-12 px-6 text-center">
             <h3 className="text-sm font-semibold text-foreground">
               No posted entries yet for this date.
             </h3>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-            <Table>
+          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[120px]">Code</TableHead>

@@ -13,7 +13,7 @@ interface DealsStatsBarProps {
 
 export function DealsStatsBar({ total, totalValue, wonValue, avgProbability }: DealsStatsBarProps) {
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
       <StatCard label="Total Deals" value={total} icon={TrendingUp} index={0} />
       <StatCard label="Pipeline Value" value={formatINRCompact(totalValue)} icon={DollarSign} index={1} />
       <StatCard label="Won Value" value={formatINRCompact(wonValue)} icon={Trophy} index={2} />

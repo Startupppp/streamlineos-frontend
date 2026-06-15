@@ -9,8 +9,8 @@ export default function SalesQuotasLoading() {
       subtitle="Manage revenue targets per rep"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="pt-6">

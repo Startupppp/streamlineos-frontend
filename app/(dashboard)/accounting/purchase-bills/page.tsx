@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Receipt } from "lucide-react";
 import { usePurchaseBills } from "@/lib/api/hooks/accounting";
 import type { PurchaseBillStatus } from "@/types/accounting";
 
@@ -82,10 +84,10 @@ export default function PurchaseBillsListPage() {
           value={search}
           onChange={handleSearchChange}
           placeholder="Search by bill number"
-          className="sm:max-w-xs"
+          className="w-full sm:max-w-xs"
         />
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="sm:max-w-xs">
+          <SelectTrigger className="w-full sm:max-w-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -102,14 +104,17 @@ export default function PurchaseBillsListPage() {
       {query.error && <ErrorState description={query.error.message} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
-          No purchase bills yet.
-        </div>
+        <EmptyState
+          icon={Receipt}
+          title="No purchase bills yet"
+          description="Record a vendor bill to start tracking accounts payable."
+          action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+        />
       )}
 
       {items.length > 0 && (
-        <div className="rounded-xl border border-slate-200/60 overflow-hidden">
-          <Table>
+        <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Bill #</TableHead>
@@ -124,7 +129,7 @@ export default function PurchaseBillsListPage() {
               {items.map((bill) => (
                 <TableRow key={bill.id}>
                   <TableCell className="font-mono text-xs">
-                    <Link href={`/accounting/purchase-bills/${bill.id}`} className="text-blue-600 hover:underline">
+                    <Link href={`/accounting/purchase-bills/${bill.id}`} className="text-foreground hover:text-blue-600 hover:underline">
                       {bill.billNumber}
                     </Link>
                   </TableCell>

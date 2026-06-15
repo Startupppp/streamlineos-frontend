@@ -389,6 +389,12 @@ export const queryKeys = {
     list: (articleId: number) => [...base, "kbComments", "list", articleId] as const,
   },
 
+  kbAttachments: {
+    all: [...base, "kbAttachments"] as const,
+    list: (articleId: number) => [...base, "kbAttachments", "list", articleId] as const,
+    publicList: (orgId: string, slug: string) => [...base, "kbAttachments", "publicList", orgId, slug] as const,
+  },
+
   playbook: {
     all: [...base, "playbook"] as const,
     list: (params?: Record<string, unknown>) => [...base, "playbook", "list", params] as const,

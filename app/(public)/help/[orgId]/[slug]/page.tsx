@@ -9,14 +9,95 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { ArrowLeft, Eye, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
+  CheckCircle2,
+  Paperclip,
+  FileText,
+  ImageIcon,
+  Download,
+} from "lucide-react";
 import {
   usePublicKbArticle,
   useSubmitKbFeedback,
 } from "@/lib/api/hooks/support/kb";
+import {
+  usePublicKbAttachments,
+  type PublicKbAttachment,
+} from "@/lib/api/hooks/support/kb-attachments";
 import { getApiError } from "@/lib/api-client";
+import { formatFileSize } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
+
+function PublicAttachmentIcon({ mimeType }: { mimeType: string | null }) {
+  if (mimeType?.startsWith("image/")) {
+    return <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />;
+  }
+  return <FileText className="h-4 w-4 text-muted-foreground shrink-0" />;
+}
+
+function PublicArticleAttachments({
+  attachments,
+}: {
+  attachments: PublicKbAttachment[];
+}) {
+  if (attachments.length === 0) return null;
+
+  return (
+    <div className="mt-8 border-t border-border pt-6">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Paperclip className="h-4 w-4 text-muted-foreground" /> Attachments
+      </h2>
+      <ul className="mt-3 space-y-2">
+        {attachments.map((attachment) => {
+          const sizeLabel =
+            attachment.fileSize !== null
+              ? formatFileSize(attachment.fileSize)
+              : null;
+          return (
+            <li key={attachment.id}>
+              {attachment.downloadUrl ? (
+                <a
+                  href={attachment.downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 transition-colors hover:bg-muted/50"
+                >
+                  <PublicAttachmentIcon mimeType={attachment.mimeType} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate text-foreground">
+                      {attachment.fileName}
+                    </p>
+                    {sizeLabel && (
+                      <p className="text-xs text-muted-foreground">{sizeLabel}</p>
+                    )}
+                  </div>
+                  <Download className="h-4 w-4 text-muted-foreground shrink-0" />
+                </a>
+              ) : (
+                <div className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 opacity-60">
+                  <PublicAttachmentIcon mimeType={attachment.mimeType} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate text-foreground">
+                      {attachment.fileName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Download unavailable
+                    </p>
+                  </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 export default function PublicHelpArticlePage() {
   const params = useParams<{ orgId: string; slug: string }>();
@@ -24,6 +105,7 @@ export default function PublicHelpArticlePage() {
   const slug = params.slug;
 
   const { data: article, isLoading, error, refetch } = usePublicKbArticle(orgId, slug);
+  const attachmentsQuery = usePublicKbAttachments(orgId, slug);
   const submitFeedback = useSubmitKbFeedback();
 
   const [showComment, setShowComment] = useState(false);

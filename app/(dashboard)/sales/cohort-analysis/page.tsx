@@ -48,13 +48,13 @@ export default function CohortAnalysisPage() {
       title="Cohort Analysis"
       subtitle="Track how many leads created each month ultimately converted, and how long it took"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span>Avg conversion rate: <strong>{avgConvRate}%</strong></span>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+          <Users className="h-4 w-4 shrink-0" />
+          <span className="truncate">Avg conversion rate: <strong>{avgConvRate}%</strong></span>
         </div>
         <Select value={String(months)} onValueChange={(v) => setMonths(Number(v))}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +73,7 @@ export default function CohortAnalysisPage() {
         </div>
       ) : (
         <>
-          <Card className="mb-6">
+          <Card className="mb-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Leads Created vs Converted by Cohort</CardTitle>
             </CardHeader>
@@ -92,7 +92,7 @@ export default function CohortAnalysisPage() {
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card className="mb-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Conversion Rate % Trend</CardTitle>
             </CardHeader>
@@ -120,8 +120,8 @@ export default function CohortAnalysisPage() {
               <CardTitle className="text-sm">Cohort Detail</CardTitle>
             </CardHeader>
             <CardContent>
-              <div>
-                <table className="w-full text-[11px] md:text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] text-[11px] md:text-sm">
                   <thead>
                     <tr className="border-b text-muted-foreground text-xs">
                       <th className="text-left py-2 font-medium">Cohort</th>

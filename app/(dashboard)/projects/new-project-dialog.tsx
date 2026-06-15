@@ -193,7 +193,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                             <User className="h-4 w-4 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[450px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] sm:w-[450px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                                         <div className="p-3 border-b bg-muted/40 space-y-2">
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
                                             <div className="relative">
@@ -358,7 +358,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
             </div>
             </div>
 
-            <SheetFooter className="pt-4 mt-auto shrink-0">
+            <SheetFooter className="flex-row gap-2 px-6 py-4 mt-auto shrink-0 border-t">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1">
                 {form.formState.isSubmitting ? "Creating..." : "Create Project"}

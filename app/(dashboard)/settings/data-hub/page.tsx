@@ -377,7 +377,7 @@ export default function DataHubPage() {
                     <a
                       href={entity.templateUrl}
                       download
-                      className="text-[10px] text-muted-foreground hover:text-blue-600 transition-colors inline-flex items-center gap-1"
+                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                     >
                       <FileSpreadsheet className="h-3 w-3" />
                       Download template

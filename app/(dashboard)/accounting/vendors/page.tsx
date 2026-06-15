@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Users } from "lucide-react";
 import { useVendorsOutstanding } from "@/lib/api/hooks/accounting";
 
 export default function VendorsListPage() {
@@ -48,14 +50,16 @@ export default function VendorsListPage() {
       {query.error && <ErrorState description={query.error.message} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
-          No vendors. Mark CRM clients as vendors and record purchase bills to see them here.
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No vendors found"
+          description="Mark CRM clients as vendors and record purchase bills to see them here."
+        />
       )}
 
       {items.length > 0 && (
-        <Card className="overflow-hidden">
-          <Table>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[620px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Vendor</TableHead>
@@ -69,7 +73,7 @@ export default function VendorsListPage() {
               {items.map((v) => (
                 <TableRow key={v.vendorId}>
                   <TableCell>
-                    <Link href={`/accounting/vendors/${v.vendorId}`} className="text-blue-600 hover:underline">
+                    <Link href={`/accounting/vendors/${v.vendorId}`} className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline">
                       {v.vendorName}
                     </Link>
                   </TableCell>

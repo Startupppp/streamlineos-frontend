@@ -106,23 +106,23 @@ export default function JournalListPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="journal-from "
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              htmlFor="journal-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               From
             </label>
             <Input
-              id="journal-from "
+              id="journal-from"
               type="date"
               value={from}
               onChange={handleFromChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="journal-to"
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               To
             </label>
@@ -131,15 +131,15 @@ export default function JournalListPage() {
               type="date"
               value={to}
               onChange={handleToChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 leading-none">
+            <span className="text-[11px] font-medium text-muted-foreground leading-none">
               Source
             </span>
             <Select value={sourceType} onValueChange={handleSourceTypeChange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="All sources" />
               </SelectTrigger>
               <SelectContent>
@@ -170,8 +170,8 @@ export default function JournalListPage() {
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-            <Table>
+          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[160px]">Entry #</TableHead>

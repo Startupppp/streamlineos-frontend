@@ -111,6 +111,8 @@ export function useCreateDeal() {
     mutationFn: (input: CreateDealInput) => apiClient.post<Deal>("/deals", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
     },
   });
 }
@@ -123,6 +125,9 @@ export function useUpdateDeal() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: ["deals", "win-loss"] });
     },
   });
 }
@@ -151,6 +156,9 @@ export function useUpdateDealStage() {
     onSettled: (_data, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
+      qc.invalidateQueries({ queryKey: ["deals", "win-loss"] });
     },
   });
 }
@@ -162,6 +170,8 @@ export function useDeleteDeal() {
       apiClient.delete<{ success: boolean }>(`/deals/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
     },
   });
 }
@@ -173,6 +183,8 @@ export function useCloneDeal() {
       apiClient.post<Deal>(`/deals/${id}/clone`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
     },
   });
 }
@@ -299,11 +311,16 @@ export function useResolveDealApproval() {
 }
 
 export function useUpdateDealCustomData() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
       apiClient.patch<{ customData: Record<string, unknown> }>(`/deals/${id}/custom-data`, {
         customData,
       }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+    },
   });
 }
 

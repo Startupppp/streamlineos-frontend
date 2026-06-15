@@ -535,13 +535,13 @@ export function AutomationBuilderSheet({ rule, onClose }: AutomationBuilderSheet
                 {testResult.matched ? (
                   <div className="space-y-1">
                     {testResult.actionResults.map((r, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
+                      <div key={i} className="flex items-start gap-2 text-xs">
                         {r.ok ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" />
                         ) : (
-                          <XCircle className="h-3.5 w-3.5 text-destructive" />
+                          <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-destructive" />
                         )}
-                        <span className="text-muted-foreground">
+                        <span className="min-w-0 break-words text-muted-foreground">
                           {r.type}
                           {r.error ? ` — ${r.error}` : ""}
                         </span>

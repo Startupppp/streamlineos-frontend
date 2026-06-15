@@ -102,8 +102,9 @@ export const useUpdateSupportTicket = () => {
   return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/support/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(vars.id) });
     },
   });
 };

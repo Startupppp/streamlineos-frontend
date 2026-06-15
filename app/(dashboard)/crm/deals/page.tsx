@@ -342,7 +342,7 @@ export default function DealsPage() {
           </>
         }
       >
-        <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
           <motion.div variants={fadeUp} className="sticky top-0 z-10 bg-background pb-2">
             <DealsStatsBar {...stats} />
           </motion.div>

@@ -191,7 +191,7 @@ export default function GoalsPage() {
         </div>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-4">
         <StatCard icon={Target} label="Total Goals" value={stats?.total ?? 0} tone="bg-blue-500/10 text-blue-600" />
         <StatCard
           icon={TrendingUp}

@@ -71,8 +71,8 @@ async function exportToExcel(data: {
 function ForecastSkeleton() {
   return (
     <PageWrapper title="Forecast Report" subtitle="Pipeline revenue forecast by month and stage">
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
@@ -111,8 +111,8 @@ export default function ForecastReportPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-3">
           <StatCard
             label="Total Weighted Revenue"
             value={fmtCurrency(data.totalWeighted)}

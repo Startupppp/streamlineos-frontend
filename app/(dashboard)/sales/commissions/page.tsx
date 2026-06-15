@@ -151,8 +151,8 @@ export default function CommissionsPage() {
         </Tabs>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
           <StatCard label="Pending" value={fmt(data?.totalPending ?? 0)} icon={Clock} color="amber" />
           <StatCard label="Paid" value={fmt(data?.totalPaid ?? 0)} icon={CheckCircle2} color="green" />
         </div>
@@ -187,7 +187,7 @@ export default function CommissionsPage() {
                         <TableCell className="font-medium text-sm">{c.userName ?? "—"}</TableCell>
                         <TableCell className="text-sm">{c.dealName ?? "—"}</TableCell>
                         <TableCell className="text-right text-sm">{fmt(c.dealValue)}</TableCell>
-                        <TableCell className="text-right text-sm">{Number(c.commissionRate)}%</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">{Number(c.commissionRate).toFixed(2)}%</TableCell>
                         <TableCell className="text-right font-medium text-sm">{fmt(c.commissionAmount)}</TableCell>
                         <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
                         {canManage && (
@@ -234,8 +234,8 @@ export default function CommissionsPage() {
             <div className="p-4 space-y-2">
               {rules.map((r: Record<string, unknown>) => (
                 <div key={String(r.id)} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
-                  <span className="font-medium">{String(r.name)}</span>
-                  <span className="text-muted-foreground">{r.type === "flat_percent" ? `${r.flatRate}%` : "Tiered"}</span>
+                  <span className="font-medium truncate min-w-0">{String(r.name)}</span>
+                  <span className="text-muted-foreground tabular-nums shrink-0">{r.type === "flat_percent" ? `${Number(r.flatRate).toFixed(2)}%` : "Tiered"}</span>
                 </div>
               ))}
             </div>

@@ -63,9 +63,9 @@ export default function OrganizationsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Organizations" subtitle="Company accounts">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Skeleton className="h-10 w-full max-w-sm" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-36" />)}
           </div>
         </div>
@@ -90,8 +90,8 @@ export default function OrganizationsPage() {
         </div>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data?.organizations.map(org => {
             const health = getHealthBadge(org.healthScore);
             return (
@@ -153,7 +153,7 @@ export default function OrganizationsPage() {
         </motion.div>
 
         {(data?.organizations.length ?? 0) === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[50vh]">
             <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
             <p className="text-sm font-medium text-foreground">No organizations found</p>
             <p className="text-xs mt-1">Create your first organization</p>

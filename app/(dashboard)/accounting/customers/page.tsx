@@ -88,8 +88,8 @@ export default function CustomerLedgersPage() {
             }
           />
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-            <Table>
+          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>

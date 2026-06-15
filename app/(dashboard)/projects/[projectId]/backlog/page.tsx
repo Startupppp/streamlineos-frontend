@@ -288,7 +288,7 @@ export default function BacklogPage({ params }: PageProps) {
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
       {selectedIds.size > 0 && (
-        <div className="mx-4 mb-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
+        <div className="mx-4 mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
           <span className="text-sm font-medium text-primary shrink-0">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <Select onValueChange={handleBulkStatus}>
@@ -338,7 +338,7 @@ export default function BacklogPage({ params }: PageProps) {
         </div>
       )}
 
-      <div className="border rounded-lg mx-4 mb-4">
+      <div className="border rounded-lg mx-4 mb-4 overflow-x-auto">
         <Table>
           <caption className="sr-only">Backlog tickets</caption>
           <TableHeader>

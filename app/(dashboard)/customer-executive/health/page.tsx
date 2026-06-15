@@ -168,7 +168,42 @@ function ConfigSheet({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Thresholds</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">Thresholds</h3>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 text-muted-foreground"
+                    aria-label="What do the thresholds mean?"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-64">
+                  <p className="text-xs font-semibold text-foreground mb-1.5">Health bands</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>
+                      <span className="font-medium text-emerald-600">Healthy</span> — score at or above
+                      the healthy threshold; account shows positive signals and low churn risk.
+                    </li>
+                    <li>
+                      <span className="font-medium text-amber-600">At risk</span> — between the two
+                      thresholds; needs attention.
+                    </li>
+                    <li>
+                      <span className="font-medium text-red-600">Critical</span> — below the at-risk
+                      threshold; warrants immediate intervention.
+                    </li>
+                  </ul>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Adjust to match your retention strategy.
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Healthy ≥</Label>

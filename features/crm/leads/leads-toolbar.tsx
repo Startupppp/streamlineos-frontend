@@ -38,9 +38,9 @@ export function LeadsToolbar({
   const hasFilters = !!(statusFilter || priorityFilter || sourceFilter);
 
   return (
-    <div className="flex items-center gap-2 flex-nowrap min-w-max">
+    <div className="flex items-center gap-2 flex-wrap w-full">
 
-      <div className="relative w-[140px] sm:w-[180px] sm:max-w-xs">
+      <div className="relative flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           placeholder="Search leads..."

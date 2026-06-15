@@ -135,7 +135,7 @@ function KanbanColumn({
   const Icon = config.icon;
 
   return (
-    <div className="flex flex-col min-w-[280px] max-w-[320px] flex-1">
+    <div className="flex flex-col min-w-0 sm:min-w-[280px] sm:max-w-[320px] flex-1">
       <div className={cn("flex items-center gap-2 px-3 py-2 rounded-t-lg border-t-2", config.color, config.bg)}>
         <Icon className={cn("h-4 w-4", config.textColor)} />
         <span className="text-sm font-semibold">{config.label}</span>
@@ -145,7 +145,10 @@ function KanbanColumn({
       </div>
       <div className="flex-1 space-y-2 p-2 bg-muted/30 rounded-b-lg border border-t-0 min-h-[200px] max-h-[calc(100vh-22rem)] overflow-y-auto">
         {accounts.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8">No clients</p>
+          <div className="flex flex-col items-center justify-center h-full min-h-[160px] gap-1.5 text-center">
+            <Icon className={cn("h-6 w-6 opacity-30", config.textColor)} />
+            <p className="text-xs text-muted-foreground">No accounts in this stage</p>
+          </div>
         ) : (
           accounts.map((account) => (
             <KanbanCard key={account.id} account={account} />
@@ -279,9 +282,9 @@ export default function ClientAccountsPage() {
         </>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
 
-      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-5">
+      <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 md:grid-cols-5">
         <StatCard label="Total" value={statsLoading ? "…" : (stats?.total ?? 0)} icon={Users} color="blue" index={0} />
         <StatCard label="Account Opening" value={statsLoading ? "…" : (stats?.accountOpening ?? 0)} icon={ClipboardList} color="cyan" index={1} />
         <StatCard label="Queries" value={statsLoading ? "…" : (stats?.queries ?? 0)} icon={MessageSquare} color="amber" index={2} />
@@ -294,7 +297,7 @@ export default function ClientAccountsPage() {
           {isLoading ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 pb-4">
               {STATUSES.map((s) => (
-                <div key={s} className="min-w-[280px] flex-1">
+                <div key={s} className="min-w-0 sm:min-w-[280px] flex-1">
                   <Skeleton className="h-10 mb-2 rounded-t-lg" />
                   <div className="space-y-2 p-2">
                     <Skeleton className="h-24" />

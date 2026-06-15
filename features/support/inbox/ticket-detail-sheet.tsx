@@ -198,24 +198,24 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-4 py-3 border-b border-border/40 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="md:hidden h-7 px-2"
+              className="md:hidden h-7 px-2 shrink-0"
             >
               Back
             </Button>
-            <div>
-              <h3 className="text-sm font-bold">{toTitleCase(ticket.title)}</h3>
-              <p className="text-[11px] text-muted-foreground">
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold truncate">{toTitleCase(ticket.title)}</h3>
+              <p className="text-[11px] text-muted-foreground truncate">
                 #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
             <Badge variant="outline" className={cn("text-xs", PRIORITY_COLORS[ticket.priority])}>
               {ticket.priority}
             </Badge>

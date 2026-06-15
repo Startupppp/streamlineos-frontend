@@ -207,6 +207,8 @@ export function useCreateClientAccount() {
       apiClient.post<ClientAccount>("/clients", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
     },
   });
 }
@@ -219,6 +221,8 @@ export function useUpdateClientAccount() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
     },
   });
 }

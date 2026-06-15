@@ -320,10 +320,12 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => router.push("/goals")}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            <ArrowLeft className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Edit
+            <Pencil className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button
             variant="outline"
@@ -331,7 +333,8 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
             className="text-destructive hover:text-destructive"
             onClick={() => setDeleteOpen(true)}
           >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
+            <Trash2 className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       }

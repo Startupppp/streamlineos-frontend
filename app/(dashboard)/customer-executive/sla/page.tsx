@@ -32,8 +32,8 @@ function SlaLoadingSkeleton() {
       title="SLA Compliance"
       subtitle="Track first-response and resolution time vs SLA targets"
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="space-y-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-28" />
           ))}
@@ -70,8 +70,8 @@ export default function SlaCompliancePage() {
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="space-y-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <StatCard
             label="Compliance Rate"
             value={`${s.complianceRate}%`}
@@ -177,7 +177,7 @@ export default function SlaCompliancePage() {
                   return (
                     <div
                       key={breach.id}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg border border-red-100 bg-red-50/40"
+                      className="flex items-start justify-between gap-3 p-3 rounded-lg border border-destructive/20 bg-destructive/5"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -209,7 +209,7 @@ export default function SlaCompliancePage() {
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="text-xs font-semibold text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full whitespace-nowrap">
                           +{Math.round(overdueBy)}h overdue
                         </span>
                       </div>

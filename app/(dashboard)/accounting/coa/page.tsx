@@ -45,11 +45,11 @@ const TAB_LABELS: Record<TabValue, string> = {
 };
 
 const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
-  ASSET: "border-blue-300 text-blue-700",
-  LIABILITY: "border-orange-300 text-orange-700",
-  EQUITY: "border-purple-300 text-purple-700",
-  INCOME: "border-green-300 text-green-700",
-  EXPENSE: "border-amber-300 text-amber-700",
+  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5",
+  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5",
+  EQUITY: "border-violet-500/30 text-violet-700 bg-violet-500/5",
+  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5",
+  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5",
 };
 
 function isTabValue(value: string): value is TabValue {
@@ -146,8 +146,8 @@ export default function ChartOfAccountsPage() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-            <Table>
+          <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+            <Table className="min-w-[560px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[120px]">Code</TableHead>

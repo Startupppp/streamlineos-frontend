@@ -55,7 +55,8 @@ function ReportCard({ title, tint, rows, totalLabel, totalAmount }: ReportCardPr
           No {title.toLowerCase()} accounts for this range.
         </div>
       ) : (
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[420px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[120px]">Code</TableHead>
@@ -87,6 +88,7 @@ function ReportCard({ title, tint, rows, totalLabel, totalAmount }: ReportCardPr
             </TableRow>
           </TableFooter>
         </Table>
+        </div>
       )}
     </div>
   );
@@ -125,23 +127,23 @@ export default function ProfitLossPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="pnl-from "
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              htmlFor="pnl-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               From
             </label>
             <Input
-              id="pnl-from "
+              id="pnl-from"
               type="date"
               value={from}
               onChange={handleFromChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="pnl-to"
-              className="text-[11px] font-medium text-slate-500 leading-none"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
             >
               To
             </label>
@@ -150,7 +152,7 @@ export default function ProfitLossPage() {
               type="date"
               value={to}
               onChange={handleToChange}
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
             />
           </div>
         </div>

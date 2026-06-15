@@ -103,8 +103,8 @@ export default function SalesQuotasPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Total Target" value={fmt(totalTarget)} icon={Target} color="blue" />
           <StatCard label="Total Actual" value={fmt(totalActual)} icon={DollarSign} color="green" />
           <StatCard label="Overall Attainment" value={`${overallAttainment}%`} icon={TrendingUp} color={overallAttainment >= 80 ? "green" : overallAttainment >= 50 ? "gold" : "red"} />
@@ -141,9 +141,9 @@ export default function SalesQuotasPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(q.attainmentPct, 100)}%` }} />
+                            <div className={`h-full rounded-full transition-all ${q.attainmentPct >= 100 ? "bg-green-600" : "bg-primary"}`} style={{ width: `${Math.min(q.attainmentPct, 100)}%` }} />
                           </div>
-                          <span className="text-xs font-medium tabular-nums">{q.attainmentPct}%</span>
+                          <span className={`text-xs font-medium tabular-nums ${q.attainmentPct >= 100 ? "text-green-600" : ""}`}>{q.attainmentPct}%</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">

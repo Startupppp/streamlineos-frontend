@@ -3,11 +3,25 @@
 import { useCallback, memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { CalendarClock } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TicketTypeIcon } from "./shared/ticket-type-icon";
 import { PriorityBadge } from "./shared/priority-badge";
 import type { KanbanTicket } from "./shared/types";
 import { motion } from "framer-motion";
+
+function getDueState(dueDate?: string | null): "overdue" | "soon" | "future" | null {
+  if (!dueDate) return null;
+  const due = new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
+  if (diffDays < 0) return "overdue";
+  if (diffDays <= 1) return "soon";
+  return "future";
+}
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
@@ -52,6 +66,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   const primaryAssignee =
     ticket.assignees?.[0]?.user ?? ticket.assignee ?? null;
+
+  const dueState = ticket.status === "DONE" ? null : getDueState(ticket.dueDate);
+  const dueLabel = ticket.dueDate
+    ? new Date(ticket.dueDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : null;
 
   return (
     <motion.div
@@ -109,6 +131,21 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
                 {ticket.points ?? ticket.storyPoints}
               </Badge>
             )}
+
+          {dueState && dueLabel && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 text-[10px] font-medium tabular-nums",
+                dueState === "overdue" && "text-destructive",
+                dueState === "soon" && "text-amber-600",
+                dueState === "future" && "text-muted-foreground"
+              )}
+              title={`Due ${dueLabel}`}
+            >
+              <CalendarClock className="h-3 w-3 shrink-0" />
+              {dueLabel}
+            </span>
+          )}
         </div>
 
         {primaryAssignee ? (
