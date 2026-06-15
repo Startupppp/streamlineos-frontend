@@ -87,6 +87,7 @@ export const pages = pgTable("pages", {
   foreignKey({ columns: [table.parentPageId], foreignColumns: [table.id] }).onDelete("cascade"),
   index("idx_pages_project").on(table.projectId),
   index("idx_pages_org").on(table.orgId),
+  index("idx_pages_parent").on(table.parentPageId),
 ]);
 
 export const projectMilestones = pgTable("project_milestones", {

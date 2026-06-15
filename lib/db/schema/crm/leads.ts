@@ -177,7 +177,7 @@ export const leadImportBatches = pgTable("lead_import_batches", {
 
 export const webLeadForms = pgTable("web_lead_forms", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   fields: jsonb("fields").$type<Array<{ name: string; label: string; type: string; required: boolean; options?: string[] }>>().notNull().default([]),

@@ -6,6 +6,7 @@ import {
   moduleStatusEnum,
 } from "../enums";
 import { organizations, users } from "../auth";
+import { deals } from "../crm/deals";
 
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
@@ -18,7 +19,7 @@ export const projects = pgTable("projects", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   status: projectStatusEnum("status").default("ACTIVE").notNull(),
-  dealId: integer("deal_id"),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "set null" }),
   budget: decimal("budget", { precision: 15, scale: 2 }),
   settings: jsonb("settings").$type<{
     modules: {
@@ -33,6 +34,7 @@ export const projects = pgTable("projects", {
 }, (table) => [
   index("idx_projects_org_status").on(table.orgId, table.status),
   index("idx_projects_manager").on(table.managerId),
+  index("idx_projects_deal").on(table.dealId),
 ]);
 
 export const sprints = pgTable("sprints", {

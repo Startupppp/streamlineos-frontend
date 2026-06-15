@@ -170,6 +170,7 @@ export const targets = pgTable("targets", {
   foreignKey({ columns: [table.parentTargetId], foreignColumns: [table.id] }).onDelete("set null"),
   index("idx_targets_user_period").on(table.userId, table.period),
   index("idx_targets_branch").on(table.branchId),
+  index("idx_targets_parent").on(table.parentTargetId),
 ]);
 
 export const targetHistory = pgTable("target_history", {
@@ -188,7 +189,7 @@ export const targetHistory = pgTable("target_history", {
 
 export const incentiveConfig = pgTable("incentive_config", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   branchId: integer("branch_id").references(() => branches.id),
   incentiveRate: decimal("incentive_rate", { precision: 5, scale: 2 }).notNull(),
   effectiveFrom: timestamp("effective_from").defaultNow().notNull(),
@@ -200,7 +201,7 @@ export const incentiveConfig = pgTable("incentive_config", {
 
 export const incentives = pgTable("incentives", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   branchId: integer("branch_id").references(() => branches.id),
   clientAccountId: integer("client_account_id").notNull().references(() => clientAccounts.id),
   salesRepId: text("sales_rep_id").notNull().references(() => users.id),
@@ -257,7 +258,7 @@ export const tasks = pgTable("tasks", {
 
 export const taskSequences = pgTable("task_sequences", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   createdBy: text("created_by").references(() => users.id),
@@ -276,7 +277,7 @@ export const taskSequenceSteps = pgTable("task_sequence_steps", {
 
 export const territories = pgTable("territories", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   states: text("states").array().default([]),
   cities: text("cities").array().default([]),
@@ -292,7 +293,7 @@ export const territories = pgTable("territories", {
 
 export const customFieldDefinitions = pgTable("custom_field_definitions", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   entityType: text("entity_type").notNull(),
   name: text("name").notNull(),
   label: text("label").notNull(),

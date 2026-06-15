@@ -28,6 +28,7 @@ export const okrGoals = pgTable("okr_goals", {
   foreignKey({ columns: [table.parentGoalId], foreignColumns: [table.id] }).onDelete("set null"),
   index("idx_okr_goals_org").on(table.orgId),
   index("idx_okr_goals_org_status").on(table.orgId, table.status),
+  index("idx_okr_goals_parent").on(table.parentGoalId),
 ]);
 
 export const okrKeyResults = pgTable("okr_key_results", {

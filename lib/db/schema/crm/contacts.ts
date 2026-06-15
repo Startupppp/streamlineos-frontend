@@ -8,7 +8,7 @@ import { leads } from "./leads";
 
 export const branches = pgTable("branches", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   code: text("code").notNull(),
   city: text("city"),
@@ -60,7 +60,7 @@ export const clients = pgTable("clients", {
 
 export const clientAccounts = pgTable("client_accounts", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull().references(() => organizations.id),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   branchId: integer("branch_id").references(() => branches.id),
   leadId: integer("lead_id").notNull().references(() => leads.id),
   salesRepId: text("sales_rep_id").notNull().references(() => users.id),
