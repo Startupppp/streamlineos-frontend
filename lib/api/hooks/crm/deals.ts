@@ -348,6 +348,15 @@ export function useCommissions(params?: { userId?: string; status?: string }) {
   });
 }
 
+export function useUpdateCommissionStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: "approved" | "paid" }) =>
+      apiClient.patch(`/sales/commissions/${id}`, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissions"] }),
+  });
+}
+
 export function useCommissionRules() {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissionRules"] as const,

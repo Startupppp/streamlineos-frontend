@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { tickets, ticketAssignees, users } from "@/lib/db/schema";
 import { createNotification } from "@/server/actions/create-notification";
+import { logTicketFieldChanges } from "@/lib/services/ticket-activity";
 import { logger } from "@/lib/logger";
 import {
   sendTicketAssignmentEmail,
@@ -220,10 +221,37 @@ export async function updateTicket(
 ): Promise<void> {
   const updateFields = buildUpdateFields(input);
 
+  const before = await db.query.tickets.findFirst({
+    where: and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)),
+    columns: {
+      title: true,
+      status: true,
+      priority: true,
+      assigneeId: true,
+      sprintId: true,
+      dueDate: true,
+    },
+  });
+
   await db
     .update(tickets)
     .set(updateFields)
     .where(and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)));
+
+  if (before) {
+    try {
+      await logTicketFieldChanges(db, orgId, ticketId, actingUserId, before, {
+        title: input.title,
+        status: input.status,
+        priority: input.priority,
+        assigneeId: resolveAssigneeId(input.assigneeId),
+        sprintId: input.sprintId,
+        dueDate: input.dueDate,
+      });
+    } catch (logErr) {
+      logger.error("Failed to log ticket activity", { error: logErr });
+    }
+  }
 
   await syncAssignees(ticketId, actingUserId, input);
   await notifyNewAssignees(orgId, ticketId, actingUserId, actorName, input);

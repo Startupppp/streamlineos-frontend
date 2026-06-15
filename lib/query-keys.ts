@@ -374,6 +374,26 @@ export const queryKeys = {
     ticketLinks: (ticketId: number) => [...base, "gitIntegration", "ticketLinks", ticketId] as const,
   },
 
+  ticketActivity: {
+    all: [...base, "ticketActivity"] as const,
+    list: (ticketId: number) => [...base, "ticketActivity", "list", ticketId] as const,
+  },
+
+  supportActivity: {
+    all: [...base, "supportActivity"] as const,
+    list: (ticketId: number) => [...base, "supportActivity", "list", ticketId] as const,
+  },
+
+  kbComments: {
+    all: [...base, "kbComments"] as const,
+    list: (articleId: number) => [...base, "kbComments", "list", articleId] as const,
+  },
+
+  playbook: {
+    all: [...base, "playbook"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "playbook", "list", params] as const,
+  },
+
   kb: {
     all: [...base, "kb"] as const,
     categories: () => [...base, "kb", "categories"] as const,

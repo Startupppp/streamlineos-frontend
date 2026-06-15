@@ -6,3 +6,4 @@ export * from "./crm/billing";
 export * from "./crm/analytics";
 export * from "./crm/customer-success";
 export * from "./crm/nps";
+export * from "./crm/playbook";

@@ -7,3 +7,4 @@ export * from "./goals";
 export * from "./roadmap";
 export * from "./whiteboards";
 export * from "./git";
+export * from "./activity";

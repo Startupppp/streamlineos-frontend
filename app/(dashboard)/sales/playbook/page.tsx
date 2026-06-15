@@ -1,174 +1,52 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Search, Copy, Check } from "lucide-react";
+import { Plus, Copy, Check, Pencil, Trash2, ArrowUp, ArrowDown, BookOpen } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  usePlaybookEntries,
+  useCreatePlaybookEntry,
+  useUpdatePlaybookEntry,
+  useDeletePlaybookEntry,
+  type PlaybookEntry,
+} from "@/lib/api/hooks/sales-playbook";
+import { useAbility } from "@/lib/abilities-context";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
-
-type PlaybookCategory = "Scripts" | "Objections" | "Pricing" | "Qualifying" | "Closing";
-
-interface PlaybookEntry {
-  id: number;
-  category: PlaybookCategory;
-  title: string;
-  content: string;
-  tags: string[];
-}
-
-const PLAYBOOK_ENTRIES: PlaybookEntry[] = [
-  {
-    id: 1,
-    category: "Scripts",
-    title: "Cold Call Opening",
-    content:
-      "Hi [Name], this is [Rep] from StreamlineOS. I'm calling because we help professionals like you grow their wealth through structured investment plans. Do you have 2 minutes to hear how we've helped others in [their industry]?",
-    tags: ["cold-call", "opening", "intro"],
-  },
-  {
-    id: 2,
-    category: "Scripts",
-    title: "Follow-up After Demo",
-    content:
-      "Hi [Name], following up on our conversation from [date]. I wanted to check if you had any questions about the [product] we discussed. Many of our clients find that the [key benefit] really resonates. Would you be open to a quick 15-minute call this week?",
-    tags: ["follow-up", "email", "nurture"],
-  },
-  {
-    id: 3,
-    category: "Objections",
-    title: "Too Expensive",
-    content:
-      "I understand budget is a concern. Let me reframe this — instead of looking at the cost, let's look at the ROI. Our clients typically see [X]% returns over [Y] years. The question isn't can you afford it, it's can you afford not to invest?",
-    tags: ["price", "objection", "ROI"],
-  },
-  {
-    id: 4,
-    category: "Objections",
-    title: "Need to Think About It",
-    content:
-      "Of course, this is an important decision. What specific aspect would you like to think through? Is it the investment amount, the timeline, or something else? I'd rather help you work through your concerns now than have you worry alone.",
-    tags: ["stalling", "objection", "close"],
-  },
-  {
-    id: 5,
-    category: "Objections",
-    title: "Already Have an Advisor",
-    content:
-      "That's great — having an advisor shows you take your finances seriously. Many of our clients work with us alongside their existing advisor. We specialize in [specific niche] that most advisors don't focus on. Would it make sense to see if we complement what you already have?",
-    tags: ["competition", "objection"],
-  },
-  {
-    id: 6,
-    category: "Qualifying",
-    title: "BANT Questions",
-    content:
-      "Budget: 'What range are you thinking for this investment?' Authority: 'Are you the primary decision maker, or is anyone else involved?' Need: 'What's your biggest financial goal for the next 5 years?' Timeline: 'When are you looking to start?'",
-    tags: ["BANT", "discovery", "qualifying"],
-  },
-  {
-    id: 7,
-    category: "Qualifying",
-    title: "Pain Point Discovery",
-    content:
-      "Ask: 'What's your biggest frustration with your current investments?' Then listen. Follow up with: 'How long has this been a challenge?' and 'What have you tried so far?' This reveals real pain and urgency.",
-    tags: ["discovery", "pain-point"],
-  },
-  {
-    id: 8,
-    category: "Pricing",
-    title: "Anchoring High",
-    content:
-      "Always present the premium option first. When you start at ₹10L and move down to ₹5L, ₹5L feels like a bargain. Never lead with the lowest tier — it sets expectations you can't exceed.",
-    tags: ["pricing", "anchoring", "negotiation"],
-  },
-  {
-    id: 9,
-    category: "Pricing",
-    title: "Value Before Price",
-    content:
-      "Never reveal pricing until you've established value. Build the vision of what life looks like after they invest. Ask permission: 'Before I share numbers, can I show you what other clients in your situation have achieved?' Then present pricing as the investment to get there.",
-    tags: ["pricing", "value", "positioning"],
-  },
-  {
-    id: 10,
-    category: "Closing",
-    title: "Assumptive Close",
-    content:
-      "Instead of 'Would you like to proceed?', say 'Let's get you started — I just need your PAN and a few minutes to complete the KYC.' Assume the sale and handle objections as they arise rather than asking for permission.",
-    tags: ["closing", "technique"],
-  },
-  {
-    id: 11,
-    category: "Closing",
-    title: "Urgency Close",
-    content:
-      "Create genuine urgency: 'The current rate locks in at month-end' or 'We have limited slots in the advisory program this quarter.' Never manufacture fake urgency — use real deadlines, real limits.",
-    tags: ["closing", "urgency", "scarcity"],
-  },
-  {
-    id: 12,
-    category: "Scripts",
-    title: "Referral Request",
-    content:
-      "After a successful investment: 'I'm so glad you're seeing results. I have a question — do you know 2-3 people who might benefit from this same outcome? I'd love to help them the way I've helped you, and your endorsement means everything.'",
-    tags: ["referral", "expansion", "script"],
-  },
-  {
-    id: 13,
-    category: "Objections",
-    title: "Market is Uncertain",
-    content:
-      "That's exactly why diversification matters. Market uncertainty affects those who are concentrated in one asset. Our structured plans are designed to perform across cycles — let me show you how we've navigated the last 3 market downturns.",
-    tags: ["market", "risk", "objection"],
-  },
-  {
-    id: 14,
-    category: "Qualifying",
-    title: "Risk Tolerance Assessment",
-    content:
-      "Ask: 'On a scale of 1-10, how would you feel if your investment dropped 20% in value for 6 months before recovering to 30% gains?' This surfaces real risk appetite vs stated risk tolerance — crucial for right product fit.",
-    tags: ["risk", "qualifying", "assessment"],
-  },
-  {
-    id: 15,
-    category: "Closing",
-    title: "Summary Close",
-    content:
-      "Summarize everything agreed: 'So we've established you want [goal], your timeline is [X] years, and your budget is [Y]. Based on all that, [Plan Name] is the right fit. The next step is [specific action]. Does that work for you?'",
-    tags: ["closing", "summary", "recap"],
-  },
-];
-
-const CATEGORIES: Array<"All" | PlaybookCategory> = [
-  "All",
-  "Scripts",
-  "Objections",
-  "Pricing",
-  "Qualifying",
-  "Closing",
-];
-
-const CATEGORY_BADGE_CLASSES: Record<PlaybookCategory, string> = {
-  Scripts: "bg-blue-100 text-blue-700 border-blue-200",
-  Objections: "bg-red-100 text-red-700 border-red-200",
-  Pricing: "bg-amber-100 text-amber-700 border-amber-200",
-  Qualifying: "bg-purple-100 text-purple-700 border-purple-200",
-  Closing: "bg-green-100 text-green-700 border-green-200",
-};
-
+const UNCATEGORIZED = "Uncategorized";
 
 function CopyButton({ content }: { content: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
+    if (!content.trim()) return;
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
@@ -192,117 +70,340 @@ function CopyButton({ content }: { content: string }) {
   );
 }
 
+function PlaybookEntrySheet({
+  entry,
+  onClose,
+}: {
+  entry?: PlaybookEntry;
+  onClose: () => void;
+}) {
+  const isEdit = !!entry;
+  const [title, setTitle] = useState(entry?.title ?? "");
+  const [category, setCategory] = useState(entry?.category ?? "");
+  const [content, setContent] = useState(entry?.content ?? "");
 
-function PlaybookCard({ entry }: { entry: PlaybookEntry }) {
+  const create = useCreatePlaybookEntry();
+  const update = useUpdatePlaybookEntry();
+  const isPending = create.isPending || update.isPending;
+
+  const handleSave = useCallback(() => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      toast.error("Title is required");
+      return;
+    }
+    const payload = {
+      title: trimmedTitle,
+      category: category.trim() || undefined,
+      content: content.trim(),
+    };
+    if (isEdit) {
+      update.mutate(
+        { id: entry.id, ...payload, category: category.trim() || null },
+        {
+          onSuccess: () => { toast.success("Playbook entry updated"); onClose(); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    } else {
+      create.mutate(payload, {
+        onSuccess: () => { toast.success("Playbook entry created"); onClose(); },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    }
+  }, [title, category, content, isEdit, entry, create, update, onClose]);
+
   return (
-    <motion.div variants={fadeUp}>
-      <Card className="h-full flex flex-col shadow-sm hover:shadow-md hover:border-blue-500/30 transition-all">
-        <CardHeader className="pb-2 pt-4 px-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <Badge
-                variant="outline"
-                className={cn("text-[10px] px-1.5 py-0 h-4 mb-1.5 font-medium", CATEGORY_BADGE_CLASSES[entry.category])}
-              >
-                {entry.category}
-              </Badge>
-              <h3 className="text-sm font-semibold leading-snug">{entry.title}</h3>
-            </div>
-            <CopyButton content={entry.content} />
+    <Sheet open onOpenChange={onClose}>
+      <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col">
+        <SheetHeader>
+          <SheetTitle>{isEdit ? "Edit Entry" : "New Playbook Entry"}</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-4 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="pb-title">Title *</Label>
+            <Input
+              id="pb-title"
+              placeholder="e.g. Cold Call Opening"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-3 px-4 pb-4">
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">{entry.content}</p>
-          <div className="flex flex-wrap gap-1 mt-auto pt-1">
-            {entry.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
-                {tag}
-              </Badge>
-            ))}
+          <div className="space-y-1.5">
+            <Label htmlFor="pb-category">Category</Label>
+            <Input
+              id="pb-category"
+              placeholder="e.g. Scripts, Objections, Closing"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pb-content">Content</Label>
+            <Textarea
+              id="pb-content"
+              rows={8}
+              placeholder="Script, objection handler, or best practice…"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+        </div>
+        <SheetFooter>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isPending || !title.trim()}>
+            {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Entry"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
+function PlaybookCard({
+  entry,
+  canManage,
+  canMoveUp,
+  canMoveDown,
+  onEdit,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  reordering,
+}: {
+  entry: PlaybookEntry;
+  canManage: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  reordering: boolean;
+}) {
+  return (
+    <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-all">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-semibold leading-snug min-w-0 flex-1 break-words">{entry.title}</h3>
+          <div className="flex items-center gap-0.5 shrink-0">
+            <CopyButton content={entry.content} />
+            {canManage && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={onMoveUp}
+                  disabled={!canMoveUp || reordering}
+                  aria-label="Move up"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={onMoveDown}
+                  disabled={!canMoveDown || reordering}
+                  aria-label="Move down"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={onEdit}
+                  aria-label="Edit entry"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={onDelete}
+                  aria-label="Delete entry"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 px-4 pb-4">
+        {entry.content.trim() ? (
+          <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">{entry.content}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground/60 italic">No content yet.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SalesPlaybookPage() {
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<"All" | PlaybookCategory>("All");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<PlaybookEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PlaybookEntry | null>(null);
+
+  const ability = useAbility();
+  const canManage = ability.can("manage", "sales");
+
+  const { data, isLoading, isError, refetch } = usePlaybookEntries();
+  const updateEntry = useUpdatePlaybookEntry();
+  const deleteEntry = useDeletePlaybookEntry();
+
+  const entries = useMemo(() => data ?? [], [data]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return PLAYBOOK_ENTRIES.filter((entry) => {
-      const matchesCategory = activeCategory === "All" || entry.category === activeCategory;
-      if (!matchesCategory) return false;
-      if (!q) return true;
-      return (
-        entry.title.toLowerCase().includes(q) ||
-        entry.content.toLowerCase().includes(q) ||
-        entry.tags.some((t) => t.toLowerCase().includes(q))
+    if (!q) return entries;
+    return entries.filter(
+      (e) =>
+        e.title.toLowerCase().includes(q) ||
+        e.content.toLowerCase().includes(q) ||
+        (e.category ?? "").toLowerCase().includes(q),
+    );
+  }, [entries, search]);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, PlaybookEntry[]>();
+    for (const entry of filtered) {
+      const key = entry.category?.trim() || UNCATEGORIZED;
+      const list = map.get(key) ?? [];
+      list.push(entry);
+      map.set(key, list);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filtered]);
+
+  const handleReorder = useCallback(
+    (entry: PlaybookEntry, neighbor: PlaybookEntry) => {
+      updateEntry.mutate(
+        { id: entry.id, sortOrder: neighbor.sortOrder },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
       );
+      updateEntry.mutate(
+        { id: neighbor.id, sortOrder: entry.sortOrder },
+        { onError: (e) => toast.error(getErrorMessage(e)) },
+      );
+    },
+    [updateEntry],
+  );
+
+  const handleDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteEntry.mutate(deleteTarget.id, {
+      onSuccess: () => { toast.success("Playbook entry deleted"); setDeleteTarget(null); },
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [search, activeCategory]);
+  }, [deleteTarget, deleteEntry]);
 
   return (
     <PageWrapper
       title="Sales Playbook"
       subtitle="Scripts, objection handlers, and best practices for your sales team"
+      actions={
+        canManage ? (
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> New Entry
+          </Button>
+        ) : undefined
+      }
       filters={
-        <div className="flex items-center gap-3">
-          <div className="relative max-w-sm w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by title, content, or tag..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-xs"
-            />
-          </div>
+        <div className="relative max-w-sm w-full">
+          <Input
+            placeholder="Search by title, content, or category…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 text-xs"
+          />
         </div>
       }
     >
-      <div className="space-y-4">
-        <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as typeof activeCategory)}>
-          <TabsList className="h-8 gap-0.5">
-            {CATEGORIES.map((cat) => (
-              <TabsTrigger key={cat} value={cat} className="text-xs h-7 px-3">
-                {cat}
-                {cat !== "All" && (
-                  <span className="ml-1.5 text-[9px] text-muted-foreground">
-                    ({PLAYBOOK_ENTRIES.filter((e) => e.category === cat).length})
-                  </span>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+      {isLoading ? (
+        <LoadingState variant="cards" rows={6} />
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load playbook"
+          description="An error occurred while loading playbook entries. Please try again."
+          onRetry={() => refetch()}
+        />
+      ) : entries.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <EmptyState
+            icon={BookOpen}
+            title="No playbook entries yet"
+            description="Build a shared library of scripts, objection handlers, and best practices for your team."
+            action={canManage ? { label: "Add your first playbook entry", onClick: () => setCreateOpen(true) } : undefined}
+          />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center min-h-[40vh]">
+          <EmptyState
+            icon={BookOpen}
+            title="No matching entries"
+            description="Try a different search term."
+          />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {grouped.map(([category, categoryEntries]) => (
+            <div key={category} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold">{category}</h2>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                  {categoryEntries.length}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categoryEntries.map((entry, index) => (
+                  <PlaybookCard
+                    key={entry.id}
+                    entry={entry}
+                    canManage={canManage}
+                    canMoveUp={index > 0}
+                    canMoveDown={index < categoryEntries.length - 1}
+                    reordering={updateEntry.isPending}
+                    onEdit={() => setEditTarget(entry)}
+                    onDelete={() => setDeleteTarget(entry)}
+                    onMoveUp={() => handleReorder(entry, categoryEntries[index - 1])}
+                    onMoveDown={() => handleReorder(entry, categoryEntries[index + 1])}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        <p className="text-xs text-muted-foreground">
-          {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
-          {activeCategory !== "All" && ` in ${activeCategory}`}
-          {search && ` matching "${search}"`}
-        </p>
+      {createOpen && <PlaybookEntrySheet onClose={() => setCreateOpen(false)} />}
+      {editTarget && <PlaybookEntrySheet entry={editTarget} onClose={() => setEditTarget(null)} />}
 
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p className="text-sm font-medium text-foreground">No entries found</p>
-            <p className="text-xs mt-1">Try a different search or category</p>
-          </div>
-        ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {filtered.map((entry) => (
-              <PlaybookCard key={entry.id} entry={entry} />
-            ))}
-          </motion.div>
-        )}
-      </div>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{deleteTarget?.title}&rdquo; will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteEntry.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={deleteEntry.isPending}
+            >
+              {deleteEntry.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   );
 }

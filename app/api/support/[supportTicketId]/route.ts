@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getSupportTicket } from "@/server/queries/support";
 import { db } from "@/lib/db";
-import { supportTickets, users } from "@/lib/db/schema";
+import { supportTickets, supportTicketActivity, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketStatusEmail, sendSupportTicketCreatedEmail } from "@/lib/email";
@@ -13,8 +13,91 @@ const updateSchema = z.object({
   status: z
     .enum(["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"])
     .optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   assigneeId: z.string().optional(),
 });
+
+type TicketUpdateInput = z.infer<typeof updateSchema>;
+
+type ActivityAction =
+  | "status_changed"
+  | "priority_changed"
+  | "assignee_changed"
+  | "resolved"
+  | "reopened";
+
+interface ExistingTicket {
+  status: string;
+  priority: string | null;
+  assigneeId: string | null;
+}
+
+async function logTicketActivity(
+  orgId: string,
+  ticketId: number,
+  userId: string,
+  previous: ExistingTicket,
+  input: TicketUpdateInput
+) {
+  const entries: {
+    action: ActivityAction;
+    fromValue: string | null;
+    toValue: string | null;
+  }[] = [];
+
+  if (input.status && input.status !== previous.status) {
+    const action: ActivityAction =
+      input.status === "RESOLVED"
+        ? "resolved"
+        : (previous.status === "RESOLVED" || previous.status === "CLOSED") &&
+            input.status !== "CLOSED"
+          ? "reopened"
+          : "status_changed";
+    entries.push({ action, fromValue: previous.status, toValue: input.status });
+  }
+
+  if (input.priority && input.priority !== previous.priority) {
+    entries.push({
+      action: "priority_changed",
+      fromValue: previous.priority,
+      toValue: input.priority,
+    });
+  }
+
+  if (
+    input.assigneeId !== undefined &&
+    input.assigneeId !== (previous.assigneeId ?? "")
+  ) {
+    entries.push({
+      action: "assignee_changed",
+      fromValue: previous.assigneeId,
+      toValue: input.assigneeId || null,
+    });
+  }
+
+  if (entries.length === 0) return;
+
+  try {
+    await db.insert(supportTicketActivity).values(
+      entries.map((entry) => ({
+        orgId,
+        supportTicketId: ticketId,
+        userId,
+        action: entry.action,
+        fromValue: entry.fromValue,
+        toValue: entry.toValue,
+      }))
+    );
+  } catch (activityError) {
+    logger.error("Failed to log support ticket activity", {
+      ticketId,
+      error:
+        activityError instanceof Error
+          ? activityError.message
+          : String(activityError),
+    });
+  }
+}
 
 export async function GET(
   _req: NextRequest,
@@ -65,6 +148,7 @@ export async function PATCH(
         if (input.status === "RESOLVED") updateData.resolvedAt = new Date();
         if (input.status === "CLOSED") updateData.closedAt = new Date();
       }
+      if (input.priority) updateData.priority = input.priority;
       if (input.assigneeId !== undefined)
         updateData.assigneeId = input.assigneeId;
 
@@ -77,6 +161,8 @@ export async function PATCH(
             eq(supportTickets.orgId, session.orgId)
           )
         );
+
+      await logTicketActivity(session.orgId, ticketId, session.user.id, ticket, input);
 
       await invalidateCachePattern(`support:tickets:${session.orgId}:*`);
 

@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { SupportActivityLog } from "@/components/support/support-activity-log";
 import type { SupportTicketStatus } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -313,6 +314,13 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-border/40">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+            Activity
+          </h4>
+          <SupportActivityLog supportTicketId={ticket.id} />
         </div>
       </ScrollArea>
 
