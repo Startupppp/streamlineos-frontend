@@ -86,7 +86,9 @@ export async function PATCH(
       if (!existing) return err("Invoice not found", 404);
 
       const body = await req.json();
-      const input = updateSchema.parse(body);
+      const parsed = updateSchema.safeParse(body);
+      if (!parsed.success) return err("Invalid update", 400);
+      const input = parsed.data;
 
       if (input.status) {
         const updateData: Record<string, unknown> = {
@@ -122,12 +124,12 @@ export async function PATCH(
             const total = Number(existing.total ?? 0);
             const supplierStateCode = await resolveSupplierStateCode(session.orgId);
             const placeOfSupplyStateCode = existing.placeOfSupply ?? supplierStateCode;
-            const today = new Date().toISOString().slice(0, 10);
+            const invoiceDate = (existing.createdAt ?? new Date()).toISOString().slice(0, 10);
             await postInvoiceSend({
               orgId: session.orgId,
               invoiceId: existing.id,
               invoiceNumber: existing.invoiceNumber,
-              invoiceDate: today,
+              invoiceDate,
               supplierStateCode,
               placeOfSupplyStateCode,
               subtotal,

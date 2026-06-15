@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { TrendingUp, DollarSign, Briefcase, Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -87,9 +88,14 @@ function ForecastSkeleton() {
 export default function ForecastReportPage() {
   const { data, isLoading } = useDealForecast();
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     if (!data) return;
-    exportToExcel({ byMonth: data.byMonth, byStage: data.byStage });
+    try {
+      await exportToExcel({ byMonth: data.byMonth, byStage: data.byStage });
+      toast.success("Forecast exported");
+    } catch {
+      toast.error("Export failed. Please try again.");
+    }
   }, [data]);
 
   if (isLoading || !data) return <ForecastSkeleton />;

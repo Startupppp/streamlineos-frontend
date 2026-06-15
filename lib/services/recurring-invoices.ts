@@ -5,6 +5,7 @@ import { addDays, addMonths, addWeeks, addYears, format } from "date-fns";
 import { db } from "@/lib/db";
 import { invoices, invoiceItems } from "@/lib/db/schema/crm/billing";
 import { createInvoice, type CreateInvoiceInput } from "@/lib/services/invoices";
+import { logger } from "@/lib/logger";
 
 const GST_RATES = [0, 5, 12, 18, 28] as const;
 type GstRate = (typeof GST_RATES)[number];
@@ -25,6 +26,7 @@ export interface RecurringInvoiceRow {
 export interface GenerateRecurringResult {
   generated: number;
   invoiceIds: number[];
+  failedIds: number[];
 }
 
 function toIsoDate(value: Date): string {
@@ -157,6 +159,7 @@ export async function generateDueRecurringInvoices(
   });
 
   const invoiceIds: number[] = [];
+  const failedIds: number[] = [];
 
   for (const due of dueInvoices) {
     try {
@@ -172,10 +175,15 @@ export async function generateDueRecurringInvoices(
         .where(and(eq(invoices.id, due.id), eq(invoices.orgId, orgId)));
 
       invoiceIds.push(invoice.id);
-    } catch {
-      continue;
+    } catch (error) {
+      failedIds.push(due.id);
+      logger.error("Recurring invoice clone failed", {
+        orgId,
+        sourceInvoiceId: due.id,
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
-  return { generated: invoiceIds.length, invoiceIds };
+  return { generated: invoiceIds.length, invoiceIds, failedIds };
 }

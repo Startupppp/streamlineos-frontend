@@ -9,7 +9,7 @@ const updateSchema = z.object({
   field: z.string().min(1).optional(),
   operator: z.enum(["eq", "gt", "lt", "contains", "in"]).optional(),
   value: z.string().min(1).optional(),
-  points: z.number().int().optional(),
+  points: z.number().int().min(-1000).max(1000).optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ruleId: string }> }) {

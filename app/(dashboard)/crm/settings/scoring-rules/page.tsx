@@ -54,7 +54,7 @@ const ruleSchema = z.object({
   field: z.string().min(1,"Select a field"),
   operator: z.enum(["eq","gt","lt","contains","in"]),
   value: z.string().min(1,"Value required"),
-  points: z.coerce.number().int("Must be integer"),
+  points: z.coerce.number().int("Must be integer").min(-1000, "Min -1000").max(1000, "Max 1000"),
 });
 type RuleForm = z.infer<typeof ruleSchema>;
 
@@ -214,8 +214,8 @@ export default function ScoringRulesPage() {
                 )} />
                 <FormField control={form.control} name="points" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Points</FormLabel>
-                    <FormControl><Input type="number" {...field} placeholder="e.g. 20" /></FormControl>
+                    <FormLabel>Points (-1000 to 1000)</FormLabel>
+                    <FormControl><Input type="number" min={-1000} max={1000} {...field} placeholder="e.g. 20" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

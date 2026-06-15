@@ -5,13 +5,15 @@ import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { commissionRules } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { z } from "zod";
 
 const createSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
   type: z.enum(["flat_percent", "tiered"]).default("flat_percent"),
-  flatRate: z.string().optional(),
+  flatRate: z.string().refine(
+    (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100,
+    "Rate must be a number between 0 and 100",
+  ).optional(),
   tiers: z.array(z.object({
     minValue: z.number(),
     maxValue: z.number().optional(),
@@ -48,7 +50,6 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const role = session.user.role ?? "";
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "settings")) return err("Only admins can create commission rules", 403);

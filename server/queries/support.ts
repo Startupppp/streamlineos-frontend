@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { supportTickets, supportTicketMessages } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql } from "drizzle-orm";
 
 export interface SupportFilters {
   status?: "OPEN" | "IN_PROGRESS" | "WAITING" | "RESOLVED" | "CLOSED";
@@ -61,7 +61,7 @@ export async function getSupportTicket(orgId: string, id: number) {
         with: {
           author: { columns: { id: true, name: true, image: true } },
         },
-        orderBy: [desc(supportTicketMessages.createdAt)],
+        orderBy: [asc(supportTicketMessages.createdAt)],
       },
     },
   });

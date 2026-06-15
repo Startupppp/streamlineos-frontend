@@ -76,6 +76,10 @@ export default function BalanceSheetPage() {
     setAsOf(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Reports"
@@ -99,7 +103,7 @@ export default function BalanceSheetPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {report && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

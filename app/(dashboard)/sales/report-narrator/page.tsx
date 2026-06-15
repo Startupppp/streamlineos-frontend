@@ -131,7 +131,7 @@ export default function ReportNarratorPage() {
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Failed to generate narrative";
       if (msg.toLowerCase().includes("not configured")) {
-        toast.error("AI features require OPENAI_API_KEY to be configured");
+        toast.error("AI features need setup. Add your API key in Settings → AI Settings.");
       } else {
         toast.error(msg);
       }

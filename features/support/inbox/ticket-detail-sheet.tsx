@@ -192,7 +192,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
     new Date(ticket.slaDeadline) < new Date() &&
     !["RESOLVED", "CLOSED"].includes(ticket.status);
 
-  const messages = [...(ticket.messages ?? [])].reverse();
+  const messages = ticket.messages ?? [];
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

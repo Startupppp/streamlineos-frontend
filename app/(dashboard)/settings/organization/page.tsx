@@ -13,6 +13,27 @@ import { OrgProfileSection } from "@/features/settings/organization/org-profile-
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
+function isValidOctet(part: string): boolean {
+  if (!/^\d{1,3}$/.test(part)) return false;
+  const n = Number(part);
+  return n >= 0 && n <= 255;
+}
+
+function isValidIpOrPrefix(value: string): boolean {
+  if (value.endsWith(".")) {
+    const parts = value.slice(0, -1).split(".");
+    if (parts.length < 1 || parts.length > 3) return false;
+    return parts.every(isValidOctet);
+  }
+  const parts = value.split(".");
+  if (parts.length !== 4) return false;
+  return parts.every(isValidOctet);
+}
+
+function isValidDomain(value: string): boolean {
+  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(value);
+}
+
 export default function OrganizationSettingsPage() {
   const { data: org, isLoading } = useOrgSettings();
 
@@ -154,7 +175,15 @@ export default function OrganizationSettingsPage() {
 
   const handleAddIp = useCallback(() => {
     const ip = ipInput.trim();
-    if (!ip || ipAllowlist.includes(ip)) return;
+    if (!ip) return;
+    if (!isValidIpOrPrefix(ip)) {
+      toast.error("Enter a valid IP address (e.g. 203.0.113.5) or prefix (e.g. 192.168.1.)");
+      return;
+    }
+    if (ipAllowlist.includes(ip)) {
+      toast.error("This IP is already in the allowlist");
+      return;
+    }
     setIpAllowlist((prev) => [...prev, ip]);
     setIpInput("");
   }, [ipInput, ipAllowlist]);
@@ -202,7 +231,15 @@ export default function OrganizationSettingsPage() {
 
   const handleAddDomain = useCallback(() => {
     const domain = domainInput.trim().toLowerCase().replace(/^@/, "");
-    if (!domain || allowedEmailDomains.includes(domain)) return;
+    if (!domain) return;
+    if (!isValidDomain(domain)) {
+      toast.error("Enter a valid domain (e.g. company.com)");
+      return;
+    }
+    if (allowedEmailDomains.includes(domain)) {
+      toast.error("This domain is already in the list");
+      return;
+    }
     setAllowedEmailDomains((prev) => [...prev, domain]);
     setDomainInput("");
     domainInputRef.current?.focus();

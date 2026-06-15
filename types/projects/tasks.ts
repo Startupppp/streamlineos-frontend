@@ -175,8 +175,11 @@ export interface UpdateTicketInput {
   assigneeIds?: string[];
   sprintId?: number | null;
   epicId?: number | null;
+  moduleId?: number | null;
   points?: number | null;
   originalEstimate?: number | null;
+  startDate?: string | null;
+  dueDate?: string | null;
 }
 
 export interface UpdateTicketStatusInput {

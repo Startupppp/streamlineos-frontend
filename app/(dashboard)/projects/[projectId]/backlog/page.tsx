@@ -4,6 +4,7 @@ import { use, useMemo, useCallback, useState, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/lib/hooks/trpc-hooks";
 import { useBulkUpdateTickets } from "@/lib/api/hooks/projects";
+import type { BulkUpdateTicketsInput } from "@/lib/api/hooks/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
@@ -95,10 +96,10 @@ const TicketRow = memo(function TicketRow({
       <TableCell>
         <StatusBadge status={ticket.status} />
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden sm:table-cell">
         <PriorityBadge priority={ticket.priority} showLabel />
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden md:table-cell">
         {ticket.assignee ? (
           <div className="flex items-center gap-1.5">
             <Avatar className="h-6 w-6">
@@ -116,7 +117,7 @@ const TicketRow = memo(function TicketRow({
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
         {ticket.createdAt
           ? format(new Date(ticket.createdAt), "MMM d")
           : "—"}
@@ -217,7 +218,11 @@ export default function BacklogPage({ params }: PageProps) {
   }, [filteredTickets]);
 
   const handleBulkUpdate = useCallback(
-    (update: { assigneeId?: string; status?: string; sprintId?: number | null }) => {
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority">>) => {
+      if (selectedIds.size === 0) {
+        toast.error("No tickets selected");
+        return;
+      }
       bulkUpdate.mutate(
         { ticketIds: Array.from(selectedIds), ...update },
         {
@@ -230,6 +235,30 @@ export default function BacklogPage({ params }: PageProps) {
       );
     },
     [selectedIds, bulkUpdate]
+  );
+
+  const handleBulkStatus = useCallback(
+    (value: string) => handleBulkUpdate({ status: value }),
+    [handleBulkUpdate]
+  );
+
+  const handleBulkPriority = useCallback(
+    (value: string) => {
+      if (value === "LOW" || value === "MEDIUM" || value === "HIGH" || value === "URGENT") {
+        handleBulkUpdate({ priority: value });
+      }
+    },
+    [handleBulkUpdate]
+  );
+
+  const handleBulkAssignee = useCallback(
+    (value: string) => handleBulkUpdate({ assigneeId: value }),
+    [handleBulkUpdate]
+  );
+
+  const handleBulkSprint = useCallback(
+    (value: string) => handleBulkUpdate({ sprintId: value === "backlog" ? null : Number(value) }),
+    [handleBulkUpdate]
   );
 
   const statuses =
@@ -262,7 +291,7 @@ export default function BacklogPage({ params }: PageProps) {
         <div className="mx-4 mb-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
           <span className="text-sm font-medium text-primary shrink-0">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
-            <Select onValueChange={(v) => handleBulkUpdate({ status: v })}>
+            <Select onValueChange={handleBulkStatus}>
               <SelectTrigger className="h-7 text-xs w-36"><SelectValue placeholder="Set Status" /></SelectTrigger>
               <SelectContent>
                 {["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"].map((s) => (
@@ -270,7 +299,15 @@ export default function BacklogPage({ params }: PageProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Select onValueChange={(v) => handleBulkUpdate({ assigneeId: v })}>
+            <Select onValueChange={handleBulkPriority}>
+              <SelectTrigger className="h-7 text-xs w-36"><SelectValue placeholder="Set Priority" /></SelectTrigger>
+              <SelectContent>
+                {["LOW", "MEDIUM", "HIGH", "URGENT"].map((p) => (
+                  <SelectItem key={p} value={p} className="text-xs">{p.charAt(0) + p.slice(1).toLowerCase()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select onValueChange={handleBulkAssignee}>
               <SelectTrigger className="h-7 text-xs w-36"><SelectValue placeholder="Assign to" /></SelectTrigger>
               <SelectContent>
                 {members.map((m) => (
@@ -280,7 +317,7 @@ export default function BacklogPage({ params }: PageProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Select onValueChange={(v) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) })}>
+            <Select onValueChange={handleBulkSprint}>
               <SelectTrigger className="h-7 text-xs w-40"><SelectValue placeholder="Move to Sprint" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="backlog" className="text-xs">Backlog (remove sprint)</SelectItem>
@@ -316,9 +353,9 @@ export default function BacklogPage({ params }: PageProps) {
               <TableHead className="w-[80px]" scope="col">ID</TableHead>
               <TableHead scope="col">Title</TableHead>
               <TableHead className="w-[120px]" scope="col">Status</TableHead>
-              <TableHead className="w-[100px]" scope="col">Priority</TableHead>
-              <TableHead className="w-[140px]" scope="col">Assignee</TableHead>
-              <TableHead className="w-[110px]" scope="col">Created</TableHead>
+              <TableHead className="w-[100px] hidden sm:table-cell" scope="col">Priority</TableHead>
+              <TableHead className="w-[140px] hidden md:table-cell" scope="col">Assignee</TableHead>
+              <TableHead className="w-[110px] hidden lg:table-cell" scope="col">Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

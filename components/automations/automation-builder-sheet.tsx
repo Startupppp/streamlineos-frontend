@@ -166,11 +166,22 @@ export function AutomationBuilderSheet({ rule, onClose }: AutomationBuilderSheet
     if (!name.trim()) return "Name is required";
     if (actions.length === 0) return "Add at least one action";
     for (const action of actions) {
-      if (action.type === "notify_roles" && action.config.roles.length === 0) {
-        return "Notify roles action needs at least one role";
+      if (action.type === "notify_roles") {
+        if (action.config.roles.length === 0) return "Notify roles action needs at least one role";
+        if (!action.config.title.trim()) return "Notify roles action needs a title";
+        if (!action.config.message.trim()) return "Notify roles action needs a message";
       }
-      if (action.type === "email" && !action.config.to.trim()) {
-        return "Email action needs a recipient address";
+      if (action.type === "notify_all") {
+        if (!action.config.title.trim()) return "Notify everyone action needs a title";
+        if (!action.config.message.trim()) return "Notify everyone action needs a message";
+      }
+      if (action.type === "email") {
+        if (!action.config.to.trim()) return "Email action needs a recipient address";
+        if (!action.config.subject.trim()) return "Email action needs a subject";
+        if (!action.config.body.trim()) return "Email action needs a body";
+      }
+      if (action.type === "create_task" && !action.config.title.trim()) {
+        return "Create task action needs a title";
       }
       if (action.type === "webhook" && !action.config.event.trim()) {
         return "Webhook action needs an event name";

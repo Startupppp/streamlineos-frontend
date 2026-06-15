@@ -2,9 +2,10 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { supportTickets, supportTicketMessages, users } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketReplyEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 
 const replySchema = z.object({
   body: z.string().min(1),
@@ -44,7 +45,7 @@ export async function GET(
         with: {
           author: { columns: { id: true, name: true, image: true } },
         },
-        orderBy: [desc(supportTicketMessages.createdAt)],
+        orderBy: [asc(supportTicketMessages.createdAt)],
       });
 
       return ok(messages);
@@ -131,7 +132,12 @@ export async function POST(
               input.body
             );
           }
-        })().catch(() => {});
+        })().catch((emailError) => {
+          logger.error("Support reply notification email failed", {
+            ticketId,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+        });
       }
 
       return ok(message, 201);

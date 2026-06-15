@@ -69,6 +69,14 @@ export default function NotificationPreferencesPage() {
   }, []);
 
   const handleSave = useCallback(() => {
+    if (quietStart && quietEnd && quietStart === quietEnd) {
+      toast.error("Quiet hours start and end time cannot be the same");
+      return;
+    }
+    if ((quietStart && !quietEnd) || (!quietStart && quietEnd)) {
+      toast.error("Set both a start and end time for quiet hours");
+      return;
+    }
     updatePrefs.mutate(
       {
         emailEnabled,

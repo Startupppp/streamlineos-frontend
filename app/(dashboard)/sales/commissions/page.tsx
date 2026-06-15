@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import {
-  DollarSign,
   Plus,
   Clock,
   CheckCircle2,
@@ -75,8 +74,17 @@ export default function CommissionsPage() {
 
   const handleCreateRule = useCallback(() => {
     if (!ruleName.trim()) { toast.error("Rule name is required"); return; }
+    let flatRate: string | undefined;
+    if (ruleType === "flat_percent") {
+      const rate = Number(ruleRate);
+      if (!ruleRate.trim() || !Number.isFinite(rate) || rate < 0 || rate > 100) {
+        toast.error("Rate must be a number between 0 and 100");
+        return;
+      }
+      flatRate = String(rate);
+    }
     createRule.mutate(
-      { name: ruleName.trim(), type: ruleType, flatRate: ruleRate || undefined },
+      { name: ruleName.trim(), type: ruleType, flatRate },
       {
         onSuccess: () => { toast.success("Commission rule created"); setRuleDialogOpen(false); setRuleName(""); setRuleRate(""); },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -192,7 +200,7 @@ export default function CommissionsPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Rate (%)</label>
-              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" step="0.1" placeholder="e.g. 5" />
+              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" min="0" max="100" step="0.1" placeholder="e.g. 5" />
             </div>
           </div>
           <DialogFooter>

@@ -28,6 +28,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -81,11 +82,15 @@ export default function ContactsPage() {
     [searchParams, router, pathname],
   );
 
-  const { data, isLoading } = useContacts({
+  const { data, isLoading, error, refetch } = useContacts({
     search: apiSearch || undefined,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
@@ -131,6 +136,19 @@ export default function ContactsPage() {
           <Skeleton className="h-10 w-full max-w-sm" />
           <Skeleton className="h-96" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageWrapper title="Contacts" subtitle="People directory">
+        <ErrorState
+          title="Failed to load contacts"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }

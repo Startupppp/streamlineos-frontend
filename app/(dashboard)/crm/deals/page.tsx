@@ -220,6 +220,7 @@ export default function DealsPage() {
           if (winLossDialog.stage === "WON") setShowConfetti(true);
           setWinLossDialog(null);
         },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [winLossDialog, winLossCategory, winLossNotes, updateStageMutation]);
@@ -242,6 +243,7 @@ export default function DealsPage() {
           toast.success("Deal stage updated");
           setStageSkipDialog(null);
         },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [stageSkipDialog, updateStageMutation]);

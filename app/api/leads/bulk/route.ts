@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { leads } from "@/lib/db/schema";
+import { leads, organizationMembers } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -27,6 +27,14 @@ export async function PATCH(req: NextRequest) {
     if (update.status) setData.status = update.status;
     if (update.priority) setData.priority = update.priority;
     if (update.assignedToId) {
+      const member = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, update.assignedToId),
+          eq(organizationMembers.orgId, session.orgId!),
+        ),
+        columns: { id: true },
+      });
+      if (!member) return err("Assignee not found in organization", 400);
       setData.assignedToId = update.assignedToId;
       setData.assignedAt = new Date();
       setData.assignedById = session.user.id;

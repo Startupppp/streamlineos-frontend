@@ -67,12 +67,16 @@ function ApplyDialog({
   const apply = useApplyTaskSequence();
 
   function handleApply() {
-    if (!baseDate) return;
+    const base = new Date(baseDate);
+    if (!baseDate || Number.isNaN(base.getTime())) {
+      toast.error("Please select a valid base date");
+      return;
+    }
     apply.mutate(
       {
         sequenceId: sequence.id,
         input: {
-          baseDate: new Date(baseDate).toISOString(),
+          baseDate: base.toISOString(),
           entityType: entityType !== "" ? entityType : undefined,
           entityId: entityId ? Number(entityId) : undefined,
         },

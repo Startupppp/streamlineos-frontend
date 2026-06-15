@@ -3,14 +3,15 @@ import { npsSurveys, npsResponses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
-import { parseBody } from "@/lib/api/helpers";
 import { categoryForScore } from "@/lib/services/nps";
 
 const submitSchema = z.object({
   score: z.number().int().min(0).max(10),
   comment: z.string().max(2000).optional(),
   name: z.string().max(200).optional(),
-  email: z.string().email().max(320).optional().or(z.literal("")),
+  email: z
+    .union([z.string().email("Please enter a valid email address").max(320), z.literal("")])
+    .optional(),
 });
 
 type Params = { params: Promise<{ token: string }> };
@@ -50,7 +51,12 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Survey not found or no longer active" }, { status: 404 });
   }
 
-  const input = await parseBody(req, submitSchema);
+  const parsed = submitSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message ?? "Invalid submission";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+  const input = parsed.data;
   const email = input.email && input.email.length > 0 ? input.email : null;
 
   await db.insert(npsResponses).values({

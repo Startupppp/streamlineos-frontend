@@ -3,8 +3,8 @@ import { revalidateTag } from "next/cache";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { createPayment, getInvoicePayments } from "@/server/queries/invoice";
 import { db } from "@/lib/db";
-import { invoices } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { invoices, payments } from "@/lib/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { postPaymentReceipt } from "@/lib/accounting/post-payment";
 import { seedChartOfAccountsForOrg } from "@/lib/accounting/seed-coa";
@@ -50,6 +50,15 @@ export async function POST(
     const body = await req.json() as unknown;
     const parsed = recordPaymentSchema.safeParse(body);
     if (!parsed.success) return err("Invalid payment data", 400);
+
+    const [{ totalPaid }] = await db
+      .select({ totalPaid: sql<number>`COALESCE(sum(${payments.amount}::numeric), 0)::float` })
+      .from(payments)
+      .where(and(eq(payments.invoiceId, invoiceId), eq(payments.orgId, session.orgId)));
+    const remaining = Number(invoice.total ?? 0) - totalPaid;
+    if (parsed.data.amount > remaining + 0.01) {
+      return err(`Payment amount ${parsed.data.amount.toFixed(2)} exceeds outstanding balance ${remaining.toFixed(2)}`, 400);
+    }
 
     await seedChartOfAccountsForOrg(session.orgId);
 

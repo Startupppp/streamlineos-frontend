@@ -10,7 +10,7 @@ const createSchema = z.object({
   field: z.string().min(1),
   operator: z.enum(["eq", "gt", "lt", "contains", "in"]),
   value: z.string().min(1),
-  points: z.number().int(),
+  points: z.number().int().min(-1000).max(1000),
 });
 
 export async function GET() {

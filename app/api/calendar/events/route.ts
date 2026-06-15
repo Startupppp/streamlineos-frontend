@@ -6,7 +6,7 @@ import {
   createCalendarEvent,
   getOooConflicts,
 } from "@/server/queries/calendar";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 const getSchema = z.object({
   start: z.string(),
@@ -35,7 +35,18 @@ const postSchema = z.object({
   agenda: z.string().optional(),
   linkedDealId: z.number().int().optional(),
   linkedLeadId: z.number().int().optional(),
-});
+}).refine(
+  (v) => {
+    const start = new Date(v.startDate);
+    const end = new Date(v.endDate);
+    return (
+      !Number.isNaN(start.getTime()) &&
+      !Number.isNaN(end.getTime()) &&
+      end > start
+    );
+  },
+  { message: "End date must be after start date", path: ["endDate"] },
+);
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -74,7 +85,10 @@ export async function POST(req: NextRequest) {
     let input: z.infer<typeof postSchema>;
     try {
       input = await parseBody(req, postSchema);
-    } catch {
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return err(error.issues[0]?.message ?? "Invalid request body", 400);
+      }
       return err("Invalid request body", 400);
     }
 

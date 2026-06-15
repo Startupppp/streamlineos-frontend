@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Webhook, Trash2, ToggleLeft, ToggleRight, Copy, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Plus, Webhook, Trash2, ToggleLeft, ToggleRight, Copy, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
@@ -37,6 +35,15 @@ const AVAILABLE_EVENTS = [
   { id: "invoice.paid", label: "Invoice Paid" },
   { id: "employee.onboarded", label: "Employee Onboarded" },
 ];
+
+function isValidWebhookUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 interface WebhookEndpoint {
   id: number;
@@ -96,15 +103,19 @@ export default function WebhooksPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [showSecrets, setShowSecrets] = useState<Record<number, boolean>>({});
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
   const handleCreate = useCallback(async () => {
-    if (!url.trim()) { toast.error("URL is required"); return; }
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) { toast.error("URL is required"); return; }
+    if (!isValidWebhookUrl(trimmedUrl)) {
+      toast.error("Enter a valid HTTP(S) URL (e.g. https://your-server.com/webhook)");
+      return;
+    }
     createWebhook.mutate(
-      { url: url.trim(), description: description.trim() || undefined, events: selectedEvents },
+      { url: trimmedUrl, description: description.trim() || undefined, events: selectedEvents },
       {
         onSuccess: () => {
           toast.success("Webhook created");

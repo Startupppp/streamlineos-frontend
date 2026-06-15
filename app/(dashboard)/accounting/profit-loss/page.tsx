@@ -106,6 +106,10 @@ export default function ProfitLossPage() {
     setTo(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const pnl = query.data;
   const income = pnl?.income ?? [];
   const expense = pnl?.expense ?? [];
@@ -157,6 +161,7 @@ export default function ProfitLossPage() {
           <ErrorState
             title="Failed to load profit & loss"
             description={query.error.message}
+            onRetry={handleRetry}
           />
         ) : !pnl || !hasAnyRows ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">

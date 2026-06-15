@@ -20,8 +20,11 @@ export const updateTicketSchema = z.object({
   assigneeIds: z.array(z.string()).optional(),
   sprintId: z.number().nullable().optional(),
   epicId: z.number().nullable().optional(),
+  moduleId: z.number().nullable().optional(),
   points: z.number().nullable().optional(),
   originalEstimate: z.number().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
 });
 
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
@@ -48,10 +51,13 @@ function buildUpdateFields(input: UpdateTicketInput): Record<string, unknown> {
   if (resolvedAssignee !== undefined) fields.assigneeId = resolvedAssignee;
   if (input.sprintId !== undefined) fields.sprintId = input.sprintId;
   if (input.epicId !== undefined) fields.epicId = input.epicId;
+  if (input.moduleId !== undefined) fields.moduleId = input.moduleId;
   if (input.points !== undefined) fields.points = input.points;
   if (input.originalEstimate !== undefined) {
     fields.originalEstimate = input.originalEstimate?.toString();
   }
+  if (input.startDate !== undefined) fields.startDate = input.startDate;
+  if (input.dueDate !== undefined) fields.dueDate = input.dueDate;
   return fields;
 }
 

@@ -28,6 +28,10 @@ export default function TrialBalancePage() {
     setAsOf(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const tb = query.data;
   const rows = tb?.rows ?? [];
 
@@ -78,6 +82,7 @@ export default function TrialBalancePage() {
           <ErrorState
             title="Failed to load trial balance"
             description={query.error.message}
+            onRetry={handleRetry}
           />
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">

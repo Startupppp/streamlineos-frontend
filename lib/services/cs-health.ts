@@ -218,15 +218,18 @@ export async function computeHealthForOrg(orgId: string): Promise<HealthScoreRes
   });
 
   if (results.length > 0) {
-    await db.insert(clientHealthScores).values(
-      results.map((r) => ({
-        orgId,
-        clientAccountId: r.clientAccountId,
-        score: r.score,
-        status: r.status,
-        breakdown: r.breakdown,
-      })),
-    );
+    await db.transaction(async (tx) => {
+      await tx.delete(clientHealthScores).where(eq(clientHealthScores.orgId, orgId));
+      await tx.insert(clientHealthScores).values(
+        results.map((r) => ({
+          orgId,
+          clientAccountId: r.clientAccountId,
+          score: r.score,
+          status: r.status,
+          breakdown: r.breakdown,
+        })),
+      );
+    });
   }
 
   return results;

@@ -6,6 +6,8 @@ import { supportTickets, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketStatusEmail, sendSupportTicketCreatedEmail } from "@/lib/email";
+import { invalidateCachePattern } from "@/lib/cache";
+import { logger } from "@/lib/logger";
 
 const updateSchema = z.object({
   status: z
@@ -76,6 +78,8 @@ export async function PATCH(
           )
         );
 
+      await invalidateCachePattern(`support:tickets:${session.orgId}:*`);
+
       if (input.status) {
         void (async () => {
           const creator = await db.query.users.findFirst({
@@ -92,7 +96,12 @@ export async function PATCH(
               session.user.name ?? "Support"
             );
           }
-        })().catch(() => {});
+        })().catch((emailError) => {
+          logger.error("Support status notification email failed", {
+            ticketId,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+        });
       }
 
       if (input.assigneeId && input.assigneeId !== ticket.assigneeId) {
@@ -111,7 +120,12 @@ export async function PATCH(
               ticketId
             );
           }
-        })().catch(() => {});
+        })().catch((emailError) => {
+          logger.error("Support assignment notification email failed", {
+            ticketId,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+        });
       }
 
       return ok({ success: true });

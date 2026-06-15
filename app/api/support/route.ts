@@ -8,6 +8,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { sendSupportTicketCreatedEmail } from "@/lib/email";
 import { applyRoutingRules } from "@/lib/services/support-routing";
+import { logger } from "@/lib/logger";
 
 const TICKET_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 type TicketPriority = (typeof TICKET_PRIORITIES)[number];
@@ -120,8 +121,11 @@ export async function POST(req: NextRequest) {
         if (routing.setPriority && !callerSetPriority && isTicketPriority(routing.setPriority)) {
           finalPriority = routing.setPriority;
         }
-      } catch {
-
+      } catch (routingError) {
+        logger.error("Support routing rules failed to apply", {
+          orgId: session.orgId,
+          error: routingError instanceof Error ? routingError.message : String(routingError),
+        });
       }
 
       const slaHours = SLA_HOURS[finalPriority];
@@ -159,7 +163,12 @@ export async function POST(req: NextRequest) {
               ticket.id
             );
           }
-        })().catch(() => {});
+        })().catch((emailError) => {
+          logger.error("Support ticket created notification email failed", {
+            ticketId: ticket.id,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+        });
       }
 
       await invalidateCachePattern(`support:tickets:${session.orgId}:*`);

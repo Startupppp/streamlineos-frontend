@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -66,10 +65,10 @@ export default function RepComparisonPage() {
   const [rep1, setRep1] = useState<string>("");
   const [rep2, setRep2] = useState<string>("");
 
-  const { data: leaderboard, isLoading: lbLoading } = useSalesDashboardLeaderboard();
+  const { data: leaderboard } = useSalesDashboardLeaderboard();
   const { data: comparison, isLoading: cmpLoading } = useRepComparison(
-    rep1 ? Number(rep1) : null,
-    rep2 ? Number(rep2) : null,
+    rep1 && rep1 !== rep2 ? Number(rep1) : null,
+    rep2 && rep1 !== rep2 ? Number(rep2) : null,
   );
 
   const reps = leaderboard ?? [];
@@ -123,14 +122,21 @@ export default function RepComparisonPage() {
         </div>
       )}
 
-      {rep1 && rep2 && cmpLoading && (
+      {rep1 && rep2 && rep1 === rep2 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-muted-foreground">
+          <GitCompare className="h-10 w-10 opacity-30" />
+          <p>Please select two different reps to compare</p>
+        </div>
+      )}
+
+      {rep1 && rep2 && rep1 !== rep2 && cmpLoading && (
         <div className="space-y-4">
           <Skeleton className="h-48" />
           <Skeleton className="h-72" />
         </div>
       )}
 
-      {comparison && (
+      {comparison && rep1 !== rep2 && (
         <>
           <Card className="mb-6">
             <CardHeader className="pb-2">

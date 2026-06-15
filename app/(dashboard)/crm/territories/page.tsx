@@ -57,7 +57,8 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
   const addTag = useCallback(
     (value: string) => {
       const trimmed = value.trim();
-      if (trimmed && !tags.includes(trimmed)) {
+      const lower = trimmed.toLowerCase();
+      if (trimmed && !tags.some((t) => t.toLowerCase() === lower)) {
         onChange([...tags, trimmed]);
       }
       setInputValue("");

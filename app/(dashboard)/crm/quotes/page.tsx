@@ -110,12 +110,17 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject || !validUntil || lineItems.some((li) => !li.description)) {
+    if (!subject.trim() || !validUntil) {
       toast.error("Please fill all required fields");
       return;
     }
+    if (lineItems.some((li) => !li.description.trim())) {
+      toast.error("Every line item needs a description");
+      return;
+    }
+    const cleanedItems = lineItems.map((li) => ({ ...li, description: li.description.trim() }));
     createQuote.mutate(
-      { subject, validUntil, notes: notes || undefined, lineItems },
+      { subject: subject.trim(), validUntil, notes: notes || undefined, lineItems: cleanedItems },
       {
         onSuccess: () => {
           toast.success("Quote created successfully");

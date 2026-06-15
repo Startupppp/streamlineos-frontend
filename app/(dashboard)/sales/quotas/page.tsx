@@ -74,6 +74,15 @@ export default function SalesQuotasPage() {
       toast.error("Employee, dates, and target revenue are required");
       return;
     }
+    if (new Date(startDate) >= new Date(endDate)) {
+      toast.error("Start date must be before end date");
+      return;
+    }
+    const target = Number(targetRevenue);
+    if (!Number.isFinite(target) || target <= 0) {
+      toast.error("Target revenue must be a positive number");
+      return;
+    }
     createQuota.mutate(
       { userId, period, startDate, endDate, targetRevenue, notes: notes || undefined },
       {
@@ -174,17 +183,17 @@ export default function SalesQuotasPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Start Date</label>
+            <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
             <DatePicker value={startDate} onChange={setStartDate} placeholder="Start date" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">End Date</label>
+            <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
             <DatePicker value={endDate} onChange={setEndDate} placeholder="End date" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Target Revenue (₹)</label>
-          <Input type="text" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
+          <label className="text-sm font-medium">Target Revenue (₹) <span className="text-destructive">*</span></label>
+          <Input type="number" min="0" step="1" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>

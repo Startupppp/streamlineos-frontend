@@ -42,7 +42,23 @@ export const createInvoiceSchema = z.object({
   taxInclusive: z.boolean().optional(),
 }).refine((v) => Boolean(v.items?.length || v.lineItems?.length), {
   message: "Either items or lineItems must be provided",
+}).refine((v) => v.discount <= computeGrossTotal(v), {
+  message: "Discount cannot exceed the invoice subtotal plus tax",
+  path: ["discount"],
 });
+
+function computeGrossTotal(input: {
+  items?: { quantity: number; rate: number; gstRate: number }[];
+  lineItems?: { amount: number }[];
+}): number {
+  if (input.items?.length) {
+    return input.items.reduce((acc, it) => {
+      const amount = it.quantity * it.rate;
+      return acc + amount + amount * (it.gstRate / 100);
+    }, 0);
+  }
+  return (input.lineItems ?? []).reduce((acc, li) => acc + li.amount, 0);
+}
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 
@@ -178,12 +194,12 @@ export async function createInvoice(
     }
 
     if (status === "SENT") {
-      const today = new Date().toISOString().slice(0, 10);
+      const invoiceDate = (inserted.createdAt ?? new Date()).toISOString().slice(0, 10);
       await postInvoiceSend({
         orgId,
         invoiceId: inserted.id,
         invoiceNumber: inserted.invoiceNumber,
-        invoiceDate: today,
+        invoiceDate,
         supplierStateCode,
         placeOfSupplyStateCode,
         subtotal,

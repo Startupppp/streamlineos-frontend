@@ -46,7 +46,20 @@ const invoiceFormSchema = z.object({
   customerGstin: z.string().regex(GSTIN_REGEX, "Invalid GSTIN").optional().or(z.literal("")),
   supplierGstin: z.string().regex(GSTIN_REGEX, "Invalid GSTIN").optional().or(z.literal("")),
   reverseCharge: z.boolean(),
+}).refine((v) => v.discount <= grossTotal(v.items), {
+  message: "Discount cannot exceed the invoice subtotal plus tax",
+  path: ["discount"],
 });
+
+function grossTotal(items: { quantity: number; rate: number; gstRate: number }[]): number {
+  return items.reduce((acc, it) => {
+    const qty = Number(it.quantity) || 0;
+    const rate = Number(it.rate) || 0;
+    const gstRate = Number(it.gstRate) || 0;
+    const amount = qty * rate;
+    return acc + amount + amount * (gstRate / 100);
+  }, 0);
+}
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
@@ -434,6 +447,9 @@ export default function NewInvoicePage() {
                 className="h-8 text-sm"
                 {...register("discount", { valueAsNumber: true })}
               />
+              {errors.discount?.message && (
+                <p className="text-xs text-destructive">{errors.discount.message}</p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="due-date" className="text-xs">Due Date</Label>
