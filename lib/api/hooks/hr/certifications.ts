@@ -27,6 +27,7 @@ export function useCertifications(params?: { userId?: string; expiringSoon?: boo
   return useQuery({
     queryKey: certKeys.list(params as Record<string, unknown> | undefined),
     queryFn: () => apiClient.get<Certification[]>("/hr/certifications", params as Record<string, unknown> | undefined),
+    staleTime: 2 * 60_000,
   });
 }
 

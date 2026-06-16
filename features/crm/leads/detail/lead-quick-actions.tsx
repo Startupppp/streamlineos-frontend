@@ -61,34 +61,34 @@ interface LeadQuickActionsProps {
 
 const ACTION_BUTTONS = [
   {
-    key: "call" as const,
-    label: "Log Call",
+    key:"call" as const,
+    label:"Log Call",
     icon: Phone,
-    color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
+    color:"bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
   },
   {
-    key: "email" as const,
-    label: "Send Email",
+    key:"email" as const,
+    label:"Send Email",
     icon: Mail,
-    color: "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20",
+    color:"bg-purple-500/10 text-purple-400 hover:bg-purple-500/20",
   },
   {
-    key: "note" as const,
-    label: "Add Note",
+    key:"note" as const,
+    label:"Add Note",
     icon: StickyNote,
-    color: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
+    color:"bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
   },
   {
-    key: "task" as const,
-    label: "New Task",
+    key:"task" as const,
+    label:"New Task",
     icon: ListTodo,
-    color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
+    color:"bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
   },
   {
-    key: "draft" as const,
-    label: "Draft Email",
+    key:"draft" as const,
+    label:"Draft Email",
     icon: Wand2,
-    color: "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20",
+    color:"bg-violet-500/10 text-violet-400 hover:bg-violet-500/20",
   },
 ] as const;
 
@@ -106,7 +106,7 @@ function ActionToggleButton({ action, isActive, onSetActiveAction }: ActionToggl
     <Button
       variant="ghost"
       size="sm"
-      className={cn(action.color, isActive && "ring-2 ring-current/30")}
+      className={cn(action.color, isActive &&"ring-2 ring-current/30")}
       onClick={handleClick}
     >
       <action.icon className="h-4 w-4 mr-1.5" />
@@ -142,8 +142,8 @@ export function LeadQuickActions({
   const handleApplyTemplate = useCallback((templateId: string) => {
     const template = emailTemplates?.find((t) => String(t.id) === templateId);
     if (!template) return;
-    const subject = template.subject.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
-    const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
+    const subject = template.subject.replace(/\{\{lead_name\}\}/gi, leadName ??"");
+    const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ??"");
     emailForm.setValue("subject", subject);
     emailForm.setValue("body", body);
   }, [emailTemplates, leadName, emailForm]);
@@ -154,7 +154,7 @@ export function LeadQuickActions({
       {
         leadName,
         context: leadContext,
-        tone: "formal",
+        tone:"formal",
       },
       {
         onSuccess: (result) => {
@@ -184,14 +184,14 @@ export function LeadQuickActions({
           ))}
         </div>
 
-        {activeAction === "draft" && (
+        {activeAction ==="draft" && (
           <div className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <p className="text-sm font-medium mb-1">AI Email Draft</p>
                 <p className="text-xs text-muted-foreground">
-                  Generate a professional email for{" "}
-                  <span className="font-medium text-foreground">{leadName ?? "this lead"}</span>{" "}
+                  Generate a professional email for{""}
+                  <span className="font-medium text-foreground">{leadName ??"this lead"}</span>{""}
                   using AI. The draft will pre-fill the email form for your review.
                 </p>
               </div>
@@ -228,7 +228,7 @@ export function LeadQuickActions({
           </div>
         )}
 
-        {activeAction === "note" && (
+        {activeAction ==="note" && (
           <Form {...noteForm}>
             <form
               onSubmit={noteForm.handleSubmit(onNoteSubmit)}
@@ -263,17 +263,16 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-gold hover:bg-gold/80 text-white"
-                  disabled={isNotePending}
+                                    disabled={isNotePending}
                 >
-                  {isNotePending ? "Saving..." : "Save Note"}
+                  {isNotePending ?"Saving..." :"Save Note"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction === "task" && (
+        {activeAction ==="task" && (
           <Form {...taskForm}>
             <form
               onSubmit={taskForm.handleSubmit(onTaskSubmit)}
@@ -299,7 +298,7 @@ export function LeadQuickActions({
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value || ""} onChange={field.onChange} placeholder="Select due date" />
+                      <DatePicker value={field.value ||""} onChange={field.onChange} placeholder="Select due date" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -317,17 +316,16 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-gold hover:bg-gold/80 text-white"
-                  disabled={isTaskPending}
+                                    disabled={isTaskPending}
                 >
-                  {isTaskPending ? "Creating..." : "Create Task"}
+                  {isTaskPending ?"Creating..." :"Create Task"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction === "email" && (
+        {activeAction ==="email" && (
           <Form {...emailForm}>
             <form
               onSubmit={emailForm.handleSubmit(onEmailSubmit)}
@@ -405,17 +403,16 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-gold hover:bg-gold/80 text-white"
-                  disabled={isEmailPending}
+                                    disabled={isEmailPending}
                 >
-                  {isEmailPending ? "Sending..." : "Send Email"}
+                  {isEmailPending ?"Sending..." :"Send Email"}
                 </Button>
               </div>
             </form>
           </Form>
         )}
 
-        {activeAction === "call" && (
+        {activeAction ==="call" && (
           <Form {...callForm}>
             <form
               onSubmit={callForm.handleSubmit(onCallSubmit)}
@@ -487,10 +484,9 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-gold hover:bg-gold/80 text-white"
-                  disabled={isCallPending}
+                                    disabled={isCallPending}
                 >
-                  {isCallPending ? "Logging..." : "Log Call"}
+                  {isCallPending ?"Logging..." :"Log Call"}
                 </Button>
               </div>
             </form>

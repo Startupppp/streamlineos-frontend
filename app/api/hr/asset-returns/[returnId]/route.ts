@@ -1,4 +1,4 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { assetReturns } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -15,7 +15,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ returnId: string }> }
 ) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:assets", async (session) => {
     const { returnId: id } = await params;
     const returnId = Number(id);
     if (isNaN(returnId)) return err("Invalid asset return ID.", 400);

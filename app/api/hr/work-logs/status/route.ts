@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { sendWorkLogStatusEmail } from "@/lib/email";
@@ -16,7 +16,9 @@ const patchWorkLogStatusSchema = z.object({
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:attendance")) {
       return err("Only admins can approve or reject work logs.", 403);
     }
 

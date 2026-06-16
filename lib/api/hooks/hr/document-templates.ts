@@ -14,6 +14,7 @@ export interface DocumentTemplate {
   variables: string[];
   version: number;
   isActive: boolean;
+  isDefault: boolean;
   createdBy: string;
   createdAt: string | null;
   updatedAt: string | null;
@@ -64,6 +65,7 @@ export function useDocumentTemplates(type?: string) {
         "/hr/documents/templates",
         params as Record<string, unknown> | undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -71,6 +73,7 @@ export function useDocumentTemplate(id: number) {
   return useQuery({
     queryKey: queryKeys.hr.documentTemplate(id),
     queryFn: () => apiClient.get<DocumentTemplate>(`/hr/documents/templates/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -105,6 +108,15 @@ export function useDeleteDocumentTemplate() {
   });
 }
 
+export function useSetDocumentTemplateDefault() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isDefault }: { id: number; isDefault: boolean }) =>
+      apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${id}`, { isDefault }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
+  });
+}
+
 export interface DocumentTemplateVersion {
   id: number;
   templateId: number;
@@ -125,6 +137,7 @@ export function useDocumentTemplateVersions(templateId: number) {
       apiClient.get<DocumentTemplateVersion[]>(
         `/hr/documents/templates/${templateId}/versions`
       ),
+    staleTime: 2 * 60_000,
     enabled: !!templateId,
   });
 }
@@ -136,6 +149,7 @@ export function useCandidateDocuments(candidateId: number) {
       apiClient.get<CandidateDocument[]>(
         `/hr/recruitment/candidates/${candidateId}/documents`
       ),
+    staleTime: 2 * 60_000,
     enabled: !!candidateId,
   });
 }

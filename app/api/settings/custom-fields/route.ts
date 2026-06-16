@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { customFieldDefinitions } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
@@ -22,7 +22,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   const entityType = req.nextUrl.searchParams.get("entityType") ?? undefined;
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:custom-fields", async (session) => {
     const where = entityType
       ? and(
           eq(customFieldDefinitions.orgId, session.orgId),
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     return err("Invalid request body", 400);
   }
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:custom-fields", async (session) => {
     const existing = await db
       .select({ id: customFieldDefinitions.id })
       .from(customFieldDefinitions)

@@ -11,25 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
-import { Plus, Calendar, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { Plus, Calendar, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ReviewCycle } from "@/types/hr";
 
 export function CyclesTab() {
@@ -48,11 +42,7 @@ export function CyclesTab() {
 
   const openCreate = useCallback(() => {
     setEditCycle(null);
-    setName("");
-    setType("QUARTERLY");
-    setPeriodStart("");
-    setPeriodEnd("");
-    setDeadline("");
+    setName(""); setType("QUARTERLY"); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
     setSheetOpen(true);
   }, []);
 
@@ -66,34 +56,39 @@ export function CyclesTab() {
     setSheetOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    if (!name || !periodStart || !periodEnd) {
-      toast.error("Name and period are required");
-      return;
+  const handleCreate = useCallback(() => {
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Cycle name is required"); return; }
+    if (trimmedName.length < 3) { toast.error("Cycle name must be at least 3 characters"); return; }
+    if (trimmedName.length > 100) { toast.error("Cycle name must be at most 100 characters"); return; }
+    if (!/[a-zA-Z0-9]/.test(trimmedName)) { toast.error("Cycle name must contain at least one letter or number"); return; }
+    if (/\s{2,}/.test(trimmedName)) { toast.error("Cycle name cannot have consecutive spaces"); return; }
+    if (!periodStart) { toast.error("Period start date is required"); return; }
+    if (!editCycle) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (periodStart < today) { toast.error("Period start date cannot be earlier than today"); return; }
+    }
+    if (!periodEnd) { toast.error("Period end date is required"); return; }
+    if (periodEnd < periodStart) { toast.error("Period end must be after period start"); return; }
+    if (deadline && (deadline < periodStart || deadline > periodEnd)) {
+      toast.error("Deadline must fall within the review period dates"); return;
     }
     if (editCycle) {
       updateCycle.mutate(
-        { id: editCycle.id, name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { id: editCycle.id, name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
         {
-          onSuccess: () => {
-            toast.success("Cycle updated");
-            setSheetOpen(false);
-            setEditCycle(null);
-          },
+          onSuccess: () => { toast.success("Cycle updated"); setSheetOpen(false); setEditCycle(null); },
           onError: (e) => toast.error(getErrorMessage(e)),
         }
       );
     } else {
       createCycle.mutate(
-        { name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        { name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
         {
           onSuccess: () => {
             toast.success("Cycle created");
             setSheetOpen(false);
-            setName("");
-            setPeriodStart("");
-            setPeriodEnd("");
-            setDeadline("");
+            setName(""); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
           },
           onError: (e) => toast.error(getErrorMessage(e)),
         }
@@ -104,43 +99,19 @@ export function CyclesTab() {
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
     deleteCycle.mutate(deleteId, {
-      onSuccess: () => {
-        toast.success("Cycle deleted");
-        setDeleteId(null);
-      },
+      onSuccess: () => { toast.success("Cycle deleted"); setDeleteId(null); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteId, deleteCycle]);
 
-  const handleDeleteDialogChange = useCallback(
-    (open: boolean) => { if (!open) setDeleteId(null); },
-    []
-  );
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value),
-    []
-  );
-  const handlePeriodStartChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value),
-    []
-  );
-  const handlePeriodEndChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value),
-    []
-  );
-  const handleDeadlineChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setDeadline(e.target.value),
-    []
-  );
+  const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handlePeriodStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value), []);
+  const handlePeriodEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value), []);
+  const handleDeadlineChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeadline(e.target.value), []);
 
   if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    );
+    return <LoadingState variant="list" rows={3} />;
   }
 
   return (
@@ -153,56 +124,64 @@ export function CyclesTab() {
       </div>
 
       {!cycles?.length ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Calendar className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No review cycles yet. Create a quarterly or annual cycle.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState icon={Calendar} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
       ) : (
         <div className="space-y-2">
           {cycles.map((cycle: ReviewCycle) => (
-            <CycleCard
-              key={cycle.id}
-              cycle={cycle}
-              onEdit={openEdit}
-              onDeleteRequest={setDeleteId}
-            />
+            <Card key={cycle.id}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{cycle.name}</p>
+                    <Badge variant={cycle.status === "ACTIVE" ? "default" : cycle.status === "COMPLETED" ? "secondary" : "outline"} className="text-[10px]">{cycle.status}</Badge>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {cycle.periodStart} → {cycle.periodEnd}
+                    {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
+                    {cycle.type && <> &middot; {cycle.type}</>}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEdit(cycle)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(cycle.id)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
-      <HrSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"}
-        onSubmit={handleSubmit}
-        submitLabel={editCycle ? "Save Changes" : "Create"}
-        isPending={createCycle.isPending || updateCycle.isPending}
-      >
+      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={handleCreate} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Cycle Name</label>
-          <Input
-            placeholder="e.g., Q2 2026 Review"
-            value={name}
-            onChange={handleNameChange}
-          />
+          <Input placeholder="e.g., Q2 2026 Review" value={name} onChange={handleNameChange} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Type</label>
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="QUARTERLY">Quarterly</SelectItem>
-              <SelectItem value="HALF_YEARLY">Half-Yearly</SelectItem>
-              <SelectItem value="ANNUAL">Annual</SelectItem>
-              <SelectItem value="CUSTOM">Custom</SelectItem>
+              <SelectItem value="QUARTERLY">Quarterly — 3-month cycle</SelectItem>
+              <SelectItem value="HALF_YEARLY">Half-Yearly — 6-month cycle</SelectItem>
+              <SelectItem value="ANNUAL">Annual — Full-year cycle</SelectItem>
+              <SelectItem value="CUSTOM">Custom — Define your own period</SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-[11px] text-muted-foreground">
+            {type === "QUARTERLY" && "3-month performance review. Best for fast-paced teams that need frequent check-ins and course corrections."}
+            {type === "HALF_YEARLY" && "6-month review cycle. Provides a balanced mid-year checkpoint for goal progress and development feedback."}
+            {type === "ANNUAL" && "Comprehensive year-end evaluation covering overall performance, growth, and compensation decisions."}
+            {type === "CUSTOM" && "Flexible review period tailored to your team's schedule. Define any start/end dates and deadline that fits your workflow."}
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -231,63 +210,5 @@ export function CyclesTab() {
         isPending={deleteCycle.isPending}
       />
     </div>
-  );
-}
-
-interface CycleCardProps {
-  cycle: ReviewCycle;
-  onEdit: (cycle: ReviewCycle) => void;
-  onDeleteRequest: (id: number) => void;
-}
-
-function CycleCard({ cycle, onEdit, onDeleteRequest }: CycleCardProps) {
-  const handleEdit = useCallback(() => onEdit(cycle), [onEdit, cycle]);
-  const handleDeleteRequest = useCallback(
-    () => onDeleteRequest(cycle.id),
-    [onDeleteRequest, cycle.id]
-  );
-
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold">{cycle.name}</p>
-            <Badge
-              variant={
-                cycle.status === "ACTIVE"
-                  ? "default"
-                  : cycle.status === "COMPLETED"
-                    ? "secondary"
-                    : "outline"
-              }
-              className="text-[10px]"
-            >
-              {cycle.status}
-            </Badge>
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            {cycle.periodStart} → {cycle.periodEnd}
-            {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
-            {cycle.type && <> &middot; {cycle.type}</>}
-          </p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEdit}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive" onClick={handleDeleteRequest}>
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardContent>
-    </Card>
   );
 }

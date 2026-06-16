@@ -24,9 +24,9 @@ export function MetricCard({
   };
 
   return (
-    <div className="relative rounded-lg border border-slate-200 bg-white p-3">
+    <div className="relative rounded-lg border border-border bg-card p-3 shadow-noir">
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">
+        <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
           {label}
         </p>
         {icon && (
@@ -40,7 +40,7 @@ export function MetricCard({
           </span>
         )}
       </div>
-      <p className="font-display text-[1.25rem] font-extrabold tracking-tight text-slate-900 leading-none">
+      <p className="font-display text-[1.25rem] font-extrabold tracking-tight text-foreground leading-none">
         {value}
       </p>
       {(delta || hint) && (
@@ -53,13 +53,13 @@ export function MetricCard({
                   ? "text-emerald-600"
                   : delta.direction === "down"
                     ? "text-red-600"
-                    : "text-slate-500",
+                    : "text-muted-foreground",
               )}
             >
               {delta.value}
             </span>
           )}
-          {hint && <span className="text-slate-500">{hint}</span>}
+          {hint && <span className="text-muted-foreground">{hint}</span>}
         </div>
       )}
     </div>

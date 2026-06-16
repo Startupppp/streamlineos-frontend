@@ -3,7 +3,7 @@ import { getEmployee } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { users, organizationMembers, onboardingTasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { invalidateUserSession } from "@/lib/auth";
 import { sendTerminationEmail } from "@/lib/email";
 import { format, differenceInDays, addDays } from "date-fns";
@@ -24,7 +24,10 @@ const updateEmployeeSchema = z.object({
   hasDashboardAccess: z.boolean().optional(),
   role: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  experienceYears: z.number().optional(),
+  experienceYears: z.preprocess(
+    (val) => (val === undefined || val === null ? undefined : Number(val)),
+    z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional()
+  ),
   taxId: z.string().optional(),
   monthlySalary: z.number().optional(),
   bankDetails: z.object({
@@ -75,16 +78,22 @@ export async function PATCH(
     }
 
     const isSelf = session.user.id === targetUserId;
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
-    if (!isSelf && !isOwnerOrAdmin) {
+    const ability = await getSessionAbility();
+
+    const isOwnerOrAdmin = ability.can("manage", "hr:employees");
+    const canManageEmployees = isOwnerOrAdmin || session.user.role === "HR" || session.user.role === "CEO";
+    if (!isSelf && !canManageEmployees) {
       return err("You can only update your own profile.", 403);
     }
 
     const body = await parseBody(req, updateEmployeeSchema);
 
     if (body.isActive === false) {
-      if (!isOwnerOrAdmin) return err("Only admins can terminate employees.", 403);
+      if (!canManageEmployees) return err("Only HR or CEO can terminate employees.", 403);
       if (isSelf) return err("You cannot terminate your own account.", 400);
+      if (targetMember.role === "CEO" || targetMember.isOwner) {
+        return err("CEO cannot be terminated through this workflow.", 400);
+      }
     }
 
     if (body.reportingTo !== undefined && body.reportingTo !== null) {

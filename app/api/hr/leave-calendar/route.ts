@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseQuery } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, users, leaveTypes } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -32,7 +32,7 @@ export interface LeaveCalendarEntry {
 }
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:leaves", async (session) => {
     const parsed = querySchema.safeParse(
       Object.fromEntries(req.nextUrl.searchParams.entries()),
     );

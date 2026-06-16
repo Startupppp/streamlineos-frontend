@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAIScoreLead } from "@/lib/api/hooks/ai";
+import { useFeature } from "@/lib/billing/use-feature";
 import { toast } from "sonner";
 
 interface AIScoreButtonProps {
@@ -21,8 +22,13 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
   const [open, setOpen] = useState(false);
   const scoreMutation = useAIScoreLead();
   const result = scoreMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
 
   const handleScore = () => {
+    if (!featureEnabled) {
+      toast.error(`AI lead scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`);
+      return;
+    }
     scoreMutation.mutate(leadId, {
       onError: (err) => toast.error(err.message || "AI scoring failed"),
     });
@@ -47,12 +53,13 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
               e.stopPropagation();
               if (!result) handleScore();
             }}
-            disabled={scoreMutation.isPending}
+            disabled={scoreMutation.isPending || !featureEnabled}
+            title={!featureEnabled ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan` : undefined}
           >
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? (
               <span className={cn("font-bold", scoreColor(result.score))}>{result.score}</span>
@@ -78,7 +85,8 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
         variant="outline"
         size="sm"
         onClick={handleScore}
-        disabled={scoreMutation.isPending}
+        disabled={scoreMutation.isPending || !featureEnabled}
+        title={!featureEnabled ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan` : undefined}
         className="w-full"
       >
         {scoreMutation.isPending ? (
@@ -88,7 +96,7 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
           </>
         ) : (
           <>
-            <Sparkles className="h-4 w-4 mr-2 text-gold" />
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
             AI Score Lead
           </>
         )}

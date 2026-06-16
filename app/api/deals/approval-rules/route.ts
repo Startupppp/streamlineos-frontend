@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { dealApprovalRules } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -24,7 +25,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!ADMIN_ROLES.includes(session.user.role ?? "")) return err("Only admins can create approval rules", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "settings")) return err("Only admins can create approval rules", 403);
 
     const input = await parseBody(req, createSchema);
     const [rule] = await db.insert(dealApprovalRules).values({

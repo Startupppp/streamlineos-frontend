@@ -1,9 +1,16 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { interviews } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const listSchema = z.object({
+  candidateId: z.coerce.number().int().positive().optional(),
+  upcoming: z.enum(["true", "false"]).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createInterviewSchema = z.object({
   candidateId: z.number(),
@@ -19,19 +26,25 @@ const createInterviewSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const { searchParams } = req.nextUrl;
-    const candidateId = searchParams.get("candidateId");
-    const upcoming = searchParams.get("upcoming");
+    const { candidateId, upcoming, limit } = parseQuery(req, listSchema);
+    const orgId = session.orgId;
 
-    const conditions = [eq(interviews.orgId, session.orgId)];
-    if (candidateId) conditions.push(eq(interviews.candidateId, Number(candidateId)));
-    if (upcoming === "true") conditions.push(gte(interviews.scheduledAt, new Date()));
-
-    const data = await db.query.interviews.findMany({
-      where: and(...conditions),
-      with: { candidate: true, interviewer: true },
-      orderBy: [desc(interviews.scheduledAt)],
-    });
+    const key = `hr:interviews:list:${orgId}:${candidateId ?? ""}:${upcoming ?? ""}:${limit}`;
+    const data = await cached(
+      key,
+      () => {
+        const conditions = [eq(interviews.orgId, orgId)];
+        if (candidateId) conditions.push(eq(interviews.candidateId, candidateId));
+        if (upcoming === "true") conditions.push(gte(interviews.scheduledAt, new Date()));
+        return db.query.interviews.findMany({
+          where: and(...conditions),
+          with: { candidate: true, interviewer: true },
+          orderBy: [desc(interviews.scheduledAt)],
+          limit,
+        });
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(data);
   });
@@ -62,6 +75,8 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(interview);
+    await invalidateCachePattern(`hr:interviews:list:${session.orgId}:*`);
+
+    return ok(interview, 201);
   });
 }

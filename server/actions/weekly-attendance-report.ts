@@ -32,7 +32,7 @@ export async function generateAndSendWeeklyReport() {
     const activeMembers = members.filter((m) => m.user?.isActive !== false);
     if (activeMembers.length === 0) continue;
     const ownerAndAdminMembers = members.filter(
-      (m) => m.role === "CEO" || m.role === "ADMIN"
+      (m) => m.role === "CEO"
     );
     const recipientEmails = [
       ...new Set(

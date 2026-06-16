@@ -71,7 +71,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
                   {personSlug ? (
                     <Link
                       href={`/sales/person/${personSlug}`}
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                     >
                       {item.person}
                     </Link>

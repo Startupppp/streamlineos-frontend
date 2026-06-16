@@ -7,7 +7,7 @@ import { tickets, ticketAssignees, ticketWatchers, users, projects, projectMembe
 import { eq, and, desc, or, sql, count } from "drizzle-orm";
 import { sendTicketAssignmentEmail } from "@/lib/email";
 import { createNotification } from "@/server/actions/create-notification";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -31,7 +31,8 @@ const createTicketSchema = z.object({
 type RouteParams = { params: Promise<{ projectId: string }> };
 
 async function checkProjectAccess(session: { user: { id: string; role?: string }; orgId: string }, projectId: number) {
-  if (isAdminOrOwner(session.user.role)) return true;
+  const ability = await getSessionAbility();
+  if (ability.can("manage", "projects")) return true;
   const project = await db.query.projects.findFirst({
     where: and(eq(projects.id, projectId), eq(projects.orgId, session.orgId)),
     columns: { managerId: true },
@@ -115,9 +116,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     const body = await parseBody(req, createTicketSchema);
 
-    const normalizeType = (type: string) => {
+    const normalizeType = (type: string): "EPIC" | "STORY" | "TASK" | "BUG" => {
       const upper = type.toUpperCase();
-      return upper === "FEATURE" ? "STORY" : upper;
+      if (upper === "FEATURE") return "STORY";
+      if (upper === "EPIC" || upper === "STORY" || upper === "TASK" || upper === "BUG") return upper;
+      return "TASK";
     };
 
     const [ticket] = await db.transaction(async (tx) => {

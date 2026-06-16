@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 
@@ -62,8 +62,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
-      return err("Only CEO or Admin can create roles", 403);
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "all")) {
+      return err("Only Owner, CEO, or CTO can create roles", 403);
     }
 
     const input = await parseBody(req, cloneSchema);

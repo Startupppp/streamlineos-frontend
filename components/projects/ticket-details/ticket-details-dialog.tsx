@@ -26,6 +26,7 @@ import { TicketRelations } from "./ticket-relations";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
+import { TicketActivityLog } from "@/components/projects/ticket-activity-log";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
 function AttachmentImage({
@@ -337,6 +338,10 @@ export function TicketDetailsDialog({
                   projectId={projectId}
                   comments={ticket.comments || []}
                 />
+
+                {ticketId ? (
+                  <TicketActivityLog ticketId={ticketId} projectId={projectId} />
+                ) : null}
               </div>
             </>
           ) : (

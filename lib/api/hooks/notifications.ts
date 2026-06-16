@@ -51,10 +51,30 @@ export const useMarkNotificationRead = () => {
 
 export const useMarkAllNotificationsRead = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
+  return useMutation<
+    { success: boolean },
+    Error,
+    void,
+    { previousCount: UnreadCount | undefined }
+  >({
     mutationFn: () =>
       apiClient.patch<{ success: boolean }>("/notifications/read-all"),
-    onSuccess: () => {
+    onMutate: async () => {
+      const unreadKey = queryKeys.notifications.unreadCount();
+      await queryClient.cancelQueries({ queryKey: unreadKey });
+      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
+      queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
+      return { previousCount };
+    },
+    onError: (_error, _vars, context) => {
+      if (context?.previousCount !== undefined) {
+        queryClient.setQueryData(
+          queryKeys.notifications.unreadCount(),
+          context.previousCount,
+        );
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.notifications.all,
       });

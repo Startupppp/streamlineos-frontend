@@ -154,7 +154,7 @@ export default function HrAssetsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Assets" value={counts.total} icon={Package} color="blue" />
           <StatCard label="Available" value={counts.available} icon={CheckCircle2} color="green" />
-          <StatCard label="Assigned" value={counts.assigned} icon={Laptop} color="gold" />
+          <StatCard label="Assigned" value={counts.assigned} icon={Laptop} color="amber" />
           <StatCard label="Maintenance" value={counts.maintenance} icon={Wrench} color="red" />
         </div>
 

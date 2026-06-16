@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { usePredictDeal } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIPredictDealButtonProps {
   dealId: number;
@@ -23,8 +24,10 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
   const [open, setOpen] = useState(false);
   const predictMutation = usePredictDeal();
   const result = predictMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.deal-prediction");
 
   const handlePredict = () => {
+    if (!featureEnabled) { toast.error(`AI deal prediction requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     predictMutation.mutate(dealId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -64,7 +67,7 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
             {predictMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold", probColor(result.winProbability))}>{result.winProbability}%</span> : "Predict"}
           </Button>
@@ -90,7 +93,7 @@ export function AIPredictDealButton({ dealId, compact }: AIPredictDealButtonProp
         {predictMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Predicting...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Predict Win Probability</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Predict Win Probability</>
         )}
       </Button>
       {result && <PredictDetails result={result} probColor={probColor} probBg={probBg} confidenceVariant={confidenceVariant} />}

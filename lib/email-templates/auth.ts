@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, escapeHtml } from "./base";
 
 export function getVerificationEmailTemplate(verificationUrl: string): string {
   const content = `
@@ -242,7 +242,7 @@ export function getAccountLockedEmailTemplate(name: string): string {
     </div>
 
     <div style="text-align: center;">
-      <a href="${baseUrl}/forgot-password" class="email-button">
+      <a href="${appUrl}/forgot-password" class="email-button">
         Reset Password
       </a>
     </div>
@@ -301,7 +301,7 @@ export function getNewDeviceLoginEmailTemplate(
     </div>
 
     <div style="text-align: center;">
-      <a href="${baseUrl}/forgot-password" class="email-button">
+      <a href="${appUrl}/forgot-password" class="email-button">
         Secure My Account
       </a>
     </div>
@@ -335,7 +335,7 @@ export function getPasswordExpiryWarningEmailTemplate(name: string, daysLeft: nu
     </div>
 
     <div style="text-align: center;">
-      <a href="${baseUrl}/settings?tab=security" class="email-button">
+      <a href="${appUrl}/settings?tab=security" class="email-button">
         Update Password
       </a>
     </div>

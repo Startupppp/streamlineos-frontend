@@ -5,11 +5,13 @@ import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "projects:timesheets")) {
       return err("Only admins can view team timesheets", 403);
     }
 

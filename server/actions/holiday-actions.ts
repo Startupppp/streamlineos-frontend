@@ -7,7 +7,7 @@ import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendBulkHolidayAnnouncement } from "@/lib/email";
-import { ROLES } from "@/lib/constants/roles";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 function capitalizeWords(str: string): string {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
@@ -24,7 +24,8 @@ export async function addHoliday(data: {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  const ability = await getSessionAbility();
+  if (!member || !ability.can("manage", "hr:attendance")) {
     return { error: "Permission denied" };
   }
 
@@ -76,7 +77,8 @@ export async function deleteHoliday(holidayId: number) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  const ability = await getSessionAbility();
+  if (!member || !ability.can("manage", "hr:attendance")) {
     return { error: "Permission denied" };
   }
 
@@ -172,7 +174,8 @@ export async function bulkAddHolidays(holidayList: Array<{
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  const ability = await getSessionAbility();
+  if (!member || !ability.can("manage", "hr:attendance")) {
     return { error: "Permission denied" };
   }
 

@@ -100,7 +100,7 @@ export function WorkLogEntryRow({
       title={statusLabel}
       className={cn(
         "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border shadow-sm hover:shadow-md transition-all",
-        isWeekendDay ? "bg-gold/[0.03] dark:bg-gold/[0.05]" : "bg-card",
+        isWeekendDay ? "bg-blue-500/[0.03] dark:bg-blue-500/[0.05]" : "bg-card",
         hasUnsavedChanges
           ? "border-l-4 border-l-amber-500"
           : content
@@ -113,7 +113,7 @@ export function WorkLogEntryRow({
         <span className="text-muted-foreground text-xs font-medium">{format(date, "MMM, EEEE")}</span>
         <div className="flex items-center gap-1.5">
           {isWeekendDay && (
-            <span className="text-[10px] bg-gold/10 dark:bg-gold/20 px-1.5 py-0.5 rounded font-medium text-gold inline-block">
+            <span className="text-[10px] bg-blue-500/10 dark:bg-blue-500/20 px-1.5 py-0.5 rounded font-medium text-blue-600 inline-block">
               Weekend
             </span>
           )}

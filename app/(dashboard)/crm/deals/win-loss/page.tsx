@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, DollarSign } from "lucide-react";
+import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,14 +85,14 @@ export default function WinLossAnalysisPage() {
           <StatCard
             label="Win Rate"
             value={`${s.winRate}%`}
-            color="gold"
+            color="amber"
             icon={Target}
           />
           <StatCard
             label="Won Value"
             value={formatCurrency(s.wonValue)}
             color="blue"
-            icon={DollarSign}
+            icon={IndianRupee}
           />
         </motion.div>
 
@@ -100,7 +100,7 @@ export default function WinLossAnalysisPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-gold" />
+                <TrendingUp className="h-4 w-4 text-blue-600" />
                 Outcome Split
               </CardTitle>
             </CardHeader>

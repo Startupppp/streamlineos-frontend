@@ -26,7 +26,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ teamId: string }> },
 ) {
-  return withAuth<TeamDetail>(async (session) => {
+  return withAuth(async (session) => {
     const { teamId } = await params;
     const deptId = parseInt(teamId, 10);
     if (isNaN(deptId)) return err("Invalid team ID", 400);

@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reimbursements } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -15,7 +15,9 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:expenses");
     const conditions = [eq(reimbursements.orgId, session.orgId)];
     if (!isAdmin) conditions.push(eq(reimbursements.userId, session.user.id));
 

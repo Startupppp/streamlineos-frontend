@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
@@ -15,7 +15,7 @@ const updateStatusSchema = z.object({
 
 const updateDetailsSchema = z.object({
   category: z.string().optional(),
-  amount: z.number().optional(),
+  amount: z.number().positive("Amount must be greater than 0").max(999_999_999.99, "Amount cannot exceed 999,999,999.99").optional(),
   description: z.string().optional(),
   merchant: z.string().optional(),
   paymentMethod: z.string().optional(),
@@ -29,7 +29,9 @@ export async function PATCH(
   { params }: { params: Promise<{ expenseId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:expenses")) {
       return err("Only admins can update expense status.", 403);
     }
 
@@ -51,7 +53,9 @@ export async function PATCH(
       if (!expense) return err("Expense not found.", 404);
 
       const isOwner = expense.userId === session.user.id;
-      const isAdmin = isAdminOrOwner(session.user.role);
+      const ability = await getSessionAbility();
+
+      const isAdmin = ability.can("approve", "hr:expenses");
       if (!isOwner && !isAdmin) return err("Not authorized.", 403);
       if (expense.status !== "PENDING" && !isAdmin) return err("Can only edit pending expenses.", 400);
 
@@ -162,7 +166,9 @@ export async function DELETE(
     if (!expense) return err("Expense not found.", 404);
 
     const isOwner = expense.userId === session.user.id;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:expenses");
 
     if (!isOwner && !isAdmin) return err("Not authorized to delete this expense.", 403);
     if (expense.status === "PAID") return err("Paid expenses cannot be deleted.", 400);

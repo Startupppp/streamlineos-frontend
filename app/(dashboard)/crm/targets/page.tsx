@@ -36,7 +36,7 @@ import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
 const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },
-  revenue: { icon: TrendingUp, color: "text-gold" },
+  revenue: { icon: TrendingUp, color: "text-blue-600" },
   meetings: { icon: Calendar, color: "text-purple-400" },
   deals: { icon: Zap, color: "text-amber-400" },
 };
@@ -206,7 +206,7 @@ export default function TargetsPage() {
         {myTargets && myTargets.length > 0 && (
           <motion.div variants={fadeUp}>
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Target className="h-5 w-5 text-gold" />
+              <Target className="h-5 w-5 text-blue-600" />
               My Targets
             </h2>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -250,7 +250,7 @@ export default function TargetsPage() {
                           className={cn(
                             "h-full rounded-full",
                             progress >= 100 ? "bg-emerald-500" :
-                            progress >= 75 ? "bg-gold" :
+                            progress >= 75 ? "bg-blue-500" :
                             progress >= 50 ? "bg-amber-500" : "bg-blue-500",
                           )}
                           initial={{ width: 0 }}
@@ -297,7 +297,7 @@ export default function TargetsPage() {
 
         <motion.div variants={fadeUp}>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-gold" />
+            <Trophy className="h-5 w-5 text-blue-600" />
             Team Leaderboard
           </h2>
           {leaderboard && leaderboard.length > 0 ? (

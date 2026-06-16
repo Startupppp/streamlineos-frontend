@@ -16,6 +16,7 @@ import { PasswordStrengthIndicator } from "@/components/auth/password-strength-i
 import { Loader2, Eye, EyeOff, ArrowRight, Shield, Rocket, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { signOut } from "next-auth/react";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ function SetupPasswordContent() {
         password: values.password,
       });
       toast.success("Password set successfully! You can now sign in.");
+      await signOut({ redirect: false });
       router.push("/signin");
     } catch (error) {
       toast.error(getErrorMessage(error));

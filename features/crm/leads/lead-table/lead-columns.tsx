@@ -29,8 +29,8 @@ interface SortIconProps {
 export function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
   if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
   return sortDirection === "asc"
-    ? <ArrowUp className="h-3 w-3 ml-1 text-gold" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-gold" />;
+    ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+    : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
 }
 
 export interface RenderCellOptions {
@@ -80,7 +80,7 @@ export function useLeadCellRenderer({
       case "name":
         return (
           <button
-            className="font-medium text-[12px] hover:text-gold hover:underline text-left truncate max-w-[140px] block"
+            className="font-medium text-[12px] hover:text-blue-600 hover:underline text-left truncate max-w-[140px] block"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
             {lead.name}
@@ -224,7 +224,7 @@ export function useLeadCellRenderer({
         );
 
       case "investmentInterest":
-        return <span className="text-[11px] font-mono tabular-nums text-gold">{formatINR(lead.investmentInterest)}</span>;
+        return <span className="text-[11px] font-mono tabular-nums text-blue-600">{formatINR(lead.investmentInterest)}</span>;
 
       case "potentialValue":
         return <span className="text-[11px] font-mono tabular-nums">{formatINR(lead.potentialValue)}</span>;

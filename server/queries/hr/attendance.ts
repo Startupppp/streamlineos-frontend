@@ -1,10 +1,26 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { attendance } from "@/lib/db/schema";
+import {
+  attendance,
+  leaveRequests,
+  leaveBalances,
+  leaveTypes,
+  wfhRequests,
+  holidays,
+  users,
+} from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, asc } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
-import type { AttendanceLog, AttendanceStatusResult } from "@/types/hr";
+import type {
+  AttendanceLog,
+  AttendanceStatusResult,
+  LeavesResult,
+  LeaveBalance,
+  WfhRequest,
+  Holiday,
+} from "@/types/hr";
+import type { LeaveType, LeaveRequest } from "@/types/hr";
 
 export async function getAttendanceStatus(
   orgId: string,
@@ -135,4 +151,117 @@ export async function getMonthlyAttendance(
     ),
     orderBy: [asc(attendance.date)],
   }) as unknown as Promise<AttendanceLog[]>;
+}
+
+export async function getLeaves(orgId: string, userId: string): Promise<LeavesResult> {
+  const [balances, types, requests] = await Promise.all([
+    db.query.leaveBalances.findMany({
+      where: and(
+        eq(leaveBalances.userId, userId),
+        eq(leaveBalances.orgId, orgId)
+      ),
+    }),
+    db.query.leaveTypes.findMany({
+      where: eq(leaveTypes.orgId, orgId),
+    }),
+    db.query.leaveRequests.findMany({
+      where: and(
+        eq(leaveRequests.userId, userId),
+        eq(leaveRequests.orgId, orgId)
+      ),
+      orderBy: [desc(leaveRequests.createdAt)],
+    }),
+  ]);
+
+  return {
+    balances: balances as unknown as LeaveBalance[],
+    types: types as unknown as LeaveType[],
+    requests: requests as unknown as LeaveRequest[],
+  };
+}
+
+export async function getLeaveBalance(orgId: string, userId: string): Promise<LeaveBalance[]> {
+  return db.query.leaveBalances.findMany({
+    where: and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.orgId, orgId),
+      eq(leaveBalances.year, new Date().getFullYear())
+    ),
+  }) as unknown as Promise<LeaveBalance[]>;
+}
+
+export async function getWfhRequests(orgId: string, userId: string): Promise<WfhRequest[]> {
+  return db.query.wfhRequests.findMany({
+    where: and(eq(wfhRequests.orgId, orgId), eq(wfhRequests.userId, userId)),
+    orderBy: [desc(wfhRequests.createdAt)],
+  }) as unknown as Promise<WfhRequest[]>;
+}
+
+export async function getPendingWfhRequests(orgId: string): Promise<WfhRequest[]> {
+  const rows = await db
+    .select({
+      id: wfhRequests.id,
+      orgId: wfhRequests.orgId,
+      userId: wfhRequests.userId,
+      date: wfhRequests.date,
+      reason: wfhRequests.reason,
+      status: wfhRequests.status,
+      approverId: wfhRequests.approverId,
+      rejectionReason: wfhRequests.rejectionReason,
+      createdAt: wfhRequests.createdAt,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userEmail: users.email,
+      userImage: users.image,
+    })
+    .from(wfhRequests)
+    .innerJoin(users, eq(wfhRequests.userId, users.id))
+    .where(and(eq(wfhRequests.orgId, orgId), eq(wfhRequests.status, "PENDING")))
+    .orderBy(desc(wfhRequests.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    orgId: r.orgId,
+    userId: r.userId,
+    date: r.date,
+    reason: r.reason,
+    status: r.status,
+    approverId: r.approverId,
+    rejectionReason: r.rejectionReason,
+    createdAt: r.createdAt,
+    user: { id: r.userId, firstName: r.userFirstName, lastName: r.userLastName, email: r.userEmail, image: r.userImage },
+  })) as WfhRequest[];
+}
+
+export async function getHolidays(orgId: string, year: number): Promise<Holiday[]> {
+  const startDate = `${year}-01-01`;
+  const endDate = `${year}-12-31`;
+  return db.query.holidays.findMany({
+    where: and(
+      eq(holidays.orgId, orgId),
+      gte(holidays.date, startDate),
+      lte(holidays.date, endDate)
+    ),
+    orderBy: [asc(holidays.date)],
+  }) as unknown as Promise<Holiday[]>;
+}
+
+export async function getHolidaysForCalendar(
+  orgId: string,
+  year: number,
+  month: number
+): Promise<Holiday[]> {
+  const mm = String(month).padStart(2, "0");
+  const startDate = `${year}-${mm}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${mm}-${String(lastDay).padStart(2, "0")}`;
+
+  return db.query.holidays.findMany({
+    where: and(
+      eq(holidays.orgId, orgId),
+      gte(holidays.date, startDate),
+      lte(holidays.date, endDate)
+    ),
+    orderBy: [asc(holidays.date)],
+  }) as unknown as Promise<Holiday[]>;
 }

@@ -1,8 +1,8 @@
 
 export const ROLES = {
+  OWNER: "OWNER",
   CEO: "CEO",
   HR: "HR",
-  ADMIN: "ADMIN",
   SALES: "SALES",
   ENGINEERING: "ENGINEERING",
   DESIGN: "DESIGN",
@@ -14,27 +14,32 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
-export const ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR];
+export const ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+];
 
-export const EXPENSE_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.ADMIN];
+export const EXPENSE_ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+];
 
-/** Roles permitted to manage the public blog at /blogs/admin. */
-export const BLOG_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.BLOG_EDITOR];
-
-export function isBlogAdmin(role: string | undefined | null): boolean {
-  return !!role && BLOG_ADMIN_ROLES.includes(role);
-}
+export const BLOG_ADMIN_ROLES: readonly string[] = [
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+  ROLES.BLOG_EDITOR,
+];
 
 export const ALL_ROLES: readonly string[] = Object.values(ROLES);
-
-export function isAdminOrOwner(role: string | undefined | null): boolean {
-  return !!role && ADMIN_ROLES.includes(role);
-}
 
 export function isCEO(role: string | undefined | null): boolean {
   return role === ROLES.CEO;
 }
 
-export function isExpenseAdmin(role: string | undefined | null): boolean {
-  return !!role && EXPENSE_ADMIN_ROLES.includes(role);
+export function isOwner(role: string | undefined | null): boolean {
+  return role === ROLES.OWNER;
 }
+

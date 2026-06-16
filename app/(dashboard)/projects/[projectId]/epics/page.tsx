@@ -10,6 +10,7 @@ import {
 import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
 import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,52 +107,10 @@ export default function EpicsPage({ params }: PageProps) {
       <div className="space-y-8" aria-live="polite" aria-atomic="true">
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold">{epics.length}</p>
-                <p className="text-sm text-muted-foreground">Epics</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-2xl font-bold">{stories.length}</p>
-                <p className="text-sm text-muted-foreground">Stories</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-2xl font-bold">{tasks.length}</p>
-                <p className="text-sm text-muted-foreground">Tasks</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold">
-                  {tickets.filter(t => t.status === "DONE").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Completed</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
+        <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
+        <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
+        <StatCard label="Completed" value={tickets.filter(t => t.status === "DONE").length} icon={CheckCircle2} color="green" index={3} />
       </div>
 
       <div className="space-y-4">
@@ -357,7 +316,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
                   style={{ width: `${(inProgressItems / totalItems) * 100}%` }}
                 />
                 <div
-                  className="bg-gray-300 dark:bg-gray-600 h-full transition-all"
+                  className="bg-slate-300 dark:bg-slate-600 h-full transition-all"
                   style={{ width: `${(todoItems / totalItems) * 100}%` }}
                 />
               </>
@@ -367,7 +326,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             <div className="flex gap-3 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full" /> Done ({completedItems})</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full" /> In Progress ({inProgressItems})</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full" /> To Do ({todoItems})</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded-full" /> To Do ({todoItems})</span>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Download,
   FileSpreadsheet,
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Mail,
   CalendarIcon,
+  AlertCircle,
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -38,6 +39,8 @@ import {
   type ExportFilters,
 } from "@/server/actions/expense-export";
 import type { ExpenseFilters } from "@/server/actions/expense-query";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { usePdfRenderer } from "./pdf-renderer";
 import { downloadCSV, downloadXLSX } from "./xlsx-renderer";
 
@@ -106,6 +109,29 @@ export function ExpenseExportDialog({
   const [exportStatus, setExportStatus] = useState(
     filters.status && filters.status !== "all" ? String(filters.status) : "all"
   );
+  const [exportUserId, setExportUserId] = useState(filters.userId || "all");
+
+  const { data: employeesData } = useHrEmployees({ limit: 200 });
+  const employees = useMemo<Employee[]>(() => {
+    if (!employeesData) return [];
+    if (Array.isArray(employeesData)) return employeesData as Employee[];
+    return ((employeesData as PaginatedEmployees).data ?? []) as Employee[];
+  }, [employeesData]);
+
+  const dateFieldErrors = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const fromInFuture = dateFrom && dateFrom > today;
+    const rangeInvalid = dateFrom && dateTo && dateFrom > dateTo;
+    const fromError = fromInFuture
+      ? "From date cannot be in the future"
+      : rangeInvalid
+      ? "From date must be before To date"
+      : null;
+    const toError = rangeInvalid ? "To date must be after From date" : null;
+    return { from: fromError, to: toError };
+  }, [dateFrom, dateTo]);
+
+  const dateRangeError = dateFieldErrors.from;
 
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
@@ -116,7 +142,7 @@ export function ExpenseExportDialog({
     categoryId: filters.categoryId,
     category: exportCategory !== "all" ? exportCategory : filters.category,
     status: exportStatus !== "all" ? exportStatus : filters.status,
-    userId: filters.userId,
+    userId: exportUserId !== "all" ? exportUserId : filters.userId,
     paymentMethod: exportPayment !== "all" ? exportPayment : filters.paymentMethod,
     minAmount: filters.minAmount,
     maxAmount: filters.maxAmount,
@@ -124,6 +150,10 @@ export function ExpenseExportDialog({
   };
 
   const handleSendEmail = async () => {
+    if (dateRangeError) {
+      toast.error(dateRangeError);
+      return;
+    }
     setIsSendingEmail(true);
     try {
       const result = await emailExpenseReport(exportFilters, emailTarget);
@@ -141,6 +171,10 @@ export function ExpenseExportDialog({
   };
 
   const handleExport = async () => {
+    if (dateRangeError) {
+      toast.error(dateRangeError);
+      return;
+    }
     setIsExporting(true);
     setExportComplete(false);
 
@@ -214,16 +248,28 @@ export function ExpenseExportDialog({
                 Date Range
               </Label>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
-                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" />
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground block">From</Label>
+                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" toDate={new Date()} />
+                  {dateFieldErrors.from && (
+                    <p className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      {dateFieldErrors.from}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
-                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" />
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground block">To</Label>
+                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" toDate={new Date()} />
+                  {dateFieldErrors.to && (
+                    <p className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      {dateFieldErrors.to}
+                    </p>
+                  )}
                 </div>
               </div>
-              {(dateFrom || dateTo) && (
+              {(dateFrom || dateTo) && !dateRangeError && (
                 <button
                   onClick={() => {
                     setDateFrom("");
@@ -285,6 +331,27 @@ export function ExpenseExportDialog({
                 </Select>
               </div>
             </div>
+
+            {employees.length > 0 && (
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Spent By</Label>
+                <Select value={exportUserId} onValueChange={setExportUserId}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Employees</SelectItem>
+                    {employees
+                      .filter((e) => e.isActive)
+                      .map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {[e.firstName, e.lastName].filter(Boolean).join(" ") || e.email}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-3">
               <Label className="text-sm font-medium">Export Format</Label>
@@ -364,7 +431,7 @@ export function ExpenseExportDialog({
               </Button>
               <Button
                 onClick={handleExport}
-                disabled={isExporting || exportComplete || isSendingEmail}
+                disabled={isExporting || exportComplete || isSendingEmail || !!dateRangeError}
                 className="gap-2"
               >
                 {isExporting ? (
@@ -405,7 +472,7 @@ export function ExpenseExportDialog({
               <Button
                 variant="outline"
                 onClick={handleSendEmail}
-                disabled={isSendingEmail || isExporting}
+                disabled={isSendingEmail || isExporting || !!dateRangeError}
                 className="flex-1 gap-2 border-primary/30 text-primary hover:bg-primary/5"
               >
                 {isSendingEmail ? (

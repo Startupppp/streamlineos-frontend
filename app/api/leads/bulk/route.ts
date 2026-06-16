@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { leads } from "@/lib/db/schema";
+import { leads, organizationMembers } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -19,7 +19,7 @@ const bulkDeleteSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("update", "crm:leads", async (session) => {
     const input = await parseBody(req, bulkUpdateSchema);
     const { leadIds, update } = input;
     const setData: Record<string, unknown> = { updatedAt: new Date() };
@@ -27,6 +27,14 @@ export async function PATCH(req: NextRequest) {
     if (update.status) setData.status = update.status;
     if (update.priority) setData.priority = update.priority;
     if (update.assignedToId) {
+      const member = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, update.assignedToId),
+          eq(organizationMembers.orgId, session.orgId!),
+        ),
+        columns: { id: true },
+      });
+      if (!member) return err("Assignee not found in organization", 400);
       setData.assignedToId = update.assignedToId;
       setData.assignedAt = new Date();
       setData.assignedById = session.user.id;
@@ -41,7 +49,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("delete", "crm:leads", async (session) => {
     const input = await parseBody(req, bulkDeleteSchema);
 
     await db.delete(leads)

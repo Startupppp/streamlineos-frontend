@@ -70,6 +70,6 @@ export async function POST(req: NextRequest) {
       success: true,
       credited: input.days,
       leaveTypeId: compOffType.id,
-    });
+    }, 201);
   });
 }

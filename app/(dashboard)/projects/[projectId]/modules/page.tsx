@@ -46,7 +46,7 @@ const createModuleSchema = z.object({
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
 
 const statusColors: Record<string, string> = {
-  backlog: "bg-gray-100 text-gray-700",
+  backlog: "bg-slate-100 text-slate-700",
   planned: "bg-blue-100 text-blue-700",
   "in-progress": "bg-yellow-100 text-yellow-700",
   paused: "bg-orange-100 text-orange-700",

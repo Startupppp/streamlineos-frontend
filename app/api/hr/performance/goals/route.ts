@@ -3,7 +3,7 @@ import { getGoals } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { goals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -34,7 +34,9 @@ const updateGoalSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:performance");
     const filterUserId = searchParams.get("userId") ?? undefined;
 
     if (filterUserId && filterUserId !== session.user.id && !isAdmin) {
@@ -53,7 +55,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance")) {
       return err("Only admins can create goals.", 403);
     }
 
@@ -88,7 +92,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance")) {
       return err("Only admins can update goals.", 403);
     }
 
@@ -115,6 +121,6 @@ export async function PATCH(req: NextRequest) {
         and(eq(goals.id, body.goalId), eq(goals.orgId, session.orgId))
       );
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

@@ -1,10 +1,10 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "audit-log", async (session) => {
     const rows = await db
       .selectDistinct({ action: auditLogs.action })
       .from(auditLogs)

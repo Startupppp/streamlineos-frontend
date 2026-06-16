@@ -1,5 +1,5 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { incentives } from "@/lib/db/schema/crm";
 import { eq, and } from "drizzle-orm";
@@ -16,7 +16,9 @@ export async function PATCH(
   { params }: { params: Promise<{ incentiveId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "crm:incentives")) {
       return err("Only admins can approve incentives.", 403);
     }
 

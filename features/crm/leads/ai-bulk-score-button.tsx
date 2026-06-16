@@ -16,6 +16,7 @@ import {
 import { useAIBatchScoreLeads } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIBulkScoreButtonProps {
   leadIds: number[];
@@ -25,8 +26,10 @@ interface AIBulkScoreButtonProps {
 export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const batchMutation = useAIBatchScoreLeads();
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
 
   const handleScore = () => {
+    if (!featureEnabled) { toast.error(`AI bulk scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     batchMutation.mutate(leadIds, {
       onSuccess: (data) => {
         toast.success(`Scored ${data.scored} leads`);
@@ -50,7 +53,7 @@ export function AIBulkScoreButton({ leadIds, onComplete }: AIBulkScoreButtonProp
         {batchMutation.isPending ? (
           <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Scoring...</>
         ) : (
-          <><Sparkles className="h-3.5 w-3.5 mr-1.5 text-gold" />AI Score {leadIds.length}</>
+          <><Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-600" />AI Score {leadIds.length}</>
         )}
       </Button>
 

@@ -39,10 +39,10 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 px-4 py-3">
         <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-          <ListTodo className="h-4 w-4 text-gold" aria-hidden="true" />
+          <ListTodo className="h-4 w-4 text-blue-600" aria-hidden="true" />
           My Issues
         </CardTitle>
-        <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
+        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
           {tickets.length} open
         </Badge>
       </CardHeader>
@@ -63,7 +63,7 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
               const project = ticket.project;
               return (
                 <Link key={ticket.id} href={project?.id ? `/projects/${project.id}` : "/projects"}>
-                  <div className="flex items-center gap-3 p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-gold/30 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3 p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-blue-500/30 transition-colors cursor-pointer">
                     <TypeIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

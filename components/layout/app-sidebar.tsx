@@ -13,10 +13,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
-import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
+import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
 import { NotificationBell } from "./notification-bell";
+import { usePermissions } from "@/lib/rbac/hooks";
+import { useAbility } from "@/lib/abilities-context";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -43,15 +45,17 @@ export function AppSidebar({
 
   const pathname = usePathname();
 
+  const { permissions } = usePermissions();
+  const ability = useAbility();
   const navGroups = useMemo(
-    () => getNavGroupsForRole(effectiveRole),
-    [effectiveRole]
+    () => getNavGroupsForUser(effectiveRole, permissions),
+    [effectiveRole, permissions]
   );
-  const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
+  const isAdmin = ability.can("manage", "settings");
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {
-      const match = group.routes.some((route) => {
+      const match = flattenNavRoutes(group.routes).some((route) => {
         if (route.isProjectsList) return pathname.startsWith("/projects/");
         return pathname === route.href || pathname.startsWith(route.href + "/");
       });
@@ -136,10 +140,7 @@ export function AppSidebar({
     );
   }, []);
 
-  if (
-    !hasEverLoadedRef.current &&
-    (status === "loading" || (status === "authenticated" && !role))
-  ) {
+  if (status === "loading") {
     return (
       <div className="flex flex-col h-full bg-sidebar">
         <div className="px-3 py-4 flex-1 space-y-6">
@@ -177,7 +178,7 @@ export function AppSidebar({
         <div
           className={cn(
             "flex items-center h-14 shrink-0 border-b border-sidebar-border",
-            isCollapsed ? "justify-center px-0" : "justify-between px-4"
+            isCollapsed ? "relative justify-center px-0" : "justify-between px-4"
           )}
         >
           {!isCollapsed && (
@@ -186,7 +187,7 @@ export function AppSidebar({
               onClick={onNavigate}
               className="flex items-center gap-3 min-w-0 group"
             >
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 shrink-0">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden shrink-0">
                 <Image
                   src="/logo.svg"
                   alt="StreamlineOS"
@@ -195,7 +196,7 @@ export function AppSidebar({
                 />
               </div>
               <div className="min-w-0">
-                <span className="gold-text text-[17px] font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
+                <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
                   StreamlineOS
                 </span>
                 {orgName ? (
@@ -212,20 +213,32 @@ export function AppSidebar({
           )}
 
           {isCollapsed && (
-            <Link
-              href="/dashboard"
-              onClick={onNavigate}
-              className="h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 flex items-center justify-center"
-              aria-label="Go to dashboard"
-            >
-              <Image
-                src="/logo.svg"
-                alt="StreamlineOS"
-                width={26}
-                height={26}
-                className="object-contain"
-              />
-            </Link>
+            <>
+              <Link
+                href="/dashboard"
+                onClick={onNavigate}
+                className="h-10 w-10 rounded-xl overflow-hidden flex items-center justify-center"
+                aria-label="Go to dashboard"
+              >
+                <Image
+                  src="/logo.svg"
+                  alt="StreamlineOS"
+                  width={26}
+                  height={26}
+                  className="object-contain"
+                />
+              </Link>
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  aria-label="Expand sidebar"
+                  className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar transition-colors"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </>
           )}
 
           {onToggleCollapse && !isCollapsed && (
@@ -233,23 +246,12 @@ export function AppSidebar({
               type="button"
               onClick={onToggleCollapse}
               aria-label="Collapse sidebar"
-              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-white/5 transition-colors shrink-0"
+              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent transition-colors shrink-0"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
-
-        {onToggleCollapse && isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
-            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-gold hover:border-gold/40 hover:bg-sidebar transition-colors"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        )}
 
         <ScrollArea className="flex-1 min-h-0">
           <nav
@@ -291,7 +293,7 @@ export function AppSidebar({
                     type="button"
                     onClick={handleSearchClick}
                     aria-label="Search"
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5 transition-colors"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                   >
                     <Search className="h-4 w-4" />
                   </button>
@@ -300,7 +302,7 @@ export function AppSidebar({
                   Search (⌘K)
                 </TooltipContent>
               </Tooltip>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-black/[0.04]">
                 <NotificationBell />
               </div>
             </>
@@ -310,15 +312,15 @@ export function AppSidebar({
                 type="button"
                 onClick={handleSearchClick}
                 aria-label="Search"
-                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] px-2.5 text-sidebar-foreground/40 text-xs hover:text-sidebar-foreground/70 hover:bg-white/[0.07] transition-colors"
+                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-muted border border-sidebar-border px-2.5 text-sidebar-foreground/55 text-xs hover:text-sidebar-foreground/85 hover:bg-sidebar-accent hover:border-sidebar-ring/30 transition-colors"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="flex-1 text-left">Search…</span>
-                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/[0.08] bg-white/[0.04] px-1 font-mono text-[9px] text-sidebar-foreground/25">
+                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-sidebar-border bg-muted px-1 font-mono text-[9px] text-sidebar-foreground/45">
                   ⌘K
                 </kbd>
               </button>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-black/[0.04]">
                 <NotificationBell />
               </div>
             </>

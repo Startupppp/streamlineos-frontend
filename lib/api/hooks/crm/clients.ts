@@ -142,11 +142,43 @@ export interface CsatResponse {
   submittedAt: string;
 }
 
+export interface SlaByPriority {
+  priority: string;
+  total: number;
+  withinSla: number;
+  breached: number;
+  avgResolutionHours: number;
+  slaTarget: number;
+}
+
+export interface SlaRecentBreach {
+  id: number;
+  title: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+  hoursOpen: number;
+  slaTarget: number;
+}
+
+export interface SlaStats {
+  stats: {
+    totalTickets: number;
+    withinSla: number;
+    slaBreached: number;
+    complianceRate: number;
+    avgResolutionHours: number;
+  };
+  byPriority: SlaByPriority[];
+  recentBreaches: SlaRecentBreach[];
+}
+
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useQuery({
     queryKey: queryKeys.clients.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedClientAccounts>("/clients", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -155,6 +187,7 @@ export function useClientAccount(id: number) {
     queryKey: queryKeys.clients.detail(id),
     queryFn: () => apiClient.get<ClientAccountWithActivities>(`/clients/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -163,6 +196,7 @@ export function useClientActivities(clientId: number) {
     queryKey: queryKeys.clients.activities(clientId),
     queryFn: () => apiClient.get<ClientActivity[]>(`/clients/${clientId}/activities`),
     enabled: clientId > 0,
+    staleTime: 60_000,
   });
 }
 
@@ -173,6 +207,8 @@ export function useCreateClientAccount() {
       apiClient.post<ClientAccount>("/clients", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
     },
   });
 }
@@ -185,6 +221,8 @@ export function useUpdateClientAccount() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.clients.all });
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
     },
   });
 }
@@ -212,6 +250,7 @@ export function useCrmAssignmentStats(enabled = false) {
   return useQuery({
     queryKey: queryKeys.clients.crmStats(),
     queryFn: () => apiClient.get<CrmAssignmentStats>("/clients/assign-crm"),
+    staleTime: 2 * 60_000,
     enabled,
   });
 }
@@ -232,6 +271,7 @@ export function useRenewalAccounts() {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "renewals"] as const,
     queryFn: () => apiClient.get<ClientAccount[]>("/clients/renewals"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -240,8 +280,11 @@ export function useUpdateRenewal() {
   return useMutation({
     mutationFn: ({ accountId, ...data }: UpdateRenewalInput) =>
       apiClient.patch<ClientAccount>(`/clients/renewals/${accountId}`, data),
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [...queryKeys.clients.all, "renewals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.accountId) });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      qc.invalidateQueries({ queryKey: queryKeys.clientStats.stats() });
     },
   });
 }
@@ -250,6 +293,7 @@ export function useClientAccountStats() {
   return useQuery({
     queryKey: queryKeys.clientStats.stats(),
     queryFn: () => apiClient.get<ClientAccountStats>("/clients/stats"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -257,6 +301,7 @@ export function useClientHealth(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "health", params] as const,
     queryFn: () => apiClient.get<{ items: ClientHealth[]; summary: { healthy: number; at_risk: number; critical: number } }>("/clients/health", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -267,6 +312,7 @@ export function useChurnAlerts() {
       alerts: ClientHealth[];
       summary: { critical: number; atRisk: number; total: number };
     }>("/clients/churn-alerts"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -274,6 +320,7 @@ export function useClientTimeline(clientId: number) {
   return useQuery({
     queryKey: [...queryKeys.clients.detail(clientId), "timeline"] as const,
     queryFn: () => apiClient.get<{ events: ClientTimelineEvent[]; total: number }>(`/clients/${clientId}/timeline`),
+    staleTime: 2 * 60_000,
     enabled: clientId > 0,
   });
 }
@@ -282,9 +329,9 @@ export function useSimpleClientsList() {
   return useQuery({
     queryKey: ["clients", "simple-list"],
     queryFn: () => apiClient.get<SimpleClient[]>("/clients/list"),
+    staleTime: 2 * 60_000,
   });
 }
-
 
 export function useClientOpportunities(clientId?: number) {
   return useQuery({
@@ -294,6 +341,7 @@ export function useClientOpportunities(clientId?: number) {
         "/clients/opportunities",
         clientId ? { clientId } : undefined
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -323,11 +371,11 @@ export function useDeleteClientOpportunity() {
   });
 }
 
-
 export function useOnboardingTemplates() {
   return useQuery({
     queryKey: ["onboarding-templates"],
     queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -335,6 +383,7 @@ export function useClientOnboardingItems(clientId: number) {
   return useQuery({
     queryKey: ["onboarding-items", clientId],
     queryFn: () => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }),
+    staleTime: 2 * 60_000,
     enabled: clientId > 0,
   });
 }
@@ -379,11 +428,11 @@ export function useCreateOnboardingTemplate() {
   });
 }
 
-
 export function useCsatSurveys() {
   return useQuery({
     queryKey: ["csat-surveys"],
     queryFn: () => apiClient.get<CsatSurvey[]>("/csat"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -391,6 +440,7 @@ export function useCsatSurveyResponses(surveyId: number) {
   return useQuery({
     queryKey: ["csat-responses", surveyId],
     queryFn: () => apiClient.get<CsatResponse[]>(`/csat/${surveyId}/responses`),
+    staleTime: 2 * 60_000,
     enabled: surveyId > 0,
   });
 }
@@ -418,5 +468,13 @@ export function useDeleteCsatSurvey() {
   return useMutation({
     mutationFn: (id: number) => apiClient.delete(`/csat/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+  });
+}
+
+export function useSlaCompliance() {
+  return useQuery({
+    queryKey: ["sla", "compliance"],
+    queryFn: () => apiClient.get<SlaStats>("/customer-executive/sla"),
+    staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,16 +1,22 @@
 
 import { DefaultSession } from "next-auth";
+import type { Plan } from "@/lib/billing/feature-gates";
 
 declare module "next-auth" {
   interface Session {
     orgId?: string | null;
     sessionId?: string;
+    plan?: Plan | null;
+    permissions?: string[];
+    enabledModules?: string[];
     user: {
       id: string;
       role: string;
       forceChangePassword?: boolean;
       isActive?: boolean;
       hasDashboardAccess?: boolean;
+      isPlatformAdmin?: boolean;
+      isOrgOwner?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -36,5 +42,10 @@ declare module "next-auth/jwt" {
     sessionId?: string;
     totpEnabled?: boolean;
     mfaEnforced?: boolean;
+    permissions?: string[];
+    plan?: Plan | null;
+    isPlatformAdmin?: boolean;
+    isOrgOwner?: boolean;
+    enabledModules?: string[];
   }
 }

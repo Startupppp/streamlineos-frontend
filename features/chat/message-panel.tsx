@@ -23,7 +23,7 @@ import {
   useChatChannel,
   useChatMessages,
   useChatPoll,
-  useMarkRead,
+  useMarkChannelRead,
   useSendMessage,
   useDeleteMessage,
   useEditMessage,
@@ -31,8 +31,10 @@ import {
   useSetTyping,
   useChatTyping,
   useChatOrgUsers,
+  useToggleReaction,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
+import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
@@ -65,11 +67,12 @@ export function MessagePanel({
     hasNextPage,
     isFetchingNextPage,
   } = useChatMessages(channelId);
-  const markReadRef = useRef(useMarkRead());
+  const markReadRef = useRef(useMarkChannelRead());
   const markRead = markReadRef.current;
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
+  const toggleReaction = useToggleReaction(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const setTyping = useSetTyping();
   const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
@@ -114,11 +117,20 @@ export function MessagePanel({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
 
+  const mentionCandidates = useMemo(() => {
+    if (!orgUsers) return [];
+    if (channel?.type === "DIRECT") {
+      const otherId = channel.members?.find((m) => m.user?.id !== currentUserId)?.user?.id;
+      return orgUsers.filter((u) => u.id === otherId);
+    }
+    return orgUsers.filter((u) => u.id !== currentUserId);
+  }, [orgUsers, channel, currentUserId]);
+
   const filteredMentions = useMemo(() => {
-    if (!orgUsers || !mentionQuery) return orgUsers ?? [];
+    if (!mentionQuery) return mentionCandidates;
     const q = mentionQuery.toLowerCase();
-    return orgUsers.filter((u) => u.name?.toLowerCase().includes(q));
-  }, [orgUsers, mentionQuery]);
+    return mentionCandidates.filter((u) => u.name?.toLowerCase().includes(q));
+  }, [mentionCandidates, mentionQuery]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -189,13 +201,19 @@ export function MessagePanel({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "chat");
-        const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-        if (!res.ok) { const err = await res.json(); toast.error(`Failed: ${err.error || file.name}`); continue; }
-        const result = await res.json();
-        setPendingAttachments((prev) => [
-          ...prev,
-          { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
-        ]);
+        try {
+          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>(
+            "/storage/upload",
+            formData,
+          );
+          setPendingAttachments((prev) => [
+            ...prev,
+            { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
+          ]);
+        } catch (err) {
+          toast.error(`Failed: ${getApiError(err) || file.name}`);
+          continue;
+        }
       }
     } catch (error) { toast.error(getErrorMessage(error)); }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
@@ -257,6 +275,10 @@ export function MessagePanel({
       setEditInput("");
     } catch (error) { toast.error(getErrorMessage(error)); }
   }, [editInput, editMessage, channelId]);
+
+  const handleReact = useCallback((messageId: number, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
+  }, [toggleReaction]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentions && filteredMentions.length > 0) {
@@ -332,7 +354,7 @@ export function MessagePanel({
           {channel?.type === "DIRECT" ? (
             <div className="relative">
               <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
-                <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-gold/20 to-gold/5 text-gold">
+                <AvatarFallback className="text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
                   {getInitials(otherMember?.name)}
                 </AvatarFallback>
               </Avatar>
@@ -409,6 +431,7 @@ export function MessagePanel({
         onSaveEdit={handleEdit}
         onReply={(msg) => { setReplyTo(msg); inputRef.current?.focus(); }}
         onDelete={(messageId) => deleteMessage.mutate({ channelId, messageId })}
+        onReact={handleReact}
         showScrollBtn={showScrollBtn}
         scrollToBottom={scrollToBottom}
         messagesEndRef={messagesEndRef}

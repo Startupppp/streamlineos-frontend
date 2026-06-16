@@ -1,6 +1,7 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getHolidays } from "@/server/queries/hr";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { holidays, users, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -20,14 +21,21 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const yearParam = req.nextUrl.searchParams.get("year");
     const year = yearParam ? Number(yearParam) : new Date().getFullYear();
-    const data = await getHolidays(session.orgId, year);
+    const key = `hr:holidays:${session.orgId}:${year}`;
+    const data = await cached(
+      key,
+      () => getHolidays(session.orgId, year),
+      { ttlSeconds: CACHE_TTL.HOUR },
+    );
     return ok(data);
   });
 }
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:attendance")) {
       return err("Only admins can add holidays.", 403);
     }
 
@@ -43,6 +51,8 @@ export async function POST(req: NextRequest) {
         isPublic: body.isPublic ?? false,
       })
       .returning();
+
+    await invalidateCachePattern(`hr:holidays:${session.orgId}:*`);
 
     void (async () => {
       const members = await db
@@ -69,6 +79,6 @@ export async function POST(req: NextRequest) {
       }
     })().catch(() => {});
 
-    return ok({ success: true });
+    return ok({ success: true }, 201);
   });
 }

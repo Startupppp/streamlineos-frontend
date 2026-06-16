@@ -10,11 +10,11 @@ export default function PipelineLoading() {
       noInternalScroll
       actions={<Skeleton className="h-8 w-20 rounded-md" />}
     >
-      <div className="flex h-full gap-3 overflow-x-auto">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-border min-w-[260px] w-[260px] flex flex-col bg-muted/30 border-t-2 flex-shrink-0 h-full"
+            className="rounded-xl border border-border flex flex-col bg-muted/30 border-t-2"
           >
             <div className="flex items-center justify-between p-3 rounded-t-xl bg-muted/50">
               <div className="flex items-center gap-2">

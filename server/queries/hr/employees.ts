@@ -1,17 +1,37 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { departments, organizationMembers, users, leaveRequests, attendance } from "@/lib/db/schema";
+import {
+  departments,
+  organizationMembers,
+  assets,
+  documents,
+  helpdeskTickets,
+  users,
+  employeeDevices,
+} from "@/lib/db/schema";
 import { timesheets, projectMembers, projects, tickets } from "@/lib/db/schema/projects";
-import { eq, and, desc, gte, lte, ilike, or, count } from "drizzle-orm";
+import { eq, and, desc, asc, isNull, sql, ilike, or, count } from "drizzle-orm";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
 import type {
   Department,
   Employee,
+  Asset,
+  Document,
+  HelpdeskTicket,
   EmployeeStats,
+  WorkLog,
   OrgChartNode,
   PaginatedEmployees,
+  Device,
 } from "@/types/hr";
+import type { DocumentType } from "@/types/hr";
+import {
+  attendance,
+  leaveRequests,
+} from "@/lib/db/schema";
+import { gte, lte } from "drizzle-orm";
+import { formatDateOnly } from "@/lib/date-utils";
 
 export async function getDepartments(orgId: string): Promise<Department[]> {
   return db.query.departments.findMany({
@@ -26,7 +46,9 @@ export async function getEmployees(
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
     with: {
-      user: true,
+      user: {
+        with: { department: true },
+      },
     },
   });
 
@@ -51,6 +73,7 @@ export async function getEmployees(
       designation: u.designation,
       employeeId: u.employeeId,
       departmentId: u.departmentId,
+      department: u.department ? { id: u.department.id, name: u.department.name } : null,
       image: u.image,
       isActive: u.isActive ?? true,
       joiningDate: u.joiningDate,
@@ -178,25 +201,104 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
   };
 }
 
+export async function getAssets(orgId: string): Promise<Asset[]> {
+  return db.query.assets.findMany({
+    where: eq(assets.orgId, orgId),
+    orderBy: [desc(assets.createdAt)],
+  }) as unknown as Promise<Asset[]>;
+}
+
+export async function getDocuments(
+  orgId: string,
+  userId: string,
+  isAdmin: boolean,
+  params?: {
+    filterUserId?: string;
+    type?: string;
+  }
+): Promise<Document[]> {
+  const conditions = [
+    eq(documents.orgId, orgId),
+    eq(documents.isActive, true),
+  ];
+
+  if (params?.filterUserId) {
+    conditions.push(eq(documents.userId, params.filterUserId));
+  } else if (!isAdmin) {
+    conditions.push(eq(documents.userId, userId));
+  }
+
+  if (params?.type) {
+    conditions.push(eq(documents.type, params.type as DocumentType));
+  }
+
+  return db.query.documents.findMany({
+    where: and(...conditions),
+    orderBy: [desc(documents.createdAt)],
+  }) as unknown as Promise<Document[]>;
+}
+
+export async function getHelpdeskTickets(
+  orgId: string,
+  userId: string,
+  isAdmin: boolean,
+  params?: {
+    filterUserId?: string;
+    status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  }
+): Promise<HelpdeskTicket[]> {
+  const conditions = [eq(helpdeskTickets.orgId, orgId)];
+
+  if (params?.filterUserId) {
+    conditions.push(eq(helpdeskTickets.userId, params.filterUserId));
+  } else if (!isAdmin) {
+    conditions.push(eq(helpdeskTickets.userId, userId));
+  }
+
+  if (params?.status) {
+    conditions.push(eq(helpdeskTickets.status, params.status));
+  }
+
+  return db.query.helpdeskTickets.findMany({
+    where: and(...conditions),
+    orderBy: [desc(helpdeskTickets.createdAt)],
+  }) as unknown as Promise<HelpdeskTicket[]>;
+}
+
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(/[\s_]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
     with: { user: true },
   });
 
-  return members
-    .map((m) => m.user)
-    .filter((u) => u.isActive !== false)
-    .map((u) => ({
+  const seen = new Set<string>();
+  const result: OrgChartNode[] = [];
+
+  for (const m of members) {
+    const u = m.user;
+    if (!u || seen.has(u.id) || u.isActive === false) continue;
+    seen.add(u.id);
+    result.push({
       id: u.id,
       name: u.name,
       email: u.email,
-      role: u.role ?? "EMPLOYEE",
+      role: toTitleCase(u.role ?? "Employee"),
       designation: u.designation,
       image: u.image,
       departmentId: u.departmentId,
       reportingTo: u.reportingTo,
-    }));
+    });
+  }
+
+  return result;
 }
 
 export async function getEmployeeStats(orgId: string, userId: string): Promise<EmployeeStats> {
@@ -297,4 +399,94 @@ export async function getEmployeeTickets(orgId: string, userId: string) {
     .limit(50);
 
   return { data };
+}
+
+export async function getWorkLogs(
+  orgId: string,
+  userId: string,
+  year: number,
+  quarter: number,
+  filterUserId?: string,
+  month?: number,
+  dateFrom?: string,
+  dateTo?: string
+): Promise<WorkLog[]> {
+  const targetUserId = filterUserId || userId;
+
+  const startMonth = (quarter - 1) * 3;
+  const quarterStart = formatDateOnly(new Date(year, startMonth, 1));
+  const quarterEnd = formatDateOnly(new Date(year, startMonth + 3, 0));
+
+  const effectiveFrom = dateFrom && dateFrom >= quarterStart ? dateFrom : quarterStart;
+  const effectiveTo = dateTo && dateTo <= quarterEnd ? dateTo : quarterEnd;
+
+  const conditions = [
+    eq(timesheets.orgId, orgId),
+    eq(timesheets.userId, targetUserId),
+    isNull(timesheets.ticketId),
+    gte(timesheets.date, effectiveFrom),
+    lte(timesheets.date, effectiveTo),
+  ];
+
+  if (month !== undefined) {
+    conditions.push(sql`EXTRACT(MONTH FROM ${timesheets.date}) = ${month + 1}`);
+    conditions.push(sql`EXTRACT(YEAR FROM ${timesheets.date}) = ${year}`);
+  }
+
+  const logs = await db.query.timesheets.findMany({
+    where: and(...conditions),
+    orderBy: [asc(timesheets.date)],
+  });
+
+  const seenDates = new Set<string>();
+  return logs
+    .map((l) => ({ ...l, date: String(l.date).slice(0, 10) }))
+    .filter((l) => {
+      if (seenDates.has(l.date)) return false;
+      seenDates.add(l.date);
+      return true;
+    }) as unknown as WorkLog[];
+}
+
+export async function getDevices(orgId: string): Promise<Device[]> {
+  const rows = await db
+    .select({
+      id: employeeDevices.id,
+      orgId: employeeDevices.orgId,
+      userId: employeeDevices.userId,
+      deviceType: employeeDevices.deviceType,
+      deviceName: employeeDevices.deviceName,
+      serialNumber: employeeDevices.serialNumber,
+      brand: employeeDevices.brand,
+      model: employeeDevices.model,
+      assignedDate: employeeDevices.assignedDate,
+      returnDate: employeeDevices.returnDate,
+      status: employeeDevices.status,
+      notes: employeeDevices.notes,
+      createdAt: employeeDevices.createdAt,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userEmail: users.email,
+    })
+    .from(employeeDevices)
+    .innerJoin(users, eq(employeeDevices.userId, users.id))
+    .where(eq(employeeDevices.orgId, orgId))
+    .orderBy(desc(employeeDevices.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    orgId: r.orgId,
+    userId: r.userId,
+    deviceType: r.deviceType,
+    deviceName: r.deviceName,
+    serialNumber: r.serialNumber,
+    brand: r.brand,
+    model: r.model,
+    assignedDate: r.assignedDate,
+    returnDate: r.returnDate,
+    status: r.status,
+    notes: r.notes,
+    createdAt: r.createdAt,
+    user: { id: r.userId, firstName: r.userFirstName, lastName: r.userLastName, email: r.userEmail },
+  })) as Device[];
 }

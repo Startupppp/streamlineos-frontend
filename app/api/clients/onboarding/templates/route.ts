@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { clientOnboardingTemplates } from "@/lib/db/schema/crm";
 import { eq } from "drizzle-orm";
@@ -24,7 +24,8 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "settings")) {
       return err("Forbidden: admin access required", 403);
     }
 

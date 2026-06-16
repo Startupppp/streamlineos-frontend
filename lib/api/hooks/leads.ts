@@ -39,6 +39,7 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
     queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
@@ -47,6 +48,7 @@ export function useLeadDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.leads.detail(id),
     queryFn: () => apiClient.get<LeadWithActivities>(`/leads/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }
@@ -55,6 +57,7 @@ export function useLeadBoard() {
   return useQuery({
     queryKey: queryKeys.leads.board(),
     queryFn: () => apiClient.get<LeadBoard>("/leads/board"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -63,6 +66,7 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
     queryKey: queryKeys.leads.stats(filters),
     queryFn: () =>
       apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -71,6 +75,7 @@ export function useLeadActivities(leadId: number, limit?: number) {
     queryKey: queryKeys.leads.activities(leadId),
     queryFn: () =>
       apiClient.get<LeadActivity[]>(`/leads/${leadId}/activities`, limit ? { limit } : undefined),
+    staleTime: 2 * 60_000,
     enabled: leadId > 0,
   });
 }
@@ -80,6 +85,7 @@ export function useLeadTimeline(leadId: number, limit?: number) {
     queryKey: queryKeys.leads.timeline(leadId),
     queryFn: () =>
       apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined),
+    staleTime: 2 * 60_000,
     enabled: leadId > 0,
   });
 }
@@ -88,6 +94,7 @@ export function useLeadSlaAlerts() {
   return useQuery({
     queryKey: queryKeys.leads.slaAlerts(),
     queryFn: () => apiClient.get<SlaAlertResponse>("/leads/sla-alerts"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -99,6 +106,7 @@ export function useLeadAnalyticsSummary(filters?: {
     queryKey: queryKeys.leads.analyticsSummary(filters),
     queryFn: () =>
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -106,6 +114,7 @@ export function useLeadDashboardMetrics() {
   return useQuery({
     queryKey: queryKeys.leads.dashboardMetrics(),
     queryFn: () => apiClient.get<LeadDashboardMetrics>("/leads/dashboard-metrics"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -113,6 +122,7 @@ export function useUnverifiedLeads() {
   return useQuery({
     queryKey: queryKeys.leads.unverified(),
     queryFn: () => apiClient.get<Lead[]>("/leads/unverified"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -285,6 +295,7 @@ export function useSalesLeaderboard() {
     queryKey: queryKeys.salesLeaderboard.list(),
     queryFn: () =>
       apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -293,6 +304,7 @@ export function useSalesTeamCapacity() {
     queryKey: queryKeys.salesTeamCapacity.list(),
     queryFn: () =>
       apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -318,6 +330,7 @@ export function useOverdueFollowUps(limit?: number) {
         "/leads/follow-ups",
         { overdue: "true", limit: limit ?? 10 } as Record<string, unknown>,
       ),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -347,12 +360,12 @@ export function useLeadImportStatus(batchId: number | null) {
   return useQuery({
     queryKey: [...queryKeys.leads.all, "importBatch", batchId] as const,
     queryFn: () => apiClient.get<LeadImportBatch>(`/leads/import/${batchId}`),
+    staleTime: 2 * 60_000,
     enabled: batchId !== null,
     refetchInterval: 3000,
   });
 }
 
-export const useSlaAlerts = useLeadSlaAlerts;
 
 export interface ScoreExplanation {
   score: number;

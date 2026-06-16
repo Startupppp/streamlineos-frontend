@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { deals, dealActivities } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ne, sum, count } from "drizzle-orm";
 import type { DealFilters } from "@/types/crm";
 
 export async function getDeals(
@@ -27,6 +27,24 @@ export async function getDeals(
     limit: filters?.limit ?? 50,
     offset: filters?.offset ?? 0,
   });
+}
+
+export async function getDealStats(orgId: string) {
+  const [activeRow, wonRow] = await Promise.all([
+    db
+      .select({ cnt: count(), total: sum(deals.value) })
+      .from(deals)
+      .where(and(eq(deals.orgId, orgId), ne(deals.stage, "WON"), ne(deals.stage, "LOST"))),
+    db
+      .select({ total: sum(deals.value) })
+      .from(deals)
+      .where(and(eq(deals.orgId, orgId), eq(deals.stage, "WON"))),
+  ]);
+  return {
+    active: activeRow[0]?.cnt ?? 0,
+    pipelineValue: Number(activeRow[0]?.total ?? 0),
+    wonValue: Number(wonRow[0]?.total ?? 0),
+  };
 }
 
 export async function getDeal(orgId: string, id: number) {

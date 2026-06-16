@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, logoUrl, escapeHtml } from "./base";
 
 export function getExpenseSubmittedEmailTemplate(
   approverName: string,

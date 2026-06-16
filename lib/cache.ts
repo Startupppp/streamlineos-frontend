@@ -52,9 +52,16 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
   if (!isRedisEnabled() || !redis) return;
 
   try {
-    const keys = await redis.keys(pattern);
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    let cursor: string | number = 0;
+    const keysToDelete: string[] = [];
+    do {
+      const [nextCursor, keys]: [string | number, string[]] = await redis.scan(cursor, { match: pattern, count: 100 });
+      cursor = nextCursor;
+      keysToDelete.push(...keys);
+    } while (Number(cursor) !== 0);
+
+    if (keysToDelete.length > 0) {
+      await redis.del(...keysToDelete);
     }
   } catch {
 
@@ -71,20 +78,25 @@ export const CACHE_KEYS = {
 
   orgSettings: (orgId: string) => `org:settings:${orgId}`,
   rolePermissions: (orgId: string, role: string) => `org:roles:${orgId}:${role}`,
+  rolesList: (orgId: string) => `org:roles:${orgId}`,
 
   leadsCount: (orgId: string) => `leads:count:${orgId}`,
   leadsList: (orgId: string, hash: string) => `leads:list:${orgId}:${hash}`,
   leadDetail: (orgId: string, id: number) => `leads:detail:${orgId}:${id}`,
 
   projectsList: (orgId: string) => `projects:list:${orgId}`,
+  projectLabels: (orgId: string) => `projects:labels:${orgId}`,
+  orgMembers: (orgId: string) => `org:members:${orgId}`,
+  customStates: (orgId: string, projectId: number) =>
+    `projects:customStates:${orgId}:${projectId}`,
   ticketsList: (orgId: string, projectId: number, hash: string) =>
     `tickets:list:${orgId}:${projectId}:${hash}`,
 
   salesDashboard: (orgId: string) => `sales:dashboard:${orgId}`,
-  marketingDashboard: (orgId: string) => `marketing:dashboard:${orgId}`,
   ceDashboard: (orgId: string) => `ce:dashboard:${orgId}`,
   supportDashboard: (orgId: string) => `support:dashboard:${orgId}`,
 
+  dealsList: (orgId: string, hash: string) => `deals:list:${orgId}:${hash}`,
   dealsForecast: (orgId: string) => `deals:forecast:${orgId}`,
   approvalsList: (orgId: string) => `deals:approvals:${orgId}`,
 
@@ -94,9 +106,6 @@ export const CACHE_KEYS = {
   quotasList: (orgId: string) => `sales:quotas:${orgId}`,
   commissionsList: (orgId: string) => `sales:commissions:${orgId}`,
 
-  campaignsList: (orgId: string) => `marketing:campaigns:${orgId}`,
-  emailCampaignsList: (orgId: string) => `marketing:emailCampaigns:${orgId}`,
-
   searchResults: (orgId: string, hash: string) => `search:${orgId}:${hash}`,
 
   leadBoard: (orgId: string, hash: string) => `leads:board:${orgId}:${hash}`,
@@ -104,6 +113,27 @@ export const CACHE_KEYS = {
 
   executiveDashboard: (orgId: string) => `dashboard:executive:${orgId}`,
   announcementsList: (orgId: string) => `dashboard:announcements:${orgId}`,
+
+  invoicesList: (orgId: string, hash: string) => `invoices:list:${orgId}:${hash}`,
+  invoiceDetail: (orgId: string, id: number) => `invoices:detail:${orgId}:${id}`,
+  invoiceStats: (orgId: string) => `invoices:stats:${orgId}`,
+
+  tasksList: (orgId: string, hash: string) => `tasks:list:${orgId}:${hash}`,
+  taskDetail: (orgId: string, id: number) => `tasks:detail:${orgId}:${id}`,
+
+  quotesList: (orgId: string, hash: string) => `quotes:list:${orgId}:${hash}`,
+  quoteDetail: (orgId: string, id: number) => `quotes:detail:${orgId}:${id}`,
+
+  supportTicketsList: (orgId: string, hash: string) => `support:list:${orgId}:${hash}`,
+  supportTicketDetail: (orgId: string, id: number) => `support:detail:${orgId}:${id}`,
+
+  calendarEvents: (orgId: string, hash: string) => `calendar:events:${orgId}:${hash}`,
+
+  targetsList: (orgId: string, hash: string) => `targets:list:${orgId}:${hash}`,
+  targetLeaderboard: (orgId: string, metricType: string) => `targets:leaderboard:${orgId}:${metricType}`,
+
+  branchesList: (orgId: string) => `branches:list:${orgId}`,
+  rolesList2: (orgId: string) => `roles:list:${orgId}`,
 } as const;
 
 export const CACHE_TTL = {

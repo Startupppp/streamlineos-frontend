@@ -62,6 +62,7 @@ export interface Candidate {
   duplicateOfId: number | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
+  interviews?: Interview[];
 }
 
 export interface CandidateApplication {
@@ -77,7 +78,6 @@ export interface CandidateApplication {
   jobPosting?: JobPosting;
 }
 
-// ATS Kanban pipeline types
 export interface AtsPipelineCandidate {
   id: number;
   name: string;

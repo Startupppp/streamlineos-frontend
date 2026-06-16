@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useInterviewerPerformance } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 
 function getSpeedLabel(hours: number | null): { label: string; color: string } {
@@ -92,70 +93,34 @@ export default function InterviewerPerformancePage() {
       }
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              Avg Submit Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? (
-              <Skeleton className="h-7 w-20" />
-            ) : (
-              <p className={cn("text-2xl font-bold", getSpeedLabel(avgSubmitTime ?? null).color)}>
-                {avgSubmitTime !== null ? `${Math.round(avgSubmitTime)}h` : "—"}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <UserCheck className="h-3.5 w-3.5" />
-              Submission Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? (
-              <Skeleton className="h-7 w-16" />
-            ) : (
-              <p className="text-2xl font-bold">{submissionRate}%</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5" />
-              Submitted
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? (
-              <Skeleton className="h-7 w-16" />
-            ) : (
-              <p className="text-2xl font-bold">{totalSubmitted}</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-4 px-4">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Pending
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {isLoading ? (
-              <Skeleton className="h-7 w-12" />
-            ) : (
-              <p className={cn("text-2xl font-bold", totalPending > 0 ? "text-amber-600" : "")}>
-                {totalPending}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Avg Submit Time"
+          value={isLoading ? "—" : avgSubmitTime !== null ? `${Math.round(avgSubmitTime)}h` : "—"}
+          icon={Clock}
+          color="blue"
+          index={0}
+        />
+        <StatCard
+          label="Submission Rate"
+          value={isLoading ? "—" : `${submissionRate}%`}
+          icon={UserCheck}
+          color="green"
+          index={1}
+        />
+        <StatCard
+          label="Submitted"
+          value={isLoading ? "—" : totalSubmitted}
+          icon={TrendingUp}
+          color="cyan"
+          index={2}
+        />
+        <StatCard
+          label="Pending"
+          value={isLoading ? "—" : totalPending}
+          icon={AlertCircle}
+          color="amber"
+          index={3}
+        />
       </div>
 
       <Card>

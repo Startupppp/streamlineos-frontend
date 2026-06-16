@@ -42,7 +42,7 @@ export function ReplyComposer({
         <p className="text-[13px] font-medium text-slate-800">Reply sent.</p>
         <button
           onClick={() => setDone(false)}
-          className="text-[11px] font-mono uppercase tracking-[0.16em] text-blue-600 hover:underline mt-3"
+          className="text-[11px] font-medium text-blue-600 hover:underline mt-3"
         >
           Send another →
         </button>
@@ -51,8 +51,8 @@ export function ReplyComposer({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-slate-500 mb-2">
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <p className="text-[11px] font-medium text-slate-500 mb-2">
         Reply
       </p>
       <Textarea

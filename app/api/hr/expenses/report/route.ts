@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, or } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,10 @@ export async function GET(req: NextRequest) {
       return err("startDate and endDate are required.", 400);
     }
 
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isAdmin = ability.can("approve", "hr:expenses");
     const conditions = [
       eq(expenses.orgId, session.orgId),
       gte(expenses.expenseDate, startDate),

@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
       .where(
         and(
           eq(candidateSources.orgId, session.orgId),
-          eq(candidateSources.platform, body.platform as Platform)
-        )
+          eq(candidateSources.platform, body.platform),
+        ),
       )
       .limit(1);
 
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         platform: body.platform,
         isActive: body.isActive,
         oauthToken: body.oauthToken,
-        meta: body.meta as Record<string, unknown> | undefined,
+        meta: body.meta,
         createdBy: session.user.id,
       })
       .returning();

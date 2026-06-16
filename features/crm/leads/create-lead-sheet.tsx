@@ -36,7 +36,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
   const [emailInput, setEmailInput] = useState("");
 
   const debouncedEmail = useDebouncedValue(emailInput, 500);
-  const debouncedPhone = useDebouncedValue(phone ?? "", 500);
+  const debouncedPhone = useDebouncedValue(phone ??"", 500);
 
   const { data: dupCheck } = useCheckLeadDuplicates(
     { email: debouncedEmail || undefined, phone: debouncedPhone || undefined },
@@ -47,7 +47,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button className="bg-gold hover:bg-gold/90 text-white shadow-lg">
+        <Button className="shadow-lg">
           <Plus className="h-4 w-4 mr-2" />
           New Lead
         </Button>
@@ -56,8 +56,8 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
 
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center">
-              <UserPlus className="h-5 w-5 text-gold" />
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <UserPlus className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <SheetTitle className="text-lg font-semibold">Create New Lead</SheetTitle>
@@ -138,7 +138,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
                   <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                    Possible duplicate{dupCheck!.duplicates.length > 1 ? "s" : ""} found
+                    Possible duplicate{dupCheck!.duplicates.length > 1 ?"s" :""} found
                   </span>
                 </div>
                 <div className="space-y-1.5">
@@ -219,7 +219,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                   </Select>
                 </div>
 
-                {source === "referral" && (
+                {source ==="referral" && (
                   <div className="col-span-2">
                     <Label htmlFor="referredBy" className="text-xs font-medium mb-1.5 block">
                       Referred By <span className="text-red-400">*</span>
@@ -300,8 +300,8 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button type="submit" form="create-lead-form" className="flex-1 bg-gold hover:bg-gold/90 text-white h-9" disabled={isPending}>
-            {isPending ? "Creating..." : "Create Lead"}
+          <Button type="submit" form="create-lead-form" className="flex-1 h-9" disabled={isPending}>
+            {isPending ?"Creating..." :"Create Lead"}
           </Button>
         </SheetFooter>
       </SheetContent>

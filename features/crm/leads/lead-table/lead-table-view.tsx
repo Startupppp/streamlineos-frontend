@@ -128,6 +128,9 @@ export function LeadTableView({
         </div>
       </div>
 
+      <p className="sm:hidden shrink-0 text-[10px] text-muted-foreground/70 px-1 pb-0.5">
+        Swipe horizontally to see more columns
+      </p>
       <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
@@ -177,7 +180,7 @@ export function LeadTableView({
                     className={cn(
                       "h-8",
                       idx % 2 === 1 && "bg-muted/10",
-                      selectedIds.has(lead.id) && "bg-gold/5 hover:bg-gold/10",
+                      selectedIds.has(lead.id) && "bg-blue-500/5 hover:bg-blue-500/10",
                       "hover:bg-muted/30 transition-colors",
                     )}
                   >

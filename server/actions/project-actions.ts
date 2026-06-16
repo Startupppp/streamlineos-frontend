@@ -10,6 +10,7 @@ import {
 import { eq, and, desc, or, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function getProjects() {
     const session = await auth();
@@ -20,7 +21,10 @@ export async function getProjects() {
     });
     if (!member) return [];
 
-    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
     if (isOwnerOrAdmin) {
         return await db.query.projects.findMany({
             where: eq(projects.orgId, member.orgId),
@@ -143,7 +147,9 @@ export async function getProjectById(projectId: number) {
     });
 
     if (!project) return null;
-    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
+    const ability = await getSessionAbility();
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
     if (isOwnerOrAdmin) return project;
     const isManager = project.managerId === session.user.id;
     if (isManager) return project;

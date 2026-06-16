@@ -17,7 +17,7 @@ export interface EmployeeSkill {
 const skillKeys = { all: [...queryKeys.hr.all, "skills"] as const, list: (p?: Record<string, unknown>) => [...skillKeys.all, "list", p] as const };
 
 export function useEmployeeSkills(params?: { userId?: string }) {
-  return useQuery({ queryKey: skillKeys.list(params as Record<string, unknown>), queryFn: () => apiClient.get<EmployeeSkill[]>("/hr/skills", params as Record<string, unknown>) });
+  return useQuery({ queryKey: skillKeys.list(params as Record<string, unknown>), queryFn: () => apiClient.get<EmployeeSkill[]>("/hr/skills", params as Record<string, unknown>), staleTime: 2 * 60_000 });
 }
 
 export function useAddSkill() {

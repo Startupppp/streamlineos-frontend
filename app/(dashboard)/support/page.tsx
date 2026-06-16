@@ -49,13 +49,20 @@ export default function SupportDashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+      <PageWrapper
+        title="Support Analytics"
+        subtitle="Real-time insights into customer support performance across all channels"
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28" />)}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+            <Skeleton className="h-72 lg:col-span-5" />
+            <Skeleton className="h-72 lg:col-span-7" />
+          </div>
         </div>
-        <Skeleton className="h-80" />
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -67,7 +74,7 @@ export default function SupportDashboardPage() {
       subtitle="Real-time insights into customer support performance across all channels"
     >
     <motion.div
-      className="space-y-6"
+      className="space-y-4"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -104,12 +111,12 @@ export default function SupportDashboardPage() {
         />
       </motion.div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-5" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-gold" />
+                <Shield className="h-4 w-4 text-blue-600" />
                 Ticket Status Breakdown
               </CardTitle>
             </CardHeader>
@@ -127,7 +134,7 @@ export default function SupportDashboardPage() {
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-gold" />
+                <Ticket className="h-4 w-4 text-blue-600" />
                 Ticket Volume Trend
               </CardTitle>
             </CardHeader>
@@ -143,7 +150,7 @@ export default function SupportDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <motion.div variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -184,8 +191,8 @@ export default function SupportDashboardPage() {
                       >
                         <td className="py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-gold">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-semibold text-blue-600">
                                 {member.avatar}
                               </span>
                             </div>
@@ -226,19 +233,19 @@ export default function SupportDashboardPage() {
         <Card className="shadow-noir">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="h-4 w-4 text-gold" />
+              <Shield className="h-4 w-4 text-blue-600" />
               Tickets by Priority
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {ticketsByPriority.map((priority) => {
                 const percentage = calcPercent(priority.value, totalPriority);
 
                 return (
                   <motion.div
                     key={priority.label}
-                    className="relative overflow-hidden rounded-xl border border-border p-4"
+                    className="relative overflow-hidden rounded-xl border border-border p-3"
                     variants={slideInLeft}
                   >
                     <div

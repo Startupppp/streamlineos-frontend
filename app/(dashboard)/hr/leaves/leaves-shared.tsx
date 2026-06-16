@@ -111,7 +111,7 @@ export interface WfhRequest {
 }
 
 export const balanceCardConfig: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  "Casual Leave": { label: "CASUAL", color: "bg-gold", icon: CalendarDays },
+  "Casual Leave": { label: "CASUAL", color: "bg-blue-500", icon: CalendarDays },
   "Sick Leave": { label: "SICK", color: "bg-red-400", icon: Heart },
   "Unpaid Leave": { label: "UNPAID", color: "bg-slate-400", icon: Palmtree },
 };

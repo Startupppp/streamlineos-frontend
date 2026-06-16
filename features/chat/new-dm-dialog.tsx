@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useChatOrgUsers, useChatOnlineUsers, useCreateDM } from "@/lib/hooks/trpc-hooks";
+import { useChatOrgUsers, useChatOnlineUsers, useCreateDMChannel } from "@/lib/hooks/trpc-hooks";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 
@@ -69,7 +69,7 @@ export function NewDMDialog({
 }) {
   const { data: orgUsers, isLoading } = useChatOrgUsers();
   const { data: onlineUsers } = useChatOnlineUsers();
-  const createDM = useCreateDM();
+  const createDM = useCreateDMChannel();
   const [search, setSearch] = useState("");
 
   const onlineUserIds = useMemo(

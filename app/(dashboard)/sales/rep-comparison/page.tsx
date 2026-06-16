@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -46,15 +45,15 @@ function StatPill({
 }) {
   const winner = higherIsBetter ? (val1 >= val2 ? 1 : 2) : (val1 <= val2 ? 1 : 2);
   return (
-    <div className="flex items-center justify-between gap-3 py-2 border-b last:border-0 text-sm">
+    <div className="flex items-center justify-between gap-2 py-2 border-b last:border-0 text-sm">
       <span
-        className={`w-24 text-right font-medium ${winner === 1 ? "text-green-600" : "text-muted-foreground"}`}
+        className={`w-20 sm:w-24 shrink-0 text-right font-medium tabular-nums truncate ${winner === 1 ? "text-green-600" : "text-muted-foreground"}`}
       >
         {fmtFn(val1)}
       </span>
-      <span className="text-xs text-muted-foreground flex-1 text-center">{label}</span>
+      <span className="text-xs text-muted-foreground flex-1 min-w-0 text-center truncate">{label}</span>
       <span
-        className={`w-24 text-left font-medium ${winner === 2 ? "text-green-600" : "text-muted-foreground"}`}
+        className={`w-20 sm:w-24 shrink-0 text-left font-medium tabular-nums truncate ${winner === 2 ? "text-green-600" : "text-muted-foreground"}`}
       >
         {fmtFn(val2)}
       </span>
@@ -66,10 +65,10 @@ export default function RepComparisonPage() {
   const [rep1, setRep1] = useState<string>("");
   const [rep2, setRep2] = useState<string>("");
 
-  const { data: leaderboard, isLoading: lbLoading } = useSalesDashboardLeaderboard();
+  const { data: leaderboard } = useSalesDashboardLeaderboard();
   const { data: comparison, isLoading: cmpLoading } = useRepComparison(
-    rep1 ? Number(rep1) : null,
-    rep2 ? Number(rep2) : null,
+    rep1 && rep1 !== rep2 ? Number(rep1) : null,
+    rep2 && rep1 !== rep2 ? Number(rep2) : null,
   );
 
   const reps = leaderboard ?? [];
@@ -92,9 +91,9 @@ export default function RepComparisonPage() {
       title="Rep Comparison"
       subtitle="Overlay two sales reps' performance side by side"
     >
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
         <Select value={rep1} onValueChange={setRep1}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select Rep 1" />
           </SelectTrigger>
           <SelectContent>
@@ -103,9 +102,9 @@ export default function RepComparisonPage() {
             ))}
           </SelectContent>
         </Select>
-        <GitCompare className="h-4 w-4 text-muted-foreground" />
+        <GitCompare className="h-4 w-4 text-muted-foreground shrink-0 self-center hidden sm:block" />
         <Select value={rep2} onValueChange={setRep2}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Select Rep 2" />
           </SelectTrigger>
           <SelectContent>
@@ -117,22 +116,29 @@ export default function RepComparisonPage() {
       </div>
 
       {(!rep1 || !rep2) && (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
           <GitCompare className="h-10 w-10 opacity-30" />
           <p>Select two reps to compare their performance</p>
         </div>
       )}
 
-      {rep1 && rep2 && cmpLoading && (
+      {rep1 && rep2 && rep1 === rep2 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
+          <GitCompare className="h-10 w-10 opacity-30" />
+          <p>Please select two different reps to compare</p>
+        </div>
+      )}
+
+      {rep1 && rep2 && rep1 !== rep2 && cmpLoading && (
         <div className="space-y-4">
           <Skeleton className="h-48" />
           <Skeleton className="h-72" />
         </div>
       )}
 
-      {comparison && (
+      {comparison && rep1 !== rep2 && (
         <>
-          <Card className="mb-6">
+          <Card className="mb-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="text-blue-600 font-bold">{rep1Name}</span>
@@ -149,7 +155,7 @@ export default function RepComparisonPage() {
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card className="mb-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Monthly Deals Won</CardTitle>
             </CardHeader>

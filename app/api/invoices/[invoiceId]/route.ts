@@ -1,10 +1,15 @@
 import { type NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getInvoice } from "@/server/queries/invoice";
 import { db } from "@/lib/db";
-import { invoices } from "@/lib/db/schema";
+import { invoices, organizations } from "@/lib/db/schema";
+import { indianStates } from "@/lib/db/schema/accounting";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { postInvoiceSend } from "@/lib/accounting/post-invoice";
+import { seedChartOfAccountsForOrg } from "@/lib/accounting/seed-coa";
+import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
 const lineItemSchema = z.object({
   description: z.string().min(1),
@@ -47,6 +52,21 @@ export async function GET(
   });
 }
 
+async function resolveSupplierStateCode(orgId: string): Promise<string> {
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+    columns: { address: true },
+  });
+  const stateName = org?.address?.state;
+  if (!stateName) return "";
+  const match = await db
+    .select({ stateCode: indianStates.stateCode })
+    .from(indianStates)
+    .where(eq(indianStates.stateName, stateName))
+    .limit(1);
+  return match[0]?.stateCode ?? "";
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ invoiceId: string }> }
@@ -66,7 +86,9 @@ export async function PATCH(
       if (!existing) return err("Invoice not found", 404);
 
       const body = await req.json();
-      const input = updateSchema.parse(body);
+      const parsed = updateSchema.safeParse(body);
+      if (!parsed.success) return err("Invalid update", 400);
+      const input = parsed.data;
 
       if (input.status) {
         const updateData: Record<string, unknown> = {
@@ -76,15 +98,55 @@ export async function PATCH(
         if (input.status === "SENT") updateData.sentAt = new Date();
         if (input.status === "PAID") updateData.paidAt = new Date();
 
-        await db
-          .update(invoices)
-          .set(updateData)
-          .where(
-            and(
-              eq(invoices.id, invoiceId),
-              eq(invoices.orgId, session.orgId)
-            )
-          );
+        const willPost = input.status === "SENT" && existing.status !== "SENT";
+        if (willPost) {
+          await seedChartOfAccountsForOrg(session.orgId);
+        }
+
+        await db.transaction(async (tx) => {
+          await tx
+            .update(invoices)
+            .set(updateData)
+            .where(
+              and(
+                eq(invoices.id, invoiceId),
+                eq(invoices.orgId, session.orgId)
+              )
+            );
+
+          if (willPost) {
+            const subtotal = Number(existing.subtotal ?? 0);
+            const discount = Number(existing.discount ?? 0);
+            const cgst = Number(existing.cgstAmount ?? 0);
+            const sgst = Number(existing.sgstAmount ?? 0);
+            const igst = Number(existing.igstAmount ?? 0);
+            const taxPool = Math.round((cgst + sgst + igst) * 100) / 100;
+            const total = Number(existing.total ?? 0);
+            const supplierStateCode = await resolveSupplierStateCode(session.orgId);
+            const placeOfSupplyStateCode = existing.placeOfSupply ?? supplierStateCode;
+            const invoiceDate = (existing.createdAt ?? new Date()).toISOString().slice(0, 10);
+            await postInvoiceSend({
+              orgId: session.orgId,
+              invoiceId: existing.id,
+              invoiceNumber: existing.invoiceNumber,
+              invoiceDate,
+              supplierStateCode,
+              placeOfSupplyStateCode,
+              subtotal,
+              discount,
+              taxPool,
+              total,
+              createdBy: session.user.id,
+            }, tx);
+          }
+        });
+
+        if (willPost) {
+          revalidateTag(orgScopedTag(CacheTag.journal, session.orgId), "default");
+          revalidateTag(orgScopedTag(CacheTag.trialBalance, session.orgId), "default");
+          revalidateTag(orgScopedTag(CacheTag.profitLoss, session.orgId), "default");
+        }
+
         return ok({ success: true });
       }
 

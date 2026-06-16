@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { getLead } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
@@ -81,7 +81,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const leadId = Number(id);
   if (!Number.isFinite(leadId)) return err("Invalid lead id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("delete", "crm:leads", async (session) => {
     await db.delete(leads)
       .where(and(eq(leads.id, leadId), eq(leads.orgId, session.orgId!)));
     void createAuditLog({

@@ -15,6 +15,7 @@ import { EmptySearchIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -145,18 +146,15 @@ export default function ProjectsPage() {
       ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <EmptySearchIllustration className="mb-4 h-36 w-36 opacity-95" />
-          <p className="text-muted-foreground text-sm">
-            No projects match your filters.
-          </p>
-          <button
-            onClick={() => updateParams({ q: null, status: null, page: null })}
-            className="text-primary text-sm mt-2 hover:underline"
-          >
-            Clear all filters
-          </button>
-        </div>
+        <EmptyState
+          illustration={<EmptySearchIllustration className="h-32 w-32" />}
+          title="No projects match your filters"
+          description="Try adjusting the search or status filter."
+          action={{
+            label: "Clear all filters",
+            onClick: () => updateParams({ q: null, status: null, page: null }),
+          }}
+        />
       ) : viewMode === "grid" ? (
         <motion.div
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"

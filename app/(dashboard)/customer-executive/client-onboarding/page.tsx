@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -18,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CheckSquare, Square, Plus, Trash2, CalendarDays, User, ClipboardList } from "lucide-react";
-import { isAdminOrOwner } from "@/lib/constants/roles";
+import { useAbility } from "@/lib/abilities-context";
 import {
   useClientAccounts,
   useClientOnboardingItems,
@@ -324,7 +325,8 @@ function TemplatesTab() {
 
 export default function ClientOnboardingPage() {
   const { data: session } = useSession();
-  const isAdmin = isAdminOrOwner(session?.user?.role);
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "settings");
 
   return (
     <PageWrapper

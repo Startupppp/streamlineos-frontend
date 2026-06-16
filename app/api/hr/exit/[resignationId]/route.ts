@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, exitChecklists, users, fnfSettlements } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -35,7 +35,8 @@ export async function GET(
     });
     if (!data) return err("Resignation not found.", 404);
 
-    if (!isAdminOrOwner(session.user.role) && data.userId !== session.user.id) {
+    const ability = await getSessionAbility();
+    if (!ability.can("approve", "hr:leaves") && data.userId !== session.user.id) {
       return err("Forbidden", 403);
     }
 
@@ -61,6 +62,7 @@ export async function PATCH(
 
     const body = updateSchema.parse(await req.json());
     const role = session.user.role;
+    const ability = await getSessionAbility();
 
     if (body.status === "HR_APPROVED") {
       if (role !== "HR" && role !== "CEO") return err("Only HR can perform HR review.", 403);
@@ -120,7 +122,7 @@ export async function PATCH(
     }
 
     if (body.status === "REJECTED") {
-      if (!isAdminOrOwner(role)) return err("Only admins can reject.", 403);
+      if (!ability.can("approve", "hr:leaves")) return err("Only admins can reject.", 403);
       if (!body.remarks) return err("Remarks are required when rejecting.", 400);
 
       const updateFields: Record<string, unknown> = {
@@ -154,7 +156,7 @@ export async function PATCH(
     }
 
     if (body.status === "COMPLETED") {
-      if (!isAdminOrOwner(role)) return err("Only admins can complete.", 403);
+      if (!ability.can("approve", "hr:leaves")) return err("Only admins can complete.", 403);
       await db.update(resignations).set({
         status: "COMPLETED",
         updatedAt: new Date(),

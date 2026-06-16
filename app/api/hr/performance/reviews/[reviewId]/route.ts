@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { performanceReviews } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { updatePerformanceReviewSchema } from "@/lib/validations/hr";
+import { updatePerformanceReviewSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 
 export async function GET(

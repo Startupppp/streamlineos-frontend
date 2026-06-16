@@ -6,3 +6,5 @@ export * from "./advanced";
 export * from "./watchers";
 export * from "./templates";
 export * from "./milestones";
+export * from "./ticket-activity";
+export * from "./whiteboards";

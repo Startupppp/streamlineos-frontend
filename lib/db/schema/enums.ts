@@ -25,8 +25,6 @@ export const wfhRequestStatusEnum = pgEnum("wfh_request_status", ["PENDING", "AP
 export const deviceStatusEnum = pgEnum("device_status", ["ACTIVE", "INACTIVE", "LOST", "RETURNED"]);
 export const reviewCycleStatusEnum = pgEnum("review_cycle_status", ["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"]);
 export const meetingStatusEnum = pgEnum("meeting_status", ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]);
-export const trainingStatusEnum = pgEnum("training_status", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
-export const enrollmentStatusEnum = pgEnum("enrollment_status", ["ENROLLED", "IN_PROGRESS", "COMPLETED", "DROPPED"]);
 export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "PENDING_HR", "HR_APPROVED", "CEO_APPROVED", "IN_PROGRESS", "APPROVED", "WITHDRAWN", "COMPLETED", "REJECTED"]);
 export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING", "DONE"]);
 export const ackStatusEnum = pgEnum("ack_status", ["PENDING", "ACKNOWLEDGED", "DECLINED"]);
@@ -58,9 +56,8 @@ export const slaAppliesToEnum = pgEnum("sla_applies_to", ["lead", "deal", "both"
 export const slaPriorityEnum = pgEnum("sla_priority", ["low", "medium", "high", "urgent"]);
 export const orgSizeEnum = pgEnum("org_size", ["1-10", "11-50", "51-200", "201-1000", "1000+"]);
 export const branchStatusEnum = pgEnum("branch_status", ["ACTIVE", "INACTIVE"]);
-export const dmLeadStatusEnum = pgEnum("dm_lead_status", ["pending_review", "verified", "sent_to_hr", "imported_to_pipeline"]);
 
-export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
+export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm"]);
 export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
 export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
 export const crmCampaignStatusEnum = pgEnum("crm_campaign_status", ["active", "paused", "completed"]);
@@ -85,8 +82,6 @@ export const invoiceStatusEnum = pgEnum("invoice_status", ["DRAFT", "SENT", "PAI
 export const supportTicketStatusEnum = pgEnum("support_ticket_status", ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"]);
 export const supportTicketPriorityEnum = pgEnum("support_ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
-export const socialPlatformEnum = pgEnum("social_platform", ["instagram", "twitter", "linkedin", "facebook", "youtube"]);
-
 export const quoteStatusEnum = pgEnum("quote_status", ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED", "EXPIRED"]);
 export const subscriptionPlanEnum = pgEnum("subscription_plan", ["STARTER", "PROFESSIONAL", "ENTERPRISE"]);
@@ -96,3 +91,6 @@ export const taskTypeEnum = pgEnum("task_type", ["CALL", "EMAIL", "MEETING", "CU
 export const taskStatusEnum = pgEnum("task_status", ["pending", "completed", "cancelled"]);
 
 export const blogPostStatusEnum = pgEnum("blog_post_status", ["draft", "published", "archived"]);
+
+export const accountTypeEnum = pgEnum("account_type", ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"]);
+export const journalEntryStatusEnum = pgEnum("journal_entry_status", ["DRAFT", "POSTED", "VOID"]);

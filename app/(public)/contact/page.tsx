@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, MessageSquare, Shield, BookOpen } from "lucide-react";
-import { MarketingShell, MarketingEyebrow } from "@/features/marketing/marketing-shell";
-import { ContactForm } from "@/features/marketing/contact-form";
+import { PublicShell, PublicEyebrow } from "@/features/landing/public-shell";
+import { ContactForm } from "@/features/landing/contact-form";
 import { BRAND_NAME, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 
 export const metadata: Metadata = {
   title: `Contact ${BRAND_NAME}`,
-  description: `Reach the ${BRAND_NAME} team — sales, support, partnerships, and press.`,
+  description: `Reach the ${BRAND_NAME} team â€” sales, support, partnerships, and press.`,
+  alternates: { canonical: "/contact" },
 };
 
 const channels = [
@@ -22,13 +23,13 @@ const channels = [
     icon: MessageSquare,
     label: "Existing customer support",
     description: "Open a ticket from inside your workspace for the fastest response.",
-    value: "Help · in-app",
+    value: "Help Â· in-app",
     href: "/signin",
   },
   {
     icon: Shield,
     label: "Security disclosures",
-    description: "Report a vulnerability — please don't share details on this form.",
+    description: "Report a vulnerability â€” please don't share details on this form.",
     value: "security@streamlineos.app",
     href: "mailto:security@streamlineos.app",
   },
@@ -43,15 +44,15 @@ const channels = [
 
 export default function ContactPage() {
   return (
-    <MarketingShell>
+    <PublicShell>
       <section className="container mx-auto px-4 lg:px-8 max-w-3xl text-center">
-        <MarketingEyebrow>Contact us</MarketingEyebrow>
+        <PublicEyebrow>Contact us</PublicEyebrow>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] leading-[1.02] text-slate-900 mb-5">
           Tell us what you&apos;re{" "}
-          <span className="brand-text">trying to solve.</span>
+          <span className="text-blue-600">trying to solve.</span>
         </h1>
         <p className="text-slate-600 text-lg leading-relaxed max-w-2xl mx-auto">
-          Pricing questions, demos, partnerships, security disclosures — every message reaches
+          Pricing questions, demos, partnerships, security disclosures â€” every message reaches
           a human on our team. We aim to reply within one business day.
         </p>
       </section>
@@ -89,6 +90,6 @@ export default function ContactPage() {
           })}
         </aside>
       </section>
-    </MarketingShell>
+    </PublicShell>
   );
 }

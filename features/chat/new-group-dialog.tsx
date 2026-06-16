@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/hooks/trpc-hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";
 
 type OrgUserItem = { id: string; name?: string | null; email?: string | null; image?: string | null };
@@ -32,9 +33,9 @@ interface SelectedUserBadgeProps {
 function SelectedUserBadge({ id, name, onRemove }: SelectedUserBadgeProps) {
   const handleRemove = useCallback(() => onRemove(id), [id, onRemove]);
   return (
-    <span className="inline-flex items-center gap-1 bg-gold/10 text-gold rounded-full px-2 py-0.5 text-[11px] font-medium">
-      {name?.split(" ")[0]}
-      <button onClick={handleRemove} className="hover:bg-gold/20 rounded-full p-0.5">
+    <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-600 rounded-full px-2 py-0.5 text-[11px] font-medium">
+      {name?.split("")[0]}
+      <button onClick={handleRemove} className="hover:bg-blue-500/20 rounded-full p-0.5">
         <X className="h-2.5 w-2.5" />
       </button>
     </span>
@@ -53,11 +54,11 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-        "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-        selected && "bg-gold/5"
+"w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
+        selected &&"bg-blue-500/5"
       )}
     >
-      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ? "bg-gold border-gold text-white" : "border-border/60")}>
+      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ?"bg-blue-500 border-blue-500 text-white" :"border-border/60")}>
         {selected && <Check className="h-3 w-3" />}
       </div>
       <Avatar className="h-7 w-7 shrink-0">
@@ -89,11 +90,11 @@ export function NewGroupDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-  const [step, setStep] = useState<"info" | "members">("info");
+  const [step, setStep] = useState<"info" |"members">("info");
 
   const handleOpenAvatarInput = useCallback(() => { avatarInputRef.current?.click(); }, []);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
+    setName(e.target.value.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,""));
   }, []);
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value), []);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
@@ -126,13 +127,12 @@ export function NewGroupDialog({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "chat-avatars");
-      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      formData.append("folder","chat-avatars");
+      const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
       if (data.url) setAvatarUrl(data.url);
       else toast.error("Upload failed");
     } catch (error) { toast.error(getErrorMessage(error)); }
-    finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value = ""; }
+    finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value =""; }
   };
 
   const handleCreate = async () => {
@@ -181,11 +181,11 @@ export function NewGroupDialog({
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-[16px]">
-            {step === "info" ? "Create Channel" : "Add Members"}
+            {step ==="info" ?"Create Channel" :"Add Members"}
           </DialogTitle>
         </DialogHeader>
 
-        {step === "info" ? (
+        {step ==="info" ? (
           <div className="px-4 pb-4 space-y-4">
             <div className="flex justify-center">
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
@@ -197,7 +197,7 @@ export function NewGroupDialog({
               >
                 {avatarUrl ? (
                   <div className="relative h-16 w-16 rounded-xl overflow-hidden border-2 border-border/40">
-                    <Image src={resolveImageUrl(avatarUrl) ?? ""} alt="Channel avatar" fill unoptimized className="object-cover" />
+                    <Image src={resolveImageUrl(avatarUrl) ??""} alt="Channel avatar" fill unoptimized className="object-cover" />
                   </div>
                 ) : (
                   <div className="h-16 w-16 rounded-xl bg-muted/40 border-2 border-dashed border-border/60 flex items-center justify-center">
@@ -242,7 +242,7 @@ export function NewGroupDialog({
             <Button
               onClick={handleGoToMembers}
               disabled={!name.trim()}
-              className="w-full bg-gold hover:bg-gold/90 text-white h-9"
+              className="w-full h-9"
             >
               Next: Add Members
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -296,7 +296,7 @@ export function NewGroupDialog({
               <Button
                 onClick={handleCreate}
                 disabled={selectedIds.size === 0 || createGroup.isPending}
-                className="flex-1 bg-gold hover:bg-gold/90 text-white h-9"
+                className="flex-1 h-9"
               >
                 {createGroup.isPending ? (
                   <>
@@ -304,7 +304,7 @@ export function NewGroupDialog({
                     Creating...
                   </>
                 ) : (
-                  `Create with ${selectedIds.size} member${selectedIds.size !== 1 ? "s" : ""}`
+                  `Create with ${selectedIds.size} member${selectedIds.size !== 1 ?"s" :""}`
                 )}
               </Button>
             </div>

@@ -2,7 +2,7 @@ import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { addDays } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:documents");
     const baseWhere = isAdmin
       ? and(eq(documents.orgId, session.orgId), eq(documents.isActive, true))
       : and(

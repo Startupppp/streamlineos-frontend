@@ -1,9 +1,14 @@
-import { withAuth, ok } from "@/lib/api/helpers";
+import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { employeeSkills } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const listSchema = z.object({
+  userId: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createSchema = z.object({
   userId: z.string().min(1).optional(),
@@ -13,7 +18,7 @@ const createSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const userId = req.nextUrl.searchParams.get("userId");
+    const { userId, limit } = parseQuery(req, listSchema);
     const conditions = [eq(employeeSkills.orgId, session.orgId)];
     if (userId) conditions.push(eq(employeeSkills.userId, userId));
 
@@ -21,6 +26,7 @@ export async function GET(req: NextRequest) {
       where: and(...conditions),
       with: { user: true },
       orderBy: [desc(employeeSkills.createdAt)],
+      limit,
     });
     return ok(data);
   });
@@ -28,7 +34,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const [skill] = await db.insert(employeeSkills).values({
       orgId: session.orgId,
       userId: body.userId ?? session.user.id,

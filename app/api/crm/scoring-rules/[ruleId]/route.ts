@@ -1,4 +1,4 @@
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leadScoringRules } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -9,11 +9,11 @@ const updateSchema = z.object({
   field: z.string().min(1).optional(),
   operator: z.enum(["eq", "gt", "lt", "contains", "in"]).optional(),
   value: z.string().min(1).optional(),
-  points: z.number().int().optional(),
+  points: z.number().int().min(-1000).max(1000).optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ruleId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:scoring-rules", async (session) => {
     const { ruleId } = await params;
     const id = Number(ruleId);
     if (!Number.isFinite(id)) return err("Invalid rule id", 400);
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ru
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ ruleId: string }> }) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:scoring-rules", async (session) => {
     const { ruleId } = await params;
     const id = Number(ruleId);
     if (!Number.isFinite(id)) return err("Invalid rule id", 400);

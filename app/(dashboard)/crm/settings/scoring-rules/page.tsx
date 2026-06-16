@@ -33,42 +33,42 @@ import {
 import { toast } from "sonner";
 
 const FIELDS = [
-  { value: "source", label: "Source" },
-  { value: "priority", label: "Priority" },
-  { value: "status", label: "Status" },
-  { value: "company", label: "Company" },
-  { value: "city", label: "City" },
-  { value: "potentialValue", label: "Potential Value" },
-  { value: "investmentInterest", label: "Investment Interest" },
+  { value:"source", label:"Source" },
+  { value:"priority", label:"Priority" },
+  { value:"status", label:"Status" },
+  { value:"company", label:"Company" },
+  { value:"city", label:"City" },
+  { value:"potentialValue", label:"Potential Value" },
+  { value:"investmentInterest", label:"Investment Interest" },
 ];
 
 const OPERATORS = [
-  { value: "eq", label: "Equals" },
-  { value: "gt", label: "Greater than" },
-  { value: "lt", label: "Less than" },
-  { value: "contains", label: "Contains" },
-  { value: "in", label: "In (comma-sep)" },
+  { value:"eq", label:"Equals" },
+  { value:"gt", label:"Greater than" },
+  { value:"lt", label:"Less than" },
+  { value:"contains", label:"Contains" },
+  { value:"in", label:"In (comma-sep)" },
 ];
 
 const ruleSchema = z.object({
-  field: z.string().min(1, "Select a field"),
-  operator: z.enum(["eq", "gt", "lt", "contains", "in"]),
-  value: z.string().min(1, "Value required"),
-  points: z.coerce.number().int("Must be integer"),
+  field: z.string().min(1,"Select a field"),
+  operator: z.enum(["eq","gt","lt","contains","in"]),
+  value: z.string().min(1,"Value required"),
+  points: z.coerce.number().int("Must be integer").min(-1000, "Min -1000").max(1000, "Max 1000"),
 });
 type RuleForm = z.infer<typeof ruleSchema>;
 
 const SAMPLE_LEAD = {
-  name: "Rahul Sharma",
-  email: "rahul@example.com",
-  phone: "+919876543210",
-  source: "referral",
-  priority: "HOT",
-  status: "INTERESTED",
-  company: "TechCorp India",
-  city: "Mumbai",
-  potentialValue: "5000000",
-  investmentInterest: "3000000",
+  name:"Rahul Sharma",
+  email:"rahul@example.com",
+  phone:"+919876543210",
+  source:"referral",
+  priority:"HOT",
+  status:"INTERESTED",
+  company:"TechCorp India",
+  city:"Mumbai",
+  potentialValue:"5000000",
+  investmentInterest:"3000000",
 };
 
 export default function ScoringRulesPage() {
@@ -84,7 +84,7 @@ export default function ScoringRulesPage() {
 
   const form = useForm<RuleForm>({
     resolver: ruleResolver,
-    defaultValues: { field: "", operator: "eq", value: "", points: 0 },
+    defaultValues: { field:"", operator:"eq", value:"", points: 0 },
   });
 
   const editForm = useForm<RuleForm>({
@@ -136,14 +136,14 @@ export default function ScoringRulesPage() {
     let score = 0;
     const record = SAMPLE_LEAD as Record<string, string>;
     for (const rule of rules) {
-      const fieldVal = record[rule.field] ?? "";
+      const fieldVal = record[rule.field] ??"";
       let match = false;
       switch (rule.operator) {
-        case "eq": match = fieldVal === rule.value; break;
-        case "gt": match = Number(fieldVal) > Number(rule.value); break;
-        case "lt": match = Number(fieldVal) < Number(rule.value); break;
-        case "contains": match = fieldVal.toLowerCase().includes(rule.value.toLowerCase()); break;
-        case "in": match = rule.value.split(",").map(v => v.trim()).includes(fieldVal); break;
+        case"eq": match = fieldVal === rule.value; break;
+        case"gt": match = Number(fieldVal) > Number(rule.value); break;
+        case"lt": match = Number(fieldVal) < Number(rule.value); break;
+        case"contains": match = fieldVal.toLowerCase().includes(rule.value.toLowerCase()); break;
+        case"in": match = rule.value.split(",").map(v => v.trim()).includes(fieldVal); break;
       }
       if (match) score += rule.points;
     }
@@ -166,7 +166,7 @@ export default function ScoringRulesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button >
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -214,13 +214,13 @@ export default function ScoringRulesPage() {
                 )} />
                 <FormField control={form.control} name="points" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Points</FormLabel>
-                    <FormControl><Input type="number" {...field} placeholder="e.g. 20" /></FormControl>
+                    <FormLabel>Points (-1000 to 1000)</FormLabel>
+                    <FormControl><Input type="number" min={-1000} max={1000} {...field} placeholder="e.g. 20" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
-                  {createRule.isPending ? "Creating..." : "Create Rule"}
+                <Button type="submit" className="w-full" disabled={createRule.isPending}>
+                  {createRule.isPending ?"Creating..." :"Create Rule"}
                 </Button>
               </form>
             </Form>
@@ -282,7 +282,7 @@ export default function ScoringRulesPage() {
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4 text-gold" />
+                <Zap className="h-4 w-4 text-blue-600" />
                 Live Preview - Sample Lead
               </CardTitle>
             </CardHeader>
@@ -295,13 +295,13 @@ export default function ScoringRulesPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-gold/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
                 <span className="text-sm font-medium">Calculated Score</span>
                 <Badge className={cn(
-                  "text-lg px-4 py-1 font-bold",
-                  sampleScore <= 30 ? "bg-red-500/15 text-red-700 dark:text-red-400" :
-                  sampleScore <= 60 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" :
-                  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+"text-lg px-4 py-1 font-bold",
+                  sampleScore <= 30 ?"bg-red-500/15 text-red-700 dark:text-red-400" :
+                  sampleScore <= 60 ?"bg-amber-500/15 text-amber-700 dark:text-amber-400" :
+"bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                 )}>
                   {sampleScore} pts
                 </Badge>
@@ -356,7 +356,7 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
                 <FormField control={editForm.control} name="points" render={({ field }) => (
                   <Input type="number" {...field} className="h-8 w-16 text-xs" />
                 )} />
-                <Button type="submit" size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white text-xs" disabled={updatePending}>Save</Button>
+                <Button type="submit" size="sm" className="h-8 text-xs" disabled={updatePending}>Save</Button>
                 <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
               </form>
             </Form>
@@ -369,8 +369,8 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
           <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
           <TableCell className="text-xs">{rule.value}</TableCell>
           <TableCell className="text-xs text-right">
-            <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
-              {rule.points > 0 ? "+" : ""}{rule.points}
+            <Badge variant={rule.points >= 0 ?"default" :"destructive"} className="text-[10px]">
+              {rule.points > 0 ?"+" :""}{rule.points}
             </Badge>
           </TableCell>
           <TableCell className="text-right">

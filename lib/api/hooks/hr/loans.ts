@@ -28,6 +28,7 @@ export function useSalaryLoans() {
   return useQuery({
     queryKey: loanKeys.list(),
     queryFn: () => apiClient.get<SalaryLoan[]>("/hr/loans"),
+    staleTime: 2 * 60_000,
   });
 }
 

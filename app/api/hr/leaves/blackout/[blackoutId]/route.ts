@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveBlackoutDates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { eq, and } from "drizzle-orm";
 type RouteParams = { params: Promise<{ blackoutId: string }> };
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:leaves", async (session) => {
     const { blackoutId: bid } = await params;
     const id = Number(bid);
     if (!Number.isFinite(id)) return err("Invalid ID", 400);

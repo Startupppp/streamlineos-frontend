@@ -5,7 +5,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { tickets, timesheets, projectMembers } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 
@@ -52,7 +52,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     if (!ticket?.project) return err("Ticket not found", 404);
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects");
     const isManager = ticket.project.managerId === session.user.id;
 
     if (!isOwnerOrAdmin && !isManager) {

@@ -39,6 +39,6 @@ export async function POST(
       })
       .returning();
 
-    return ok(application);
+    return ok(application, 201);
   });
 }

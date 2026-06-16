@@ -1,6 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -188,15 +189,12 @@ export function LeadActivityTimeline({
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
-            <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center">
-              <User className="h-5 w-5 text-muted-foreground/50" />
-            </div>
-            <p className="text-sm text-muted-foreground">No activities yet</p>
-            <p className="text-xs text-muted-foreground/60">
-              Log your first interaction with this lead
-            </p>
-          </div>
+          <EmptyState
+            icon={User}
+            title="No activities yet"
+            description="Log your first interaction with this lead"
+            compact
+          />
         )}
       </CardContent>
     </Card>

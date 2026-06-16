@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { pulseSurveys } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,7 +16,9 @@ export async function PATCH(
   { params }: { params: Promise<{ surveyId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { surveyId: id } = await params;
     const surveyId = Number(id);
     if (!surveyId) return err("Invalid ID.", 400);

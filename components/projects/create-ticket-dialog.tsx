@@ -37,11 +37,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { createTicketInputSchema } from "@/lib/validations/project";
+import { createTicketInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
   assigneeIds: z.array(z.string()).optional(),
@@ -99,12 +100,7 @@ export function CreateTicketDialog({
               const formData = new FormData();
               formData.append("file", file);
               formData.append("folder", "tickets");
-              const response = await fetch("/api/storage/upload", {
-                method: "POST",
-                body: formData,
-              });
-              if (!response.ok) throw new Error("Failed to upload file");
-              const result = await response.json();
+              const result = await apiClient.upload<{ url: string }>("/storage/upload", formData);
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
                 fileUrl: result.url,

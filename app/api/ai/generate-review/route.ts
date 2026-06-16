@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { aiGenerateReview } from "@/lib/ai/review-draft";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const schema = z.object({
@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
       return err("AI is not configured. Set OPENAI_API_KEY.", 503);
     }
 
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "hr:performance")) {
       return err("Only admins/managers can generate reviews", 403);
     }
 

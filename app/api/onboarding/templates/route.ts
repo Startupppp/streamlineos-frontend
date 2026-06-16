@@ -1,12 +1,12 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { eq, inArray } from "drizzle-orm";
-import { withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTemplates, onboardingTemplateSteps } from "@/lib/db/schema";
 
 export async function GET(_req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:onboarding", async (session) => {
     const templates = await db
       .select()
       .from(onboardingTemplates)
@@ -56,7 +56,7 @@ const createTemplateSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:onboarding", async (session) => {
     const body = await parseBody(req, createTemplateSchema);
 
     const [template] = await db

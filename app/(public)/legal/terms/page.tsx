@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalShell, LegalSection, PlainEnglish } from "@/features/legal/legal-shell";
 import { BRAND_NAME, BRAND_DOMAIN, BRAND_SUPPORT_EMAIL } from "@/lib/branding";
 import { PRICING } from "@/lib/pricing";
@@ -6,6 +7,7 @@ import { PRICING } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: `Terms of Service — ${BRAND_NAME}`,
   description: `The agreement between you and ${BRAND_NAME} for use of the platform.`,
+  alternates: { canonical: "/legal/terms" },
 };
 
 const sections = [
@@ -98,9 +100,9 @@ export default function TermsPage() {
           </li>
           <li>
             Probe, scan, or stress-test the platform without our written authorization. See{" "}
-            <a href="/legal/security" className="text-blue-600 hover:underline">
+            <Link href="/legal/security" className="text-blue-600 hover:underline">
               Security
-            </a>{" "}
+            </Link>{" "}
             for the disclosure programme.
           </li>
         </ul>
@@ -109,9 +111,9 @@ export default function TermsPage() {
       <LegalSection id="subscription" title="Subscription & billing">
         <p>
           The current plans and prices are at{" "}
-          <a href="/#pricing" className="text-blue-600 hover:underline">
+          <Link href="/#pricing" className="text-blue-600 hover:underline">
             {BRAND_DOMAIN}/#pricing
-          </a>
+          </Link>
           . The Scaleup plan is {PRICING.currency}
           {PRICING.scaleupPriceInr} per seat per month. Enterprise pricing is bespoke.
         </p>

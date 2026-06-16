@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Users, DollarSign, Target, Percent } from "lucide-react";
+import { Users, IndianRupee, Target, Percent } from "lucide-react";
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -25,6 +25,7 @@ import { LeadVolumeChart } from "@/features/crm/analytics/lead-volume-chart";
 import { ConversionChart } from "@/features/crm/analytics/conversion-chart";
 import { DealValueChart } from "@/features/crm/analytics/deal-value-chart";
 import { AnalyticsChartCard } from "@/features/crm/analytics/analytics-chart-card";
+import { EmptyChart } from "@/features/crm/analytics/empty-chart";
 
 export default function CrmAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState("");
@@ -126,7 +127,17 @@ export default function CrmAnalyticsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="CRM Analytics" subtitle="Pipeline insights and performance metrics">
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="shadow-sm">
+                <CardContent className="p-3.5 space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-6 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
           <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="shadow-sm">
@@ -170,7 +181,7 @@ export default function CrmAnalyticsPage() {
                 isPositive: analyticsSummary.conversionRate >= analyticsSummary.conversionRatePrevPeriod,
               } : undefined}
             />
-            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={DollarSign} index={2} />
+            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={IndianRupee} index={2} />
             <StatCard label="Active Reps" value={analyticsSummary.assignmentDistribution.length} icon={Target} index={3} />
           </motion.div>
         )}
@@ -184,7 +195,9 @@ export default function CrmAnalyticsPage() {
           <DealValueChart data={dealsByStageValue} />
 
           <AnalyticsChartCard title="SLA Compliance Rate" data={[]} filename="sla-compliance">
-            {slaReport && (
+            {!slaReport ? (
+              <EmptyChart message="No SLA data available" />
+            ) : (
               <div className="flex flex-col items-center justify-center h-[280px]">
                 <div className="relative h-40 w-40">
                   <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
@@ -202,7 +215,7 @@ export default function CrmAnalyticsPage() {
                     <span className="text-xs text-muted-foreground">Compliant</span>
                   </div>
                 </div>
-                <div className="flex gap-4 mt-4 text-xs">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-xs justify-center">
                   <span className="text-muted-foreground">Total: {slaReport.total}</span>
                   <span className="text-emerald-400">Met: {slaReport.compliant}</span>
                   <span className="text-red-400">Breached: {slaReport.breached}</span>
@@ -212,17 +225,21 @@ export default function CrmAnalyticsPage() {
           </AnalyticsChartCard>
 
           <AnalyticsChartCard title="Score Distribution" data={scoreDistribution} filename="score-distribution">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={scoreDistribution}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="range" tick={AXIS_TICK} />
-                <YAxis tick={AXIS_TICK} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {scoreDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {scoreDistribution.every((b) => b.count === 0) ? (
+              <EmptyChart message="No scored leads yet" />
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={scoreDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="range" tick={AXIS_TICK} />
+                  <YAxis tick={AXIS_TICK} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {scoreDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </AnalyticsChartCard>
 
           {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
@@ -261,15 +278,15 @@ export default function CrmAnalyticsPage() {
                 <AreaChart data={analyticsSummary.monthlyRevenue}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#bd882c" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#bd882c" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={AXIS_TICK} />
                   <YAxis tick={AXIS_TICK} />
                   <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#bd882c" strokeWidth={2} fill="url(#revenueGrad)" />
+                  <Area type="monotone" dataKey="revenue" stroke="#06b6d4" strokeWidth={2} fill="url(#revenueGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </AnalyticsChartCard>
@@ -278,7 +295,7 @@ export default function CrmAnalyticsPage() {
       </motion.div>
 
       {taskAnalytics && (
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} className="mt-4">
           <Card>
             <CardHeader className="px-4 py-3 border-b">
               <h3 className="text-sm font-semibold">Task Analytics (Last 30 Days)</h3>

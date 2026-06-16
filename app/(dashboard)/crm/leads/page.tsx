@@ -244,11 +244,14 @@ export default function LeadsPipelinePage() {
     bulkDeleteMutation.mutate(
       { leadIds: ids },
       {
-        onSuccess: (data) => toast.success(`${data.deleted} leads deleted`),
+        onSuccess: (data) => {
+          toast.success(`${data.deleted} leads deleted`);
+          if (tablePage > 1) setTablePage(1);
+        },
         onError: (err) => toast.error(err.message),
       },
     );
-  }, [bulkDeleteMutation]);
+  }, [bulkDeleteMutation, tablePage, setTablePage]);
 
   if (boardLoading || statsLoading) {
     return (

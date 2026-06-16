@@ -69,6 +69,14 @@ export default function NotificationPreferencesPage() {
   }, []);
 
   const handleSave = useCallback(() => {
+    if (quietStart && quietEnd && quietStart === quietEnd) {
+      toast.error("Quiet hours start and end time cannot be the same");
+      return;
+    }
+    if ((quietStart && !quietEnd) || (!quietStart && quietEnd)) {
+      toast.error("Set both a start and end time for quiet hours");
+      return;
+    }
     updatePrefs.mutate(
       {
         emailEnabled,
@@ -107,13 +115,13 @@ export default function NotificationPreferencesPage() {
         </Button>
       }
     >
-      <motion.div className="space-y-6 max-w-2xl" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div className="space-y-4 max-w-2xl" variants={staggerContainer} initial="hidden" animate="visible">
 
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4 text-gold" />
+                <Bell className="h-4 w-4 text-blue-600" />
                 Notification Channels
               </CardTitle>
             </CardHeader>
@@ -126,15 +134,15 @@ export default function NotificationPreferencesPage() {
               ].map((ch, i) => (
                 <div key={i}>
                   {i > 0 && <Separator className="mb-4" />}
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <ch.icon className="h-5 w-5 text-muted-foreground" />
-                      <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ch.icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
                         <p className="text-sm font-medium">{ch.label}</p>
                         <p className="text-xs text-muted-foreground">{ch.desc}</p>
                       </div>
                     </div>
-                    <Switch checked={ch.value} onCheckedChange={ch.setter} aria-label={ch.label} />
+                    <Switch checked={ch.value} onCheckedChange={ch.setter} aria-label={ch.label} className="shrink-0" />
                   </div>
                 </div>
               ))}
@@ -146,7 +154,7 @@ export default function NotificationPreferencesPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Moon className="h-4 w-4 text-purple-400" />
+                <Moon className="h-4 w-4 text-blue-600" />
                 Quiet Hours
               </CardTitle>
             </CardHeader>
@@ -187,7 +195,7 @@ export default function NotificationPreferencesPage() {
           <Card className="shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4 text-blue" />
+                <Bell className="h-4 w-4 text-blue-600" />
                 Notification Categories
               </CardTitle>
             </CardHeader>
@@ -195,8 +203,8 @@ export default function NotificationPreferencesPage() {
               {CATEGORIES.map((cat, i) => (
                 <div key={cat.key}>
                   {i > 0 && <Separator className="mb-4" />}
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">{cat.label}</p>
                       <p className="text-xs text-muted-foreground">{cat.description}</p>
                     </div>
@@ -204,6 +212,7 @@ export default function NotificationPreferencesPage() {
                       checked={categories[cat.key] ?? true}
                       onCheckedChange={handleCategoryToggle(cat.key)}
                       aria-label={cat.label}
+                      className="shrink-0"
                     />
                   </div>
                 </div>

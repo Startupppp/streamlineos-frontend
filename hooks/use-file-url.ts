@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { apiClient, getApiError } from "@/lib/api-client";
+
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
   if (url.startsWith("/uploads/") || url.startsWith("/")) return true;
@@ -17,19 +19,8 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   if (isLocalUrl(fileUrl)) {
     return fileUrl;
   }
-  try {
-    const response = await fetch(`/api/storage/download?url=${encodeURIComponent(fileUrl)}`);
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to get file URL");
-    }
-
-    const data = await response.json();
-    return data.url;
-  } catch (error) {
-    throw error;
-  }
+  const data = await apiClient.get<{ url: string }>("/storage/download", { url: fileUrl });
+  return data.url;
 }
 
 export async function viewFile(fileUrl: string): Promise<void> {
@@ -44,32 +35,19 @@ export async function viewFile(fileUrl: string): Promise<void> {
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
     const downloadFileName = fileName || extractFileName(fileUrl);
+    let blob: Blob;
     if (!isLocalUrl(fileUrl)) {
-      const response = await fetch(
-        `/api/storage/download?url=${encodeURIComponent(fileUrl)}&attachment=1`
-      );
+      blob = await apiClient.download("/storage/download", {
+        params: { url: fileUrl, attachment: 1 },
+      });
+    } else {
+      const url = await getSignedFileUrl(fileUrl);
+      const response = await fetch(url);
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error ?? "Failed to download file");
+        throw new Error("Failed to download file");
       }
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = downloadFileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      toast.success("Download started");
-      return;
+      blob = await response.blob();
     }
-    const url = await getSignedFileUrl(fileUrl);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error("Failed to download file");
-    }
-    const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = blobUrl;
@@ -80,8 +58,7 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
     window.URL.revokeObjectURL(blobUrl);
     toast.success("Download started");
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to download file";
-    toast.error(message);
+    toast.error(getApiError(err) || "Failed to download file");
   }
 }
 
@@ -104,8 +81,7 @@ export function useFileUrl() {
       const url = await getSignedFileUrl(fileUrl);
       return url;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to get file URL";
-      setError(message);
+      setError(getApiError(err) || "Failed to get file URL");
       return null;
     } finally {
       setIsLoading(false);

@@ -3,7 +3,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { interviewQuestions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -12,6 +12,8 @@ const updateSchema = z.object({
   role: z.string().max(100).nullable().optional(),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
   tags: z.array(z.string()).optional(),
+  sampleAnswer: z.string().max(3000).nullable().optional(),
+  keywords: z.array(z.string().max(100)).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -25,7 +27,9 @@ async function getQuestion(orgId: string, questionId: number) {
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees")) {
       return err("Only Admin or HR can manage question bank", 403);
     }
 
@@ -38,9 +42,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const input = await parseBody(req, updateSchema);
 
+    const updateData = { ...input, updatedAt: new Date() };
+    if (input.tags) updateData.tags = [...new Set(input.tags.map((t) => t.toLowerCase().trim()).filter(Boolean))];
+    if (input.keywords) updateData.keywords = [...new Set(input.keywords.map((k) => k.toLowerCase().trim()).filter(Boolean))];
+
     await db
       .update(interviewQuestions)
-      .set({ ...input, updatedAt: new Date() })
+      .set(updateData)
       .where(and(eq(interviewQuestions.id, questionId), eq(interviewQuestions.orgId, session.orgId)));
 
     return ok({ success: true });
@@ -49,7 +57,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees")) {
       return err("Only Admin or HR can manage question bank", 403);
     }
 
@@ -61,7 +71,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     if (!existing) return err("Question not found", 404);
 
     await db
-      .delete(interviewQuestions)
+      .update(interviewQuestions)
+      .set({ isActive: false, updatedAt: new Date() })
       .where(and(eq(interviewQuestions.id, questionId), eq(interviewQuestions.orgId, session.orgId)));
 
     return ok({ success: true });

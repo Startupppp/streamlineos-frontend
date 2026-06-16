@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -10,6 +10,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useCreateDocument, useHrEmployees } from "@/lib/api/hooks/hr";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
@@ -38,9 +39,11 @@ export function UploadDocumentDialog({
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const titleAutoPopulated = useRef(false);
 
   const { data: employees } = useHrEmployees(undefined);
   const createDocumentMutation = useCreateDocument();
+  const uploadFileMutation = useUploadFile();
 
   const filteredCategories = useMemo(
     () => categories.filter((cat) => cat && cat.trim() !== ""),
@@ -64,7 +67,6 @@ export function UploadDocumentDialog({
     defaultValues: {
       name: "",
       description: "",
-      type: "OTHER" as const,
       category: "",
       userId: "",
       isPublic: false,
@@ -73,10 +75,23 @@ export function UploadDocumentDialog({
   });
 
   useEffect(() => {
-    if (files.length === 1) {
+    if (!open) {
+      form.reset();
+      setFiles([]);
+      setTags([]);
+      setTagInput("");
+      titleAutoPopulated.current = false;
+    }
+  }, [open, form]);
+
+  useEffect(() => {
+    const currentName = form.getValues("name");
+    if (files.length === 1 && (!currentName || titleAutoPopulated.current)) {
       form.setValue("name", files[0].name.replace(/\.[^/.]+$/, ""));
-    } else if (files.length > 1) {
+      titleAutoPopulated.current = true;
+    } else if (files.length > 1 && (!currentName || titleAutoPopulated.current)) {
       form.setValue("name", `${files.length} files selected`);
+      titleAutoPopulated.current = true;
     }
   }, [files, form]);
 
@@ -98,14 +113,20 @@ export function UploadDocumentDialog({
     if (index < 0) return;
     setFiles((prev) => {
       const updated = prev.filter((_, i) => i !== index);
-      if (updated.length === 0) form.setValue("name", "");
+      if (updated.length === 0 && titleAutoPopulated.current) {
+        form.setValue("name", "");
+        titleAutoPopulated.current = false;
+      }
       return updated;
     });
   }, [form]);
 
   const handleClearAllFiles = useCallback(() => {
     setFiles([]);
-    form.setValue("name", "");
+    if (titleAutoPopulated.current) {
+      form.setValue("name", "");
+      titleAutoPopulated.current = false;
+    }
   }, [form]);
 
   const handleTagInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,26 +164,25 @@ export function UploadDocumentDialog({
     }
   }, [handleAddTag]);
 
-  const uploadFileFn = useCallback(async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "documents");
-      const response = await fetch("/api/storage/upload", { method: "POST", body: formData });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-      const data = await response.json();
-      return { url: data.url, size: file.size, mimeType: file.type };
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      return null;
-    } finally {
-      setUploading(false);
-    }
+  const handleNameManualChange = useCallback(() => {
+    titleAutoPopulated.current = false;
   }, []);
+
+  const uploadFileFn = useCallback(
+    async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
+      try {
+        setUploading(true);
+        const result = await uploadFileMutation.mutateAsync({ file, folder: "documents" });
+        return { url: result.url, size: result.size, mimeType: result.mimeType };
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+        return null;
+      } finally {
+        setUploading(false);
+      }
+    },
+    [uploadFileMutation],
+  );
 
   const onSubmit = useCallback(async (data: DocumentFormData) => {
     if (files.length === 0) { toast.error("Please select at least one file to upload"); return; }
@@ -207,6 +227,7 @@ export function UploadDocumentDialog({
         form.reset();
         setFiles([]);
         setTags([]);
+        titleAutoPopulated.current = false;
         onSuccess();
       } else {
         toast.error("Failed to upload documents");
@@ -311,6 +332,7 @@ export function UploadDocumentDialog({
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
             onTagKeyDown={handleTagKeyDown}
+            onNameChange={handleNameManualChange}
           />
         </div>
       </Form>

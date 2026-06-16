@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getAttendanceReport } from "@/server/queries/reports";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
         return err("Invalid date format", 400);
       }
 
-      const isAdmin = isAdminOrOwner(session.user.role);
+      const ability = await getSessionAbility();
+
+
+      const isAdmin = ability.can("view", "hr:attendance");
       if (userId && userId !== session.user.id && !isAdmin) {
         return err("Forbidden", 403);
       }

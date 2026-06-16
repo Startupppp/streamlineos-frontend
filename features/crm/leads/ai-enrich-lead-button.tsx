@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEnrichLead } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIEnrichLeadButtonProps {
   leadName: string;
@@ -29,8 +30,10 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
   const [open, setOpen] = useState(false);
   const enrichMutation = useEnrichLead();
   const result = enrichMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.enrichment");
 
   const handleEnrich = () => {
+    if (!featureEnabled) { toast.error(`AI lead enrichment requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     enrichMutation.mutate(
       {
         name: leadName,
@@ -47,14 +50,14 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-          <Sparkles className="h-3 w-3 text-gold" />
+          <Sparkles className="h-3 w-3 text-blue-600" />
           Enrich
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg flex flex-col p-0 gap-0 max-h-[80vh]">
         <DialogHeader className="shrink-0 px-5 pt-5 pb-3 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-gold" />
+            <Sparkles className="h-4 w-4 text-blue-600" />
             AI Lead Enrichment
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -98,7 +101,7 @@ export function AIEnrichLeadButton({ leadName, company, email, designation, city
                     <ul className="space-y-1.5">
                       {result.talkingPoints.map((p, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-xs">
-                          <span className="text-gold mt-0.5">•</span>
+                          <span className="text-blue-600 mt-0.5">•</span>
                           <span>{p}</span>
                         </li>
                       ))}

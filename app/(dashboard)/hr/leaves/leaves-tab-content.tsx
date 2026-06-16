@@ -19,8 +19,9 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
+import { useAbility } from "@/lib/abilities-context";
 
-const DONUT_COLORS = ["#bd882c", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
+const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
 function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
   const data = useMemo(
@@ -157,14 +158,14 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
                 className={cn(
                   "rounded-lg p-1.5 min-h-[64px] flex flex-col",
                   isToday
-                    ? "bg-gold/10 border border-gold/30"
+                    ? "bg-blue-500/10 border border-blue-500/30"
                     : "bg-muted/30 border border-transparent",
                 )}
               >
                 <div
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight mb-1",
-                    isToday ? "text-gold" : "text-muted-foreground",
+                    isToday ? "text-blue-600" : "text-muted-foreground",
                   )}
                 >
                   {format(day, "EEE")}
@@ -206,10 +207,8 @@ interface LeavesTabContentProps {
 
 export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThisWeek = [] }: LeavesTabContentProps) {
   const { data: session } = useSession();
-  const isAdmin =
-    session?.user?.role === "CEO" ||
-    session?.user?.role === "HR" ||
-    session?.user?.role === "ADMIN";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const currentYear = new Date().getFullYear();
 

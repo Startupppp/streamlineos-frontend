@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveBlackoutDates } from "@/lib/db/schema";
 import { eq, and, gte, lte, or } from "drizzle-orm";
@@ -15,7 +15,7 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:leaves", async (session) => {
     const { searchParams } = new URL(req.url);
     const from = searchParams.get("from");
     const to = searchParams.get("to");
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:leaves", async (session) => {
     const input = await parseBody(req, createSchema);
 
     if (input.startDate > input.endDate) {

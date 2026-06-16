@@ -1,0 +1,200 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { Eye, Trash2, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { cn } from "@/lib/utils";
+import type { DocumentTemplate } from "@/lib/api/hooks/hr/document-templates";
+
+export function VariableChips({ variables }: { variables: string[] }) {
+  const visible = variables.slice(0, 3);
+  const rest = variables.length - 3;
+  if (!variables.length) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((v) => (
+        <span
+          key={v}
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground border border-border/60"
+        >
+          {`{{${v}}}`}
+        </span>
+      ))}
+      {rest > 0 && (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-muted/50 text-muted-foreground border border-border/40">
+          +{rest} more
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function PreviewDialog({ template }: { template: DocumentTemplate }) {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = useCallback((e: Event) => {
+    e.preventDefault();
+    setOpen(true);
+  }, []);
+
+  const handleOpenChange = useCallback((val: boolean) => setOpen(val), []);
+
+  return (
+    <>
+      <DropdownMenuItem onSelect={handleSelect}>
+        <Eye className="mr-2 h-3.5 w-3.5" />
+        Preview
+      </DropdownMenuItem>
+
+      {open && (
+        <AlertDialog open={open} onOpenChange={handleOpenChange}>
+          <AlertDialogContent className="max-w-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Preview — {template.title}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Raw HTML preview with variable tokens shown as-is.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div
+              className="max-h-[60vh] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: template.htmlContent }}
+            />
+            <AlertDialogFooter>
+              <AlertDialogCancel>Close</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </>
+  );
+}
+
+export function DeleteConfirm({
+  template,
+  onDelete,
+  isPending,
+}: {
+  template: DocumentTemplate;
+  onDelete: (id: number) => void;
+  isPending: boolean;
+}) {
+  const handleDelete = useCallback(() => onDelete(template.id), [template.id, onDelete]);
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Trash2 className="mr-2 h-3.5 w-3.5" />
+          Delete
+        </DropdownMenuItem>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete template?</AlertDialogTitle>
+          <AlertDialogDescription>
+            &ldquo;{template.title}&rdquo; will be deactivated. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleDelete}
+            disabled={isPending}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+interface DefaultStarButtonProps {
+  template: DocumentTemplate;
+  currentDefault: DocumentTemplate | undefined;
+  onSetDefault: (id: number, isDefault: boolean) => void;
+  isPending: boolean;
+}
+
+export function DefaultStarButton({
+  template,
+  currentDefault,
+  onSetDefault,
+  isPending,
+}: DefaultStarButtonProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const isCurrentDefault = template.isDefault;
+  const hasExistingDefault = !!currentDefault && !isCurrentDefault;
+
+  const handleClick = useCallback(() => setConfirmOpen(true), []);
+  const handleConfirmOpenChange = useCallback((val: boolean) => setConfirmOpen(val), []);
+  const handleConfirm = useCallback(() => {
+    onSetDefault(template.id, !isCurrentDefault);
+    setConfirmOpen(false);
+  }, [template.id, isCurrentDefault, onSetDefault]);
+
+  const confirmTitle = isCurrentDefault
+    ? "Remove default status?"
+    : "Set as default template?";
+
+  const confirmDescription = isCurrentDefault
+    ? "Are you sure you want to remove the default status from this template?"
+    : hasExistingDefault
+    ? `This will replace "${currentDefault.title}" as the default template. Continue?`
+    : "Set this template as the default?";
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "h-7 w-7 shrink-0 transition-colors",
+          isCurrentDefault
+            ? "text-amber-500 hover:text-amber-600"
+            : "text-muted-foreground/40 hover:text-amber-400",
+        )}
+        onClick={handleClick}
+        disabled={isPending}
+        aria-label={isCurrentDefault ? "Remove default status" : "Set as default"}
+        title={isCurrentDefault ? "Remove default status" : "Set as default"}
+      >
+        <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
+      </Button>
+
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={handleConfirmOpenChange}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel="Confirm"
+        variant="default"
+        isPending={isPending}
+        onConfirm={handleConfirm}
+      />
+    </>
+  );
+}

@@ -14,26 +14,43 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { Plus, Zap, BarChart3, CheckCircle2 } from "lucide-react";
+import { Plus, CheckCircle2 } from "lucide-react";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 
 const LEVELS = [
   { value: "1", label: "Beginner" },
-  { value: "2", label: "Intermediate" },
-  { value: "3", label: "Advanced" },
-  { value: "4", label: "Expert" },
-  { value: "5", label: "Master" },
+  { value: "2", label: "Elementary" },
+  { value: "3", label: "Intermediate" },
+  { value: "4", label: "Advanced" },
+  { value: "5", label: "Expert" },
 ];
 
 function levelLabel(level: number | null): string {
   return LEVELS.find((l) => l.value === String(level))?.label ?? "Unknown";
 }
 
+const SKILL_NAME_RE = /[a-zA-Z]/;
+const CONSECUTIVE_SPACES_RE = /  +/;
+
+function normalizeSkillName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function validateSkillName(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return "Skill name must be at least 2 characters.";
+  if (trimmed.length > 50) return "Skill name must be at most 50 characters.";
+  if (!SKILL_NAME_RE.test(trimmed)) return "Skill name must contain at least one letter.";
+  if (CONSECUTIVE_SPACES_RE.test(trimmed)) return "Skill name must not contain consecutive spaces.";
+  return null;
+}
+
 function levelColor(level: number | null): string {
   if (level === null) return "bg-muted";
-  if (level >= 4) return "bg-green-500";
-  if (level >= 3) return "bg-blue-500";
-  if (level >= 2) return "bg-amber-500";
+  if (level >= 5) return "bg-green-500";
+  if (level >= 4) return "bg-blue-500";
+  if (level >= 3) return "bg-amber-500";
+  if (level >= 2) return "bg-orange-400";
   return "bg-muted-foreground";
 }
 
@@ -44,20 +61,46 @@ export default function SkillsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [skillName, setSkillName] = useState("");
   const [level, setLevel] = useState("3");
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const handleSkillNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSkillName(e.target.value);
+    setNameError(null);
+  }, []);
 
   const handleAdd = useCallback(() => {
-    if (!skillName.trim()) { toast.error("Skill name is required"); return; }
+    const validationError = validateSkillName(skillName);
+    if (validationError) {
+      setNameError(validationError);
+      return;
+    }
+    const normalizedNew = normalizeSkillName(skillName);
+    const grouped = (skills ?? []).reduce<Record<string, string>>((acc, s) => {
+      acc[normalizeSkillName(s.skillName)] = s.skillName;
+      return acc;
+    }, {});
+    if (grouped[normalizedNew]) {
+      setNameError(`A skill with this name already exists (did you mean "${grouped[normalizedNew]}"?)`);
+      return;
+    }
     addSkill.mutate(
-      { skillName: skillName.trim(), level: Number(level) },
+      { skillName: skillName.trim().replace(/\s+/g, " "), level: Number(level) },
       {
         onSuccess: () => {
           toast.success("Skill added"); setSheetOpen(false);
-          setSkillName(""); setLevel("3");
+          setSkillName(""); setLevel("3"); setNameError(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [skillName, level, addSkill]);
+  }, [skillName, level, addSkill, skills]);
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) { setSkillName(""); setLevel("3"); setNameError(null); }
+  }, []);
 
   if (isLoading) {
     return (
@@ -79,7 +122,7 @@ export default function SkillsPage() {
       title="Skills Matrix"
       subtitle="Organization-wide skill mapping and competency tracking"
       badge={`${skills?.length ?? 0} entries`}
-      actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Add Skill</Button>}
+      actions={<Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />Add Skill</Button>}
     >
       {!skills?.length ? (
         <Card><CardContent className="py-12 text-center">
@@ -112,10 +155,16 @@ export default function SkillsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Add Skill" onSubmit={handleAdd} submitLabel="Add" isPending={addSkill.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title="Add Skill" onSubmit={handleAdd} submitLabel="Add" isPending={addSkill.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Skill Name</label>
-          <Input placeholder="e.g., React, Python, Leadership" value={skillName} onChange={(e) => setSkillName(e.target.value)} />
+          <Input
+            placeholder="e.g., React, Python, Leadership"
+            value={skillName}
+            onChange={handleSkillNameChange}
+            aria-invalid={!!nameError}
+          />
+          {nameError && <p className="text-xs text-destructive">{nameError}</p>}
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Proficiency Level</label>

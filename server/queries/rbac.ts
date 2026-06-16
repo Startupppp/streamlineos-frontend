@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import {
   userPermissions,
   rolePermissions,
+  roles,
   users,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -41,6 +42,13 @@ export async function getUserPermissions(userId: string, orgId: string) {
       })
     : [];
 
+  const customRole = role
+    ? await db.query.roles.findFirst({
+        where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
+        columns: { permissions: true },
+      })
+    : null;
+
   const defaultPerms = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
 
   const permissionSet = new Set<string>();
@@ -57,11 +65,13 @@ export async function getUserPermissions(userId: string, orgId: string) {
     }
   });
 
-  defaultPerms.forEach((perm) => permissionSet.add(perm));
-
-  if (role === "CEO") {
-    PERMISSIONS.forEach((p) => permissionSet.add(p.name));
+  if (customRole?.permissions && Array.isArray(customRole.permissions)) {
+    for (const perm of customRole.permissions as string[]) {
+      permissionSet.add(perm);
+    }
   }
+
+  defaultPerms.forEach((perm) => permissionSet.add(perm));
 
   return Array.from(permissionSet);
 }
@@ -81,7 +91,17 @@ export async function getRolePermissions(role: string, orgId: string) {
     },
   });
 
-  return perms
-    .map((rp) => rp.permission?.name)
-    .filter((name): name is string => !!name);
+  const customRole = await db.query.roles.findFirst({
+    where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
+    columns: { permissions: true },
+  });
+
+  const result = new Set<string>();
+  for (const rp of perms) {
+    if (rp.permission?.name) result.add(rp.permission.name);
+  }
+  if (customRole?.permissions && Array.isArray(customRole.permissions)) {
+    for (const p of customRole.permissions as string[]) result.add(p);
+  }
+  return Array.from(result);
 }

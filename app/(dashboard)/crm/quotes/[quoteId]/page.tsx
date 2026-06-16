@@ -15,7 +15,7 @@ import { ArrowLeft, Send, CheckCircle, XCircle, Trash2, Download, FileText } fro
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  DRAFT: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
   SENT: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
@@ -254,7 +254,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ quoteId:
                 <p className="text-sm text-muted-foreground">
                   Tax: {quote.currency} {Number(quote.taxAmount).toLocaleString("en-IN")}
                 </p>
-                <p className="text-lg font-bold text-gold">
+                <p className="text-lg font-bold text-blue-600">
                   Net Total: {quote.currency} {Number(quote.netAmount).toLocaleString("en-IN")}
                 </p>
               </div>

@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  ArrowRightLeft, PhoneCall, StickyNote, Mail, Video, FileText, MessageSquare,
+  ArrowRightLeft, PhoneCall, StickyNote, Mail, Video, FileText, MessageSquare, Activity,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { LucideIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ interface ActivityTimelineProps {
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   if (activities.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>;
+    return <EmptyState icon={Activity} title="No activities yet" compact />;
   }
 
   return (
@@ -36,9 +37,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
             <div key={activity.id} className="flex gap-3">
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                isStageChange ? "bg-purple-500/10" : "bg-gold/10",
+                isStageChange ? "bg-purple-500/10" : "bg-blue-500/10",
               )}>
-                <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-gold")} />
+                <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-blue-600")} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">

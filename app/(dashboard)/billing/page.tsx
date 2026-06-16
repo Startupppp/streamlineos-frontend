@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
 import {
-  DollarSign,
+  IndianRupee,
   FileText,
   AlertCircle,
   CheckCircle2,
@@ -60,9 +61,9 @@ export default function BillingPage() {
         </Link>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Total Invoiced"
             value={statsLoading ? "—" : fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
@@ -79,7 +80,7 @@ export default function BillingPage() {
             label="Outstanding"
             value={statsLoading ? "—" : fmt(stats?.totalOutstanding ?? 0)}
             icon={Clock}
-            color="gold"
+            color="amber"
           />
           <StatCard
             label="Overdue"
@@ -89,15 +90,15 @@ export default function BillingPage() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           {(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
             const badge = STATUS_BADGE[s];
             const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
             return (
               <Link key={s} href={`/billing/invoices?status=${s}`}>
-                <div className="rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <p className="text-xs text-muted-foreground mb-1">{badge.label}</p>
-                  <p className="text-2xl font-bold">{count}</p>
+                <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <p className="text-xs text-muted-foreground mb-1 truncate">{badge.label}</p>
+                  <p className="text-xl font-bold tabular-nums">{count}</p>
                 </div>
               </Link>
             );
@@ -132,15 +133,6 @@ export default function BillingPage() {
             <InvoiceTable invoices={overdueInvoices} />
           </div>
         )}
-
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/billing/invoices">
-            <Button variant="outline" size="sm">All Invoices</Button>
-          </Link>
-          <Link href="/billing/invoices/new">
-            <Button variant="outline" size="sm">Create Invoice</Button>
-          </Link>
-        </div>
       </div>
     </PageWrapper>
   );
@@ -161,15 +153,21 @@ function InvoiceTable({
 }) {
   if (!invoices.length) {
     return (
-      <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-        <EmptyExpensesIllustration className="mx-auto mb-3 h-36 w-36 opacity-95" />
-        No invoices found.
-      </div>
+      <EmptyState
+        className="border-0 bg-transparent py-10"
+        illustration={
+          <EmptyExpensesIllustration className="h-28 w-28 opacity-95" />
+        }
+        title="No invoices found"
+        description="Create your first invoice to start tracking revenue."
+        action={{ label: "New Invoice", href: "/billing/invoices/new" }}
+      />
     );
   }
 
   return (
-    <Table>
+    <div className="overflow-x-auto">
+    <Table className="min-w-[640px]">
       <TableHeader>
         <TableRow>
           <TableHead>Invoice #</TableHead>
@@ -219,5 +217,6 @@ function InvoiceTable({
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }

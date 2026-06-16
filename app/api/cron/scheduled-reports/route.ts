@@ -1,17 +1,16 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import {  users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, gte } from "drizzle-orm";
+import { users, organizationMembers } from "@/lib/db/schema";
+import { eq, and, gte, inArray } from "drizzle-orm";
 import { leads, leadActivities } from "@/lib/db/schema";
+import { ok, err } from "@/lib/api/helpers";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { appUrl } from "@/lib/app-url";
 
 export async function GET(request: Request) {
-
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return err("Unauthorized", 401);
   }
 
   const now = new Date();
@@ -20,28 +19,36 @@ export async function GET(request: Request) {
 
   try {
     const orgs = await db.query.organizations.findMany();
+    if (orgs.length === 0) return ok({ processedOrgs: 0 });
+
+    const orgIds = orgs.map((o) => o.id);
+    const allMembers = await db
+      .select({
+        orgId: organizationMembers.orgId,
+        role: organizationMembers.role,
+        email: users.email,
+        isActive: users.isActive,
+      })
+      .from(organizationMembers)
+      .innerJoin(users, eq(users.id, organizationMembers.userId))
+      .where(inArray(organizationMembers.orgId, orgIds));
+
+    const hrAdminEmailsByOrg = new Map<string, string[]>();
+    for (const m of allMembers) {
+      if ((m.role !== "HR" && m.role !== "CEO") || !m.isActive || !m.email) continue;
+      const list = hrAdminEmailsByOrg.get(m.orgId) ?? [];
+      list.push(m.email);
+      hrAdminEmailsByOrg.set(m.orgId, list);
+    }
 
     for (const org of orgs) {
-
-      const members = await db
-        .select({
-          userId: organizationMembers.userId,
-          role: organizationMembers.role,
-          email: users.email,
-          isActive: users.isActive,
-        })
-        .from(organizationMembers)
-        .innerJoin(users, eq(users.id, organizationMembers.userId))
-        .where(eq(organizationMembers.orgId, org.id));
-      const hrAdmins = members.filter(
-        (m) => (m.role === "HR" || m.role === "CEO") && m.isActive
-      );
-      if (hrAdmins.length === 0) continue;
+      const recipients = hrAdminEmailsByOrg.get(org.id) ?? [];
+      if (recipients.length === 0) continue;
 
       try {
         logger.info(`Sending daily report for org ${org.id}`);
         const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        await sendDailyLeadReport(org.id, org.name, hrAdmins.map((u) => u.email).filter(Boolean) as string[], since, now);
+        await sendDailyLeadReport(org.id, org.name, recipients, since, now);
       } catch (err) {
         logger.error("Daily report failed", { orgId: org.id, error: err });
       }
@@ -50,7 +57,7 @@ export async function GET(request: Request) {
         try {
           logger.info(`Sending weekly report for org ${org.id}`);
           const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          await sendWeeklySalesReport(org.id, org.name, hrAdmins.map((u) => u.email).filter(Boolean) as string[], since, now);
+          await sendWeeklySalesReport(org.id, org.name, recipients, since, now);
         } catch (err) {
           logger.error("Weekly report failed", { orgId: org.id, error: err });
         }
@@ -61,17 +68,17 @@ export async function GET(request: Request) {
           logger.info(`Sending monthly report for org ${org.id}`);
           const since = new Date(now.getFullYear(), now.getMonth() - 1, 1);
           const until = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-          await sendMonthlyFullReport(org.id, org.name, hrAdmins.map((u) => u.email).filter(Boolean) as string[], since, until);
+          await sendMonthlyFullReport(org.id, org.name, recipients, since, until);
         } catch (err) {
           logger.error("Monthly report failed", { orgId: org.id, error: err });
         }
       }
     }
 
-    return NextResponse.json({ success: true, processedOrgs: orgs.length });
+    return ok({ processedOrgs: orgs.length });
   } catch (error) {
     logger.error("Scheduled reports cron failed", { error });
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return err("Internal error", 500);
   }
 }
 

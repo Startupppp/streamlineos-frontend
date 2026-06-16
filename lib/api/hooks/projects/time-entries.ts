@@ -51,7 +51,7 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
       ),
     onSuccess: (_data: unknown, variables: LogTimeInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.timeEntries(),
+        queryKey: [...queryKeys.projects.all, "timeEntries"],
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
@@ -68,7 +68,7 @@ export function useUpdateTimeEntry(options?: Parameters<typeof useMutation>[0]) 
       apiClient.patch<TimeEntry>(`/projects/time-entries/${entryId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.timeEntries(),
+        queryKey: [...queryKeys.projects.all, "timeEntries"],
       });
     },
     ...options,
@@ -82,7 +82,7 @@ export function useDeleteTimeEntry(options?: Parameters<typeof useMutation>[0]) 
       apiClient.delete<{ success: boolean }>(`/projects/time-entries/${entryId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.timeEntries(),
+        queryKey: [...queryKeys.projects.all, "timeEntries"],
       });
     },
     ...options,
@@ -115,7 +115,7 @@ export function useApproveTimesheet(options?: Parameters<typeof useMutation>[0])
     mutationFn: ({ timesheetId }: { timesheetId: number }) =>
       apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/approve`, {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.timeEntries() });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "timeEntries"] });
     },
     ...options,
   });
@@ -127,7 +127,7 @@ export function useRejectTimesheet(options?: Parameters<typeof useMutation>[0]) 
     mutationFn: ({ timesheetId, reason }: { timesheetId: number; reason?: string }) =>
       apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/reject`, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.timeEntries() });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "timeEntries"] });
     },
     ...options,
   });

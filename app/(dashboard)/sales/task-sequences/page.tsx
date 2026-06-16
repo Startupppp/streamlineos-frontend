@@ -67,12 +67,16 @@ function ApplyDialog({
   const apply = useApplyTaskSequence();
 
   function handleApply() {
-    if (!baseDate) return;
+    const base = new Date(baseDate);
+    if (!baseDate || Number.isNaN(base.getTime())) {
+      toast.error("Please select a valid base date");
+      return;
+    }
     apply.mutate(
       {
         sequenceId: sequence.id,
         input: {
-          baseDate: new Date(baseDate).toISOString(),
+          baseDate: base.toISOString(),
           entityType: entityType !== "" ? entityType : undefined,
           entityId: entityId ? Number(entityId) : undefined,
         },
@@ -108,14 +112,14 @@ function ApplyDialog({
           <div className="space-y-1">
             <Label>Link to Entity (optional)</Label>
             <Select
-              value={entityType}
-              onValueChange={(v) => setEntityType(v as TaskEntityType | "")}
+              value={entityType || "none"}
+              onValueChange={(v) => setEntityType(v === "none" ? "" : (v as TaskEntityType))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select entity type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="LEAD">Lead</SelectItem>
                 <SelectItem value="DEAL">Deal</SelectItem>
                 <SelectItem value="CONTACT">Contact</SelectItem>
@@ -225,8 +229,10 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
               <Input
                 placeholder="e.g. 5-Touch Follow-Up"
                 value={name}
+                maxLength={50}
                 onChange={(e) => setName(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Max 50 characters</p>
             </div>
             <div className="space-y-1">
               <Label>Description</Label>
@@ -248,11 +254,11 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
 
             {steps.map((step, idx) => (
               <div key={idx} className="border rounded-md p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-xs font-medium text-muted-foreground w-6">#{idx + 1}</span>
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 hidden sm:block" />
+                  <span className="text-xs font-medium text-muted-foreground shrink-0">#{idx + 1}</span>
                   <Input
-                    className="flex-1"
+                    className="flex-1 min-w-0 basis-full sm:basis-0"
                     placeholder="Step title *"
                     value={step.title}
                     onChange={(e) => updateStep(idx, "title", e.target.value)}
@@ -261,7 +267,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
                     value={step.type}
                     onValueChange={(v) => updateStep(idx, "type", v)}
                   >
-                    <SelectTrigger className="w-28">
+                    <SelectTrigger className="w-28 shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -270,7 +276,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <div className="flex items-center gap-1 w-24">
+                  <div className="flex items-center gap-1 w-24 shrink-0">
                     <Input
                       type="number"
                       min={0}
@@ -329,13 +335,13 @@ function SequenceCard({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-base">{sequence.name}</CardTitle>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base break-words">{sequence.name}</CardTitle>
             {sequence.description && (
-              <p className="text-sm text-muted-foreground mt-0.5">{sequence.description}</p>
+              <p className="text-sm text-muted-foreground mt-0.5 break-words">{sequence.description}</p>
             )}
           </div>
-          <Badge variant="secondary">{sequence.steps.length} steps</Badge>
+          <Badge variant="secondary" className="shrink-0 whitespace-nowrap">{sequence.steps.length} steps</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -395,12 +401,12 @@ export default function TaskSequencesPage() {
 
   return (
     <PageWrapper title="Task Sequences" subtitle="Pre-built task chains for repeatable workflows">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <ListChecks className="h-5 w-5" />
-          <span className="text-sm">{sequences?.length ?? 0} sequence{sequences?.length !== 1 ? "s" : ""}</span>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+          <ListChecks className="h-5 w-5 shrink-0" />
+          <span className="text-sm truncate">{sequences?.length ?? 0} sequence{sequences?.length !== 1 ? "s" : ""}</span>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button size="sm" className="shrink-0" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-1" /> New Sequence
         </Button>
       </div>
@@ -423,7 +429,7 @@ export default function TaskSequencesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
           <ListChecks className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No sequences yet.</p>
           <Button variant="outline" onClick={() => setCreateOpen(true)}>

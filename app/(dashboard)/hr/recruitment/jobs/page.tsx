@@ -4,13 +4,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting } from "@/lib/api/hooks/hr";
+import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/lib/api/hooks/hr";
 import { usePublishJobToBoards, useJobShareLinks } from "@/lib/api/hooks/hr/recruitment";
 import type { JobBoardPlatform, JobShareLinks } from "@/lib/api/hooks/hr/recruitment";
 import { useGenerateJobDescription } from "@/lib/api/hooks/ai";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,15 +104,6 @@ function ShareJobDialog({ jobId, onClose }: { jobId: number; onClose: () => void
   );
 }
 
-function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "OPEN": return "default";
-    case "DRAFT": return "secondary";
-    case "PAUSED": return "outline";
-    case "CLOSED": case "FILLED": return "destructive";
-    default: return "secondary";
-  }
-}
 
 export default function JobPostingsPage() {
   const router = useRouter();
@@ -127,9 +119,12 @@ export default function JobPostingsPage() {
   const publishToBoards = usePublishJobToBoards();
   const generateJd = useGenerateJobDescription();
 
+  const { data: departments } = useHrDepartments();
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shareJobId, setShareJobId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
+  const [departmentId, setDepartmentId] = useState<string>("");
   const [location, setLocation] = useState("");
   const [type, setType] = useState("FULL_TIME");
   const [description, setDescription] = useState("");
@@ -150,13 +145,50 @@ export default function JobPostingsPage() {
   );
 
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    const sm = salaryMin ? Number(salaryMin) : undefined;
-    const sx = salaryMax ? Number(salaryMax) : undefined;
-    if (sm && sx && sm > sx) { toast.error("Salary min must be ≤ max"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Job Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Job Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Job Title must be at most 100 characters"); return; }
+    if (!/^[a-zA-Z]/.test(trimmedTitle)) { toast.error("Job Title must start with a letter"); return; }
+    if (/[^a-zA-Z0-9\s\-',]/.test(trimmedTitle)) { toast.error("Job Title may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
+    if (/(.)\1{3,}/.test(trimmedTitle)) { toast.error("Job Title cannot have 4 or more consecutive identical characters"); return; }
+    if (/\s{2,}/.test(title)) { toast.error("Job Title cannot have multiple consecutive spaces"); return; }
+    if (title !== title.trim()) { toast.error("Job Title cannot have leading or trailing spaces"); return; }
+
+    const trimmedLocation = location.trim();
+    if (trimmedLocation) {
+      if (trimmedLocation.length < 2) { toast.error("Location must be at least 2 characters"); return; }
+      if (trimmedLocation.length > 100) { toast.error("Location must be at most 100 characters"); return; }
+      if (!/^[a-zA-Z]/.test(trimmedLocation)) { toast.error("Location must start with a letter"); return; }
+      if (/[^a-zA-Z0-9\s\-',]/.test(trimmedLocation)) { toast.error("Location may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
+      if (/(.)\1{3,}/.test(trimmedLocation)) { toast.error("Location cannot have 4 or more consecutive identical characters"); return; }
+      if (/\s{2,}/.test(location)) { toast.error("Location cannot have multiple consecutive spaces"); return; }
+    }
+
+    const smRaw = salaryMin.trim();
+    const sxRaw = salaryMax.trim();
+    const sm = smRaw ? Number(smRaw) : undefined;
+    const sx = sxRaw ? Number(sxRaw) : undefined;
+    if (smRaw && (isNaN(Number(smRaw)) || !/^\d+$/.test(smRaw))) { toast.error("Minimum salary must be a positive whole number"); return; }
+    if (sxRaw && (isNaN(Number(sxRaw)) || !/^\d+$/.test(sxRaw))) { toast.error("Maximum salary must be a positive whole number"); return; }
+    if (sm !== undefined && sm <= 0) { toast.error("Minimum salary must be greater than 0"); return; }
+    if (sx !== undefined && sx <= 0) { toast.error("Maximum salary must be greater than 0"); return; }
+    if (sm !== undefined && sm > 999_999_999) { toast.error("Minimum salary is too large"); return; }
+    if (sx !== undefined && sx > 999_999_999) { toast.error("Maximum salary is too large"); return; }
+    if (sm !== undefined && sx !== undefined && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
+
+    const isDuplicateJob = (jobs ?? []).some((j) =>
+      j.status !== "CLOSED" &&
+      j.title.trim().toLowerCase() === trimmedTitle.toLowerCase() &&
+      (j.type ?? "") === type &&
+      (j.location ?? "").trim().toLowerCase() === trimmedLocation.toLowerCase()
+    );
+    if (isDuplicateJob) { toast.error("A job posting with this title, type, and location already exists"); return; }
+
     createJob.mutate(
       {
         title: title.trim(),
+        departmentId: departmentId ? Number(departmentId) : undefined,
         location: location || undefined,
         type,
         description: description || undefined,
@@ -170,13 +202,13 @@ export default function JobPostingsPage() {
         onSuccess: () => {
           toast.success("Job posting created");
           setSheetOpen(false);
-          setTitle(""); setLocation(""); setDescription(""); setOpenings("1");
+          setTitle(""); setDepartmentId(""); setLocation(""); setDescription(""); setOpenings("1");
           setSalaryMin(""); setSalaryMax(""); setRequirements(""); setApplicationDeadline("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [title, location, type, description, openings, createJob]);
+  }, [title, departmentId, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob, jobs]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {
@@ -243,8 +275,19 @@ export default function JobPostingsPage() {
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
+                <label className="text-sm font-medium">Job Title <span className="text-destructive">*</span></label>
                 <Input placeholder="e.g. Senior React Developer" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Department</label>
+                <Select value={departmentId} onValueChange={setDepartmentId}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    {departments?.map((d) => (
+                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location</label>
@@ -260,6 +303,11 @@ export default function JobPostingsPage() {
                       <SelectItem value="PART_TIME">Part Time</SelectItem>
                       <SelectItem value="CONTRACT">Contract</SelectItem>
                       <SelectItem value="INTERNSHIP">Internship</SelectItem>
+                      <SelectItem value="FREELANCE">Freelance</SelectItem>
+                      <SelectItem value="TEMPORARY">Temporary</SelectItem>
+                      <SelectItem value="CONSULTANT">Consultant</SelectItem>
+                      <SelectItem value="APPRENTICESHIP">Apprenticeship</SelectItem>
+                      <SelectItem value="COMMISSION_BASED">Commission-Based</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -311,11 +359,11 @@ export default function JobPostingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Min Salary (₹)</label>
-                  <Input type="number" min="0" placeholder="e.g. 600000" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
+                  <Input inputMode="numeric" placeholder="e.g. 600000" value={salaryMin} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMin(e.target.value); }} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Max Salary (₹)</label>
-                  <Input type="number" min="0" placeholder="e.g. 1200000" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+                  <Input inputMode="numeric" placeholder="e.g. 1200000" value={salaryMax} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMax(e.target.value); }} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -351,11 +399,12 @@ export default function JobPostingsPage() {
       <Card>
         <CardContent className="p-0">
           <ScrollArea className="w-full" type="auto">
-            <div className="min-w-[700px]">
+            <div className="min-w-[800px]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Department</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Openings</TableHead>
@@ -365,7 +414,7 @@ export default function JobPostingsPage() {
                 </TableHeader>
                 <TableBody>
                   {!jobs?.length ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyPersonIllustration className="h-36 w-36 opacity-95" />
                       <p>No job postings yet.</p>
                     </div></TableCell></TableRow>
@@ -384,10 +433,11 @@ export default function JobPostingsPage() {
                             )}
                           </div>
                         </TableCell>
+                        <TableCell>{departments?.find((d) => d.id === job.departmentId)?.name ?? "—"}</TableCell>
                         <TableCell>{job.location ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{job.type?.replace("_", " ")}</TableCell>
+                        <TableCell className="text-sm">{job.type?.replaceAll("_", " ")}</TableCell>
                         <TableCell>{job.openings}</TableCell>
-                        <TableCell><Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge></TableCell>
+                        <TableCell><StatusBadge status={job.status} /></TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>

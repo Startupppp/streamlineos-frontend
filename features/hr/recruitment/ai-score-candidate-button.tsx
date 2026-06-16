@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAIScoreCandidate } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIScoreCandidateButtonProps {
   candidateId: number;
@@ -20,8 +21,10 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
   const [open, setOpen] = useState(false);
   const scoreMutation = useAIScoreCandidate();
   const result = scoreMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.candidate-scoring");
 
   const handleScore = () => {
+    if (!featureEnabled) { toast.error(`AI candidate scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     scoreMutation.mutate(
       { candidateId, jobId },
       { onError: (e) => toast.error(getErrorMessage(e)) },
@@ -59,7 +62,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold", fitColor(result.fitLevel))}>{result.score}</span> : "Score"}
           </Button>
@@ -79,7 +82,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
         {scoreMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Scoring...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Score Candidate</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Score Candidate</>
         )}
       </Button>
       {result && <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />}

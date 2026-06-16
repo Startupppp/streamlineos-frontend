@@ -24,8 +24,7 @@ export async function PUT(
     if (isNaN(leaveId)) return err("Invalid leave request ID.", 400);
 
     const isAuthorized =
-      EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "") ||
-      session.user.role === "ADMIN";
+      EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "");
     if (!isAuthorized) {
       return err("Only HR, Admin, or CEO can reject leave requests.", 403);
     }

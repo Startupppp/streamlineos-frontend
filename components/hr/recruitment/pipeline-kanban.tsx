@@ -43,7 +43,7 @@ const KanbanColumn = memo(function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col min-w-[280px] w-[280px] shrink-0",
+        "flex flex-col w-full min-w-0",
         isRejected && "opacity-80",
       )}
     >
@@ -162,7 +162,7 @@ export function PipelineKanban({
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
         {COLUMNS.map((col) => (
           <ColumnSkeleton key={col.id} col={col} />
         ))}
@@ -173,7 +173,7 @@ export function PipelineKanban({
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.id}

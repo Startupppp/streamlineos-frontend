@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
 import { z } from "zod";
@@ -22,7 +22,9 @@ const importSchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can bulk import.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees"))  return err("Only admins can bulk import.", 403);
 
     const body = importSchema.parse(await req.json());
     const values = body.candidates.map((c) => ({

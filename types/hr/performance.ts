@@ -1,4 +1,6 @@
-import { ReviewStatus } from "./common";
+export type ReviewStatus = "DRAFT" | "IN_PROGRESS" | "COMPLETED" | "ARCHIVED";
+export type ReviewCycleStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type MeetingStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
 export interface RatingEntry {
   category: string;
@@ -10,9 +12,6 @@ export interface GoalEntry {
   goal: string;
   achieved: boolean;
 }
-
-export type ReviewCycleStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-export type MeetingStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
 export interface ReviewCycle {
   id: number;

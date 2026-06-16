@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { aiScoreLead, aiBatchScoreLeads } from "@/lib/ai/lead-scoring";
 import { isOpenAIConfigured } from "@/lib/ai/openai";
 import { z } from "zod";
@@ -13,7 +14,9 @@ const batchSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAuth<unknown>(async (session) => {
+  return withAuth(async (session) => {
+    const featureGuard = requireFeature(session.plan, "ai.lead-scoring");
+    if (featureGuard) return featureGuard;
     if (!isOpenAIConfigured()) {
       return err("AI scoring is not configured. Set OPENAI_API_KEY.", 503);
     }

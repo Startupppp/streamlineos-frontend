@@ -6,6 +6,7 @@ export function useMfaStatus() {
   return useQuery({
     queryKey: ["mfa", "status"],
     queryFn: () => apiClient.get<{ enabled: boolean }>("/auth/mfa/status"),
+    staleTime: 2 * 60_000,
   });
 }
 

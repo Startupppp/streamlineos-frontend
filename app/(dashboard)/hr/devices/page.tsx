@@ -54,6 +54,7 @@ export default function DevicesPage() {
   const addForm = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceSchema),
     defaultValues: { userId: "", deviceType: "", deviceName: "", serialNumber: "", brand: "", model: "", notes: "" },
+    mode: "onBlur",
   });
 
   const editForm = useForm<DeviceFormValues>({
@@ -198,6 +199,7 @@ export default function DevicesPage() {
                 <DeviceFormContent
                   form={addForm}
                   employees={employees}
+                  devices={devices ?? []}
                   isPending={createDeviceMutation.isPending}
                   submitLabel="Add Device"
                   onSubmit={handleAddDevice}
@@ -272,8 +274,8 @@ export default function DevicesPage() {
             return (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 pb-4 border-b">
-                  <div className="h-12 w-12 rounded-lg bg-gold/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-gold" />
+                  <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">{viewedDevice.deviceName}</p>
@@ -305,6 +307,8 @@ export default function DevicesPage() {
             <DeviceFormContent
               form={editForm}
               employees={employees}
+              devices={devices ?? []}
+              currentDeviceId={editDevice?.id}
               isPending={updateDeviceMutation.isPending}
               submitLabel="Save Changes"
               onSubmit={handleUpdateDevice}

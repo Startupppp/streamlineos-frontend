@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState } from "react";
 import { format } from "date-fns";
+import JSZip from "jszip";
 import {
   FileText,
   Folder,
@@ -15,6 +16,8 @@ import {
   FileImage,
   ArrowDown,
   Upload,
+  Pencil,
+  Loader2,
 } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
@@ -63,14 +66,14 @@ const FILE_ICON_CONFIG: Record<string, { bg: string; text: string; icon: React.C
   jpeg: { bg: "bg-amber-100 dark:bg-amber-900/20", text: "text-amber-600 dark:text-amber-400", icon: FileImage },
 };
 
-const DEFAULT_FILE_ICON = { bg: "bg-gray-100 dark:bg-gray-800/30", text: "text-gray-600 dark:text-gray-400", icon: File };
+const DEFAULT_FILE_ICON = { bg: "bg-slate-100 dark:bg-slate-800/30", text: "text-slate-600 dark:text-slate-400", icon: File };
 
 const CATEGORY_COLORS: Record<string, string> = {
   Policies: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
   Templates: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
   Payroll: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
   "Tax Forms": "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800",
-  General: "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700",
+  General: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700",
 };
 
 const FOLDER_COLORS = [
@@ -100,6 +103,7 @@ export interface FolderItem {
 
 export interface DocumentTableProps {
   paginatedDocuments: Document[];
+  allFilteredDocuments: Document[];
   folders: FolderItem[];
   page: number;
   pageSize: number;
@@ -109,6 +113,7 @@ export interface DocumentTableProps {
   searchTerm: string;
   onPageChange: (page: number) => void;
   onDelete: (documentId: number) => Promise<void>;
+  onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
 }
 
@@ -116,9 +121,10 @@ export interface DocumentTableProps {
 interface DocumentRowProps {
   doc: Document;
   onDelete: (id: number) => Promise<void>;
+  onEdit: (doc: Document) => void;
 }
 
-const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProps) {
+const DocumentRow = memo(function DocumentRow({ doc, onDelete, onEdit }: DocumentRowProps) {
   const fileConfig = getFileIconConfig(doc.fileName || doc.name);
   const FileIcon = fileConfig.icon;
   const typeLabel =
@@ -160,6 +166,7 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
     [onDelete, doc.id],
   );
 
+  const handleEdit = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onEdit(doc); }, [onEdit, doc]);
   const handleMenuTriggerClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   return (
@@ -246,6 +253,10 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEdit}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
               {(doc.version || 1) > 1 && (
                 <DropdownMenuItem onClick={handleVersionHistory}>
                   <History className="mr-2 h-4 w-4" />
@@ -268,6 +279,7 @@ const DocumentRow = memo(function DocumentRow({ doc, onDelete }: DocumentRowProp
 
 export function DocumentTable({
   paginatedDocuments,
+  allFilteredDocuments,
   folders,
   page,
   pageSize,
@@ -277,8 +289,47 @@ export function DocumentTable({
   searchTerm,
   onPageChange,
   onDelete,
+  onEdit,
   onOpenUpload,
 }: DocumentTableProps) {
+  const [isZipping, setIsZipping] = useState(false);
+
+  const filesWithUrl = allFilteredDocuments.filter((d) => !!d.fileUrl);
+
+  const handleDownloadZip = useCallback(async () => {
+    if (filesWithUrl.length === 0) return;
+    setIsZipping(true);
+    try {
+      const zip = new JSZip();
+      const results = await Promise.allSettled(
+        filesWithUrl.map(async (doc) => {
+          const response = await fetch(doc.fileUrl);
+          if (!response.ok) throw new Error(`Failed to fetch ${doc.fileName ?? doc.name}`);
+          const blob = await response.blob();
+          const fileName = doc.fileName ?? `${doc.name}.bin`;
+          zip.file(fileName, blob);
+        })
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "documents.zip";
+      anchor.click();
+      URL.revokeObjectURL(url);
+      if (failed > 0) {
+        toast.warning(`${filesWithUrl.length - failed} file(s) downloaded; ${failed} could not be fetched.`);
+      } else {
+        toast.success(`${filesWithUrl.length} file(s) packaged into ZIP`);
+      }
+    } catch {
+      toast.error("Failed to create ZIP archive");
+    } finally {
+      setIsZipping(false);
+    }
+  }, [filesWithUrl]);
+
   return (
     <Card className="shadow-sm border overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
@@ -375,7 +426,7 @@ export function DocumentTable({
               </TableRow>
             ) : (
               paginatedDocuments.map((doc) => (
-                <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} />
+                <DocumentRow key={doc.id} doc={doc} onDelete={onDelete} onEdit={onEdit} />
               ))
             )}
           </TableBody>
@@ -385,17 +436,35 @@ export function DocumentTable({
 
         {totalFiltered > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
-            <span className="text-sm text-muted-foreground">
-              Showing{" "}
-              <strong className="text-foreground">
-                {Math.min((page - 1) * pageSize + 1, totalFiltered)}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-foreground">
-                {Math.min(page * pageSize, totalFiltered)}
-              </strong>{" "}
-              of <strong className="text-foreground">{totalFiltered}</strong> results
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                Showing{" "}
+                <strong className="text-foreground">
+                  {Math.min((page - 1) * pageSize + 1, totalFiltered)}
+                </strong>{" "}
+                to{" "}
+                <strong className="text-foreground">
+                  {Math.min(page * pageSize, totalFiltered)}
+                </strong>{" "}
+                of <strong className="text-foreground">{totalFiltered}</strong> results
+              </span>
+              {filesWithUrl.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={handleDownloadZip}
+                  disabled={isZipping}
+                >
+                  {isZipping ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  Download ZIP ({filesWithUrl.length})
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

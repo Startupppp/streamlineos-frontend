@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, logoUrl, escapeHtml } from "./base";
 
 export function getInvitationEmailTemplate(invitationUrl: string, organizationName: string, inviterName?: string): string {
   const safeOrgName = escapeHtml(organizationName);

@@ -1,6 +1,6 @@
 import { Readable } from "stream";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { withAuth } from "@/lib/api/helpers";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
 import {
@@ -34,12 +34,8 @@ function isValidFileKey(fileKey: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+  return withAuth(async (session) => {
+    try {
     if (!isStorageConfigured()) {
       return NextResponse.json({ error: "Cloud storage not configured" }, { status: 503 });
     }
@@ -97,8 +93,9 @@ export async function GET(req: NextRequest) {
 
     const signedUrl = await getFileUrl(fileKey, expiresIn);
     return NextResponse.json({ url: signedUrl });
-  } catch (error) {
-    logger.error("Download error", error);
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
-  }
+    } catch (error) {
+      logger.error("Download error", error);
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+  });
 }

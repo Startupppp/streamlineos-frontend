@@ -3,6 +3,7 @@ import "server-only";
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { isOpenAIConfigured, aiText } from "@/lib/ai/openai";
 
 const BodySchema = z.object({

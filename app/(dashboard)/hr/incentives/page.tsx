@@ -23,8 +23,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   IndianRupee, CheckCircle2, XCircle, Clock, Settings,
-  TrendingUp, Users, Percent,
+  TrendingUp, Users, Percent, History,
 } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   useHrIncentiveStats,
   useHrIncentives,
@@ -76,6 +77,7 @@ export default function IncentivesPage() {
   );
 
   const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [newRate, setNewRate] = useState("");
   const [approveModal, setApproveModal] = useState<{ id: number; calculated: string } | null>(null);
   const [approveAmount, setApproveAmount] = useState("");
@@ -112,6 +114,18 @@ export default function IncentivesPage() {
     setApproveModal(null);
   }
 
+  function handleApproveDialogOpenChange(open: boolean) {
+    if (!open) handleApproveClose();
+  }
+
+  function handleApproveAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setApproveAmount(e.target.value);
+  }
+
+  function handleApproveNotesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setApproveNotes(e.target.value);
+  }
+
   function handleApproveConfirm() {
     if (!approveModal) return;
     approveMutation.mutate(
@@ -140,7 +154,35 @@ export default function IncentivesPage() {
     );
   }
 
+  function handleRateInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    if (raw === "") {
+      setNewRate("");
+      return;
+    }
+    const dotIndex = raw.indexOf(".");
+    if (dotIndex !== -1) {
+      const decimals = raw.slice(dotIndex + 1);
+      if (decimals.length > 2) {
+        setNewRate(raw.slice(0, dotIndex + 3));
+        return;
+      }
+    }
+    if (/^\d{0,5}(\.\d{0,2})?$/.test(raw)) {
+      setNewRate(raw);
+    }
+  }
+
   function handleSetRate() {
+    const parsed = parseFloat(newRate);
+    if (!newRate || isNaN(parsed) || parsed <= 0 || parsed > 100) {
+      toast.error("Incentive rate must be between 0 and 100");
+      return;
+    }
+    if (!/^\d{1,5}(\.\d{1,2})?$/.test(newRate)) {
+      toast.error("Rate must have at most 2 decimal places");
+      return;
+    }
     setConfigMutation.mutate(
       { incentiveRate: newRate },
       {
@@ -154,14 +196,43 @@ export default function IncentivesPage() {
     );
   }
 
+  function handleOpenConfigDialog() {
+    setShowConfigDialog(true);
+  }
+
+  function handleCloseConfigDialog() {
+    setShowConfigDialog(false);
+  }
+
+  function handleOpenHistory() {
+    setShowHistoryDialog(true);
+  }
+
+  function handleCloseHistory() {
+    setShowHistoryDialog(false);
+  }
+
+  function handlePrevPage() {
+    updateParams({ page: page <= 2 ? null : String(page - 1) });
+  }
+
+  function handleNextPage() {
+    updateParams({ page: String(page + 1) });
+  }
+
   return (
     <PageWrapper
       title="Incentive Management"
       subtitle="Manage sales incentives, approvals, and rate configuration"
       actions={
-        <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
-          <Settings className="h-4 w-4 mr-1" /> Configure Rate
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleOpenHistory}>
+            <History className="h-4 w-4 mr-1" /> Rate History
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleOpenConfigDialog}>
+            <Settings className="h-4 w-4 mr-1" /> Configure Rate
+          </Button>
+        </div>
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
@@ -179,31 +250,19 @@ export default function IncentivesPage() {
       <div className="space-y-6">
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
-          {[
-            { label: "This Month", value: formatINR(stats?.thisMonth), icon: IndianRupee, color: "text-emerald-400" },
-            { label: "Total Revenue", value: formatINR(stats?.totalRevenue), icon: TrendingUp, color: "text-blue-400" },
-            { label: "Avg / Conversion", value: formatINR(stats?.avgPerConversion), icon: Users, color: "text-purple-400" },
-            { label: "Pending", value: stats?.pending ?? 0, icon: Clock, color: "text-amber-400" },
-            { label: "Approved", value: stats?.approved ?? 0, icon: CheckCircle2, color: "text-emerald-400" },
-          ].map(s => (
-            <Card key={s.label}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <s.icon className={cn("h-5 w-5", s.color)} />
-                  <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <StatCard label="This Month" value={formatINR(stats?.thisMonth)} icon={IndianRupee} color="green" index={0} />
+          <StatCard label="Total Revenue" value={formatINR(stats?.totalRevenue)} icon={TrendingUp} color="blue" index={1} />
+          <StatCard label="Avg / Conversion" value={formatINR(stats?.avgPerConversion)} icon={Users} color="violet" index={2} />
+          <StatCard label="Pending" value={stats?.pending ?? 0} icon={Clock} color="amber" index={3} />
+          <StatCard label="Approved" value={stats?.approved ?? 0} icon={CheckCircle2} color="green" index={4} />
         </div>
 
         {currentConfig && (
-          <Card className="bg-gold/5 border-gold/20">
+          <Card className="bg-blue-500/5 border-blue-500/20">
             <CardContent className="p-4 flex items-center gap-3">
-              <Percent className="h-5 w-5 text-gold" />
+              <Percent className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-gold font-bold">{currentConfig.incentiveRate}%</span></p>
+                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-blue-600 font-bold">{currentConfig.incentiveRate}%</span></p>
                 <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
               </div>
             </CardContent>
@@ -292,15 +351,15 @@ export default function IncentivesPage() {
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => updateParams({ page: String(page + 1) })}>Next</Button>
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={handleNextPage}>Next</Button>
               </div>
             </div>
           )}
         </Card>
       </div>
 
-      <Dialog open={!!approveModal} onOpenChange={(open) => !open && handleApproveClose()}>
+      <Dialog open={!!approveModal} onOpenChange={handleApproveDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Approve Incentive</DialogTitle>
@@ -312,11 +371,11 @@ export default function IncentivesPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Approved Amount (adjust if needed)</Label>
-              <Input type="number" value={approveAmount} onChange={(e) => setApproveAmount(e.target.value)} />
+              <Input type="number" value={approveAmount} onChange={handleApproveAmountChange} />
             </div>
             <div className="space-y-1.5">
               <Label>Notes</Label>
-              <Input value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} placeholder="Optional notes..." />
+              <Input value={approveNotes} onChange={handleApproveNotesChange} placeholder="Optional notes..." />
             </div>
           </div>
           <DialogFooter>
@@ -346,10 +405,9 @@ export default function IncentivesPage() {
             <div className="space-y-1.5">
               <Label>New Incentive Rate (%)</Label>
               <Input
-                type="number"
-                step="0.01"
+                inputMode="decimal"
                 value={newRate}
-                onChange={(e) => setNewRate(e.target.value)}
+                onChange={handleRateInputChange}
                 placeholder="e.g., 2.50"
               />
               <p className="text-xs text-muted-foreground">
@@ -358,13 +416,66 @@ export default function IncentivesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfigDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCloseConfigDialog}>Cancel</Button>
             <Button
               disabled={!newRate || setConfigMutation.isPending}
               onClick={handleSetRate}
             >
               Set Rate
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              Incentive Rate History
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            {!configs || configs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No rate history found.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Rate</TableHead>
+                    <TableHead className="text-xs">Effective From</TableHead>
+                    <TableHead className="text-xs">Set By</TableHead>
+                    <TableHead className="text-xs">Set On</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {configs.map((cfg, idx) => (
+                    <TableRow key={cfg.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className={cn("font-semibold tabular-nums text-sm", idx === 0 ? "text-blue-600" : "text-foreground")}>
+                            {cfg.incentiveRate}%
+                          </span>
+                          {idx === 0 && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 bg-blue-500/10 text-blue-600 border-blue-500/20">Current</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(cfg.effectiveFrom).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </TableCell>
+                      <TableCell className="text-xs">{cfg.createdByName ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {cfg.createdAt ? new Date(cfg.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseHistory}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

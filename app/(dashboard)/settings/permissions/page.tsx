@@ -14,6 +14,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { cn } from "@/lib/utils";
 
 const ROLE_LABELS: Record<SystemRole, string> = {
+  OWNER: "Owner",
   CEO: "CEO",
   HR: "HR",
   SALES: "Sales",
@@ -106,7 +107,7 @@ function PermissionsContent() {
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Lock className="h-4 w-4 text-gold" />
+              <Lock className="h-4 w-4 text-blue-600" />
               System Role Permissions ({PERMISSIONS.length} total)
             </CardTitle>
           </CardHeader>

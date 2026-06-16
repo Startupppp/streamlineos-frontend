@@ -2,7 +2,7 @@
 
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "../../../lib/validations/hr";
+import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
 
 import { Input } from "../../ui/input";
 import {
@@ -48,11 +48,14 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                 <Input
                   type="number"
                   inputMode="decimal"
-                  step="0.1"
+                  step="0.5"
                   min="0"
-                  max="50"
+                  max="60"
                   placeholder="e.g. 2.5"
                   value={field.value != null ? field.value : ""}
+                  onKeyDown={(e) => {
+                    if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+                  }}
                   onChange={(e) => {
                     const v = e.target.value;
                     if (v === "") {
@@ -60,7 +63,10 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                       return;
                     }
                     if (/^\d*\.?\d*$/.test(v)) {
-                      field.onChange(parseFloat(v) || 0);
+                      const parsed = parseFloat(v);
+                      if (!isNaN(parsed) && parsed >= 0 && parsed <= 60) {
+                        field.onChange(parsed);
+                      }
                     }
                   }}
                   onBlur={field.onBlur}

@@ -19,6 +19,7 @@ export function useHrDepartments() {
   return useQuery({
     queryKey: queryKeys.hr.departments(),
     queryFn: () => apiClient.get<Department[]>("/hr/departments"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -41,6 +42,7 @@ export function useHrEmployees(params?: {
     queryKey: queryKeys.hr.employees(params),
     queryFn: () =>
       apiClient.get<Employee[] | PaginatedEmployees>("/hr/employees", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -78,6 +80,7 @@ export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -86,6 +89,7 @@ export function useHrEmployeeStats(userId: string) {
     queryKey: queryKeys.hr.employeeStats(userId),
     queryFn: () =>
       apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }),
+    staleTime: 2 * 60_000,
     enabled: !!userId,
   });
 }
@@ -95,6 +99,7 @@ export function useHrEmployeeProjects(userId: string) {
     queryKey: [...queryKeys.hr.all, "employeeProjects", userId] as const,
     queryFn: () =>
       apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }),
+    staleTime: 2 * 60_000,
     enabled: !!userId,
   });
 }
@@ -104,6 +109,7 @@ export function useHrEmployeeTickets(userId: string) {
     queryKey: [...queryKeys.hr.all, "employeeTickets", userId] as const,
     queryFn: () =>
       apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }),
+    staleTime: 2 * 60_000,
     enabled: !!userId,
   });
 }
@@ -143,15 +149,24 @@ export interface ExpertResult {
   name: string | null;
   image: string | null;
   designation: string | null;
-  skills: string[];
+  department: string | null;
+  role: string | null;
+  skills: { name: string; level: number }[];
   matchedSkill: string;
+  matchedLevel: number;
 }
 
-export function useFindExpert(skill: string) {
+export interface FindExpertParams {
+  skill: string;
+  department?: string;
+  role?: string;
+}
+
+export function useFindExpert(params: FindExpertParams) {
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "findExpert", skill] as const,
-    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", { skill }),
-    enabled: skill.trim().length > 0,
+    queryKey: [...queryKeys.hr.all, "findExpert", params] as const,
+    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>),
+    enabled: params.skill.trim().length > 0,
     staleTime: 2 * 60_000,
   });
 }

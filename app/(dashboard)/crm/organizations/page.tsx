@@ -63,9 +63,9 @@ export default function OrganizationsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Organizations" subtitle="Company accounts">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Skeleton className="h-10 w-full max-w-sm" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-36" />)}
           </div>
         </div>
@@ -90,17 +90,17 @@ export default function OrganizationsPage() {
         </div>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data?.organizations.map(org => {
             const health = getHealthBadge(org.healthScore);
             return (
-              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
+              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 cursor-pointer group">
                 <Link href={`/crm/organizations/${org.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0">
@@ -130,7 +130,7 @@ export default function OrganizationsPage() {
                     {org.website && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-gold">
+                        <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-blue-600">
                           {org.website}
                         </a>
                       </div>
@@ -141,7 +141,7 @@ export default function OrganizationsPage() {
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{org.description}</p>
                   )}
                   <div className="mt-3 flex justify-end">
-                    <span className="text-xs text-gold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-blue-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       View details <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -153,7 +153,7 @@ export default function OrganizationsPage() {
         </motion.div>
 
         {(data?.organizations.length ?? 0) === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[50vh]">
             <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
             <p className="text-sm font-medium text-foreground">No organizations found</p>
             <p className="text-xs mt-1">Create your first organization</p>

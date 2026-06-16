@@ -26,7 +26,7 @@ export type PriorityResponse = z.infer<typeof PriorityResponseSchema>;
 
 export async function GET(req: NextRequest) {
   void req;
-  return withAuth<PriorityResponse>(async (session) => {
+  return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {
       return err("AI is not configured. Set OPENAI_API_KEY.", 503);
     }

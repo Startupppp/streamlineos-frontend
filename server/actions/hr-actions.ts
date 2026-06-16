@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendAccountDeactivationEmail } from "@/lib/email";
 import { ROLES, ADMIN_ROLES, EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function getEmployees() {
   const session = await auth();
@@ -179,7 +180,8 @@ export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   const { role, id: currentUserId } = session.user;
-  if (role !== ROLES.CEO && role !== ROLES.ADMIN) {
+  const ability = await getSessionAbility();
+  if (!ability.can("manage", "hr:employees")) {
       return { error: "Permission denied" };
   }
   if (userId === currentUserId) {
@@ -207,11 +209,8 @@ export async function deleteEmployee(userId: string) {
       if (!employee) {
         return { error: "User not found" };
       }
-      if (role === ROLES.ADMIN && (employee.role === ROLES.ADMIN || employee.role === ROLES.CEO)) {
-        return { error: "Admins can only delete Member accounts" };
-      }
-      if (role === ROLES.CEO && employee.role === ROLES.CEO) {
-        return { error: "Cannot delete another Owner account" };
+      if (role !== ROLES.CEO && employee.role === ROLES.CEO) {
+        return { error: "Only the CEO can delete other CEO/Owner accounts" };
       }
       await db.update(users)
         .set({ isActive: false })

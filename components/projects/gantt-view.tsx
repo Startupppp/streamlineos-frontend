@@ -36,7 +36,7 @@ interface GanttViewProps {
 }
 
 const statusColors: Record<string, string> = {
-  TODO: "#9ca3af",
+  TODO: "#94a3b8",
   IN_PROGRESS: "#3b82f6",
   IN_REVIEW: "#8b5cf6",
   DONE: "#22c55e",
@@ -215,7 +215,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
                     width={barWidth}
                     height={rowHeight - 12}
                     rx={4}
-                    fill={statusColors[ticket.status] ?? "#9ca3af"}
+                    fill={statusColors[ticket.status] ?? "#94a3b8"}
                     opacity={0.8}
                   />
                 )}

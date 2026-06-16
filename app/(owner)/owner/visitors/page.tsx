@@ -45,7 +45,7 @@ export default async function VisitorsPage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-3 mb-4">
+      <div className="rounded-2xl border border-border bg-card p-3 mb-4">
         <h3 className="font-display text-base font-bold text-slate-900 mb-1.5">
           Visits — last 30 days
         </h3>
@@ -93,7 +93,7 @@ export default async function VisitorsPage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white mt-1.5 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card mt-1.5 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100">
           <h3 className="font-display text-base font-bold text-slate-900">
             Recent visits
@@ -133,7 +133,7 @@ function ListCard({
   empty: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100">
         <h3 className="font-display text-base font-bold text-slate-900">{title}</h3>
       </div>

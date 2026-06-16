@@ -18,8 +18,8 @@ export default function CommissionsLoading() {
       actions={<Skeleton className="h-8 w-40 rounded-md" />}
       filters={tabsFilter}
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="pt-6">

@@ -1,9 +1,15 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { certifications } from "@/lib/db/schema";
 import { eq, and, desc, lte, gte } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const listSchema = z.object({
+  userId: z.string().min(1).optional(),
+  expiringSoon: z.enum(["true", "false"]).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createSchema = z.object({
   userId: z.string().min(1).optional(),
@@ -18,8 +24,7 @@ const createSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const userId = req.nextUrl.searchParams.get("userId");
-    const expiringSoon = req.nextUrl.searchParams.get("expiringSoon");
+    const { userId, expiringSoon, limit } = parseQuery(req, listSchema);
 
     const conditions = [eq(certifications.orgId, session.orgId)];
     if (userId) conditions.push(eq(certifications.userId, userId));
@@ -35,6 +40,7 @@ export async function GET(req: NextRequest) {
       where: and(...conditions),
       with: { user: true },
       orderBy: [desc(certifications.createdAt)],
+      limit,
     });
     return ok(data);
   });
@@ -42,7 +48,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const [cert] = await db.insert(certifications).values({
       orgId: session.orgId,
       userId: body.userId ?? session.user.id,

@@ -14,9 +14,8 @@ export default async function DashboardLayout({
     redirect("/signin");
   }
 
-  const role = session.user.role;
-  const isAdminRole = role === "CEO" || role === "HR";
-  const hasDashboardAccess = isAdminRole || session.user.hasDashboardAccess !== false;
+  const isAdminLike = session.user.isPlatformAdmin || session.user.isOrgOwner;
+  const hasDashboardAccess = isAdminLike || session.user.hasDashboardAccess !== false;
 
   const cookieStore = await cookies();
   const defaultCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";

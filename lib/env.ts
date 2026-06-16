@@ -14,7 +14,6 @@ export const R2_FOLDERS = {
   employeeDocuments: "employees/documents/",
   payslips: "payslips/",
   esign: "esign/",
-  qrCodes: "qr-codes/",
   exports: "exports/",
   emailAttachments: "email-attachments/",
   temp: "temp/",
