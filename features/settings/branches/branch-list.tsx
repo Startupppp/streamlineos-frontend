@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { MapPin, Phone, Mail, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ interface BranchListProps {
   isLoading: boolean;
   onEdit: (branch: Branch) => void;
   onDelete: (branch: Branch) => void;
+  onCreate: () => void;
 }
 
 export function BranchList({
@@ -22,6 +24,7 @@ export function BranchList({
   isLoading,
   onEdit,
   onDelete,
+  onCreate,
 }: BranchListProps) {
   if (isLoading) {
     return (
@@ -35,15 +38,15 @@ export function BranchList({
 
   if (branches.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">
-          <EmptyTeamIllustration className="mx-auto mb-4 w-40 h-40" />
-          <p className="text-sm font-medium text-foreground">No branches yet</p>
-          <p className="text-xs mt-1">
-            Create a branch to set up your multi-branch hierarchy.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-1 min-h-[60vh]">
+        <EmptyState
+          illustration={<EmptyTeamIllustration className="h-32 w-32" />}
+          title="No branches yet"
+          description="Create a branch to set up your multi-branch hierarchy."
+          action={{ label: "Add Branch", onClick: onCreate }}
+          className="w-full"
+        />
+      </div>
     );
   }
 

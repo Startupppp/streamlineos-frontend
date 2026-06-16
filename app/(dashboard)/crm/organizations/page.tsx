@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart, ArrowRight,
+  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart, ArrowRight, Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -60,6 +61,8 @@ export default function OrganizationsPage() {
 
   const totalPages = data?.totalPages ?? 0;
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Organizations" subtitle="Company accounts">
@@ -77,7 +80,14 @@ export default function OrganizationsPage() {
     <PageWrapper
       title="Organizations"
       subtitle={`${data?.totalCount ?? 0} organizations`}
-      actions={<CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />}
+      actions={
+        <>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-2" /> New Organization
+          </Button>
+          <CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />
+        </>
+      }
       filters={
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -153,11 +163,13 @@ export default function OrganizationsPage() {
         </motion.div>
 
         {(data?.organizations.length ?? 0) === 0 && (
-          <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[50vh]">
-            <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
-            <p className="text-sm font-medium text-foreground">No organizations found</p>
-            <p className="text-xs mt-1">Create your first organization</p>
-          </div>
+          <EmptyState
+            illustration={<EmptyProjectsIllustration className="w-36 h-36" />}
+            title="No organizations found"
+            description={search ? "No organizations match your search." : "Create your first organization to get started."}
+            action={search ? undefined : { label: "New Organization", onClick: handleOpenCreate }}
+            className="min-h-[50vh]"
+          />
         )}
 
         {totalPages > 1 && (

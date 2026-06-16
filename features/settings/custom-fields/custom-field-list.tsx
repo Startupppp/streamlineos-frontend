@@ -106,13 +106,15 @@ export function CustomFieldList({ entityType }: CustomFieldListProps) {
       </div>
 
       {fields.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyTargetIllustration className="h-24 w-24" />}
-          title="No custom fields yet"
-          description={`Add custom fields to capture additional information on ${entityType}s.`}
-          compact
-          action={{ label: "Add Field", onClick: openCreate }}
-        />
+        <div className="flex flex-1 min-h-[55vh]">
+          <EmptyState
+            illustration={<EmptyTargetIllustration className="h-32 w-32" />}
+            title="No custom fields yet"
+            description={`Add custom fields to capture additional information on ${entityType}s.`}
+            action={{ label: "Add Field", onClick: openCreate }}
+            className="w-full"
+          />
+        </div>
       ) : (
         <Card>
           <CardContent className="p-0">

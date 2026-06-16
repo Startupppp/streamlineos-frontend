@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -107,6 +108,8 @@ export default function WebhooksPage() {
   const [description, setDescription] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
+  const handleOpenCreate = useCallback(() => setSheetOpen(true), []);
+
   const handleCreate = useCallback(async () => {
     const trimmedUrl = url.trim();
     if (!trimmedUrl) { toast.error("URL is required"); return; }
@@ -168,7 +171,7 @@ export default function WebhooksPage() {
       title="Webhooks"
       subtitle="Send real-time events to external systems when things happen in the CRM"
       actions={
-        <Button onClick={() => setSheetOpen(true)}>
+        <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Add Webhook
         </Button>
@@ -176,19 +179,14 @@ export default function WebhooksPage() {
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {(!webhooks || webhooks.length === 0) ? (
-          <motion.div variants={fadeUp}>
-            <Card className="shadow-noir">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                <Webhook className="h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No webhooks configured</p>
-                <p className="text-xs text-muted-foreground/60 max-w-sm">
-                  Webhooks let external services receive notifications when events happen in your CRM.
-                </p>
-                <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Add your first webhook
-                </Button>
-              </CardContent>
-            </Card>
+          <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
+            <EmptyState
+              icon={Webhook}
+              title="No webhooks configured"
+              description="Webhooks let external services receive notifications when events happen in your CRM."
+              action={{ label: "Add Webhook", onClick: handleOpenCreate }}
+              className="w-full"
+            />
           </motion.div>
         ) : (
           webhooks.map((wh) => (

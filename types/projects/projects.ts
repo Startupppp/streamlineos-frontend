@@ -190,6 +190,7 @@ export interface ProjectAnalytics {
   priorityBreakdown: { priority: string | null; count: number }[];
   assigneeCompletion: {
     assigneeId: string | null;
+    assigneeName: string | null;
     total: number;
     completed: number;
   }[];

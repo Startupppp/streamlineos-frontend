@@ -64,5 +64,4 @@ ruvector.db
 
 # E2E UI audit artifacts + throwaway harnesses (local only)
 /e2e-artifacts/
-/scripts/e2e-smoke.mjs
-/scripts/e2e-ui-audit.mjs
+/scripts/e2e-*.mjs

@@ -227,7 +227,7 @@ export default function NewInvoicePage() {
             <p className="text-sm font-semibold">Line Items</p>
           </div>
           <div className="p-4 space-y-2">
-            <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1">
+            <div className="hidden md:grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1">
               <span className="col-span-3">Description</span>
               <span className="col-span-2">HSN/SAC</span>
               <span className="col-span-1 text-right">Qty</span>
@@ -238,61 +238,80 @@ export default function NewInvoicePage() {
             {itemsArray.fields.map((field, idx) => {
               const lineAmount = totals.lines[idx]?.amount ?? 0;
               return (
-                <div key={field.id} className="grid grid-cols-12 gap-2 items-center">
-                  <Input
-                    className="col-span-3 h-8 text-sm"
-                    placeholder="Description"
-                    aria-label={`Description for item ${idx + 1}`}
-                    {...register(`items.${idx}.description`)}
-                  />
-                  <Input
-                    className="col-span-2 h-8 text-sm"
-                    placeholder="HSN/SAC"
-                    aria-label={`HSN or SAC for item ${idx + 1}`}
-                    {...register(`items.${idx}.hsnSacCode`)}
-                  />
-                  <Input
-                    className="col-span-1 h-8 text-sm text-right"
-                    type="number"
-                    min={1}
-                    placeholder="1"
-                    aria-label={`Quantity for item ${idx + 1}`}
-                    {...register(`items.${idx}.quantity`, { valueAsNumber: true })}
-                  />
-                  <Input
-                    className="col-span-2 h-8 text-sm text-right"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    placeholder="0"
-                    aria-label={`Rate for item ${idx + 1}`}
-                    {...register(`items.${idx}.rate`, { valueAsNumber: true })}
-                  />
-                  <Controller
-                    control={control}
-                    name={`items.${idx}.gstRate`}
-                    render={({ field: gstField }) => (
-                      <Select
-                        value={String(gstField.value ?? 0)}
-                        onValueChange={(value) => handleGstRateChange(idx, value)}
-                      >
-                        <SelectTrigger className="col-span-2 h-8 text-sm" aria-label={`GST rate for item ${idx + 1}`}>
-                          <SelectValue placeholder="0%" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {GST_RATE_OPTIONS.map((rate) => (
-                            <SelectItem key={rate} value={String(rate)}>
-                              {rate}%
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <div className="col-span-1 text-sm font-medium text-right pr-1">
-                    {fmt(lineAmount)}
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 gap-3 rounded-lg border border-border p-3 md:grid-cols-12 md:gap-2 md:items-center md:rounded-none md:border-0 md:p-0"
+                >
+                  <div className="space-y-1 md:col-span-3 md:space-y-0">
+                    <Label className="text-xs text-muted-foreground md:hidden">Description</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      placeholder="Description"
+                      aria-label={`Description for item ${idx + 1}`}
+                      {...register(`items.${idx}.description`)}
+                    />
                   </div>
-                  <div className="col-span-12 flex justify-end -mt-1">
+                  <div className="space-y-1 md:col-span-2 md:space-y-0">
+                    <Label className="text-xs text-muted-foreground md:hidden">HSN/SAC</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      placeholder="HSN/SAC"
+                      aria-label={`HSN or SAC for item ${idx + 1}`}
+                      {...register(`items.${idx}.hsnSacCode`)}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-1 md:space-y-0">
+                    <Label className="text-xs text-muted-foreground md:hidden">Qty</Label>
+                    <Input
+                      className="h-8 text-sm md:text-right"
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                      aria-label={`Quantity for item ${idx + 1}`}
+                      {...register(`items.${idx}.quantity`, { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2 md:space-y-0">
+                    <Label className="text-xs text-muted-foreground md:hidden">Rate</Label>
+                    <Input
+                      className="h-8 text-sm md:text-right"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="0"
+                      aria-label={`Rate for item ${idx + 1}`}
+                      {...register(`items.${idx}.rate`, { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2 md:space-y-0">
+                    <Label className="text-xs text-muted-foreground md:hidden">GST %</Label>
+                    <Controller
+                      control={control}
+                      name={`items.${idx}.gstRate`}
+                      render={({ field: gstField }) => (
+                        <Select
+                          value={String(gstField.value ?? 0)}
+                          onValueChange={(value) => handleGstRateChange(idx, value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm" aria-label={`GST rate for item ${idx + 1}`}>
+                            <SelectValue placeholder="0%" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GST_RATE_OPTIONS.map((rate) => (
+                              <SelectItem key={rate} value={String(rate)}>
+                                {rate}%
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between md:col-span-1 md:block md:text-right md:pr-1">
+                    <span className="text-xs text-muted-foreground md:hidden">Amount</span>
+                    <span className="text-sm font-medium">{fmt(lineAmount)}</span>
+                  </div>
+                  <div className="flex justify-end md:col-span-12 md:-mt-1">
                     <Button
                       type="button"
                       variant="ghost"

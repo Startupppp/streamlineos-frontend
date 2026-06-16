@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   Search, Mail, Phone, Building2,
   ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
-  TableIcon, LayoutGrid, Link2, Download, Sparkles, Twitter, Globe,
+  TableIcon, LayoutGrid, Link2, Download, Sparkles, Twitter, Globe, Plus,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -28,6 +28,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
@@ -96,6 +97,7 @@ export default function ContactsPage() {
 
   const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
   const handleViewCard = useCallback(() => updateParams({ view:"card" }), [updateParams]);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const handleEnrich = useCallback(
     (contact: { id: number; name: string; email: string | null; company: string | null }) => {
@@ -172,6 +174,9 @@ export default function ContactsPage() {
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-2" /> New Contact
+            </Button>
             <CreateContactDialog open={createOpen} onOpenChange={setCreateOpen} />
           </>
         }
@@ -211,10 +216,14 @@ export default function ContactsPage() {
                       <TableBody>
                         {(data?.items ?? []).length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
-                              <EmptyTeamIllustration className="mx-auto mb-3 w-24 h-24" />
-                              <p className="text-sm font-medium text-foreground">No contacts found</p>
-                              <p className="text-xs mt-1">Create your first contact to get started</p>
+                            <TableCell colSpan={9} className="p-0">
+                              <EmptyState
+                                illustration={<EmptyTeamIllustration className="w-28 h-28" />}
+                                title="No contacts found"
+                                description={apiSearch ? "No contacts match your search." : "Create your first contact to get started."}
+                                action={apiSearch ? undefined : { label: "New Contact", onClick: handleOpenCreate }}
+                                className="border-0 bg-transparent min-h-[40vh]"
+                              />
                             </TableCell>
                           </TableRow>
                         ) : data?.items.map(contact => (
@@ -455,11 +464,13 @@ export default function ContactsPage() {
               </motion.div>
 
               {(data?.items.length ?? 0) === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <EmptyTeamIllustration className="mx-auto mb-3 w-36 h-36" />
-                  <p className="text-sm font-medium text-foreground">No contacts found</p>
-                  <p className="text-xs mt-1">Create your first contact to get started</p>
-                </div>
+                <EmptyState
+                  illustration={<EmptyTeamIllustration className="w-36 h-36" />}
+                  title="No contacts found"
+                  description={apiSearch ? "No contacts match your search." : "Create your first contact to get started."}
+                  action={apiSearch ? undefined : { label: "New Contact", onClick: handleOpenCreate }}
+                  className="min-h-[50vh]"
+                />
               )}
 
               {totalPages > 1 && (

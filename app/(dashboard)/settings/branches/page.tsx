@@ -182,6 +182,7 @@ export default function BranchManagementPage() {
           isLoading={isLoading}
           onEdit={setEditingBranch}
           onDelete={setDeletingBranch}
+          onCreate={handleOpenCreate}
         />
       </div>
 
