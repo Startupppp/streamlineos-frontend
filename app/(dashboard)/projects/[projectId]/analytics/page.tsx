@@ -22,7 +22,6 @@ import {
   EstimateVsActualChart,
   STATE_COLORS,
   PRIORITY_COLORS,
-  CHART_COLORS,
 } from "@/features/projects/analytics/project-charts";
 
 export default function AnalyticsPage({
