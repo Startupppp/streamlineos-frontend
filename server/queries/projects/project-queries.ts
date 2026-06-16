@@ -168,12 +168,14 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
     db
       .select({
         assigneeId: tickets.assigneeId,
+        assigneeName: sql<string | null>`COALESCE(NULLIF(TRIM(CONCAT(${users.firstName}, ' ', ${users.lastName})), ''), ${users.name})`,
         total: count(),
         completed: count(sql`CASE WHEN ${tickets.status} = 'DONE' THEN 1 END`),
       })
       .from(tickets)
+      .leftJoin(users, eq(users.id, tickets.assigneeId))
       .where(and(orgFilter, sql`${tickets.assigneeId} IS NOT NULL`))
-      .groupBy(tickets.assigneeId),
+      .groupBy(tickets.assigneeId, users.firstName, users.lastName, users.name),
   ]);
 
   const twelveWeeksAgo = new Date();

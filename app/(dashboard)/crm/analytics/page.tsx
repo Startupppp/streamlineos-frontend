@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Users, DollarSign, Target, Percent } from "lucide-react";
+import { Users, IndianRupee, Target, Percent } from "lucide-react";
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -181,7 +181,7 @@ export default function CrmAnalyticsPage() {
                 isPositive: analyticsSummary.conversionRate >= analyticsSummary.conversionRatePrevPeriod,
               } : undefined}
             />
-            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={DollarSign} index={2} />
+            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={IndianRupee} index={2} />
             <StatCard label="Active Reps" value={analyticsSummary.assignmentDistribution.length} icon={Target} index={3} />
           </motion.div>
         )}

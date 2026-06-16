@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Users, TrendingUp, Building2, BarChart3, Target,
-  ArrowRight, UserPlus, Settings, DollarSign, AlertTriangle,
+  ArrowRight, UserPlus, Settings, IndianRupee, AlertTriangle,
   FileText, Briefcase, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
@@ -127,7 +127,7 @@ export default function CrmHubPage() {
         <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <StatCard label="Total Leads" value={leadStats?.total ?? 0} icon={UserPlus} color="blue" index={0} />
           <StatCard label="Active Deals" value={dealStats?.active ?? 0} icon={Briefcase} color="green" index={1} />
-          <StatCard label="Pipeline Value" value={formatINRCompact(dealStats?.pipelineValue ?? 0)} icon={DollarSign} color="cyan" index={2} />
+          <StatCard label="Pipeline Value" value={formatINRCompact(dealStats?.pipelineValue ?? 0)} icon={IndianRupee} color="cyan" index={2} />
           <StatCard label="Conversion" value={`${leadStats?.conversionRate ?? 0}%`} icon={TrendingUp} color="amber" index={3} />
         </motion.div>
 

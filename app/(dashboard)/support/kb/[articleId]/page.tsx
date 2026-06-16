@@ -53,6 +53,8 @@ import {
   ImageIcon,
   Download,
   History,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import {
   useKbArticle,
@@ -76,6 +78,10 @@ import {
   useKbAttachmentDownloadUrl,
   type KbAttachment,
 } from "@/lib/api/hooks/support/kb-attachments";
+import {
+  useKbIndexStatus,
+  useReindexKbArticle,
+} from "@/lib/api/hooks/support/kb-rag";
 import { getApiError } from "@/lib/api-client";
 import { resolveImageUrl } from "@/lib/utils";
 import { formatFileSize } from "@/lib/format-utils";
@@ -381,10 +387,22 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
   const uploadAttachment = useUploadKbAttachment(article.id);
   const deleteAttachment = useDeleteKbAttachment(article.id);
   const downloadUrl = useKbAttachmentDownloadUrl(article.id);
+  const indexStatus = useKbIndexStatus(article.id);
+  const reindex = useReindexKbArticle();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<KbAttachment | null>(null);
 
   const attachments = attachmentsQuery.data ?? [];
+
+  function handleReindex() {
+    reindex.mutate(article.id, {
+      onSuccess: (result) => {
+        toast.success(`Indexed ${result.chunks} passage${result.chunks === 1 ? "" : "s"} for AI search`);
+        result.warnings.forEach((warning) => toast.warning(warning));
+      },
+      onError: (e) => toast.error(getApiError(e)),
+    });
+  }
 
   function handlePickFile() {
     inputRef.current?.click();
@@ -511,6 +529,36 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
             ))}
           </div>
         )}
+
+        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 space-y-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium leading-none">AI search index</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {indexStatus.isLoading
+                  ? "Checking…"
+                  : indexStatus.data && indexStatus.data.chunks > 0
+                    ? `${indexStatus.data.chunks} passage${indexStatus.data.chunks === 1 ? "" : "s"} indexed`
+                    : "Not indexed yet"}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={handleReindex}
+            disabled={reindex.isPending}
+          >
+            {reindex.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+            )}
+            {reindex.isPending ? "Indexing…" : "Rebuild AI index"}
+          </Button>
+        </div>
       </CardContent>
 
       <AlertDialog

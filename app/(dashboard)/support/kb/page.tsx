@@ -53,6 +53,8 @@ import {
   Pencil,
   Trash2,
   CheckCircle2,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import {
   useKbCategories,
@@ -67,6 +69,8 @@ import {
   type KbArticleStatus,
   type KbArticleVisibility,
 } from "@/lib/api/hooks/support/kb";
+import { KbAskPanel } from "@/components/support/kb-ask-panel";
+import { useReindexAllKb } from "@/lib/api/hooks/support/kb-rag";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -341,6 +345,21 @@ export default function KnowledgeBasePage() {
 
   const deleteCategoryMutation = useDeleteKbCategory();
   const deleteArticleMutation = useDeleteKbArticle();
+  const reindexAll = useReindexAllKb();
+
+  function handleReindexAll() {
+    reindexAll.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(
+          `Indexed ${result.indexed}/${result.total} articles · ${result.totalChunks} passages`,
+        );
+        if (result.failures.length > 0) {
+          toast.warning(`${result.failures.length} article(s) failed to index`);
+        }
+      },
+      onError: (e) => toast.error(getApiError(e)),
+    });
+  }
 
   const categoryNameById = useMemo(() => {
     const map = new Map<number, string>();
@@ -388,6 +407,19 @@ export default function KnowledgeBasePage() {
       subtitle="Author help center articles and organize them into categories."
       actions={
         <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReindexAll}
+            disabled={reindexAll.isPending}
+          >
+            {reindexAll.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-1" />
+            )}
+            {reindexAll.isPending ? "Indexing…" : "Index all for AI"}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setCategoryDialogOpen(true)}>
             <FolderTree className="h-4 w-4 mr-1" /> New Category
           </Button>
@@ -402,6 +434,8 @@ export default function KnowledgeBasePage() {
         <StatCard icon={CheckCircle2} label="Published" value={stats.published} />
         <StatCard icon={Globe} label="Public" value={stats.publicCount} />
       </div>
+
+      <KbAskPanel mode="authed" className="mb-5" />
 
       <Tabs defaultValue="articles">
         <TabsList>

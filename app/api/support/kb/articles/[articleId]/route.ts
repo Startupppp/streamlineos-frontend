@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { kbArticles } from "@/lib/db/schema";
 import { and, eq, ne } from "drizzle-orm";
 import { slugify } from "@/lib/format-utils";
+import { reindexArticleSafe } from "@/lib/services/kb-rag";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -85,6 +86,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       .returning();
 
     if (!updated) return err("Article not found", 404);
+
+    if (input.content !== undefined || input.title !== undefined) {
+      await reindexArticleSafe(session.orgId, articleId);
+    }
+
     return ok(updated);
   });
 }

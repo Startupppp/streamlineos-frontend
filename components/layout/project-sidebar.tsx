@@ -21,7 +21,7 @@ import {
   Inbox,
   User,
   Diamond,
-  DollarSign,
+  IndianRupee,
   Activity,
   PenTool,
 } from "lucide-react";
@@ -72,7 +72,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
         { label: "Agile Reports", icon: Activity, href: `${baseUrl}/reports` },
         { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
-        { label: "Budget", icon: DollarSign, href: `${baseUrl}/budget` },
+        { label: "Budget", icon: IndianRupee, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
       ],

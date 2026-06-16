@@ -9,11 +9,11 @@ import { SalesFunnelChart } from "@/components/charts/sales-funnel-chart";
 import { RevenueVsGoalChart } from "@/components/charts/revenue-vs-goal-chart";
 import { fadeUp, scaleIn } from "@/lib/motion-variants";
 import { sparkColors } from "@/lib/theme-constants";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatCurrency, formatINRCompact } from "@/lib/format-utils";
 import type { SalesFunnelItem, DealsByStage } from "@/types/crm/deals";
 import type { SalesFunnelStageResult, RevenueVsGoalEntryResult } from "@/lib/api/hooks/crm/analytics";
 
-const formatRevenueValue = (v: number) => `$${(v / 1000).toFixed(0)}K`;
+const formatRevenueValue = (v: number) => formatINRCompact(v);
 
 type DatePreset =
   | "all"

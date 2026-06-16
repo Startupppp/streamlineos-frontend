@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, Users, Target, DollarSign } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Target, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -173,7 +173,7 @@ export default function LeadSourceReportPage() {
                             </div>
                             <div className="text-center hidden sm:block">
                               <div className="font-semibold tabular-nums text-xs">
-                                <DollarSign className="h-3 w-3 inline mr-0.5 text-blue-600" />
+                                <IndianRupee className="h-3 w-3 inline mr-0.5 text-blue-600" />
                                 {formatCurrency(s.totalValue)}
                               </div>
                               <div className="text-[10px] text-muted-foreground">value</div>

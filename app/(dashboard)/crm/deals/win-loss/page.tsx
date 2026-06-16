@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, DollarSign } from "lucide-react";
+import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,7 +92,7 @@ export default function WinLossAnalysisPage() {
             label="Won Value"
             value={formatCurrency(s.wonValue)}
             color="blue"
-            icon={DollarSign}
+            icon={IndianRupee}
           />
         </motion.div>
 

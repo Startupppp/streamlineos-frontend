@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { DollarSign, Trophy, TrendingUp, Target, Filter, Users, UserX, Phone, CalendarClock, Mail, MapPin, AlertCircle } from "lucide-react";
+import { IndianRupee, Trophy, TrendingUp, Target, Filter, Users, UserX, Phone, CalendarClock, Mail, MapPin, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -153,7 +153,7 @@ export function SalesKpiCards({
         <MetricCard
           label="Pipeline Value"
           value={formatCurrency(kpiPipeline)}
-          icon={DollarSign}
+          icon={IndianRupee}
           trend={kpiPipelineTrend}
           sparkData={revenueSparkData}
           sparkColor={sparkColors.blue}

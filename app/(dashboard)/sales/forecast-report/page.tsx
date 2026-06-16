@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { TrendingUp, DollarSign, Briefcase, Download } from "lucide-react";
+import { TrendingUp, IndianRupee, Briefcase, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -123,7 +123,7 @@ export default function ForecastReportPage() {
           <StatCard
             label="Best Case Revenue"
             value={fmtCurrency(data.totalBestCase)}
-            icon={DollarSign}
+            icon={IndianRupee}
             color="green"
             index={1}
           />

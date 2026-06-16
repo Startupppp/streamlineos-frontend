@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, IndianRupee } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -52,7 +52,7 @@ export function CrmRecentActivity({ deals }: CrmRecentActivityProps) {
                     isLost ? "bg-red-500/15 text-red-400" :
                     "bg-blue-500/10 text-blue-600",
                   )}>
-                    {isWon ? <TrendingUp className="h-3 w-3" /> : <DollarSign className="h-3 w-3" />}
+                    {isWon ? <TrendingUp className="h-3 w-3" /> : <IndianRupee className="h-3 w-3" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium truncate">{deal.name}</p>

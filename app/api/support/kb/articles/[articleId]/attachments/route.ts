@@ -3,6 +3,7 @@ import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { kbArticles, kbArticleAttachments } from "@/lib/db/schema";
 import { and, eq, desc } from "drizzle-orm";
+import { reindexArticleSafe } from "@/lib/services/kb-rag";
 import { z } from "zod";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -105,6 +106,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         uploadedBy: kbArticleAttachments.uploadedBy,
         createdAt: kbArticleAttachments.createdAt,
       });
+
+    await reindexArticleSafe(session.orgId, articleId);
 
     return ok(inserted, 201);
   });

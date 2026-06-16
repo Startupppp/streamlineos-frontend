@@ -5,7 +5,11 @@ export const accountTypeSchema = z.enum(["ASSET", "LIABILITY", "EQUITY", "INCOME
 
 export const listAccountsQuerySchema = paginationSchema
   .merge(searchSchema)
-  .extend({ type: accountTypeSchema.optional(), activeOnly: z.coerce.boolean().optional() });
+  .extend({
+    pageSize: z.coerce.number().int().min(1).max(1000).default(20),
+    type: accountTypeSchema.optional(),
+    activeOnly: z.coerce.boolean().optional(),
+  });
 
 export const createAccountSchema = z.object({
   code: z.string().min(1).max(20),

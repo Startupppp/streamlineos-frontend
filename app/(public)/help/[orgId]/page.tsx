@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookOpen, Search, FileText, FolderTree, ArrowRight } from "lucide-react";
 import { usePublicKb } from "@/lib/api/hooks/support/kb";
+import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import { getApiError } from "@/lib/api-client";
 
 const CATEGORY_ALL = "all";
@@ -71,6 +72,7 @@ export default function PublicHelpCenterPage() {
       </section>
 
       <div className="mx-auto max-w-4xl px-4 py-8">
+        <KbAskPanel mode="public" orgId={orgId} className="mb-6" />
         {isLoading ? (
           <LoadingState variant="cards" />
         ) : error ? (

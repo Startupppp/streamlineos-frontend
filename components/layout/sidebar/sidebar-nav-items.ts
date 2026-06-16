@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
-  Receipt, FileText, Laptop, Timer, DollarSign, Handshake,
+  Receipt, FileText, Laptop, Timer, IndianRupee, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Package,
@@ -208,7 +208,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Sales", icon: BarChart3, href: "/sales", requiredPermission: "dashboard:sales:view",
         children: [
           { label: "Quotas", icon: Target, href: "/sales/quotas", requiredPermission: "crm:targets:view" },
-          { label: "Commissions", icon: DollarSign, href: "/sales/commissions", requiredPermission: "crm:incentives:read" },
+          { label: "Commissions", icon: IndianRupee, href: "/sales/commissions", requiredPermission: "crm:incentives:read" },
           { label: "Forecast Report", icon: TrendingUp, href: "/sales/forecast-report", requiredPermission: "dashboard:sales:view" },
           { label: "Sales Playbook", icon: BookOpen, href: "/sales/playbook", requiredPermission: "dashboard:sales:view" },
           { label: "Report Narrator", icon: FileSearch, href: "/sales/report-narrator", requiredPermission: "dashboard:sales:view" },

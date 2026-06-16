@@ -6,7 +6,7 @@ import {
   Target,
   Plus,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +106,7 @@ export default function SalesQuotasPage() {
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Total Target" value={fmt(totalTarget)} icon={Target} color="blue" />
-          <StatCard label="Total Actual" value={fmt(totalActual)} icon={DollarSign} color="green" />
+          <StatCard label="Total Actual" value={fmt(totalActual)} icon={IndianRupee} color="green" />
           <StatCard label="Overall Attainment" value={`${overallAttainment}%`} icon={TrendingUp} color={overallAttainment >= 80 ? "green" : overallAttainment >= 50 ? "gold" : "red"} />
         </div>
 

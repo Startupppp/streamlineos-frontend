@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { kbArticleAttachments } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getFileUrl, deleteFile, isStorageConfigured } from "@/lib/storage";
+import { reindexArticleSafe } from "@/lib/services/kb-rag";
 import { logger } from "@/lib/logger";
 
 type RouteContext = {
@@ -68,6 +69,8 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext) {
         });
       }
     }
+
+    await reindexArticleSafe(session.orgId, articleId);
 
     return ok({ success: true });
   });

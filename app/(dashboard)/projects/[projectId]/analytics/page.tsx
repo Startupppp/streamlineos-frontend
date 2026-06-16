@@ -91,11 +91,11 @@ export default function AnalyticsPage({
     return analytics.assigneeCompletion.map(
       (entry: {
         assigneeId: string | null;
+        assigneeName: string | null;
         total: number;
         completed: number;
       }) => ({
-        name:
-          entry.assigneeId != null ? `User ${entry.assigneeId}` : "Unassigned",
+        name: entry.assigneeName ?? "Unassigned",
         completed: entry.completed,
         total: entry.total,
         rate:

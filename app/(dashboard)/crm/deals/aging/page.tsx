@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Clock, AlertTriangle, TrendingDown, DollarSign, ArrowLeft, ExternalLink } from "lucide-react";
+import { Clock, AlertTriangle, TrendingDown, IndianRupee, ArrowLeft, ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -173,7 +173,7 @@ export default function DealAgingPage() {
           <StatCard
             label="Total Value at Risk"
             value={formatINR(stats.totalValue)}
-            icon={DollarSign}
+            icon={IndianRupee}
             color="blue"
             index={3}
           />

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Globe, Image, Clock, DollarSign, CalendarRange, Users, Upload, Palette } from "lucide-react";
+import { Loader2, Globe, Image, Clock, IndianRupee, CalendarRange, Users, Upload, Palette } from "lucide-react";
 
 const CURRENCIES = [
   { value: "USD", label: "USD — US Dollar" },
@@ -222,7 +222,7 @@ export function OrgConfigSection({
 
           <div className="space-y-1.5">
             <Label htmlFor="currency" className="text-sm flex items-center gap-1.5">
-              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <IndianRupee className="h-3.5 w-3.5 text-muted-foreground" />
               Default Currency
             </Label>
             {isEditingConfig ? (

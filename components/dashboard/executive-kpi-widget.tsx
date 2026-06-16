@@ -5,7 +5,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
 import { useAbility } from "@/lib/abilities-context";
 import {
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Target,
   Briefcase,
@@ -62,7 +62,7 @@ export function ExecutiveKpiWidget() {
           <StatCard
             label="MRR (Won)"
             value={fmt(data.mrr)}
-            icon={DollarSign}
+            icon={IndianRupee}
             color="gold"
             index={2}
           />

@@ -5,7 +5,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
 import {
-  DollarSign,
+  IndianRupee,
   FileText,
   AlertCircle,
   CheckCircle2,

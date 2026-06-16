@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Clock, TrendingUp, Pencil } from "lucide-react";
+import { IndianRupee, Clock, TrendingUp, Pencil } from "lucide-react";
 import { useProjectBudget, useUpdateProjectBudget } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 
@@ -81,7 +81,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         <StatCard
           label="Planned Budget"
           value={fmt(budget?.plannedBudget ?? 0)}
-          icon={DollarSign}
+          icon={IndianRupee}
           hint={budget?.plannedBudget ? "Project budget" : "Not set"}
           color="blue"
           index={0}
@@ -97,7 +97,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         <StatCard
           label="Remaining"
           value={fmt(Math.abs(budget?.remaining ?? 0))}
-          icon={DollarSign}
+          icon={IndianRupee}
           hint={overBudget ? "Over budget" : "Available"}
           color={overBudget ? "red" : "green"}
           index={2}
