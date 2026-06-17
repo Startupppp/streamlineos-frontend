@@ -8,6 +8,8 @@ export const assets = pgTable("assets", {
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(),
+  brand: text("brand"),
+  model: text("model"),
   serialNumber: text("serial_number"),
   assignedTo: text("assigned_to").references(() => users.id, { onDelete: "set null" }),
   status: assetStatusEnum("status").default("AVAILABLE").notNull(),

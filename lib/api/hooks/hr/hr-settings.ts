@@ -19,6 +19,7 @@ import type {
   TicketStatus,
   CreateAssetInput,
   UpdateAssetInput,
+  AssignAssetInput,
   CreateDocumentInput,
   CreateGoalInput,
   CreateHelpdeskTicketInput,
@@ -76,6 +77,15 @@ export function useUpdateAsset() {
   return useMutation({
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+  });
+}
+
+export function useAssignAsset() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AssignAssetInput) =>
+      apiClient.patch<{ success: boolean }>("/hr/assets", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
   });
 }

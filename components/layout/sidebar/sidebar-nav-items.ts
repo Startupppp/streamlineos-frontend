@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
-  Receipt, FileText, Laptop, Timer, IndianRupee, Handshake,
+  Receipt, FileText, Timer, IndianRupee, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Package,
@@ -68,9 +68,8 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Handbook", icon: BookOpen, href: "/hr/handbook", requiredPermission: "hr:documents:view" },
         ],
       },
-      { label: "Devices", icon: Laptop, href: "/hr/devices", requiredPermission: "hr:assets:view" },
       {
-        label: "Assets", icon: Package, href: "/hr/assets", requiredPermission: "hr:assets:view",
+        label: "Assets & Devices", icon: Package, href: "/hr/assets", requiredPermission: "hr:assets:view",
         children: [
           { label: "Asset Returns", icon: PackageMinus, href: "/hr/asset-returns", requiredPermission: "hr:assets:manage" },
         ],

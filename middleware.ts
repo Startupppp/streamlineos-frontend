@@ -70,7 +70,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/hr": ["hr:employees:view"],
   "/hr/onboarding": ["hr:employees:create"],
   "/hr/payroll": ["hr:payroll:view"],
-  "/hr/devices": ["hr:assets:view"],
+  "/hr/assets": ["hr:assets:view"],
   "/hr/documents": ["hr:documents:view"],
   "/hr/work-logs": ["self:attendance"],
   "/hr/performance": ["hr:performance:view"],

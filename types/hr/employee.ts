@@ -1,4 +1,4 @@
-export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "DISPOSED";
+export type AssetStatus = "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED";
 export type DocumentType =
   | "CONTRACT"
   | "CERTIFICATE"
@@ -100,6 +100,8 @@ export interface Asset {
   orgId: string;
   name: string;
   type: string;
+  brand: string | null;
+  model: string | null;
   serialNumber: string | null;
   assignedTo: string | null;
   status: AssetStatus | null;
@@ -237,9 +239,9 @@ export interface UpdateProfileInput {
 export interface CreateAssetInput {
   name: string;
   type: string;
-  status?: string;
-  serialNumber?: string;
-  assignedTo?: string;
+  brand: string;
+  model: string;
+  serialNumber: string;
   purchaseDate?: Date | string;
   purchaseCost?: number;
   location?: string;
@@ -250,11 +252,20 @@ export interface UpdateAssetInput {
   assetId: number;
   name?: string;
   type?: string;
+  brand?: string;
+  model?: string;
   serialNumber?: string;
-  assignedTo?: string;
+  assignedTo?: string | null;
   status?: AssetStatus;
+  purchaseDate?: Date | string;
+  purchaseCost?: number;
   location?: string;
   notes?: string;
+}
+
+export interface AssignAssetInput {
+  assetId: number;
+  assignedTo: string | null;
 }
 
 export interface CreateDocumentInput {
