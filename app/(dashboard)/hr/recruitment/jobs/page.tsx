@@ -4,23 +4,17 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/lib/api/hooks/hr";
+import { useJobPostings, useUpdateJobPosting, useDeleteJobPosting, useHrDepartments } from "@/lib/api/hooks/hr";
 import { usePublishJobToBoards, useJobShareLinks } from "@/lib/api/hooks/hr/recruitment";
 import type { JobBoardPlatform, JobShareLinks } from "@/lib/api/hooks/hr/recruitment";
-import { useGenerateJobDescription } from "@/lib/api/hooks/ai";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,7 +27,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, MoreHorizontal, Trash2, Play, Pause, Share2, Sparkles, Loader2, Copy, ExternalLink } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Play, Pause, Share2, Loader2, Copy, ExternalLink } from "lucide-react";
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 
@@ -113,26 +107,13 @@ export default function JobPostingsPage() {
   const { data: jobs, isLoading } = useJobPostings(
     statusFilter ? { status: statusFilter } : undefined
   );
-  const createJob = useCreateJobPosting();
   const updateJob = useUpdateJobPosting();
   const deleteJob = useDeleteJobPosting();
   const publishToBoards = usePublishJobToBoards();
-  const generateJd = useGenerateJobDescription();
 
   const { data: departments } = useHrDepartments();
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [shareJobId, setShareJobId] = useState<number | null>(null);
-  const [title, setTitle] = useState("");
-  const [departmentId, setDepartmentId] = useState<string>("");
-  const [location, setLocation] = useState("");
-  const [type, setType] = useState("FULL_TIME");
-  const [description, setDescription] = useState("");
-  const [openings, setOpenings] = useState("1");
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
-  const [requirements, setRequirements] = useState("");
-  const [applicationDeadline, setApplicationDeadline] = useState("");
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -143,72 +124,6 @@ export default function JobPostingsPage() {
     },
     [searchParams, router]
   );
-
-  const handleCreate = useCallback(() => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) { toast.error("Job Title is required"); return; }
-    if (trimmedTitle.length < 2) { toast.error("Job Title must be at least 2 characters"); return; }
-    if (trimmedTitle.length > 100) { toast.error("Job Title must be at most 100 characters"); return; }
-    if (!/^[a-zA-Z]/.test(trimmedTitle)) { toast.error("Job Title must start with a letter"); return; }
-    if (/[^a-zA-Z0-9\s\-',]/.test(trimmedTitle)) { toast.error("Job Title may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
-    if (/(.)\1{3,}/.test(trimmedTitle)) { toast.error("Job Title cannot have 4 or more consecutive identical characters"); return; }
-    if (/\s{2,}/.test(title)) { toast.error("Job Title cannot have multiple consecutive spaces"); return; }
-    if (title !== title.trim()) { toast.error("Job Title cannot have leading or trailing spaces"); return; }
-
-    const trimmedLocation = location.trim();
-    if (trimmedLocation) {
-      if (trimmedLocation.length < 2) { toast.error("Location must be at least 2 characters"); return; }
-      if (trimmedLocation.length > 100) { toast.error("Location must be at most 100 characters"); return; }
-      if (!/^[a-zA-Z]/.test(trimmedLocation)) { toast.error("Location must start with a letter"); return; }
-      if (/[^a-zA-Z0-9\s\-',]/.test(trimmedLocation)) { toast.error("Location may only contain letters, numbers, hyphens, apostrophes, and commas"); return; }
-      if (/(.)\1{3,}/.test(trimmedLocation)) { toast.error("Location cannot have 4 or more consecutive identical characters"); return; }
-      if (/\s{2,}/.test(location)) { toast.error("Location cannot have multiple consecutive spaces"); return; }
-    }
-
-    const smRaw = salaryMin.trim();
-    const sxRaw = salaryMax.trim();
-    const sm = smRaw ? Number(smRaw) : undefined;
-    const sx = sxRaw ? Number(sxRaw) : undefined;
-    if (smRaw && (isNaN(Number(smRaw)) || !/^\d+$/.test(smRaw))) { toast.error("Minimum salary must be a positive whole number"); return; }
-    if (sxRaw && (isNaN(Number(sxRaw)) || !/^\d+$/.test(sxRaw))) { toast.error("Maximum salary must be a positive whole number"); return; }
-    if (sm !== undefined && sm <= 0) { toast.error("Minimum salary must be greater than 0"); return; }
-    if (sx !== undefined && sx <= 0) { toast.error("Maximum salary must be greater than 0"); return; }
-    if (sm !== undefined && sm > 999_999_999) { toast.error("Minimum salary is too large"); return; }
-    if (sx !== undefined && sx > 999_999_999) { toast.error("Maximum salary is too large"); return; }
-    if (sm !== undefined && sx !== undefined && sm > sx) { toast.error("Minimum salary must be ≤ maximum salary"); return; }
-
-    const isDuplicateJob = (jobs ?? []).some((j) =>
-      j.status !== "CLOSED" &&
-      j.title.trim().toLowerCase() === trimmedTitle.toLowerCase() &&
-      (j.type ?? "") === type &&
-      (j.location ?? "").trim().toLowerCase() === trimmedLocation.toLowerCase()
-    );
-    if (isDuplicateJob) { toast.error("A job posting with this title, type, and location already exists"); return; }
-
-    createJob.mutate(
-      {
-        title: title.trim(),
-        departmentId: departmentId ? Number(departmentId) : undefined,
-        location: location || undefined,
-        type,
-        description: description || undefined,
-        openings: Number(openings) || 1,
-        salaryMin: sm,
-        salaryMax: sx,
-        requirements: requirements.trim() || undefined,
-        applicationDeadline: applicationDeadline || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Job posting created");
-          setSheetOpen(false);
-          setTitle(""); setDepartmentId(""); setLocation(""); setDescription(""); setOpenings("1");
-          setSalaryMin(""); setSalaryMax(""); setRequirements(""); setApplicationDeadline("");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [title, departmentId, location, type, description, openings, salaryMin, salaryMax, requirements, applicationDeadline, createJob, jobs]);
 
   const handleStatusChange = useCallback(
     (id: number, status: JobPostingStatus) => {
@@ -263,126 +178,14 @@ export default function JobPostingsPage() {
       badge={`${jobs?.length ?? 0} jobs`}
       actions={
         <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/recruitment">Back</Link>
-        </Button>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" />New Job</Button></SheetTrigger>
-          <SheetContent className="flex flex-col p-0 gap-0">
-            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-              <SheetTitle className="text-base">Create Job Posting</SheetTitle>
-              <SheetDescription className="text-xs">Add a new position to recruit for.</SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Job Title <span className="text-destructive">*</span></label>
-                <Input placeholder="e.g. Senior React Developer" value={title} onChange={(e) => setTitle(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Department</label>
-                <Select value={departmentId} onValueChange={setDepartmentId}>
-                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                  <SelectContent>
-                    {departments?.map((d) => (
-                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Location</label>
-                <Input placeholder="e.g. Mumbai, Remote" value={location} onChange={(e) => setLocation(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Type</label>
-                  <Select value={type} onValueChange={setType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FULL_TIME">Full Time</SelectItem>
-                      <SelectItem value="PART_TIME">Part Time</SelectItem>
-                      <SelectItem value="CONTRACT">Contract</SelectItem>
-                      <SelectItem value="INTERNSHIP">Internship</SelectItem>
-                      <SelectItem value="FREELANCE">Freelance</SelectItem>
-                      <SelectItem value="TEMPORARY">Temporary</SelectItem>
-                      <SelectItem value="CONSULTANT">Consultant</SelectItem>
-                      <SelectItem value="APPRENTICESHIP">Apprenticeship</SelectItem>
-                      <SelectItem value="COMMISSION_BASED">Commission-Based</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Openings</label>
-                  <Input type="number" min="1" value={openings} onChange={(e) => setOpenings(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Description</label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-xs px-2 gap-1 text-primary"
-                    disabled={!title.trim() || generateJd.isPending}
-                    onClick={() => {
-                      if (!title.trim()) return;
-                      generateJd.mutate(
-                        {
-                          title: title.trim(),
-                          requirements: requirements || undefined,
-                          location: location || undefined,
-                          type,
-                          salaryMin: salaryMin ? Number(salaryMin) : undefined,
-                          salaryMax: salaryMax ? Number(salaryMax) : undefined,
-                        },
-                        {
-                          onSuccess: (data) => {
-                            setDescription(data.description);
-                            toast.success("Job description generated");
-                          },
-                          onError: (e) => toast.error(getErrorMessage(e)),
-                        }
-                      );
-                    }}
-                  >
-                    {generateJd.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    {generateJd.isPending ? "Generating..." : "Generate with AI"}
-                  </Button>
-                </div>
-                <Textarea placeholder="Job description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Min Salary (₹)</label>
-                  <Input inputMode="numeric" placeholder="e.g. 600000" value={salaryMin} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMin(e.target.value); }} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Max Salary (₹)</label>
-                  <Input inputMode="numeric" placeholder="e.g. 1200000" value={salaryMax} onChange={(e) => { if (/^\d*$/.test(e.target.value)) setSalaryMax(e.target.value); }} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Requirements</label>
-                <Textarea placeholder="• 3+ years React experience&#10;• Strong TypeScript skills" value={requirements} onChange={(e) => setRequirements(e.target.value)} rows={4} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Application Deadline</label>
-                <Input type="date" value={applicationDeadline} onChange={(e) => setApplicationDeadline(e.target.value)} />
-              </div>
-            </div>
-            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
-              <Button className="flex-1" onClick={handleCreate} disabled={createJob.isPending}>
-                {createJob.isPending ? "Creating..." : "Create Job"}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/hr/recruitment">Back</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/hr/recruitment/jobs/new">
+              <Plus className="mr-2 h-4 w-4" />New Job
+            </Link>
+          </Button>
         </div>
       }
       filters={
