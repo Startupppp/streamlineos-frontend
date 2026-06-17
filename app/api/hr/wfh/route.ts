@@ -7,9 +7,18 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 const createWfhSchema = z.object({
-  date: z.string(),
+  date: z
+    .string()
+    .min(1, "Date is required")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
+    .refine((v) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selected = new Date(`${v}T00:00:00`);
+      return selected >= today;
+    }, "WFH date cannot be in the past"),
   reason: z.string().optional(),
-  approverId: z.string(),
+  approverId: z.string().min(1, "Approver is required"),
 });
 
 export async function GET() {

@@ -178,3 +178,15 @@ export interface GetMonthlyAttendanceInput {
   year: number;
   month: number;
 }
+
+export interface TeamAttendanceEntry {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  department: string | null;
+  status: "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+  checkIn: string | null;
+  checkOut: string | null;
+  workHours: string | null;
+}

@@ -219,12 +219,12 @@ export const TimerCard = memo(function TimerCard() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
           <Button
             onClick={handleCheckIn}
             disabled={isActive || isPending || isInCooldown}
             variant={isActive ? "secondary" : "default"}
-            className={`font-semibold ${
+            className={`font-semibold flex-1 ${
               !isActive && !isInCooldown
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : ""
@@ -240,23 +240,20 @@ export const TimerCard = memo(function TimerCard() {
               : "Check In"}
           </Button>
 
-          <Button
-            onClick={handleClockAction}
-            disabled={!isActive || isPending}
-            variant={isActive ? "default" : "secondary"}
-            className={`font-semibold ${
-              isActive
-                ? "bg-rose-600 hover:bg-rose-700 text-white"
-                : ""
-            }`}
-          >
-            {checkOutMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <LogOut className="h-4 w-4 mr-2" />
-            )}
-            Check Out
-          </Button>
+          {isActive && (
+            <Button
+              onClick={handleClockAction}
+              disabled={isPending}
+              className="font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {checkOutMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <LogOut className="h-4 w-4 mr-2" />
+              )}
+              Check Out
+            </Button>
+          )}
         </div>
 
         {isActive && (

@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { getAuthenticatedMember } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
 import { logger } from "@/lib/logger";
-import { attendance, organizationMembers } from "@/lib/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { attendance, organizationMembers, departments } from "@/lib/db/schema";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import { organizations } from "@/lib/db/schema/auth";
 import { sendEmail } from "@/lib/email/sender";
 import { getWeeklyAttendanceReportTemplate } from "@/lib/email-templates/reports";
@@ -43,11 +43,20 @@ export async function emailAttendanceReport(
     return { success: false, error: "Duplicate email addresses found across To, CC, and BCC fields" };
   }
 
-  try {
-    const today = new Date();
-    const resolvedStart = startDate ?? formatDateOnly(new Date(today.getFullYear(), today.getMonth(), 1));
-    const resolvedEnd = endDate ?? formatDateOnly(today);
+  const today = new Date();
+  const resolvedStart = startDate ?? formatDateOnly(new Date(today.getFullYear(), today.getMonth(), 1));
+  const resolvedEnd = endDate ?? formatDateOnly(today);
 
+  if (resolvedStart > resolvedEnd) {
+    return { success: false, error: "Start date must be before or equal to end date" };
+  }
+
+  const resolvedEndDate = new Date(`${resolvedEnd}T23:59:59`);
+  if (resolvedEndDate > today) {
+    return { success: false, error: "End date cannot be in the future" };
+  }
+
+  try {
     const members = await db.query.organizationMembers.findMany({
       where: eq(organizationMembers.orgId, orgId),
       with: { user: true },
@@ -57,6 +66,16 @@ export async function emailAttendanceReport(
     const orgName = org?.name ?? "Organization";
 
     const activeMembers = members.filter((m) => m.user?.isActive !== false);
+
+    const deptIds = [...new Set(activeMembers.map((m) => m.user?.departmentId).filter(Boolean))] as number[];
+    const deptMap = new Map<number, string>();
+    if (deptIds.length > 0) {
+      const deptRows = await db
+        .select({ id: departments.id, name: departments.name })
+        .from(departments)
+        .where(inArray(departments.id, deptIds));
+      for (const d of deptRows) deptMap.set(d.id, d.name);
+    }
 
     const allRecords = await db.query.attendance.findMany({
       where: and(
@@ -73,7 +92,14 @@ export async function emailAttendanceReport(
       recordsByUser.set(record.userId, existing);
     }
 
-    const rows: { name: string; totalHours: string; autoCheckoutDays: number; overtimeDays: number; daysPresent: number }[] = [];
+    const rows: {
+      department: string;
+      name: string;
+      totalHours: string;
+      daysPresent: number;
+      overtimeDays: number;
+      autoCheckoutDays: number;
+    }[] = [];
 
     for (const member of activeMembers) {
       const user = member.user;
@@ -92,17 +118,22 @@ export async function emailAttendanceReport(
         uniqueDates.add(record.date);
       }
 
+      if (uniqueDates.size === 0) continue;
+
       const employeeName =
         user.firstName && user.lastName
           ? `${user.firstName} ${user.lastName}`
           : user.name ?? user.email ?? "Unknown";
 
+      const department = user.departmentId ? (deptMap.get(user.departmentId) ?? "—") : "—";
+
       rows.push({
+        department,
         name: employeeName,
         totalHours: totalHours.toFixed(1),
-        autoCheckoutDays,
-        overtimeDays,
         daysPresent: uniqueDates.size,
+        overtimeDays,
+        autoCheckoutDays,
       });
     }
 
@@ -110,7 +141,13 @@ export async function emailAttendanceReport(
       return { success: false, error: "No attendance data found for the selected period" };
     }
 
-    const periodLabel = `${format(new Date(resolvedStart), "MMM dd")} - ${format(new Date(resolvedEnd), "MMM dd, yyyy")}`;
+    rows.sort((a, b) => {
+      if (a.department < b.department) return -1;
+      if (a.department > b.department) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    const periodLabel = `${format(new Date(`${resolvedStart}T00:00:00`), "MMM dd")} - ${format(new Date(`${resolvedEnd}T00:00:00`), "MMM dd, yyyy")}`;
     const subject = `Attendance Report - ${periodLabel}`;
     const html = getWeeklyAttendanceReportTemplate(periodLabel, orgName, rows);
 

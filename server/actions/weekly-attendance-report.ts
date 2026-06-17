@@ -2,8 +2,8 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { attendance, organizationMembers } from "@/lib/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { attendance, organizationMembers, departments } from "@/lib/db/schema";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import { sendWeeklyAttendanceReportEmail } from "@/lib/email";
 import { format, subDays, startOfWeek } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -44,7 +44,18 @@ export async function generateAndSendWeeklyReport() {
 
     if (recipientEmails.length === 0) continue;
 
+    const deptIds = [...new Set(activeMembers.map((m) => m.user?.departmentId).filter(Boolean))] as number[];
+    const deptMap = new Map<number, string>();
+    if (deptIds.length > 0) {
+      const deptRows = await db
+        .select({ id: departments.id, name: departments.name })
+        .from(departments)
+        .where(inArray(departments.id, deptIds));
+      for (const d of deptRows) deptMap.set(d.id, d.name);
+    }
+
     const rows: {
+      department: string;
       name: string;
       totalHours: string;
       autoCheckoutDays: number;
@@ -89,7 +100,10 @@ export async function generateAndSendWeeklyReport() {
           ? `${user.firstName} ${user.lastName}`
           : user.name || user.email;
 
+      const department = user.departmentId ? (deptMap.get(user.departmentId) ?? "—") : "—";
+
       rows.push({
+        department,
         name: employeeName,
         totalHours: totalHours.toFixed(1),
         autoCheckoutDays,
