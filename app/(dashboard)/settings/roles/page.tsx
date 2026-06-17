@@ -214,13 +214,19 @@ interface RoleListItemProps {
 
 function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProps) {
   const handleSelect = useCallback(() => onSelect(role), [role, onSelect]);
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(role); }
+  }, [role, onSelect]);
   const handleDelete = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onDelete(role); }, [role, onDelete]);
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={handleSelect}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
+        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
         isSelected && "bg-muted/50 border-l-2 border-primary"
       )}
     >
@@ -236,7 +242,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProp
           </button>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
