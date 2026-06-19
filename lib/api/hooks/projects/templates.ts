@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 
 export interface ProjectTemplateTicket {
@@ -50,7 +51,7 @@ export interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-const TEMPLATES_KEY = ["streamlineos", "project-templates"] as const;
+const TEMPLATES_KEY = queryKeys.projects.templates();
 
 
 export function useProjectTemplates() {
@@ -88,7 +89,7 @@ export function useApplyProjectTemplate() {
         input,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["streamlineos", "projects"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
   });
 }

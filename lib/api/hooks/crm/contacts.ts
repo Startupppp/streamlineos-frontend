@@ -66,7 +66,7 @@ export function useDeleteContact() {
 
 export function useContactSearch(q: string) {
   return useQuery({
-    queryKey: ["contacts", "search", q],
+    queryKey: queryKeys.contacts.search(q),
     queryFn: () =>
       apiClient.get<ContactSearchResult[]>("/contacts/search", { q }),
     enabled: q.length >= 2,

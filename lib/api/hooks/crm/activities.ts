@@ -183,7 +183,7 @@ export function useLogTargetProgress() {
 
 export function useTerritories() {
   return useQuery({
-    queryKey: ["territories"],
+    queryKey: queryKeys.territories.all,
     queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
     staleTime: 2 * 60_000,
   });
@@ -194,7 +194,7 @@ export function useCreateTerritory() {
   return useMutation({
     mutationFn: (input: CreateTerritoryInput) =>
       apiClient.post<Territory>("/crm/territories", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.territories.all }),
   });
 }
 
@@ -203,7 +203,7 @@ export function useUpdateTerritory() {
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateTerritoryInput) =>
       apiClient.patch<Territory>(`/crm/territories/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.territories.all }),
   });
 }
 
@@ -212,13 +212,13 @@ export function useDeleteTerritory() {
   return useMutation({
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.territories.all }),
   });
 }
 
 export function useCustomFields(entityType: "lead" | "deal" | "contact") {
   return useQuery({
-    queryKey: ["custom-fields", entityType] as const,
+    queryKey: queryKeys.settings.customFields(entityType),
     queryFn: () =>
       apiClient.get<{ fields: CustomFieldDefinition[] }>(
         `/settings/custom-fields?entityType=${entityType}`
@@ -233,7 +233,7 @@ export function useCreateCustomField() {
     mutationFn: (input: CreateCustomFieldInput) =>
       apiClient.post<{ field: CustomFieldDefinition }>("/settings/custom-fields", input),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+      qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });
     },
   });
 }
@@ -244,7 +244,7 @@ export function useUpdateCustomField() {
     mutationFn: ({ id, entityType: _et, ...data }: UpdateCustomFieldInput) =>
       apiClient.patch<{ field: CustomFieldDefinition }>(`/settings/custom-fields/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+      qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });
     },
   });
 }
@@ -255,7 +255,7 @@ export function useDeleteCustomField() {
     mutationFn: ({ id, entityType: _et }: { id: number; entityType: "lead" | "deal" | "contact" }) =>
       apiClient.delete<{ success: boolean }>(`/settings/custom-fields/${id}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+      qc.invalidateQueries({ queryKey: queryKeys.settings.customFields(vars.entityType) });
     },
   });
 }

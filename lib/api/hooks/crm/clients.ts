@@ -327,7 +327,7 @@ export function useClientTimeline(clientId: number) {
 
 export function useSimpleClientsList() {
   return useQuery({
-    queryKey: ["clients", "simple-list"],
+    queryKey: queryKeys.clients.simpleList(),
     queryFn: () => apiClient.get<SimpleClient[]>("/clients/list"),
     staleTime: 2 * 60_000,
   });
@@ -335,7 +335,7 @@ export function useSimpleClientsList() {
 
 export function useClientOpportunities(clientId?: number) {
   return useQuery({
-    queryKey: ["client-opportunities", clientId],
+    queryKey: queryKeys.clientOpportunities.list(clientId),
     queryFn: () =>
       apiClient.get<ClientOpportunity[]>(
         "/clients/opportunities",
@@ -350,7 +350,7 @@ export function useCreateClientOpportunity() {
   return useMutation({
     mutationFn: (input: CreateClientOpportunityInput) =>
       apiClient.post<ClientOpportunity>("/clients/opportunities", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
   });
 }
 
@@ -359,7 +359,7 @@ export function useUpdateClientOpportunity() {
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<CreateClientOpportunityInput> & { id: number }) =>
       apiClient.patch<ClientOpportunity>(`/clients/opportunities/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
   });
 }
 
@@ -367,13 +367,13 @@ export function useDeleteClientOpportunity() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiClient.delete(`/clients/opportunities/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOpportunities.all }),
   });
 }
 
 export function useOnboardingTemplates() {
   return useQuery({
-    queryKey: ["onboarding-templates"],
+    queryKey: queryKeys.clientOnboarding.templates(),
     queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
     staleTime: 2 * 60_000,
   });
@@ -381,7 +381,7 @@ export function useOnboardingTemplates() {
 
 export function useClientOnboardingItems(clientId: number) {
   return useQuery({
-    queryKey: ["onboarding-items", clientId],
+    queryKey: queryKeys.clientOnboarding.items(clientId),
     queryFn: () => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }),
     staleTime: 2 * 60_000,
     enabled: clientId > 0,
@@ -395,7 +395,7 @@ export function useCreateOnboardingItem() {
       clientId: number; title: string; description?: string;
       assignedTo?: string; dueDate?: string; templateId?: number;
     }) => apiClient.post<OnboardingItem>("/clients/onboarding/items", input),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }
 
@@ -406,7 +406,7 @@ export function useToggleOnboardingItem() {
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
         completedAt: completed ? new Date().toISOString() : null,
       }),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }
 
@@ -415,7 +415,7 @@ export function useDeleteOnboardingItem() {
   return useMutation({
     mutationFn: ({ id, clientId: _clientId }: { id: number; clientId: number }) =>
       apiClient.delete(`/clients/onboarding/items/${id}`),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.items(vars.clientId) }),
   });
 }
 
@@ -424,7 +424,7 @@ export function useCreateOnboardingTemplate() {
   return useMutation({
     mutationFn: (input: { name: string; description?: string; isDefault?: boolean }) =>
       apiClient.post<OnboardingTemplate>("/clients/onboarding/templates", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding-templates"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clientOnboarding.templates() }),
   });
 }
 

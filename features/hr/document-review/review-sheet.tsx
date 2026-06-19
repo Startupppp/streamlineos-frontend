@@ -25,6 +25,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface OnboardingDoc {
@@ -53,7 +54,7 @@ interface ReviewSheetProps {
 
 function useEmployeeOnboardingDocs(userId: string | null) {
   return useQuery<OnboardingDoc[]>({
-    queryKey: ["hr", "onboarding-docs", userId],
+    queryKey: queryKeys.hr.onboardingDocs(userId ?? undefined),
     queryFn: () =>
       apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs", { params: { userId } }),
     enabled: !!userId,
@@ -74,7 +75,7 @@ function useReviewDocument() {
     }) =>
       apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, { status, remarks }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hr", "onboarding-docs"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
     },
   });
 }

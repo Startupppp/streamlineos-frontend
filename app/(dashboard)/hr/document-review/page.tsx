@@ -13,11 +13,12 @@ import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-rev
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useAbility } from "@/lib/abilities-context";
 
 function useDocReviewSummary() {
   return useQuery<EmployeeDocSummary[]>({
-    queryKey: ["hr", "onboarding-docs", "summary"],
+    queryKey: queryKeys.hr.onboardingDocsSummary(),
     queryFn: () => apiClient.get<EmployeeDocSummary[]>("/hr/onboarding-docs/summary"),
   });
 }

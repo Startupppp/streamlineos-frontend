@@ -19,7 +19,7 @@ export interface LeadSourceReport {
 
 export function useLeadSourceReport() {
   return useQuery({
-    queryKey: ["leads", "source-report"],
+    queryKey: queryKeys.leads.sourceReport(),
     queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
     staleTime: 2 * 60_000,
   });

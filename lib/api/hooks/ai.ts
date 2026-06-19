@@ -293,7 +293,7 @@ export interface OrgFeatureFlags {
 
 export function useOrgFeatureFlags() {
   return useQuery({
-    queryKey: ["settings", "feature-flags"],
+    queryKey: queryKeys.settings.featureFlags(),
     queryFn: () => apiClient.get<OrgFeatureFlags>("/settings/feature-flags"),
   });
 }
@@ -307,7 +307,7 @@ export function useUpdateFeatureFlag() {
         data,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["settings", "feature-flags"] });
+      qc.invalidateQueries({ queryKey: queryKeys.settings.featureFlags() });
     },
   });
 }
@@ -345,7 +345,7 @@ export interface AiUsageData {
 
 export function useAiUsage() {
   return useQuery({
-    queryKey: ["settings", "ai-usage"],
+    queryKey: queryKeys.settings.aiUsage(),
     queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
   });
 }

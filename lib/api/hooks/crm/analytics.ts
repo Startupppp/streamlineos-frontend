@@ -186,7 +186,7 @@ export function useDealVelocity(filters: Pick<SalesDashboardFilters, "from" | "t
   if (filters.to) params.to = filters.to;
 
   return useQuery({
-    queryKey: ["sales", "velocity", params],
+    queryKey: queryKeys.salesAnalytics.velocity(params),
     queryFn: () => apiClient.get<DealVelocityResult>("/sales/dashboard/velocity", params),
     staleTime: 2 * 60_000,
   });
@@ -194,7 +194,7 @@ export function useDealVelocity(filters: Pick<SalesDashboardFilters, "from" | "t
 
 export function useAgingDeals(thresholdDays = 14) {
   return useQuery({
-    queryKey: ["sales", "aging", thresholdDays],
+    queryKey: queryKeys.salesAnalytics.aging(thresholdDays),
     queryFn: () => apiClient.get<AgingDealResult[]>("/sales/dashboard/aging", { threshold: String(thresholdDays) }),
     staleTime: 5 * 60 * 1000,
   });
@@ -204,7 +204,7 @@ export function useSalesCycleLength(repId?: string) {
   const params: Record<string, string> = {};
   if (repId) params.repId = repId;
   return useQuery({
-    queryKey: ["sales", "cycleLength", repId],
+    queryKey: queryKeys.salesAnalytics.cycleLength(repId),
     queryFn: () => apiClient.get<CycleLengthResult>("/sales/dashboard/cycle-length", params),
     staleTime: 5 * 60 * 1000,
   });
@@ -214,7 +214,7 @@ export function useLostDealAnalysis(repId?: string) {
   const params: Record<string, string> = {};
   if (repId) params.repId = repId;
   return useQuery({
-    queryKey: ["sales", "lostAnalysis", repId],
+    queryKey: queryKeys.salesAnalytics.lostAnalysis(repId),
     queryFn: () => apiClient.get<LostAnalysisResult>("/sales/dashboard/lost-analysis", params),
     staleTime: 5 * 60 * 1000,
   });
@@ -222,7 +222,7 @@ export function useLostDealAnalysis(repId?: string) {
 
 export function useSalesCohort(months = 6) {
   return useQuery({
-    queryKey: ["sales", "cohort", months],
+    queryKey: queryKeys.salesAnalytics.cohort(months),
     queryFn: () => apiClient.get<CohortRow[]>("/sales/dashboard/cohort", { months: String(months) }),
     staleTime: 5 * 60 * 1000,
   });
@@ -230,7 +230,7 @@ export function useSalesCohort(months = 6) {
 
 export function useRepComparison(rep1Id: number | null, rep2Id: number | null) {
   return useQuery({
-    queryKey: ["sales", "repComparison", rep1Id, rep2Id],
+    queryKey: queryKeys.salesAnalytics.repComparison(rep1Id ?? undefined, rep2Id ?? undefined),
     queryFn: () =>
       apiClient.get<{ rep1: RepComparisonData; rep2: RepComparisonData }>(
         "/sales/dashboard/rep-comparison",

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface ProjectMilestone {
   id: number;
@@ -90,7 +91,7 @@ export function useDeleteMilestone(projectId: number) {
 
 export function useProjectBudget(projectId: number) {
   return useQuery({
-    queryKey: ["streamlineos", "projects", projectId, "budget"] as const,
+    queryKey: queryKeys.projects.budget(projectId),
     queryFn: () => apiClient.get<ProjectBudget>(`/projects/${projectId}/budget`),
     enabled: !!projectId,
     staleTime: 60_000,
@@ -102,14 +103,14 @@ export function useUpdateProjectBudget(projectId: number) {
   return useMutation({
     mutationFn: (budget: number) =>
       apiClient.patch<{ id: number; budget: string }>(`/projects/${projectId}/budget`, { budget }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["streamlineos", "projects", projectId, "budget"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),
   });
 }
 
 
 export function useResourceAllocation() {
   return useQuery({
-    queryKey: ["streamlineos", "projects", "resource-allocation"] as const,
+    queryKey: queryKeys.projects.resourceAllocation(),
     queryFn: () => apiClient.get<ResourceAllocationEntry[]>("/projects/resource-allocation"),
     staleTime: 60_000,
   });
