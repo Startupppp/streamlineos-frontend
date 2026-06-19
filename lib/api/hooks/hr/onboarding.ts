@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 
 export interface OnboardingStatus {
@@ -69,7 +70,7 @@ export interface CreateTemplateInput {
 
 export function useOnboardingStatus() {
   return useQuery<OnboardingStatus[]>({
-    queryKey: ["onboarding", "status"],
+    queryKey: queryKeys.hr.onboardingStatus(),
     queryFn: () => apiClient.get<OnboardingStatus[]>("/onboarding"),
   });
 }
@@ -77,7 +78,7 @@ export function useOnboardingStatus() {
 
 export function useUserOnboarding(userId: string) {
   return useQuery<OnboardingTask[]>({
-    queryKey: ["onboarding", "user", userId],
+    queryKey: queryKeys.hr.onboardingUser(userId),
     queryFn: () => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`),
     enabled: !!userId,
   });
@@ -90,7 +91,7 @@ export function useCompleteOnboardingTask() {
     mutationFn: ({ taskId, status }: { taskId: number; status: "COMPLETED" | "PENDING" }) =>
       apiClient.patch<{ success: boolean }>(`/onboarding/tasks/${taskId}`, { status }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["onboarding"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingAll });
     },
   });
 }
@@ -102,7 +103,7 @@ export function useInitiateOnboarding() {
     mutationFn: (userId: string) =>
       apiClient.post<{ success: boolean; tasksCreated: number }>("/onboarding", { userId }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["onboarding", "status"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingStatus() });
     },
   });
 }
@@ -110,7 +111,7 @@ export function useInitiateOnboarding() {
 
 export function useHrOnboardingTemplates() {
   return useQuery<HrOnboardingTemplate[]>({
-    queryKey: ["onboarding", "templates"],
+    queryKey: queryKeys.hr.onboardingTemplates(),
     queryFn: () => apiClient.get<HrOnboardingTemplate[]>("/onboarding/templates"),
   });
 }
@@ -122,7 +123,7 @@ export function useCreateHrOnboardingTemplate() {
     mutationFn: (data: CreateTemplateInput) =>
       apiClient.post<{ success: boolean; templateId: number }>("/onboarding/templates", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["onboarding", "templates"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingTemplates() });
     },
   });
 }

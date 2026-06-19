@@ -74,6 +74,18 @@ export const queryKeys = {
     headcount: (groupBy: string) => [...base, "hr", "headcount", groupBy] as const,
     dashboardOnboardingStatus: () => [...base, "hr", "dashboard", "onboardingStatus"] as const,
     dashboardDiversity: () => [...base, "hr", "dashboard", "diversity"] as const,
+    dashboardTimeToFill: () => [...base, "hr", "dashboard", "timeToFill"] as const,
+    dashboardPayrollSummary: () => [...base, "hr", "dashboard", "payrollSummary"] as const,
+    dashboardSalaryBands: () => [...base, "hr", "dashboard", "salaryBands"] as const,
+    dashboardCompliance: () => [...base, "hr", "dashboard", "compliance"] as const,
+    dashboardAttendanceAnalytics: () => [...base, "hr", "dashboard", "attendanceAnalytics"] as const,
+    directory: () => [...base, "hr", "directory"] as const,
+    onboardingAll: [...base, "hr", "onboarding"] as const,
+    onboardingStatus: () => [...base, "hr", "onboarding", "status"] as const,
+    onboardingUser: (userId: string) => [...base, "hr", "onboarding", "user", userId] as const,
+    onboardingTemplates: () => [...base, "hr", "onboarding", "templates"] as const,
+    candidateSla: (candidateId: number) => [...base, "hr", "candidateSla", candidateId] as const,
+    atsKanban: () => [...base, "hr", "atsKanban"] as const,
   },
 
   leads: {

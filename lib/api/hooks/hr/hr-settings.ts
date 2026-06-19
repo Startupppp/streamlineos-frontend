@@ -388,7 +388,7 @@ export function useChangePassword() {
 
 export function useHrDirectory() {
   return useQuery({
-    queryKey: ["hr", "directory"],
+    queryKey: queryKeys.hr.directory(),
     queryFn: () => apiClient.get<unknown[]>("/hr/directory"),
     staleTime: 2 * 60_000,
   });

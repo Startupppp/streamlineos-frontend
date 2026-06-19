@@ -123,7 +123,7 @@ export interface HrTimeToFill {
 
 export function useHrTimeToFill() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "time-to-fill"] as const,
+    queryKey: queryKeys.hr.dashboardTimeToFill(),
     queryFn: () => apiClient.get<HrTimeToFill>("/hr/dashboard/time-to-fill"),
     staleTime: 300_000,
   });
@@ -141,7 +141,7 @@ export interface HrPayrollSummary {
 
 export function useHrPayrollSummary() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "payroll-summary"] as const,
+    queryKey: queryKeys.hr.dashboardPayrollSummary(),
     queryFn: () => apiClient.get<HrPayrollSummary>("/hr/dashboard/payroll-summary"),
     staleTime: 120_000,
   });
@@ -160,7 +160,7 @@ export interface HrSalaryBands {
 
 export function useHrSalaryBands() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "salary-bands"] as const,
+    queryKey: queryKeys.hr.dashboardSalaryBands(),
     queryFn: () => apiClient.get<HrSalaryBands>("/hr/dashboard/salary-bands"),
     staleTime: 300_000,
   });
@@ -175,7 +175,7 @@ export interface HrCompliance {
 
 export function useHrCompliance() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "compliance"] as const,
+    queryKey: queryKeys.hr.dashboardCompliance(),
     queryFn: () => apiClient.get<HrCompliance>("/hr/dashboard/compliance"),
     staleTime: 120_000,
   });
@@ -195,7 +195,7 @@ export interface HrDashboardAttendanceAnalytics {
 
 export function useHrDashboardAttendanceAnalytics() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "attendance-analytics"] as const,
+    queryKey: queryKeys.hr.dashboardAttendanceAnalytics(),
     queryFn: () => apiClient.get<HrDashboardAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
     staleTime: 60_000,
   });

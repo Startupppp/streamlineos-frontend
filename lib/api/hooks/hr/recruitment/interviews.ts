@@ -316,7 +316,7 @@ export function useUpsertInterviewSla() {
 
 export function useCandidateSla(candidateId: number) {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "candidateSla", candidateId],
+    queryKey: queryKeys.hr.candidateSla(candidateId),
     queryFn: () =>
       apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
     staleTime: 2 * 60_000,
@@ -333,8 +333,8 @@ export function useResetCandidateSla() {
         { stage }
       ),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "candidateSla", vars.candidateId] });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "atsKanban"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateSla(vars.candidateId) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.atsKanban() });
     },
   });
 }
