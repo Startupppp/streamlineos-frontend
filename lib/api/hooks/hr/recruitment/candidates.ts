@@ -79,7 +79,7 @@ export interface RecruitmentAnalytics {
   totalHired: number;
 }
 
-const ATS_KANBAN_KEY = ["streamlineos", "hr", "atsKanban"] as const;
+const ATS_KANBAN_KEY = queryKeys.hr.atsKanban();
 
 export function useCandidates(params?: { status?: string; jobId?: number }) {
   return useQuery({

@@ -183,8 +183,8 @@ export interface BookingLinkResponse {
   expiresAt: string;
 }
 
-const INTERVIEW_SLAS_KEY = ["streamlineos", "hr", "interviewSlas"] as const;
-const SLA_REPORT_KEY = ["streamlineos", "hr", "slaReport"] as const;
+const INTERVIEW_SLAS_KEY = queryKeys.hr.interviewSlas();
+const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 
 export function useInterviews(params?: { candidateId?: number; upcoming?: boolean }) {
   return useQuery({
