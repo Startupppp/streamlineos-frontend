@@ -24,7 +24,7 @@ import {
 import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 
 export default function HRDashboardPage() {
@@ -240,7 +240,7 @@ export default function HRDashboardPage() {
         />
       )}
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Terminate Employee"
@@ -250,7 +250,7 @@ export default function HRDashboardPage() {
             : ""
         }
         confirmLabel="Terminate"
-        variant="destructive"
+        destructive
         onConfirm={handleDelete}
       />
     </PageWrapper>

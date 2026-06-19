@@ -11,7 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TerminationList } from "@/features/hr/termination/termination-list";
 import { TerminationFormSheet } from "@/features/hr/termination/termination-form-sheet";
 import { TerminationDetailSheet } from "@/features/hr/termination/termination-detail-sheet";
@@ -341,13 +341,12 @@ export default function TerminationPage() {
         onInternalNotesChange={handleInternalNotesChange}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={submitId !== null}
         onOpenChange={handleSubmitConfirmClose}
         title="Submit for CEO Approval"
         description="Are you sure you want to submit this termination record for CEO approval? The record will move to PENDING_CEO status."
         confirmLabel="Submit"
-        variant="default"
         onConfirm={handleSubmitForApproval}
         isPending={submitTermination.isPending}
       />
@@ -363,24 +362,23 @@ export default function TerminationPage() {
         onSubmit={handleCeoReviewSubmit}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={emailRecord !== null}
         onOpenChange={handleEmailRecordClose}
         title="Send Termination Email"
         description={`Send termination email to ${emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. Account deactivation will happen when you mark the termination as Complete.`}
         confirmLabel="Send Email"
-        variant="default"
         onConfirm={handleSendEmailConfirm}
         isPending={sendEmail.isPending}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={completeId !== null}
         onOpenChange={handleCompleteIdClose}
         title="Complete Termination"
         description="This will deactivate the employee's account, initiate Full & Final settlement, and create asset return records. This action cannot be undone."
         confirmLabel="Complete Termination"
-        variant="destructive"
+        destructive
         onConfirm={handleCompleteConfirm}
         isPending={completeTermination.isPending}
       />

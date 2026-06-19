@@ -19,7 +19,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -215,13 +215,12 @@ function BonusContent() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={payId !== null}
         onOpenChange={(open) => { if (!open) setPayId(null); }}
         title="Mark Bonus as Paid"
         description="Confirm that this bonus has been disbursed to the employee?"
         confirmLabel="Mark Paid"
-        variant="default"
         onConfirm={handleMarkPaid}
         isPending={markPaid.isPending}
       />

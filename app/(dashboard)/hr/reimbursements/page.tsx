@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Receipt, CheckCircle2, XCircle, DollarSign } from "lucide-react";
@@ -153,13 +153,13 @@ export default function ReimbursementsPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={rejectId !== null}
         onOpenChange={(open) => { if (!open) setRejectId(null); }}
         title="Reject Reimbursement"
         description="Are you sure you want to reject this reimbursement request?"
         confirmLabel="Reject"
-        variant="destructive"
+        destructive
         onConfirm={handleReject}
         isPending={process.isPending}
       />

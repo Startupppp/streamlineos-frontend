@@ -16,7 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
@@ -174,13 +174,12 @@ export default function AssetReturnsPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={returnId !== null}
         onOpenChange={(open) => { if (!open) setReturnId(null); }}
         title="Confirm Return"
         description="Mark this asset as returned in good condition?"
         confirmLabel="Confirm"
-        variant="default"
         onConfirm={handleMarkReturned}
         isPending={markReturned.isPending}
       />

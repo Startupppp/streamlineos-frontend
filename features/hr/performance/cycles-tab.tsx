@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Plus, Calendar, MoreHorizontal, Trash2, Pencil } from "lucide-react";
@@ -199,13 +199,13 @@ export function CyclesTab() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Review Cycle"
         description="Are you sure you want to delete this review cycle? This action cannot be undone."
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         onConfirm={handleDelete}
         isPending={deleteCycle.isPending}
       />

@@ -18,7 +18,7 @@ import {
 import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import type { DocumentTemplate } from "@/lib/api/hooks/hr/document-templates";
 
@@ -185,13 +185,12 @@ export function DefaultStarButton({
         <Star className={cn("h-4 w-4", isCurrentDefault && "fill-amber-500")} />
       </Button>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={confirmOpen}
         onOpenChange={handleConfirmOpenChange}
         title={confirmTitle}
         description={confirmDescription}
         confirmLabel="Confirm"
-        variant="default"
         isPending={isPending}
         onConfirm={handleConfirm}
       />

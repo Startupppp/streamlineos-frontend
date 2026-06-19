@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -168,13 +168,12 @@ export default function SurveysPage() {
         <p className="text-xs text-muted-foreground">A default satisfaction question will be added. Edit questions after creation.</p>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={closeId !== null}
         onOpenChange={handleCloseDialogChange}
         title="Close Survey"
         description="Close this survey? No more responses will be accepted."
         confirmLabel="Close"
-        variant="default"
         onConfirm={handleClose}
         isPending={update.isPending}
       />

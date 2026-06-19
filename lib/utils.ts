@@ -11,10 +11,4 @@ export function resolveImageUrl(image: string | null | undefined): string | unde
   return `/api/storage/image?key=${encodeURIComponent(image)}`;
 }
 
-export function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+export { slugify as generateSlug } from "./format-utils";

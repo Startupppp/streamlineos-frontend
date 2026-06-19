@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -358,13 +358,13 @@ function HandbookContent() {
         />
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Version"
         description="Are you sure you want to delete this handbook version? Drafts can be deleted; published versions must be unpublished first."
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         onConfirm={handleDelete}
         isPending={remove.isPending}
       />

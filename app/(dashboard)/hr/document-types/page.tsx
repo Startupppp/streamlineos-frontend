@@ -10,7 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentTypeList } from "@/features/hr/document-types/document-type-list";
 import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-type-form-dialog";
 
@@ -298,24 +298,23 @@ export default function DocumentTypesPage() {
         onSubmit={handleSubmit}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deactivateTarget !== null}
         onOpenChange={handleDeactivateDialogChange}
         title="Deactivate Document Type"
         description={`Are you sure you want to deactivate "${deactivateTarget?.name}"? It will no longer appear in new onboarding checklists.`}
         confirmLabel="Deactivate"
-        variant="destructive"
+        destructive
         onConfirm={handleDeactivate}
         isPending={deleteMutation.isPending}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={reactivateTarget !== null}
         onOpenChange={handleReactivateDialogChange}
         title="Reactivate Document Type"
         description={`Are you sure you want to reactivate "${reactivateTarget?.name}"? It will appear again in new onboarding checklists.`}
         confirmLabel="Reactivate"
-        variant="default"
         onConfirm={handleReactivate}
         isPending={updateMutation.isPending}
       />

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
+import { logger } from "@/lib/logger";
 
 const MIN_AGE_MS = 16 * 365.25 * 24 * 60 * 60 * 1000;
 
@@ -182,7 +183,7 @@ export async function POST(req: NextRequest) {
         const setupUrl = `${appUrl}/setup-password?token=${setupToken}`;
         await sendWelcomeEmail(newUser.email, `${body.firstName} ${body.lastName}`, setupUrl);
       } catch (emailErr) {
-        console.error("Failed to send setup email", { email: newUser.email, error: emailErr });
+        logger.error("Failed to send setup email", { email: newUser.email, error: emailErr });
       }
     }
 

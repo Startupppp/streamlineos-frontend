@@ -22,7 +22,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -313,13 +313,12 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
         </SheetContent>
       </Sheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={approveDoc !== null}
         onOpenChange={handleCloseApprove}
         title="Approve Document"
         description={`Approve "${approveDoc?.documentTypeName}" submitted by ${userName ?? "this employee"}?`}
         confirmLabel="Approve"
-        variant="default"
         onConfirm={handleApprove}
         isPending={reviewMutation.isPending}
       />

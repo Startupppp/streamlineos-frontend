@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -228,13 +228,13 @@ export function GoalsTab() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Goal"
         description="Are you sure you want to delete this goal? This cannot be undone."
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         onConfirm={handleDelete}
         isPending={deleteGoal.isPending}
       />

@@ -12,6 +12,7 @@ import {
   FAQJsonLd,
 } from "@/features/seo/structured-data";
 import { faqs } from "@/features/landing/data/faqs";
+import { logger } from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: `${BRAND_NAME} — ${BRAND_TAGLINE} | HR, Projects, CRM in one platform`,
@@ -47,7 +48,7 @@ export default async function HomePage() {
       throw error;
     }
     if (process.env.NODE_ENV === "development") {
-      console.warn(
+      logger.warn(
         "[HomePage] Auth not configured — rendering landing only. " +
           "Set NEXTAUTH_SECRET in .env to enable session-aware redirects.",
       );

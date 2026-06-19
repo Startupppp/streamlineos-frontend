@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useSkillsMatrix } from "@/lib/api/hooks/hr";
+import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { LayoutGrid, Table2 } from "lucide-react";
 
@@ -27,10 +28,6 @@ const LEVEL_LABELS: Record<number, string> = {
   5: "Expert",
 };
 
-function getInitials(name: string | null) {
-  if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
-}
 
 export default function SkillsMatrixPage() {
   const { data, isLoading } = useSkillsMatrix();

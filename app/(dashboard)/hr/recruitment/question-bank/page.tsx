@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -159,13 +159,13 @@ export default function QuestionBankPage() {
         onDeleteRequest={handleDeleteRequest}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteTargetId !== null}
         onOpenChange={handleDeleteCancel}
         title="Delete Question"
         description="Are you sure you want to delete this question from the bank? This action cannot be undone."
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         onConfirm={handleDeleteConfirm}
         isPending={deleteQuestion.isPending}
       />

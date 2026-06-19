@@ -62,8 +62,6 @@ import { formatCurrencyFull } from "@/lib/format-utils";
 import type { InvoiceStatus } from "@/types/invoice";
 import type { Invoice } from "@/types/invoice";
 
-const formatCurrency = (amount: number | string) => formatCurrencyFull(amount);
-
 const STATUS_CONFIG: Record<
   string,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }
@@ -153,7 +151,7 @@ export function InvoicesClient() {
             <IndianRupee className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats?.totalOutstanding ?? 0)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyFull(stats?.totalOutstanding ?? 0)}</div>
             <p className="text-xs text-muted-foreground">{(stats?.sent ?? 0) + (stats?.overdue ?? 0)} invoices</p>
           </CardContent>
         </Card>
@@ -163,7 +161,7 @@ export function InvoicesClient() {
             <Check className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats?.totalPaid ?? 0)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyFull(stats?.totalPaid ?? 0)}</div>
             <p className="text-xs text-muted-foreground">{stats?.paid ?? 0} invoices</p>
           </CardContent>
         </Card>
@@ -261,7 +259,7 @@ function InvoiceTableRow({ inv, onUpdateStatus, onDelete }: InvoiceTableRowProps
     <TableRow>
       <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
       <TableCell>{inv.client?.name ?? "—"}</TableCell>
-      <TableCell className="font-semibold">{formatCurrency(inv.total)}</TableCell>
+      <TableCell className="font-semibold">{formatCurrencyFull(inv.total)}</TableCell>
       <TableCell>
         <Badge variant={config.variant} className="gap-1 text-xs">
           <config.icon className="h-3 w-3" />
@@ -334,7 +332,7 @@ function LineItemRow({ item, idx, onUpdate, onRemove, disabled }: LineItemRowPro
       <Input className="col-span-5 h-9 text-sm" placeholder="Description" value={item.description} onChange={handleDescChange} />
       <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Qty" value={item.quantity || ""} onChange={handleQtyChange} />
       <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Rate" value={item.rate || ""} onChange={handleRateChange} />
-      <div className="col-span-2 text-sm font-medium text-right pr-1">{formatCurrency(item.amount)}</div>
+      <div className="col-span-2 text-sm font-medium text-right pr-1">{formatCurrencyFull(item.amount)}</div>
       <Button variant="ghost" size="icon" className="col-span-1 h-8 w-8" onClick={handleRemove} disabled={disabled} aria-label="Remove line item">
         <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>
@@ -438,10 +436,10 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           </div>
 
           <div className="border-t pt-3 space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tax ({taxRate}%)</span><span>{formatCurrency(taxAmount)}</span></div>
-            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-destructive">-{formatCurrency(discount)}</span></div>}
-            <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total</span><span>{formatCurrency(total)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrencyFull(subtotal)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tax ({taxRate}%)</span><span>{formatCurrencyFull(taxAmount)}</span></div>
+            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-destructive">-{formatCurrencyFull(discount)}</span></div>}
+            <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total</span><span>{formatCurrencyFull(total)}</span></div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

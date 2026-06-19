@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Landmark, CheckCircle2, XCircle, Banknote } from "lucide-react";
@@ -143,13 +143,13 @@ export default function LoansPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={rejectId !== null}
         onOpenChange={(open) => { if (!open) setRejectId(null); }}
         title="Reject Loan"
         description="Are you sure you want to reject this loan request?"
         confirmLabel="Reject"
-        variant="destructive"
+        destructive
         onConfirm={handleReject}
         isPending={process.isPending}
       />

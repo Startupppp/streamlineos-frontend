@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import {
@@ -393,7 +393,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={hrApproveId !== null}
         onOpenChange={(open) => {
           if (!open) setHrApproveId(null);
@@ -401,12 +401,11 @@ export default function ExitManagementPage() {
         title="Approve Resignation (HR)"
         description="Are you sure you want to approve this resignation? It will be forwarded to the CEO for final approval."
         confirmLabel="Approve"
-        variant="default"
         onConfirm={handleHrApprove}
         isPending={hrReview.isPending}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={ceoApproveId !== null}
         onOpenChange={(open) => {
           if (!open) setCeoApproveId(null);
@@ -414,7 +413,6 @@ export default function ExitManagementPage() {
         title="Approve Resignation (CEO)"
         description="Are you sure you want to give final approval for this resignation?"
         confirmLabel="Approve"
-        variant="default"
         onConfirm={handleCeoApprove}
         isPending={ceoReview.isPending}
       />
@@ -449,7 +447,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={withdrawId !== null}
         onOpenChange={(open) => {
           if (!open) setWithdrawId(null);
@@ -457,7 +455,7 @@ export default function ExitManagementPage() {
         title="Withdraw Resignation"
         description="Are you sure you want to withdraw your resignation? This action cannot be undone."
         confirmLabel="Withdraw"
-        variant="destructive"
+        destructive
         onConfirm={handleWithdraw}
         isPending={withdrawResignation.isPending}
       />

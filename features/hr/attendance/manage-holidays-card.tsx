@@ -10,7 +10,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday, useUpdateHoliday } from "@/lib/api/hooks/hr";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Pencil, Check, X, PartyPopper } from "lucide-react";
 
@@ -320,24 +320,23 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
         </p>
       </CardContent>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={pendingHoliday !== null}
         onOpenChange={(open) => { if (!open) setPendingHoliday(null); }}
         title="Add Holiday"
         description={pendingHoliday ? `Add "${pendingHoliday.name}" on ${pendingHoliday.date} as a company holiday?` : ""}
         confirmLabel="Add"
-        variant="default"
         onConfirm={handleAddConfirm}
         isPending={addMutation.isPending}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteConfirmId !== null}
         onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}
         title="Remove Holiday"
         description="Are you sure you want to remove this holiday? This action cannot be undone."
         confirmLabel="Remove"
-        variant="destructive"
+        destructive
         onConfirm={handleDeleteConfirm}
         isPending={deleteMutation.isPending}
       />

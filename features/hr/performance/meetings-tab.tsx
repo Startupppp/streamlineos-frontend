@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { resolveImageUrl, cn } from "@/lib/utils";
@@ -205,13 +205,13 @@ export function MeetingsTab() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={handleDeleteDialogChange}
         title="Delete Meeting"
         description="Delete this 1-on-1 meeting?"
         confirmLabel="Delete"
-        variant="destructive"
+        destructive
         onConfirm={handleDelete}
         isPending={deleteMeeting.isPending}
       />

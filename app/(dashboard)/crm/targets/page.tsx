@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { useMyTargets, useTargetLeaderboard, useCreateTarget, useTargetHistory } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
@@ -47,9 +48,6 @@ const RANK_STYLES = [
   { bg: "bg-orange-700/10", border: "border-orange-700/20", text: "text-orange-400", ring: "ring-orange-700/10", bar: "bg-gradient-to-r from-orange-700 to-orange-500", badge: "bg-orange-700 text-white" },
 ];
 
-function getInitials(name: string) {
-  return name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
-}
 
 function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metricType: string }) {
   const { data: history, isLoading } = useTargetHistory(targetId);
