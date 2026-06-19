@@ -430,7 +430,7 @@ export function useCreateOnboardingTemplate() {
 
 export function useCsatSurveys() {
   return useQuery({
-    queryKey: ["csat-surveys"],
+    queryKey: queryKeys.csat.surveys(),
     queryFn: () => apiClient.get<CsatSurvey[]>("/csat"),
     staleTime: 2 * 60_000,
   });
@@ -438,7 +438,7 @@ export function useCsatSurveys() {
 
 export function useCsatSurveyResponses(surveyId: number) {
   return useQuery({
-    queryKey: ["csat-responses", surveyId],
+    queryKey: queryKeys.csat.responses(surveyId),
     queryFn: () => apiClient.get<CsatResponse[]>(`/csat/${surveyId}/responses`),
     staleTime: 2 * 60_000,
     enabled: surveyId > 0,
@@ -450,7 +450,7 @@ export function useCreateCsatSurvey() {
   return useMutation({
     mutationFn: (input: { title: string; question?: string; clientId?: number; scaleMax?: number }) =>
       apiClient.post<CsatSurvey>("/csat", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
   });
 }
 
@@ -459,7 +459,7 @@ export function useUpdateCsatSurvey() {
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; status?: string; title?: string; question?: string }) =>
       apiClient.patch<CsatSurvey>(`/csat/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
   });
 }
 
@@ -467,13 +467,13 @@ export function useDeleteCsatSurvey() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiClient.delete(`/csat/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.csat.all }),
   });
 }
 
 export function useSlaCompliance() {
   return useQuery({
-    queryKey: ["sla", "compliance"],
+    queryKey: queryKeys.sla.compliance(),
     queryFn: () => apiClient.get<SlaStats>("/customer-executive/sla"),
     staleTime: 5 * 60 * 1000,
   });

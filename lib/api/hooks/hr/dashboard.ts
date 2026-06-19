@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface HrDashboardMetrics {
   totalEmployees: number;
@@ -43,7 +44,7 @@ export interface HrHeadcountGroup {
 
 export function useHrDashboardMetrics() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "metrics"] as const,
+    queryKey: queryKeys.hr.dashboardMetrics(),
     queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
     staleTime: 60_000,
   });
@@ -51,7 +52,7 @@ export function useHrDashboardMetrics() {
 
 export function useHrHeadcountTrends() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "headcount-trends"] as const,
+    queryKey: queryKeys.hr.headcountTrends(),
     queryFn: () => apiClient.get<HrHeadcountTrends>("/hr/dashboard/headcount-trends"),
     staleTime: 120_000,
   });
@@ -64,7 +65,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   const qs = params.toString();
 
   return useQuery({
-    queryKey: ["streamlineos", "hr", "leave-calendar", month, year] as const,
+    queryKey: queryKeys.hr.leaveCalendar(month ?? 0, year ?? 0),
     queryFn: () =>
       apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`),
     staleTime: 60_000,
@@ -73,7 +74,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
 
 export function useHrHeadcount(groupBy: "department" | "role" | "branch" = "department") {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "headcount", groupBy] as const,
+    queryKey: queryKeys.hr.headcount(groupBy),
     queryFn: () =>
       apiClient.get<HrHeadcountGroup[]>(`/hr/headcount?groupBy=${groupBy}`),
     staleTime: 120_000,
@@ -96,7 +97,7 @@ export interface HrOnboardingStatus {
 
 export function useHrOnboardingStatus() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "onboarding-status"] as const,
+    queryKey: queryKeys.hr.dashboardOnboardingStatus(),
     queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
     staleTime: 60_000,
   });
@@ -109,7 +110,7 @@ export interface HrDiversityMetrics {
 
 export function useHrDiversityMetrics() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "diversity"] as const,
+    queryKey: queryKeys.hr.dashboardDiversity(),
     queryFn: () => apiClient.get<HrDiversityMetrics>("/hr/dashboard/diversity"),
     staleTime: 300_000,
   });

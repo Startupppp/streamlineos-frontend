@@ -127,7 +127,7 @@ export function useUpdateDeal() {
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
-      qc.invalidateQueries({ queryKey: ["deals", "win-loss"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.winLoss() });
     },
   });
 }
@@ -158,7 +158,7 @@ export function useUpdateDealStage() {
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.deals.stats() });
       qc.invalidateQueries({ queryKey: queryKeys.deals.forecast() });
-      qc.invalidateQueries({ queryKey: ["deals", "win-loss"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.winLoss() });
     },
   });
 }
@@ -216,7 +216,7 @@ export function useLogDealActivity() {
 
 export function useDealMeetings(dealId: number) {
   return useQuery({
-    queryKey: ["deals", dealId, "meetings"],
+    queryKey: queryKeys.deals.meetings(dealId),
     queryFn: () => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
@@ -229,7 +229,7 @@ export function useCreateDealMeeting(dealId: number) {
     mutationFn: (input: CreateDealMeetingInput) =>
       apiClient.post<DealMeeting>(`/deals/${dealId}/meetings`, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
     },
   });
 }
@@ -240,7 +240,7 @@ export function useUpdateDealMeeting(dealId: number) {
     mutationFn: ({ meetingId, ...data }: Partial<CreateDealMeetingInput> & { meetingId: number }) =>
       apiClient.patch<DealMeeting>(`/deals/${dealId}/meetings/${meetingId}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
     },
   });
 }
@@ -251,14 +251,14 @@ export function useDeleteDealMeeting(dealId: number) {
     mutationFn: (meetingId: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/meetings/${meetingId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.meetings(dealId) });
     },
   });
 }
 
 export function useWinLossAnalysis() {
   return useQuery({
-    queryKey: ["deals", "win-loss"],
+    queryKey: queryKeys.deals.winLoss(),
     queryFn: () => apiClient.get<WinLossAnalysis>("/deals/win-loss"),
     staleTime: 2 * 60_000,
   });

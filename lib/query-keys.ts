@@ -64,6 +64,16 @@ export const queryKeys = {
     documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
     candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,
     rolloutDocuments: (candidateId: number) => [...base, "hr", "rolloutDocuments", candidateId] as const,
+    leavesMyOwn: () => [...base, "hr", "leaves", "my"] as const,
+    leavesTeam: () => [...base, "hr", "leaves", "team"] as const,
+    leavesThisWeek: () => [...base, "hr", "leavesThisWeek"] as const,
+    leavesMyRequests: () => [...base, "hr", "leavesMyRequests"] as const,
+    dashboardMetrics: () => [...base, "hr", "dashboard", "metrics"] as const,
+    headcountTrends: () => [...base, "hr", "dashboard", "headcountTrends"] as const,
+    leaveCalendar: (month: number, year: number) => [...base, "hr", "leaveCalendar", month, year] as const,
+    headcount: (groupBy: string) => [...base, "hr", "headcount", groupBy] as const,
+    dashboardOnboardingStatus: () => [...base, "hr", "dashboard", "onboardingStatus"] as const,
+    dashboardDiversity: () => [...base, "hr", "dashboard", "diversity"] as const,
   },
 
   leads: {
@@ -89,6 +99,8 @@ export const queryKeys = {
     forecast: () => [...base, "deals", "forecast"] as const,
     stats: () => [...base, "deals", "stats"] as const,
     aging: () => [...base, "deals", "aging"] as const,
+    winLoss: () => [...base, "deals", "winLoss"] as const,
+    meetings: (dealId: number) => [...base, "deals", "meetings", dealId] as const,
   },
 
   contacts: {
@@ -477,6 +489,17 @@ export const queryKeys = {
   webhooks: {
     all: [...base, "webhooks"] as const,
     list: () => [...base, "webhooks", "list"] as const,
+  },
+
+  csat: {
+    all: [...base, "csat"] as const,
+    surveys: () => [...base, "csat", "surveys"] as const,
+    responses: (surveyId: number) => [...base, "csat", "responses", surveyId] as const,
+  },
+
+  sla: {
+    all: [...base, "sla"] as const,
+    compliance: () => [...base, "sla", "compliance"] as const,
   },
 
   mfa: {

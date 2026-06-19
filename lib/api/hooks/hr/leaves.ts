@@ -92,7 +92,7 @@ export function useRequestLeave() {
       apiClient.post<{ success: boolean }>("/hr/leaves", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
     },
   });
 }
@@ -108,7 +108,7 @@ export function useApproveLeave() {
 
 export function useHrMyLeaves() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "leaves", "my"] as const,
+    queryKey: queryKeys.hr.leavesMyOwn(),
     queryFn: () =>
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",
@@ -119,7 +119,7 @@ export function useHrMyLeaves() {
 
 export function useHrTeamLeaves() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
+    queryKey: queryKeys.hr.leavesTeam(),
     queryFn: () =>
       apiClient.get<{ pending: unknown[]; all: unknown[] }>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
@@ -135,9 +135,9 @@ export function useApproveLeaveDedicated() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesThisWeek"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesThisWeek() });
     },
   });
 }
@@ -160,8 +160,8 @@ export function useRejectLeaveDedicated() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
     },
   });
 }
@@ -173,7 +173,7 @@ export function useCancelLeave() {
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
     },
   });
 }
@@ -187,8 +187,8 @@ export function useRevertLeave() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leaves", "team"] });
-      qc.invalidateQueries({ queryKey: ["streamlineos", "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesTeam() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leavesMyRequests() });
     },
   });
 }
@@ -203,7 +203,7 @@ export function useHrLeaveContext() {
 
 export function useHrLeaveApprovals() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "leaves", "team"] as const,
+    queryKey: queryKeys.hr.leavesTeam(),
     queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/team"),
     staleTime: 2 * 60_000,
   });
@@ -211,7 +211,7 @@ export function useHrLeaveApprovals() {
 
 export function useHrLeavesThisWeek() {
   return useQuery({
-    queryKey: [...["streamlineos"], "hr", "leavesThisWeek"] as const,
+    queryKey: queryKeys.hr.leavesThisWeek(),
     queryFn: () => apiClient.get<unknown[]>("/hr/leaves/this-week"),
     staleTime: 2 * 60_000,
   });
@@ -219,7 +219,7 @@ export function useHrLeavesThisWeek() {
 
 export function useHrMyLeaveRequests() {
   return useQuery({
-    queryKey: [...["streamlineos"], "hr", "leavesMyRequests"] as const,
+    queryKey: queryKeys.hr.leavesMyRequests(),
     queryFn: () =>
       apiClient.get<{ requests: unknown[]; balances: unknown[] }>(
         "/hr/leaves/my",
