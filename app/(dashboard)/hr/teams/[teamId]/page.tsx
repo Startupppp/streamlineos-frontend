@@ -11,6 +11,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { ArrowLeft } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
@@ -18,7 +19,7 @@ import type { TeamDetail } from "@/app/api/hr/teams/[teamId]/route";
 
 function useTeamDetail(teamId: string) {
   return useQuery({
-    queryKey: ["hr", "teams", teamId] as const,
+    queryKey: queryKeys.hr.teams(teamId),
     queryFn: () => apiClient.get<TeamDetail>(`/hr/teams/${teamId}`),
     enabled: !!teamId,
   });

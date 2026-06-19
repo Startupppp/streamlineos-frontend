@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +46,7 @@ interface AgingResponse {
 
 function useDealAging() {
   return useQuery<AgingResponse>({
-    queryKey: ["deals", "aging"],
+    queryKey: queryKeys.deals.aging(),
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
     refetchInterval: 300_000,
   });

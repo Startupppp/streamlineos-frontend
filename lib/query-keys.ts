@@ -53,6 +53,11 @@ export const queryKeys = {
     oneOnOnes: (params?: Record<string, unknown>) => [...base, "hr", "oneOnOnes", params] as const,
     terminations: () => [...base, "hr", "terminations"] as const,
     termination: (id: number) => [...base, "hr", "termination", id] as const,
+    documentTypes: () => [...base, "hr", "documentTypes"] as const,
+    onboardingDocs: (userId?: string) => [...base, "hr", "onboardingDocs", userId] as const,
+    myOnboardingDocs: () => [...base, "hr", "myOnboardingDocs"] as const,
+    teams: (teamId?: string) => [...base, "hr", "teams", teamId] as const,
+    diversityReport: () => [...base, "hr", "diversityReport"] as const,
     documentTemplates: (params?: Record<string, unknown>) => [...base, "hr", "documentTemplates", params] as const,
     documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
     candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,
@@ -80,6 +85,7 @@ export const queryKeys = {
     detail: (id: number) => [...base, "deals", "detail", id] as const,
     forecast: () => [...base, "deals", "forecast"] as const,
     stats: () => [...base, "deals", "stats"] as const,
+    aging: () => [...base, "deals", "aging"] as const,
   },
 
   contacts: {
@@ -448,6 +454,11 @@ export const queryKeys = {
   supportRouting: {
     all: [...base, "supportRouting"] as const,
     list: () => [...base, "supportRouting", "list"] as const,
+  },
+
+  webhooks: {
+    all: [...base, "webhooks"] as const,
+    list: () => [...base, "webhooks", "list"] as const,
   },
 
 } as const;

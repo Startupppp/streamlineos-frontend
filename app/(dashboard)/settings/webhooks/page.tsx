@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
 const AVAILABLE_EVENTS = [
@@ -66,7 +67,7 @@ interface CreateWebhookInput {
 
 function useWebhooks() {
   return useQuery({
-    queryKey: ["webhooks"],
+    queryKey: queryKeys.webhooks.all,
     queryFn: () => apiClient.get<WebhookEndpoint[]>("/webhooks"),
   });
 }
@@ -75,7 +76,7 @@ function useCreateWebhook() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateWebhookInput) => apiClient.post<WebhookEndpoint>("/webhooks", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
@@ -84,7 +85,7 @@ function useToggleWebhook() {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch(`/webhooks/${id}`, { isActive }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
@@ -92,7 +93,7 @@ function useDeleteWebhook() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 

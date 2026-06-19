@@ -23,6 +23,7 @@ import { EmptyUploadIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface DocumentType {
@@ -52,14 +53,14 @@ interface OnboardingDoc {
 
 function useMyOnboardingDocs() {
   return useQuery<OnboardingDoc[]>({
-    queryKey: ["hr", "my-onboarding-docs"],
+    queryKey: queryKeys.hr.myOnboardingDocs(),
     queryFn: () => apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs"),
   });
 }
 
 function useDocumentTypes() {
   return useQuery<DocumentType[]>({
-    queryKey: ["hr", "document-types"],
+    queryKey: queryKeys.hr.documentTypes(),
     queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
   });
 }
@@ -70,7 +71,7 @@ function useSubmitOnboardingDoc() {
     mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
       apiClient.post("/hr/onboarding-docs", body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hr", "my-onboarding-docs"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
     },
   });
 }

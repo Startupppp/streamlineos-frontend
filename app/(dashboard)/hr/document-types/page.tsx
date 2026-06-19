@@ -15,6 +15,7 @@ import { DocumentTypeList } from "@/features/hr/document-types/document-type-lis
 import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-type-form-dialog";
 
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -32,7 +33,7 @@ interface DocumentType {
 
 function useDocumentTypes() {
   return useQuery<DocumentType[]>({
-    queryKey: ["hr", "document-types"],
+    queryKey: queryKeys.hr.documentTypes(),
     queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
   });
 }
@@ -50,7 +51,7 @@ function useCreateDocumentType() {
       return apiClient.post("/hr/document-types", body);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hr", "document-types"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
   });
 }
@@ -73,7 +74,7 @@ function useUpdateDocumentType() {
       return apiClient.patch(`/hr/document-types/${id}`, body);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hr", "document-types"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
   });
 }
@@ -85,7 +86,7 @@ function useDeleteDocumentType() {
       return apiClient.patch(`/hr/document-types/${id}`, { isActive: false });
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hr", "document-types"] });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
   });
 }

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +22,7 @@ interface DiversityReport {
 
 function useDiversityReport() {
   return useQuery<DiversityReport>({
-    queryKey: ["hr", "diversityReport"],
+    queryKey: queryKeys.hr.diversityReport(),
     queryFn: () => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report"),
     staleTime: 5 * 60 * 1000,
   });
