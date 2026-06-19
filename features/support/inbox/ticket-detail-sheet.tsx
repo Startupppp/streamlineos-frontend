@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 import { SupportActivityLog } from "@/components/support/support-activity-log";
 import type { SupportTicketStatus } from "@/types/support";
 
@@ -106,9 +107,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
           const fd = new FormData();
           fd.append("file", file);
           fd.append("folder", "support-attachments");
-          const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
-          const json = (await res.json()) as { url?: string; error?: string };
-          if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+          const json = await apiClient.upload<{ url: string }>("/api/storage/upload", fd);
           uploaded.push({
             fileName: file.name,
             fileUrl: json.url,

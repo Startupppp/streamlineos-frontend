@@ -169,3 +169,35 @@ export function workingDaysBetween(start: Date, end: Date): number {
   }
   return count;
 }
+
+export function subDays(date: Date | string, days: number): Date {
+  return addDays(date, -days);
+}
+
+export function startOfWeek(date: Date | string): Date {
+  const d = new Date(toDate(date));
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+export function endOfWeek(date: Date | string): Date {
+  const start = startOfWeek(date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+export function getAgeInYears(dob: Date | string): number {
+  const birth = toDate(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}

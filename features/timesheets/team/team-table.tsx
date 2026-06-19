@@ -126,9 +126,6 @@ export const TeamTable = memo(function TeamTable({
   onEntryClick,
   onExportCSV,
 }: TeamTableProps) {
-  const handlePrevPage = useCallback(() => onPageChange((p) => Math.max(1, p - 1)), [onPageChange]);
-  const handleNextPage = useCallback(() => onPageChange((p) => p + 1), [onPageChange]);
-
   return (
     <Card>
       <CardHeader className="pb-3 border-b">

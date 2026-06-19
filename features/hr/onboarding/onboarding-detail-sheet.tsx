@@ -162,12 +162,7 @@ function UploadSheet({
       const fd = new FormData();
       fd.append("file", selectedFile);
       fd.append("folder", "onboarding-docs");
-      const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
-      const json = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !json.url) {
-        toast.error(json.error ?? "File upload failed");
-        return;
-      }
+      const json = await apiClient.upload<{ url: string }>("/api/storage/upload", fd);
       onSubmit(json.url, selectedFile.name);
     } catch {
       toast.error("File upload failed");

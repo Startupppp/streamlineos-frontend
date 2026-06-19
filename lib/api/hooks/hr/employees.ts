@@ -52,7 +52,7 @@ export function useUpdateProfile() {
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
   });
 }
 
@@ -62,7 +62,7 @@ export function useTerminateEmployee() {
     mutationFn: (userId: string) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, { isActive: false }),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
   });
 }
 

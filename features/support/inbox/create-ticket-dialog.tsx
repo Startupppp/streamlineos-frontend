@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
 import type { SupportTicketPriority } from "@/types/support";
 
 const TICKET_CATEGORIES = [
@@ -139,9 +140,7 @@ export function CreateTicketDialog({ open, onOpenChange }: CreateTicketDialogPro
           const fd = new FormData();
           fd.append("file", file);
           fd.append("folder", "support-attachments");
-          const res = await fetch("/api/storage/upload", { method: "POST", body: fd });
-          const json = (await res.json()) as { url?: string; error?: string };
-          if (!res.ok || !json.url) throw new Error(json.error ?? "Upload failed");
+          const json = await apiClient.upload<{ url: string }>("/api/storage/upload", fd);
           uploaded.push({
             fileName: file.name,
             fileUrl: json.url,
