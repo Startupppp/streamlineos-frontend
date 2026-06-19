@@ -34,6 +34,39 @@ export const CATEGORIES = [
   "CULTURE_FIT",
 ];
 export const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
+export const QUESTION_MAX_LENGTH = 300;
+export const SAMPLE_ANSWER_MAX_LENGTH = 200;
+export const TAGS_MAX_COUNT = 5;
+export const KEYWORDS_MAX_COUNT = 5;
+
+export function countCommaSeparatedItems(value: string): number {
+  return value.split(",").map((t) => t.trim()).filter(Boolean).length;
+}
+
+function clampCommaSeparatedInput(value: string, max: number): string {
+  const parts = value.split(",");
+  const out: string[] = [];
+  let itemCount = 0;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const trimmed = part.trim();
+    const isLast = i === parts.length - 1;
+
+    if (trimmed && !isLast) {
+      if (itemCount >= max) break;
+      itemCount++;
+      out.push(part);
+    } else if (isLast) {
+      if (itemCount >= max && trimmed) break;
+      out.push(part);
+    } else {
+      out.push(part);
+    }
+  }
+
+  return out.join(",");
+}
 
 interface RolePickerProps {
   value: string;
@@ -149,6 +182,46 @@ export function QuestionFormBody({
     onRolePickerOpenChange(false);
   }, [setForm, onRolePickerOpenChange]);
 
+  const handleQuestionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value.slice(0, QUESTION_MAX_LENGTH);
+      setForm((f) => ({ ...f, question: value }));
+    },
+    [setForm]
+  );
+
+  const questionLength = form.question.length;
+
+  const handleSampleAnswerChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value.slice(0, SAMPLE_ANSWER_MAX_LENGTH);
+      setForm((f) => ({ ...f, sampleAnswer: value }));
+    },
+    [setForm]
+  );
+
+  const sampleAnswerLength = form.sampleAnswer.length;
+
+  const handleTagsChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = clampCommaSeparatedInput(e.target.value, TAGS_MAX_COUNT);
+      setForm((f) => ({ ...f, tags: value }));
+    },
+    [setForm]
+  );
+
+  const tagsCount = countCommaSeparatedItems(form.tags);
+
+  const handleKeywordsChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = clampCommaSeparatedInput(e.target.value, KEYWORDS_MAX_COUNT);
+      setForm((f) => ({ ...f, keywords: value }));
+    },
+    [setForm]
+  );
+
+  const keywordsCount = countCommaSeparatedItems(form.keywords);
+
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
       <div className="space-y-2">
@@ -156,9 +229,24 @@ export function QuestionFormBody({
         <Textarea
           placeholder="e.g. Tell me about a time you handled a conflict..."
           value={form.question}
-          onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
+          onChange={handleQuestionChange}
           rows={4}
+          maxLength={QUESTION_MAX_LENGTH}
+          aria-describedby="question-char-count"
         />
+        <p
+          id="question-char-count"
+          className={cn(
+            "text-[10px] text-right tabular-nums",
+            questionLength >= QUESTION_MAX_LENGTH
+              ? "text-destructive"
+              : questionLength >= QUESTION_MAX_LENGTH - 30
+                ? "text-amber-600"
+                : "text-muted-foreground"
+          )}
+        >
+          {questionLength}/{QUESTION_MAX_LENGTH} characters
+        </p>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -222,8 +310,22 @@ export function QuestionFormBody({
         <Input
           placeholder="e.g. leadership, problem-solving"
           value={form.tags}
-          onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+          onChange={handleTagsChange}
+          aria-describedby="tags-count"
         />
+        <p
+          id="tags-count"
+          className={cn(
+            "text-[10px] text-right tabular-nums",
+            tagsCount >= TAGS_MAX_COUNT
+              ? "text-destructive"
+              : tagsCount >= TAGS_MAX_COUNT - 1
+                ? "text-amber-600"
+                : "text-muted-foreground"
+          )}
+        >
+          {tagsCount}/{TAGS_MAX_COUNT} tags
+        </p>
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">
@@ -233,9 +335,24 @@ export function QuestionFormBody({
         <Textarea
           placeholder="Describe what an ideal answer would include..."
           value={form.sampleAnswer}
-          onChange={(e) => setForm((f) => ({ ...f, sampleAnswer: e.target.value }))}
+          onChange={handleSampleAnswerChange}
           rows={4}
+          maxLength={SAMPLE_ANSWER_MAX_LENGTH}
+          aria-describedby="sample-answer-char-count"
         />
+        <p
+          id="sample-answer-char-count"
+          className={cn(
+            "text-[10px] text-right tabular-nums",
+            sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH
+              ? "text-destructive"
+              : sampleAnswerLength >= SAMPLE_ANSWER_MAX_LENGTH - 20
+                ? "text-amber-600"
+                : "text-muted-foreground"
+          )}
+        >
+          {sampleAnswerLength}/{SAMPLE_ANSWER_MAX_LENGTH} characters
+        </p>
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium">
@@ -245,8 +362,22 @@ export function QuestionFormBody({
         <Input
           placeholder="e.g. ownership, collaboration, metrics"
           value={form.keywords}
-          onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+          onChange={handleKeywordsChange}
+          aria-describedby="keywords-count"
         />
+        <p
+          id="keywords-count"
+          className={cn(
+            "text-[10px] text-right tabular-nums",
+            keywordsCount >= KEYWORDS_MAX_COUNT
+              ? "text-destructive"
+              : keywordsCount >= KEYWORDS_MAX_COUNT - 1
+                ? "text-amber-600"
+                : "text-muted-foreground"
+          )}
+        >
+          {keywordsCount}/{KEYWORDS_MAX_COUNT} keywords
+        </p>
       </div>
     </div>
   );

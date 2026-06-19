@@ -21,7 +21,16 @@ import {
   type InterviewQuestion,
 } from "@/lib/api/hooks/hr/recruitment";
 
-import { QuestionFormBody, CATEGORIES, DIFFICULTIES } from "./question-form-body";
+import {
+  QuestionFormBody,
+  CATEGORIES,
+  DIFFICULTIES,
+  QUESTION_MAX_LENGTH,
+  SAMPLE_ANSWER_MAX_LENGTH,
+  TAGS_MAX_COUNT,
+  KEYWORDS_MAX_COUNT,
+  countCommaSeparatedItems,
+} from "./question-form-body";
 
 export { CATEGORIES, DIFFICULTIES };
 
@@ -51,7 +60,19 @@ function validateForm(form: QuestionFormState): string | null {
   const trimmedQ = form.question.trim();
   if (!trimmedQ) return "Question text is required";
   if (trimmedQ.length < 10) return "Question must be at least 10 characters";
-  if (trimmedQ.length > 1000) return "Question must be at most 1000 characters";
+  if (trimmedQ.length > QUESTION_MAX_LENGTH) {
+    return `Question must be at most ${QUESTION_MAX_LENGTH} characters`;
+  }
+  const trimmedSample = form.sampleAnswer.trim();
+  if (trimmedSample.length > SAMPLE_ANSWER_MAX_LENGTH) {
+    return `Sample answer must be at most ${SAMPLE_ANSWER_MAX_LENGTH} characters`;
+  }
+  if (countCommaSeparatedItems(form.tags) > TAGS_MAX_COUNT) {
+    return `You can add at most ${TAGS_MAX_COUNT} tags`;
+  }
+  if (countCommaSeparatedItems(form.keywords) > KEYWORDS_MAX_COUNT) {
+    return `You can add at most ${KEYWORDS_MAX_COUNT} keywords`;
+  }
   return null;
 }
 
@@ -71,9 +92,9 @@ function parseFormPayload(form: QuestionFormState) {
     category: form.category,
     difficulty: form.difficulty,
     role: form.role.trim() || undefined,
-    tags: [...new Set(rawTags)],
+    tags: [...new Set(rawTags)].slice(0, TAGS_MAX_COUNT),
     sampleAnswer: form.sampleAnswer.trim() || undefined,
-    keywords: [...new Set(rawKeywords)],
+    keywords: [...new Set(rawKeywords)].slice(0, KEYWORDS_MAX_COUNT),
   };
 }
 
@@ -167,9 +188,9 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
     difficulty: question.difficulty as "EASY" | "MEDIUM" | "HARD",
     role: question.role ?? "",
     roleInput: "",
-    tags: (question.tags ?? []).join(", "),
+    tags: (question.tags ?? []).slice(0, TAGS_MAX_COUNT).join(", "),
     sampleAnswer: question.sampleAnswer ?? "",
-    keywords: (question.keywords ?? []).join(", "),
+    keywords: (question.keywords ?? []).slice(0, KEYWORDS_MAX_COUNT).join(", "),
   });
 
   const update = useUpdateInterviewQuestion(question.id);

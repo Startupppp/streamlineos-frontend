@@ -7,13 +7,13 @@ import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 
 const updateSchema = z.object({
-  question: z.string().min(1).max(1000).optional(),
+  question: z.string().min(1).max(300).optional(),
   category: z.string().min(1).max(100).optional(),
   role: z.string().max(100).nullable().optional(),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
-  tags: z.array(z.string()).optional(),
-  sampleAnswer: z.string().max(3000).nullable().optional(),
-  keywords: z.array(z.string().max(100)).optional(),
+  tags: z.array(z.string().max(100)).max(5).optional(),
+  sampleAnswer: z.string().max(200).nullable().optional(),
+  keywords: z.array(z.string().max(100)).max(5).optional(),
   isActive: z.boolean().optional(),
 });
 

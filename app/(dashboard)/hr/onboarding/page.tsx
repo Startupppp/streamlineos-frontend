@@ -87,7 +87,7 @@ export default function OnboardingPage() {
       }
     >
       {isHROrCEO ? (
-        <Tabs defaultValue="workflow" className="space-y-4">
+        <Tabs defaultValue="wizard" className="space-y-4">
           <TabsList>
             <TabsTrigger value="workflow" className="text-xs h-7 px-3">
               Workflow
