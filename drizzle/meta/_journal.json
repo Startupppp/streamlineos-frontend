@@ -379,6 +379,13 @@
       "when": 1782000000000,
       "tag": "0120_drop_hr_training_module",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1782090000000,
+      "tag": "0122_hr_automation_triggers",
+      "breakpoints": true
     }
   ]
 }
