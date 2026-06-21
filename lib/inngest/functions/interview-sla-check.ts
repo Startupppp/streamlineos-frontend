@@ -57,6 +57,17 @@ export const interviewSlaCheck = inngest.createFunction(
             },
           });
 
+          void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+            runAutomationsForEvent(record.orgId, "sla.breached", {
+              candidateId: record.candidateId,
+              candidateName: `Candidate #${record.candidateId}`,
+              stage: record.stage,
+              enteredAt: new Date(record.enteredAt).toISOString(),
+              breachedAt: now.toISOString(),
+              hoursInStage: Math.round(elapsedHours),
+            })
+          );
+
           breached++;
           updated++;
         } else if (elapsedHours >= policy.warningHours && record.status === "ON_TRACK") {
