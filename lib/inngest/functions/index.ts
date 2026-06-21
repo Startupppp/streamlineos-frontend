@@ -29,6 +29,10 @@ import { eventReminders } from "./event-reminders";
 import { offerDeadlineReminder } from "./offer-deadline-reminder";
 import { leaveEscalation } from "./leave-escalation";
 import { candidateFeedbackEmail } from "./candidate-feedback-email";
+import { hrOnboardingOverdue } from "./hr-onboarding-overdue";
+import { hrOnboardingCompleted } from "./hr-onboarding-completed";
+import { hrAttendanceAnomaly } from "./hr-attendance-anomaly";
+import { hrCertificationExpiry } from "./hr-certification-expiry";
 
 export const inngestFunctions = [
   dailyNotifications,
@@ -60,4 +64,8 @@ export const inngestFunctions = [
   offerDeadlineReminder,
   leaveEscalation,
   candidateFeedbackEmail,
+  hrOnboardingOverdue,
+  hrOnboardingCompleted,
+  hrAttendanceAnomaly,
+  hrCertificationExpiry,
 ];
