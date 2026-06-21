@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      await db.insert(leaveRequests).values({
+      const [leaveRequest] = await db.insert(leaveRequests).values({
         orgId: session.orgId,
         userId: session.user.id,
         leaveTypeId: body.leaveTypeId,
@@ -185,7 +185,21 @@ export async function POST(req: NextRequest) {
         isHalfDay: body.isHalfDay ?? false,
         halfDayPeriod: body.halfDayPeriod ?? null,
         status: "PENDING",
-      });
+      }).returning();
+
+      void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+        runAutomationsForEvent(session.orgId, "leave.requested", {
+          leaveRequestId: leaveRequest.id,
+          userId: session.user.id,
+          employeeName: session.user.name ?? "",
+          leaveType: leaveType?.name ?? "Leave",
+          startDate: body.startDate,
+          endDate: body.endDate,
+          totalDays: requestedDays,
+          reason: body.reason ?? null,
+          priority: body.priority ?? "MEDIUM",
+        })
+      );
 
       void (async () => {
         const hrMembers = await db

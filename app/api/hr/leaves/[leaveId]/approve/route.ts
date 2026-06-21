@@ -163,6 +163,22 @@ export async function PUT(
       })
     );
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "leave.approved", {
+        leaveRequestId: leaveId,
+        userId: existing.userId,
+        employeeName: employee?.name ?? "",
+        employeeEmail: employee?.email ?? "",
+        leaveType: leaveTypeName,
+        startDate: existing.startDate,
+        endDate: existing.endDate,
+        decision: "APPROVED",
+        approverId: session.user.id,
+        rejectionReason: null,
+        decidedAt: new Date().toISOString(),
+      })
+    );
+
     return ok({ success: true });
   });
 }

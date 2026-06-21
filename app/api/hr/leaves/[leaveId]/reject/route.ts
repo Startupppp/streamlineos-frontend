@@ -109,6 +109,22 @@ export async function PUT(
         : Promise.resolve(),
     ]);
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "leave.rejected", {
+        leaveRequestId: leaveId,
+        userId: existing.userId,
+        employeeName: employee?.name ?? "",
+        employeeEmail: employee?.email ?? "",
+        leaveType: leaveType?.name ?? "Leave",
+        startDate: existing.startDate,
+        endDate: existing.endDate,
+        decision: "REJECTED",
+        approverId: session.user.id,
+        rejectionReason: reason,
+        decidedAt: new Date().toISOString(),
+      })
+    );
+
     return ok({ success: true });
   });
 }
