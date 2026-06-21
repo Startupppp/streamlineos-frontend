@@ -1,7 +1,7 @@
 import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
-import { interviews } from "@/lib/db/schema";
+import { interviews, candidates } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -76,6 +76,26 @@ export async function POST(req: NextRequest) {
       .returning();
 
     await invalidateCachePattern(`hr:interviews:list:${session.orgId}:*`);
+
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const interviewCandidate = await db.query.candidates.findFirst({
+        where: and(eq(candidates.id, interview.candidateId), eq(candidates.orgId, session.orgId)),
+        columns: { firstName: true, lastName: true, email: true },
+      });
+      await runAutomationsForEvent(session.orgId, "interview.scheduled", {
+        interviewId: interview.id,
+        candidateId: interview.candidateId,
+        candidateName: interviewCandidate ? `${interviewCandidate.firstName} ${interviewCandidate.lastName}` : "",
+        candidateEmail: interviewCandidate?.email ?? "",
+        jobTitle: "",
+        interviewerId: interview.interviewerId ?? "",
+        interviewerEmail: "",
+        type: interview.type,
+        scheduledAt: interview.scheduledAt.toISOString(),
+        durationMinutes: interview.duration ?? 60,
+        meetingLink: interview.meetingLink ?? null,
+      });
+    });
 
     return ok(interview, 201);
   });

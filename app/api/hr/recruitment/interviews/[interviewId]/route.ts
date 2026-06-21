@@ -68,6 +68,25 @@ export async function PATCH(
       })
       .where(eq(interviews.id, interviewId));
 
+    if (body.result !== undefined && body.result !== "PENDING" && existing.result !== body.result) {
+      void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+        const interviewCandidate = await db.query.candidates.findFirst({
+          where: and(eq(candidates.id, existing.candidateId), eq(candidates.orgId, session.orgId)),
+          columns: { firstName: true, lastName: true },
+        });
+        await runAutomationsForEvent(session.orgId, "interview.completed", {
+          interviewId,
+          candidateId: existing.candidateId,
+          candidateName: interviewCandidate ? `${interviewCandidate.firstName} ${interviewCandidate.lastName}` : "",
+          jobTitle: "",
+          result: body.result,
+          rating: body.rating ?? null,
+          interviewerId: existing.interviewerId ?? "",
+          completedAt: new Date().toISOString(),
+        });
+      });
+    }
+
     if (body.result === "NO_SHOW" && existing.result !== "NO_SHOW") {
       const candidate = await db.query.candidates.findFirst({
         where: eq(candidates.id, existing.candidateId),

@@ -58,6 +58,17 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       where: eq(candidates.id, candidateId),
     });
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "candidate.bgv_status_changed", {
+        candidateId,
+        candidateName: `${candidate.firstName} ${candidate.lastName}`,
+        candidateEmail: candidate.email ?? "",
+        previousBgvStatus: candidate.bgvStatus ?? "NOT_INITIATED",
+        newBgvStatus: body.bgvStatus,
+        bgvAgency: body.bgvAgency ?? null,
+      })
+    );
+
     return ok(updated);
   });
 }
