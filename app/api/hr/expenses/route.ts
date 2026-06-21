@@ -104,6 +104,19 @@ export async function POST(req: NextRequest) {
       });
     } catch {  }
 
+    if (!isAdminRole) {
+      void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+        runAutomationsForEvent(session.orgId, "expense.submitted", {
+          expenseId: expense.id,
+          userId: session.user.id,
+          employeeName: session.user.name ?? "",
+          amount: body.amount.toString(),
+          category: body.category,
+          submittedAt: new Date().toISOString(),
+        })
+      );
+    }
+
     try {
       if (!isAdminRole) {
         const hrMembers = await db

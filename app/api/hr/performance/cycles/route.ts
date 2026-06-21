@@ -38,6 +38,17 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
+
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "performance.review_cycle_started", {
+        cycleId: cycle.id,
+        cycleName: cycle.name,
+        startDate: cycle.periodStart,
+        endDate: cycle.periodEnd,
+        reviewerCount: 0,
+      })
+    );
+
     return ok(cycle, 201);
   });
 }
