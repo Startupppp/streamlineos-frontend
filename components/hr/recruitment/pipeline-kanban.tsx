@@ -41,20 +41,19 @@ const KanbanColumn = memo(function KanbanColumn({
   onCardClick,
 }: KanbanColumnProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col w-full min-w-0",
-        isRejected && "opacity-80",
-      )}
-    >
-      <div className="flex items-center gap-2 mb-2 px-0.5">
-        <span className="text-xs font-semibold tracking-wide">{col.label}</span>
-        <span
-          className={cn(
-            "ml-auto inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold min-w-[22px]",
-            col.badge,
-          )}
-        >
+    <div className={cn("flex flex-col w-full min-w-0", isRejected && "opacity-75")}>
+      <div className={cn(
+        "flex items-center justify-between rounded-t-xl px-3 py-2.5 bg-gradient-to-r mb-0",
+        col.headerGradient
+      )}>
+        <div className="flex items-center gap-2">
+          <span className={cn("h-2 w-2 rounded-full", col.dot)} />
+          <span className={cn("text-xs font-semibold tracking-wide", col.headerText)}>{col.label}</span>
+        </div>
+        <span className={cn(
+          "inline-flex items-center justify-center rounded-full min-w-[22px] h-5 px-1.5 text-[11px] font-bold bg-white/25",
+          col.headerText
+        )}>
           {items.length}
         </span>
       </div>
@@ -65,16 +64,13 @@ const KanbanColumn = memo(function KanbanColumn({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              "flex-1 rounded-xl border-2 p-2 transition-colors",
+              "flex-1 rounded-b-xl rounded-tr-xl border-2 p-2 transition-colors min-h-[60px]",
               col.bg,
               col.border,
-              snapshot.isDraggingOver && "ring-2 ring-primary/30",
+              snapshot.isDraggingOver && "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
             )}
           >
-            <div
-              className="overflow-y-auto space-y-2"
-              style={{ maxHeight: "calc(100vh - 250px)" }}
-            >
+            <div className="overflow-y-auto space-y-2" style={{ maxHeight: "calc(100vh - 300px)" }}>
               {items.map((candidate, index) => (
                 <CandidateCard
                   key={candidate.id}
@@ -84,10 +80,9 @@ const KanbanColumn = memo(function KanbanColumn({
                 />
               ))}
               {provided.placeholder}
-
               {items.length === 0 && !snapshot.isDraggingOver && (
-                <div className="flex items-center justify-center h-16 rounded-lg border border-dashed border-border/50">
-                  <p className="text-[10px] text-muted-foreground">Drop here</p>
+                <div className="flex flex-col items-center justify-center h-16 rounded-lg border border-dashed border-border/40 gap-1">
+                  <p className="text-[10px] text-muted-foreground/60 font-medium">Drop here</p>
                 </div>
               )}
             </div>
@@ -112,15 +107,12 @@ export function PipelineKanban({
   const [selectedCandidate, setSelectedCandidate] =
     useState<AtsPipelineCandidate | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-
   const [pendingReject, setPendingReject] = useState<{
     candidateId: number;
     candidateName: string;
   } | null>(null);
 
-  const stageMap = Object.fromEntries(
-    stages.map((s) => [s.stage, s.candidates]),
-  );
+  const stageMap = Object.fromEntries(stages.map((s) => [s.stage, s.candidates]));
 
   const handleCardClick = useCallback((candidate: AtsPipelineCandidate) => {
     setSelectedCandidate(candidate);
@@ -135,13 +127,8 @@ export function PipelineKanban({
       if (result.source.droppableId === newStage) return;
 
       if (newStage === "REJECTED") {
-        const candidate = stages
-          .flatMap((s) => s.candidates)
-          .find((c) => c.id === candidateId);
-        setPendingReject({
-          candidateId,
-          candidateName: candidate?.name ?? `Candidate #${candidateId}`,
-        });
+        const candidate = stages.flatMap((s) => s.candidates).find((c) => c.id === candidateId);
+        setPendingReject({ candidateId, candidateName: candidate?.name ?? `Candidate #${candidateId}` });
       } else {
         onStageChange(candidateId, newStage);
       }
@@ -162,7 +149,7 @@ export function PipelineKanban({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
         {COLUMNS.map((col) => (
           <ColumnSkeleton key={col.id} col={col} />
         ))}
@@ -173,7 +160,7 @@ export function PipelineKanban({
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4 items-start">
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.id}
@@ -192,21 +179,13 @@ export function PipelineKanban({
         onOpenChange={setSheetOpen}
       />
 
-      <AlertDialog
-        open={!!pendingReject}
-        onOpenChange={handleRejectDialogChange}
-      >
+      <AlertDialog open={!!pendingReject} onOpenChange={handleRejectDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reject candidate?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to move{" "}
-              <span className="font-semibold">
-                {pendingReject?.candidateName}
-              </span>{" "}
-              to{" "}
-              <span className="font-semibold text-destructive">Rejected</span>?
-              This will notify the HR team.
+              Move <span className="font-semibold">{pendingReject?.candidateName}</span> to{" "}
+              <span className="font-semibold text-destructive">Rejected</span>? This will notify the HR team.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
