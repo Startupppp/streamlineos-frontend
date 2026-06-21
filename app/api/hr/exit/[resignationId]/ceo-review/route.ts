@@ -49,6 +49,23 @@ export async function PATCH(
       data: { resignationId, orgId: session.orgId, employeeId: record.userId, approved },
     });
 
+    if (approved) {
+      void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+        const employee = await db.query.users.findFirst({
+          where: eq(users.id, record.userId),
+          columns: { name: true },
+        });
+        await runAutomationsForEvent(session.orgId, "resignation.approved", {
+          resignationId,
+          userId: record.userId,
+          employeeName: employee?.name ?? "Employee",
+          lastWorkingDate: record.lastWorkingDate,
+          approvedBy: session.user.id,
+          approvedAt: new Date().toISOString(),
+        });
+      });
+    }
+
     return ok({ success: true });
   });
 }

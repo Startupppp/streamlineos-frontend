@@ -107,6 +107,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "resignation.submitted", {
+        resignationId: resignation.id,
+        userId: session.user.id,
+        employeeName: submittingUser?.name ?? "Employee",
+        employeeEmail: submittingUser?.email ?? "",
+        lastWorkingDate: body.lastWorkingDate,
+        noticePeriodDays: body.noticePeriodDays,
+        reasonCategory: body.reasonCategory ?? null,
+        submittedAt: new Date().toISOString(),
+      })
+    );
+
     return ok(resignation, 201);
   });
 }
