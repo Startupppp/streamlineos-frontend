@@ -1,4 +1,7 @@
-import { withAuth, ok, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { paginationSchema, searchSchema } from "@/lib/validation";
+import { paginateOffset } from "@/lib/api/list-response";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { crmOrganizations } from "@/lib/db/schema";
 import { eq, desc, and, ilike, sql } from "drizzle-orm";
@@ -6,7 +9,7 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
   domain: z.string().optional(),
   industry: z.string().optional(),
   size: z.enum(["1-10", "11-50", "51-200", "201-1000", "1000+"]).optional(),
@@ -15,57 +18,68 @@ const createSchema = z.object({
   description: z.string().optional(),
 });
 
-const listQuerySchema = z.object({
-  search: z.string().optional(),
-  page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(100).optional().default(20),
-});
+const listQuerySchema = paginationSchema
+  .merge(searchSchema)
+  .extend({
+    search: z.string().optional(),
+  });
+
+function escapeLike(input: string): string {
+  return input.replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const parsed = listQuerySchema.safeParse({
-      search: req.nextUrl.searchParams.get("search") ?? undefined,
-      page: req.nextUrl.searchParams.get("page") ?? undefined,
-      limit: req.nextUrl.searchParams.get("limit") ?? undefined,
-    });
+    const { page, pageSize, search } = parseQuery(req, listQuerySchema);
+    const { offset, limit } = paginateOffset({ page, pageSize });
 
-    const { search, page, limit } = parsed.success
-      ? parsed.data
-      : { search: undefined, page: 1, limit: 20 };
+    const searchTerm = (search ?? req.nextUrl.searchParams.get("q") ?? "").trim();
 
-    const where = and(
-      eq(crmOrganizations.orgId, session.orgId),
-      search
-        ? ilike(crmOrganizations.name, `%${search.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`)
-        : undefined
+    const key = `crm:organizations:list:${session.orgId}:${page}:${pageSize}:${searchTerm}`;
+    const data = await cached(
+      key,
+      async () => {
+        const where = and(
+          eq(crmOrganizations.orgId, session.orgId),
+          searchTerm
+            ? ilike(crmOrganizations.name, `%${escapeLike(searchTerm)}%`)
+            : undefined,
+        );
+
+        const [organizations, countRow] = await Promise.all([
+          db
+            .select({
+              id: crmOrganizations.id,
+              name: crmOrganizations.name,
+              domain: crmOrganizations.domain,
+              industry: crmOrganizations.industry,
+              size: crmOrganizations.size,
+              website: crmOrganizations.website,
+              linkedinUrl: crmOrganizations.linkedinUrl,
+              description: crmOrganizations.description,
+              createdAt: crmOrganizations.createdAt,
+            })
+            .from(crmOrganizations)
+            .where(where)
+            .orderBy(desc(crmOrganizations.createdAt))
+            .limit(limit)
+            .offset(offset),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(crmOrganizations)
+            .where(where)
+            .then((rows) => rows[0]),
+        ]);
+
+        const totalCount = Number(countRow?.count ?? 0);
+        const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / pageSize);
+
+        return { organizations, totalCount, page, totalPages };
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
     );
 
-    const offset = (page - 1) * limit;
-
-    const [organizations, countRow] = await Promise.all([
-      db
-        .select()
-        .from(crmOrganizations)
-        .where(where)
-        .orderBy(desc(crmOrganizations.createdAt))
-        .limit(limit)
-        .offset(offset),
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(crmOrganizations)
-        .where(where)
-        .then((rows) => rows[0]),
-    ]);
-
-    const totalCount = Number(countRow?.count ?? 0);
-    const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / limit);
-
-    return ok({
-      organizations,
-      totalCount,
-      page,
-      totalPages,
-    });
+    return ok(data);
   });
 }
 
@@ -84,7 +98,18 @@ export async function POST(req: NextRequest) {
         linkedinUrl: input.linkedinUrl || null,
         description: input.description ?? null,
       })
-      .returning();
+      .returning({
+        id: crmOrganizations.id,
+        name: crmOrganizations.name,
+        domain: crmOrganizations.domain,
+        industry: crmOrganizations.industry,
+        size: crmOrganizations.size,
+        website: crmOrganizations.website,
+        linkedinUrl: crmOrganizations.linkedinUrl,
+        description: crmOrganizations.description,
+        createdAt: crmOrganizations.createdAt,
+      });
+    await invalidateCachePattern(`crm:organizations:list:${session.orgId}:*`);
     return ok(org, 201);
   });
 }

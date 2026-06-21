@@ -2,9 +2,7 @@ import { getProjectById } from "@/server/actions/project-actions";
 import { notFound } from "next/navigation";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { organizationMembers, projects } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getProjectAccessForUser } from "@/server/queries/projects";
 import { AccessDeniedView } from "./access-denied-view";
 
 export default async function ProjectLayout({
@@ -21,16 +19,8 @@ export default async function ProjectLayout({
   const session = await auth();
   if (!session?.user?.id) return notFound();
 
-  const projectCheck = await db.query.projects.findFirst({
-    where: eq(projects.id, numId),
-    columns: { id: true, name: true, key: true, orgId: true, managerId: true },
-  });
+  const projectCheck = await getProjectAccessForUser(numId, session.user.id);
   if (!projectCheck) return notFound();
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-  if (!member || member.orgId !== projectCheck.orgId) return notFound();
 
   const project = await getProjectById(numId);
   if (!project) {

@@ -30,11 +30,7 @@ import {
   type AuditLogRow,
 } from "@/lib/api/hooks/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
-
-function getInitials(name?: string | null) {
-  if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-}
+import { getInitials } from "@/lib/format-utils";
 
 const ACTION_COLORS: Record<string, string> = {
   "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
@@ -381,63 +377,61 @@ export default function AuditLogPage() {
                     </span>
                   </div>
 
-                  <div className="-mx-3 px-3 overflow-x-auto">
-                    <div className="flex items-center gap-1.5 min-w-max">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={handleFirstPage}
-                        disabled={page <= 1}
-                        aria-label="First page"
-                      >
-                        <ChevronsLeft className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={handlePrevPage}
-                        disabled={page <= 1}
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={handleNextPage}
-                        disabled={page >= totalPages}
-                        aria-label="Next page"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={handleLastPage}
-                        disabled={page >= totalPages}
-                        aria-label="Last page"
-                      >
-                        <ChevronsRight className="h-3.5 w-3.5" />
-                      </Button>
-                      <div className="flex items-center gap-1.5 ml-1">
-                        <span className="text-[12px]">Go to</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={totalPages}
-                          value={goToPage}
-                          onChange={handleGoToPageChange}
-                          onKeyDown={handleGoToPageKeyDown}
-                          placeholder="—"
-                          className="h-7 w-14 text-xs text-center"
-                          aria-label="Go to page"
-                        />
-                      </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 hidden sm:inline-flex"
+                      onClick={handleFirstPage}
+                      disabled={page <= 1}
+                      aria-label="First page"
+                    >
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={handlePrevPage}
+                      disabled={page <= 1}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={handleNextPage}
+                      disabled={page >= totalPages}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 hidden sm:inline-flex"
+                      onClick={handleLastPage}
+                      disabled={page >= totalPages}
+                      aria-label="Last page"
+                    >
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="hidden md:flex items-center gap-1.5 ml-1">
+                      <span className="text-[12px]">Go to</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={goToPage}
+                        onChange={handleGoToPageChange}
+                        onKeyDown={handleGoToPageKeyDown}
+                        placeholder="—"
+                        className="h-7 w-14 text-xs text-center"
+                        aria-label="Go to page"
+                      />
                     </div>
                   </div>
                 </div>

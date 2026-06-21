@@ -4,12 +4,21 @@ import { documents, onboardingSteps, organizationMembers } from "@/lib/db/schema
 import { eq, and } from "drizzle-orm";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const VALID_DOC_TYPES = ["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const;
-type DocType = (typeof VALID_DOC_TYPES)[number];
+const docTypeSchema = z.enum([
+  "CONTRACT",
+  "CERTIFICATE",
+  "ID_PROOF",
+  "PAYSLIP",
+  "POLICY",
+  "OFFER_LETTER",
+  "RESUME",
+  "OTHER",
+]);
 
 async function upsertOnboardingStep(userId: string, orgId: string, stepName: string) {
   const existing = await db.query.onboardingSteps.findFirst({
@@ -37,13 +46,15 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const type = formData.get("type") as string | null;
+    const fileEntry = formData.get("file");
+    const file = fileEntry instanceof File ? fileEntry : null;
 
     if (!file) return err("No file provided", 400);
-    if (!type || !(VALID_DOC_TYPES as readonly string[]).includes(type)) {
-      return err("Invalid document type", 400);
-    }
+
+    const typeResult = docTypeSchema.safeParse(formData.get("type"));
+    if (!typeResult.success) return err("Invalid document type", 400);
+    const type = typeResult.data;
+
     if (!ALLOWED_TYPES.includes(file.type)) {
       return err("File type not allowed. Use PDF, JPEG, PNG, or WebP.", 400);
     }
@@ -62,7 +73,7 @@ export async function POST(req: NextRequest) {
       orgId: userOrg.orgId,
       userId: session.user.id,
       name: file.name,
-      type: type as DocType,
+      type,
       fileUrl: result.url,
       fileSize: file.size,
       mimeType: file.type,
@@ -71,6 +82,6 @@ export async function POST(req: NextRequest) {
 
     await upsertOnboardingStep(session.user.id, session.orgId, `Upload ${type}`);
 
-    return ok({ success: true, url: result.url });
+    return ok({ url: result.url }, 201);
   });
 }

@@ -1,5 +1,7 @@
 import { LeavesWfhContent } from "./leaves-wfh-content";
+import { requirePermission } from "@/lib/rbac/require-permission";
 
-export default function LeavesPage() {
+export default async function LeavesPage() {
+  await requirePermission(["self:leaves", "hr:leaves:view"]);
   return <LeavesWfhContent />;
 }

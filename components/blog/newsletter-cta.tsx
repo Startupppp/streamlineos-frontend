@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail } from "lucide-react";
 
-/** Subscribe card - UI only (no backend wiring). */
 export function NewsletterCTA() {
   const [email, setEmail] = useState("");
 

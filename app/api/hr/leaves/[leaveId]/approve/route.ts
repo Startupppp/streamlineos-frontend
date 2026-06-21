@@ -26,8 +26,7 @@ export async function PUT(
     if (isNaN(leaveId)) return err("Invalid leave request ID.", 400);
 
     const isAuthorized =
-      EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "") ||
-      session.user.role === "ADMIN";
+      EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "");
     if (!isAuthorized) {
       return err("Only HR, Admin, or CEO can approve leave requests.", 403);
     }
@@ -161,6 +160,22 @@ export async function PUT(
         startDate: existing.startDate,
         endDate: existing.endDate,
         leaveTypeId: existing.leaveTypeId,
+      })
+    );
+
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "leave.approved", {
+        leaveRequestId: leaveId,
+        userId: existing.userId,
+        employeeName: employee?.name ?? "",
+        employeeEmail: employee?.email ?? "",
+        leaveType: leaveTypeName,
+        startDate: existing.startDate,
+        endDate: existing.endDate,
+        decision: "APPROVED",
+        approverId: session.user.id,
+        rejectionReason: null,
+        decidedAt: new Date().toISOString(),
       })
     );
 

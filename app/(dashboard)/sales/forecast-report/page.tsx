@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { TrendingUp, DollarSign, Briefcase, Download } from "lucide-react";
+import { TrendingUp, IndianRupee, Briefcase, Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -70,8 +71,8 @@ async function exportToExcel(data: {
 function ForecastSkeleton() {
   return (
     <PageWrapper title="Forecast Report" subtitle="Pipeline revenue forecast by month and stage">
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
@@ -87,9 +88,14 @@ function ForecastSkeleton() {
 export default function ForecastReportPage() {
   const { data, isLoading } = useDealForecast();
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     if (!data) return;
-    exportToExcel({ byMonth: data.byMonth, byStage: data.byStage });
+    try {
+      await exportToExcel({ byMonth: data.byMonth, byStage: data.byStage });
+      toast.success("Forecast exported");
+    } catch {
+      toast.error("Export failed. Please try again.");
+    }
   }, [data]);
 
   if (isLoading || !data) return <ForecastSkeleton />;
@@ -105,19 +111,19 @@ export default function ForecastReportPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-3">
           <StatCard
             label="Total Weighted Revenue"
             value={fmtCurrency(data.totalWeighted)}
             icon={TrendingUp}
-            color="gold"
+            color="amber"
             index={0}
           />
           <StatCard
             label="Best Case Revenue"
             value={fmtCurrency(data.totalBestCase)}
-            icon={DollarSign}
+            icon={IndianRupee}
             color="green"
             index={1}
           />

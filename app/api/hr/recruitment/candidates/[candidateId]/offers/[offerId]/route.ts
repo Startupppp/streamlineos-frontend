@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { candidateOffers } from "@/lib/db/schema";
+import { candidateOffers, candidates, candidateApplications } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         eq(candidateOffers.candidateId, candidateId),
         eq(candidateOffers.orgId, session.orgId),
       ),
-      columns: { id: true },
+      columns: { id: true, offerStatus: true, offeredSalary: true, joiningDate: true, validUntil: true },
     });
     if (!existing) return err("Offer not found", 404);
 
@@ -72,6 +72,51 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .set(updateData)
       .where(eq(candidateOffers.id, offerId))
       .returning();
+
+    if (
+      input.offerStatus === "SENT" ||
+      input.offerStatus === "ACCEPTED" ||
+      input.offerStatus === "DECLINED"
+    ) {
+      void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+        const [candidate, latestApp] = await Promise.all([
+          db.query.candidates.findFirst({
+            where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
+            columns: { firstName: true, lastName: true, email: true },
+          }),
+          db.query.candidateApplications.findFirst({
+            where: eq(candidateApplications.candidateId, candidateId),
+            with: { jobPosting: { columns: { title: true } } },
+            orderBy: (t, { desc }) => [desc(t.appliedAt)],
+          }),
+        ]);
+        const candidateName = candidate ? `${candidate.firstName} ${candidate.lastName}` : "";
+        const candidateEmail = candidate?.email ?? "";
+        const jobTitle = latestApp?.jobPosting?.title ?? "";
+
+        if (input.offerStatus === "SENT" && existing.offerStatus !== "SENT") {
+          await runAutomationsForEvent(session.orgId, "offer.sent", {
+            offerId, candidateId, candidateName, candidateEmail, jobTitle,
+            offeredSalary: updated.offeredSalary ?? "",
+            joiningDate: updated.joiningDate ?? null,
+            validUntil: updated.validUntil ?? null,
+            sentAt: new Date().toISOString(),
+          });
+        } else if (input.offerStatus === "ACCEPTED") {
+          await runAutomationsForEvent(session.orgId, "offer.accepted", {
+            offerId, candidateId, candidateName, candidateEmail, jobTitle,
+            decision: "ACCEPTED",
+            respondedAt: new Date().toISOString(),
+          });
+        } else if (input.offerStatus === "DECLINED") {
+          await runAutomationsForEvent(session.orgId, "offer.rejected", {
+            offerId, candidateId, candidateName, candidateEmail, jobTitle,
+            decision: "REJECTED",
+            respondedAt: new Date().toISOString(),
+          });
+        }
+      });
+    }
 
     return ok(updated);
   });

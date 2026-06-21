@@ -4,16 +4,15 @@ import type { CategoryWithCount } from "@/types/blog";
 
 interface CategoryFilterProps {
   categories: CategoryWithCount[];
-  /** slug of the active category, or null for "All". */
+
   activeSlug?: string | null;
 }
 
-/** Horizontal, scrollable category pills linking to category pages. */
 export function CategoryFilter({ categories, activeSlug }: CategoryFilterProps) {
   return (
     <nav
       aria-label="Filter by category"
-      className="flex flex-nowrap gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible"
+      className="flex flex-wrap gap-2 pb-1 sm:justify-center"
     >
       <Pill href="/blogs" active={!activeSlug}>
         All

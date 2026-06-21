@@ -86,7 +86,7 @@
   --radius: 0.625rem;
 
   /* ─── Surface ─── */
-  --background: #eef3fb;          /* page canvas (matches .surface-soft base) */
+  --background: #f8fafc;          /* page canvas — slate-50, near pure white with the barest cool hint for card lift */
   --foreground: #0b1220;          /* primary ink */
   --card: #ffffff;
   --card-foreground: #0b1220;
@@ -130,14 +130,14 @@
   --chart-4: #8b5cf6;
   --chart-5: #ec4899;
 
-  /* ─── Dashboard sidebar (dark navy) ─── */
-  --sidebar: #060a18;
-  --sidebar-foreground: #c4cbe0;
+  /* ─── Dashboard sidebar (white panel — matches landing card surfaces) ─── */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b1220;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
-  --sidebar-accent-foreground: #f4f7ff;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 10%, transparent);
+  --sidebar-accent-foreground: #1e40af;
+  --sidebar-border: #e2e8f0;
   --sidebar-ring: #60a5fa;
 
   /* ─── Cinematic dark canvas (only used on auth right-panel and rare dark sections) ─── */
@@ -150,44 +150,56 @@
 }
 
 .dark {
-  --background: #06091a;
+  /* ─── Surface (deeper blacks for true OLED-feel) ─── */
+  --background: #07091a;          /* page canvas */
   --foreground: #f1f4fb;
-  --card: #0e1426;
+  --card: #101428;                /* elevated panel — clearly lifted from bg */
   --card-foreground: #f1f4fb;
-  --popover: #111830;
+  --popover: #141a32;
   --popover-foreground: #f1f4fb;
-
-  --primary: #ffffff;
-  --primary-foreground: #03060f;
-  --secondary: #1e293b;
-  --secondary-foreground: #f1f4fb;
   --muted: #161e36;
-  --muted-foreground: #8089a8;
-  --accent: #1e293b;
+  --muted-foreground: #94a0c0;
+  --border: rgba(148, 178, 245, 0.12);     /* subtle but visible against card */
+  --input: rgba(148, 178, 245, 0.14);
+  --ring: #60a5fa;
+
+  /* ─── CTA & Action — invert ink to white for dark ─── */
+  --primary: #f1f4fb;
+  --primary-foreground: #07091a;
+  --secondary: #1a2238;
+  --secondary-foreground: #f1f4fb;
+  --accent: #1a2238;
   --accent-foreground: #f1f4fb;
   --destructive: #ef4444;
   --destructive-foreground: #f1f4fb;
-  --border: rgba(160, 190, 255, 0.08);
-  --input: rgba(160, 190, 255, 0.10);
-  --ring: #60a5fa;
 
+  /* ─── Charts (slightly punchier in dark for legibility) ─── */
   --chart-1: #3b82f6;
   --chart-2: #06b6d4;
   --chart-3: #60a5fa;
   --chart-4: #8b5cf6;
   --chart-5: #ec4899;
 
-  --sidebar: #03060f;
-  --sidebar-foreground: #a4afca;
+  /* ─── Sidebar (deepest layer — same dark-on-dark Linear/Vercel pattern) ─── */
+  --sidebar: #0b1024;
+  --sidebar-foreground: #c4cbe0;
   --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
-  --sidebar-accent-foreground: #f1f4fb;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
+  --sidebar-accent-foreground: #f4f7ff;
+  --sidebar-border: rgba(148, 178, 245, 0.10);
   --sidebar-ring: #60a5fa;
 
   --gold: #3b82f6;
   --blue: #1d4ed8;
+}
+
+/* ─── Shadow override for dark mode — light glass-highlight instead of dark drop ─── */
+.dark .shadow-noir {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(148, 178, 245, 0.04);
 }
 
 /* ─── Hide scrollbar utility (top-level, outside @layer so it always wins) ─── */
@@ -249,22 +261,6 @@
   border-bottom: 1px solid var(--sidebar-border);
 }
 
-/* ─── Gold ───────────────────────────────────────────────────────────────────── */
-.gold-gradient {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--sidebar-primary) 50%, var(--gold) 100%);
-}
-
-.gold-text {
-  background: linear-gradient(135deg, var(--sidebar-primary) 0%, var(--gold) 60%, var(--sidebar-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gold-border {
-  border-image: linear-gradient(135deg, var(--gold), var(--sidebar-primary), var(--gold)) 1;
-}
-
 /* ─── Shadows ────────────────────────────────────────────────────────────────── */
 .shadow-soft {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
@@ -275,21 +271,13 @@
 }
 
 .shadow-noir {
-  box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px color-mix(in srgb, var(--primary) 6%, transparent);
-}
-
-.shadow-gold {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent), 0 4px 24px color-mix(in srgb, var(--primary) 8%, transparent);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -10px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 /* ─── Hover effects ──────────────────────────────────────────────────────────── */
-.glow-gold {
-  transition: box-shadow 0.25s ease;
-}
-.glow-gold:hover {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), 0 4px 20px color-mix(in srgb, var(--primary) 12%, transparent);
-}
-
 .press-scale {
   transition: transform 0.1s ease;
 }
@@ -463,10 +451,10 @@
 
 .surface-soft {
   background:
-    radial-gradient(ellipse 90% 65% at 15% 8%, rgba(96, 165, 250, 0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 90% 65% at 88% 92%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255, 255, 255, 0.55) 0%, transparent 70%),
-    #eef3fb;
+    radial-gradient(ellipse 90% 65% at 15% 8%, rgba(96, 165, 250, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 90% 65% at 88% 92%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255, 255, 255, 0.7) 0%, transparent 70%),
+    #f4f7fc;
   background-attachment: fixed;
 }
 
@@ -566,7 +554,7 @@
 }
 
 .nav-item:hover {
-  background: var(--sidebar-border);
+  background: color-mix(in srgb, var(--sidebar-primary) 6%, transparent);
   color: var(--sidebar-foreground);
 }
 

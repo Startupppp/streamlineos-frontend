@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, users, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -21,7 +21,8 @@ export async function GET(
     });
     if (!resignation) return err("Resignation not found.", 404);
 
-    if (!isAdminOrOwner(session.user.role) && resignation.userId !== session.user.id) {
+    const ability = await getSessionAbility();
+    if (!ability.can("approve", "hr:leaves") && resignation.userId !== session.user.id) {
       return err("Forbidden", 403);
     }
 

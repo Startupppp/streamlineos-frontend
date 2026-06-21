@@ -1,4 +1,4 @@
-import { withAdmin, ok, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leadAssignmentRules } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -10,7 +10,7 @@ const reorderSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "crm:assignment-rules", async (session) => {
     const { ruleIds } = await parseBody(req, reorderSchema);
     await Promise.all(
       ruleIds.map((id, index) =>

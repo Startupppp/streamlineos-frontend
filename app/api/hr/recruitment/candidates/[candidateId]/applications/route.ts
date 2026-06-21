@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { candidateApplications, candidates } from "@/lib/db/schema";
+import { candidateApplications, candidates, jobPostings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -39,6 +39,22 @@ export async function POST(
       })
       .returning();
 
-    return ok(application);
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const jobPosting = await db.query.jobPostings.findFirst({
+        where: eq(jobPostings.id, body.jobPostingId),
+        columns: { title: true },
+      });
+      await runAutomationsForEvent(session.orgId, "candidate.application_created", {
+        candidateId,
+        candidateName: `${candidate.firstName} ${candidate.lastName}`,
+        candidateEmail: candidate.email ?? "",
+        jobPostingId: body.jobPostingId,
+        jobTitle: jobPosting?.title ?? "",
+        source: candidate.source ?? "DIRECT",
+        appliedAt: application.appliedAt?.toISOString() ?? new Date().toISOString(),
+      });
+    });
+
+    return ok(application, 201);
   });
 }

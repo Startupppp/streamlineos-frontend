@@ -1,9 +1,10 @@
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { documentTypes } from "@/lib/db/schema/hr";
 import { eq, and, asc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const createSchema = z.object({
   name: z.string().min(1, "name is required"),
@@ -26,9 +27,7 @@ function toSlug(name: string): string {
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin =
-      session.user.role === "CEO" ||
-      session.user.role === "HR" ||
-      session.user.role === "ADMIN";
+      (await getSessionAbility()).can("manage", "hr:documents");
 
     const rows = await db
       .select()
@@ -48,7 +47,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:documents", async (session) => {
     const body = await parseBody(req, createSchema);
 
     const slug = toSlug(body.name);

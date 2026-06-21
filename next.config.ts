@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 function isLocalOrLoopbackAppUrl(): boolean {
-  for (const raw of [process.env.NEXT_PUBLIC_APP_URL, process.env.NEXTAUTH_URL]) {
+  for (const raw of [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXTAUTH_URL,
+  ]) {
     if (!raw) continue;
     try {
       const host = new URL(raw).hostname.toLowerCase();
@@ -10,9 +13,8 @@ function isLocalOrLoopbackAppUrl(): boolean {
         host === "127.0.0.1" ||
         host === "::1" ||
         host.endsWith(".localhost")
-      ) {
+      )
         return true;
-      }
     } catch {
       // ignore invalid URL
     }
@@ -84,7 +86,10 @@ const nextConfig: NextConfig = {
         { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+        {
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(), geolocation=(self)",
+        },
         ...(shouldSendStrictTransportSecurity()
           ? [
               {
@@ -94,7 +99,10 @@ const nextConfig: NextConfig = {
             ]
           : []),
         { key: "X-XSS-Protection", value: "0" },
-        { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+        {
+          key: "Cross-Origin-Opener-Policy",
+          value: "same-origin-allow-popups",
+        },
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
         {
           key: "Content-Security-Policy",

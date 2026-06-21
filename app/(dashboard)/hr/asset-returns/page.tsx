@@ -16,12 +16,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 interface AssetReturn {
   id: number; userId: string; employeeName: string | null; assetName: string;
@@ -45,7 +46,8 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" | "d
 export default function AssetReturnsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: items, isLoading } = useQuery({
     queryKey: arKeys.list(),
@@ -172,13 +174,12 @@ export default function AssetReturnsPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={returnId !== null}
         onOpenChange={(open) => { if (!open) setReturnId(null); }}
         title="Confirm Return"
         description="Mark this asset as returned in good condition?"
         confirmLabel="Confirm"
-        variant="default"
         onConfirm={handleMarkReturned}
         isPending={markReturned.isPending}
       />

@@ -85,6 +85,7 @@ export function useResignations() {
   return useQuery({
     queryKey: exitKeys.list(),
     queryFn: () => apiClient.get<Resignation[]>("/hr/exit"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -92,6 +93,7 @@ export function useResignationDetail(id: number | null) {
   return useQuery({
     queryKey: exitKeys.detail(id ?? 0),
     queryFn: () => apiClient.get<ResignationDetail>(`/hr/exit/${id}`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -100,6 +102,7 @@ export function useResignationLetter(id: number | null) {
   return useQuery({
     queryKey: exitKeys.letter(id ?? 0),
     queryFn: () => apiClient.get<{ html: string }>(`/hr/exit/${id}/letter`),
+    staleTime: 2 * 60_000,
     enabled: !!id,
   });
 }
@@ -168,6 +171,7 @@ export function useResignationProgress(id: number, enabled: boolean) {
   return useQuery({
     queryKey: exitKeys.progress(id),
     queryFn: () => apiClient.get<ResignationProgress>(`/hr/exit/${id}/progress`),
+    staleTime: 2 * 60_000,
     enabled,
   });
 }

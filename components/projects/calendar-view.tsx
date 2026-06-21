@@ -36,7 +36,7 @@ interface CalendarViewProps {
 }
 
 const statusColors: Record<string, string> = {
-  TODO: "bg-gray-400",
+  TODO: "bg-slate-400",
   IN_PROGRESS: "bg-blue-500",
   IN_REVIEW: "bg-purple-500",
   DONE: "bg-green-500",
@@ -155,7 +155,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
                     onClick={() => onTicketClick(t.id)}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded text-left hover:bg-muted transition-colors"
                   >
-                    <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", statusColors[t.status] ?? "bg-gray-400")} />
+                    <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", statusColors[t.status] ?? "bg-slate-400")} />
                     <span className="text-[10px] text-foreground truncate">{t.title}</span>
                   </button>
                 ))}

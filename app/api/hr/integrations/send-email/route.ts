@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { emailTemplates, candidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -25,7 +25,9 @@ function replaceVariables(text: string, vars: Record<string, string>): string {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can send emails.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "settings"))  return err("Only admins can send emails.", 403);
 
     if (!process.env.RESEND_API_KEY && !process.env.SENDGRID_API_KEY) {
       return err("Email not configured. Set RESEND_API_KEY or SENDGRID_API_KEY.", 400);

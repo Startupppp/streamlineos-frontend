@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { backgroundVerifications } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -34,7 +34,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can initiate verifications.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees"))  return err("Only admins can initiate verifications.", 403);
     const body = createSchema.parse(await req.json());
     const [bgv] = await db.insert(backgroundVerifications).values({
       orgId: session.orgId,
@@ -51,7 +53,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can update verifications.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:employees"))  return err("Only admins can update verifications.", 403);
     const body = updateSchema.parse(await req.json());
 
     const existing = await db.query.backgroundVerifications.findFirst({

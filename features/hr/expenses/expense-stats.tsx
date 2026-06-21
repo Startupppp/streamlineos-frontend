@@ -71,7 +71,7 @@ export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
         label="Pending Approval"
         value={formatINRCompact(stats?.pendingAmount || 0)}
         icon={Clock}
-        color="gold"
+        color="amber"
       />
       <StatCard
         label="Rejected (30d)"

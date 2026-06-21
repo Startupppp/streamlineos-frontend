@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
@@ -8,16 +8,11 @@ import { sendResignationSubmittedEmail } from "@/lib/email";
 import { inngest } from "@/lib/inngest/client";
 import { format } from "date-fns";
 import type { NextRequest } from "next/server";
-
-const REASON_CATEGORIES = [
-  "Better Opportunity", "Personal Reasons", "Higher Education",
-  "Work Environment", "Compensation", "Role Mismatch",
-  "Relocation", "Health Issues", "Starting Own Venture", "Other",
-] as const;
+import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
 
 const createSchema = z.object({
   reason: z.string().min(50, "Detailed reason must be at least 50 characters").max(2000),
-  reasonCategory: z.enum(REASON_CATEGORIES),
+  reasonCategory: z.enum(RESIGNATION_REASONS),
   lastWorkingDate: z.string().min(1, "Last working date is required"),
   noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
   willingForExitInterview: z.boolean().optional().default(true),
@@ -26,7 +21,9 @@ const createSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:leaves");
     const conditions = [eq(resignations.orgId, session.orgId)];
     if (!isAdmin) conditions.push(eq(resignations.userId, session.user.id));
 
@@ -41,7 +38,23 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (ability.can("manage", "all")) {
+      return err("CEO users cannot submit a resignation through this system.", 403);
+    }
+
     const body = createSchema.parse(await req.json());
+
+    const existing = await db.query.resignations.findFirst({
+      where: and(
+        eq(resignations.orgId, session.orgId),
+        eq(resignations.userId, session.user.id),
+        inArray(resignations.status, ["SUBMITTED", "PENDING_HR", "HR_APPROVED"]),
+      ),
+      columns: { id: true },
+    });
+    if (existing) return err("You already have an active resignation request pending approval.", 409);
+
     const [resignation] = await db.insert(resignations).values({
       orgId: session.orgId,
       userId: session.user.id,
@@ -93,6 +106,19 @@ export async function POST(req: NextRequest) {
         employeeId: session.user.id,
       },
     });
+
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "resignation.submitted", {
+        resignationId: resignation.id,
+        userId: session.user.id,
+        employeeName: submittingUser?.name ?? "Employee",
+        employeeEmail: submittingUser?.email ?? "",
+        lastWorkingDate: body.lastWorkingDate,
+        noticePeriodDays: body.noticePeriodDays,
+        reasonCategory: body.reasonCategory ?? null,
+        submittedAt: new Date().toISOString(),
+      })
+    );
 
     return ok(resignation, 201);
   });

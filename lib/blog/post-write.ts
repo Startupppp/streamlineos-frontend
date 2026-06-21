@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { and, eq, ne } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { blogDb } from "@/lib/blog-db";
 import { blogPosts } from "@/lib/db/schema";
 import { slugify } from "@/lib/blog-utils";
 
@@ -25,7 +25,6 @@ export const postUpdateSchema = postCreateSchema.partial();
 export type PostCreateInput = z.infer<typeof postCreateSchema>;
 export type PostUpdateInput = z.infer<typeof postUpdateSchema>;
 
-/** Return a slug unique across blog_posts, appending -2, -3, … on collision. */
 export async function ensureUniqueSlug(
   base: string,
   excludeId?: string,
@@ -33,9 +32,9 @@ export async function ensureUniqueSlug(
   const root = slugify(base) || "post";
   let candidate = root;
   let n = 2;
-  // Loop until no other row holds the candidate slug.
+
   for (;;) {
-    const clash = await db.query.blogPosts.findFirst({
+    const clash = await blogDb.query.blogPosts.findFirst({
       where: excludeId
         ? and(eq(blogPosts.slug, candidate), ne(blogPosts.id, excludeId))
         : eq(blogPosts.slug, candidate),

@@ -5,13 +5,15 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 type RouteParams = { params: Promise<{ entryId: string }> };
 
 export async function PATCH(_req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "projects:timesheets")) {
       return err("Only admins can approve timesheets", 403);
     }
 

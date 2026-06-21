@@ -55,3 +55,13 @@ next-env.d.ts
 # generated QR codes (local development)
 /public/qr-codes/
 /public/uploads/
+
+# Plugin binary (regenerated locally)
+ruvector.db
+
+# Workflow audit artifacts
+.auditui/
+
+# E2E UI audit artifacts + throwaway harnesses (local only)
+/e2e-artifacts/
+/scripts/e2e-*.mjs

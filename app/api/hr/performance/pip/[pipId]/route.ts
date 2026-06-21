@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -11,6 +11,13 @@ const updateSchema = z.object({
   outcome: z.string().max(1000).optional(),
   notes: z.string().max(2000).optional(),
   endDate: z.string().optional(),
+  reason: z.string().min(1).max(1000).optional(),
+  objectives: z.array(z.object({
+    objective: z.string().min(1),
+    metric: z.string().min(1),
+    deadline: z.string().min(1),
+  })).optional(),
+  hrRepId: z.string().nullable().optional(),
 });
 
 export async function PATCH(
@@ -18,7 +25,9 @@ export async function PATCH(
   { params }: { params: Promise<{ pipId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { pipId: id } = await params;
     const pipId = Number(id);
     if (!pipId) return err("Invalid ID.", 400);

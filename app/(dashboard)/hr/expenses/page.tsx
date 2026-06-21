@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import {
   useExpensePageData,
   useUpdateExpenseStatus,
   useDeleteExpense,
+  useHrEmployees,
 } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { ImportExpenseSheet } from "./import-expense-sheet";
 import ExpensesLoading from "./loading";
@@ -40,6 +42,7 @@ import {
 } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
+import { useAbility } from "@/lib/abilities-context";
 
 export default function ExpensesPage() {
   const { data: session } = useSession();
@@ -52,10 +55,8 @@ export default function ExpensesPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const isAdmin =
-    session?.user?.role === "CEO" ||
-    session?.user?.role === "ADMIN" ||
-    session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =
     useExpenseFilters({
@@ -102,6 +103,21 @@ export default function ExpensesPage() {
 
   const updateStatusMutation = useUpdateExpenseStatus();
   const deleteMutation = useDeleteExpense();
+
+  const { data: employeesRaw } = useHrEmployees({ limit: 200 });
+  const employees = useMemo(() => {
+    const raw = employeesRaw
+      ? Array.isArray(employeesRaw)
+        ? (employeesRaw as Employee[])
+        : ((employeesRaw as PaginatedEmployees).data ?? [])
+      : [];
+    return (raw as Employee[])
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        id: e.id,
+        name: [e.firstName, e.lastName].filter(Boolean).join(" ") || e.email,
+      }));
+  }, [employeesRaw]);
 
   const handleApprove = useCallback(
     (expenseId: number) => {
@@ -265,7 +281,7 @@ export default function ExpensesPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
+          className="space-y-4"
         >
           <motion.div variants={fadeUp}>
             <AdminExpenseStats stats={stats} pendingCount={pendingCount} />
@@ -275,11 +291,15 @@ export default function ExpensesPage() {
               statusFilter={statusFilter}
               pendingCount={pendingCount}
               onStatusChange={setStatusFilter}
+              employees={employees}
+              selectedUserId={filters.userId}
+              onUserChange={(userId) => setFilter("userId", userId || undefined)}
             />
           </motion.div>
           <motion.div variants={fadeUp}>
             <AdminExpenseList
               expenses={filteredExpenses}
+              currentUserId={session?.user?.id}
               pagination={pagination}
               startItem={startItem}
               endItem={endItem}
@@ -334,10 +354,7 @@ export default function ExpensesPage() {
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       actions={
-        <Button
-          className="bg-gold hover:bg-gold/90 text-white font-bold shadow-sm gap-2 rounded-full px-6"
-          onClick={() => setIsCreateOpen(true)}
-        >
+        <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           Submit New Claim
         </Button>

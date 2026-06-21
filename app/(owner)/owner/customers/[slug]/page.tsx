@@ -29,7 +29,7 @@ export default async function CustomerDetailPage({
       <div className="mb-4">
         <Link
           href="/owner/customers"
-          className="inline-flex items-center gap-1.5 text-[12px] font-mono uppercase tracking-[0.16em] text-slate-500 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to customers
@@ -63,7 +63,7 @@ export default async function CustomerDetailPage({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-2">
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100">
             <h3 className="font-display text-base font-bold text-slate-900">
               Team members
@@ -99,7 +99,7 @@ export default async function CustomerDetailPage({
                       {u.email}
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+                  <span className="text-[11px] font-medium text-slate-400">
                     {u.role}
                   </span>
                 </li>
@@ -113,7 +113,7 @@ export default async function CustomerDetailPage({
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100">
             <h3 className="font-display text-base font-bold text-slate-900">
               Recent payments
@@ -146,7 +146,7 @@ export default async function CustomerDetailPage({
                     <p className="font-mono font-semibold text-slate-900">
                       {fmtInr(p.amount)}
                     </p>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400">
+                    <p className="text-[11px] font-medium text-slate-400">
                       {p.status}
                     </p>
                   </div>

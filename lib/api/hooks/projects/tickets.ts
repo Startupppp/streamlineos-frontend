@@ -59,6 +59,10 @@ export function useCreateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.all, "burndown"],
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
     },
     ...options,
   });
@@ -82,6 +86,10 @@ export function useUpdateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId }),
       });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.all, "burndown"],
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
     },
     ...options,
   });
@@ -104,6 +112,10 @@ export function useDeleteTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.all, "burndown"],
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
     },
     ...options,
   });
@@ -118,6 +130,10 @@ export function useMoveTicket(options?: Parameters<typeof useMutation>[0]) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.all, "burndown"],
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
     },
     ...options,
   });
@@ -279,6 +295,7 @@ export function useTicketRelations(ticketId: number, projectId: number) {
     queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
     queryFn: () =>
       apiClient.get<TicketRelation[]>(`/projects/${projectId}/tickets/${ticketId}/relations`),
+    staleTime: 2 * 60_000,
     enabled: !!ticketId && !!projectId,
   });
 }

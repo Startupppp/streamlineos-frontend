@@ -3,7 +3,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizationMembers, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner, isCEO } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 
@@ -19,7 +19,8 @@ export async function PATCH(
     try {
       const { memberId: userId } = await params;
 
-      if (!isCEO(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
         return err("Only organization owners can update member roles", 403);
       }
 
@@ -72,7 +73,8 @@ export async function DELETE(
         return err("You cannot remove yourself from the organization", 400);
       }
 
-      if (!isAdminOrOwner(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "settings")) {
         return err("Forbidden", 403);
       }
 

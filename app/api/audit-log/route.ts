@@ -1,11 +1,11 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, toNumber } from "@/lib/api/helpers";
+import { withAbility, ok, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { auditLogs, users } from "@/lib/db/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "audit-log", async (session) => {
     const params = req.nextUrl.searchParams;
     const page = Math.max(1, toNumber(params.get("page")) ?? 1);
     const pageSize = Math.min(100, toNumber(params.get("pageSize")) ?? 25);

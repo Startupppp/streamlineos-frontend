@@ -5,10 +5,11 @@ import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import Link from "next/link";
-import { useCandidates, useCreateCandidate, useUpdateCandidate, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
+import { useCandidates, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -16,20 +17,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Search, Mail, Phone, Building2, Star, XCircle, CheckSquare, GitCompare, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Candidate, CandidateStatus } from "@/types/hr";
 import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
+import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
+import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
 
 const STATUSES: { value: CandidateStatus; label: string; color: string }[] = [
   { value: "NEW", label: "New", color: "bg-blue-500" },
@@ -60,14 +59,6 @@ const SOURCE_BADGE_CLASSES: Record<string, string> = {
   DIRECT: "text-muted-foreground",
 };
 
-function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "HIRED": return "default";
-    case "INTERVIEW": case "OFFER": return "secondary";
-    case "REJECTED": return "destructive";
-    default: return "outline";
-  }
-}
 
 export default function CandidatesPage() {
   const router = useRouter();
@@ -78,30 +69,13 @@ export default function CandidatesPage() {
   const { data: candidates, isLoading } = useCandidates(
     statusFilter ? { status: statusFilter } : undefined
   );
-  const createCandidate = useCreateCandidate();
-  const updateCandidate = useUpdateCandidate();
   const updateCandidateStage = useUpdateCandidateStage();
   const deleteCandidate = useDeleteCandidate();
   const bulkReject = useBulkRejectCandidates();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [source, setSource] = useState("DIRECT");
-
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editCurrentRole, setEditCurrentRole] = useState("");
-  const [editCurrentCompany, setEditCurrentCompany] = useState("");
-  const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
-  const [editSource, setEditSource] = useState("DIRECT");
-  const [editNotes, setEditNotes] = useState("");
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingCandidate, setDeletingCandidate] = useState<Candidate | null>(null);
@@ -133,24 +107,6 @@ export default function CandidatesPage() {
     );
   }, [candidates, searchQuery]);
 
-  const handleCreate = useCallback(() => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast.error("First name, last name, and email are required");
-      return;
-    }
-    createCandidate.mutate(
-      { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), phone: phone || undefined, source },
-      {
-        onSuccess: () => {
-          toast.success("Candidate added");
-          setSheetOpen(false);
-          setFirstName(""); setLastName(""); setEmail(""); setPhone("");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [firstName, lastName, email, phone, source, createCandidate]);
-
   const handleStatusChange = useCallback(
     (id: number, status: CandidateStatus) => {
       updateCandidateStage.mutate({ candidateId: id, stage: status }, {
@@ -163,47 +119,8 @@ export default function CandidatesPage() {
 
   const openEditSheet = useCallback((candidate: Candidate) => {
     setEditingCandidate(candidate);
-    setEditFirstName(candidate.firstName);
-    setEditLastName(candidate.lastName);
-    setEditEmail(candidate.email);
-    setEditPhone(candidate.phone ?? "");
-    setEditCurrentRole(candidate.currentRole ?? "");
-    setEditCurrentCompany(candidate.currentCompany ?? "");
-    setEditLinkedinUrl(candidate.linkedinUrl ?? "");
-    setEditSource(candidate.source ?? "DIRECT");
-    setEditNotes(candidate.notes ?? "");
     setEditSheetOpen(true);
   }, []);
-
-  const handleEdit = useCallback(() => {
-    if (!editingCandidate) return;
-    if (!editFirstName.trim() || !editLastName.trim() || !editEmail.trim()) {
-      toast.error("First name, last name, and email are required");
-      return;
-    }
-    updateCandidate.mutate(
-      {
-        id: editingCandidate.id,
-        firstName: editFirstName.trim(),
-        lastName: editLastName.trim(),
-        email: editEmail.trim(),
-        phone: editPhone.trim() || undefined,
-        currentRole: editCurrentRole.trim() || undefined,
-        currentCompany: editCurrentCompany.trim() || undefined,
-        linkedinUrl: editLinkedinUrl.trim() || undefined,
-        source: editSource || undefined,
-        notes: editNotes.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Candidate updated");
-          setEditSheetOpen(false);
-          setEditingCandidate(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [editingCandidate, editFirstName, editLastName, editEmail, editPhone, editCurrentRole, editCurrentCompany, editLinkedinUrl, editSource, editNotes, updateCandidate]);
 
   const openDeleteDialog = useCallback((candidate: Candidate) => {
     setDeletingCandidate(candidate);
@@ -320,56 +237,10 @@ export default function CandidatesPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/hr/recruitment">Back</Link>
           </Button>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" />Add Candidate</Button></SheetTrigger>
-          <SheetContent className="flex flex-col p-0 gap-0">
-            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-              <SheetTitle className="text-base">Add Candidate</SheetTitle>
-              <SheetDescription className="text-xs">Add a new candidate to the pipeline.</SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">First Name</label>
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Last Name</label>
-                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Email</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Phone</label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Source</label>
-                  <Select value={source} onValueChange={setSource}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DIRECT">Direct</SelectItem>
-                      <SelectItem value="REFERRAL">Referral</SelectItem>
-                      <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                      <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
-                      <SelectItem value="CAMPUS">Campus</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
-              <Button className="flex-1" onClick={handleCreate} disabled={createCandidate.isPending}>
-                {createCandidate.isPending ? "Adding..." : "Add Candidate"}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Candidate
+          </Button>
         </div>
       }
       filters={
@@ -453,7 +324,7 @@ export default function CandidatesPage() {
                       </p>
                     )}
                   </div>
-                  <Badge variant={statusBadgeVariant(candidate.status)}>{candidate.status}</Badge>
+                  <StatusBadge status={candidate.status} />
                 </div>
 
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
@@ -518,82 +389,16 @@ export default function CandidatesPage() {
         />
       )}
 
-      <Sheet open={editSheetOpen} onOpenChange={(open) => { setEditSheetOpen(open); if (!open) setEditingCandidate(null); }}>
-        <SheetContent className="flex flex-col p-0 gap-0">
-          <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-            <SheetTitle className="text-base">Edit Candidate</SheetTitle>
-            <SheetDescription className="text-xs">
-              Update details for {editingCandidate?.firstName} {editingCandidate?.lastName}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">First Name <span className="text-destructive">*</span></label>
-                <Input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Last Name <span className="text-destructive">*</span></label>
-                <Input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Email <span className="text-destructive">*</span></label>
-              <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Phone</label>
-                <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Source</label>
-                <Select value={editSource} onValueChange={setEditSource}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DIRECT">Direct</SelectItem>
-                    <SelectItem value="REFERRAL">Referral</SelectItem>
-                    <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                    <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
-                    <SelectItem value="CAMPUS">Campus</SelectItem>
-                    <SelectItem value="NAUKRI">Naukri</SelectItem>
-                    <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Current Role</label>
-                <Input value={editCurrentRole} onChange={(e) => setEditCurrentRole(e.target.value)} placeholder="e.g. Software Engineer" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Current Company</label>
-                <Input value={editCurrentCompany} onChange={(e) => setEditCurrentCompany(e.target.value)} placeholder="e.g. Acme Corp" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">LinkedIn URL</label>
-              <Input value={editLinkedinUrl} onChange={(e) => setEditLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Notes</label>
-              <Textarea
-                value={editNotes}
-                onChange={(e) => setEditNotes(e.target.value)}
-                rows={3}
-                placeholder="Internal notes about this candidate..."
-              />
-            </div>
-          </div>
-          <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setEditSheetOpen(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleEdit} disabled={updateCandidate.isPending}>
-              {updateCandidate.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AddCandidateSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+
+      <EditCandidateSheet
+        open={editSheetOpen}
+        candidate={editingCandidate}
+        onOpenChange={(open) => {
+          setEditSheetOpen(open);
+          if (!open) setEditingCandidate(null);
+        }}
+      />
 
       <ConfirmDialog
         open={deleteDialogOpen}

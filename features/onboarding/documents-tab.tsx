@@ -11,7 +11,7 @@ import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import { Button } from "@/components/ui/button";
 
 const DOCUMENT_TYPES = [
-  { type: "ID", label: "Upload ID Proof", hint: "Passport / Aadhar / License" },
+  { type: "ID_PROOF", label: "Upload ID Proof", hint: "Passport / Aadhar / License" },
   { type: "CERTIFICATE", label: "Educational Certificates", hint: "Highest Degree / Diploma" },
   { type: "CONTRACT", label: "Signed Contract", hint: "If provided offline" },
 ] as const;
@@ -21,7 +21,7 @@ const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_EXTENSIONS = ".pdf,.jpg,.jpeg,.png,.webp";
 const FILE_HINT = "PDF, JPEG, PNG, WebP";
 
-const REQUIRED_DOC_TYPES = new Set(["ID"]);
+const REQUIRED_DOC_TYPES = new Set(["ID_PROOF"]);
 
 interface DocumentsTabProps {
   onComplete: (values?: Record<string, string | undefined>) => void;
@@ -107,7 +107,7 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
           <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
         </motion.div>
         <form onSubmit={handleFormSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-live="polite">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" aria-live="polite">
               {DOCUMENT_TYPES.map((doc) => {
                 const isUploaded = !!uploadedFiles[doc.type];
                 const isThisLoading = loadingDoc === doc.type;
@@ -116,25 +116,26 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
                   <motion.div
                     key={doc.type}
                     variants={fadeUp}
-                    className={`border border-dashed rounded-lg p-5 flex flex-col items-center text-center space-y-2 transition ${
+                    className={`border border-dashed rounded-lg p-3.5 flex flex-col items-center text-center space-y-1.5 transition ${
                       isUploaded ? "border-emerald-500/50 bg-emerald-500/5" : "border-border hover:bg-muted/50"
                     }`}
                   >
                     {isUploaded ? (
-                      <CheckCircle className="h-7 w-7 text-emerald-500" aria-hidden="true" />
+                      <CheckCircle className="h-6 w-6 text-emerald-500" aria-hidden="true" />
                     ) : isThisLoading ? (
-                      <Loader2 className="h-7 w-7 text-muted-foreground animate-spin" aria-hidden="true" />
+                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" aria-hidden="true" />
                     ) : (
-                      <Upload className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+                      <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                     )}
-                    <Label htmlFor={`${doc.type}-upload`} className="font-medium text-sm cursor-pointer">
+                    <Label htmlFor={`${doc.type}-upload`} className="font-medium text-sm cursor-pointer leading-tight">
                       {doc.label}
                       {isRequired && <span className="text-destructive ml-1">*</span>}
                     </Label>
-                    <span className="text-xs text-muted-foreground">{doc.hint}</span>
-                    <span className="text-xs text-muted-foreground/60">Max {MAX_FILE_SIZE_MB}MB · {FILE_HINT}</span>
-                    {uploadedFiles[doc.type] && (
+                    <span className="text-xs text-muted-foreground leading-tight">{doc.hint}</span>
+                    {uploadedFiles[doc.type] ? (
                       <span className="text-xs text-emerald-600 font-medium truncate max-w-full">{uploadedFiles[doc.type]}</span>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground/60">Max {MAX_FILE_SIZE_MB}MB · {FILE_HINT}</span>
                     )}
                     <input
                       ref={(el) => { fileInputRefs.current[doc.type] = el; }}

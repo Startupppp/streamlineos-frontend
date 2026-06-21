@@ -6,7 +6,7 @@ import {
   Target,
   Plus,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +74,15 @@ export default function SalesQuotasPage() {
       toast.error("Employee, dates, and target revenue are required");
       return;
     }
+    if (new Date(startDate) >= new Date(endDate)) {
+      toast.error("Start date must be before end date");
+      return;
+    }
+    const target = Number(targetRevenue);
+    if (!Number.isFinite(target) || target <= 0) {
+      toast.error("Target revenue must be a positive number");
+      return;
+    }
     createQuota.mutate(
       { userId, period, startDate, endDate, targetRevenue, notes: notes || undefined },
       {
@@ -94,10 +103,10 @@ export default function SalesQuotasPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Total Target" value={fmt(totalTarget)} icon={Target} color="blue" />
-          <StatCard label="Total Actual" value={fmt(totalActual)} icon={DollarSign} color="green" />
+          <StatCard label="Total Actual" value={fmt(totalActual)} icon={IndianRupee} color="green" />
           <StatCard label="Overall Attainment" value={`${overallAttainment}%`} icon={TrendingUp} color={overallAttainment >= 80 ? "green" : overallAttainment >= 50 ? "gold" : "red"} />
         </div>
 
@@ -132,9 +141,9 @@ export default function SalesQuotasPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-20 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(q.attainmentPct, 100)}%` }} />
+                            <div className={`h-full rounded-full transition-all ${q.attainmentPct >= 100 ? "bg-green-600" : "bg-primary"}`} style={{ width: `${Math.min(q.attainmentPct, 100)}%` }} />
                           </div>
-                          <span className="text-xs font-medium tabular-nums">{q.attainmentPct}%</span>
+                          <span className={`text-xs font-medium tabular-nums ${q.attainmentPct >= 100 ? "text-green-600" : ""}`}>{q.attainmentPct}%</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -174,17 +183,17 @@ export default function SalesQuotasPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Start Date</label>
+            <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
             <DatePicker value={startDate} onChange={setStartDate} placeholder="Start date" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">End Date</label>
+            <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
             <DatePicker value={endDate} onChange={setEndDate} placeholder="End date" />
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Target Revenue (₹)</label>
-          <Input type="text" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
+          <label className="text-sm font-medium">Target Revenue (₹) <span className="text-destructive">*</span></label>
+          <Input type="number" min="0" step="1" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>

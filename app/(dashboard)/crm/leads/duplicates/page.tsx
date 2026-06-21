@@ -241,7 +241,7 @@ export default function DuplicateLeadsPage() {
             <StatCard
               label="Leads at Risk"
               value={totalLeadsAtRisk}
-              color="gold"
+              color="amber"
               icon={Users}
             />
           </div>

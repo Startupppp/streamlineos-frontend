@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
   SheetTrigger, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Users, Check, ChevronDown, Filter, CalendarDays, Download } from "lucide-react";
@@ -51,10 +51,6 @@ export interface SharedFilterProps {
   employees: WorkLogFilterEmployee[] | undefined;
   departments: WorkLogFilterDepartment[] | undefined;
   isAdminOrCeo: boolean;
-  employeeSearchOpen: boolean;
-  setEmployeeSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  employeeSearch: string;
-  setEmployeeSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface WorkLogFilterActionsProps extends SharedFilterProps {
@@ -73,12 +69,12 @@ export function WorkLogFilterActions({
   employees,
   departments,
   isAdminOrCeo,
-  employeeSearchOpen,
-  setEmployeeSearchOpen,
-  employeeSearch,
-  setEmployeeSearch,
   onExport,
 }: WorkLogFilterActionsProps) {
+  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const [sheetPickerOpen, setSheetPickerOpen] = useState(false);
+  const [sheetPickerSearch, setSheetPickerSearch] = useState("");
   const handleYearChange = useCallback((v: string) => {
     const y = parseInt(v);
     setFilters((p) => ({ ...p, year: y }));
@@ -87,8 +83,18 @@ export function WorkLogFilterActions({
 
   const handleQuarterChange = useCallback((v: string) => {
     const q = parseInt(v);
-    setFilters((p) => ({ ...p, quarter: q }));
-    setDraftFilters((p) => ({ ...p, quarter: q }));
+    const quarterStartMonth = (q - 1) * 3;
+    const quarterMonths = [quarterStartMonth, quarterStartMonth + 1, quarterStartMonth + 2];
+    setFilters((p) => ({
+      ...p,
+      quarter: q,
+      month: p.month !== undefined && !quarterMonths.includes(p.month) ? undefined : p.month,
+    }));
+    setDraftFilters((p) => ({
+      ...p,
+      quarter: q,
+      month: p.month !== undefined && !quarterMonths.includes(p.month) ? undefined : p.month,
+    }));
   }, [setFilters, setDraftFilters]);
 
   const handleSheetOpen = useCallback((open: boolean) => {
@@ -104,7 +110,7 @@ export function WorkLogFilterActions({
   }, [setDraftFilters]);
 
   const handleDraftMonthChange = useCallback((v: string) => {
-    setDraftFilters((p) => ({ ...p, month: v === "all" ? undefined : parseInt(v) }));
+    setDraftFilters((p) => ({ ...p, month: v ==="all" ? undefined : parseInt(v) }));
   }, [setDraftFilters]);
 
   const handleDraftDateFromChange = useCallback((val: string) => {
@@ -116,18 +122,27 @@ export function WorkLogFilterActions({
   }, [setDraftFilters]);
 
   const handleDraftDepartmentChange = useCallback((v: string) => {
-    setDraftFilters((p) => ({
-      ...p,
-      departmentId: v === "all" ? undefined : v,
-      selectedUserId: v === "all" ? p.selectedUserId : undefined,
-    }));
-  }, [setDraftFilters]);
+    setDraftFilters((p) => {
+      const newDeptId = v === "all" ? undefined : v;
+      const empStillInDept =
+        !newDeptId ||
+        !p.selectedUserId ||
+        (employees ?? []).some(
+          (e) => e.id === p.selectedUserId && e.departmentId?.toString() === newDeptId
+        );
+      return {
+        ...p,
+        departmentId: newDeptId,
+        selectedUserId: empStillInDept ? p.selectedUserId : undefined,
+      };
+    });
+  }, [setDraftFilters, employees]);
 
   const handleSelectMyLogs = useCallback(() => {
     setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
-    setEmployeeSearchOpen(false);
-    setEmployeeSearch("");
-  }, [setDraftFilters, setEmployeeSearchOpen, setEmployeeSearch]);
+    setSheetPickerOpen(false);
+    setSheetPickerSearch("");
+  }, [setDraftFilters]);
 
   const handleApplyFilters = useCallback(() => {
     setFilters({ ...draftFilters });
@@ -144,7 +159,7 @@ export function WorkLogFilterActions({
   const selectedEmployeeName = draftFilters.selectedUserId
     ? (() => {
         const emp = (employees ?? []).find((e) => e.id === draftFilters.selectedUserId);
-        return emp ? `${emp.firstName} ${emp.lastName}` : "Select employee";
+        return emp ? ([emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown") : "Select employee";
       })()
     : "My Logs";
 
@@ -154,7 +169,7 @@ export function WorkLogFilterActions({
       const monthIdx = startMonthIdx + offset;
       return {
         idx: monthIdx,
-        name: format(new Date(draftFilters.year, monthIdx, 1), "MMMM"),
+        name: format(new Date(draftFilters.year, monthIdx, 1),"MMMM"),
       };
     });
   })();
@@ -198,7 +213,7 @@ export function WorkLogFilterActions({
                 {filters.selectedUserId
                   ? (() => {
                       const emp = (employees ?? []).find((e) => e.id === filters.selectedUserId);
-                      return emp ? `${emp.firstName} ${emp.lastName}` : "Employee";
+                      return emp ? ([emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Employee") : "Employee";
                     })()
                   : "My Logs"}
               </span>
@@ -212,36 +227,41 @@ export function WorkLogFilterActions({
                 value={employeeSearch}
                 onValueChange={setEmployeeSearch}
               />
-              <CommandEmpty>No employee found.</CommandEmpty>
-              <CommandGroup className="max-h-60 overflow-y-auto">
-                <CommandItem
-                  value="My Logs"
-                  onSelect={() => {
-                    setFilters((p) => ({ ...p, selectedUserId: undefined }));
-                    setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
-                    setEmployeeSearchOpen(false);
-                    setEmployeeSearch("");
-                  }}
-                >
-                  <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ? "opacity-100" : "opacity-0")} />
-                  My Logs
-                </CommandItem>
-                {(employees ?? []).map((emp) => (
+              <CommandList>
+                <CommandEmpty>No employee found.</CommandEmpty>
+                <CommandGroup>
                   <CommandItem
-                    key={emp.id}
-                    value={`${emp.firstName} ${emp.lastName}`}
+                    value="My Logs"
                     onSelect={() => {
-                      setFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                      setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                      setFilters((p) => ({ ...p, selectedUserId: undefined }));
+                      setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
                       setEmployeeSearchOpen(false);
                       setEmployeeSearch("");
                     }}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ? "opacity-100" : "opacity-0")} />
-                    {emp.firstName} {emp.lastName}
+                    <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                    My Logs
                   </CommandItem>
-                ))}
-              </CommandGroup>
+                  {(employees ?? []).map((emp) => {
+                      const empName = [emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown";
+                      return (
+                      <CommandItem
+                        key={emp.id}
+                        value={empName}
+                        onSelect={() => {
+                          setFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                          setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                          setEmployeeSearchOpen(false);
+                          setEmployeeSearch("");
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
+                        {empName}
+                      </CommandItem>
+                      );
+                    })}
+                </CommandGroup>
+              </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
@@ -253,7 +273,7 @@ export function WorkLogFilterActions({
             <Filter className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-gold text-white border-0">
+              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-blue-500 text-white border-0">
                 {activeFilterCount}
               </Badge>
             )}
@@ -294,7 +314,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">Month</Label>
               <Select
-                value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
+                value={draftFilters.month !== undefined ? draftFilters.month.toString() :"all"}
                 onValueChange={handleDraftMonthChange}
               >
                 <SelectTrigger className="w-full">
@@ -316,7 +336,7 @@ export function WorkLogFilterActions({
                 <div>
                   <Label className="text-xs text-muted-foreground">From</Label>
                   <DatePicker
-                    value={draftFilters.dateFrom || ""}
+                    value={draftFilters.dateFrom ||""}
                     onChange={handleDraftDateFromChange}
                     placeholder="From date"
                     toDate={draftFilters.dateTo ? new Date(draftFilters.dateTo) : undefined}
@@ -325,7 +345,7 @@ export function WorkLogFilterActions({
                 <div>
                   <Label className="text-xs text-muted-foreground">To</Label>
                   <DatePicker
-                    value={draftFilters.dateTo || ""}
+                    value={draftFilters.dateTo ||""}
                     onChange={handleDraftDateToChange}
                     placeholder="To date"
                     fromDate={draftFilters.dateFrom ? new Date(draftFilters.dateFrom) : undefined}
@@ -337,7 +357,7 @@ export function WorkLogFilterActions({
             {isAdminOrCeo && departments && departments.length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Department</Label>
-                <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
+                <Select value={draftFilters.departmentId ||"all"} onValueChange={handleDraftDepartmentChange}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="All departments" /></SelectTrigger>
                   <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin">
                     <SelectItem value="all">All Departments</SelectItem>
@@ -352,12 +372,12 @@ export function WorkLogFilterActions({
             {isAdminOrCeo && employees && employees.length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Employee</Label>
-                <Popover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
+                <Popover open={sheetPickerOpen} onOpenChange={setSheetPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
-                      aria-expanded={employeeSearchOpen}
+                      aria-expanded={sheetPickerOpen}
                       className="w-full justify-between font-normal"
                     >
                       <span className="flex items-center gap-1.5 truncate">
@@ -371,26 +391,28 @@ export function WorkLogFilterActions({
                     <Command>
                       <CommandInput
                         placeholder="Search employee..."
-                        value={employeeSearch}
-                        onValueChange={setEmployeeSearch}
+                        value={sheetPickerSearch}
+                        onValueChange={setSheetPickerSearch}
                       />
-                      <CommandEmpty>No employee found.</CommandEmpty>
-                      <CommandGroup className="max-h-60 overflow-y-auto">
-                        <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
-                          <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ? "opacity-100" : "opacity-0")} />
-                          My Logs
-                        </CommandItem>
-                        {filteredEmployees.map((emp) => (
-                          <EmployeeCommandItem
-                            key={emp.id}
-                            employee={emp}
-                            isSelected={draftFilters.selectedUserId === emp.id}
-                            onSelect={setDraftFilters}
-                            onClose={setEmployeeSearchOpen}
-                            onClearSearch={setEmployeeSearch}
-                          />
-                        ))}
-                      </CommandGroup>
+                      <CommandList>
+                        <CommandEmpty>No employee found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
+                            <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                            My Logs
+                          </CommandItem>
+                          {filteredEmployees.map((emp) => (
+                                <EmployeeCommandItem
+                              key={emp.id}
+                              employee={emp}
+                              isSelected={draftFilters.selectedUserId === emp.id}
+                              onSelect={setDraftFilters}
+                              onClose={setSheetPickerOpen}
+                              onClearSearch={setSheetPickerSearch}
+                            />
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
@@ -403,7 +425,7 @@ export function WorkLogFilterActions({
               Reset
             </Button>
             <SheetClose asChild>
-              <Button className="flex-1 bg-gold hover:bg-gold/90 text-white" onClick={handleApplyFilters}>
+              <Button className="flex-1" onClick={handleApplyFilters}>
                 Apply Filters
               </Button>
             </SheetClose>
@@ -441,9 +463,9 @@ function EmployeeCommandItem({
   }, [employee.id, onSelect, onClose, onClearSearch]);
 
   return (
-    <CommandItem value={`${employee.firstName} ${employee.lastName}`} onSelect={handleSelect}>
-      <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
-      {employee.firstName} {employee.lastName}
+    <CommandItem value={[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"} onSelect={handleSelect}>
+      <Check className={cn("mr-2 h-4 w-4", isSelected ?"opacity-100" :"opacity-0")} />
+      {[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"}
     </CommandItem>
   );
 }

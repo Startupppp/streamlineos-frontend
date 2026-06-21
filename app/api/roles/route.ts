@@ -4,7 +4,8 @@ import { getRoles } from "@/server/queries/roles";
 import { db } from "@/lib/db";
 import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
+import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -34,8 +35,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
-        return err("Only CEO or Admin can create roles", 403);
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
+        return err("Only Owner, CEO, or CTO can create roles", 403);
       }
 
       const body = await req.json();
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
+      await invalidateCache(CACHE_KEYS.rolesList(session.orgId));
       return ok(created, 201);
     } catch (error) {
       return err(

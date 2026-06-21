@@ -133,8 +133,8 @@ export default function SlaReportPage() {
               <CardTitle className="text-sm">Monthly Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+              <div>
+                <table className="w-full text-[10px] md:text-xs">
                   <thead>
                     <tr className="border-b bg-muted/40">
                       <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Month</th>
@@ -189,7 +189,7 @@ export default function SlaReportPage() {
 }
 
 const STAGE_COLORS = [
-  "#bd882c",
+  "#06b6d4",
   "#3b82f6",
   "#ef4444",
   "#10b981",

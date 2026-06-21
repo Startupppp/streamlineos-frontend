@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { logger } from "@/lib/logger";
 import {
   backfillCrmAssignments,
   getCrmAssignmentStats,
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       const stats = await getCrmAssignmentStats(session.orgId);
       return ok(stats);
     } catch (error) {
-      console.error("[assign-crm] Error:", error);
+      logger.error("[assign-crm] Error", { error });
       return err("Failed to assign CRM reps. Please try again.", 500);
     }
   });

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAIAttritionRisk } from "@/lib/api/hooks/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/billing/use-feature";
 
 interface AIAttritionRiskButtonProps {
   userId: string;
@@ -23,8 +24,10 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
   const [open, setOpen] = useState(false);
   const analyzeMutation = useAIAttritionRisk();
   const result = analyzeMutation.data;
+  const { enabled: featureEnabled, requiredPlan } = useFeature("ai.attrition-risk");
 
   const handleAnalyze = () => {
+    if (!featureEnabled) { toast.error(`AI attrition analysis requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
     analyzeMutation.mutate(userId, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -61,7 +64,7 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
             {analyzeMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-gold" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
             )}
             {result ? <span className={cn("font-bold capitalize", riskColor(result.riskLevel))}>{result.riskLevel}</span> : "Risk"}
           </Button>
@@ -81,7 +84,7 @@ export function AIAttritionRiskButton({ userId, compact }: AIAttritionRiskButton
         {analyzeMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Analyzing...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-gold" />AI Attrition Risk</>
+          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Attrition Risk</>
         )}
       </Button>
       {result && <RiskDetails result={result} riskColor={riskColor} riskBg={riskBg} />}

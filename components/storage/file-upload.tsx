@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { Upload, X, File } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
+import { apiClient, getApiError } from "../../lib/api-client";
 
 interface FileUploadProps {
   onUploadComplete: (url: string, key: string) => void;
@@ -51,26 +52,22 @@ export function FileUpload({
         formData.append("file", file);
         formData.append("folder", folder);
 
-        const response = await fetch("/api/storage/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          toast.error(`Failed to upload ${file.name}: ${error.error}`);
+        try {
+          const result = await apiClient.upload<{ url: string; key: string }>(
+            "/storage/upload",
+            formData,
+          );
+          const newFile = { url: result.url, key: result.key, name: file.name };
+          setUploadedFiles((prev) => [...prev, newFile]);
+          onUploadComplete(result.url, result.key);
+        } catch (err) {
+          toast.error(`Failed to upload ${file.name}: ${getApiError(err)}`);
           continue;
         }
-
-        const result = await response.json();
-        const newFile = { url: result.url, key: result.key, name: file.name };
-
-        setUploadedFiles((prev) => [...prev, newFile]);
-        onUploadComplete(result.url, result.key);
       }
 
       toast.success(`Successfully uploaded ${fileArray.length} file(s)`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload file");
     } finally {
       setUploading(false);

@@ -1,8 +1,8 @@
+export { appUrl } from "../app-url";
+
 import { appUrl } from "../app-url";
 
-export const baseUrl = appUrl;
-
-export const logoUrl = `${baseUrl}/logo.png`;
+export const logoUrl = `${appUrl}/logo.png`;
 
 export function escapeHtml(str: string): string {
   return str

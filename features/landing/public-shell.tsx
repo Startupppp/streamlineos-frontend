@@ -1,0 +1,31 @@
+import { ReactNode } from "react";
+import { LandingNav } from "@/features/landing/components/landing-nav";
+import { LandingFooter } from "@/features/landing/landing-footer";
+import { VisitTracker } from "@/features/analytics/visit-tracker";
+
+type Props = {
+  children: ReactNode;
+  className?: string;
+};
+
+export function PublicShell({ children, className }: Props) {
+  return (
+    <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950 overflow-x-clip">
+      <VisitTracker />
+      <LandingNav />
+      <main className={`flex-1 pt-28 pb-16 lg:pt-32 lg:pb-24 ${className ?? ""}`}>
+        {children}
+      </main>
+      <LandingFooter />
+    </div>
+  );
+}
+
+type EyebrowProps = { children: ReactNode };
+export function PublicEyebrow({ children }: EyebrowProps) {
+  return (
+    <p className="text-[13px] font-medium text-blue-600 mb-3">
+      {children}
+    </p>
+  );
+}

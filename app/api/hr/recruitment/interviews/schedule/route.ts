@@ -199,6 +199,22 @@ export async function POST(req: NextRequest) {
       }
     })();
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "interview.scheduled", {
+        interviewId: interview.id,
+        candidateId: body.candidateId,
+        candidateName: `${candidate.firstName} ${candidate.lastName}`,
+        candidateEmail: candidate.email ?? "",
+        jobTitle: "",
+        interviewerId: primaryInterviewerId,
+        interviewerEmail: "",
+        type: interview.type,
+        scheduledAt: interview.scheduledAt.toISOString(),
+        durationMinutes: body.durationMinutes,
+        meetingLink: interview.meetingLink ?? null,
+      })
+    );
+
     return ok(interview, 201);
   });
 }

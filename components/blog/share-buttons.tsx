@@ -7,12 +7,11 @@ import { cn } from "@/lib/utils";
 
 interface ShareButtonsProps {
   title: string;
-  /** Absolute or root-relative URL of the post. */
+
   url: string;
   className?: string;
 }
 
-/** Inline social share + copy-link controls. */
 export function ShareButtons({ title, url, className }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
 

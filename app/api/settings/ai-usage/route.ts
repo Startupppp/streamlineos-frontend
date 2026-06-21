@@ -2,12 +2,13 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { aiUsageLogs } from "@/lib/db/schema";
 import { eq, gte, sum, sql, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { subDays } from "date-fns";
 
 export async function GET() {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "settings")) {
       return err("Forbidden", 403);
     }
 

@@ -36,7 +36,7 @@ export default function CustomerExecutiveDashboardPage() {
   if (isLoading || !data) {
     return (
       <PageWrapper title="Dashboard" subtitle="Loading...">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>
@@ -226,7 +226,7 @@ export default function CustomerExecutiveDashboardPage() {
                         {getPersonSlug(account.csm) ? (
                           <Link
                             href={`/sales/person/${getPersonSlug(account.csm)}`}
-                            className="text-primary hover:underline"
+                            className="text-blue-600 hover:text-blue-700 hover:underline"
                           >
                             {account.csm}
                           </Link>
@@ -266,7 +266,7 @@ export default function CustomerExecutiveDashboardPage() {
               <CardTitle className="text-base">Recent Interactions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-y-auto pr-1" style={{ maxHeight: "380px" }}>
+              <div className="overflow-y-auto pr-1 max-h-[380px]">
                 <ActivityFeed items={customerInteractions} />
               </div>
             </CardContent>
@@ -293,18 +293,18 @@ export default function CustomerExecutiveDashboardPage() {
                   <p className="text-2xl font-bold text-foreground">{supportStats.openTickets}</p>
                   <p className="text-xs text-muted-foreground mt-1">Open Tickets</p>
                 </div>
-                <div className="rounded-xl border border-border p-3 text-center">
+                <div className="rounded-xl border border-border p-2.5 text-center">
                   <p className="text-2xl font-bold text-foreground">{supportStats.avgResolution}</p>
                   <p className="text-xs text-muted-foreground mt-1">Avg Resolution</p>
                 </div>
-                <div className="rounded-xl border border-border p-3 text-center">
+                <div className="rounded-xl border border-border p-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Zap className="h-4 w-4 text-amber-500" />
                     <p className="text-2xl font-bold text-foreground">{supportStats.firstResponse}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">First Response</p>
                 </div>
-                <div className="rounded-xl border border-border p-3 text-center">
+                <div className="rounded-xl border border-border p-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <SmilePlus className="h-4 w-4 text-emerald-500" />
                     <p className="text-2xl font-bold text-foreground">{supportStats.satisfaction}%</p>

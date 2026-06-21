@@ -72,9 +72,9 @@ export function LeadSidebar({
               <div
                 className={cn(
                   "h-11 w-11 rounded-full shrink-0",
-                  "ring-2 ring-gold/50 ring-offset-2 ring-offset-background",
-                  "bg-gold/10 flex items-center justify-center",
-                  "text-gold font-bold text-base select-none"
+                  "ring-2 ring-blue-500/50 ring-offset-2 ring-offset-background",
+                  "bg-blue-500/10 flex items-center justify-center",
+                  "text-blue-600 font-bold text-base select-none"
                 )}
               >
                 {avatarInitials}
@@ -109,7 +109,7 @@ export function LeadSidebar({
                       className={cn(
                         "absolute left-0 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center",
                         idx === 0
-                          ? "border-gold bg-gold/20"
+                          ? "border-blue-500 bg-blue-500/20"
                           : "border-border bg-background"
                       )}
                     />

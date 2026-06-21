@@ -1,9 +1,9 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reviewCycles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { updateReviewCycleSchema } from "@/lib/validations/hr";
+import { updateReviewCycleSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -29,7 +29,9 @@ export async function PATCH(
   { params }: { params: Promise<{ cycleId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { cycleId: id } = await params;
     const cycleId = Number(id);
     if (!cycleId) return err("Invalid cycle ID.", 400);
@@ -50,7 +52,9 @@ export async function DELETE(
   { params }: { params: Promise<{ cycleId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Forbidden.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:performance"))  return err("Forbidden.", 403);
     const { cycleId: id } = await params;
     const cycleId = Number(id);
     if (!cycleId) return err("Invalid cycle ID.", 400);

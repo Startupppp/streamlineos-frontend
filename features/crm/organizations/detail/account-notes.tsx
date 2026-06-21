@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Pencil, Save, X, FileText } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateCrmOrganization } from "@/lib/api/hooks/crm";
@@ -14,7 +15,7 @@ interface AccountNotesProps {
 
 export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps) {
   const [editing, setEditing] = useState(false);
-  const [notes, setNotes] = useState(initialNotes ?? "");
+  const [notes, setNotes] = useState(initialNotes ??"");
 
   const updateMutation = useUpdateCrmOrganization();
 
@@ -32,7 +33,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
   }, [organizationId, notes, updateMutation]);
 
   const handleCancel = useCallback(() => {
-    setNotes(initialNotes ?? "");
+    setNotes(initialNotes ??"");
     setEditing(false);
   }, [initialNotes]);
 
@@ -42,10 +43,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
         {notes ? (
           <p className="text-sm text-foreground whitespace-pre-wrap">{notes}</p>
         ) : (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <FileText className="h-7 w-7 text-muted-foreground/40 mb-1.5" />
-            <p className="text-sm text-muted-foreground">No notes yet</p>
-          </div>
+          <EmptyState icon={FileText} title="No notes yet" compact />
         )}
         <Button
           variant="ghost"
@@ -54,7 +52,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
           onClick={() => setEditing(true)}
         >
           <Pencil className="h-3 w-3" />
-          {notes ? "Edit notes" : "Add notes"}
+          {notes ?"Edit notes" :"Add notes"}
         </Button>
       </div>
     );
@@ -73,7 +71,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
       <div className="flex gap-2">
         <Button
           size="sm"
-          className="gap-1.5 bg-gold hover:bg-gold/90 text-white"
+          className="gap-1.5"
           onClick={handleSave}
           disabled={updateMutation.isPending}
         >

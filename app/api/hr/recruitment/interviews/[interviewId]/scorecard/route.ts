@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { interviewScorecards, interviews } from "@/lib/db/schema";
+import { interviewScorecards, interviews, candidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -91,6 +91,21 @@ export async function POST(
         })
         .catch(() => {});
 
+      void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+        const interviewCandidate = await db.query.candidates.findFirst({
+          where: and(eq(candidates.id, interview.candidateId), eq(candidates.orgId, session.orgId)),
+          columns: { firstName: true, lastName: true },
+        });
+        await runAutomationsForEvent(session.orgId, "scorecard.submitted", {
+          interviewId,
+          candidateId: interview.candidateId,
+          candidateName: interviewCandidate ? `${interviewCandidate.firstName} ${interviewCandidate.lastName}` : "",
+          interviewerName: session.user.name ?? "",
+          recommendation: body.recommendation,
+          submittedAt: new Date().toISOString(),
+        });
+      });
+
       return ok(updated);
     }
 
@@ -114,6 +129,21 @@ export async function POST(
         data: { interviewId, orgId: session.orgId, candidateId: interview.candidateId },
       })
       .catch(() => {});
+
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const interviewCandidate = await db.query.candidates.findFirst({
+        where: and(eq(candidates.id, interview.candidateId), eq(candidates.orgId, session.orgId)),
+        columns: { firstName: true, lastName: true },
+      });
+      await runAutomationsForEvent(session.orgId, "scorecard.submitted", {
+        interviewId,
+        candidateId: interview.candidateId,
+        candidateName: interviewCandidate ? `${interviewCandidate.firstName} ${interviewCandidate.lastName}` : "",
+        interviewerName: session.user.name ?? "",
+        recommendation: body.recommendation,
+        submittedAt: new Date().toISOString(),
+      });
+    });
 
     return ok(scorecard, 201);
   });

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { Quote, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { testimonials } from "../data/testimonials";
 
 export function LandingTestimonials() {
@@ -32,13 +32,11 @@ export function LandingTestimonials() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
           className="max-w-2xl text-center mx-auto mb-12"
         >
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-blue-600 mb-3">
-            Teams that ship faster
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-[1.05] text-slate-900">
             Don&apos;t take our word for it.{" "}
-            <span className="brand-text">Take theirs.</span>
+            <span className="text-blue-600">Take theirs.</span>
           </h2>
+          <p className="mt-3 text-slate-500 text-base">Teams that ship faster with StreamlineOS.</p>
         </motion.div>
       </div>
 
@@ -68,21 +66,19 @@ function TestimonialCard({
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
-      className="group relative shrink-0 w-[300px] sm:w-[360px] lg:w-[400px] rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-6 lg:p-7 hover:border-blue-300/70 hover:shadow-[0_22px_50px_-22px_rgba(30,64,175,0.22)] transition-all duration-400"
+      className="group relative shrink-0 w-[300px] sm:w-[360px] lg:w-[400px] rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-6 hover:border-blue-300/70 hover:shadow-[0_20px_48px_-20px_rgba(30,64,175,0.20)] transition-all duration-300"
     >
-      <Quote className="h-5 w-5 text-blue-500/45 mb-3" />
-      <div className="flex gap-0.5 mb-3">
+      <div className="flex gap-0.5 mb-3.5">
         {Array.from({ length: 5 }).map((_, idx) => (
           <Star key={idx} className="h-3 w-3 fill-amber-400 text-amber-400" />
         ))}
       </div>
-      <p className="text-[14px] lg:text-[15px] text-slate-700 leading-relaxed mb-5 line-clamp-5">
+      <p className="text-[14px] text-slate-700 leading-relaxed mb-5 line-clamp-5">
         &ldquo;{testimonial.quote}&rdquo;
       </p>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
         <span
-          className="h-10 w-10 rounded-full inline-flex items-center justify-center text-[12px] font-bold text-white shrink-0"
-          style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+          className="h-9 w-9 rounded-full inline-flex items-center justify-center text-[11px] font-bold text-white shrink-0 bg-blue-600"
         >
           {testimonial.initials}
         </span>
@@ -90,7 +86,7 @@ function TestimonialCard({
           <p className="text-[13px] font-semibold text-slate-900 truncate">
             {testimonial.name}
           </p>
-          <p className="text-[11px] text-slate-500 font-mono truncate">
+          <p className="text-[11px] text-slate-500 truncate">
             {testimonial.role}
           </p>
         </div>

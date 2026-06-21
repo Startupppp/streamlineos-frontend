@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { quotes, quoteLineItems, users, deals, clientAccounts } from "@/lib/db/schema";
 import { eq, and, desc, ilike, sql, count } from "drizzle-orm";
@@ -33,58 +34,68 @@ export async function GET(req: NextRequest) {
     const search = params.get("search") || undefined;
     const limit = Math.min(Number(params.get("limit")) || 25, 100);
     const offset = Number(params.get("offset")) || 0;
+    const orgId = session.orgId;
 
-    const conditions = [eq(quotes.orgId, session.orgId)];
-    if (status) conditions.push(eq(quotes.status, status as "DRAFT"));
-    if (dealId) conditions.push(eq(quotes.dealId, dealId));
-    if (search) conditions.push(ilike(quotes.subject, `%${search}%`));
+    const key = `quotes:list:${orgId}:${status ?? ""}:${dealId ?? ""}:${search ?? ""}:${limit}:${offset}`;
+    const result = await cached(
+      key,
+      async () => {
+        const conditions = [eq(quotes.orgId, orgId)];
+        if (status) conditions.push(eq(quotes.status, status as "DRAFT"));
+        if (dealId) conditions.push(eq(quotes.dealId, dealId));
+        if (search) conditions.push(ilike(quotes.subject, `%${search}%`));
 
-    const where = and(...conditions);
+        const where = and(...conditions);
 
-    const [data, totalResult] = await Promise.all([
-      db
-        .select({
-          id: quotes.id,
-          orgId: quotes.orgId,
-          dealId: quotes.dealId,
-          clientId: quotes.clientId,
-          quoteNumber: quotes.quoteNumber,
-          subject: quotes.subject,
-          status: quotes.status,
-          currency: quotes.currency,
-          totalAmount: quotes.totalAmount,
-          netAmount: quotes.netAmount,
-          validUntil: quotes.validUntil,
-          createdById: quotes.createdById,
-          sentAt: quotes.sentAt,
-          acceptedAt: quotes.acceptedAt,
-          createdAt: quotes.createdAt,
-          updatedAt: quotes.updatedAt,
-          createdByName: users.name,
-          createdByImage: users.image,
-          dealName: deals.name,
-          clientName: clientAccounts.clientName,
-        })
-        .from(quotes)
-        .leftJoin(users, eq(quotes.createdById, users.id))
-        .leftJoin(deals, eq(quotes.dealId, deals.id))
-        .leftJoin(clientAccounts, eq(quotes.clientId, clientAccounts.id))
-        .where(where)
-        .orderBy(desc(quotes.createdAt))
-        .limit(limit)
-        .offset(offset),
-      db.select({ count: count() }).from(quotes).where(where),
-    ]);
+        const [data, totalResult] = await Promise.all([
+          db
+            .select({
+              id: quotes.id,
+              orgId: quotes.orgId,
+              dealId: quotes.dealId,
+              clientId: quotes.clientId,
+              quoteNumber: quotes.quoteNumber,
+              subject: quotes.subject,
+              status: quotes.status,
+              currency: quotes.currency,
+              totalAmount: quotes.totalAmount,
+              netAmount: quotes.netAmount,
+              validUntil: quotes.validUntil,
+              createdById: quotes.createdById,
+              sentAt: quotes.sentAt,
+              acceptedAt: quotes.acceptedAt,
+              createdAt: quotes.createdAt,
+              updatedAt: quotes.updatedAt,
+              createdByName: users.name,
+              createdByImage: users.image,
+              dealName: deals.name,
+              clientName: clientAccounts.clientName,
+            })
+            .from(quotes)
+            .leftJoin(users, eq(quotes.createdById, users.id))
+            .leftJoin(deals, eq(quotes.dealId, deals.id))
+            .leftJoin(clientAccounts, eq(quotes.clientId, clientAccounts.id))
+            .where(where)
+            .orderBy(desc(quotes.createdAt))
+            .limit(limit)
+            .offset(offset),
+          db.select({ count: count() }).from(quotes).where(where),
+        ]);
 
-    return ok({
-      quotes: data.map((q) => ({
-        ...q,
-        createdBy: q.createdByName ? { id: q.createdById, name: q.createdByName, image: q.createdByImage } : null,
-        deal: q.dealId ? { id: q.dealId, name: q.dealName } : null,
-        client: q.clientId ? { id: q.clientId, clientName: q.clientName } : null,
-      })),
-      total: totalResult[0]?.count ?? 0,
-    });
+        return {
+          quotes: data.map((q) => ({
+            ...q,
+            createdBy: q.createdByName ? { id: q.createdById, name: q.createdByName, image: q.createdByImage } : null,
+            deal: q.dealId ? { id: q.dealId, name: q.dealName } : null,
+            client: q.clientId ? { id: q.clientId, clientName: q.clientName } : null,
+          })),
+          total: totalResult[0]?.count ?? 0,
+        };
+      },
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
+
+    return ok(result);
   });
 }
 
@@ -152,6 +163,8 @@ export async function POST(req: NextRequest) {
       targetType: "quote",
       metadata: { quoteNumber, subject: input.subject },
     }).catch(() => {});
+
+    await invalidateCachePattern(`quotes:list:${session.orgId}:*`);
 
     return ok(quote, 201);
   });

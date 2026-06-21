@@ -1,0 +1,228 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCreateJobPosting } from "@/lib/api/hooks/hr/recruitment";
+import { useHrDepartments } from "@/lib/api/hooks/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { FormSidebar } from "./sidebar";
+import {
+  Section1, Section2, Section3, Section4, Section5,
+} from "./sections-1-5";
+import {
+  Section6, Section7, Section8, Section9, Section10,
+} from "./sections-6-10";
+import { createJobFormSchema, SECTION_KEYS, type CreateJobFormValues } from "./schema";
+
+const STEPS = [
+  { title: "Basic Job Details", subtitle: "Title, dept, type" },
+  { title: "Location Details", subtitle: "Country, city, office" },
+  { title: "Compensation Details", subtitle: "Salary, currency, type" },
+  { title: "Experience & Education", subtitle: "Years, education level" },
+  { title: "Skills & Tags", subtitle: "Required & preferred" },
+  { title: "Job Description", subtitle: "Overview, responsibilities" },
+  { title: "Hiring Workflow", subtitle: "Manager, rounds, Q-bank" },
+  { title: "Application Settings", subtitle: "Resume, cover letter" },
+  { title: "Job Status & Visibility", subtitle: "Status, deadline" },
+  { title: "Additional Settings", subtitle: "Priority, referral" },
+] as const;
+
+const SECTIONS = [Section1, Section2, Section3, Section4, Section5, Section6, Section7, Section8, Section9, Section10];
+
+function buildDescription(data: CreateJobFormValues): string {
+  const lines: string[] = [];
+  lines.push(`=== OVERVIEW ===\n${data.overview}`);
+  lines.push(`=== RESPONSIBILITIES ===\n${data.responsibilities}`);
+  lines.push(`=== WORK MODE ===\n${data.workMode}`);
+  if ((data.requiredSkills ?? []).length > 0) {
+    lines.push(`=== REQUIRED SKILLS ===\n${data.requiredSkills.join(", ")}`);
+  }
+  if ((data.preferredSkills ?? []).length > 0) {
+    lines.push(`=== PREFERRED SKILLS ===\n${data.preferredSkills!.join(", ")}`);
+  }
+  lines.push(`=== HIRING MANAGER ===\n${data.hiringManager}`);
+  lines.push(`=== INTERVIEW ROUNDS ===\n${data.interviewRounds.join(", ")}`);
+  lines.push(`=== VISIBILITY ===\n${data.visibility}`);
+  lines.push(`=== PRIORITY ===\n${data.priority}`);
+  return lines.join("\n\n");
+}
+
+function buildRequirements(data: CreateJobFormValues): string {
+  const parts: string[] = [data.jobRequirements];
+  if (data.educationLevel) parts.push(`Education: ${data.educationLevel}`);
+  if ((data.tags ?? []).length > 0) parts.push(`Tags: ${data.tags!.join(", ")}`);
+  return parts.join("\n\n");
+}
+
+export function CreateJobForm() {
+  const router = useRouter();
+  const [activeStep, setActiveStep] = useState(0);
+  const createJob = useCreateJobPosting();
+  const { data: departments } = useHrDepartments();
+
+  const form = useForm<CreateJobFormValues>({
+    resolver: zodResolver(createJobFormSchema),
+    mode: "onBlur",
+    defaultValues: {
+      openings: 1,
+      salaryMin: undefined,
+      salaryMax: undefined,
+      minExperience: 0,
+      requiredSkills: [],
+      preferredSkills: [],
+      tags: [],
+      interviewRounds: [],
+      resumeRequired: true,
+      coverLetterRequired: false,
+      referralEnabled: true,
+      approvalRequired: false,
+      status: "DRAFT",
+    },
+  });
+
+  const { formState: { errors } } = form;
+
+  const getStepHasError = useCallback(
+    (index: number) => {
+      const keys = SECTION_KEYS[index];
+      return keys.some((k) => !!errors[k as keyof CreateJobFormValues]);
+    },
+    [errors]
+  );
+
+  const getStepCompleted = useCallback(
+    (index: number) => {
+      const keys = SECTION_KEYS[index];
+      const values = form.getValues();
+      return keys.every((k) => {
+        const v = values[k as keyof CreateJobFormValues];
+        if (Array.isArray(v)) return v.length > 0;
+        return v !== undefined && v !== null && v !== "";
+      });
+    },
+    [form]
+  );
+
+  const handleSubmit = useCallback(
+    async (status: "DRAFT" | "OPEN") => {
+      const valid = await form.trigger();
+      if (!valid) {
+        const firstErrorIdx = SECTION_KEYS.findIndex((keys) =>
+          keys.some((k) => !!form.formState.errors[k as keyof CreateJobFormValues])
+        );
+        if (firstErrorIdx !== -1) setActiveStep(firstErrorIdx);
+        toast.error("Please fix validation errors before submitting");
+        return;
+      }
+
+      const data = form.getValues();
+      const deptId = Number(data.departmentId);
+      createJob.mutate(
+        {
+          title: data.title.trim(),
+          departmentId: !isNaN(deptId) && deptId > 0 ? deptId : undefined,
+          location: `${data.stateCity}, ${data.country}`,
+          type: data.jobType,
+          experience: `${data.minExperience}${data.maxExperience != null ? `–${data.maxExperience}` : "+"} years | ${data.educationLevel}`,
+          salaryMin: data.salaryMin,
+          salaryMax: data.salaryMax,
+          description: buildDescription(data),
+          requirements: buildRequirements(data),
+          benefits: data.benefits || undefined,
+          openings: data.openings,
+          applicationDeadline: data.applicationDeadline || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success(status === "DRAFT" ? "Job saved as draft" : "Job published successfully");
+            router.push("/hr/recruitment/jobs");
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    },
+    [form, createJob, router]
+  );
+
+  const handleSaveDraft = useCallback(() => handleSubmit("DRAFT"), [handleSubmit]);
+  const handlePublish = useCallback(() => handleSubmit("OPEN"), [handleSubmit]);
+
+  const steps = STEPS.map((s, i) => ({
+    ...s,
+    number: i + 1,
+    active: activeStep === i,
+    completed: getStepCompleted(i),
+    hasError: getStepHasError(i),
+  }));
+
+  const ActiveSection = SECTIONS[activeStep];
+
+  return (
+    <div className="flex h-full min-h-0">
+      <FormSidebar steps={steps} onStepClick={setActiveStep} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center justify-between px-6 py-3 border-b shrink-0 gap-3">
+          <div>
+            <p className="text-xs text-muted-foreground">
+              Step {activeStep + 1} of {STEPS.length} — {STEPS[activeStep].title}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveDraft}
+              disabled={createJob.isPending}
+            >
+              {createJob.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
+              Save as Draft
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePublish}
+              disabled={createJob.isPending}
+            >
+              {createJob.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
+              Publish Job
+            </Button>
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="px-6 py-6 max-w-2xl">
+            <ActiveSection form={form} departments={departments} />
+          </div>
+        </ScrollArea>
+
+        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={activeStep === 0}
+            onClick={() => setActiveStep((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {activeStep + 1} / {STEPS.length}
+          </span>
+          {activeStep < STEPS.length - 1 ? (
+            <Button size="sm" onClick={() => setActiveStep((p) => p + 1)}>
+              Next
+            </Button>
+          ) : (
+            <Button size="sm" onClick={handlePublish} disabled={createJob.isPending}>
+              Publish Job
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

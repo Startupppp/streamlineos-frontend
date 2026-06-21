@@ -19,7 +19,7 @@ export default function DealDetailLoading() {
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-7 w-24 rounded-lg" />
           ))}

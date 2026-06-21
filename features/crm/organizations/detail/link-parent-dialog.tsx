@@ -39,7 +39,7 @@ export function LinkParentDialog({
       { id: organizationId, parentId: selectedId },
       {
         onSuccess: () => {
-          toast.success(selectedId ? "Parent account linked" : "Parent account unlinked");
+          toast.success(selectedId ?"Parent account linked" :"Parent account unlinked");
           onOpenChange(false);
         },
         onError: (e) => toast.error(e.message),
@@ -75,10 +75,10 @@ export function LinkParentDialog({
                 type="button"
                 onClick={() => setSelectedId(null)}
                 className={cn(
-                  "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+"w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                   selectedId === null
-                    ? "bg-gold/10 text-gold"
-                    : "hover:bg-accent text-muted-foreground",
+                    ?"bg-blue-500/10 text-blue-600"
+                    :"hover:bg-accent text-muted-foreground",
                 )}
               >
                 <Link2Off className="h-3.5 w-3.5 shrink-0" />
@@ -92,10 +92,10 @@ export function LinkParentDialog({
                   type="button"
                   onClick={() => setSelectedId(org.id)}
                   className={cn(
-                    "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
+"w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                     selectedId === org.id
-                      ? "bg-gold/10 text-gold"
-                      : "hover:bg-accent text-foreground",
+                      ?"bg-blue-500/10 text-blue-600"
+                      :"hover:bg-accent text-foreground",
                   )}
                 >
                   <span className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-semibold shrink-0">
@@ -121,12 +121,12 @@ export function LinkParentDialog({
             <X className="h-4 w-4 mr-1" /> Cancel
           </Button>
           <Button
-            className="flex-1 bg-gold hover:bg-gold/90 text-white"
+            className="flex-1"
             onClick={handleConfirm}
             disabled={updateMutation.isPending}
           >
             <Check className="h-4 w-4 mr-1" />
-            {selectedId ? "Link Parent" : "Remove Parent"}
+            {selectedId ?"Link Parent" :"Remove Parent"}
           </Button>
         </DialogFooter>
       </DialogContent>

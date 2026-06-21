@@ -49,7 +49,17 @@ async function del<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
   return res.data;
 }
 
-export const apiClient = { get, post, put, patch, delete: del } as const;
+async function upload<T>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<T> {
+  const res = await _axios.post<T>(url, formData, config);
+  return res.data;
+}
+
+async function download(url: string, config?: AxiosRequestConfig): Promise<Blob> {
+  const res = await _axios.get<Blob>(url, { ...config, responseType: "blob" });
+  return res.data;
+}
+
+export const apiClient = { get, post, put, patch, delete: del, upload, download } as const;
 
 export function getApiError(error: unknown): string {
   if (axios.isAxiosError(error)) {

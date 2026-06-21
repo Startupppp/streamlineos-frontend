@@ -10,13 +10,11 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { AIAttritionRiskButton } from "./ai-attrition-risk-button";
 import {
   canDeleteEmployee,
   getDisplayName,
@@ -36,10 +34,8 @@ interface HrEmployeeTableProps {
   showTo: number;
   currentUserRole: string | undefined;
   currentUserId: string | undefined;
-  togglingAccess: Set<string>;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: PageSizeOption) => void;
-  onToggleDashboardAccess: (userId: string, newValue: boolean) => void;
   onRequestDelete: (employee: Employee) => void;
 }
 
@@ -53,13 +49,10 @@ export function HrEmployeeTable({
   showTo,
   currentUserRole,
   currentUserId,
-  togglingAccess,
   onPageChange,
   onPageSizeChange,
-  onToggleDashboardAccess,
   onRequestDelete,
 }: HrEmployeeTableProps) {
-  const canManageAccess = currentUserRole === "CEO" || currentUserRole === "HR";
   const [goToPage, setGoToPage] = useState("");
 
   const handleGoToPageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,10 +92,6 @@ export function HrEmployeeTable({
                   <TableHead>Role</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Status</TableHead>
-                  {canManageAccess && (
-                    <TableHead className="text-center">Dashboard</TableHead>
-                  )}
-                  {canManageAccess && <TableHead>AI Risk</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -114,9 +103,14 @@ export function HrEmployeeTable({
                   const canTerminate = canDeleteEmployee(
                     user.role,
                     user.id,
+                    user.isActive,
                     currentUserRole,
                     currentUserId,
                   );
+
+                  function handleTerminateClick() {
+                    onRequestDelete(user);
+                  }
 
                   return (
                     <TableRow key={user.id} className="group">
@@ -173,33 +167,6 @@ export function HrEmployeeTable({
                         </Badge>
                       </TableCell>
 
-                      {canManageAccess && (
-                        <TableCell className="text-center">
-                          {user.role === "CEO" || user.id === currentUserId ? (
-                            <Switch
-                              checked={true}
-                              disabled
-                              aria-label="Dashboard access always on"
-                            />
-                          ) : (
-                            <Switch
-                              checked={user.hasDashboardAccess}
-                              disabled={togglingAccess.has(user.id)}
-                              onCheckedChange={(checked) =>
-                                onToggleDashboardAccess(user.id, checked)
-                              }
-                              aria-label={`Toggle dashboard access for ${displayName}`}
-                            />
-                          )}
-                        </TableCell>
-                      )}
-
-                      {canManageAccess && (
-                        <TableCell>
-                          <AIAttritionRiskButton userId={user.id} compact />
-                        </TableCell>
-                      )}
-
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
@@ -207,6 +174,7 @@ export function HrEmployeeTable({
                             size="icon"
                             className="h-7 w-7"
                             aria-label={`Edit ${displayName}`}
+                            title={`Edit ${displayName}`}
                             asChild
                           >
                             <Link href={`/hr/employees/${user.id}?tab=profile`}>
@@ -219,7 +187,8 @@ export function HrEmployeeTable({
                               size="icon"
                               className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                               aria-label={`Terminate ${displayName}`}
-                              onClick={() => onRequestDelete(user)}
+                              title={`Terminate ${displayName}`}
+                              onClick={handleTerminateClick}
                             >
                               <UserX className="h-3.5 w-3.5" />
                             </Button>

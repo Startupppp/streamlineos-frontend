@@ -17,18 +17,18 @@ import {
 } from "@/components/ui/form";
 
 const EDIT_STAGES = [
-  { key: "LEAD" as const, label: "Lead" },
-  { key: "CONTACTED" as const, label: "Contacted" },
-  { key: "PROPOSAL" as const, label: "Proposal" },
-  { key: "NEGOTIATION" as const, label: "Negotiation" },
-  { key: "WON" as const, label: "Won" },
-  { key: "LOST" as const, label: "Lost" },
+  { key:"LEAD" as const, label:"Lead" },
+  { key:"CONTACTED" as const, label:"Contacted" },
+  { key:"PROPOSAL" as const, label:"Proposal" },
+  { key:"NEGOTIATION" as const, label:"Negotiation" },
+  { key:"WON" as const, label:"Won" },
+  { key:"LOST" as const, label:"Lost" },
 ];
 
 const editSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1,"Name is required"),
   value: z.string().optional(),
-  stage: z.enum(["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]),
+  stage: z.enum(["LEAD","CONTACTED","PROPOSAL","NEGOTIATION","WON","LOST"]),
   probability: z.coerce.number().min(0).max(100),
   contactPerson: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal("")),
@@ -65,15 +65,15 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
     resolver: zodResolver(editSchema) as unknown as Resolver<EditFormValues>,
     values: {
       name: deal.name,
-      value: deal.value ?? "0",
+      value: deal.value ??"0",
       stage: deal.stage as EditFormValues["stage"],
       probability: deal.probability ?? 0,
-      contactPerson: deal.contactPerson ?? "",
-      contactEmail: deal.contactEmail ?? "",
-      contactPhone: deal.contactPhone ?? "",
-      expectedCloseDate: deal.expectedCloseDate ?? "",
-      notes: deal.notes ?? "",
-      lostReason: deal.lostReason ?? "",
+      contactPerson: deal.contactPerson ??"",
+      contactEmail: deal.contactEmail ??"",
+      contactPhone: deal.contactPhone ??"",
+      expectedCloseDate: deal.expectedCloseDate ??"",
+      notes: deal.notes ??"",
+      lostReason: deal.lostReason ??"",
     },
   });
 
@@ -134,7 +134,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
                 <FormItem>
                   <FormLabel>Expected Close</FormLabel>
                   <FormControl>
-                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Expected close date" />
+                    <DatePicker value={field.value ??""} onChange={field.onChange} placeholder="Expected close date" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -160,7 +160,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
                   <FormMessage />
                 </FormItem>
               )} />
-              {deal.stage === "LOST" && (
+              {deal.stage ==="LOST" && (
                 <FormField control={form.control} name="lostReason" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lost Reason</FormLabel>
@@ -181,8 +181,8 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
             </div>
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-              <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={isPending}>
-                {isPending ? "Saving..." : "Save Changes"}
+              <Button type="submit" disabled={isPending}>
+                {isPending ?"Saving..." :"Save Changes"}
               </Button>
             </div>
           </form>

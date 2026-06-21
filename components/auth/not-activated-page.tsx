@@ -22,9 +22,9 @@ export function NotActivatedPage() {
           className="mb-8"
         >
           <div className="relative">
-            <div className="h-28 w-28 rounded-full bg-gold/10 flex items-center justify-center">
-              <div className="h-20 w-20 rounded-full bg-gold/15 flex items-center justify-center">
-                <ShieldOff className="h-10 w-10 text-gold" />
+            <div className="h-28 w-28 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-blue-500/15 flex items-center justify-center">
+                <ShieldOff className="h-10 w-10 text-blue-600" />
               </div>
             </div>
             <motion.div
@@ -44,7 +44,7 @@ export function NotActivatedPage() {
           transition={{ delay: 0.25, duration: 0.4 }}
           className="text-2xl font-semibold text-foreground mb-3"
         >
-          Account Not Activated
+          Access Restricted
         </motion.h1>
 
         <motion.p
@@ -53,8 +53,8 @@ export function NotActivatedPage() {
           transition={{ delay: 0.35, duration: 0.4 }}
           className="text-muted-foreground text-sm leading-relaxed mb-2"
         >
-          Your dashboard access has not been activated yet. Please contact your
-          administrator or HR department to get access to the dashboard.
+          Your portal access has been temporarily disabled by an administrator.
+          Your account remains active — only portal access is restricted.
         </motion.p>
 
         <motion.p
@@ -63,7 +63,7 @@ export function NotActivatedPage() {
           transition={{ delay: 0.45, duration: 0.4 }}
           className="text-muted-foreground/70 text-xs mb-8"
         >
-          If you believe this is an error, please reach out to your team lead.
+          Please contact your HR department or administrator to restore access.
         </motion.p>
 
         <motion.div

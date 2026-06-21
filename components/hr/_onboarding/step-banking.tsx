@@ -2,7 +2,7 @@
 
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "../../../lib/validations/hr";
+import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
 
 import { Input } from "../../ui/input";
 import {
@@ -28,7 +28,7 @@ export function StepBanking({ form }: StepBankingProps) {
           name="bankDetails.accountHolder"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Holder Name <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Account Holder Name</FormLabel>
               <FormControl>
                 <Input placeholder="Name as per bank records" {...field} onChange={(e) => {
                   if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
@@ -43,7 +43,7 @@ export function StepBanking({ form }: StepBankingProps) {
           name="bankDetails.bankName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bank Name <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Bank Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Chase, HDFC" {...field} onChange={(e) => {
                   if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
@@ -58,7 +58,7 @@ export function StepBanking({ form }: StepBankingProps) {
           name="bankDetails.branch"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Branch Name <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Branch Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Down Town Branch" {...field} onChange={(e) => {
                   if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
@@ -73,7 +73,7 @@ export function StepBanking({ form }: StepBankingProps) {
           name="bankDetails.accountNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Number <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Account Number</FormLabel>
               <FormControl>
                 <Input placeholder="XXXX-XXXX-XXXX" inputMode="numeric" {...field} onChange={(e) => {
                   if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
@@ -88,7 +88,7 @@ export function StepBanking({ form }: StepBankingProps) {
           name="bankDetails.ifsc"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Routing / IFSC Code <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Routing / IFSC Code</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. SBIN0001234" {...field} onChange={(e) => {
                   const v = e.target.value.toUpperCase();

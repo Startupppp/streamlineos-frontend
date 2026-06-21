@@ -1,4 +1,4 @@
-export { getEmailTemplate, baseUrl, logoUrl } from "./base";
+export { getEmailTemplate, appUrl, logoUrl } from "./base";
 export type { EmailTemplateProps } from "./base";
 
 export {

@@ -40,6 +40,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(doc);
+    return ok(doc, 201);
   });
 }

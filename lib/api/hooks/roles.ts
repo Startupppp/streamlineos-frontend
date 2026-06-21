@@ -12,6 +12,7 @@ export const useRoles = (
   return useQuery<Role[], Error>({
     queryKey: queryKeys.roles.list(),
     queryFn: () => apiClient.get<Role[]>("/roles"),
+    staleTime: 30 * 60_000,
     ...options,
   });
 };
@@ -27,6 +28,7 @@ export const useRole = (
     queryKey: queryKeys.roles.detail(id),
     queryFn: () => apiClient.get<Role>(`/roles/${id}`),
     enabled: id > 0,
+    staleTime: 30 * 60_000,
     ...options,
   });
 };

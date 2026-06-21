@@ -1,14 +1,4 @@
-/**
- * Creates the blog schema (blog_post_status enum + blog_authors + blog_categories
- * + blog_posts) idempotently in the database the app uses (DATABASE_URL, falling
- * back to DB).
- *
- * We apply only the blog objects via targeted SQL rather than `drizzle-kit push`
- * so we never diff/alter the rest of an existing, populated database. The blog
- * tables are self-contained (authors live in blog_authors, no FK to users).
- *
- * Run: npx tsx --env-file=.env scripts/migrate-blog.ts
- */
+
 
 process.env.DATABASE_URL ??= process.env.DB;
 
@@ -86,11 +76,11 @@ CREATE INDEX IF NOT EXISTS "idx_blog_posts_status_published" ON "blog_posts" ("s
 `;
 
 async function main() {
-  const { client } = await import("../lib/db");
-  console.log("📦 Applying blog schema to the app database…");
-  await client.unsafe(DDL);
+  const { blogClient } = await import("../lib/blog-db");
+  console.log("📦 Applying blog schema to the blog database (BLOGS_DB)…");
+  await blogClient.unsafe(DDL);
   console.log("✅ Blog tables ready (blog_authors, blog_categories, blog_posts).");
-  await client.end({ timeout: 5 });
+  await blogClient.end({ timeout: 5 });
   process.exit(0);
 }
 

@@ -6,11 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, Pencil, Mail, Eye, Copy, Variable,
+  Plus, Trash2, Pencil, Mail, Eye, Copy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,8 +18,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription,
 } from "@/components/ui/form";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
@@ -29,46 +31,58 @@ import {
 import { toast } from "sonner";
 
 const VARIABLES = [
-  "{{lead.name}}",
-  "{{lead.email}}",
-  "{{lead.phone}}",
-  "{{lead.company}}",
-  "{{lead.city}}",
-  "{{lead.source}}",
-  "{{lead.potentialValue}}",
-  "{{deal.name}}",
-  "{{deal.value}}",
-  "{{deal.stage}}",
-  "{{user.name}}",
-  "{{user.email}}",
+"{{lead.name}}",
+"{{lead.email}}",
+"{{lead.phone}}",
+"{{lead.company}}",
+"{{lead.city}}",
+"{{lead.source}}",
+"{{lead.potentialValue}}",
+"{{deal.name}}",
+"{{deal.value}}",
+"{{deal.stage}}",
+"{{user.name}}",
+"{{user.email}}",
 ];
 
 const SAMPLE_DATA: Record<string, string> = {
-  "lead.name": "Rahul Sharma",
-  "lead.email": "rahul@example.com",
-  "lead.phone": "+919876543210",
-  "lead.company": "TechCorp India",
-  "lead.city": "Mumbai",
-  "lead.source": "referral",
-  "lead.potentialValue": "50,00,000",
-  "deal.name": "Enterprise License",
-  "deal.value": "25,00,000",
-  "deal.stage": "Proposal",
-  "user.name": "Priya Patel",
-  "user.email": "priya@streamlineos.app",
+"lead.name":"Rahul Sharma",
+"lead.email":"rahul@example.com",
+"lead.phone":"+919876543210",
+"lead.company":"TechCorp India",
+"lead.city":"Mumbai",
+"lead.source":"referral",
+"lead.potentialValue":"50,00,000",
+"deal.name":"Enterprise License",
+"deal.value":"25,00,000",
+"deal.stage":"Proposal",
+"user.name":"Priya Patel",
+"user.email":"priya@streamlineos.app",
 };
 
+const TEMPLATE_NAME_INVALID_CHARS = /[<>{}|\\^`]/;
+
 const templateSchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  subject: z.string().min(1, "Subject required"),
-  body: z.string().min(1, "Body required"),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => !TEMPLATE_NAME_INVALID_CHARS.test(v), "Name contains invalid special characters (<>{}|\\^`)")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces"),
+  subject: z
+    .string()
+    .min(3, "Subject must be at least 3 characters")
+    .max(200, "Subject must be at most 200 characters"),
+  body: z
+    .string()
+    .min(10, "Body must be at least 10 characters"),
 });
 type TemplateForm = z.infer<typeof templateSchema>;
 
 function interpolate(text: string, data: Record<string, string>) {
   let result = text;
   for (const [key, value] of Object.entries(data)) {
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`,"g"), value);
   }
   return result;
 }
@@ -85,7 +99,7 @@ export default function EmailTemplatesPage() {
 
   const createForm = useForm<TemplateForm>({
     resolver: zodResolver(templateSchema),
-    defaultValues: { name: "", subject: "", body: "" },
+    defaultValues: { name:"", subject:"", body:"" },
   });
 
   const editForm = useForm<TemplateForm>({
@@ -118,8 +132,8 @@ export default function EmailTemplatesPage() {
     editForm.reset({ name: template.name, subject: template.subject, body: template.body });
   }, [editForm]);
 
-  const insertVariable = useCallback((variable: string, formType: "create" | "edit") => {
-    const f = formType === "create" ? createForm : editForm;
+  const insertVariable = useCallback((variable: string, formType:"create" |"edit") => {
+    const f = formType ==="create" ? createForm : editForm;
     const current = f.getValues("body");
     f.setValue("body", current + variable);
   }, [createForm, editForm]);
@@ -161,7 +175,7 @@ export default function EmailTemplatesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button >
               <Plus className="h-4 w-4 mr-2" />
               New Template
             </Button>
@@ -175,15 +189,17 @@ export default function EmailTemplatesPage() {
                 <FormField control={createForm.control} name="name" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Template Name</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Welcome Email" /></FormControl>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome Email" maxLength={100} /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
                   </FormItem>
                 )} />
                 <FormField control={createForm.control} name="subject" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" /></FormControl>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome to StreamlineOS, {{lead.name}}" maxLength={200} /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
                   </FormItem>
                 )} />
                 <FormField control={createForm.control} name="body" render={({ field }) => (
@@ -191,6 +207,7 @@ export default function EmailTemplatesPage() {
                     <FormLabel>Body</FormLabel>
                     <FormControl><Textarea {...field} rows={8} placeholder="Write your email body..." /></FormControl>
                     <FormMessage />
+                    <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
                   </FormItem>
                 )} />
                 <div>
@@ -201,8 +218,8 @@ export default function EmailTemplatesPage() {
                     ))}
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createTemplate.isPending}>
-                  {createTemplate.isPending ? "Creating..." : "Create Template"}
+                <Button type="submit" className="w-full" disabled={createTemplate.isPending}>
+                  {createTemplate.isPending ?"Creating..." :"Create Template"}
                 </Button>
               </form>
             </Form>
@@ -241,7 +258,7 @@ export default function EmailTemplatesPage() {
 
         {editingId !== null && (
           <motion.div variants={fadeUp}>
-            <Card className="shadow-sm border-gold/30">
+            <Card className="shadow-sm border-blue-500/30">
               <CardHeader>
                 <CardTitle className="text-base">Edit Template</CardTitle>
               </CardHeader>
@@ -251,15 +268,17 @@ export default function EmailTemplatesPage() {
                     <FormField control={editForm.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Template Name</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} maxLength={100} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length}/100 characters</FormDescription>
                       </FormItem>
                     )} />
                     <FormField control={editForm.control} name="subject" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Subject</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormControl><Input {...field} maxLength={200} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length}/200 characters</FormDescription>
                       </FormItem>
                     )} />
                     <FormField control={editForm.control} name="body" render={({ field }) => (
@@ -267,6 +286,7 @@ export default function EmailTemplatesPage() {
                         <FormLabel>Body</FormLabel>
                         <FormControl><Textarea {...field} rows={8} /></FormControl>
                         <FormMessage />
+                        <FormDescription className="text-[10px]">{field.value.length} characters (min 10)</FormDescription>
                       </FormItem>
                     )} />
                     <div>
@@ -279,8 +299,8 @@ export default function EmailTemplatesPage() {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
-                      <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updateTemplate.isPending}>
-                        {updateTemplate.isPending ? "Saving..." : "Save Changes"}
+                      <Button type="submit" disabled={updateTemplate.isPending}>
+                        {updateTemplate.isPending ?"Saving..." :"Save Changes"}
                       </Button>
                     </div>
                   </form>
@@ -346,8 +366,17 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDelete }: TemplateC
   return (
     <Card className="shadow-sm hover:shadow-md transition-all">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-sm truncate">{template.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CardTitle className="text-sm truncate min-w-0 cursor-default">{template.name}</CardTitle>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs break-words">{template.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePreviewToggle} aria-label="View">
               <Eye className="h-3.5 w-3.5" />
@@ -379,8 +408,8 @@ function TemplateCard({ template, onPreviewToggle, onEdit, onDelete }: TemplateC
 
 interface VariableButtonProps {
   variable: string;
-  formType: "create" | "edit";
-  onInsert: (variable: string, formType: "create" | "edit") => void;
+  formType:"create" |"edit";
+  onInsert: (variable: string, formType:"create" |"edit") => void;
 }
 
 function VariableButton({ variable, formType, onInsert }: VariableButtonProps) {

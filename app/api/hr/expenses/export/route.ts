@@ -3,7 +3,7 @@ import { withAuth } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, users } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
 
 export async function GET(req: NextRequest) {
@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
     const status = params.get("status") || undefined;
     const startDate = params.get("startDate");
     const endDate = params.get("endDate");
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("approve", "hr:expenses");
 
     const conditions = [eq(expenses.orgId, session.orgId)];
 

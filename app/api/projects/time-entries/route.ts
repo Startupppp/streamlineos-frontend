@@ -5,7 +5,7 @@ import { withAuth, ok, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets, tickets } from "@/lib/db/schema";
 import { eq, and, gte, lte, inArray, desc } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -19,7 +19,10 @@ export async function GET(req: NextRequest) {
     const limit = toNumber(searchParams.get("limit")) ?? 50;
     const offset = (page - 1) * limit;
 
-    const isOwnerOrAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+
+    const isOwnerOrAdmin = ability.can("manage", "projects:timesheets");
 
     const conditions = [eq(timesheets.orgId, session.orgId!)];
 

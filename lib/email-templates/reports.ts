@@ -1,15 +1,16 @@
-import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
+import { getEmailTemplate, appUrl, logoUrl, escapeHtml } from "./base";
 
 export function getWeeklyAttendanceReportTemplate(
   weekRange: string,
   orgName: string,
-  rows: { name: string; totalHours: string; autoCheckoutDays: number; overtimeDays: number; daysPresent: number }[]
+  rows: { department: string; name: string; totalHours: string; autoCheckoutDays: number; overtimeDays: number; daysPresent: number }[]
 ): string {
   const sOrgName = escapeHtml(orgName);
   const tableRows = rows
     .map(
       (r) => `
       <tr>
+        <td style="border: 1px solid #d1d5db; padding: 8px 12px; color: #6b7280; font-size: 13px;">${escapeHtml(r.department)}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px 12px; color: #374151;">${escapeHtml(r.name)}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: center; color: #111827;">${r.daysPresent}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: center; color: #111827;">${escapeHtml(r.totalHours)}</td>
@@ -20,14 +21,15 @@ export function getWeeklyAttendanceReportTemplate(
     .join("");
 
   const content = `
-    <h2 class="email-title">Weekly Attendance Report</h2>
+    <h2 class="email-title">Attendance Report</h2>
     <p class="email-text">
-      Here is the weekly attendance summary for <strong>${sOrgName}</strong> for the period <strong>${weekRange}</strong>.
+      Here is the attendance summary for <strong>${sOrgName}</strong> for the period <strong>${weekRange}</strong>.
     </p>
 
     <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px;">
       <thead>
         <tr style="background-color: #f3f4f6;">
+          <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; font-weight: 600; color: #111827;">Department</th>
           <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; font-weight: 600; color: #111827;">Employee</th>
           <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: center; font-weight: 600; color: #111827;">Days Present</th>
           <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: center; font-weight: 600; color: #111827;">Total Hours</th>
@@ -43,12 +45,12 @@ export function getWeeklyAttendanceReportTemplate(
     <div class="divider"></div>
 
     <p class="email-text" style="font-size: 14px; color: #64748b;">
-      This is an automated weekly report. Review attendance details in the HR portal.
+      This report includes all employees with at least one attendance record in the selected period, sorted by department. Review full details in the HR portal.
     </p>
   `;
 
   return getEmailTemplate({
-    title: `Weekly Attendance Report - ${weekRange}`,
+    title: `Attendance Report - ${weekRange}`,
     preheader: `Attendance summary for ${weekRange}`,
     content,
   });

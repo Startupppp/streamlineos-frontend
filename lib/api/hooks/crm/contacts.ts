@@ -17,6 +17,7 @@ export function useContacts(filters?: ContactFilters) {
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedContacts>("/contacts", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -25,6 +26,7 @@ export function useContactDetail(id: number) {
     queryKey: queryKeys.contacts.detail(id),
     queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -64,7 +66,7 @@ export function useDeleteContact() {
 
 export function useContactSearch(q: string) {
   return useQuery({
-    queryKey: ["contacts", "search", q],
+    queryKey: queryKeys.contacts.search(q),
     queryFn: () =>
       apiClient.get<ContactSearchResult[]>("/contacts/search", { q }),
     enabled: q.length >= 2,

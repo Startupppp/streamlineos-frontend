@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -156,13 +156,12 @@ function FnfContent() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={completeId !== null}
         onOpenChange={(open) => { if (!open) setCompleteId(null); }}
         title="Complete Settlement"
         description="Mark this FnF settlement as completed? This action cannot be undone."
         confirmLabel="Complete"
-        variant="default"
         onConfirm={handleComplete}
         isPending={complete.isPending}
       />

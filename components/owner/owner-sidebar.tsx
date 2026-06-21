@@ -79,13 +79,13 @@ export function OwnerSidebar({
   return (
     <aside
       className={cn(
-        "hidden lg:flex shrink-0 flex-col bg-white text-slate-700 border-r border-slate-200 transition-[width] duration-200 ease-out",
+        "hidden lg:flex shrink-0 flex-col bg-card text-foreground border-r border-border transition-[width] duration-200 ease-out",
         collapsed ? "w-[56px]" : "w-[220px]",
       )}
     >
       <div
         className={cn(
-          "h-12 shrink-0 border-b border-slate-200 flex items-center",
+          "h-12 shrink-0 border-b border-border flex items-center",
           collapsed ? "justify-center px-2" : "justify-between px-3",
         )}
       >
@@ -93,7 +93,7 @@ export function OwnerSidebar({
           <AnimatedLogo size={26} className="rounded-md shrink-0" />
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <p className="font-display text-[12.5px] font-bold tracking-tight text-slate-900 truncate">
+              <p className="font-display text-[12.5px] font-bold tracking-tight text-foreground truncate">
                 StreamlineOS
               </p>
               <p className="text-[9px] font-mono uppercase tracking-[0.16em] text-blue-600">
@@ -106,7 +106,7 @@ export function OwnerSidebar({
           <button
             onClick={toggle}
             aria-label="Collapse sidebar"
-            className="h-6 w-6 inline-flex items-center justify-center rounded text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
           >
             <PanelLeftClose className="h-3.5 w-3.5" />
           </button>
@@ -130,8 +130,8 @@ export function OwnerSidebar({
                 "relative flex items-center rounded-md text-[12.5px] font-medium transition-colors",
                 collapsed ? "justify-center h-8" : "gap-2 px-2 h-8",
                 active
-                  ? "text-slate-900 bg-blue-50"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
+                  ? "text-foreground bg-sidebar-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60",
               )}
             >
               {active && (
@@ -140,7 +140,7 @@ export function OwnerSidebar({
               <Icon
                 className={cn(
                   "h-3.5 w-3.5 shrink-0",
-                  active ? "text-blue-600" : "text-slate-500",
+                  active ? "text-blue-600" : "text-muted-foreground",
                 )}
               />
               {!collapsed && (
@@ -161,7 +161,7 @@ export function OwnerSidebar({
         })}
       </nav>
 
-      <div className="shrink-0 border-t border-slate-200 px-2 py-1.5">
+      <div className="shrink-0 border-t border-border px-2 py-1.5">
         <div
           className={cn(
             "flex items-center gap-2 px-1 py-1 rounded-md",
@@ -177,10 +177,10 @@ export function OwnerSidebar({
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-semibold text-slate-900 truncate leading-tight">
+              <p className="text-[11.5px] font-semibold text-foreground truncate leading-tight">
                 {ownerName}
               </p>
-              <p className="text-[10px] font-mono text-slate-500 truncate">
+              <p className="text-[10px] font-mono text-muted-foreground truncate">
                 {ownerEmail}
               </p>
             </div>
@@ -190,7 +190,7 @@ export function OwnerSidebar({
           onClick={() => signOut({ callbackUrl: "/signin" })}
           title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "w-full flex items-center rounded-md text-[11.5px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors",
+            "w-full flex items-center rounded-md text-[11.5px] font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors",
             collapsed ? "justify-center h-7" : "gap-2 px-2 h-7",
           )}
         >
@@ -201,7 +201,7 @@ export function OwnerSidebar({
           <button
             onClick={toggle}
             aria-label="Expand sidebar"
-            className="mt-1 w-full inline-flex items-center justify-center h-7 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="mt-1 w-full inline-flex items-center justify-center h-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
           >
             <PanelLeft className="h-3 w-3" />
           </button>

@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const leadId = Number(id);
   if (!Number.isFinite(leadId)) return err("Invalid lead id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("update", "crm:leads", async (session) => {
     const input = await parseBody(req, schema);
     const updateData: Record<string, unknown> = {
       verifiedById: session.user.id,

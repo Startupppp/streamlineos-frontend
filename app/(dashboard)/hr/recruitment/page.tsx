@@ -8,13 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Users, Calendar, UserCheck, ArrowRight } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatDistanceToNow } from "date-fns";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 
 
-const PIE_COLORS = ["#0f2b7f", "#bd882c", "#10b981", "#8b5cf6", "#f43f5e", "#06b6d4"];
+const PIE_COLORS = ["#1e40af", "#06b6d4", "#10b981", "#8b5cf6", "#f43f5e", "#3b82f6"];
 
 function SourcePieChart({ sources }: { sources: { source: string; count: number }[] }) {
   const data = sources.map((s) => ({ name: s.source, value: s.count }));
@@ -45,7 +47,15 @@ function SourcePieChart({ sources }: { sources: { source: string; count: number 
   );
 }
 
+const NAV_LINKS = [
+  { href: "/hr/recruitment/candidates", label: "Candidates" },
+  { href: "/hr/recruitment/pipeline", label: "Kanban" },
+  { href: "/hr/recruitment/jobs", label: "Jobs" },
+  { href: "/hr/recruitment/question-bank", label: "Question Bank" },
+] as const;
+
 export default function RecruitmentDashboardPage() {
+  const pathname = usePathname();
   const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
   const { data: recentJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
   const { data: upcomingInterviews, isLoading: interviewsLoading } = useInterviews({ upcoming: true });
@@ -77,42 +87,28 @@ export default function RecruitmentDashboardPage() {
       subtitle="Hire the best talent for your team"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/candidates">Candidates</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/pipeline">Kanban</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/hr/recruitment/jobs">Jobs</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/hr/recruitment/question-bank">Question Bank</Link>
-          </Button>
+          {NAV_LINKS.map((link) => (
+            <Button
+              key={link.href}
+              variant={pathname === link.href || pathname.startsWith(link.href + "/") ? "default" : "outline"}
+              size="sm"
+              asChild
+            >
+              <Link href={link.href}>{link.label}</Link>
+            </Button>
+          ))}
         </div>
       }
     >
       <div className="space-y-6">
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[
-            { label: "Total Jobs", value: stats?.totalJobs ?? 0, icon: Briefcase },
-            { label: "Open Positions", value: stats?.openJobs ?? 0, icon: Briefcase },
-            { label: "Total Candidates", value: stats?.totalCandidates ?? 0, icon: Users },
-            { label: "New Candidates", value: stats?.newCandidates ?? 0, icon: Users },
-            { label: "Upcoming Interviews", value: stats?.upcomingInterviews ?? 0, icon: Calendar },
-            { label: "Hired (Month)", value: stats?.hiredThisMonth ?? 0, icon: UserCheck },
-          ].map(({ label, value, icon: Icon }) => (
-            <Card key={label}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="text-xs">{label}</span>
-                </div>
-                <p className="text-xl font-bold">{value}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <StatCard label="Total Jobs" value={stats?.totalJobs ?? 0} icon={Briefcase} color="blue" index={0} />
+          <StatCard label="Open Positions" value={stats?.openJobs ?? 0} icon={Briefcase} color="cyan" index={1} />
+          <StatCard label="Total Candidates" value={stats?.totalCandidates ?? 0} icon={Users} color="violet" index={2} />
+          <StatCard label="New Candidates" value={stats?.newCandidates ?? 0} icon={Users} color="amber" index={3} />
+          <StatCard label="Upcoming Interviews" value={stats?.upcomingInterviews ?? 0} icon={Calendar} color="blue" index={4} />
+          <StatCard label="Hired (Month)" value={stats?.hiredThisMonth ?? 0} icon={UserCheck} color="green" index={5} />
         </div>
 
         {stats && (stats.funnel || stats.sources?.length > 0) && (
@@ -225,12 +221,12 @@ export default function RecruitmentDashboardPage() {
             <CardTitle className="text-sm font-medium">Pipeline Funnel</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="flex items-end gap-2 overflow-x-auto pb-2">
+            <div className="flex items-end gap-2 pb-2">
               {analytics.funnel.map((stage) => {
                 const maxCount = Math.max(...analytics.funnel.map((s) => s.count), 1);
                 const heightPct = Math.max((stage.count / maxCount) * 100, 4);
                 return (
-                  <div key={stage.stage} className="flex flex-col items-center gap-1 flex-1 min-w-[60px]">
+                  <div key={stage.stage} className="flex flex-col items-center gap-1 flex-1 min-w-0">
                     <span className="text-xs font-semibold tabular-nums">{stage.count}</span>
                     <div className="w-full rounded-t-sm bg-primary/80" style={{ height: `${heightPct * 0.6}px`, minHeight: 4 }} />
                     <span className="text-[10px] text-muted-foreground text-center leading-tight">{stage.stage}</span>

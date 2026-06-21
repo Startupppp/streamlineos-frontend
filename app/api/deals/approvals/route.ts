@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { dealApprovals, dealApprovalRules, deals, users } from "@/lib/db/schema";
@@ -65,13 +66,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth<unknown>(async (session) => {
+  return withAuth(async (session) => {
     const body = await req.json();
 
     if (body.approvalId) {
       const { approvalId, action, rejectionReason } = resolveSchema.parse(body);
       const role = session.user.role ?? "";
-      if (!ADMIN_ROLES.includes(role)) return err("Only admins can resolve approvals", 403);
+      const ability = await getSessionAbility();
+
+      if (!ability.can("manage", "settings")) return err("Only admins can resolve approvals", 403);
 
       const [updated] = await db
         .update(dealApprovals)
@@ -110,11 +113,14 @@ export async function POST(req: NextRequest) {
 
     const { dealId, requestedStage } = requestSchema.parse(body);
 
-    const [deal] = await db.select().from(deals).where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
+    const [deal] = await db
+      .select({ id: deals.id, value: deals.value })
+      .from(deals)
+      .where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
     if (!deal) return err("Deal not found", 404);
 
     const rules = await db
-      .select()
+      .select({ id: dealApprovalRules.id, minValue: dealApprovalRules.minValue })
       .from(dealApprovalRules)
       .where(and(eq(dealApprovalRules.orgId, session.orgId), eq(dealApprovalRules.isActive, true)));
 

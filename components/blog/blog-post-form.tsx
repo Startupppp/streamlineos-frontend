@@ -140,7 +140,7 @@ export function BlogPostForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      {/* Main column */}
+
       <div className="space-y-5">
         <Field label="Title" error={errors.title?.message}>
           <Input {...register("title")} placeholder="An engaging post title" />
@@ -161,7 +161,6 @@ export function BlogPostForm({
         </Field>
       </div>
 
-      {/* Sidebar */}
       <aside className="space-y-5">
         <div className="space-y-5 rounded-xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center gap-3">

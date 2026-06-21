@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Clock, AlertTriangle, TrendingDown, DollarSign, ArrowLeft, ExternalLink } from "lucide-react";
+import { Clock, AlertTriangle, TrendingDown, IndianRupee, ArrowLeft, ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +46,7 @@ interface AgingResponse {
 
 function useDealAging() {
   return useQuery<AgingResponse>({
-    queryKey: ["deals", "aging"],
+    queryKey: queryKeys.deals.aging(),
     queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
     refetchInterval: 300_000,
   });
@@ -160,7 +161,7 @@ export default function DealAgingPage() {
             label="Avg Days Stuck"
             value={`${stats.avgDays}d`}
             icon={Clock}
-            color="gold"
+            color="amber"
             index={1}
           />
           <StatCard
@@ -173,7 +174,7 @@ export default function DealAgingPage() {
           <StatCard
             label="Total Value at Risk"
             value={formatINR(stats.totalValue)}
-            icon={DollarSign}
+            icon={IndianRupee}
             color="blue"
             index={3}
           />
@@ -211,7 +212,7 @@ export default function DealAgingPage() {
                             <TableCell className="font-medium">
                               <Link
                                 href={`/crm/deals/${deal.id}`}
-                                className="hover:underline hover:text-gold transition-colors truncate block max-w-[200px]"
+                                className="hover:underline hover:text-blue-600 transition-colors truncate block max-w-[200px]"
                               >
                                 {deal.name}
                               </Link>

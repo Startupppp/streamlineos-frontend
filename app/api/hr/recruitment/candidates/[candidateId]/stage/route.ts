@@ -111,6 +111,16 @@ export async function PATCH(
       })
       .catch(() => undefined);
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "candidate.stage_changed", {
+        candidateId,
+        candidateName: `${existing.firstName} ${existing.lastName}`,
+        candidateEmail: existing.email ?? "",
+        previousStatus: existing.status,
+        newStatus: newStage,
+      })
+    );
+
     return ok({
       id: updated.id,
       stage: updated.status,

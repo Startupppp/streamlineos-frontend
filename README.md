@@ -1,247 +1,227 @@
-## StreamlineOS
+# StreamlineOS
 
 ![StreamlineOS](public/logo.svg)
 
-**StreamlineOS** is an opinionated, enterprise-grade platform for Human Resources, Project Management, CRM, and organizational workflows. It is built for small-to-mid sized companies that want a single, cohesive system for employee lifecycle management, agile delivery, sales pipelines, and executive reporting.
+> The operating system for modern teams — HR, Projects, CRM, Chat, and Analytics in a single platform built on one Postgres data model. Open alternative to Odoo.
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61dafb?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)](https://www.typescriptlang.org)
+[![Postgres](https://img.shields.io/badge/Postgres-15%2B-336791?logo=postgresql)](https://www.postgresql.org)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle-ORM-c5f74f)](https://orm.drizzle.team)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
 
 ---
 
-## 🚀 Core Capabilities
+## What's inside
 
-### 👥 Human Resources (HR)
-
-- **Employee 360°**: Centralized employee records, roles, departments, and history.
-- **Onboarding Wizard**: Guided, multi-step onboarding with document collection and role assignment.
-- **Attendance & Time**: Clock-in/clock-out, daily and monthly views, and work logs.
-- **Leaves & WFH**: Leave policies, approval flows, WFH requests, and balances.
-- **Payroll & Payslips**: Salary structure management and payslip access for employees.
-- **Org View**: Org chart, department-level views, and HR dashboards.
-
-### 💼 Projects & Delivery
-
-- **Project Workspaces**: Projects with epics, sprints, tickets, and Kanban boards.
-- **Backlog & Sprints**: Prioritization, drag-and-drop board, and sprint burndown.
-- **Time Tracking**: Timesheets linked to tickets and projects.
-- **Reports**: Velocity, work distribution, and basic delivery analytics.
-
-### 🤝 CRM & Sales
-
-- **Leads & Deals**: Pipeline for leads and deals with stages and owners.
-- **Clients**: Client directory tied to work and communication.
-- **Activity & Targets**: Activity feeds and sales targets with dashboards.
-
-### 📊 Reporting & Automation
-
-- **Scheduled Reports**: Daily, weekly, and monthly emails (attendance, expenses, CEO recaps).
-- **AI Assistance**: AI-powered task suggestions and summaries via Vercel AI SDK + Google Generative AI.
-- **Exports**: XLSX reports for finance and HR (e.g. monthly expenses).
-
-### 🛡️ Security & Access
-
-- **Role-Based Access Control (RBAC)**: Permissions based on roles (Owner, Admin, Manager, Member, etc.).
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) v5 (beta) with email and OAuth support.
-- **Multi-Org**: Multi-organization support via organization-scoped data and guards.
+| Module | Highlights |
+|---|---|
+| **HR** | Employees, attendance, leaves, payroll, expenses, assets, documents, performance reviews, goals, recruitment pipeline, onboarding, exit & termination, compliance. |
+| **CRM** | Leads, deals, clients, organizations, targets, quotes, assignment & scoring rules, SLA tracking, territories, win/loss analysis. |
+| **Projects** | Projects, sprints, cycles, modules, tickets (with epics/sub-issues), timesheets, resource allocation, project templates. |
+| **Chat & Comms** | Realtime DMs and channels (Ably), notifications, command palette (⌘K), helpdesk inbox. |
+| **Marketing** | Campaigns, landing pages, content + email calendars, social analytics, A/B testing. |
+| **Finance** | Billing, invoices, sales commissions, customer success, renewal pipeline. |
+| **Admin** | Permission-matrix RBAC, audit log, branches, webhooks, custom fields, MFA, IP allowlists, branded blog. |
 
 ---
 
-## 🛠️ Tech Stack
+## Architecture
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **UI & Styling**:
-  - [Tailwind CSS 4](https://tailwindcss.com/)
-  - Headless components via [Radix UI](https://www.radix-ui.com/) and custom UI primitives (buttons, dialogs, tables, etc.)
-- **State & Data Fetching**:
-  - [Zustand](https://github.com/pmndrs/zustand)
-  - [TanStack Query](https://tanstack.com/query/latest)
-- **API Layer**: [tRPC v11](https://trpc.io/) (end-to-end typesafe APIs)
-- **Database**: [PostgreSQL](https://www.postgresql.org/) + [Drizzle ORM](https://orm.drizzle.team/)
-- **Auth**: [NextAuth.js v5 beta](https://next-auth.js.org/)
-- **Storage**: Cloudflare R2 (S3-compatible)
-- **AI**: [Vercel AI SDK](https://sdk.vercel.ai/) with Google Generative AI
-- **Email**: SendGrid or SMTP (pluggable via `EMAIL_PROVIDER`)
-- **Tooling**:
-  - [ESLint 9](https://eslint.org/) + `eslint-config-next`
-  - [Vitest](https://vitest.dev/) for unit tests
-  - [Playwright](https://playwright.dev/) for end-to-end tests
+- **Next.js 16 (App Router)** — server components, edge middleware, server actions.
+- **Postgres + Drizzle ORM** — one schema for the full product surface; type-safe queries throughout.
+- **NextAuth v5** — credentials + Google OAuth; JWT sessions cached in Redis (5-min TTL).
+- **Redis (Upstash)** — session cache, rate limits.
+- **Cloudflare R2** — file uploads (avatars, docs, attachments).
+- **Ably** — realtime chat / presence.
+- **Tailwind CSS v4 + Radix UI** — `shadcn`-style primitives.
+- **TanStack Query** — client-side data layer over the REST API in `app/api/**`.
+- **Resend / SendGrid** — transactional email.
+- **Inngest** — background jobs (scheduled reports, payroll generation).
+- **AI (optional)** — Vercel AI SDK with Google Generative AI + OpenAI.
+
+```
+app/                       Next.js routes
+  (auth)/                  signin, signup, reset-password
+  (public)/                landing, blog, pricing, about, contact, legal
+  (dashboard)/             authenticated product surface
+  api/                     REST endpoints (auth, roles, hr, crm, projects, ...)
+  layout.tsx               Root metadata + providers
+  middleware.ts            Edge gate — permission-driven route blocks
+components/                Shared UI primitives
+features/                  Domain-grouped views & components
+lib/
+  auth.ts                  NextAuth config + JWT/session callbacks
+  db/schema/               Drizzle schema, per domain
+  rbac/                    Role/permission model, gates, default org roles
+  branding.ts              Single source of truth for brand strings
+scripts/                   Seeders and ops scripts
+types/                     Global types (next-auth augmentation, etc.)
+```
 
 ---
 
-## 🏁 Getting Started (Local Development)
+## Role-based access control
+
+StreamlineOS uses **permission-matrix RBAC** modeled after Odoo's access groups. Role *names* are not hardcoded — admins define them in the UI.
+
+- **`OWNER`** is the only structurally privileged role. Assigned automatically at signup; cannot be locked out. Super-admin bypass on every check.
+- Every other role is a per-org row in the `roles` table — name, slug, and permission list are fully editable in `/settings/roles`.
+- The route gate (`middleware.ts`) checks the user's effective permissions against a `ROUTE_PERMISSION_MAP`, not against role names. Toggle a permission off in the matrix and the page stops opening for that user.
+- The sidebar is permission-filtered: each nav item declares `requiredPermission`, and only visible items render.
+- Effective permissions are computed once per JWT refresh (`getUserPermissions`) and cached in Redis with the session.
+
+**Default roles seeded on signup** (all editable / deletable):
+
+`Administrator` · `HR Manager` · `Project Manager` · `Sales` · `Team Member`
+
+---
+
+## Getting started
 
 ### Prerequisites
 
-- **Node.js** 18+ (20+ recommended)
-- **pnpm** (recommended, repo uses `pnpm-lock.yaml`)
-- Running **PostgreSQL** instance
+- **Node.js** 20+
+- **pnpm** 10+ (repo pins `packageManager: pnpm@10.18.0`)
+- **Postgres** 15+ (local, Neon, Supabase, RDS, etc.)
+- **Redis** (optional in dev; required in prod — Upstash recommended)
 
-### 1. Clone the repository
+### 1. Install
 
 ```bash
-git clone <your-repo-url>
+git clone <repo-url> streamlineos
 cd streamlineos
-```
-
-### 2. Install dependencies
-
-```bash
 pnpm install
 ```
 
-### 3. Configure environment variables
-
-The project validates environment variables via `lib/env.ts`. Use `env.example` as the source of truth:
+### 2. Configure environment
 
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
-Then update at least:
+Minimum required:
 
-- **Database**
-  - `DATABASE_URL` — PostgreSQL connection string.
-- **Auth**
-  - `NEXTAUTH_URL` — usually `http://localhost:3000` in development.
-  - `NEXTAUTH_SECRET` — generate with `openssl rand -base64 32`.
-- **Email**
-  - `EMAIL_PROVIDER` — one of `sendgrid`, `smtp`, or `azure`.
-  - `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`.
-  - Provider-specific keys (e.g. `SENDGRID_API_KEY` or SMTP config).
-- **Storage**
-  - `R2_REGION`, `R2_BUCKET_NAME`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT`, `NEXT_PUBLIC_R2_PUBLIC_URL`.
-- **AI**
-  - `GOOGLE_GENERATIVE_AI_API_KEY`.
-- **App URLs**
-  - `NEXT_PUBLIC_APP_URL` — typically `http://localhost:3000`.
-  - `NEXT_PUBLIC_QR_REDIRECT_BASE_URL`.
+| Variable | What |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 48` |
+| `NEXTAUTH_URL` | e.g. `http://localhost:1000` |
+| `NEXT_PUBLIC_APP_URL` | Same as above |
 
-> There is also a legacy `.env.example` file; `env.example` is the more complete template and is recommended for new setups.
+Optional but recommended for full functionality: Resend or SendGrid (email), Upstash Redis (sessions & rate limits), Cloudflare R2 (uploads), Ably (chat), Google OAuth (sign-in), Razorpay (billing). See `.env.example` for the complete list.
 
-### 4. Set up the database
+> A separate `BLOGS_DB` connection string lets the public blog point at a dedicated Postgres database. If unset, the blog falls back to `DATABASE_URL`.
 
-Push the Drizzle schema to your local database:
+### 3. Provision the database
 
 ```bash
-pnpm db:push
+pnpm db:push       # apply the Drizzle schema
 ```
 
-Optional but recommended:
-
-- **Generate migrations from schema**:
-
-  ```bash
-  pnpm db:generate
-  ```
-
-- **Apply migrations**:
-
-  ```bash
-  pnpm db:migrate
-  ```
-
-### 5. Seed data (optional)
-
-To quickly explore the app with sample data, you can run the seed scripts:
+### 4. Run
 
 ```bash
-# Base seed (organizations, roles, users, etc.)
-pnpm tsx scripts/seed.ts
-
-# Additional CRM-specific seed data
-pnpm tsx scripts/seed-crm.ts
-
-# Import regional holidays (optional)
-pnpm tsx scripts/import-holidays.ts
+pnpm dev           # starts Next on http://localhost:1000
 ```
 
-Creating an initial organization can also be done via:
-
-```bash
-pnpm tsx scripts/create-organization.ts
-```
-
-> Review each script before running in a non-local environment.
-
-### 6. Start the development server
-
-```bash
-pnpm dev
-```
-
-Visit `http://localhost:3000` in your browser.
+Sign up at `/signup` — the first user of an org becomes its `OWNER` and the default roles get seeded automatically.
 
 ---
 
-## 📜 Common Commands
+## Demo workspace
 
-| Command                    | Description                                             |
-| :------------------------- | :------------------------------------------------------ |
-| `pnpm dev`                 | Start the Next.js development server.                  |
-| `pnpm build`               | Build the application for production.                  |
-| `pnpm start`               | Run the built app in production mode.                  |
-| `pnpm lint`                | Run ESLint over the codebase.                          |
-| `pnpm test`                | Run unit tests with Vitest.                            |
-| `pnpm test:watch`          | Run Vitest in watch mode.                              |
-| `pnpm playwright test`     | Run Playwright end-to-end tests (if configured).       |
-| `pnpm db:push`             | Push Drizzle schema to the database (dev/prototyping). |
-| `pnpm db:generate`         | Generate migrations from the schema.                   |
-| `pnpm db:migrate`          | Apply pending database migrations.                     |
-| `pnpm db:studio`           | Open Drizzle Studio to inspect and edit data.          |
-| `pnpm db:fix-orphaned`     | Run the script to fix orphaned data.                   |
+For customer walkthroughs, spin up a fully-populated demo workspace in one command:
 
----
-
-## 📂 Project Structure (High-Level)
-
-```text
-streamlineos/
-├── app/                    # Next.js App Router layouts, routes, and API handlers
-│   ├── (auth)/             # Authentication-related routes (sign-in, verify, etc.)
-│   ├── (dashboard)/        # Main dashboard experience (HR, CRM, projects, etc.)
-│   ├── api/                # Route handlers (cron jobs, storage, AI, health)
-│   └── ...                 # Error / not-found routes and edge handlers
-├── components/             # Reusable UI and feature components
-│   ├── ui/                 # Design system primitives built on Radix
-│   ├── layout/             # Shell elements (sidebar, header, nav)
-│   ├── hr/                 # HR-specific components and widgets
-│   ├── projects/           # Boards, charts, and dialogs for projects
-│   ├── crm/                # CRM visualizations and forms
-│   └── ...                 # AI helpers, attendance widgets, etc.
-├── server/                 # Backend tRPC routers and server-side actions
-│   ├── api/                # tRPC router tree (`server/api/root.ts`, etc.)
-│   └── actions/            # Server actions for workflows (HR, reports, etc.)
-├── lib/                    # Shared utilities, env, db, RBAC, and hooks
-│   ├── db.ts               # Drizzle connection and config
-│   ├── db/schema.ts        # Database schema
-│   ├── env.ts              # Environment validation
-│   ├── rbac/               # Permission model and middleware
-│   ├── validations/        # Zod schemas for inputs
-│   └── hooks/              # Typed React + tRPC hooks
-├── scripts/                # Node scripts (seed, create org, import data)
-├── public/                 # Static assets (logo, icons, etc.)
-├── types/                  # Global TypeScript types and module augmentations
-└── pnpm-lock.yaml          # Lockfile (pnpm)
+```bash
+pnpm seed:demo
 ```
 
+This creates (or refreshes) **Demo · StreamlineOS** with:
+
+- 1 OWNER + 5 team users (HR Manager, PM, Sales, Engineer, Designer)
+- 5 default org roles ready for the `/settings/roles` matrix demo
+- 5 CRM leads + 2 deals
+- 1 project + 5 tickets
+- 3 recruitment candidates
+- 7 days of attendance + 2 leave requests across the team
+
+**Default credentials** (override via `DEMO_OWNER_EMAIL` / `DEMO_OWNER_PASSWORD`):
+
+| Role | Email | Password |
+|---|---|---|
+| Owner | `demo@streamlineos.in` | `Demo@2026!` |
+| HR Manager | `priya.hr@demo.streamlineos.in` | `DemoTeam@2026!` |
+| Project Manager | `arjun.pm@demo.streamlineos.in` | `DemoTeam@2026!` |
+| Sales | `neha.sales@demo.streamlineos.in` | `DemoTeam@2026!` |
+| Engineer | `rahul.eng@demo.streamlineos.in` | `DemoTeam@2026!` |
+| Designer | `sara.design@demo.streamlineos.in` | `DemoTeam@2026!` |
+
+The seeder is idempotent — re-running it refreshes the OWNER password and tops up missing rows without creating duplicates.
+
+**Suggested demo flow**
+1. Log in as OWNER → populated dashboard.
+2. Walk through `/settings/roles` → toggle a permission off, show the page stop opening for that role.
+3. Switch to HR Manager → HR-only sidebar (CRM and Finance hidden).
+4. Switch to Sales → CRM pipeline with leads + deals.
+5. Switch to PM → project board with tickets.
+
 ---
 
-## ✅ Production Considerations
+## Scripts
 
-- **Secrets**: Never commit `.env` files. Use your cloud provider’s secret manager or CI/CD secrets.
-- **Database**: Run `db:generate` + `db:migrate` as part of your deployment pipeline instead of `db:push`.
-- **Cron Routes**: Secure cron endpoints via `CRON_SECRET` and your scheduler (e.g. GitHub Actions, cloud cron).
-- **Email**: Ensure domain verification and sender authentication (SPF/DKIM) with your email provider.
-- **File Storage**: Configure R2 credentials and `NEXT_PUBLIC_R2_PUBLIC_URL` appropriately per environment.
+| Command | Purpose |
+|---|---|
+| `pnpm dev` | Start Next.js dev server (port **1000**) |
+| `pnpm build` | Production build |
+| `pnpm start` | Serve production build |
+| `pnpm lint` | Run ESLint |
+| `pnpm db:push` | Apply Drizzle schema to the database |
+| `pnpm db:generate` | Generate a migration from schema diff |
+| `pnpm db:migrate` | Run generated migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm setup:r2` | Create configured Cloudflare R2 buckets |
+| `pnpm seed:owner` | Create / refresh the platform-owner user |
+| `pnpm seed:demo` | Seed the demo workspace (HR, CRM, Projects sample data) |
+| `pnpm seed:blog` | Seed sample blog posts (uses `BLOGS_DB` if set) |
 
 ---
 
-## 🧩 Contributing / Customizing
+## Public site & SEO
 
-This project is structured to be a strong starting point for a company-internal CRM/HR/Projects tool:
+- Public routes live under `app/(public)` — landing, pricing, about, contact, blog, legal.
+- Per-page canonicals declared via `metadata.alternates.canonical`. The root layout deliberately **does not** set a default canonical so child pages canonicalize to themselves.
+- `app/sitemap.ts` lists indexable marketing routes; `app/robots.ts` allows the marketing surface and disallows authenticated areas.
+- Structured data (`Organization`, `WebSite`, `SoftwareApplication`, `FAQPage`) emitted from `features/seo/structured-data`.
+- Google Tag Manager + Microsoft Clarity hooks render only when their IDs are configured.
 
-- Swap out providers (email, storage, AI) via environment variables.
-- Extend Drizzle schema and tRPC routers under `lib/db/schema.ts` and `server/api`.
-- Add or adjust permissions via `lib/rbac/permissions.ts` and `lib/rbac/middleware.ts`.
+---
 
-If you fork or customize it heavily, keep the environment validation in `lib/env.ts` in sync with your `.env` contract.
+## Production deployment
 
+- Runs on any Next-compatible host (Vercel, Fly.io, Railway, self-hosted Node).
+- Required for prod: Postgres, Redis (Upstash), R2 or S3-compatible bucket, Resend or SendGrid, HTTPS termination.
+- Middleware enforces HTTPS redirects (`x-forwarded-proto`), per-org IP allowlisting (Redis key `org:ip-allowlist:<orgId>`), MFA gates, and rate limits.
+- Run `pnpm db:generate` + `pnpm db:migrate` as part of the deployment pipeline instead of `pnpm db:push`.
+- Audit logs land in the `audit_logs` table; opt-in webhook forwarding via secrets in `.env`.
+- Cron-style endpoints under `app/api/cron/*` are secured with `CRON_SECRET` — schedule them with your platform's scheduler.
+
+---
+
+## Customising
+
+- **Branding** — every brand string is centralised in `lib/branding.ts`. Change once, propagates to metadata, emails, and JSON-LD.
+- **Permissions** — add new permissions in `lib/rbac/permissions.ts`; map them to routes in `middleware.ts` (`ROUTE_PERMISSION_MAP`) and to nav items in `components/layout/sidebar/sidebar-nav-items.ts` (`requiredPermission`).
+- **Schema** — extend a domain file under `lib/db/schema/`, run `pnpm db:generate` to produce a migration, then `pnpm db:migrate`.
+- **Default org roles** — edit `lib/rbac/default-org-roles.ts`. Used by both signup and the demo seeder.
+- **Email provider** — switch via `EMAIL_PROVIDER` (`resend` / `sendgrid`) in `.env`.
+- **Storage provider** — R2 is the default but any S3-compatible bucket works through the same client.
+
+---
+
+## License
+
+Proprietary — © StreamlineOS. All rights reserved.
+
+For commercial licensing, contact [support@streamlineos.in](mailto:support@streamlineos.in).

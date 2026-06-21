@@ -13,6 +13,7 @@ import type {
   UpsertWorkLogInput,
   UpdateWorkLogStatusInput,
   GetWorkLogsInput,
+  TeamAttendanceEntry,
 } from "@/types/hr";
 
 export function useHrAttendanceStatus(
@@ -21,6 +22,7 @@ export function useHrAttendanceStatus(
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(),
     queryFn: () => apiClient.get<AttendanceStatusResult>("/hr/attendance/status"),
+    staleTime: 2 * 60_000,
     ...options,
   });
 }
@@ -34,6 +36,7 @@ export function useHrAttendanceLogs(params?: {
     queryKey: queryKeys.hr.attendanceLogs(params),
     queryFn: () =>
       apiClient.get<AttendanceLog[]>("/hr/attendance/logs", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -117,6 +120,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
     queryKey: queryKeys.hr.monthlyAttendance(params),
     queryFn: () =>
       apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     enabled: !!params.userId,
   });
 }
@@ -131,6 +135,7 @@ export function useAttendanceHeatmap(params: { userId: string; year: number }) {
         heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
         summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
       }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
+    staleTime: 2 * 60_000,
     enabled: !!params.userId,
   });
 }
@@ -141,10 +146,14 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
     quarter: input.quarter,
   };
   if (input.userId) params.userId = input.userId;
+  if (input.month !== undefined) params.month = input.month;
+  if (input.dateFrom) params.dateFrom = input.dateFrom;
+  if (input.dateTo) params.dateTo = input.dateTo;
 
   return useQuery({
     queryKey: queryKeys.hr.workLogs(params),
     queryFn: () => apiClient.get<WorkLog[]>("/hr/work-logs", params),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -156,7 +165,7 @@ export function useUpsertWorkLog(
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
     onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.workLogs() });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
@@ -172,10 +181,19 @@ export function useUpdateWorkLogStatus(
     mutationFn: (data: UpdateWorkLogStatusInput) =>
       apiClient.patch<WorkLog>("/hr/work-logs/status", data),
     onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.workLogs() });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
     ...options,
+  });
+}
+
+export function useHrTeamAttendanceStatus() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "team-attendance-status"] as const,
+    queryFn: () => apiClient.get<TeamAttendanceEntry[]>("/hr/attendance/team-status"),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 }

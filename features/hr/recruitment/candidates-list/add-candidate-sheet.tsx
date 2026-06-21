@@ -1,131 +1,177 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
-import { Plus } from "lucide-react";
+import { useCallback } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 
 import { useCreateCandidate } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+
+const addCandidateSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Invalid email"),
+  phone: z.string().optional().or(z.literal("")),
+  source: z.string(),
+});
+
+type AddCandidateForm = z.infer<typeof addCandidateSchema>;
+
+const DEFAULT_VALUES: AddCandidateForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  source: "DIRECT",
+};
 
 interface AddCandidateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const AddCandidateSheet = memo(function AddCandidateSheet({
-  open,
-  onOpenChange,
-}: AddCandidateSheetProps) {
+export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps) {
   const createCandidate = useCreateCandidate();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [source, setSource] = useState("DIRECT");
-
-  const handleFirstNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value), []);
-  const handleLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value), []);
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value), []);
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value), []);
-
-  const handleCreate = useCallback(() => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      toast.error("First name, last name, and email are required");
-      return;
-    }
-    createCandidate.mutate(
-      {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone || undefined,
-        source,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Candidate added");
-          onOpenChange(false);
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPhone("");
+  const handleSubmit = useCallback(
+    (data: AddCandidateForm) => {
+      createCandidate.mutate(
+        {
+          firstName: data.firstName.trim(),
+          lastName: data.lastName.trim(),
+          email: data.email.trim(),
+          phone: data.phone?.trim() || undefined,
+          source: data.source,
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [firstName, lastName, email, phone, source, createCandidate, onOpenChange]);
-
-  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+        {
+          onSuccess: () => {
+            toast.success("Candidate added");
+            onOpenChange(false);
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [createCandidate, onOpenChange],
+  );
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Candidate
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="flex flex-col p-0 gap-0">
-        <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-          <SheetTitle className="text-base">Add Candidate</SheetTitle>
-          <SheetDescription className="text-xs">Add a new candidate to the pipeline.</SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+    <EntityFormSheet<AddCandidateForm>
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Add Candidate"
+      description="Add a new candidate to the pipeline."
+      resolver={zodResolver(addCandidateSchema)}
+      defaultValues={DEFAULT_VALUES}
+      onSubmit={handleSubmit}
+      isSubmitting={createCandidate.isPending}
+      submitLabel={createCandidate.isPending ? "Adding..." : "Add Candidate"}
+      resetOnOpen
+    >
+      {(form) => (
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">First Name</label>
-              <Input value={firstName} onChange={handleFirstNameChange} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Last Name</label>
-              <Input value={lastName} onChange={handleLastNameChange} />
-            </div>
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Email</label>
-            <Input type="email" value={email} onChange={handleEmailChange} />
-          </div>
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} type="email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Phone</label>
-              <Input value={phone} onChange={handlePhoneChange} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Source</label>
-              <Select value={source} onValueChange={setSource}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DIRECT">Direct</SelectItem>
-                  <SelectItem value="REFERRAL">Referral</SelectItem>
-                  <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                  <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
-                  <SelectItem value="CAMPUS">Campus</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="DIRECT">Direct</SelectItem>
+                      <SelectItem value="REFERRAL">Referral</SelectItem>
+                      <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
+                      <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
+                      <SelectItem value="CAMPUS">Campus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
-        <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button className="flex-1" onClick={handleCreate} disabled={createCandidate.isPending}>
-            {createCandidate.isPending ? "Adding..." : "Add Candidate"}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      )}
+    </EntityFormSheet>
   );
-});
+}

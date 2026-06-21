@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Trash2, Video, ExternalLink } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { format } from "date-fns";
 
 interface Meeting {
@@ -35,7 +36,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
       </CardHeader>
       <CardContent>
         {!meetings?.length ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">No meetings scheduled</p>
+          <EmptyState icon={Calendar} title="No meetings scheduled" compact />
         ) : (
           <div className="space-y-3">
             {meetings.map((m) => (
@@ -52,7 +53,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                   </p>
                   {m.agenda && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{m.agenda}</p>}
                   {m.recordingLink && (
-                    <a href={m.recordingLink} target="_blank" rel="noopener noreferrer" className="text-xs text-gold hover:underline flex items-center gap-1 mt-1">
+                    <a href={m.recordingLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1">
                       <Video className="h-3 w-3" /> Recording <ExternalLink className="h-2.5 w-2.5" />
                     </a>
                   )}

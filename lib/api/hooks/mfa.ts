@@ -4,8 +4,9 @@ import { queryKeys } from "@/lib/query-keys";
 
 export function useMfaStatus() {
   return useQuery({
-    queryKey: ["mfa", "status"],
+    queryKey: queryKeys.mfa.status(),
     queryFn: () => apiClient.get<{ enabled: boolean }>("/auth/mfa/status"),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -26,7 +27,7 @@ export function useMfaVerify() {
   return useMutation({
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["mfa"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.mfa.all }),
   });
 }
 
@@ -35,7 +36,7 @@ export function useMfaDisable() {
   return useMutation({
     mutationFn: (token: string) =>
       apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["mfa"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.mfa.all }),
   });
 }
 

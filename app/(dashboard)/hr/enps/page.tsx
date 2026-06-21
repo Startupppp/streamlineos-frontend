@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { Plus, ThumbsUp, BarChart3, Users, Calendar } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 interface EnpsSurvey {
   id: number; title: string; status: string | null; score: number | null;
@@ -43,7 +44,8 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
 export default function EnpsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: surveys, isLoading } = useQuery({
     queryKey: enpsKeys.list(),

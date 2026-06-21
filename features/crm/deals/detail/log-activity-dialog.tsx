@@ -1,16 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useCallback } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { EntityFormDialog } from "@/components/shared";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+
+const logActivitySchema = z.object({
+  notes: z.string().min(1, "Details are required"),
+});
+
+type LogActivityValues = z.infer<typeof logActivitySchema>;
 
 interface LogActivityDialogProps {
   open: boolean;
@@ -27,56 +34,51 @@ export function LogActivityDialog({
   onClose,
   onSubmit,
 }: LogActivityDialogProps) {
-  const [notes, setNotes] = useState("");
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      if (!v) onClose();
+    },
+    [onClose],
+  );
 
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNotes(e.target.value);
-  }, []);
-
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!notes.trim()) return;
-    onSubmit(notes.trim());
-    setNotes("");
-  }, [notes, onSubmit]);
-
-  const handleOpenChange = useCallback((v: boolean) => {
-    if (!v) {
-      onClose();
-      setNotes("");
-    }
-  }, [onClose]);
+  const handleSubmit = useCallback(
+    (data: LogActivityValues) => {
+      onSubmit(data.notes.trim());
+    },
+    [onSubmit],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{actionLabel}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="activity-notes">Details</Label>
-            <Textarea
-              id="activity-notes"
-              value={notes}
-              onChange={handleNotesChange}
-              placeholder={`Enter ${actionLabel.toLowerCase()} details...`}
-              rows={4}
-              required
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button
-              type="submit"
-              className="bg-gold hover:bg-gold/90 text-white"
-              disabled={isPending || !notes.trim()}
-            >
-              {isPending ? "Logging..." : "Log Activity"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <EntityFormDialog<LogActivityValues>
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={actionLabel}
+      resolver={zodResolver(logActivitySchema)}
+      defaultValues={{ notes: "" }}
+      onSubmit={handleSubmit}
+      isSubmitting={isPending}
+      resetOnOpen
+      submitLabel="Log activity"
+    >
+      {(form) => (
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Details</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder={`Enter ${actionLabel.toLowerCase()} details...`}
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+    </EntityFormDialog>
   );
 }

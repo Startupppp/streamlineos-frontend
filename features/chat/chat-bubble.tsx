@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Trash2 } from "lucide-react";
+import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Smile, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,31 +19,39 @@ import {
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
 
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
+
 export function ChatBubble({
   message,
   isOwn,
   showSender,
   isEditing,
   editInput,
+  currentUserId,
   onEditInputChange,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
   onReply,
   onDelete,
+  onReact,
 }: {
   message: Message;
   isOwn: boolean;
   showSender: boolean;
   isEditing: boolean;
   editInput: string;
+  currentUserId: string;
   onEditInputChange: (v: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onReply: () => void;
   onDelete: () => void;
+  onReact: (emoji: string) => void;
 }) {
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+
   const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onEditInputChange(e.target.value), [onEditInputChange]);
   const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSaveEdit(); }
@@ -53,6 +61,11 @@ export function ChatBubble({
     navigator.clipboard.writeText(message.content!);
     toast.success("Copied");
   }, [message.content]);
+  const handleToggleReactionPicker = useCallback(() => setShowReactionPicker((p) => !p), []);
+  const handleQuickReact = useCallback((emoji: string) => {
+    onReact(emoji);
+    setShowReactionPicker(false);
+  }, [onReact]);
 
   if (message.isDeleted) {
     return (
@@ -101,11 +114,11 @@ export function ChatBubble({
             className={cn(
               "mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border text-[11px]",
               isOwn
-                ? "bg-gold/5 border-gold/15"
+                ? "bg-blue-500/5 border-blue-500/15"
                 : "bg-blue/5 border-blue/10"
             )}
           >
-            <p className={cn("font-bold", isOwn ? "text-gold" : "text-blue")}>
+            <p className={cn("font-bold", isOwn ? "text-blue-600" : "text-blue")}>
               {message.replyTo.sender?.name}
             </p>
             <p className="text-muted-foreground truncate">{message.replyTo.content}</p>
@@ -114,7 +127,7 @@ export function ChatBubble({
 
         {isEditing ? (
           <div className="mx-1">
-            <div className="rounded-xl border border-gold/40 bg-background overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-blue-500/40 bg-background overflow-hidden shadow-sm">
               <textarea
                 value={editInput}
                 onChange={handleEditInputChange}
@@ -126,7 +139,7 @@ export function ChatBubble({
             <div className="flex items-center gap-2 mt-1 px-1">
               <button onClick={onCancelEdit} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
               <span className="text-muted-foreground/30">|</span>
-              <button onClick={onSaveEdit} className="text-[11px] text-gold font-bold hover:underline">Save</button>
+              <button onClick={onSaveEdit} className="text-[11px] text-blue-600 font-bold hover:underline">Save</button>
               <span className="text-[10px] text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
             </div>
           </div>
@@ -135,7 +148,7 @@ export function ChatBubble({
             className={cn(
               "relative px-3.5 py-2 shadow-sm",
               isOwn
-                ? "bg-gradient-to-br from-gold to-amber-700 text-white rounded-2xl rounded-br-md"
+                ? "bg-gradient-to-br from-blue-500 to-amber-700 text-white rounded-2xl rounded-br-md"
                 : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
             )}
           >
@@ -227,6 +240,30 @@ export function ChatBubble({
           </div>
         )}
 
+        {message.reactions && Object.keys(message.reactions).length > 0 && (
+          <div className={cn("flex flex-wrap gap-1 mt-1 px-1", isOwn ? "justify-end" : "justify-start")}>
+            {Object.entries(message.reactions).map(([emoji, userIds]) => {
+              const hasReacted = userIds.includes(currentUserId);
+              const handleReactClick = () => onReact(emoji);
+              return (
+                <button
+                  key={emoji}
+                  onClick={handleReactClick}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-0.5 rounded-full border text-[12px] transition-colors",
+                    hasReacted
+                      ? "bg-blue-500/15 border-blue-500/30 text-blue-600"
+                      : "bg-muted/40 border-border/30 hover:bg-muted/60"
+                  )}
+                >
+                  <span>{emoji}</span>
+                  <span className="font-medium text-[11px]">{userIds.length}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {!isEditing && (
           <div
             className={cn(
@@ -234,9 +271,17 @@ export function ChatBubble({
               isOwn ? "left-0" : "right-0"
             )}
           >
-            <div className="flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-hidden">
+            <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible">
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handleToggleReactionPicker}
+                className={cn("p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground", showReactionPicker && "bg-muted/50 text-foreground")}
+                title="React"
+                aria-label="Add reaction"
+              >
+                <Smile className="h-3.5 w-3.5" />
               </button>
               {message.content && (
                 <button
@@ -266,6 +311,23 @@ export function ChatBubble({
                       Delete for Everyone
                     </button>
                   </div>
+                </div>
+              )}
+              {showReactionPicker && (
+                <div className={cn(
+                  "absolute top-full mt-1 z-50 bg-background border border-border/60 rounded-xl shadow-lg p-1.5 flex gap-1",
+                  isOwn ? "right-0" : "left-0"
+                )}>
+                  {QUICK_REACTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => handleQuickReact(emoji)}
+                      className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 text-base transition-colors"
+                      aria-label={`React with ${emoji}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

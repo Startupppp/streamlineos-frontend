@@ -1,14 +1,14 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
   organizationMembers, users, attendance, leaveRequests,
-  payrolls, departments, expenses,
+  payrolls, departments, expenses, resignations,
 } from "@/lib/db/schema";
-import { eq, and, gte, lte, sql, count, desc } from "drizzle-orm";
+import { eq, and, gte, lte, sql, count } from "drizzle-orm";
 import { cached, HR_CACHE, CACHE_TTL } from "@/lib/hr-cache";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const orgId = session.orgId;
     const data = await cached(HR_CACHE.analytics(orgId), async () => {
     const now = new Date();
@@ -32,6 +32,8 @@ export async function GET() {
       payrollCostResult,
       recentJoinsResult,
       expenseTotalResult,
+      headcountTrendResult,
+      exitsByMonthResult,
     ] = await Promise.all([
       db.select({ count: count() }).from(organizationMembers).where(eq(organizationMembers.orgId, orgId)),
 
@@ -112,6 +114,41 @@ export async function GET() {
           gte(expenses.expenseDate, yearStart),
           lte(expenses.expenseDate, yearEnd)
         )),
+
+      db.select({
+        month: sql<string>`to_char(${users.joiningDate}::date, 'Mon')`,
+        monthNum: sql<number>`EXTRACT(MONTH FROM ${users.joiningDate}::date)`.mapWith(Number),
+        joins: count(),
+      })
+        .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(and(
+          eq(organizationMembers.orgId, orgId),
+          gte(users.joiningDate, yearStart),
+          lte(users.joiningDate, yearEnd)
+        ))
+        .groupBy(
+          sql`to_char(${users.joiningDate}::date, 'Mon')`,
+          sql`EXTRACT(MONTH FROM ${users.joiningDate}::date)`,
+        )
+        .orderBy(sql`EXTRACT(MONTH FROM ${users.joiningDate}::date)`),
+
+      db.select({
+        month: sql<string>`to_char(${resignations.createdAt}, 'Mon')`,
+        monthNum: sql<number>`EXTRACT(MONTH FROM ${resignations.createdAt})`.mapWith(Number),
+        exits: count(),
+      })
+        .from(resignations)
+        .where(and(
+          eq(resignations.orgId, orgId),
+          gte(resignations.createdAt, new Date(yearStart)),
+          lte(resignations.createdAt, new Date(yearEnd))
+        ))
+        .groupBy(
+          sql`to_char(${resignations.createdAt}, 'Mon')`,
+          sql`EXTRACT(MONTH FROM ${resignations.createdAt})`,
+        )
+        .orderBy(sql`EXTRACT(MONTH FROM ${resignations.createdAt})`),
     ]);
 
     const allDepts = await db.query.departments.findMany({
@@ -123,6 +160,15 @@ export async function GET() {
     for (const row of leavesByStatusResult) {
       leavesByStatus[row.status ?? "UNKNOWN"] = Number(row.count);
     }
+
+    const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const joinsMap = new Map(headcountTrendResult.map((r) => [r.month, Number(r.joins)]));
+    const exitsMap = new Map(exitsByMonthResult.map((r) => [r.month, Number(r.exits)]));
+    const joiningExitsTrend = allMonths.map((m) => ({
+      month: m,
+      joins: joinsMap.get(m) ?? 0,
+      exits: exitsMap.get(m) ?? 0,
+    }));
 
     return {
       headcount: {
@@ -158,6 +204,7 @@ export async function GET() {
       expenses: {
         approvedYTD: expenseTotalResult[0]?.total ?? "0",
       },
+      joiningExitsTrend,
     };
     }, { ttlSeconds: CACHE_TTL.MEDIUM });
 

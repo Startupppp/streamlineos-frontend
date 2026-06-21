@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import {
@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
+import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
@@ -58,9 +59,10 @@ export default function ExitManagementPage() {
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
-  const isAdmin = role === "CEO" || role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("approve", "hr:leaves");
   const isHR = role === "HR";
-  const isCEO = role === "CEO";
+  const isCEO = ability.can("manage", "all");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -82,6 +84,10 @@ export default function ExitManagementPage() {
 
   const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
 
+  const hasActiveResignation = resignations?.some(
+    (r: Resignation) => r.userId === userId && ["SUBMITTED", "PENDING_HR", "HR_APPROVED"].includes(r.status ?? ""),
+  ) ?? false;
+
   const toggleExpand = useCallback((id: number) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -91,14 +97,34 @@ export default function ExitManagementPage() {
     });
   }, []);
 
+  const resetResignationForm = useCallback(() => {
+    setReason("");
+    setReasonCategory("");
+    setWillingForExitInterview(false);
+    setCompanyFeedback("");
+  }, []);
+
   const handleSubmitResignation = useCallback(() => {
-    if (!reason.trim()) {
+    if (!reasonCategory) {
+      toast.error("Please select a reason category");
+      return;
+    }
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
       toast.error("Detailed explanation is required");
+      return;
+    }
+    if (trimmedReason.length < 50) {
+      toast.error("Detailed explanation must be at least 50 characters");
+      return;
+    }
+    if (trimmedReason.length > 2000) {
+      toast.error("Detailed explanation must be at most 2000 characters");
       return;
     }
     createResignation.mutate(
       {
-        reason: reason.trim(),
+        reason: trimmedReason,
         lastWorkingDate: autoLwd,
         noticePeriodDays: NOTICE_PERIOD_DAYS,
         reasonCategory: reasonCategory || undefined,
@@ -109,15 +135,12 @@ export default function ExitManagementPage() {
         onSuccess: () => {
           toast.success("Resignation submitted");
           setSheetOpen(false);
-          setReason("");
-          setReasonCategory("");
-          setWillingForExitInterview(false);
-          setCompanyFeedback("");
+          resetResignationForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation]);
+  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation, resetResignationForm]);
 
   const handleHrApprove = useCallback(() => {
     if (!hrApproveId) return;
@@ -184,6 +207,45 @@ export default function ExitManagementPage() {
     );
   }, [withdrawId, withdrawResignation]);
 
+  const handleDownloadTemplate = useCallback(() => {
+    const content = [
+      "RESIGNATION LETTER TEMPLATE",
+      "",
+      "[Date]",
+      "",
+      "To,",
+      "The Management,",
+      "[Company Name]",
+      "",
+      "Subject: Resignation from the position of [Your Job Title]",
+      "",
+      "Dear [Manager's Name],",
+      "",
+      "I am writing to formally inform you of my decision to resign from my position as [Your Job Title] at [Company Name], effective [Last Working Date].",
+      "",
+      "Reason for leaving: [Briefly state your reason]",
+      "",
+      "I am grateful for the opportunities I have had during my tenure at [Company Name]. I will ensure a smooth handover of my responsibilities during the notice period.",
+      "",
+      "Thank you for your support and guidance.",
+      "",
+      "Sincerely,",
+      "[Your Name]",
+      "[Employee ID]",
+      "[Date]",
+    ].join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Resignation_Letter_Template.txt";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
@@ -202,10 +264,14 @@ export default function ExitManagementPage() {
       subtitle="Resignations, exit interviews, and offboarding"
       badge={`${resignations?.length ?? 0} records`}
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Submit Resignation
-        </Button>
+        !isCEO && !hasActiveResignation ? (
+          <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Submit Resignation
+          </Button>
+        ) : hasActiveResignation ? (
+          <p className="text-xs text-muted-foreground">You have a pending resignation.</p>
+        ) : null
       }
     >
       {!resignations?.length ? (
@@ -239,7 +305,7 @@ export default function ExitManagementPage() {
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(open) => { if (!open) resetResignationForm(); setSheetOpen(open); }}
         title="Submit Resignation"
         onSubmit={handleSubmitResignation}
         submitLabel="Submit"
@@ -316,18 +382,18 @@ export default function ExitManagementPage() {
           <p className="text-xs text-muted-foreground mb-2">
             Need a template? Download and attach your formal resignation letter:
           </p>
-          <a
-            href="/Resignation Letter Template.docx"
-            download
-            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
           >
             <Download className="h-3 w-3" />
             Download Resignation Letter Template
-          </a>
+          </button>
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={hrApproveId !== null}
         onOpenChange={(open) => {
           if (!open) setHrApproveId(null);
@@ -335,12 +401,11 @@ export default function ExitManagementPage() {
         title="Approve Resignation (HR)"
         description="Are you sure you want to approve this resignation? It will be forwarded to the CEO for final approval."
         confirmLabel="Approve"
-        variant="default"
         onConfirm={handleHrApprove}
         isPending={hrReview.isPending}
       />
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={ceoApproveId !== null}
         onOpenChange={(open) => {
           if (!open) setCeoApproveId(null);
@@ -348,7 +413,6 @@ export default function ExitManagementPage() {
         title="Approve Resignation (CEO)"
         description="Are you sure you want to give final approval for this resignation?"
         confirmLabel="Approve"
-        variant="default"
         onConfirm={handleCeoApprove}
         isPending={ceoReview.isPending}
       />
@@ -383,7 +447,7 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      <ConfirmActionDialog
+      <ConfirmDialog
         open={withdrawId !== null}
         onOpenChange={(open) => {
           if (!open) setWithdrawId(null);
@@ -391,7 +455,7 @@ export default function ExitManagementPage() {
         title="Withdraw Resignation"
         description="Are you sure you want to withdraw your resignation? This action cannot be undone."
         confirmLabel="Withdraw"
-        variant="destructive"
+        destructive
         onConfirm={handleWithdraw}
         isPending={withdrawResignation.isPending}
       />

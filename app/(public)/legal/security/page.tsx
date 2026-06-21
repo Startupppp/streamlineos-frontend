@@ -5,6 +5,7 @@ import { BRAND_NAME } from "@/lib/branding";
 export const metadata: Metadata = {
   title: `Security — ${BRAND_NAME}`,
   description: `How ${BRAND_NAME} secures customer data, infrastructure, and the development pipeline.`,
+  alternates: { canonical: "/legal/security" },
 };
 
 const sections = [

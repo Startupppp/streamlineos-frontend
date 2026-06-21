@@ -1,9 +1,15 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { performanceReviews, goals } from "@/lib/db/schema";
+import {
+  performanceReviews,
+  goals,
+} from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import type { PerformanceReview, Goal } from "@/types/hr";
+import type {
+  PerformanceReview,
+  Goal,
+} from "@/types/hr";
 
 export async function getPerformanceReviews(
   orgId: string,

@@ -2,7 +2,6 @@ import { sendEmail } from "./sender";
 import {
   getDealStageChangeEmailTemplate,
   getLeadAssignedEmailTemplate,
-  getTaskAssignedEmailTemplate,
 } from "../email-templates";
 
 export async function sendDealStageChangeEmail(
@@ -34,21 +33,5 @@ export async function sendLeadAssignedEmail(
     to: email,
     subject: `New Lead Assigned: ${leadName}`,
     html: getLeadAssignedEmailTemplate(repName, leadName, source, priority, assignedBy),
-  });
-}
-
-export async function sendTaskAssignedEmail(
-  email: string,
-  assigneeName: string,
-  taskTitle: string,
-  taskType: string,
-  dueDate: string | null,
-  creatorName: string,
-  entityLabel?: string
-) {
-  await sendEmail({
-    to: email,
-    subject: `Task Assigned: ${taskTitle}`,
-    html: getTaskAssignedEmailTemplate(assigneeName, taskTitle, taskType, dueDate, creatorName, entityLabel),
   });
 }

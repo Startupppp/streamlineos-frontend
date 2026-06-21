@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { auth } from "@/lib/auth";
+import { withAuth } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_ROWS = 10_000;
@@ -131,12 +132,8 @@ async function readRowsFromFile(file: File): Promise<ParsedImportRow[]> {
 }
 
 export async function POST(req: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+  return withAuth(async (session) => {
+    try {
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),
     });
@@ -144,7 +141,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No organization found" }, { status: 400 });
     }
 
-    const isAdmin = member.role === "CEO" || member.role === "HR" || member.role === "ADMIN";
+    const ability = await getSessionAbility();
+
+
+    const isAdmin = ability.can("approve", "hr:expenses");
     if (!isAdmin) {
       return NextResponse.json({ error: "Only HR and CEO can import expenses" }, { status: 403 });
     }
@@ -234,8 +234,9 @@ export async function POST(req: Request) {
       skippedReasons,
       ...(rows.length >= MAX_ROWS ? { warning: `Only first ${MAX_ROWS} rows were processed` } : {}),
     });
-  } catch (error) {
-    logger.error("Expense import error", { error: error instanceof Error ? error.message : "Unknown" });
-    return NextResponse.json({ error: "Failed to import expenses" }, { status: 500 });
-  }
+    } catch (error) {
+      logger.error("Expense import error", { error: error instanceof Error ? error.message : "Unknown" });
+      return NextResponse.json({ error: "Failed to import expenses" }, { status: 500 });
+    }
+  });
 }

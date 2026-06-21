@@ -6,6 +6,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { getSessionAbility } from "@/lib/abilities-server";
 
 const querySchema = z.object({
   userId: z.string().optional(),
@@ -92,9 +93,7 @@ const reviewerUsers = aliasedTable(users, "reviewer");
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin =
-      session.user.role === "CEO" ||
-      session.user.role === "HR" ||
-      session.user.role === "ADMIN";
+      (await getSessionAbility()).can("manage", "hr:documents");
 
     if (isAdmin) {
       const query = parseQuery(req, querySchema);
@@ -234,6 +233,21 @@ export async function POST(req: NextRequest) {
     });
 
     await recalcOnboardingStatus(session.orgId, session.user.id);
+
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+        columns: { name: true },
+      });
+      await runAutomationsForEvent(session.orgId, "onboarding.document_submitted", {
+        documentId: record.id,
+        userId: session.user.id,
+        employeeName: employee?.name ?? "",
+        documentTypeName: docType.name,
+        status: "SUBMITTED",
+        submittedAt: new Date().toISOString(),
+      });
+    });
 
     return ok(record, 201);
   });

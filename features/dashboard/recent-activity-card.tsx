@@ -43,7 +43,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 px-4 py-3">
         <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-          <Activity className="h-4 w-4 text-gold" aria-hidden="true" />
+          <Activity className="h-4 w-4 text-blue-600" aria-hidden="true" />
           Recent Activity
         </CardTitle>
       </CardHeader>

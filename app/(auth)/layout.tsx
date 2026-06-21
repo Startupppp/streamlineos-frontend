@@ -42,7 +42,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        <footer className="shrink-0 px-6 sm:px-10 py-5 flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.16em] text-slate-400">
+        <footer className="shrink-0 px-6 sm:px-10 py-5 flex items-center justify-between text-[12px] font-medium text-slate-400">
           <p>
             &copy; {new Date().getFullYear()} {BRAND_NAME}
           </p>

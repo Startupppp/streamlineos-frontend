@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { sendEmail } from "@/lib/email";
 import { z } from "zod";
 
@@ -389,7 +389,7 @@ export async function POST(req: NextRequest) {
     return err("Invalid request body — expected { templateId, testEmail }", 400);
   }
 
-  return withAdmin(async () => {
+  return withAbility("manage", "settings:email-templates", async () => {
     const entry = TEMPLATE_MAP[body.templateId];
     if (!entry) {
       return err(`Unknown template ID: ${body.templateId}`, 404);

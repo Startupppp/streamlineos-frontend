@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../lib/auth";
+import { withAuth } from "@/lib/api/helpers";
 import {
   suggestTaskAssignments,
   analyzeWorkload,
-} from "../../../../lib/ai/automation";
-import { logger } from "../../../../lib/logger";
+} from "@/lib/ai/automation";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const orgId = "orgId" in session && typeof session.orgId === "string" ? session.orgId : session.user.id;
+  return withAuth(async (session) => {
+    try {
+    const orgId = session.orgId;
 
     const searchParams = req.nextUrl.searchParams;
     const type = searchParams.get("type");
@@ -34,11 +30,12 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
-  } catch (error) {
-    logger.error("AI suggestions error", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
+    } catch (error) {
+      logger.error("AI suggestions error", error);
+      return NextResponse.json(
+        { error: "Internal Server Error" },
+        { status: 500 }
+      );
+    }
+  });
 }

@@ -2,10 +2,11 @@
 
 import { useState, useCallback } from "react";
 import {
-  DollarSign,
   Plus,
   Clock,
   CheckCircle2,
+  Check,
+  BadgeIndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,10 +39,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useCommissions, useCommissionRules, useCreateCommissionRule } from "@/lib/api/hooks/crm";
+import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus } from "@/lib/api/hooks/crm";
+import { useAbility } from "@/lib/abilities-context";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -56,16 +68,27 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
   paid: { label: "Paid", variant: "outline" },
 };
 
+interface PendingAction {
+  id: number;
+  userName: string | null;
+  status: "approved" | "paid";
+}
+
 export default function CommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [ruleName, setRuleName] = useState("");
   const [ruleType, setRuleType] = useState("flat_percent");
   const [ruleRate, setRuleRate] = useState("");
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+
+  const ability = useAbility();
+  const canManage = ability.can("manage", "sales");
 
   const { data, isLoading } = useCommissions({ status: statusFilter });
   const { data: rules } = useCommissionRules();
   const createRule = useCreateCommissionRule();
+  const updateStatus = useUpdateCommissionStatus();
 
   const items = (data?.items ?? []) as Array<{
     id: number; userName: string | null; dealName: string | null;
@@ -73,10 +96,33 @@ export default function CommissionsPage() {
     status: string; createdAt: string | null;
   }>;
 
+  const handleConfirmAction = useCallback(() => {
+    if (!pendingAction) return;
+    updateStatus.mutate(
+      { id: pendingAction.id, status: pendingAction.status },
+      {
+        onSuccess: () => {
+          toast.success(pendingAction.status === "paid" ? "Commission marked as paid" : "Commission approved");
+          setPendingAction(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [pendingAction, updateStatus]);
+
   const handleCreateRule = useCallback(() => {
     if (!ruleName.trim()) { toast.error("Rule name is required"); return; }
+    let flatRate: string | undefined;
+    if (ruleType === "flat_percent") {
+      const rate = Number(ruleRate);
+      if (!ruleRate.trim() || !Number.isFinite(rate) || rate < 0 || rate > 100) {
+        toast.error("Rate must be a number between 0 and 100");
+        return;
+      }
+      flatRate = String(rate);
+    }
     createRule.mutate(
-      { name: ruleName.trim(), type: ruleType, flatRate: ruleRate || undefined },
+      { name: ruleName.trim(), type: ruleType, flatRate },
       {
         onSuccess: () => { toast.success("Commission rule created"); setRuleDialogOpen(false); setRuleName(""); setRuleRate(""); },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -105,9 +151,9 @@ export default function CommissionsPage() {
         </Tabs>
       }
     >
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard label="Pending" value={fmt(data?.totalPending ?? 0)} icon={Clock} color="gold" />
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <StatCard label="Pending" value={fmt(data?.totalPending ?? 0)} icon={Clock} color="amber" />
           <StatCard label="Paid" value={fmt(data?.totalPaid ?? 0)} icon={CheckCircle2} color="green" />
         </div>
 
@@ -123,13 +169,14 @@ export default function CommissionsPage() {
                     <TableHead className="text-right">Rate</TableHead>
                     <TableHead className="text-right">Commission</TableHead>
                     <TableHead>Status</TableHead>
+                    {canManage && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={canManage ? 7 : 6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : items.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                    <TableRow><TableCell colSpan={canManage ? 7 : 6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyExpensesIllustration className="h-36 w-36 opacity-95" />
                       <p>No commissions found.</p>
                     </div></TableCell></TableRow>
@@ -140,9 +187,36 @@ export default function CommissionsPage() {
                         <TableCell className="font-medium text-sm">{c.userName ?? "—"}</TableCell>
                         <TableCell className="text-sm">{c.dealName ?? "—"}</TableCell>
                         <TableCell className="text-right text-sm">{fmt(c.dealValue)}</TableCell>
-                        <TableCell className="text-right text-sm">{Number(c.commissionRate)}%</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">{Number(c.commissionRate).toFixed(2)}%</TableCell>
                         <TableCell className="text-right font-medium text-sm">{fmt(c.commissionAmount)}</TableCell>
                         <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
+                        {canManage && (
+                          <TableCell className="text-right">
+                            {c.status === "pending" ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  onClick={() => setPendingAction({ id: c.id, userName: c.userName, status: "approved" })}
+                                >
+                                  <Check className="h-3.5 w-3.5 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => setPendingAction({ id: c.id, userName: c.userName, status: "paid" })}
+                                >
+                                  <BadgeIndianRupee className="h-3.5 w-3.5 mr-1" />
+                                  Mark Paid
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
@@ -160,8 +234,8 @@ export default function CommissionsPage() {
             <div className="p-4 space-y-2">
               {rules.map((r: Record<string, unknown>) => (
                 <div key={String(r.id)} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
-                  <span className="font-medium">{String(r.name)}</span>
-                  <span className="text-muted-foreground">{r.type === "flat_percent" ? `${r.flatRate}%` : "Tiered"}</span>
+                  <span className="font-medium truncate min-w-0">{String(r.name)}</span>
+                  <span className="text-muted-foreground tabular-nums shrink-0">{r.type === "flat_percent" ? `${Number(r.flatRate).toFixed(2)}%` : "Tiered"}</span>
                 </div>
               ))}
             </div>
@@ -192,7 +266,7 @@ export default function CommissionsPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Rate (%)</label>
-              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" step="0.1" placeholder="e.g. 5" />
+              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" min="0" max="100" step="0.1" placeholder="e.g. 5" />
             </div>
           </div>
           <DialogFooter>
@@ -203,6 +277,27 @@ export default function CommissionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!pendingAction} onOpenChange={(open) => !open && setPendingAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction?.status === "paid" ? "Mark commission as paid?" : "Approve commission?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.status === "paid"
+                ? `This will mark ${pendingAction?.userName ?? "this rep"}'s commission as paid and notify them.`
+                : `This will approve ${pendingAction?.userName ?? "this rep"}'s commission and notify them.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateStatus.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} disabled={updateStatus.isPending}>
+              {updateStatus.isPending ? "Saving…" : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   );
 }

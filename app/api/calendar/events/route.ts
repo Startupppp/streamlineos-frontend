@@ -1,11 +1,12 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import {
   getCalendarEvents,
   createCalendarEvent,
   getOooConflicts,
 } from "@/server/queries/calendar";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 const getSchema = z.object({
   start: z.string(),
@@ -13,7 +14,12 @@ const getSchema = z.object({
 });
 
 const postSchema = z.object({
-  title: z.string().min(1),
+  title: z
+    .string()
+    .min(2, "Event title must be at least 2 characters")
+    .max(100, "Event title must be at most 100 characters")
+    .refine((v) => /^[a-zA-Z0-9]/.test(v.trim()), "Event title must start with a letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Event title cannot have consecutive spaces"),
   description: z.string().optional(),
   location: z.string().optional(),
   startDate: z.string(),
@@ -29,7 +35,18 @@ const postSchema = z.object({
   agenda: z.string().optional(),
   linkedDealId: z.number().int().optional(),
   linkedLeadId: z.number().int().optional(),
-});
+}).refine(
+  (v) => {
+    const start = new Date(v.startDate);
+    const end = new Date(v.endDate);
+    return (
+      !Number.isNaN(start.getTime()) &&
+      !Number.isNaN(end.getTime()) &&
+      end > start
+    );
+  },
+  { message: "End date must be after start date", path: ["endDate"] },
+);
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -41,11 +58,17 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const events = await getCalendarEvents(
-        session.orgId,
-        session.user.id,
-        new Date(params.start),
-        new Date(params.end)
+      const key = `calendar:events:${session.orgId}:${session.user.id}:${params.start}:${params.end}`;
+      const events = await cached(
+        key,
+        () =>
+          getCalendarEvents(
+            session.orgId,
+            session.user.id,
+            new Date(params.start),
+            new Date(params.end),
+          ),
+        { ttlSeconds: CACHE_TTL.SHORT },
       );
       return ok(events);
     } catch (error) {
@@ -62,7 +85,10 @@ export async function POST(req: NextRequest) {
     let input: z.infer<typeof postSchema>;
     try {
       input = await parseBody(req, postSchema);
-    } catch {
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return err(error.issues[0]?.message ?? "Invalid request body", 400);
+      }
       return err("Invalid request body", 400);
     }
 
@@ -92,6 +118,8 @@ export async function POST(req: NextRequest) {
       }),
       getOooConflicts(session.orgId, input.attendeeIds ?? [], startDate, endDate),
     ]);
+
+    await invalidateCachePattern(`calendar:events:${session.orgId}:*`);
 
     return ok({ event, oooConflicts }, 201);
   });

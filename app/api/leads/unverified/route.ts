@@ -1,8 +1,8 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { getUnverifiedLeads } from "@/server/queries/leads";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "crm:leads", async (session) => {
     const data = await getUnverifiedLeads(session.orgId!);
     return ok(data);
   });

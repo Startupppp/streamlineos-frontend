@@ -1,26 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { ReactNode, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Pencil, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -28,19 +23,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useUpdateTicket } from "@/lib/api/hooks/projects";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useQueryClient } from "@tanstack/react-query";
+
+const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 
 const editEpicSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  status: z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]),
+  priority: z.enum(PRIORITIES),
+  status: z.enum(STATUSES),
 });
 
 type EditEpicInput = z.infer<typeof editEpicSchema>;
@@ -54,33 +49,33 @@ interface EditEpicDialogProps {
     status: string | null;
   };
   projectId: number;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
 }
+
+function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
+  return PRIORITIES.includes(value as EditEpicInput["priority"])
+    ? (value as EditEpicInput["priority"])
+    : "MEDIUM";
+}
+
+function toStatus(value: string | null | undefined): EditEpicInput["status"] {
+  return STATUSES.includes(value as EditEpicInput["status"])
+    ? (value as EditEpicInput["status"])
+    : "TODO";
+}
+
+const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
+  TODO: "To Do",
+  IN_PROGRESS: "In Progress",
+  IN_REVIEW: "In Review",
+  DONE: "Done",
+};
 
 export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const form = useForm<EditEpicInput>({
-    resolver: zodResolver(editEpicSchema),
-    defaultValues: {
-      title: epic.title,
-      description: epic.description || "",
-      priority: (epic.priority as EditEpicInput["priority"]) || "MEDIUM",
-      status: (epic.status as EditEpicInput["status"]) || "TODO",
-    },
-  });
-
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        title: epic.title,
-        description: epic.description || "",
-        priority: (epic.priority as EditEpicInput["priority"]) || "MEDIUM",
-        status: (epic.status as EditEpicInput["status"]) || "TODO",
-      });
-    }
-  }, [open, epic, form]);
+  const handleOpen = () => setOpen(true);
 
   const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
@@ -91,7 +86,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 
-  function onSubmit(data: EditEpicInput) {
+  const handleSubmit = (data: EditEpicInput) => {
     updateTicket.mutate({
       ticketId: epic.id,
       title: data.title,
@@ -99,34 +94,52 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
       priority: data.priority,
       status: data.status,
     });
-  }
+  };
+
+  const defaultValues: EditEpicInput = {
+    title: epic.title,
+    description: epic.description ?? "",
+    priority: toPriority(epic.priority),
+    status: toStatus(epic.status),
+  };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm">
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-purple-500" />
-            Edit Epic
-          </SheetTitle>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <>
+      {trigger ? (
+        <span onClick={handleOpen} role="button" tabIndex={0}>
+          {trigger}
+        </span>
+      ) : (
+        <Button variant="ghost" size="sm" onClick={handleOpen}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
+      )}
+      <EntityFormSheet<EditEpicInput>
+        open={open}
+        onOpenChange={setOpen}
+        title="Edit epic"
+        resolver={zodResolver(editEpicSchema)}
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isSubmitting={updateTicket.isPending}
+        resetOnOpen
+        submitLabel="Save changes"
+      >
+        {(form) => (
+          <>
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormLabel className="flex items-center gap-2">
+                    <Zap className="h-3.5 w-3.5 text-violet-500" />
+                    Title
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -138,7 +151,12 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea className="resize-none" rows={3} placeholder="Epic description..." {...field} />
+                    <Textarea
+                      className="resize-none"
+                      rows={3}
+                      placeholder="Epic description..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,12 +170,17 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="LOW">Low</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="URGENT">Urgent</SelectItem>
+                        {PRIORITIES.map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p.charAt(0) + p.slice(1).toLowerCase()}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -171,11 +194,17 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="TODO">To Do</SelectItem>
-                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                        <SelectItem value="DONE">Done</SelectItem>
+                        {STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {STATUS_LABEL[s]}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -183,15 +212,9 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
                 )}
               />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={updateTicket.isPending}>
-                {updateTicket.isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+          </>
+        )}
+      </EntityFormSheet>
+    </>
   );
 }

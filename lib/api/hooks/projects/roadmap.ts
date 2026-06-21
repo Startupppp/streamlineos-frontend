@@ -1,0 +1,330 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
+export type RoadmapStatus = "planned" | "in_progress" | "completed" | "cancelled";
+export type FeedbackStatus = "open" | "planned" | "in_progress" | "completed" | "declined";
+export type ChangelogType = "feature" | "improvement" | "fix";
+
+export interface RoadmapItem {
+  id: number;
+  orgId: string;
+  title: string;
+  description: string | null;
+  status: RoadmapStatus;
+  category: string | null;
+  isPublic: boolean;
+  projectId: number | null;
+  epicTicketId: number | null;
+  targetQuarter: string | null;
+  sortOrder: number;
+  votes: number;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedbackPost {
+  id: number;
+  orgId: string;
+  title: string;
+  description: string | null;
+  status: FeedbackStatus;
+  category: string | null;
+  votes: number;
+  submittedByName: string | null;
+  submittedByEmail: string | null;
+  linkedRoadmapItemId: number | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChangelogEntry {
+  id: number;
+  orgId: string;
+  title: string;
+  content: string;
+  version: string | null;
+  type: ChangelogType;
+  isPublished: boolean;
+  linkedRoadmapItemId: number | null;
+  publishedAt: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoadmapItemFilters {
+  status?: RoadmapStatus;
+  search?: string;
+}
+
+export interface CreateRoadmapItemInput {
+  title: string;
+  description?: string;
+  status?: RoadmapStatus;
+  category?: string;
+  isPublic?: boolean;
+  projectId?: number;
+  epicTicketId?: number;
+  targetQuarter?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateRoadmapItemInput {
+  title?: string;
+  description?: string | null;
+  status?: RoadmapStatus;
+  category?: string | null;
+  isPublic?: boolean;
+  projectId?: number | null;
+  epicTicketId?: number | null;
+  targetQuarter?: string | null;
+  sortOrder?: number;
+}
+
+export interface FeedbackPostFilters {
+  status?: FeedbackStatus;
+  search?: string;
+}
+
+export interface CreateFeedbackPostInput {
+  title: string;
+  description?: string;
+  status?: FeedbackStatus;
+  category?: string;
+  submittedByName?: string;
+  submittedByEmail?: string;
+  linkedRoadmapItemId?: number;
+}
+
+export interface UpdateFeedbackPostInput {
+  title?: string;
+  description?: string | null;
+  status?: FeedbackStatus;
+  category?: string | null;
+  linkedRoadmapItemId?: number | null;
+}
+
+export interface ChangelogFilters {
+  type?: ChangelogType;
+}
+
+export interface CreateChangelogEntryInput {
+  title: string;
+  content?: string;
+  version?: string;
+  type?: ChangelogType;
+  isPublished?: boolean;
+  linkedRoadmapItemId?: number;
+}
+
+export interface UpdateChangelogEntryInput {
+  title?: string;
+  content?: string;
+  version?: string | null;
+  type?: ChangelogType;
+  isPublished?: boolean;
+  linkedRoadmapItemId?: number | null;
+}
+
+export interface PublicRoadmapItem {
+  id: number;
+  title: string;
+  description: string | null;
+  status: RoadmapStatus;
+  category: string | null;
+  targetQuarter: string | null;
+  votes: number;
+}
+
+export interface PublicFeedbackPost {
+  id: number;
+  title: string;
+  description: string | null;
+  category: string | null;
+  votes: number;
+  createdAt: string;
+}
+
+export interface PublicChangelogEntry {
+  id: number;
+  title: string;
+  content: string;
+  version: string | null;
+  type: ChangelogType;
+  publishedAt: string | null;
+}
+
+export interface PublicRoadmapBoard {
+  orgName: string;
+  roadmap: {
+    planned: PublicRoadmapItem[];
+    in_progress: PublicRoadmapItem[];
+    completed: PublicRoadmapItem[];
+  };
+  feedback: PublicFeedbackPost[];
+  changelog: PublicChangelogEntry[];
+}
+
+export interface PublicVoteInput {
+  type: "roadmap" | "feedback";
+  id: number;
+  voterKey: string;
+}
+
+export interface PublicVoteResult {
+  id: number;
+  type: "roadmap" | "feedback";
+  votes: number;
+  voted: boolean;
+}
+
+export interface SubmitPublicFeedbackInput {
+  title: string;
+  description?: string;
+  name?: string;
+  email?: string;
+}
+
+export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
+  const params: Record<string, unknown> = { ...filters };
+  return useQuery({
+    queryKey: queryKeys.roadmap.items(params),
+    queryFn: () => apiClient.get<RoadmapItem[]>("/projects/roadmap", params),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateRoadmapItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateRoadmapItemInput) =>
+      apiClient.post<RoadmapItem>("/projects/roadmap", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useUpdateRoadmapItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateRoadmapItemInput & { id: number }) =>
+      apiClient.patch<RoadmapItem>(`/projects/roadmap/${id}`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useDeleteRoadmapItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/projects/roadmap/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
+  const params: Record<string, unknown> = { ...filters };
+  return useQuery({
+    queryKey: queryKeys.roadmap.feedback(params),
+    queryFn: () => apiClient.get<FeedbackPost[]>("/projects/feedback", params),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateFeedbackPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateFeedbackPostInput) =>
+      apiClient.post<FeedbackPost>("/projects/feedback", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useUpdateFeedbackPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateFeedbackPostInput & { id: number }) =>
+      apiClient.patch<FeedbackPost>(`/projects/feedback/${id}`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useDeleteFeedbackPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/projects/feedback/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useChangelog(filters: ChangelogFilters = {}) {
+  const params: Record<string, unknown> = { ...filters };
+  return useQuery({
+    queryKey: queryKeys.roadmap.changelog(params),
+    queryFn: () => apiClient.get<ChangelogEntry[]>("/projects/changelog", params),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateChangelogEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateChangelogEntryInput) =>
+      apiClient.post<ChangelogEntry>("/projects/changelog", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useUpdateChangelogEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: UpdateChangelogEntryInput & { id: number }) =>
+      apiClient.patch<ChangelogEntry>(`/projects/changelog/${id}`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function useDeleteChangelogEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/projects/changelog/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+  });
+}
+
+export function usePublicRoadmap(orgId: string) {
+  return useQuery({
+    queryKey: queryKeys.roadmap.publicBoard(orgId),
+    queryFn: () => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }),
+    enabled: Boolean(orgId),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function usePublicVote(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: PublicVoteInput) =>
+      apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.publicBoard(orgId) }),
+  });
+}
+
+export function useSubmitPublicFeedback(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SubmitPublicFeedbackInput) =>
+      apiClient.post<{ id: number; message: string }>(
+        `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,
+        input,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.publicBoard(orgId) }),
+  });
+}

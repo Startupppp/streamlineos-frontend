@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Clock,
   User,
@@ -20,9 +21,12 @@ import {
   AlertCircle,
   Zap,
   Target,
+  Boxes,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
+import { useEpics, useModules } from "@/lib/api/hooks/projects";
 import { LabelPicker } from "../label-picker";
 import type { ProjectMember } from "./types";
 
@@ -35,6 +39,9 @@ interface TicketSidebarProps {
     points?: number | null;
     sprintId?: number | null;
     epicId?: number | null;
+    moduleId?: number | null;
+    startDate?: string | null;
+    dueDate?: string | null;
     timeSpent?: string | null;
     originalEstimate?: string | null;
     link?: string | null;
@@ -99,6 +106,17 @@ export function TicketSidebar({
   statuses,
   onAutoSave,
 }: TicketSidebarProps) {
+  const { data: epics } = useEpics(projectId ?? 0);
+  const { data: modules } = useModules(projectId ?? 0);
+  const selectableEpics = (epics ?? []).filter((e) => e.id !== ticket.id);
+
+  const handleStartDateChange = (value: string) =>
+    onAutoSave({ startDate: value || null });
+  const handleDueDateChange = (value: string) =>
+    onAutoSave({ dueDate: value || null });
+  const handleClearStartDate = () => onAutoSave({ startDate: null });
+  const handleClearDueDate = () => onAutoSave({ dueDate: null });
+
   const timeSpent = ticket.timeSpent ? parseFloat(ticket.timeSpent) : 0;
   const originalEstimate = ticket.originalEstimate
     ? parseFloat(ticket.originalEstimate)
@@ -269,7 +287,7 @@ export function TicketSidebar({
           <Select
             value={ticket.epicId?.toString() || "none"}
             onValueChange={(v) =>
-              onAutoSave({ epicId: v === "none" ? undefined : parseInt(v) })
+              onAutoSave({ epicId: v === "none" ? null : parseInt(v) })
             }
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
@@ -277,8 +295,93 @@ export function TicketSidebar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
+              {selectableEpics.map((epic) => (
+                <SelectItem key={epic.id} value={epic.id.toString()}>
+                  {epic.title}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
+            <Boxes className="h-3 w-3 inline mr-0.5" />
+            Module
+          </span>
+          <Select
+            value={ticket.moduleId?.toString() || "none"}
+            onValueChange={(v) =>
+              onAutoSave({ moduleId: v === "none" ? null : parseInt(v) })
+            }
+          >
+            <SelectTrigger className="h-8 text-xs bg-background w-full">
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {(modules ?? []).map((mod) => (
+                <SelectItem key={mod.id} value={mod.id.toString()}>
+                  {mod.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
+            <Calendar className="h-3 w-3 inline mr-0.5" />
+            Start date
+          </span>
+          <div className="flex items-center gap-1">
+            <DatePicker
+              value={ticket.startDate ?? undefined}
+              onChange={handleStartDateChange}
+              placeholder="Set start"
+              toDate={ticket.dueDate ? new Date(ticket.dueDate) : undefined}
+              className="h-8 text-xs"
+            />
+            {ticket.startDate && (
+              <button
+                type="button"
+                onClick={handleClearStartDate}
+                className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                aria-label="Clear start date"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
+            <Calendar className="h-3 w-3 inline mr-0.5" />
+            Due date
+          </span>
+          <div className="flex items-center gap-1">
+            <DatePicker
+              value={ticket.dueDate ?? undefined}
+              onChange={handleDueDateChange}
+              placeholder="Set due"
+              fromDate={ticket.startDate ? new Date(ticket.startDate) : undefined}
+              className="h-8 text-xs"
+            />
+            {ticket.dueDate && (
+              <button
+                type="button"
+                onClick={handleClearDueDate}
+                className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                aria-label="Clear due date"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

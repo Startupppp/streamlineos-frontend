@@ -5,7 +5,7 @@ import { cached, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 export async function GET() {
   return withAuth(async (session) => {
     const role = session.user.role;
-    if (role !== "CEO" && role !== "HR" && role !== "ADMIN") {
+    if (role !== "OWNER" && role !== "CEO" && role !== "HR" && role !== "ADMIN") {
       return err("Forbidden", 403);
     }
     try {

@@ -42,7 +42,7 @@ export default function PersonDetailPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Loading...">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Skeleton className="h-48" />
           <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-20" />)}
@@ -106,22 +106,22 @@ export default function PersonDetailPage() {
         </Link>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-6">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-2xl font-bold text-primary">{person.initials}</span>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold text-foreground">{person.name}</h1>
+                  <h1 className="font-display text-xl sm:text-2xl font-extrabold tracking-[-0.02em] text-foreground break-words">{person.name}</h1>
                   <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", badge?.color)}>
                     {badge?.label}
                   </span>
@@ -129,18 +129,18 @@ export default function PersonDetailPage() {
                 <p className="text-sm text-muted-foreground">{person.title}</p>
                 <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{person.bio}</p>
 
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Mail className="h-3.5 w-3.5" /> {person.email}
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-4">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0 max-w-full">
+                    <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{person.email}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Phone className="h-3.5 w-3.5" /> {person.phone}
+                    <Phone className="h-3.5 w-3.5 shrink-0" /> {person.phone}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{person.location}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" /> {person.location}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" /> Joined {person.joinDate}
+                    <Calendar className="h-3.5 w-3.5 shrink-0" /> Joined {person.joinDate}
                   </div>
                 </div>
 
@@ -189,7 +189,7 @@ export default function PersonDetailPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             {isSalesRep && <TabsTrigger value="deals">Deals ({person.deals.length})</TabsTrigger>}
@@ -197,8 +197,8 @@ export default function PersonDetailPage() {
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-12">
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-12">
               <div className="lg:col-span-7">
                 <Card className="h-full">
                   <CardHeader>

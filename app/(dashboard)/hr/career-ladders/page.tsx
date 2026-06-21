@@ -12,11 +12,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { Plus, TrendingUp, ArrowUpRight, Users } from "lucide-react";
+import { Plus, TrendingUp, ArrowUpRight, ChevronsUpDown, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
+import { useHrDepartments } from "@/lib/api/hooks/hr";
+import { cn } from "@/lib/utils";
 
 interface CareerLadder {
   id: number; title: string; department: string | null; description: string | null;
@@ -27,9 +32,11 @@ interface CareerLadder {
 const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: () => [...clKeys.all, "list"] as const };
 
 export default function CareerLaddersPage() {
-  const { data: session } = useSession();
+  useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
+  const { data: departments } = useHrDepartments();
 
   const { data: ladders, isLoading } = useQuery({
     queryKey: clKeys.list(),
@@ -45,16 +52,56 @@ export default function CareerLaddersPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
+  const [deptPickerOpen, setDeptPickerOpen] = useState(false);
   const [description, setDescription] = useState("");
 
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setTitle("");
+      setDepartment("");
+      setDescription("");
+    }
+    setSheetOpen(open);
+  }, []);
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleDeptSelect = useCallback((name: string) => {
+    setDepartment((prev) => (prev === name ? "" : name));
+    setDeptPickerOpen(false);
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Title must be at most 100 characters"); return; }
+    if (!/[a-zA-Z]/.test(trimmedTitle)) { toast.error("Title must contain at least one letter"); return; }
+    if (/^\W+$/.test(trimmedTitle)) { toast.error("Title cannot contain only special characters"); return; }
+    if (/\s{2,}/.test(trimmedTitle)) { toast.error("Title cannot have consecutive spaces"); return; }
+
+    const trimmedDesc = description.trim();
+    if (trimmedDesc.length > 0) {
+      if (trimmedDesc.length < 10) { toast.error("Description must be at least 10 characters"); return; }
+      if (trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
+      if (!/[a-zA-Z0-9]/.test(trimmedDesc)) { toast.error("Description cannot contain only special characters"); return; }
+    }
+
     create.mutate(
-      { title: title.trim(), department: department || undefined, description: description || undefined },
+      { title: trimmedTitle, department: department || undefined, description: trimmedDesc || undefined },
       {
         onSuccess: () => {
-          toast.success("Career ladder created"); setSheetOpen(false);
-          setTitle(""); setDepartment(""); setDescription("");
+          toast.success("Career ladder created");
+          setSheetOpen(false);
+          setTitle("");
+          setDepartment("");
+          setDescription("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -70,6 +117,8 @@ export default function CareerLaddersPage() {
       </PageWrapper>
     );
   }
+
+  const selectedDeptLabel = department || "Select department (optional)";
 
   return (
     <PageWrapper
@@ -111,18 +160,41 @@ export default function CareerLaddersPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Career Ladder" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title="Create Career Ladder" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., Engineering Career Path" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input placeholder="e.g., Engineering Career Path" value={title} onChange={handleTitleChange} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Department</label>
-          <Input placeholder="e.g., Engineering" value={department} onChange={(e) => setDepartment(e.target.value)} />
+          <Popover open={deptPickerOpen} onOpenChange={setDeptPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={deptPickerOpen} className="w-full justify-between font-normal">
+                <span className="truncate text-left">{selectedDeptLabel}</span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search departments..." />
+                <CommandList className="max-h-48 overflow-y-auto">
+                  <CommandEmpty>No department found.</CommandEmpty>
+                  <CommandGroup>
+                    {(departments ?? []).map((d) => (
+                      <CommandItem key={d.id} value={d.name} onSelect={handleDeptSelect}>
+                        <Check className={cn("mr-2 h-4 w-4", department === d.name ? "opacity-100" : "opacity-0")} />
+                        {d.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Describe the career path..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea placeholder="Describe the career path..." value={description} onChange={handleDescriptionChange} rows={3} />
         </div>
       </HrSheet>
     </PageWrapper>

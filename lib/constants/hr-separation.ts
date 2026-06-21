@@ -1,16 +1,22 @@
 
 export const TERMINATION_REASONS = [
-  "Poor performance",
-  "Misconduct / violation of company policies",
-  "Attendance issues / absenteeism",
-  "Behavioral issues",
-  "Company restructuring / layoffs",
-  "Redundancy of role",
-  "Project closure",
-  "Failure to meet targets",
-  "Breach of confidentiality",
-  "Insubordination",
+  "Performance Issues",
+  "Attendance Issues",
+  "Policy Violations",
+  "Misconduct",
+  "Behavioral Concerns",
+  "Violation of Company Policies",
+  "Unauthorized Absence",
+  "Poor Productivity",
+  "Project Non-Compliance",
+  "Organizational Restructuring",
+  "Position Redundancy",
+  "End of Contract",
+  "Security or Compliance Breach",
+  "Other",
 ] as const;
+
+export const TERMINATION_REASON_OTHER = "Other" as const;
 
 export type TerminationReason = (typeof TERMINATION_REASONS)[number];
 

@@ -89,7 +89,7 @@ function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
       {entry.narrative.length > 180 && (
         <button
           type="button"
-          className="text-xs text-primary hover:underline"
+          className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
           onClick={() => setExpanded((v) => !v)}
         >
           {expanded ? "Show less" : "Show more"}
@@ -131,7 +131,7 @@ export default function ReportNarratorPage() {
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Failed to generate narrative";
       if (msg.toLowerCase().includes("not configured")) {
-        toast.error("AI features require OPENAI_API_KEY to be configured");
+        toast.error("AI features need setup. Add your API key in Settings → AI Settings.");
       } else {
         toast.error(msg);
       }
@@ -161,7 +161,7 @@ export default function ReportNarratorPage() {
         </span>
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
@@ -195,7 +195,7 @@ export default function ReportNarratorPage() {
                   </Label>
                   <button
                     type="button"
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                     onClick={handleLoadExample}
                     aria-label="Load example data"
                   >

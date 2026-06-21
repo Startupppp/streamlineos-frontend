@@ -9,7 +9,7 @@ import {
   attendance,
 } from "@/lib/db/schema";
 import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -27,7 +27,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("generate", "hr:payroll")) {
       return err("Only admins can generate payroll.", 403);
     }
 
@@ -169,6 +171,6 @@ export async function POST(req: NextRequest) {
       await db.insert(payrolls).values(newPayrolls);
     }
 
-    return ok({ generated: newPayrolls.length });
+    return ok({ generated: newPayrolls.length }, 201);
   });
 }

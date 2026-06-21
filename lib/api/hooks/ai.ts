@@ -166,49 +166,6 @@ export function useObjectionHandler() {
 
 
 
-export interface SubjectLinesInput {
-  campaignContext: string;
-  targetAudience?: string;
-  tone?: "professional" | "friendly" | "urgent" | "curiosity";
-  count?: number;
-}
-
-export interface SubjectLinesResult {
-  subjects: string[];
-}
-
-export function useGenerateSubjectLines() {
-  return useMutation({
-    mutationFn: (data: SubjectLinesInput) =>
-      apiClient.post<SubjectLinesResult>("/ai/subject-lines", data),
-  });
-}
-
-
-
-export interface ContentBrief {
-  title: string;
-  outline: string[];
-  keyPoints: string[];
-  seoKeywords: string[];
-  callToAction: string;
-  estimatedWordCount: number;
-  targetAudienceInsights: string;
-}
-
-export function useGenerateContentBrief() {
-  return useMutation({
-    mutationFn: (data: {
-      topic: string;
-      targetAudience?: string;
-      contentType?: string;
-      keywords?: string;
-    }) => apiClient.post<ContentBrief>("/ai/content-brief", data),
-  });
-}
-
-
-
 export interface SentimentResult {
   sentiment: "positive" | "neutral" | "negative" | "critical";
   score: number;
@@ -256,17 +213,6 @@ export function useNLSearch() {
 
 
 
-export interface CampaignInsightsResult {
-  insights: string;
-  generatedAt: string;
-}
-
-export function useCampaignInsights() {
-  return useMutation({
-    mutationFn: (period: string) =>
-      apiClient.post<CampaignInsightsResult>("/ai/campaign-insights", { period }),
-  });
-}
 
 
 
@@ -347,7 +293,7 @@ export interface OrgFeatureFlags {
 
 export function useOrgFeatureFlags() {
   return useQuery({
-    queryKey: ["settings", "feature-flags"],
+    queryKey: queryKeys.settings.featureFlags(),
     queryFn: () => apiClient.get<OrgFeatureFlags>("/settings/feature-flags"),
   });
 }
@@ -361,7 +307,7 @@ export function useUpdateFeatureFlag() {
         data,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["settings", "feature-flags"] });
+      qc.invalidateQueries({ queryKey: queryKeys.settings.featureFlags() });
     },
   });
 }
@@ -399,7 +345,7 @@ export interface AiUsageData {
 
 export function useAiUsage() {
   return useQuery({
-    queryKey: ["settings", "ai-usage"],
+    queryKey: queryKeys.settings.aiUsage(),
     queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
   });
 }

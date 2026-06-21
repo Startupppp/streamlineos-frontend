@@ -1,4 +1,5 @@
 import { withAuth, ok } from "@/lib/api/helpers";
+import { cached, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -6,6 +7,14 @@ import type { NextRequest } from "next/server";
 
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
+    const orgId = session.orgId;
+    const key = `dashboard:birthdays:${orgId}:${new Date().toISOString().slice(0, 10)}`;
+    const data = await cached(key, () => buildBirthdays(orgId), { ttlSeconds: CACHE_TTL.MEDIUM });
+    return ok(data);
+  });
+}
+
+async function buildBirthdays(orgId: string) {
     const members = await db
       .select({
         id: users.id,
@@ -19,7 +28,7 @@ export async function GET(_req: NextRequest) {
       .innerJoin(organizationMembers, eq(organizationMembers.userId, users.id))
       .where(
         and(
-          eq(organizationMembers.orgId, session.orgId),
+          eq(organizationMembers.orgId, orgId),
           eq(users.isActive, true)
         )
       );
@@ -85,6 +94,5 @@ export async function GET(_req: NextRequest) {
       return true;
     });
 
-    return ok(deduped.slice(0, 20));
-  });
+    return deduped.slice(0, 20);
 }

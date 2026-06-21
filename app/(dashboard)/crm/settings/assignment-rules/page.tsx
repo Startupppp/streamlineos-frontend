@@ -34,19 +34,19 @@ import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 const FIELDS = [
-  { value: "source", label: "Source" },
-  { value: "priority", label: "Priority" },
-  { value: "city", label: "City" },
-  { value: "company", label: "Company" },
-  { value: "potentialValue", label: "Potential Value" },
+  { value:"source", label:"Source" },
+  { value:"priority", label:"Priority" },
+  { value:"city", label:"City" },
+  { value:"company", label:"Company" },
+  { value:"potentialValue", label:"Potential Value" },
 ];
 
 const OPERATORS = [
-  { value: "eq", label: "Equals" },
-  { value: "contains", label: "Contains" },
-  { value: "gt", label: "Greater than" },
-  { value: "lt", label: "Less than" },
-  { value: "in", label: "In (comma-sep)" },
+  { value:"eq", label:"Equals" },
+  { value:"contains", label:"Contains" },
+  { value:"gt", label:"Greater than" },
+  { value:"lt", label:"Less than" },
+  { value:"in", label:"In (comma-sep)" },
 ];
 
 const conditionSchema = z.object({
@@ -56,11 +56,11 @@ const conditionSchema = z.object({
 });
 
 const createRuleSchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  assignmentType: z.enum(["assign_user", "round_robin"]),
+  name: z.string().min(1,"Name required").max(100),
+  assignmentType: z.enum(["assign_user","round_robin"]),
   assignToUserId: z.string().optional(),
   roundRobinUserIds: z.string().optional(),
-  conditions: z.array(conditionSchema).min(1, "At least one condition required"),
+  conditions: z.array(conditionSchema).min(1,"At least one condition required"),
 });
 type CreateRuleForm = z.infer<typeof createRuleSchema>;
 
@@ -77,20 +77,20 @@ interface RuleCardProps {
   rule: AssignmentRuleData;
   index: number;
   totalRules: number;
-  onMove: (index: number, direction: "up" | "down") => void;
+  onMove: (index: number, direction:"up" |"down") => void;
   onToggle: (id: number, isActive: boolean) => void;
   onDelete: (id: number) => void;
 }
 
 function RuleCard({ rule, index, totalRules, onMove, onToggle, onDelete }: RuleCardProps) {
   const conditions = rule.conditions as { field: string; operator: string; value: string }[];
-  const handleMoveUp = useCallback(() => onMove(index, "up"), [index, onMove]);
-  const handleMoveDown = useCallback(() => onMove(index, "down"), [index, onMove]);
+  const handleMoveUp = useCallback(() => onMove(index,"up"), [index, onMove]);
+  const handleMoveDown = useCallback(() => onMove(index,"down"), [index, onMove]);
   const handleToggle = useCallback(() => onToggle(rule.id, rule.isActive), [rule.id, rule.isActive, onToggle]);
   const handleDelete = useCallback(() => onDelete(rule.id), [rule.id, onDelete]);
 
   return (
-    <Card className={cn("shadow-sm transition-all", !rule.isActive && "opacity-60")}>
+    <Card className={cn("shadow-sm transition-all", !rule.isActive &&"opacity-60")}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-0.5">
@@ -105,8 +105,8 @@ function RuleCard({ rule, index, totalRules, onMove, onToggle, onDelete }: RuleC
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium truncate">{rule.name}</h3>
               <Badge variant="secondary" className="text-[10px]">Priority {rule.priority}</Badge>
-              <Badge variant={rule.assignmentType === "round_robin" ? "default" : "secondary"} className="text-[10px]">
-                {rule.assignmentType === "round_robin" ? "Round Robin" : "Direct Assign"}
+              <Badge variant={rule.assignmentType ==="round_robin" ?"default" :"secondary"} className="text-[10px]">
+                {rule.assignmentType ==="round_robin" ?"Round Robin" :"Direct Assign"}
               </Badge>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -179,17 +179,17 @@ export default function AssignmentRulesPage() {
   const form = useForm<CreateRuleForm>({
     resolver: zodResolver(createRuleSchema),
     defaultValues: {
-      name: "",
-      assignmentType: "assign_user",
-      assignToUserId: "",
-      roundRobinUserIds: "",
-      conditions: [{ field: "", operator: "eq", value: "" }],
+      name:"",
+      assignmentType:"assign_user",
+      assignToUserId:"",
+      roundRobinUserIds:"",
+      conditions: [{ field:"", operator:"eq", value:"" }],
     },
   });
 
   const { fields: conditionFields, append: addCondition, remove: removeCondition } = useFieldArray({
     control: form.control,
-    name: "conditions",
+    name:"conditions",
   });
 
   const assignmentType = form.watch("assignmentType");
@@ -199,8 +199,8 @@ export default function AssignmentRulesPage() {
       {
         name: data.name,
         assignmentType: data.assignmentType,
-        assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
-        roundRobinUserIds: data.assignmentType === "round_robin"
+        assignToUserId: data.assignmentType ==="assign_user" ? data.assignToUserId || undefined : undefined,
+        roundRobinUserIds: data.assignmentType ==="round_robin"
           ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
           : undefined,
         conditions: data.conditions,
@@ -220,10 +220,10 @@ export default function AssignmentRulesPage() {
     );
   }, [updateRule]);
 
-  const moveRule = useCallback((index: number, direction: "up" | "down") => {
+  const moveRule = useCallback((index: number, direction:"up" |"down") => {
     if (!rules) return;
     const newRules = [...rules];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const targetIndex = direction ==="up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newRules.length) return;
     [newRules[index], newRules[targetIndex]] = [newRules[targetIndex], newRules[index]];
     reorderRules.mutate(
@@ -233,7 +233,7 @@ export default function AssignmentRulesPage() {
   }, [rules, reorderRules]);
 
   const handleAddCondition = useCallback(() => {
-    addCondition({ field: "", operator: "eq", value: "" });
+    addCondition({ field:"", operator:"eq", value:"" });
   }, [addCondition]);
 
   const handleDeleteRule = useCallback((id: number) => {
@@ -261,7 +261,7 @@ export default function AssignmentRulesPage() {
       actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
+            <Button >
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -315,7 +315,7 @@ export default function AssignmentRulesPage() {
                   </FormItem>
                 )} />
 
-                {assignmentType === "assign_user" && (
+                {assignmentType ==="assign_user" && (
                   <FormField control={form.control} name="assignToUserId" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assign To</FormLabel>
@@ -334,7 +334,7 @@ export default function AssignmentRulesPage() {
                   )} />
                 )}
 
-                {assignmentType === "round_robin" && (
+                {assignmentType ==="round_robin" && (
                   <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => (
                     <FormItem>
                       <FormLabel>User IDs (comma-separated)</FormLabel>
@@ -344,8 +344,8 @@ export default function AssignmentRulesPage() {
                   )} />
                 )}
 
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
-                  {createRule.isPending ? "Creating..." : "Create Rule"}
+                <Button type="submit" className="w-full" disabled={createRule.isPending}>
+                  {createRule.isPending ?"Creating..." :"Create Rule"}
                 </Button>
               </form>
             </Form>

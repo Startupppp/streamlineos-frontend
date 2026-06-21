@@ -66,9 +66,9 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Embed &quot;{form.name}&quot;</DialogTitle>
+          <DialogTitle className="truncate">Embed &quot;{form.name}&quot;</DialogTitle>
           <DialogDescription>
-            Copy one of the snippets below and paste it into your website. Replace &quot;yourapp.com&quot; with your actual domain.
+            Copy a snippet below and paste it into your website. URLs are pre-filled with <span className="font-medium text-foreground break-all">{origin}</span> — update the domain if you embed on a different site.
           </DialogDescription>
         </DialogHeader>
 
@@ -76,7 +76,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">iFrame Snippet</Label>
             <div className="relative">
-              <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="bg-muted rounded-md p-3 pr-12 text-xs whitespace-pre-wrap break-all">
                 {iframeSnippet}
               </pre>
               <Button
@@ -93,7 +93,7 @@ function EmbedDialog({ form, open, onClose }: { form: WebLeadForm; open: boolean
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">JavaScript Snippet</Label>
             <div className="relative">
-              <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="bg-muted rounded-md p-3 pr-12 text-xs whitespace-pre-wrap break-all">
                 {jsSnippet}
               </pre>
               <Button
@@ -369,9 +369,9 @@ export default function WebFormsPage() {
         </Button>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
-        <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="gold" />
+        <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="amber" />
       </div>
 
       {isLoading ? (

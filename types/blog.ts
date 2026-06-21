@@ -2,13 +2,11 @@ import type { BlogPost, BlogCategory, BlogAuthor } from "@/lib/db/schema";
 
 export type { BlogPost, BlogCategory, BlogAuthor };
 
-/** A post joined with its category and author (the shape the API returns). */
 export type BlogPostWithRelations = BlogPost & {
   category: BlogCategory | null;
   author: BlogAuthor | null;
 };
 
-/** Category plus its published-post count (from /api/blog/categories). */
 export interface CategoryWithCount {
   id: string;
   name: string;
@@ -25,7 +23,6 @@ export interface TagWithCount {
 
 export type BlogPostStatus = "draft" | "published" | "archived";
 
-/** Payload for creating/updating a post via the admin API. */
 export interface PostPayload {
   title: string;
   excerpt: string;
@@ -48,7 +45,6 @@ export interface CategoryPayload {
   color?: string | null;
 }
 
-/** Paginated feed response from /api/blog/feed. */
 export interface FeedResponse {
   posts: BlogPostWithRelations[];
   nextCursor: string | null;

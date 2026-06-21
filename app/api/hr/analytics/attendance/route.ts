@@ -1,11 +1,11 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { attendance, organizationMembers, users, departments } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, count } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const { searchParams } = req.nextUrl;
     const year = Number(searchParams.get("year")) || new Date().getFullYear();
     const month = Number(searchParams.get("month")) || new Date().getMonth() + 1;

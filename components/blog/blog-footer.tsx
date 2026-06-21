@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
 
-/** Simple footer for the public blog. */
 export function BlogFooter() {
   return (
     <footer className="mt-20 border-t border-border">

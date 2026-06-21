@@ -4,7 +4,7 @@ import { getOrgSettings } from "@/server/queries/organization";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 import { redis } from "@/lib/redis";
@@ -50,7 +50,8 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "settings")) {
         return err("Forbidden", 403);
       }
 

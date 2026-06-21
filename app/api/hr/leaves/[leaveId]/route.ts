@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveBalances, leaveTypes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import { LEAVE_POLICY } from "@/lib/leave-policy";
 import type { NextRequest } from "next/server";
@@ -17,7 +17,9 @@ export async function PATCH(
   { params }: { params: Promise<{ leaveId: string }> }
 ) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("approve", "hr:leaves")) {
       return err("Only admins can approve or reject leave requests.", 403);
     }
 

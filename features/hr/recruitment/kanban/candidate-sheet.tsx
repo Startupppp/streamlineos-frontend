@@ -79,7 +79,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   href={candidate.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline"
                 >
                   <Download className="h-3 w-3" />
                   Download

@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
   organizationMembers, users, payrolls, leaveBalances,
@@ -7,7 +7,7 @@ import {
 import { eq, and, sql, count, lte, gte } from "drizzle-orm";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("manage", "hr:compliance", async (session) => {
     const orgId = session.orgId;
     const now = new Date();
     const thirtyDaysAhead = new Date();

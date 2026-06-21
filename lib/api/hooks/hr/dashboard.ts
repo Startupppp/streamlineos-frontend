@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface HrDashboardMetrics {
   totalEmployees: number;
@@ -43,7 +44,7 @@ export interface HrHeadcountGroup {
 
 export function useHrDashboardMetrics() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "metrics"] as const,
+    queryKey: queryKeys.hr.dashboardMetrics(),
     queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
     staleTime: 60_000,
   });
@@ -51,7 +52,7 @@ export function useHrDashboardMetrics() {
 
 export function useHrHeadcountTrends() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "headcount-trends"] as const,
+    queryKey: queryKeys.hr.headcountTrends(),
     queryFn: () => apiClient.get<HrHeadcountTrends>("/hr/dashboard/headcount-trends"),
     staleTime: 120_000,
   });
@@ -64,7 +65,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
   const qs = params.toString();
 
   return useQuery({
-    queryKey: ["streamlineos", "hr", "leave-calendar", month, year] as const,
+    queryKey: queryKeys.hr.leaveCalendar(month ?? 0, year ?? 0),
     queryFn: () =>
       apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`),
     staleTime: 60_000,
@@ -73,7 +74,7 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
 
 export function useHrHeadcount(groupBy: "department" | "role" | "branch" = "department") {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "headcount", groupBy] as const,
+    queryKey: queryKeys.hr.headcount(groupBy),
     queryFn: () =>
       apiClient.get<HrHeadcountGroup[]>(`/hr/headcount?groupBy=${groupBy}`),
     staleTime: 120_000,
@@ -96,7 +97,7 @@ export interface HrOnboardingStatus {
 
 export function useHrOnboardingStatus() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "onboarding-status"] as const,
+    queryKey: queryKeys.hr.dashboardOnboardingStatus(),
     queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
     staleTime: 60_000,
   });
@@ -109,7 +110,7 @@ export interface HrDiversityMetrics {
 
 export function useHrDiversityMetrics() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "diversity"] as const,
+    queryKey: queryKeys.hr.dashboardDiversity(),
     queryFn: () => apiClient.get<HrDiversityMetrics>("/hr/dashboard/diversity"),
     staleTime: 300_000,
   });
@@ -122,7 +123,7 @@ export interface HrTimeToFill {
 
 export function useHrTimeToFill() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "time-to-fill"] as const,
+    queryKey: queryKeys.hr.dashboardTimeToFill(),
     queryFn: () => apiClient.get<HrTimeToFill>("/hr/dashboard/time-to-fill"),
     staleTime: 300_000,
   });
@@ -140,7 +141,7 @@ export interface HrPayrollSummary {
 
 export function useHrPayrollSummary() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "payroll-summary"] as const,
+    queryKey: queryKeys.hr.dashboardPayrollSummary(),
     queryFn: () => apiClient.get<HrPayrollSummary>("/hr/dashboard/payroll-summary"),
     staleTime: 120_000,
   });
@@ -159,7 +160,7 @@ export interface HrSalaryBands {
 
 export function useHrSalaryBands() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "salary-bands"] as const,
+    queryKey: queryKeys.hr.dashboardSalaryBands(),
     queryFn: () => apiClient.get<HrSalaryBands>("/hr/dashboard/salary-bands"),
     staleTime: 300_000,
   });
@@ -174,8 +175,28 @@ export interface HrCompliance {
 
 export function useHrCompliance() {
   return useQuery({
-    queryKey: ["streamlineos", "hr", "dashboard", "compliance"] as const,
+    queryKey: queryKeys.hr.dashboardCompliance(),
     queryFn: () => apiClient.get<HrCompliance>("/hr/dashboard/compliance"),
     staleTime: 120_000,
+  });
+}
+
+export interface HrDashboardAttendanceAnalytics {
+  month: string;
+  workingDaysSoFar: number;
+  totalEmployees: number;
+  attendancePct: number;
+  absenteeismPct: number;
+  lateArrivals: number;
+  wfhApproved: number;
+  overtimeInstances: number;
+  byDepartment: { name: string; presentCount: number; expectedCount: number }[];
+}
+
+export function useHrDashboardAttendanceAnalytics() {
+  return useQuery({
+    queryKey: queryKeys.hr.dashboardAttendanceAnalytics(),
+    queryFn: () => apiClient.get<HrDashboardAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
+    staleTime: 60_000,
   });
 }

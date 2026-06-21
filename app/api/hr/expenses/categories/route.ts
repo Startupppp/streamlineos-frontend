@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses, expenseCategories } from "@/lib/db/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -57,7 +57,9 @@ const createCategorySchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) {
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:expenses")) {
       return err("Only admins can create expense categories.", 403);
     }
 
@@ -74,6 +76,6 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    return ok(category);
+    return ok(category, 201);
   });
 }

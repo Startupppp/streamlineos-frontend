@@ -175,7 +175,7 @@ export default function SprintsPage({ params }: PageProps) {
       {plannedSprints.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-gray-500" />
+            <Calendar className="h-5 w-5 text-slate-500" />
             Planned Sprints
           </h2>
           <div className="grid gap-4">

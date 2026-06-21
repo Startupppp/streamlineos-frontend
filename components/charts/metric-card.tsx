@@ -63,7 +63,7 @@ function SparkLine({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-export function MetricCard({ label, value, icon: Icon, trend, sparkData, sparkColor = "#bd882c" }: MetricCardProps) {
+export function MetricCard({ label, value, icon: Icon, trend, sparkData, sparkColor = "#3b82f6" }: MetricCardProps) {
   return (
     <Card>
       <CardContent className="p-4">

@@ -31,13 +31,12 @@ import type {
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
+import { useAbility } from "@/lib/abilities-context";
 
 export function LeavesWfhContent() {
   const { data: session } = useSession();
-  const isAdmin =
-    session?.user?.role === "CEO" ||
-    session?.user?.role === "ADMIN" ||
-    session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage","hr:employees");
 
   const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
   const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
@@ -65,8 +64,8 @@ export function LeavesWfhContent() {
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
   const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
-  const pendingCount = myLeaveRequests.filter((r) => r.status === "PENDING").length;
-  const approvedCount = myLeaveRequests.filter((r) => r.status === "APPROVED").length;
+  const pendingCount = myLeaveRequests.filter((r) => r.status ==="PENDING").length;
+  const approvedCount = myLeaveRequests.filter((r) => r.status ==="APPROVED").length;
 
   if (contextLoading || myLoading) {
     return (
@@ -100,7 +99,7 @@ export function LeavesWfhContent() {
             <Button
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5 bg-gold hover:bg-gold/80 text-white"
+              className="gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Request Leave
@@ -121,7 +120,7 @@ export function LeavesWfhContent() {
               label="Pending Requests"
               value={pendingCount}
               icon={Clock3}
-              color="gold"
+              color="amber"
             />
             <StatCard
               label="Approved (YTD)"
@@ -147,7 +146,7 @@ export function LeavesWfhContent() {
                   {approvedLeavesThisWeek.map((leave) => (
                     <div
                       key={leave.id}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-card border border-amber-200/50 dark:border-amber-800/20"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-amber-200/50 dark:border-amber-800/20"
                     >
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={resolveImageUrl(leave.user?.image)} />
@@ -161,8 +160,8 @@ export function LeavesWfhContent() {
                           {leave.user?.firstName} {leave.user?.lastName}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(leave.startDate), "MMM dd")} –{" "}
-                          {format(new Date(leave.endDate), "MMM dd")}
+                          {format(new Date(leave.startDate),"MMM dd")} –{""}
+                          {format(new Date(leave.endDate),"MMM dd")}
                           {leave.leaveType && (
                             <span className="ml-1 text-amber-600 dark:text-amber-400">
                               · {leave.leaveType.name}
@@ -181,20 +180,20 @@ export function LeavesWfhContent() {
             <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
               <TabsTrigger
                 value="my-leaves"
-                className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 My Leaves
               </TabsTrigger>
               <TabsTrigger
                 value="wfh"
-                className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
               >
                 Work From Home
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="approvals"
-                  className="relative data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all"
+                  className="relative rounded-md px-4 py-2 text-sm font-medium transition-all"
                 >
                   Approvals
                   {totalPendingApprovals > 0 && (

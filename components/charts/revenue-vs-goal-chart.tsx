@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { RevenueVsGoalEntryResult } from "@/lib/api/hooks/crm";
+import { formatINRCompact } from "@/lib/format-utils";
 
 interface RevenueVsGoalChartProps {
   data: RevenueVsGoalEntryResult[];
@@ -18,9 +19,7 @@ interface RevenueVsGoalChartProps {
 }
 
 function formatK(value: number) {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
-  return `$${value}`;
+  return formatINRCompact(value);
 }
 
 export function RevenueVsGoalChart({ data, height = 280 }: RevenueVsGoalChartProps) {

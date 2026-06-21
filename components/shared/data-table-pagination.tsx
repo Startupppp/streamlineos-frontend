@@ -76,7 +76,7 @@ export function DataTablePagination({
                 key={p}
                 variant={p === page ? "default" : "outline"}
                 size="icon"
-                className={`h-7 w-7 text-xs ${p === page ? "bg-gold hover:bg-gold/80 text-white" : ""}`}
+                className={`h-7 w-7 text-xs ${p === page ? "bg-blue-500 hover:bg-blue-500/80 text-white" : ""}`}
                 onClick={() => onPageChange(p)}
               >
                 {p}

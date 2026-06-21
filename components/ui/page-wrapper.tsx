@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface PageWrapperProps {
   title: string;
   subtitle?: React.ReactNode;
+  eyebrow?: string;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;
@@ -13,11 +14,13 @@ interface PageWrapperProps {
   className?: string;
   contentClassName?: string;
   noInternalScroll?: boolean;
+  variant?: "default" | "display";
 }
 
 export function PageWrapper({
   title,
   subtitle,
+  eyebrow,
   badge,
   actions,
   filters,
@@ -25,24 +28,35 @@ export function PageWrapper({
   className,
   contentClassName,
   noInternalScroll = false,
+  variant = "default",
 }: PageWrapperProps) {
+  const titleClass =
+    variant === "display"
+      ? "font-display text-xl sm:text-2xl lg:text-[1.7rem] font-extrabold tracking-[-0.02em] text-foreground leading-tight"
+      : "text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight";
+
   return (
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
       <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0 flex-1">
+            {eyebrow && (
+              <p className="text-[11px] font-medium text-muted-foreground mb-1 leading-none">
+                {eyebrow}
+              </p>
+            )}
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg font-semibold tracking-tight text-foreground leading-tight">
+              <h1 className={titleClass}>
                 {title}
               </h1>
               {badge && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground text-[11px] font-medium tabular-nums border border-border/60">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-medium tabular-nums border border-blue-200/70">
                   {badge}
                 </span>
               )}
             </div>
             {subtitle && (
-              <p className="mt-0.5 text-[13px] text-muted-foreground leading-snug">
+              <p className="mt-1 text-[13px] text-muted-foreground leading-snug max-w-2xl">
                 {subtitle}
               </p>
             )}
@@ -57,14 +71,14 @@ export function PageWrapper({
       </div>
 
       {filters && (
-        <div className="shrink-0 border-b border-border/60 bg-background">
-          <div className="px-3 sm:px-4 py-2 flex items-center gap-3 overflow-x-auto scrollbar-thin">
+        <div className="shrink-0 border-b border-border bg-card/95 backdrop-blur-sm">
+          <div className="px-3 sm:px-4 py-2 flex flex-wrap items-center gap-3">
             {filters}
           </div>
         </div>
       )}
 
-      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border/60" />}
+      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border" />}
 
       {noInternalScroll ? (
         <div className={cn("flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-3 pb-4", contentClassName)}>

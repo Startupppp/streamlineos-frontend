@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leads, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
@@ -31,7 +31,7 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("create", "crm:leads", async (session) => {
     const input = await parseBody(req, schema);
     const orgId = session.orgId!;
     const userId = session.user.id;
@@ -172,6 +172,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return ok({ imported, skipped, updated, errors, duplicatesFound: existingLeads.length, distributed, salesPeopleCount });
+    return ok({ imported, skipped, updated, errors, duplicatesFound: existingLeads.length, distributed, salesPeopleCount }, 201);
   });
 }

@@ -9,7 +9,7 @@ import {
   organizations,
 } from "@/lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { sendInvitationEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
 import { nanoid } from "nanoid";
@@ -42,7 +42,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "settings")) {
         return err("Forbidden", 403);
       }
 

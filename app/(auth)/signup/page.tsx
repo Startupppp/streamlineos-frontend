@@ -42,12 +42,19 @@ const signupSchema = z.object({
 
 type FormValues = z.infer<typeof signupSchema>;
 
-const PLAN_IDS = ["STARTUP", "SCALEUP", "ENTERPRISE"] as const;
+type TierId = (typeof PRICING_TIERS)[number]["id"];
+type ApiPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+
+const TIER_TO_API_PLAN: Record<TierId, ApiPlan> = {
+  starter: "STARTER",
+  startup: "STARTER",
+  growth: "PROFESSIONAL",
+  enterprise: "ENTERPRISE",
+};
 
 export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
-  const [selectedPlan, setSelectedPlan] =
-    useState<(typeof PLAN_IDS)[number]>("STARTUP");
+  const [selectedTier, setSelectedTier] = useState<TierId>("startup");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,7 +73,7 @@ export default function SignupPage() {
   const handleSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/auth/signup", { ...data, plan: selectedPlan });
+      await apiClient.post("/auth/signup", { ...data, plan: TIER_TO_API_PLAN[selectedTier] });
       toast.success("Account created! Signing you in…");
 
       const result = await signIn("credentials", {
@@ -76,7 +83,7 @@ export default function SignupPage() {
       });
 
       if (result?.ok) {
-        window.location.href = "/dashboard";
+        window.location.href = "/org-setup";
       } else {
         toast.error(
           "Account created but auto-login failed. Please sign in manually.",
@@ -106,17 +113,16 @@ export default function SignupPage() {
       {step === 1 ? (
         <div className="space-y-3">
           <div role="radiogroup" aria-label="Plan" className="space-y-2">
-            {PRICING_TIERS.map((plan, idx) => {
-              const id = PLAN_IDS[idx];
-              const isSelected = selectedPlan === id;
+            {PRICING_TIERS.map((plan) => {
+              const isSelected = selectedTier === plan.id;
               const shortFeatures = plan.features.slice(0, 2);
               return (
                 <button
-                  key={id}
+                  key={plan.id}
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => setSelectedPlan(id)}
+                  onClick={() => setSelectedTier(plan.id)}
                   className={cn(
                     "relative w-full text-left rounded-xl border px-4 py-3 transition-all duration-200 flex items-center gap-3",
                     isSelected
@@ -142,7 +148,7 @@ export default function SignupPage() {
                       <span className="font-display text-[15px] font-bold text-slate-900">
                         {plan.name}
                       </span>
-                      <span className="text-[15px] font-extrabold brand-text">
+                      <span className="text-[15px] font-extrabold text-blue-600">
                         {plan.price}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500 truncate">
@@ -166,7 +172,7 @@ export default function SignupPage() {
                   </div>
 
                   {plan.highlight && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.14em] text-white font-semibold shadow-sm shrink-0">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-2 py-0.5 text-[9px] font-semibold text-white shadow-sm shrink-0">
                       <Sparkles className="h-2.5 w-2.5" />
                       Popular
                     </span>
@@ -176,7 +182,7 @@ export default function SignupPage() {
             })}
           </div>
 
-          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-400 text-center pt-1">
+          <p className="text-[11px] font-medium text-slate-400 text-center pt-1">
             14-day trial · No credit card · Cancel anytime
           </p>
 

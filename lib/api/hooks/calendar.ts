@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export interface CalendarOrgMember {
   id: string;
@@ -15,7 +16,7 @@ export interface CalendarOrgMember {
 
 export function useCalendarOrgMembers() {
   return useQuery({
-    queryKey: ["org", "members"],
+    queryKey: queryKeys.calendar.orgMembers(),
     queryFn: () => apiClient.get<CalendarOrgMember[]>("/org/members"),
     staleTime: 5 * 60 * 1000,
   });
@@ -23,7 +24,7 @@ export function useCalendarOrgMembers() {
 
 export function useGoogleMeetStatus() {
   return useQuery({
-    queryKey: ["google-meet", "status"],
+    queryKey: queryKeys.calendar.googleMeetStatus(),
     queryFn: () =>
       apiClient.get<{ connected: boolean; googleEmail: string | null; authUrl: string }>(
         "/calendar/create-meet"
@@ -109,7 +110,7 @@ export interface UpdateCalendarEventPayload extends Partial<CreateCalendarEventP
 
 export function useCalendarEvents(start: Date, end: Date) {
   return useQuery({
-    queryKey: ["calendar", "events", start.toISOString(), end.toISOString()],
+    queryKey: queryKeys.calendar.events(start.toISOString(), end.toISOString()),
     queryFn: () =>
       apiClient.get<CalendarListItem[]>("/calendar/events", {
         start: start.toISOString(),
@@ -125,7 +126,7 @@ export function useCreateCalendarEvent() {
     mutationFn: (payload: CreateCalendarEventPayload) =>
       apiClient.post<CalendarEvent>("/calendar/events", payload),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
+      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -135,7 +136,7 @@ export function useUpdateCalendarEvent() {
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
       apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
+      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -144,7 +145,7 @@ export function useDeleteCalendarEvent() {
   return useMutation({
     mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
+      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -167,7 +168,7 @@ export interface EventAttendee {
 
 export function useEventAttendees(eventId: number | null) {
   return useQuery({
-    queryKey: ["calendar", "attendees", eventId],
+    queryKey: queryKeys.calendar.attendees(eventId ?? 0),
     queryFn: () => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`),
     enabled: eventId !== null,
     staleTime: 60 * 1000,
@@ -180,8 +181,8 @@ export function useRsvpCalendarEvent() {
     mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
       apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
     onSuccess: (_data, { eventId }) => {
-      void qc.invalidateQueries({ queryKey: ["calendar", "attendees", eventId] });
-      void qc.invalidateQueries({ queryKey: ["calendar"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.calendar.attendees(eventId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
     },
   });
 }

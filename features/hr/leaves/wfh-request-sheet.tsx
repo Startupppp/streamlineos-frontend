@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { useCreateWfhRequest } from "@/lib/api/hooks/hr";
 
@@ -30,21 +30,16 @@ const WFH_REASONS = [
   "Other",
 ] as const;
 
-const wfhFormSchema = z
-  .object({
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().min(1, "End date is required"),
-    reason: z.string().min(1, "Reason is required"),
-    notes: z.string().optional(),
-    approverId: z.string().min(1, "Approver is required"),
-  })
-  .refine(
-    (data) => {
-      if (!data.startDate || !data.endDate) return true;
-      return !isBefore(new Date(data.endDate), new Date(data.startDate));
-    },
-    { message: "End date cannot be before start date", path: ["endDate"] }
-  );
+const wfhFormSchema = z.object({
+  date: z
+    .string()
+    .min(1, "Date is required")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
+    .refine((v) => v >= format(new Date(), "yyyy-MM-dd"), "Date cannot be in the past"),
+  reason: z.string().min(1, "Reason is required"),
+  notes: z.string().optional(),
+  approverId: z.string().min(1, "Approver is required"),
+});
 type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
 interface WfhRequestSheetProps {
@@ -59,20 +54,17 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
   const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhFormSchema),
     defaultValues: {
-      startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-      endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+      date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
       reason: "",
       notes: "",
       approverId: "",
     },
   });
 
-  const watchedStartDate = form.watch("startDate");
-
   const onSubmit = useCallback((data: WfhFormValues) => {
     createWfhRequest.mutate(
       {
-        date: data.startDate,
+        date: data.date,
         reason: `${data.reason}${data.notes ? ` — ${data.notes}` : ""}`,
         approverId: data.approverId,
       },
@@ -80,8 +72,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
         onSuccess: () => {
           toast.success("WFH request submitted successfully");
           form.reset({
-            startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-            endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+            date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
             reason: "",
             notes: "",
             approverId: "",
@@ -107,44 +98,24 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
     >
       <Form {...form}>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Start Date</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      fromDate={startOfDay(new Date())}
-                      placeholder="Start date"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">End Date</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      fromDate={watchedStartDate ? new Date(watchedStartDate) : startOfDay(new Date())}
-                      placeholder="End date"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium">Date</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    fromDate={startOfDay(new Date())}
+                    placeholder="Select date"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

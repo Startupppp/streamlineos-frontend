@@ -65,8 +65,7 @@ export function RolloutDocumentsDialog({
   const rollout = useGenerateAndRollout(candidateId);
 
   const form = useForm<RolloutFormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(rolloutFormSchema) as any,
+    resolver: zodResolver(rolloutFormSchema),
     defaultValues: {
       selectedTemplateIds: [],
       variables: {
@@ -137,7 +136,7 @@ export function RolloutDocumentsDialog({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-gold" aria-hidden="true" />
+            <FileText className="h-5 w-5 text-blue-600" aria-hidden="true" />
             Generate Offer &amp; Documents
           </DialogTitle>
           <DialogDescription>
@@ -279,7 +278,7 @@ export function RolloutDocumentsDialog({
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-gold hover:bg-gold/90 text-white"
+                  className="flex-1 bg-blue-500 hover:bg-blue-500/90 text-white"
                   disabled={rollout.isPending || selectedIds.length === 0}
                   aria-label="Generate and send documents"
                 >

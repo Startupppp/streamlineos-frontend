@@ -1,22 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { ReactNode, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Home } from "lucide-react";
+import { format, addDays } from "date-fns";
 import { useHrEmployees, useCreateWfhRequest } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -31,12 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Home, Loader2 } from "lucide-react";
-import { format, addDays } from "date-fns";
 import type { Employee } from "@/types/hr";
 
 const wfhFormSchema = z.object({
@@ -47,39 +36,39 @@ const wfhFormSchema = z.object({
 
 type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
-export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}) {
-  const [open, setOpen] = useState(false);
+interface RequestWfhDialogProps {
+  trigger?: ReactNode;
+}
 
+export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
+  const [open, setOpen] = useState(false);
+  const createWfhRequest = useCreateWfhRequest();
   const { data: employeesRaw } = useHrEmployees();
-  const employees = useMemo(
+
+  const employees = useMemo<Employee[]>(
     () =>
       (Array.isArray(employeesRaw)
         ? employeesRaw
         : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw]
+    [employeesRaw],
   );
+
   const approvers = useMemo(
-    () => employees.filter((e) => e.role === "ADMIN" || e.role === "CEO"),
-    [employees]
+    () => employees.filter((e) => e.role === "CEO"),
+    [employees],
   );
 
-  const form = useForm<WfhFormValues>({
-    resolver: zodResolver(wfhFormSchema),
-    defaultValues: {
-      date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-      reason: "",
-      approverId: "",
-    },
-  });
+  const handleOpen = () => setOpen(true);
 
-  const createWfhRequest = useCreateWfhRequest();
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    form.reset();
-  }, [form]);
-
-  const onSubmit = useCallback((data: WfhFormValues) => {
+  const handleSubmit = (data: WfhFormValues) => {
+    const [yr, mo, dy] = data.date.split("-").map(Number);
+    const selectedDate = new Date(yr, mo - 1, dy);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate <= today) {
+      toast.error("WFH date must be a future date");
+      return;
+    }
     createWfhRequest.mutate(
       {
         date: new Date(data.date),
@@ -89,123 +78,112 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
       {
         onSuccess: () => {
           toast.success("Work from home request submitted");
-          handleClose();
+          setOpen(false);
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
         },
-      }
+      },
     );
-  }, [createWfhRequest, handleClose]);
+  };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger ?? (
-          <Button variant="outline">
-            <Home className="mr-2 h-4 w-4" />
-            Request WFH
-          </Button>
+    <>
+      {trigger ? (
+        <span onClick={handleOpen} role="button" tabIndex={0}>
+          {trigger}
+        </span>
+      ) : (
+        <Button variant="outline" onClick={handleOpen}>
+          <Home className="mr-2 h-4 w-4" />
+          Request WFH
+        </Button>
+      )}
+      <EntityFormSheet<WfhFormValues>
+        open={open}
+        onOpenChange={setOpen}
+        title="Work from home request"
+        description="Request to work from home for a specific date."
+        resolver={zodResolver(wfhFormSchema)}
+        defaultValues={{
+          date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+          reason: "",
+          approverId: "",
+        }}
+        onSubmit={handleSubmit}
+        isSubmitting={createWfhRequest.isPending}
+        submitLabel="Submit request"
+      >
+        {(form) => (
+          <>
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Home className="h-3.5 w-3.5 text-blue-500" />
+                    Date
+                  </FormLabel>
+                  <FormControl>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      fromDate={addDays(new Date(), 1)}
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="approverId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Approver</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select approver" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {approvers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name ||
+                            `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+                            u.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Reason (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., Internet maintenance at home..."
+                      className="resize-none w-full"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
-      </SheetTrigger>
-      <SheetContent className="flex flex-col p-0 sm:max-w-md">
-        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-sm">
-            <Home className="h-4 w-4 text-primary" />
-            Work From Home Request
-          </SheetTitle>
-          <SheetDescription className="text-xs">
-            Request to work from home for a specific date.
-          </SheetDescription>
-        </SheetHeader>
-
-        <ScrollArea className="flex-1 min-h-0">
-          <Form {...form}>
-            <form
-              id="wfh-form"
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="px-4 py-3 space-y-3"
-            >
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <DatePicker value={field.value} onChange={field.onChange} className="w-full" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="approverId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Approver</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select approver" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {approvers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.name ||
-                              `${u.firstName || ""} ${u.lastName || ""}`.trim() ||
-                              u.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reason (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., Internet maintenance at home..."
-                        className="resize-none w-full"
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </ScrollArea>
-
-        <SheetFooter className="px-4 pb-4 pt-3 gap-2 shrink-0 border-t flex-row">
-          <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="wfh-form"
-            className="flex-1"
-            disabled={createWfhRequest.isPending}
-          >
-            {createWfhRequest.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Submit Request
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </EntityFormSheet>
+    </>
   );
 }

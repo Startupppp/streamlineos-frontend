@@ -54,7 +54,7 @@ function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-        idx === mentionIndex && "bg-gold/10"
+        idx === mentionIndex && "bg-blue-500/10"
       )}
     >
       <Avatar className="h-6 w-6">
@@ -214,10 +214,10 @@ export function MessageInput({
             className="border-t border-border/30 overflow-hidden bg-muted/20"
           >
             <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
-              <div className="w-1 h-9 rounded-full bg-gold shrink-0" />
-              <Reply className="h-4 w-4 text-gold shrink-0" />
+              <div className="w-1 h-9 rounded-full bg-blue-500 shrink-0" />
+              <Reply className="h-4 w-4 text-blue-600 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-gold">
+                <p className="text-[12px] font-bold text-blue-600">
                   Replying to {replyTo.sender?.name}
                 </p>
                 <p className="text-[12px] text-muted-foreground truncate">
@@ -293,7 +293,7 @@ export function MessageInput({
               ))}
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-gold" />
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                   <span className="text-[11px] text-muted-foreground">Uploading...</span>
                 </div>
               )}
@@ -308,7 +308,7 @@ export function MessageInput({
             </div>
           )}
 
-          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-gold/50 focus-within:shadow-lg transition-all">
+          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-blue-500/50 focus-within:shadow-lg transition-all">
             <input
               ref={fileInputRef}
               type="file"
@@ -335,7 +335,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     uploading
-                      ? "text-gold animate-pulse"
+                      ? "text-blue-600 animate-pulse"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Attach file (max 10MB)"
@@ -348,7 +348,7 @@ export function MessageInput({
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     showEmojiPicker
-                      ? "text-gold bg-muted/50"
+                      ? "text-blue-600 bg-muted/50"
                       : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Emoji"
@@ -379,7 +379,7 @@ export function MessageInput({
                   className={cn(
                     "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                     messageInput.trim() || pendingAttachments.length > 0
-                      ? "bg-gradient-to-r from-gold to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
+                      ? "bg-gradient-to-r from-blue-500 to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
                       : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                   )}
                 >

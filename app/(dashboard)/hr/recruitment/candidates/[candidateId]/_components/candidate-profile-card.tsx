@@ -115,7 +115,7 @@ export const CandidateProfileCard = memo(function CandidateProfileCard({
             href={linkedinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
           >
             <ExternalLink className="h-3 w-3" />LinkedIn
           </a>

@@ -7,8 +7,15 @@ import {
 import { z } from "zod";
 
 const updateSchema = z.object({
-  title: z.string().min(1).optional(),
+  title: z
+    .string()
+    .min(2, "Event title must be at least 2 characters")
+    .max(100, "Event title must be at most 100 characters")
+    .refine((v) => /^[a-zA-Z0-9]/.test(v.trim()), "Event title must start with a letter or number")
+    .refine((v) => !/\s{2,}/.test(v), "Event title cannot have consecutive spaces")
+    .optional(),
   description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   allDay: z.boolean().optional(),
@@ -43,6 +50,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
     const updateData: Parameters<typeof updateCalendarEvent>[3] = {};
     if (input.title !== undefined) updateData.title = input.title;
     if (input.description !== undefined) updateData.description = input.description ?? null;
+    if (input.location !== undefined) updateData.location = input.location ?? null;
     if (input.startDate !== undefined) updateData.startDate = new Date(input.startDate);
     if (input.endDate !== undefined) updateData.endDate = new Date(input.endDate);
     if (input.allDay !== undefined) updateData.allDay = input.allDay;

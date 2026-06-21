@@ -12,6 +12,7 @@ export const useUserPermissions = (
   return useQuery<string[], Error>({
     queryKey: queryKeys.rbac.userPermissions(),
     queryFn: () => apiClient.get<string[]>("/rbac/user-permissions"),
+    staleTime: 30 * 60_000,
     ...options,
   });
 };
@@ -42,6 +43,7 @@ export const useRolePermissions = (
     queryFn: () =>
       apiClient.get<string[]>("/rbac/role-permissions", { role }),
     enabled: !!role,
+    staleTime: 30 * 60_000,
     ...options,
   });
 };
@@ -63,4 +65,3 @@ export const useUpdateRolePermissions = () => {
   });
 };
 
-export const useRbacUserPermissions = useUserPermissions;

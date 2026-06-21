@@ -28,6 +28,7 @@ export interface SupportTicket {
   id: number;
   orgId: string;
   title: string;
+  category: string | null;
   description: string | null;
   clientId: number | null;
   priority: SupportTicketPriority;

@@ -74,7 +74,8 @@ export type AuditAction =
   | "worklog.exported"
   | "expense.exported"
   | "expense.deleted"
-  | "hr.document_deleted";
+  | "hr.document_deleted"
+  | "org.setup.completed";
 
 interface AuditLogEntry {
   action: AuditAction;

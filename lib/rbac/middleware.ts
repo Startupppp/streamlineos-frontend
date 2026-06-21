@@ -1,23 +1,41 @@
-import { rolePermissions, userPermissions, roles } from "../db/schema";
+import { rolePermissions, userPermissions, roles, organizationMembers } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import type { db as database } from "../db";
 
 type DbClient = Pick<typeof database, "query">;
 
+function parsePlatformAdminEmails(): ReadonlySet<string> {
+  const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
+  return new Set(
+    raw
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+const PLATFORM_ADMIN_EMAILS = parsePlatformAdminEmails();
+
+export function isPlatformAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
+}
+
 export function requirePermission(permissionName: string) {
   return async (opts: {
-    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
+    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string; email?: string; isOrgOwner?: boolean } };
     next: () => Promise<unknown>;
   }) => {
     const { ctx, next } = opts;
-    const { userId, orgId, role } = ctx.session;
+    const { userId, orgId, role, email, isOrgOwner } = ctx.session;
 
     const hasPermission = await checkPermission(
       ctx.db,
       userId,
       orgId,
       role,
-      permissionName
+      permissionName,
+      { email, isOrgOwner },
     );
 
     if (!hasPermission) {
@@ -28,17 +46,31 @@ export function requirePermission(permissionName: string) {
   };
 }
 
+interface CheckOptions {
+  email?: string | null;
+  isOrgOwner?: boolean;
+}
+
 export async function checkPermission(
   db: DbClient,
   userId: string,
   orgId: string,
   role?: string,
-  permissionName?: string
+  permissionName?: string,
+  options?: CheckOptions,
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  if (role === "CEO") {
-    return true;
+  if (isPlatformAdminEmail(options?.email)) return true;
+
+  if (options?.isOrgOwner) return true;
+
+  if (options?.isOrgOwner === undefined) {
+    const member = await db.query.organizationMembers.findFirst({
+      where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.orgId, orgId)),
+      columns: { isOwner: true },
+    }).catch(() => null);
+    if (member?.isOwner) return true;
   }
 
   const userPerms = await db.query.userPermissions.findMany({
@@ -91,26 +123,20 @@ export async function checkPermission(
     }
   }
 
-  const { ROLE_DEFAULT_PERMISSIONS } = await import("./permissions");
-  const defaults = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
-  if (defaults.includes(permissionName)) {
-    return true;
-  }
-
   return false;
 }
 
 export function hasAnyPermission(permissionNames: string[]) {
   return async (opts: {
-    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
+    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string; email?: string; isOrgOwner?: boolean } };
     next: () => Promise<unknown>;
   }) => {
     const { ctx, next } = opts;
-    const { userId, orgId, role } = ctx.session;
+    const { userId, orgId, role, email, isOrgOwner } = ctx.session;
 
     const checks = await Promise.all(
       permissionNames.map((perm) =>
-        checkPermission(ctx.db, userId, orgId, role, perm)
+        checkPermission(ctx.db, userId, orgId, role, perm, { email, isOrgOwner })
       )
     );
 

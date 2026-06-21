@@ -2,8 +2,8 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getWorkLogs } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
-import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { eq, and, sql } from "drizzle-orm";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -18,10 +18,15 @@ const postWorkLogSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:attendance");
     const filterUserId = searchParams.get("userId") ?? undefined;
     const year = searchParams.get("year");
     const quarter = searchParams.get("quarter");
+    const monthParam = searchParams.get("month");
+    const dateFrom = searchParams.get("dateFrom") ?? undefined;
+    const dateTo = searchParams.get("dateTo") ?? undefined;
 
     if (filterUserId && filterUserId !== session.user.id && !isAdmin) {
       return err("Not authorized to view other users' work logs.", 403);
@@ -31,12 +36,17 @@ export async function GET(req: NextRequest) {
       return err("year and quarter query params are required.", 400);
     }
 
+    const month = monthParam !== null ? Number(monthParam) : undefined;
+
     const data = await getWorkLogs(
       session.orgId,
       session.user.id,
       Number(year),
       Number(quarter),
-      filterUserId
+      filterUserId,
+      month,
+      dateFrom,
+      dateTo
     );
     return ok(data);
   });
@@ -54,32 +64,9 @@ export async function POST(req: NextRequest) {
         )
       : body.description;
 
-    const existing = await db.query.timesheets.findFirst({
-      where: and(
-        eq(timesheets.orgId, session.orgId),
-        eq(timesheets.userId, session.user.id),
-        eq(timesheets.date, dateStr)
-      ),
-    });
-
     const workLink = body.workLink || null;
 
-    if (existing) {
-      const [updated] = await db
-        .update(timesheets)
-        .set({
-          description: normalizedDescription,
-          hours: body.hours?.toString() || existing.hours,
-          workLink,
-          status: "APPROVED",
-          updatedAt: new Date(),
-        })
-        .where(eq(timesheets.id, existing.id))
-        .returning();
-      return ok(updated);
-    }
-
-    const [created] = await db
+    const [upserted] = await db
       .insert(timesheets)
       .values({
         orgId: session.orgId,
@@ -90,8 +77,19 @@ export async function POST(req: NextRequest) {
         workLink,
         status: "APPROVED",
       })
+      .onConflictDoUpdate({
+        target: [timesheets.orgId, timesheets.userId, timesheets.date],
+        targetWhere: sql`ticket_id IS NULL`,
+        set: {
+          description: normalizedDescription,
+          hours: body.hours ? body.hours.toString() : sql`${timesheets.hours}`,
+          workLink,
+          status: "APPROVED",
+          updatedAt: new Date(),
+        },
+      })
       .returning();
 
-    return ok(created);
+    return ok(upserted, 201);
   });
 }

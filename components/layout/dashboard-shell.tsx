@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
 import { CommandPalette } from "./command-palette";
 import { NotActivatedPage } from "../auth/not-activated-page";
+import { AbilityContextProvider } from "@/lib/abilities-context";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
@@ -56,6 +57,7 @@ export function DashboardShell({
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 
   return (
+    <AbilityContextProvider>
     <div className="h-screen flex bg-background overflow-hidden">
       {hasDashboardAccess && <ChatUnreadNotifications currentUserId={userId} />}
       <Link
@@ -87,7 +89,7 @@ export function DashboardShell({
             <CommandPalette />
 
             {isMobile && (
-              <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
+              <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
                   <button
                     type="button"
@@ -103,10 +105,10 @@ export function DashboardShell({
                   </SheetContent>
                 </Sheet>
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-gold/15 ring-1 ring-gold/20 flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-blue-500/15 ring-1 ring-blue-500/20 flex items-center justify-center">
                     <Image src="/logo.svg" alt="StreamlineOS" width={20} height={20} className="object-contain" />
                   </div>
-                  <span className="text-sm font-bold gold-text">StreamlineOS</span>
+                  <span className="text-sm font-bold text-foreground">StreamlineOS</span>
                 </div>
               </header>
             )}
@@ -120,5 +122,6 @@ export function DashboardShell({
         )}
       </main>
     </div>
+    </AbilityContextProvider>
   );
 }

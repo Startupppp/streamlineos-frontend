@@ -11,7 +11,6 @@ interface AuthorCardProps {
   className?: string;
 }
 
-/** Compact inline byline: author avatar + name, with optional date / reading time. */
 export function AuthorCard({
   author,
   date,

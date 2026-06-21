@@ -2,12 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronLeft, Users, MapPin, Globe, BarChart3 } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 
 interface DiversityReport {
@@ -20,7 +22,7 @@ interface DiversityReport {
 
 function useDiversityReport() {
   return useQuery<DiversityReport>({
-    queryKey: ["hr", "diversityReport"],
+    queryKey: queryKeys.hr.diversityReport(),
     queryFn: () => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report"),
     staleTime: 5 * 60 * 1000,
   });
@@ -30,8 +32,8 @@ const GENDER_COLORS: Record<string, string> = {
   MALE: "bg-blue-500",
   FEMALE: "bg-pink-500",
   OTHER: "bg-purple-500",
-  PREFER_NOT_TO_SAY: "bg-gray-400",
-  Unknown: "bg-gray-300",
+  PREFER_NOT_TO_SAY: "bg-slate-400",
+  Unknown: "bg-slate-300",
 };
 
 function HorizontalBar({
@@ -98,30 +100,10 @@ export default function DiversityReportPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
-            <Card>
-              <CardContent className="pt-4 pb-4 px-4 text-center">
-                <p className="text-2xl font-bold">{data.total}</p>
-                <p className="text-xs text-muted-foreground">Total Applicants</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 px-4 text-center">
-                <p className="text-2xl font-bold">{data.genderBreakdown.length}</p>
-                <p className="text-xs text-muted-foreground">Gender Categories</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 px-4 text-center">
-                <p className="text-2xl font-bold">{data.locationBreakdown.length}</p>
-                <p className="text-xs text-muted-foreground">Locations</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 px-4 text-center">
-                <p className="text-2xl font-bold">{data.sourceBreakdown.length}</p>
-                <p className="text-xs text-muted-foreground">Sources</p>
-              </CardContent>
-            </Card>
+            <StatCard label="Total Applicants" value={data.total} icon={Users} color="blue" index={0} />
+            <StatCard label="Gender Categories" value={data.genderBreakdown.length} icon={Users} color="violet" index={1} />
+            <StatCard label="Locations" value={data.locationBreakdown.length} icon={MapPin} color="green" index={2} />
+            <StatCard label="Sources" value={data.sourceBreakdown.length} icon={Globe} color="cyan" index={3} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -139,7 +121,7 @@ export default function DiversityReportPage() {
                   <HorizontalBar
                     items={data.genderBreakdown.map((g) => ({ label: g.gender, count: g.count }))}
                     total={data.total}
-                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-gray-400"}
+                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-slate-400"}
                   />
                 )}
               </CardContent>

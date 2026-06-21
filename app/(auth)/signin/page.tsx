@@ -167,7 +167,7 @@ export default function SignInPage() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="you@streamlineos.app"
+              placeholder="you@streamlineos.in"
               {...form.register("email")}
               disabled={isPending}
               className={cn(
@@ -314,17 +314,6 @@ export default function SignInPage() {
           </>
         )}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
-              Secure sign-in
-            </span>
-          </div>
-        </div>
-
         <p className="text-sm text-center text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
@@ -336,7 +325,7 @@ export default function SignInPage() {
         </p>
 
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
-          Your session is protected with end-to-end encryption.
+          Encrypted in transit over TLS. Sessions are signed and rotated.
         </p>
       </div>
     </div>

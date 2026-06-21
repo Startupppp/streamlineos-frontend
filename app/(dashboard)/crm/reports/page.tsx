@@ -7,6 +7,7 @@ import {
   Target, UserCheck, Calendar, BarChart3, ArrowDown, X, AlertTriangle, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/motion-variants";
-import { useLeadStats, useSlaAlerts } from "@/lib/api/hooks/leads";
+import { useLeadStats, useLeadSlaAlerts } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
@@ -42,7 +43,7 @@ export default function CrmReportsPage() {
   }, [appliedFrom, appliedTo]);
 
   const { data: stats, isLoading } = useLeadStats(statsInput);
-  const { data: slaData } = useSlaAlerts();
+  const { data: slaData } = useLeadSlaAlerts();
 
   const handleApplyFilter = useCallback(() => {
     setAppliedFrom(dateFrom);
@@ -248,30 +249,18 @@ export default function CrmReportsPage() {
         {stats && (
           <>
             <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              {[
-                { label: "Total Leads", value: stats.total, icon: Users, color: "text-blue-400" },
-                { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-emerald-400" },
-                { label: "Potential Value", value: `₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`, icon: Target, color: "text-gold" },
-                { label: "Unassigned", value: stats.unassigned, icon: UserCheck, color: "text-red-400" },
-                { label: "New This Month", value: stats.thisMonth, icon: Calendar, color: "text-purple-400" },
-              ].map(s => (
-                <Card key={s.label} className="shadow-noir">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <s.icon className={cn("h-5 w-5", s.color)} />
-                      <span className="text-2xl font-bold tabular-nums">{s.value}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              <StatCard label="Total Leads" value={stats.total} icon={Users} color="blue" index={0} />
+              <StatCard label="Conversion Rate" value={`${stats.conversionRate}%`} icon={TrendingUp} color="green" index={1} />
+              <StatCard label="Potential Value" value={`₹${(stats.totalPotentialValue / 100000).toFixed(1)}L`} icon={Target} color="cyan" index={2} />
+              <StatCard label="Unassigned" value={stats.unassigned} icon={UserCheck} color="red" index={3} />
+              <StatCard label="New This Month" value={stats.thisMonth} icon={Calendar} color="violet" index={4} />
             </motion.div>
 
             <motion.div variants={fadeUp}>
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-gold" />
+                    <BarChart3 className="h-4 w-4 text-blue-600" />
                     Pipeline Breakdown
                   </CardTitle>
                 </CardHeader>
@@ -321,7 +310,7 @@ export default function CrmReportsPage() {
               <Card className="shadow-noir">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-gold" />
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
                     Conversion Funnel
                   </CardTitle>
                 </CardHeader>

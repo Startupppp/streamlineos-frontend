@@ -1,10 +1,14 @@
 import { type NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { createPayment, getInvoicePayments } from "@/server/queries/invoice";
 import { db } from "@/lib/db";
-import { invoices } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { invoices, payments } from "@/lib/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import { postPaymentReceipt } from "@/lib/accounting/post-payment";
+import { seedChartOfAccountsForOrg } from "@/lib/accounting/seed-coa";
+import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 
 const recordPaymentSchema = z.object({
   amount: z.number().positive().max(999999999.99),
@@ -47,10 +51,39 @@ export async function POST(
     const parsed = recordPaymentSchema.safeParse(body);
     if (!parsed.success) return err("Invalid payment data", 400);
 
-    const payment = await createPayment(session.orgId, invoiceId, {
-      ...parsed.data,
-      createdBy: session.user.id,
+    const [{ totalPaid }] = await db
+      .select({ totalPaid: sql<number>`COALESCE(sum(${payments.amount}::numeric), 0)::float` })
+      .from(payments)
+      .where(and(eq(payments.invoiceId, invoiceId), eq(payments.orgId, session.orgId)));
+    const remaining = Number(invoice.total ?? 0) - totalPaid;
+    if (parsed.data.amount > remaining + 0.01) {
+      return err(`Payment amount ${parsed.data.amount.toFixed(2)} exceeds outstanding balance ${remaining.toFixed(2)}`, 400);
+    }
+
+    await seedChartOfAccountsForOrg(session.orgId);
+
+    const payment = await db.transaction(async (tx) => {
+      const created = await createPayment(session.orgId, invoiceId, {
+        ...parsed.data,
+        createdBy: session.user.id,
+      }, tx);
+
+      await postPaymentReceipt({
+        orgId: session.orgId,
+        paymentId: created.id,
+        invoiceNumber: invoice.invoiceNumber,
+        paymentDate: parsed.data.paymentDate,
+        paymentMethod: parsed.data.paymentMethod,
+        amount: parsed.data.amount,
+        createdBy: session.user.id,
+      }, tx);
+
+      return created;
     });
+
+    revalidateTag(orgScopedTag(CacheTag.journal, session.orgId), "default");
+    revalidateTag(orgScopedTag(CacheTag.trialBalance, session.orgId), "default");
+    revalidateTag(orgScopedTag(CacheTag.profitLoss, session.orgId), "default");
 
     return ok(payment, 201);
   });

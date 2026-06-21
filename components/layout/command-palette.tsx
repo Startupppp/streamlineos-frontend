@@ -14,7 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
+import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
+import { usePermissions } from "@/lib/rbac/hooks";
 import { cn } from "@/lib/utils";
 
 
@@ -68,12 +69,13 @@ export function CommandPalette() {
   const router = useRouter();
   const { data: session } = useSession();
   const role = session?.user?.role;
+  const { permissions } = usePermissions();
 
   const pages = useMemo(() => {
-    const groups = getNavGroupsForRole(role);
+    const groups = getNavGroupsForUser(role, permissions);
     const seen = new Set<string>();
     return groups.flatMap((group) =>
-      group.routes
+      flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
           seen.add(r.href);
@@ -81,7 +83,7 @@ export function CommandPalette() {
         })
         .map((r) => ({ name: r.label, href: r.href, icon: r.icon, group: group.label }))
     );
-  }, [role]);
+  }, [role, permissions]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -151,11 +153,11 @@ export function CommandPalette() {
   );
 
   const quickNavGroups = useMemo(() => {
-    const groups = getNavGroupsForRole(role);
+    const groups = getNavGroupsForUser(role, permissions);
     const seen = new Set<string>();
     return groups.slice(0, 5).map((group) => ({
       label: group.label,
-      routes: group.routes
+      routes: flattenNavRoutes(group.routes)
         .filter((r) => {
           if (seen.has(r.href)) return false;
           seen.add(r.href);
@@ -163,7 +165,7 @@ export function CommandPalette() {
         })
         .slice(0, 4),
     }));
-  }, [role]);
+  }, [role, permissions]);
 
   const hasResults = filteredPages.length > 0 || entityResults.length > 0;
   const showEmpty = !isSearching && query.length >= 2 && !hasResults;

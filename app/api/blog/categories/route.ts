@@ -1,15 +1,28 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { z } from "zod";
-import { ok, err, withBlogAdmin, parseBody } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
+import { ok, err, withAbility, parseBody } from "@/lib/api/helpers";
+import { CacheTag } from "@/lib/api/cache-tags";
+import { blogDb } from "@/lib/blog-db";
 import { blogCategories } from "@/lib/db/schema";
 import { getCategories } from "@/server/queries/blog";
 import { slugify } from "@/lib/blog-utils";
 
-/** Public: list categories with published-post counts. */
+const getCachedCategories = unstable_cache(
+  () => getCategories(),
+  [CacheTag.blogCategories],
+  { tags: [CacheTag.blogCategories], revalidate: 300 },
+);
+
 export async function GET() {
   try {
-    return ok(await getCategories());
+    const data = await getCachedCategories();
+    return NextResponse.json(data, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
   } catch {
     return err("Failed to load categories", 500);
   }
@@ -25,18 +38,17 @@ const createCategorySchema = z.object({
     .nullable(),
 });
 
-/** Admin: create a category. */
 export async function POST(req: NextRequest) {
-  return withBlogAdmin(async () => {
+  return withAbility("manage", "blog:categories", async () => {
     const body = await parseBody(req, createCategorySchema);
     const slug = slugify(body.name);
 
-    const existing = await db.query.blogCategories.findFirst({
+    const existing = await blogDb.query.blogCategories.findFirst({
       where: (c, { eq }) => eq(c.slug, slug),
     });
     if (existing) return err("A category with that name already exists", 409);
 
-    const [created] = await db
+    const [created] = await blogDb
       .insert(blogCategories)
       .values({
         name: body.name,
@@ -45,6 +57,8 @@ export async function POST(req: NextRequest) {
         color: body.color ?? null,
       })
       .returning();
+
+    revalidateTag(CacheTag.blogCategories, "default");
 
     return ok(created, 201);
   });

@@ -67,7 +67,7 @@ export default async function InboxPage({
       </div>
 
       {messages.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
           <Mail className="h-8 w-8 text-slate-300 mx-auto mb-1.5" />
           <p className="text-[14px] text-slate-600 font-medium">No messages yet.</p>
           <p className="text-[12px] text-slate-400 mt-1">
@@ -75,7 +75,7 @@ export default async function InboxPage({
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="divide-y divide-slate-100">
             {messages.map((m) => (
               <Link
@@ -114,7 +114,7 @@ export default async function InboxPage({
                     <p className="text-[13px] text-slate-600 line-clamp-1 mb-1.5">
                       {m.message}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em]">
+                    <div className="flex items-center gap-2 text-[11px] font-medium">
                       <span
                         className={cn(
                           "px-1.5 py-0.5 rounded border",
@@ -140,7 +140,7 @@ export default async function InboxPage({
         </div>
       )}
 
-      <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-slate-400 mt-1.5 flex items-center gap-1.5">
+      <p className="text-[12px] font-medium text-slate-400 mt-1.5 flex items-center gap-1.5">
         <Archive className="h-3 w-3" />
         {messages.length} message{messages.length === 1 ? "" : "s"}
       </p>

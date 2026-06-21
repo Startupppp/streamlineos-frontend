@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
-import { invalidateCachePattern } from "@/lib/cache";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads, notifications, users } from "@/lib/db/schema";
@@ -11,13 +11,36 @@ import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 import { sendLeadAssignedEmail } from "@/lib/email";
 
+const LEAD_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+const LEAD_PRIORITIES = ["HOT", "WARM", "COLD"] as const;
+const LEAD_SOURCES = [
+  "referral",
+  "campaign",
+  "cold_call",
+  "website",
+  "social_media",
+  "walk_in",
+  "other",
+] as const;
+const LEAD_SORTABLE = [
+  "name",
+  "email",
+  "company",
+  "status",
+  "priority",
+  "source",
+  "score",
+  "potentialValue",
+  "createdAt",
+] as const;
+
 const listSchema = z.object({
-  status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
-  priority: z.enum(["HOT", "WARM", "COLD"]).optional(),
-  source: z.enum(["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"]).optional(),
+  status: z.enum(LEAD_STATUSES).optional(),
+  priority: z.enum(LEAD_PRIORITIES).optional(),
+  source: z.enum(LEAD_SOURCES).optional(),
   assignedToId: z.string().optional(),
   search: z.string().optional(),
-  sortBy: z.enum(["name", "email", "company", "status", "priority", "source", "score", "potentialValue", "createdAt"]).optional(),
+  sortBy: z.enum(LEAD_SORTABLE).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().min(1).optional(),
   limit: z.coerce.number().min(1).max(100).optional(),
@@ -30,7 +53,7 @@ const createSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   whatsappNumber: z.string().optional(),
-  source: z.enum(["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"]).default("other"),
+  source: z.enum(LEAD_SOURCES).default("other"),
   campaignId: z.number().optional(),
   investmentInterest: z.string().optional(),
   potentialValue: z.string().optional(),
@@ -41,22 +64,29 @@ const createSchema = z.object({
   referredBy: z.string().optional(),
   tags: z.array(z.string()).optional(),
   assignedToId: z.string().optional(),
-  priority: z.enum(["HOT", "WARM", "COLD"]).default("WARM"),
+  priority: z.enum(LEAD_PRIORITIES).default("WARM"),
 });
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getLeads(session.orgId!, {
-      ...filters,
-      role: session.user.role ?? undefined,
-      userId: session.user.id,
-      branch: {
-        role: session.user.role ?? "",
-        branchId: session.branchId,
-        userId: session.user.id,
-      },
-    });
+    const orgId = session.orgId!;
+    const role = session.user.role ?? "";
+    const branchId = session.branchId;
+    const userId = session.user.id;
+    const filterHash = JSON.stringify(filters);
+    const key = `leads:list:${orgId}:${userId}:${role}:${branchId ?? ""}:${filterHash}`;
+    const data = await cached(
+      key,
+      () =>
+        getLeads(orgId, {
+          ...filters,
+          role: role || undefined,
+          userId,
+          branch: { role, branchId, userId },
+        }),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
     return ok(data);
   });
 }
@@ -137,6 +167,16 @@ export async function POST(req: NextRequest) {
 
     void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
       dispatchWebhook(orgId, "lead.created", {
+        id: newLead.id,
+        name: newLead.name,
+        email: newLead.email,
+        source: newLead.source,
+        assignedToId: newLead.assignedToId,
+      })
+    );
+
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(orgId, "lead.created", {
         id: newLead.id,
         name: newLead.name,
         email: newLead.email,

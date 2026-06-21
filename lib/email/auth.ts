@@ -1,19 +1,16 @@
 import { sendEmail } from "./sender";
-import { baseUrl } from "./sender";
+import { appUrl } from "../app-url";
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
-  getInvitationEmailTemplate,
-  getWelcomeEmailTemplate,
   getPasswordChangeConfirmationEmailTemplate,
-  getAccountDeactivationEmailTemplate,
   getAccountLockedEmailTemplate,
   getNewDeviceLoginEmailTemplate,
   getPasswordExpiryWarningEmailTemplate,
 } from "../email-templates";
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+  const verificationUrl = `${appUrl}/verify-email?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Verify Your Email - StreamlineOS",
@@ -22,37 +19,11 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
+  const resetUrl = `${appUrl}/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - StreamlineOS",
     html: getPasswordResetEmailTemplate(resetUrl),
-  });
-}
-
-export async function sendInvitationEmail(
-  email: string,
-  token: string,
-  organizationName: string,
-  inviterName?: string
-) {
-  const invitationUrl = `${baseUrl}/invitation/${token}`;
-  await sendEmail({
-    to: email,
-    subject: `Invitation to join ${organizationName} - StreamlineOS`,
-    html: getInvitationEmailTemplate(invitationUrl, organizationName, inviterName),
-  });
-}
-
-export async function sendWelcomeEmail(
-  email: string,
-  name: string,
-  setupUrl: string
-) {
-  await sendEmail({
-    to: email,
-    subject: "Welcome to StreamlineOS — Set Up Your Account",
-    html: getWelcomeEmailTemplate(name, email, setupUrl),
   });
 }
 
@@ -64,19 +35,6 @@ export async function sendPasswordChangeConfirmationEmail(
     to: email,
     subject: "Password Changed Successfully - StreamlineOS",
     html: getPasswordChangeConfirmationEmailTemplate(userName),
-  });
-}
-
-export async function sendAccountDeactivationEmail(
-  email: string,
-  employeeName: string,
-  deactivatedBy: string,
-  reason?: string
-) {
-  await sendEmail({
-    to: email,
-    subject: "Account Deactivated - StreamlineOS",
-    html: getAccountDeactivationEmailTemplate(employeeName, deactivatedBy, reason),
   });
 }
 

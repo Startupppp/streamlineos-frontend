@@ -7,6 +7,7 @@ import { WorkLogEntryRow } from "./work-log-entry-row";
 
 interface WorkLog {
   id: number;
+  userId?: string | null;
   date: string;
   description?: string | null;
   workLink?: string | null;
@@ -29,7 +30,8 @@ interface WorkLogMonthGroupProps {
   filled: number;
   searchTerm: string;
   logs: WorkLog[] | undefined;
-  selectedUserId: string | undefined;
+  readOnly: boolean;
+  currentUserId?: string;
   onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
 }
@@ -44,13 +46,13 @@ export function WorkLogMonthGroup({
   filled,
   searchTerm,
   logs,
-  selectedUserId,
+  readOnly,
+  currentUserId,
   onSave,
   isSaving,
 }: WorkLogMonthGroupProps) {
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
-  const isViewingOther = !!selectedUserId;
 
   return (
     <Card>
@@ -90,6 +92,7 @@ export function WorkLogMonthGroup({
             {displayDays.map((date) => {
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
+              const isOwnLog = !log?.userId || !currentUserId || log.userId === currentUserId;
               return (
                 <WorkLogEntryRow
                   key={dateStr}
@@ -100,7 +103,7 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={isViewingOther}
+                  readOnly={readOnly || !isOwnLog}
                   status={log?.status ?? undefined}
                 />
               );

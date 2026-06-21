@@ -330,6 +330,62 @@
       "when": 1774390001000,
       "tag": "0103_leave_lop_auto_convert",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1781270734183,
+      "tag": "0108_schema_integrity_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1781282661168,
+      "tag": "0109_schema_integrity_v2_followup",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1781282661169,
+      "tag": "0110_finalize_not_null_drift",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1781282661170,
+      "tag": "0111_finalize_not_null_drift_2",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1781288058099,
+      "tag": "0112_fk_drift_and_missing_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1781288058100,
+      "tag": "0113_remaining_org_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0120_drop_hr_training_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1782090000000,
+      "tag": "0122_hr_automation_triggers",
+      "breakpoints": true
     }
   ]
 }

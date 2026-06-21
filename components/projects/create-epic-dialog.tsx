@@ -1,26 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { ReactNode, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Layers } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EntityFormSheet } from "@/components/shared";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,34 +27,28 @@ import { useCreateTicket } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+
 const createEpicSchema = z.object({
   title: z.string().min(1, "Epic title is required"),
   description: z.string().optional(),
-  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  priority: z.enum(PRIORITIES),
 });
 
 type CreateEpicInput = z.infer<typeof createEpicSchema>;
 
 interface CreateEpicDialogProps {
   projectId: number;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
 }
 
 export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) {
   const [open, setOpen] = useState(false);
-
-  const form = useForm<CreateEpicInput>({
-    resolver: zodResolver(createEpicSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "MEDIUM",
-    },
-  });
-
   const createTicket = useCreateTicket();
 
-  function onSubmit(data: CreateEpicInput) {
+  const handleOpen = () => setOpen(true);
+
+  const handleSubmit = (data: CreateEpicInput) => {
     createTicket.mutate(
       {
         projectId,
@@ -75,46 +61,52 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
         onSuccess: () => {
           toast.success("Epic created successfully");
           setOpen(false);
-          form.reset();
         },
         onError: (error) => {
           toast.error(getErrorMessage(error));
         },
-      }
+      },
     );
-  }
+  };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Epic
-          </Button>
-        )}
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-[500px] overflow-y-auto p-6">
-        <SheetHeader className="mb-6">
-          <SheetTitle className="flex items-center gap-2 text-lg">
-            <Layers className="h-5 w-5 text-purple-500" />
-            Create New Epic
-          </SheetTitle>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+    <>
+      {trigger ? (
+        <span onClick={handleOpen} role="button" tabIndex={0}>
+          {trigger}
+        </span>
+      ) : (
+        <Button onClick={handleOpen}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Epic
+        </Button>
+      )}
+      <EntityFormSheet<CreateEpicInput>
+        open={open}
+        onOpenChange={setOpen}
+        title="Create new epic"
+        description="A high-level feature or initiative that contains multiple stories."
+        resolver={zodResolver(createEpicSchema)}
+        defaultValues={{ title: "", description: "", priority: "MEDIUM" }}
+        onSubmit={handleSubmit}
+        isSubmitting={createTicket.isPending}
+        submitLabel="Create epic"
+      >
+        {(form) => (
+          <>
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Epic Title</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5 text-violet-500" />
+                    Epic title
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., User Authentication System" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    A high-level feature or initiative that contains multiple stories
-                  </FormDescription>
+                  <FormDescription>What is the broader initiative?</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -145,39 +137,27 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Priority</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="LOW">Low</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="HIGH">High</SelectItem>
-                      <SelectItem value="URGENT">Urgent</SelectItem>
+                      {PRIORITIES.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p.charAt(0) + p.slice(1).toLowerCase()}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="flex justify-end gap-3 pt-6 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createTicket.isPending}>
-                {createTicket.isPending ? "Creating..." : "Create Epic"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+          </>
+        )}
+      </EntityFormSheet>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { requireFeature } from "@/lib/billing/server-feature";
 import { isOpenAIConfigured, aiInvoke } from "@/lib/ai/openai";
 
 const InputSchema = z.object({

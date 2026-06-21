@@ -16,16 +16,16 @@ interface LeadsKanbanProps {
 
 export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus }: LeadsKanbanProps) {
   return (
-    <div className="overflow-x-auto pb-4 -mx-2 px-2">
+    <div className="pb-4">
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-3 min-w-[900px] lg:min-w-0">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {STATUSES.map((status) => {
             const config = STATUS_CONFIG[status];
             const StatusIcon = config.icon;
             const columnLeads: BoardLead[] = filteredBoard?.[status] ?? [];
 
             return (
-              <div key={status} className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
+              <div key={status} className="min-w-0">
                 <div className={cn("rounded-xl border h-full flex flex-col", config.border, "bg-muted/20")}>
 
                   <div className={cn(
@@ -52,7 +52,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                         {...provided.droppableProps}
                         className={cn(
                           "flex-1 p-2 space-y-2 min-h-[200px] max-h-[calc(100vh-380px)] overflow-y-auto transition-colors duration-200",
-                          snapshot.isDraggingOver && "bg-gold/5 ring-1 ring-inset ring-gold/20 rounded-b-xl",
+                          snapshot.isDraggingOver && "bg-blue-500/5 ring-1 ring-inset ring-blue-500/20 rounded-b-xl",
                         )}
                       >
                         {columnLeads.map((lead: BoardLead, index: number) => (

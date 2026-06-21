@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart, ArrowRight,
+  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart, ArrowRight, Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -60,12 +61,14 @@ export default function OrganizationsPage() {
 
   const totalPages = data?.totalPages ?? 0;
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Organizations" subtitle="Company accounts">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Skeleton className="h-10 w-full max-w-sm" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-36" />)}
           </div>
         </div>
@@ -77,7 +80,14 @@ export default function OrganizationsPage() {
     <PageWrapper
       title="Organizations"
       subtitle={`${data?.totalCount ?? 0} organizations`}
-      actions={<CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />}
+      actions={
+        <>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-2" /> New Organization
+          </Button>
+          <CreateOrgDialog open={createOpen} onOpenChange={setCreateOpen} />
+        </>
+      }
       filters={
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -90,17 +100,17 @@ export default function OrganizationsPage() {
         </div>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data?.organizations.map(org => {
             const health = getHealthBadge(org.healthScore);
             return (
-              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
+              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 cursor-pointer group">
                 <Link href={`/crm/organizations/${org.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0">
@@ -130,7 +140,7 @@ export default function OrganizationsPage() {
                     {org.website && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-gold">
+                        <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-blue-600">
                           {org.website}
                         </a>
                       </div>
@@ -141,7 +151,7 @@ export default function OrganizationsPage() {
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{org.description}</p>
                   )}
                   <div className="mt-3 flex justify-end">
-                    <span className="text-xs text-gold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-blue-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       View details <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
@@ -153,11 +163,13 @@ export default function OrganizationsPage() {
         </motion.div>
 
         {(data?.organizations.length ?? 0) === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
-            <p className="text-sm font-medium text-foreground">No organizations found</p>
-            <p className="text-xs mt-1">Create your first organization</p>
-          </div>
+          <EmptyState
+            illustration={<EmptyProjectsIllustration className="w-36 h-36" />}
+            title="No organizations found"
+            description={search ? "No organizations match your search." : "Create your first organization to get started."}
+            action={search ? undefined : { label: "New Organization", onClick: handleOpenCreate }}
+            className="min-h-[50vh]"
+          />
         )}
 
         {totalPages > 1 && (

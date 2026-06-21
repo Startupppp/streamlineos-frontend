@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useInfiniteBlogFeed } from "@/lib/api/hooks/blog";
 import { BlogCard } from "./blog-card";
 import { BlogCardSkeleton } from "./blog-card-skeleton";
-import type { BlogPostWithRelations, FeedResponse } from "@/types/blog";
+import type { BlogPostWithRelations } from "@/types/blog";
 
 interface PostFeedProps {
   initialPosts: BlogPostWithRelations[];
@@ -17,7 +18,6 @@ interface PostFeedProps {
   emptyMessage?: string;
 }
 
-/** Responsive post grid with cursor-based "Load more". */
 export function PostFeed({
   initialPosts,
   initialCursor,
@@ -27,37 +27,26 @@ export function PostFeed({
   search,
   emptyMessage = "No articles found.",
 }: PostFeedProps) {
-  const [posts, setPosts] = useState(initialPosts);
-  const [cursor, setCursor] = useState(initialCursor);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loading, setLoading] = useState(false);
+  const query = useInfiniteBlogFeed(
+    { category, tag, search },
+    { posts: initialPosts, nextCursor: initialCursor, hasMore: initialHasMore },
+  );
 
-  async function loadMore() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (cursor) params.set("cursor", cursor);
-      if (category) params.set("category", category);
-      if (tag) params.set("tag", tag);
-      if (search) params.set("search", search);
-      const res = await fetch(`/api/blog/feed?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to load");
-      const data = (await res.json()) as FeedResponse;
-      setPosts((prev) => [...prev, ...data.posts]);
-      setCursor(data.nextCursor);
-      setHasMore(data.hasMore);
-    } catch {
-      toast.error("Could not load more posts");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const posts = useMemo(
+    () => query.data?.pages.flatMap((p) => p.posts) ?? initialPosts,
+    [query.data, initialPosts],
+  );
+
+  if (query.isError) toast.error("Could not load more posts");
 
   if (posts.length === 0) {
     return (
       <p className="py-16 text-center text-muted-foreground">{emptyMessage}</p>
     );
   }
+
+  const loading = query.isFetchingNextPage;
+  const hasMore = query.hasNextPage ?? false;
 
   return (
     <div>
@@ -71,7 +60,12 @@ export function PostFeed({
 
       {hasMore && (
         <div className="mt-10 flex justify-center">
-          <Button variant="outline" size="lg" onClick={loadMore} disabled={loading}>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => query.fetchNextPage()}
+            disabled={loading}
+          >
             {loading ? "Loading…" : "Load more"}
           </Button>
         </div>

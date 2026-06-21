@@ -1,4 +1,4 @@
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
   organizationMembers,
@@ -12,7 +12,7 @@ import { cached, CACHE_TTL } from "@/lib/hr-cache";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return withAdmin(async (session) => {
+  return withAbility("read", "hr:analytics", async (session) => {
     const orgId = session.orgId;
 
     const data = await cached(

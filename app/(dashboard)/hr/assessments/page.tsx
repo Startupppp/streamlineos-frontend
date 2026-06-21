@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { Plus, ClipboardCheck, Clock, Users, PlayCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { useAbility } from "@/lib/abilities-context";
 
 interface Assessment {
   id: number; title: string; description: string | null; category: string | null;
@@ -36,7 +37,8 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
 export default function AssessmentsPage() {
   const { data: session } = useSession();
   const qc = useQueryClient();
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR";
+  const ability = useAbility();
+  const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: items, isLoading } = useQuery({
     queryKey: assessKeys.list(),

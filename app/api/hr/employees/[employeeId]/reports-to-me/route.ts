@@ -16,7 +16,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ employeeId: string }> },
 ) {
-  return withAuth<DirectReport[]>(async (session) => {
+  return withAuth(async (session) => {
     const { employeeId } = await params;
 
     const member = await db.query.organizationMembers.findFirst({

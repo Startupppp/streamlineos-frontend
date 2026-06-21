@@ -1,5 +1,5 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { policyAcknowledgments, documents } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -18,7 +18,9 @@ const ackSchema = z.object({
 
 export async function GET() {
   return withAuth(async (session) => {
-    const isAdmin = isAdminOrOwner(session.user.role);
+    const ability = await getSessionAbility();
+
+    const isAdmin = ability.can("manage", "hr:documents");
     const conditions = [eq(policyAcknowledgments.orgId, session.orgId)];
     if (!isAdmin) conditions.push(eq(policyAcknowledgments.userId, session.user.id));
 
@@ -33,7 +35,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    if (!isAdminOrOwner(session.user.role)) return err("Only admins can send acknowledgment requests.", 403);
+    const ability = await getSessionAbility();
+
+    if (!ability.can("manage", "hr:documents"))  return err("Only admins can send acknowledgment requests.", 403);
     const body = sendAckSchema.parse(await req.json());
 
     const doc = await db.query.documents.findFirst({

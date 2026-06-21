@@ -1,19 +1,29 @@
-import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getExpenses } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { expenses, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendExpenseSubmittedEmail } from "@/lib/email";
 
+const listExpensesSchema = z.object({
+  userId: z.string().min(1).optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED", "PAID"]).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
 const createExpenseSchema = z.object({
   category: z.string(),
   categoryId: z.number().int().optional(),
-  amount: z.number(),
+  amount: z.number().positive("Amount must be greater than 0").max(999_999_999.99, "Amount cannot exceed 999,999,999.99"),
   description: z.string().optional(),
   receiptUrl: z.string().optional(),
   receiptFileName: z.string().optional(),
@@ -25,28 +35,25 @@ const createExpenseSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const { searchParams } = req.nextUrl;
-    const isAdmin = isAdminOrOwner(session.user.role);
-    const filterUserId = searchParams.get("userId") ?? undefined;
-    const status = searchParams.get("status") as
-      | "PENDING"
-      | "APPROVED"
-      | "REJECTED"
-      | "PAID"
-      | null;
-    const page = searchParams.get("page");
-    const limit = searchParams.get("limit");
-    const startDate = searchParams.get("startDate") ?? undefined;
-    const endDate = searchParams.get("endDate") ?? undefined;
+    const { userId: filterUserId, status, page, limit, startDate, endDate } = parseQuery(req, listExpensesSchema);
+    const ability = await getSessionAbility();
 
-    const data = await getExpenses(session.orgId, session.user.id, isAdmin, {
-      filterUserId,
-      status: status ?? undefined,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
-      startDate,
-      endDate,
-    });
+    const isAdmin = ability.can("approve", "hr:expenses");
+
+    const key = `hr:expenses:${session.orgId}:${session.user.id}:${isAdmin ? "admin" : "self"}:${filterUserId ?? ""}:${status ?? ""}:${page ?? ""}:${limit ?? ""}:${startDate ?? ""}:${endDate ?? ""}`;
+    const data = await cached(
+      key,
+      () =>
+        getExpenses(session.orgId, session.user.id, isAdmin, {
+          filterUserId,
+          status,
+          page,
+          limit,
+          startDate,
+          endDate,
+        }),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
 
     return ok(data);
   });
@@ -60,7 +67,10 @@ export async function POST(req: NextRequest) {
       return err("category, amount, and expenseDate are required.", 400);
     }
 
-    const isAdminRole = session.user.role === "HR" || session.user.role === "CEO";
+    const ability = await getSessionAbility();
+
+
+    const isAdminRole = ability.can("approve", "hr:expenses");
 
     const [expense] = await db
       .insert(expenses)
@@ -94,6 +104,19 @@ export async function POST(req: NextRequest) {
       });
     } catch {  }
 
+    if (!isAdminRole) {
+      void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+        runAutomationsForEvent(session.orgId, "expense.submitted", {
+          expenseId: expense.id,
+          userId: session.user.id,
+          employeeName: session.user.name ?? "",
+          amount: body.amount.toString(),
+          category: body.category,
+          submittedAt: new Date().toISOString(),
+        })
+      );
+    }
+
     try {
       if (!isAdminRole) {
         const hrMembers = await db
@@ -120,6 +143,8 @@ export async function POST(req: NextRequest) {
       }
     } catch {  }
 
-    return ok(expense);
+    await invalidateCachePattern(`hr:expenses:${session.orgId}:*`);
+
+    return ok(expense, 201);
   });
 }

@@ -18,9 +18,15 @@ const createSchema = z.object({
   period: z.enum(["monthly", "quarterly", "yearly"]).default("monthly"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
-  targetRevenue: z.string().min(1, "Target revenue is required"),
+  targetRevenue: z.string().min(1, "Target revenue is required").refine(
+    (v) => Number.isFinite(Number(v)) && Number(v) > 0,
+    "Target revenue must be a positive number",
+  ),
   notes: z.string().optional(),
-});
+}).refine(
+  (data) => new Date(data.startDate) < new Date(data.endDate),
+  { message: "Start date must be before end date", path: ["endDate"] },
+);
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {

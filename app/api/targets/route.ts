@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody, err } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getTargets } from "@/server/queries/crm";
 import { db } from "@/lib/db";
 import { targets, users } from "@/lib/db/schema";
@@ -32,7 +33,13 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getTargets(session.orgId!, filters);
+    const orgId = session.orgId!;
+    const key = `targets:list:${orgId}:${filters.userId ?? ""}:${filters.period ?? ""}:${filters.limit ?? ""}:${filters.offset ?? ""}`;
+    const data = await cached(
+      key,
+      () => getTargets(orgId, filters),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
     return ok(data);
   });
 }
@@ -109,6 +116,8 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    await invalidateCachePattern(`targets:list:${orgId}:*`);
 
     return ok(created, 201);
   });

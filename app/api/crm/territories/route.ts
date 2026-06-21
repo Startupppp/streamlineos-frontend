@@ -1,9 +1,14 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { territories } from "@/lib/db/schema/crm";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
+
+const listSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -14,13 +19,32 @@ const createSchema = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const rows = await db
-      .select()
-      .from(territories)
-      .where(eq(territories.orgId, session.orgId))
-      .orderBy(territories.name);
+    const { limit } = parseQuery(req, listSchema);
+    const orgId = session.orgId;
+
+    const key = `crm:territories:${orgId}:${limit}`;
+    const rows = await cached(
+      key,
+      () =>
+        db
+          .select({
+            id: territories.id,
+            name: territories.name,
+            states: territories.states,
+            cities: territories.cities,
+            assignedReps: territories.assignedReps,
+            description: territories.description,
+            isActive: territories.isActive,
+            createdAt: territories.createdAt,
+          })
+          .from(territories)
+          .where(eq(territories.orgId, orgId))
+          .orderBy(territories.name)
+          .limit(limit),
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
     return ok(rows);
   });
@@ -28,13 +52,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json();
-    const parsed = createSchema.safeParse(body);
-    if (!parsed.success) {
-      return err(parsed.error.issues[0]?.message ?? "Validation failed");
-    }
-
-    const { name, states, cities, assignedReps, description, isActive } = parsed.data;
+    const { name, states, cities, assignedReps, description, isActive } = await parseBody(req, createSchema);
 
     const [created] = await db
       .insert(territories)
@@ -49,6 +67,8 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
+
+    await invalidateCachePattern(`crm:territories:${session.orgId}:*`);
 
     return ok(created, 201);
   });

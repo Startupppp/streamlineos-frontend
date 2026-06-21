@@ -5,7 +5,8 @@ import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
+import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -41,8 +42,9 @@ export async function PATCH(
 ) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
-        return err("Only CEO or Admin can update roles", 403);
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
+        return err("Only Owner, CEO, or CTO can update roles", 403);
       }
 
       const { roleId: id } = await params;
@@ -64,6 +66,8 @@ export async function PATCH(
         .update(roles)
         .set(updateData)
         .where(and(eq(roles.id, roleId), eq(roles.orgId, session.orgId)));
+
+      await invalidateCache(CACHE_KEYS.rolesList(session.orgId));
 
       void createAuditLog({
         action: "role.changed",
@@ -90,8 +94,9 @@ export async function DELETE(
 ) {
   return withAuth(async (session) => {
     try {
-      if (!isAdminOrOwner(session.user.role)) {
-        return err("Only CEO or Admin can delete roles", 403);
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "all")) {
+        return err("Only Owner, CEO, or CTO can delete roles", 403);
       }
 
       const { roleId: id } = await params;

@@ -85,6 +85,7 @@ export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
     queryKey: queryKeys.quotes.list(filters as Record<string, unknown>),
     queryFn: () => apiClient.get<{ quotes: Quote[]; total: number }>("/quotes", filters as Record<string, unknown>),
+    staleTime: 2 * 60_000,
   });
 }
 
@@ -92,6 +93,7 @@ export function useQuoteDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.quotes.detail(id),
     queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
+    staleTime: 2 * 60_000,
     enabled: id > 0,
   });
 }

@@ -89,7 +89,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                           {stage.label}
                         </Badge>
                       )}
-                      <span className="text-sm font-semibold text-gold">
+                      <span className="text-sm font-semibold text-blue-600">
                         {formatINRCompact(Number(deal.value ?? 0))}
                       </span>
                     </div>

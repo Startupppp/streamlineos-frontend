@@ -12,9 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuotes, useCreateQuote, type Quote } from "@/lib/api/hooks/quotes";
+import { useQuotes, useCreateQuote } from "@/lib/api/hooks/quotes";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { Plus, Search, FileText, Download, Trash2 } from "lucide-react";
@@ -22,11 +22,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-  SENT: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-  EXPIRED: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  DRAFT: "bg-muted text-muted-foreground border-transparent",
+  SENT: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  ACCEPTED: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  REJECTED: "bg-red-500/10 text-red-600 border-red-500/20",
+  EXPIRED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
 
@@ -55,20 +55,23 @@ const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, o
 
   return (
     <div className="grid grid-cols-12 gap-2 items-end">
-      <div className="col-span-5">
+      <div className="col-span-12 sm:col-span-5">
         {isFirst && <span className="text-xs text-muted-foreground">Description</span>}
         <Input value={item.description} onChange={handleDescription} placeholder="Item description" />
       </div>
-      <div className="col-span-2">
-        {isFirst && <span className="text-xs text-muted-foreground">Qty</span>}
+      <div className="col-span-4 sm:col-span-2">
+        <span className="text-xs text-muted-foreground sm:hidden">Qty</span>
+        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Qty</span>}
         <Input type="number" min={0} value={item.quantity} onChange={handleQuantity} />
       </div>
-      <div className="col-span-2">
-        {isFirst && <span className="text-xs text-muted-foreground">Price</span>}
+      <div className="col-span-4 sm:col-span-2">
+        <span className="text-xs text-muted-foreground sm:hidden">Price</span>
+        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Price</span>}
         <Input type="number" min={0} value={item.unitPrice} onChange={handleUnitPrice} />
       </div>
-      <div className="col-span-2">
-        {isFirst && <span className="text-xs text-muted-foreground">Tax %</span>}
+      <div className="col-span-3 sm:col-span-2">
+        <span className="text-xs text-muted-foreground sm:hidden">Tax %</span>
+        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Tax %</span>}
         <Input type="number" min={0} value={item.taxRate} onChange={handleTaxRate} />
       </div>
       <div className="col-span-1">
@@ -110,12 +113,17 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subject || !validUntil || lineItems.some((li) => !li.description)) {
+    if (!subject.trim() || !validUntil) {
       toast.error("Please fill all required fields");
       return;
     }
+    if (lineItems.some((li) => !li.description.trim())) {
+      toast.error("Every line item needs a description");
+      return;
+    }
+    const cleanedItems = lineItems.map((li) => ({ ...li, description: li.description.trim() }));
     createQuote.mutate(
-      { subject, validUntil, notes: notes || undefined, lineItems },
+      { subject: subject.trim(), validUntil, notes: notes || undefined, lineItems: cleanedItems },
       {
         onSuccess: () => {
           toast.success("Quote created successfully");
@@ -227,8 +235,8 @@ export default function QuotesPage() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
             <a href="/api/quotes/export" download>
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export CSV</span>
             </a>
           </Button>
           <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
@@ -248,8 +256,8 @@ export default function QuotesPage() {
         </div>
       }
     >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search quotes..."
@@ -259,7 +267,7 @@ export default function QuotesPage() {
           />
         </div>
         <Select value={statusFilter} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[140px] shrink-0">
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
           <SelectContent>
@@ -280,18 +288,16 @@ export default function QuotesPage() {
           ))}
         </div>
       ) : !data?.quotes?.length ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg">No quotes found</p>
-            <p className="text-muted-foreground text-sm mt-1">
-              Create your first quote to start closing deals.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FileText}
+          title="No quotes found"
+          description="Create your first quote to start closing deals."
+          action={{ label: "New Quote", onClick: () => setCreateOpen(true) }}
+          className="flex-1"
+        />
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
+        <div className="border rounded-lg overflow-x-auto">
+          <Table className="min-w-[680px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Quote #</TableHead>
@@ -307,7 +313,7 @@ export default function QuotesPage() {
               {data.quotes.map((q) => (
                 <TableRow key={q.id} className="cursor-pointer hover:bg-muted/50">
                   <TableCell>
-                    <Link href={`/crm/quotes/${q.id}`} className="font-mono text-sm text-gold hover:underline">
+                    <Link href={`/crm/quotes/${q.id}`} className="font-mono text-sm text-blue-600 hover:underline">
                       {q.quoteNumber}
                     </Link>
                   </TableCell>

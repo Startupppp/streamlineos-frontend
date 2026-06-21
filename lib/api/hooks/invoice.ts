@@ -20,18 +20,33 @@ interface InvoiceFilters {
   limit?: number;
 }
 
+export interface CreateInvoiceItemInput {
+  description: string;
+  hsnSacCode?: string;
+  quantity: number;
+  rate: number;
+  gstRate: number;
+}
+
 interface CreateInvoiceInput {
   clientId?: number;
   projectId?: number;
-  lineItems: InvoiceItem[];
+  lineItems?: InvoiceItem[];
+  items?: CreateInvoiceItemInput[];
   taxRate?: number;
   discount?: number;
   currency?: string;
   dueDate?: string;
   notes?: string;
+  status?: "DRAFT" | "SENT";
+  placeOfSupply?: string;
+  customerGstin?: string;
+  supplierGstin?: string;
+  reverseCharge?: boolean;
+  taxInclusive?: boolean;
 }
 
-interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> {
+interface UpdateInvoiceInput extends Partial<Omit<CreateInvoiceInput, "status">> {
   id: number;
   status?: InvoiceStatus;
 }
@@ -52,6 +67,7 @@ export const useInvoices = (
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -67,6 +83,7 @@ export const useInvoice = (
     queryKey: queryKeys.invoice.detail(id),
     queryFn: () => apiClient.get<Invoice>(`/invoices/${id}`),
     enabled: id > 0,
+    staleTime: 2 * 60_000,
     ...options,
   });
 };
@@ -80,6 +97,7 @@ export const useInvoiceStats = (
   return useQuery<InvoiceStats, Error>({
     queryKey: queryKeys.invoice.stats(),
     queryFn: () => apiClient.get<InvoiceStats>("/invoices/stats"),
+    staleTime: 5 * 60_000,
     ...options,
   });
 };
@@ -99,8 +117,10 @@ export const useUpdateInvoice = () => {
   return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(vars.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
     },
   });
 };
@@ -112,6 +132,49 @@ export const useDeleteInvoice = () => {
       apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+    },
+  });
+};
+
+export interface RecurringInvoice {
+  id: number;
+  invoiceNumber: string;
+  clientId: number | null;
+  clientName: string | null;
+  total: string;
+  currency: string;
+  status: InvoiceStatus;
+  recurringInterval: string | null;
+  nextRecurringDate: string | null;
+  overdue: boolean;
+}
+
+interface RunRecurringResult {
+  generated: number;
+  invoiceIds: number[];
+}
+
+export const useRecurringInvoices = (
+  options?: Omit<
+    UseQueryOptions<RecurringInvoice[], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<RecurringInvoice[], Error>({
+    queryKey: queryKeys.recurringInvoices.list(),
+    queryFn: () => apiClient.get<RecurringInvoice[]>("/invoices/recurring"),
+    staleTime: 2 * 60_000,
+    ...options,
+  });
+};
+
+export const useRunRecurringInvoices = () => {
+  const queryClient = useQueryClient();
+  return useMutation<RunRecurringResult, Error, void>({
+    mutationFn: () => apiClient.post<RunRecurringResult>("/invoices/recurring/run"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.recurringInvoices.all });
     },
   });
 };

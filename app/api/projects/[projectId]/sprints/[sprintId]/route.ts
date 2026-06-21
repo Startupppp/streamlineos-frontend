@@ -1,7 +1,7 @@
 
 
 import { NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
+import { withAuth, withModuleAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { sprints } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  return withAdmin(async (session) => {
+  return withModuleAbility("projects", "manage", "projects:sprints", async (session) => {
     const { sprintId } = await params;
     const id = Number(sprintId);
     if (!id) return err("Invalid sprint id", 400);

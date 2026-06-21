@@ -26,47 +26,47 @@ import { toast } from "sonner";
 
 const sentimentConfig = {
   positive: {
-    label: "Positive",
+    label:"Positive",
     icon: CheckCircle2,
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    score: "text-emerald-600 dark:text-emerald-400",
-    ring: "ring-emerald-400",
+    badge:"bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    score:"text-emerald-600 dark:text-emerald-400",
+    ring:"ring-emerald-400",
   },
   neutral: {
-    label: "Neutral",
+    label:"Neutral",
     icon: MinusCircle,
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    score: "text-blue-600 dark:text-blue-400",
-    ring: "ring-blue-400",
+    badge:"bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    score:"text-blue-600 dark:text-blue-400",
+    ring:"ring-blue-400",
   },
   negative: {
-    label: "Negative",
+    label:"Negative",
     icon: AlertTriangle,
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    score: "text-amber-600 dark:text-amber-400",
-    ring: "ring-amber-400",
+    badge:"bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    score:"text-amber-600 dark:text-amber-400",
+    ring:"ring-amber-400",
   },
   critical: {
-    label: "Critical",
+    label:"Critical",
     icon: XCircle,
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    score: "text-red-600 dark:text-red-400",
-    ring: "ring-red-400",
+    badge:"bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    score:"text-red-600 dark:text-red-400",
+    ring:"ring-red-400",
   },
 } as const;
 
 const churnRiskConfig = {
   low: {
-    label: "Low Risk",
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    label:"Low Risk",
+    badge:"bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   },
   medium: {
-    label: "Medium Risk",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    label:"Medium Risk",
+    badge:"bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   },
   high: {
-    label: "High Risk",
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    label:"High Risk",
+    badge:"bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
   },
 } as const;
 
@@ -125,7 +125,7 @@ function ResultCard({ result }: { result: SentimentResult }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+"inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
                 sentCfg.badge,
               )}
             >
@@ -134,7 +134,7 @@ function ResultCard({ result }: { result: SentimentResult }) {
             </span>
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+"inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
                 churnCfg.badge,
               )}
             >
@@ -169,14 +169,14 @@ function ResultCard({ result }: { result: SentimentResult }) {
       {result.recommendations.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <ChevronRight className="h-4 w-4 text-gold" aria-hidden="true" />
+            <ChevronRight className="h-4 w-4 text-blue-600" aria-hidden="true" />
             Recommendations
           </h3>
           <ul className="space-y-1.5">
             {result.recommendations.map((rec, i) => (
               <li key={i} className="flex gap-2.5 text-sm text-foreground">
                 <span
-                  className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-gold/10 text-gold text-xs flex items-center justify-center font-medium"
+                  className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 text-xs flex items-center justify-center font-medium"
                   aria-hidden="true"
                 >
                   {i + 1}
@@ -216,17 +216,17 @@ function HistoryItem({
       type="button"
       onClick={() => onSelect(entry)}
       className={cn(
-        "w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm",
+"w-full text-left px-3 py-2.5 rounded-lg border transition-colors text-sm",
         isActive
-          ? "border-gold bg-gold/5"
-          : "border-border hover:border-border/80 hover:bg-muted/50",
+          ?"border-blue-500 bg-blue-500/5"
+          :"border-border hover:border-border/80 hover:bg-muted/50",
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-foreground truncate">{entry.clientName || "Unknown Client"}</span>
+        <span className="font-medium text-foreground truncate">{entry.clientName ||"Unknown Client"}</span>
         <span
           className={cn(
-            "inline-flex items-center gap-1 shrink-0 px-1.5 py-0.5 rounded-full text-[11px] font-medium",
+"inline-flex items-center gap-1 shrink-0 px-1.5 py-0.5 rounded-full text-[11px] font-medium",
             sentCfg.badge,
           )}
         >
@@ -270,7 +270,7 @@ export default function SentimentAnalysisPage() {
             toast.success("Sentiment analysis complete");
           },
           onError: (err) => {
-            toast.error(err instanceof Error ? err.message : "Failed to analyse sentiment");
+            toast.error(err instanceof Error ? err.message :"Failed to analyse sentiment");
           },
         },
       );
@@ -299,7 +299,7 @@ export default function SentimentAnalysisPage() {
             <Card className="shadow-noir">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-gold" aria-hidden="true" />
+                  <Brain className="h-4 w-4 text-blue-600" aria-hidden="true" />
                   Input
                 </CardTitle>
               </CardHeader>
@@ -321,7 +321,7 @@ export default function SentimentAnalysisPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="commText" className="text-xs font-medium">
-                      Recent Client Communications{" "}
+                      Recent Client Communications{""}
                       <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
@@ -338,7 +338,7 @@ export default function SentimentAnalysisPage() {
                   <Button
                     type="submit"
                     disabled={isPending || !text.trim()}
-                    className="w-full bg-gold hover:bg-gold/90 text-white"
+                    className="w-full"
                   >
                     {isPending ? (
                       <>
@@ -378,11 +378,11 @@ export default function SentimentAnalysisPage() {
           </div>
 
           <div className="lg:col-span-2">
-            <Card className={cn("shadow-noir h-full", isPending && "opacity-70")}>
+            <Card className={cn("shadow-noir h-full", isPending &&"opacity-70")}>
               <CardContent className="p-5">
                 {isPending ? (
                   <div className="flex flex-col items-center justify-center min-h-[360px] gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-gold" aria-hidden="true" />
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" aria-hidden="true" />
                     <p className="text-sm text-muted-foreground">Analyzing client communications…</p>
                   </div>
                 ) : activeResult ? (
@@ -399,7 +399,7 @@ export default function SentimentAnalysisPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2 mt-2">
-                      {(["positive", "neutral", "negative", "critical"] as const).map((s) => {
+                      {(["positive","neutral","negative","critical"] as const).map((s) => {
                         const cfg = sentimentConfig[s];
                         const Icon = cfg.icon;
                         return (

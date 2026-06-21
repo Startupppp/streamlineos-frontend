@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { customFieldDefinitions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     return err("Invalid request body", 400);
   }
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:custom-fields", async (session) => {
     const [existing] = await db
       .select({ id: customFieldDefinitions.id })
       .from(customFieldDefinitions)
@@ -71,7 +71,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const fieldId = Number(rawId);
   if (!Number.isFinite(fieldId)) return err("Invalid field id", 400);
 
-  return withAdmin(async (session) => {
+  return withAbility("manage", "settings:custom-fields", async (session) => {
     const [existing] = await db
       .select({ id: customFieldDefinitions.id })
       .from(customFieldDefinitions)

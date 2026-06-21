@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAdmin, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { eq, and, isNotNull, sql } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { cached, CACHE_TTL } from "@/lib/cache";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAbility("read", "crm:deals", async (session) => {
     const { searchParams } = new URL(req.url);
     const repId = searchParams.get("repId");
 

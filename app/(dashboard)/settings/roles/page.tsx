@@ -55,9 +55,17 @@ const RESOURCE_GROUPS: Record<string, string> = {
   "crm:leads": "CRM - Leads",
   "crm:targets": "CRM - Targets",
   "crm:reports": "CRM - Reports",
+  "crm:clients": "CRM - Clients",
+  "crm:incentives": "CRM - Incentives",
   "dashboard:sales": "Dashboard - Sales",
   "dashboard:customer-executive": "Dashboard - Customer Executive",
   "dashboard:support": "Dashboard - Support",
+  "accounting": "Accounting",
+  "branch": "Branches",
+  "dm:leads": "Marketing - Leads",
+  "dm:campaigns": "Marketing - Campaigns",
+  "dm:social": "Marketing - Social",
+  "chat": "Chat",
   "self": "Self-Service",
 };
 
@@ -73,7 +81,7 @@ function groupPermissions(permissions: Permission[]) {
 
 export default function RolesPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="settings:rbac:manage">
       <RolesContent />
     </DashboardGate>
   );
@@ -206,13 +214,19 @@ interface RoleListItemProps {
 
 function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProps) {
   const handleSelect = useCallback(() => onSelect(role), [role, onSelect]);
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(role); }
+  }, [role, onSelect]);
   const handleDelete = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onDelete(role); }, [role, onDelete]);
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={handleSelect}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
+        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
         isSelected && "bg-muted/50 border-l-2 border-primary"
       )}
     >
@@ -223,12 +237,12 @@ function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProp
       <div className="flex items-center gap-2">
         {role.isSystem && <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>}
         {!role.isSystem && (
-          <button onClick={handleDelete} className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors" aria-label="Delete">
+          <button onClick={handleDelete} className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" aria-label="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 

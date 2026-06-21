@@ -62,6 +62,21 @@ export async function PATCH(
 
     await invalidateHrDashboardCache(session.orgId);
 
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, existing.userId),
+        columns: { name: true },
+      });
+      await runAutomationsForEvent(session.orgId, "employee.terminated", {
+        terminationId,
+        userId: existing.userId,
+        employeeName: employee?.name ?? "Employee",
+        effectiveDate: new Date().toISOString(),
+        reasons: [],
+        noticePeriodWaived: false,
+      });
+    });
+
     void writeAuditLog({
       action: "TERMINATION_COMPLETED",
       userId: session.user.id,

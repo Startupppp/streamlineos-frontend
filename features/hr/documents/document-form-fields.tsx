@@ -20,9 +20,18 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
-  name: z.string(),
+  name: z.string()
+    .min(2, "Name must be at least 2 characters")
+    .max(200, "Name must be at most 200 characters")
+    .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
+    .refine((v) => !/^[^a-zA-Z0-9]+$/.test(v.trim()), "Name cannot consist of only special characters")
+    .refine((v) => !/\s{2,}/.test(v), "Name cannot have multiple consecutive spaces")
+    .refine((v) => v === v.trim(), "Name cannot have leading or trailing spaces")
+    .refine((v) => !/[<>{}[\]\\|^~`]/.test(v), "Name contains invalid special characters"),
   description: z.string().optional(),
-  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
+  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"] as const, {
+    error: "Please select a document type",
+  }),
   category: z.string().optional(),
   userId: z.string().optional(),
   isPublic: z.boolean(),
@@ -44,6 +53,7 @@ interface DocumentFormFieldsProps {
   onAddTag: () => void;
   onRemoveTag: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onTagKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onNameChange?: () => void;
 }
 
 export function DocumentFormFields({
@@ -58,6 +68,7 @@ export function DocumentFormFields({
   onAddTag,
   onRemoveTag,
   onTagKeyDown,
+  onNameChange,
 }: DocumentFormFieldsProps) {
   const form = useFormContext<DocumentFormData>();
 
@@ -71,7 +82,14 @@ export function DocumentFormFields({
             <FormItem className="col-span-2">
               <FormLabel>Document Name *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Employment Contract 2024" {...field} />
+                <Input
+                  placeholder="e.g., Employment Contract 2024"
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    onNameChange?.();
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -85,10 +103,10 @@ export function DocumentFormFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Document Type *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

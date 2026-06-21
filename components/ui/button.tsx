@@ -19,7 +19,7 @@ import { cn } from "../../lib/utils";
      brand        Gradient CTA  brand gradient (use sparingly — top of funnel)
    ───────────────────────────────────────────────────────────────────────── */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors press-scale disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors press-scale disabled:pointer-events-none disabled:opacity-60 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -28,11 +28,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white shadow-sm hover:bg-destructive/90 focus-visible:ring-destructive/30",
         outline:
-          "border border-input bg-background text-foreground shadow-xs hover:bg-secondary hover:text-foreground",
+          "border border-border bg-card text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-muted hover:border-blue-400 hover:text-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/70",
         ghost:
-          "text-foreground hover:bg-secondary hover:text-foreground",
+          "text-foreground hover:bg-muted hover:text-foreground",
         link:
           "text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline",
         brand:

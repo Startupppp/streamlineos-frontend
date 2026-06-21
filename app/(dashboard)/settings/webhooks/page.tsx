@@ -2,22 +2,22 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Webhook, Trash2, ToggleLeft, ToggleRight, Copy, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Plus, Webhook, Trash2, ToggleLeft, ToggleRight, Copy, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
 const AVAILABLE_EVENTS = [
@@ -37,6 +37,15 @@ const AVAILABLE_EVENTS = [
   { id: "invoice.paid", label: "Invoice Paid" },
   { id: "employee.onboarded", label: "Employee Onboarded" },
 ];
+
+function isValidWebhookUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 interface WebhookEndpoint {
   id: number;
@@ -58,7 +67,7 @@ interface CreateWebhookInput {
 
 function useWebhooks() {
   return useQuery({
-    queryKey: ["webhooks"],
+    queryKey: queryKeys.webhooks.all,
     queryFn: () => apiClient.get<WebhookEndpoint[]>("/webhooks"),
   });
 }
@@ -67,7 +76,7 @@ function useCreateWebhook() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateWebhookInput) => apiClient.post<WebhookEndpoint>("/webhooks", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
@@ -76,7 +85,7 @@ function useToggleWebhook() {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch(`/webhooks/${id}`, { isActive }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
@@ -84,7 +93,7 @@ function useDeleteWebhook() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["webhooks"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
   });
 }
 
@@ -96,15 +105,21 @@ export default function WebhooksPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [showSecrets, setShowSecrets] = useState<Record<number, boolean>>({});
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
+  const handleOpenCreate = useCallback(() => setSheetOpen(true), []);
+
   const handleCreate = useCallback(async () => {
-    if (!url.trim()) { toast.error("URL is required"); return; }
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) { toast.error("URL is required"); return; }
+    if (!isValidWebhookUrl(trimmedUrl)) {
+      toast.error("Enter a valid HTTP(S) URL (e.g. https://your-server.com/webhook)");
+      return;
+    }
     createWebhook.mutate(
-      { url: url.trim(), description: description.trim() || undefined, events: selectedEvents },
+      { url: trimmedUrl, description: description.trim() || undefined, events: selectedEvents },
       {
         onSuccess: () => {
           toast.success("Webhook created");
@@ -157,7 +172,7 @@ export default function WebhooksPage() {
       title="Webhooks"
       subtitle="Send real-time events to external systems when things happen in the CRM"
       actions={
-        <Button onClick={() => setSheetOpen(true)}>
+        <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Add Webhook
         </Button>
@@ -165,19 +180,14 @@ export default function WebhooksPage() {
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {(!webhooks || webhooks.length === 0) ? (
-          <motion.div variants={fadeUp}>
-            <Card className="shadow-noir">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                <Webhook className="h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No webhooks configured</p>
-                <p className="text-xs text-muted-foreground/60 max-w-sm">
-                  Webhooks let external services receive notifications when events happen in your CRM.
-                </p>
-                <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Add your first webhook
-                </Button>
-              </CardContent>
-            </Card>
+          <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
+            <EmptyState
+              icon={Webhook}
+              title="No webhooks configured"
+              description="Webhooks let external services receive notifications when events happen in your CRM."
+              action={{ label: "Add Webhook", onClick: handleOpenCreate }}
+              className="w-full"
+            />
           </motion.div>
         ) : (
           webhooks.map((wh) => (

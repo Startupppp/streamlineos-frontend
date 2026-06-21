@@ -8,7 +8,6 @@ interface TableOfContentsProps {
   items: TocItem[];
 }
 
-/** Sticky table of contents that highlights the section currently in view. */
 export function TableOfContents({ items }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null);
 

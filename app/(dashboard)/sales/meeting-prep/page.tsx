@@ -187,7 +187,7 @@ export default function MeetingPrepPage() {
 
   const isValid =
     form.meetingTitle.trim().length > 0 &&
-    form.attendeeId.trim().length > 0 &&
+    Number(form.attendeeId) > 0 &&
     form.scheduledAt.length > 0;
 
   const handleSubmit = useCallback(async () => {
@@ -205,7 +205,7 @@ export default function MeetingPrepPage() {
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Failed to generate brief";
       if (msg.toLowerCase().includes("not configured")) {
-        toast.error("AI features require OPENAI_API_KEY to be configured");
+        toast.error("AI features need setup. Add your API key in Settings → AI Settings.");
       } else if (msg.toLowerCase().includes("not found")) {
         toast.error(`${form.attendeeType === "lead" ? "Lead" : "Client"} not found. Check the ID.`);
       } else {
@@ -383,7 +383,7 @@ export default function MeetingPrepPage() {
         <Card className="mt-4">
           <CardContent className="pt-4">
             <p className="text-xs font-medium text-foreground mb-2">The brief will include</p>
-            <ul className="grid grid-cols-2 gap-1.5">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {[
                 "Meeting overview & objectives",
                 "Attendee background & history",
