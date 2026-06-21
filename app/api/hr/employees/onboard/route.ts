@@ -149,6 +149,17 @@ export async function POST(req: NextRequest) {
     }).catch(() => {
     });
 
+    void import("@/lib/services/automation/engine").then(({ runAutomationsForEvent }) =>
+      runAutomationsForEvent(session.orgId, "onboarding.started", {
+        userId: newUser.id,
+        employeeName: `${body.firstName} ${body.lastName}`,
+        employeeEmail: body.email,
+        departmentId: body.departmentId ?? null,
+        joiningDate: body.joiningDate ?? null,
+        startedAt: new Date().toISOString(),
+      })
+    );
+
     void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
       dispatchWebhook(session.orgId, "employee.hired", {
         userId: newUser.id,

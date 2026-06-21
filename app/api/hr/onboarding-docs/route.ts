@@ -234,6 +234,21 @@ export async function POST(req: NextRequest) {
 
     await recalcOnboardingStatus(session.orgId, session.user.id);
 
+    void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+        columns: { name: true },
+      });
+      await runAutomationsForEvent(session.orgId, "onboarding.document_submitted", {
+        documentId: record.id,
+        userId: session.user.id,
+        employeeName: employee?.name ?? "",
+        documentTypeName: docType.name,
+        status: "SUBMITTED",
+        submittedAt: new Date().toISOString(),
+      });
+    });
+
     return ok(record, 201);
   });
 }
