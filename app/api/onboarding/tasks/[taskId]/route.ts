@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { onboardingTasks, users, organizationMembers } from "@/lib/db/schema";
@@ -79,23 +79,28 @@ export async function PATCH(
           );
         }
 
-        const hrMembers = await db
+        const hrMemberIds = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)
           .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-        for (const m of hrMembers) {
-          const hrUser = await db.query.users.findFirst({
-            where: eq(users.id, m.userId),
-            columns: { email: true, name: true },
-          });
-          if (hrUser?.email) {
-            await sendOnboardingCompleteHrEmail(
-              hrUser.email,
-              hrUser.name ?? "HR",
-              employee?.name ?? "Employee"
-            );
-          }
+        if (hrMemberIds.length > 0) {
+          const hrUsers = await db
+            .select({ email: users.email, name: users.name })
+            .from(users)
+            .where(inArray(users.id, hrMemberIds.map((m) => m.userId)));
+
+          await Promise.all(
+            hrUsers
+              .filter((u) => u.email)
+              .map((u) =>
+                sendOnboardingCompleteHrEmail(
+                  u.email!,
+                  u.name ?? "HR",
+                  employee?.name ?? "Employee"
+                )
+              )
+          );
         }
       })().catch(() => {});
     }
