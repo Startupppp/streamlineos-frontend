@@ -76,6 +76,7 @@ interface TerminationFormSheetProps {
   onOpenChange: (open: boolean) => void;
   isCEO: boolean;
   isPending: boolean;
+  submitDisabled?: boolean;
   onSubmit: () => void;
   employees: Employee[];
   selectedUserId: string;
@@ -99,6 +100,7 @@ export function TerminationFormSheet({
   onOpenChange,
   isCEO,
   isPending,
+  submitDisabled = false,
   onSubmit,
   employees,
   selectedUserId,
@@ -164,6 +166,7 @@ export function TerminationFormSheet({
       onSubmit={onSubmit}
       submitLabel={isCEO ? "Create & Approve" : "Save as Draft"}
       isPending={isPending}
+      submitDisabled={submitDisabled}
     >
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">

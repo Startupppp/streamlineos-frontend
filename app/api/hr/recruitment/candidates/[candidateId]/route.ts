@@ -97,6 +97,30 @@ export async function PATCH(
       }
     }
 
+    if (body.status && body.status !== existing.status) {
+      const VALID_TRANSITIONS: Record<string, string[]> = {
+        NEW: ["SCREENING", "REJECTED"],
+        SCREENING: ["NEW", "INTERVIEW", "REJECTED"],
+        INTERVIEW: ["SCREENING", "OFFER", "REJECTED"],
+        OFFER: ["INTERVIEW", "HIRED", "REJECTED"],
+        HIRED: [],
+        REJECTED: ["SCREENING"],
+      };
+      const allowed = VALID_TRANSITIONS[existing.status ?? "NEW"] ?? [];
+      if (!allowed.includes(body.status)) {
+        return err(
+          `Cannot move candidate from ${existing.status} to ${body.status}. ${
+            existing.status === "REJECTED"
+              ? "A rejected candidate must be re-opened to Screening first."
+              : existing.status === "HIRED"
+              ? "Hired candidates cannot change status."
+              : `Allowed next statuses: ${allowed.join(", ") || "none"}.`
+          }`,
+          422
+        );
+      }
+    }
+
     await db
       .update(candidates)
       .set({

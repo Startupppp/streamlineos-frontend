@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import {
   usePulseSurveys, useCreateSurvey, useUpdateSurvey,
   type PulseSurvey,
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -21,6 +22,8 @@ import {
 } from "lucide-react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+
+type SurveyStatusFilter = "all" | "DRAFT" | "ACTIVE" | "CLOSED";
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" {
   if (s === "ACTIVE") return "default";
@@ -76,12 +79,19 @@ export default function SurveysPage() {
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:performance");
 
+  const [statusFilter, setStatusFilter] = useState<SurveyStatusFilter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [closeId, setCloseId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [closesAt, setClosesAt] = useState("");
 
   const resetForm = useCallback(() => { setTitle(""); setClosesAt(""); }, []);
+
+  const filteredSurveys = useMemo(() => {
+    if (!surveys) return [];
+    if (statusFilter === "all") return surveys as PulseSurvey[];
+    return (surveys as PulseSurvey[]).filter((s) => (s.status ?? "DRAFT") === statusFilter);
+  }, [surveys, statusFilter]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
@@ -137,21 +147,35 @@ export default function SurveysPage() {
     );
   }
 
+  const handleStatusFilterChange = useCallback((v: string) => setStatusFilter(v as SurveyStatusFilter), []);
+
   return (
     <PageWrapper
       title="Pulse Surveys"
       subtitle="Create and manage employee engagement surveys"
       badge={`${surveys?.length ?? 0} surveys`}
       actions={isAdmin ? <Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />Create Survey</Button> : undefined}
+      filters={
+        <Tabs value={statusFilter} onValueChange={handleStatusFilterChange}>
+          <TabsList className="h-8">
+            <TabsTrigger value="all" className="text-xs px-3 h-7">All</TabsTrigger>
+            <TabsTrigger value="DRAFT" className="text-xs px-3 h-7">Draft</TabsTrigger>
+            <TabsTrigger value="ACTIVE" className="text-xs px-3 h-7">Active</TabsTrigger>
+            <TabsTrigger value="CLOSED" className="text-xs px-3 h-7">Closed</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      }
     >
-      {!surveys?.length ? (
+      {!filteredSurveys.length ? (
         <Card><CardContent className="py-12 text-center">
           <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No surveys created yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {statusFilter === "all" ? "No surveys created yet." : `No ${statusFilter.toLowerCase()} surveys.`}
+            </p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {surveys.map((s: PulseSurvey) => (
+          {filteredSurveys.map((s) => (
             <SurveyCard
               key={s.id}
               s={s}

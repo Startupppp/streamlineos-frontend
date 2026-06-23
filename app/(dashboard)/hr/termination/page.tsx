@@ -93,6 +93,12 @@ export default function TerminationPage() {
 
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
+  const canSubmitCreate =
+    !!selectedUserId &&
+    !!selectedReason &&
+    !!effectiveDate &&
+    (!isOtherReason || remarks.trim().length >= 10);
+
   const handleCreateSubmit = useCallback(() => {
     if (!selectedUserId) {
       toast.error("Please select an employee");
@@ -344,6 +350,7 @@ export default function TerminationPage() {
         onOpenChange={handleCreateSheetOpenChange}
         isCEO={isCEO}
         isPending={createTermination.isPending}
+        submitDisabled={!canSubmitCreate}
         onSubmit={handleCreateSubmit}
         employees={employees}
         selectedUserId={selectedUserId}
