@@ -28,6 +28,18 @@ export async function POST(
 
     if (!body.jobPostingId) return err("jobPostingId is required.", 400);
 
+    const existingApplication = await db.query.candidateApplications.findFirst({
+      where: and(
+        eq(candidateApplications.candidateId, candidateId),
+        eq(candidateApplications.jobPostingId, body.jobPostingId),
+        eq(candidateApplications.orgId, session.orgId),
+      ),
+      columns: { id: true },
+    });
+    if (existingApplication) {
+      return err("This candidate has already applied for this position.", 409);
+    }
+
     const [application] = await db
       .insert(candidateApplications)
       .values({
