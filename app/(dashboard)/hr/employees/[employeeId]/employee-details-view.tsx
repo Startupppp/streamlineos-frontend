@@ -244,7 +244,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       onSuccess: () => {
         toast.success(`${employeeName} has been terminated.`);
         setTerminateOpen(false);
-        router.push("/hr");
+        router.push("/hr/employees");
       },
       onError: (err) => toast.error((err as Error).message),
     });
@@ -272,8 +272,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         subtitle={employee.designation ?? employee.role ?? ""}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/hr"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" />Back
             </Button>
             {ability.can("manage", "hr:employees") && (
               <Button variant="outline" size="sm" asChild>

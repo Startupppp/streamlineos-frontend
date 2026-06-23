@@ -172,14 +172,28 @@ export default function DocumentTypesPage() {
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!form.name.trim()) {
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
       toast.error("Name is required");
+      return;
+    }
+    if (trimmedName.length < 2) {
+      toast.error("Name must be at least 2 characters");
+      return;
+    }
+    if (trimmedName.length > 100) {
+      toast.error("Name must be at most 100 characters");
+      return;
+    }
+    const trimmedDesc = form.description.trim();
+    if (trimmedDesc.length > 500) {
+      toast.error("Description must be at most 500 characters");
       return;
     }
 
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
+      name: trimmedName,
+      description: trimmedDesc || undefined,
       isMandatory: form.isMandatory,
       sortOrder: form.sortOrder ? Number(form.sortOrder) : undefined,
       applicableRoles: form.applicableRoles,

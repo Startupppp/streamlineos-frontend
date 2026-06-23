@@ -59,6 +59,14 @@ const formSchema = z.object({
   customPaymentMethod: z.string().optional(),
   expenseDate: z.string().min(1, "Date is required"),
 }).superRefine((data, ctx) => {
+  if (data.expenseDate) {
+    const expDate = new Date(data.expenseDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (expDate > today) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Expense date cannot be in the future", path: ["expenseDate"] });
+    }
+  }
   if (data.category === "Other" && !data.customCategory?.trim()) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please specify the category", path: ["customCategory"] });
   }

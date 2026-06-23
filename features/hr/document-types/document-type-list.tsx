@@ -11,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { Pencil, PowerOff, Power } from "lucide-react";
@@ -135,38 +141,55 @@ export function DocumentTypeList({
                 </TableCell>
                 {isHROrCEO && (
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0"
-                        onClick={() => onEdit(dt)}
-                        aria-label={`Edit ${dt.name}`}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      {dt.isActive !== false ? (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => onDeactivate(dt)}
-                          aria-label={`Deactivate ${dt.name}`}
-                        >
-                          <PowerOff className="h-3.5 w-3.5" />
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-green-600"
-                          onClick={() => onReactivate(dt)}
-                          aria-label={`Reactivate ${dt.name}`}
-                        >
-                          <Power className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
+                    <TooltipProvider>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => onEdit(dt)}
+                              aria-label={`Edit ${dt.name}`}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                        {dt.isActive !== false ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => onDeactivate(dt)}
+                                aria-label={`Deactivate ${dt.name}`}
+                              >
+                                <PowerOff className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Deactivate</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-green-600"
+                                onClick={() => onReactivate(dt)}
+                                aria-label={`Reactivate ${dt.name}`}
+                              >
+                                <Power className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Reactivate</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TooltipProvider>
                   </TableCell>
                 )}
               </TableRow>
