@@ -24,6 +24,9 @@ const createLeaveSchema = z.object({
   isHalfDay: z.boolean().optional().default(false),
   halfDayPeriod: z.enum(["AM", "PM"]).optional(),
 }).refine(
+  (d) => d.endDate >= d.startDate,
+  { message: "End date must be on or after start date", path: ["endDate"] },
+).refine(
   (d) => !d.isHalfDay || d.startDate === d.endDate,
   { message: "Half-day leave cannot span multiple dates", path: ["endDate"] },
 );
