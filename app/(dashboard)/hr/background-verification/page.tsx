@@ -24,7 +24,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, ShieldCheck, CheckCircle2, XCircle, BarChart2 } from "lucide-react";
+import { Plus, ShieldCheck, CheckCircle2, XCircle, BarChart2, Pencil } from "lucide-react";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -118,9 +118,36 @@ function BGVContent() {
   const [refNumber, setRefNumber] = useState("");
   const [notes, setNotes] = useState("");
 
+  const [editBgv, setEditBgv] = useState<BackgroundVerification | null>(null);
+  const [editNotes, setEditNotes] = useState("");
+  const [editResult, setEditResult] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+
   const resetForm = useCallback(() => {
     setUserId(""); setType("Identity"); setProvider(""); setRefNumber(""); setNotes("");
   }, []);
+
+  const handleOpenEdit = useCallback((bgv: BackgroundVerification) => {
+    setEditBgv(bgv);
+    setEditNotes(bgv.notes ?? "");
+    setEditResult(bgv.result ?? "");
+    setEditStatus(bgv.status ?? "PENDING");
+  }, []);
+
+  const handleCloseEdit = useCallback((open: boolean) => {
+    if (!open) { setEditBgv(null); setEditNotes(""); setEditResult(""); setEditStatus(""); }
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editBgv) return;
+    update.mutate(
+      { id: editBgv.id, status: editStatus || undefined, result: editResult || undefined, notes: editNotes || undefined },
+      {
+        onSuccess: () => { toast.success("Check updated"); setEditBgv(null); },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [editBgv, editStatus, editResult, editNotes, update]);
 
   const handleCreate = useCallback(() => {
     if (!userId) { toast.error("Employee is required"); return; }
@@ -182,16 +209,21 @@ function BGVContent() {
                         {bgv.createdAt && <span>{format(new Date(bgv.createdAt), "MMM d, yyyy")}</span>}
                       </div>
                     </div>
-                    {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
-                      <div className="flex gap-1.5 shrink-0">
-                        <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "PASSED")} disabled={update.isPending}>
-                          <CheckCircle2 className="h-3 w-3 mr-1" />Pass
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FAILED")} disabled={update.isPending}>
-                          <XCircle className="h-3 w-3 mr-1" />Fail
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex gap-1.5 shrink-0">
+                      {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
+                        <>
+                          <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "PASSED")} disabled={update.isPending}>
+                            <CheckCircle2 className="h-3 w-3 mr-1" />Pass
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FAILED")} disabled={update.isPending}>
+                            <XCircle className="h-3 w-3 mr-1" />Fail
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleOpenEdit(bgv)} aria-label="Edit verification">
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -208,6 +240,29 @@ function BGVContent() {
           <ComplianceDashboard />
         </TabsContent>
       </Tabs>
+
+      <HrSheet open={!!editBgv} onOpenChange={handleCloseEdit} title="Edit Verification" onSubmit={handleSaveEdit} submitLabel="Save" isPending={update.isPending}>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Status</label>
+          <Select value={editStatus} onValueChange={setEditStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="PASSED">Passed</SelectItem>
+              <SelectItem value="FAILED">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Result</label>
+          <Input placeholder="Summary of findings..." value={editResult} onChange={(e) => setEditResult(e.target.value)} maxLength={500} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Notes</label>
+          <Textarea placeholder="Additional notes..." value={editNotes} onChange={(e) => setEditNotes(e.target.value)} rows={3} maxLength={1000} className="resize-none w-full" />
+        </div>
+      </HrSheet>
 
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Initiate BGV" onSubmit={handleCreate} submitLabel="Initiate" isPending={create.isPending}>
         <div className="space-y-1.5">
