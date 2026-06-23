@@ -1,7 +1,7 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveTypes, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 import { sendLeaveCancellationEmail } from "@/lib/email";
@@ -51,26 +51,31 @@ export async function PATCH(
           })
         : null;
 
-      const hrMembers = await db
+      const hrMemberIds = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
         .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-      for (const m of hrMembers) {
-        const hrUser = await db.query.users.findFirst({
-          where: eq(users.id, m.userId),
-          columns: { email: true, name: true },
-        });
-        if (hrUser?.email) {
-          await sendLeaveCancellationEmail(
-            hrUser.email,
-            hrUser.name ?? "HR",
-            session.user.name ?? "Employee",
-            leaveType?.name ?? "Leave",
-            existing.startDate,
-            existing.endDate
-          );
-        }
+      if (hrMemberIds.length > 0) {
+        const hrUsers = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(inArray(users.id, hrMemberIds.map((m) => m.userId)));
+
+        await Promise.all(
+          hrUsers
+            .filter((u) => u.email)
+            .map((u) =>
+              sendLeaveCancellationEmail(
+                u.email!,
+                u.name ?? "HR",
+                session.user.name ?? "Employee",
+                leaveType?.name ?? "Leave",
+                existing.startDate,
+                existing.endDate
+              )
+            )
+        );
       }
     })().catch(() => {});
 

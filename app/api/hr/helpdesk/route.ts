@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { getHelpdeskTickets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { helpdeskTickets, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -77,26 +77,31 @@ export async function POST(req: NextRequest) {
       .returning();
 
     void (async () => {
-      const hrMembers = await db
+      const hrMemberIds = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
         .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-      for (const m of hrMembers) {
-        const hrUser = await db.query.users.findFirst({
-          where: eq(users.id, m.userId),
-          columns: { email: true, name: true },
-        });
-        if (hrUser?.email) {
-          await sendHelpdeskTicketEmail(
-            hrUser.email,
-            hrUser.name ?? "HR",
-            body.title,
-            body.category ?? "General",
-            body.priority ?? "MEDIUM",
-            session.user.name ?? "Employee"
-          );
-        }
+      if (hrMemberIds.length > 0) {
+        const hrUsers = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(inArray(users.id, hrMemberIds.map((m) => m.userId)));
+
+        await Promise.all(
+          hrUsers
+            .filter((u) => u.email)
+            .map((u) =>
+              sendHelpdeskTicketEmail(
+                u.email!,
+                u.name ?? "HR",
+                body.title,
+                body.category ?? "General",
+                body.priority ?? "MEDIUM",
+                session.user.name ?? "Employee"
+              )
+            )
+        );
       }
     })().catch(() => {});
 
