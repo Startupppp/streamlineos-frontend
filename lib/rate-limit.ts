@@ -57,6 +57,10 @@ export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
     progressive: true,
     maxBlockMs: 10 * 60_000,
   },
+  "platform-visit": {
+    maxRequests: 60,
+    windowMs: 60_000,
+  },
   "api-default": {
     maxRequests: 100,
     windowMs: 60_000,

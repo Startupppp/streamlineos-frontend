@@ -16,6 +16,9 @@ import {
   sql,
   gte,
   lte,
+  count,
+  inArray,
+  lt,
 } from "drizzle-orm";
 
 export async function getLeadSlaAlerts(
@@ -190,41 +193,53 @@ export async function getLeadAnalytics(
 }
 
 export async function getDashboardMetrics(orgId: string) {
-  const [allLeads, allActivities] = await Promise.all([
-    db.query.leads.findMany({ where: eq(leads.orgId, orgId) }),
-    db.query.leadActivities.findMany({
-      where: eq(leadActivities.orgId, orgId),
-    }),
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+
+  const [leadCounts, activityCounts, followUpCount] = await Promise.all([
+    db
+      .select({ status: leads.status, cnt: count() })
+      .from(leads)
+      .where(eq(leads.orgId, orgId))
+      .groupBy(leads.status),
+    db
+      .select({ type: leadActivities.type, cnt: count() })
+      .from(leadActivities)
+      .where(
+        and(
+          eq(leadActivities.orgId, orgId),
+          inArray(leadActivities.type, ["call", "meeting", "site_visit"]),
+        ),
+      )
+      .groupBy(leadActivities.type),
+    db
+      .select({ cnt: count() })
+      .from(leads)
+      .where(
+        and(
+          eq(leads.orgId, orgId),
+          sql`${leads.status} NOT IN ('CONVERTED','LOST')`,
+          lt(leads.updatedAt, threeDaysAgo),
+        ),
+      )
+      .then((r) => r[0]?.cnt ?? 0),
   ]);
 
-  const activeClients = allLeads.filter((l) => l.status === "CONVERTED").length;
-  const inactiveClients = allLeads.filter((l) => l.status === "LOST").length;
-  const totalCalls = allActivities.filter((a) => a.type === "call").length;
-  const inPersonMeetings = allActivities.filter(
-    (a) => a.type === "meeting" || a.type === "site_visit"
-  ).length;
+  const byStatus = Object.fromEntries(leadCounts.map((r) => [r.status, r.cnt]));
+  const byType = Object.fromEntries(activityCounts.map((r) => [r.type, r.cnt]));
 
-  const now = new Date();
-  const followUpDue = allLeads.filter((l) => {
-    if (l.status === "CONVERTED" || l.status === "LOST") return false;
-    const updated = new Date(l.updatedAt!);
-    const daysSince = Math.floor(
-      (now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return daysSince >= 3;
-  }).length;
+  const activeClients = byStatus["CONVERTED"] ?? 0;
+  const inactiveClients = byStatus["LOST"] ?? 0;
+  const totalLeads = Object.values(byStatus).reduce((s, n) => s + n, 0);
 
   return {
     activeClients,
     inactiveClients,
-    totalCalls,
-    inPersonMeetings,
-    followUpDue,
-    totalLeads: allLeads.length,
+    totalCalls: byType["call"] ?? 0,
+    inPersonMeetings: (byType["meeting"] ?? 0) + (byType["site_visit"] ?? 0),
+    followUpDue: followUpCount,
+    totalLeads,
     conversionRate:
-      allLeads.length > 0
-        ? Math.round((activeClients / allLeads.length) * 1000) / 10
-        : 0,
+      totalLeads > 0 ? Math.round((activeClients / totalLeads) * 1000) / 10 : 0,
   };
 }
 
