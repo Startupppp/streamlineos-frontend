@@ -2,9 +2,33 @@ import { z } from "zod";
 
 export const automationTriggerSchema = z.enum([
   "lead.created",
+  "lead.status_changed",
+  "lead.assigned",
+  "lead.score_updated",
+  "deal.created",
   "deal.stage_changed",
+  "deal.won",
+  "deal.lost",
   "ticket.created",
+  "ticket.assigned",
+  "ticket.status_changed",
+  "ticket.escalated",
   "invoice.overdue",
+  "invoice.paid",
+  "leave.requested",
+  "leave.approved",
+  "leave.rejected",
+  "attendance.anomaly",
+  "attendance.late",
+  "employee.onboarded",
+  "employee.terminated",
+  "employee.resignation",
+  "expense.submitted",
+  "expense.approved",
+  "review.cycle_started",
+  "certification.expiring",
+  "interview.scheduled",
+  "onboarding.started",
 ]);
 
 export const automationConditionSchema = z.object({
