@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       return err("A user with this email already exists.", 409);
     }
 
-    const passwordHash = await hash(body.password || "Welcome@123", 12);
+    const passwordHash = await hash(body.password || nanoid(32), 12);
     const userId = randomUUID();
 
     const [newUser] = await db
