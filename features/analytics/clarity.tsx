@@ -1,11 +1,11 @@
 import Script from "next/script";
 
-export function MicrosoftClarity() {
+export function MicrosoftClarity({ nonce }: { nonce?: string }) {
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
   if (!clarityId || process.env.NODE_ENV !== "production") return null;
 
   return (
-    <Script id="clarity-init" strategy="afterInteractive">
+    <Script id="clarity-init" strategy="afterInteractive" nonce={nonce}>
       {`
         (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};

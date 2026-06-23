@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
@@ -115,9 +116,11 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="en"
@@ -127,7 +130,7 @@ export default function RootLayout({
       <head>
         <OrganizationJsonLd />
         <WebsiteJsonLd />
-        <GoogleTagManagerHead />
+        <GoogleTagManagerHead nonce={nonce} />
       </head>
       <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-950">
         <GoogleTagManagerNoscript />
@@ -145,7 +148,7 @@ export default function RootLayout({
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
-        <MicrosoftClarity />
+        <MicrosoftClarity nonce={nonce} />
       </body>
     </html>
   );
