@@ -26,7 +26,10 @@ const scheduleSchema = z.object({
       whatsapp: z.boolean().default(false),
     })
     .default({ email: true, whatsapp: false }),
-});
+}).refine(
+  (d) => d.format !== "VIDEO" || (!!d.meetLink && d.meetLink.trim().length > 0),
+  { message: "Meet link is required for video interviews.", path: ["meetLink"] },
+);
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {

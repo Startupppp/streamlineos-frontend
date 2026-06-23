@@ -20,7 +20,10 @@ const createTicketSchema = z.object({
     .max(150, "Ticket title must be at most 150 characters")
     .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Ticket title must contain at least one letter or digit")
     .refine((v) => !/\s{2,}/.test(v), "Ticket title cannot have multiple consecutive spaces"),
-  description: z.string().max(2000).optional(),
+  description: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().trim().min(10, "Description must be at least 10 characters").max(2000, "Description must be at most 2000 characters").optional()
+  ),
   category: z.string().min(1, "Category is required"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
 });
