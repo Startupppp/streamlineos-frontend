@@ -30,7 +30,7 @@ const updateEmployeeSchema = z.object({
     z.number().min(0, "Experience cannot be negative").max(60, "Experience cannot exceed 60 years").optional()
   ),
   taxId: z.string().optional(),
-  monthlySalary: z.number().optional(),
+  monthlySalary: z.number().min(0, "Salary cannot be negative").max(9_999_999, "Salary exceeds maximum").optional(),
   bankDetails: z.object({
     accountNumber: z.string().optional(),
     bankName: z.string().optional(),
