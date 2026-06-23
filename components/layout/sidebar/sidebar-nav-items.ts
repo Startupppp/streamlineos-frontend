@@ -148,6 +148,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Inbox", icon: Inbox, href: "/hr/recruitment/inbox", requiredPermission: "hr:employees:create" },
           { label: "Scorecard Analytics", icon: BarChart2, href: "/hr/recruitment/scorecard-analytics", requiredPermission: "hr:employees:create" },
           { label: "Headcount", icon: Users, href: "/hr/recruitment/headcount" },
+          { label: "Vendors", icon: Building2, href: "/hr/recruitment/vendors", requiredPermission: "hr:employees:create" },
         ],
       },
     ],

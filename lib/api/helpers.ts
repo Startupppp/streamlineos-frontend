@@ -1,5 +1,4 @@
-
-
+import { logger } from "@/lib/logger";
 import { auth } from "@/lib/auth";
 import { redis } from "@/lib/redis";
 import { getSessionAbility } from "@/lib/abilities-server";
@@ -38,7 +37,6 @@ export function err(message: string, status = 400): NextResponse<never> {
 }
 
 export function serverErr(fallbackMessage: string, error: unknown, status = 500): NextResponse<never> {
-  const { logger } = require("@/lib/logger") as { logger: { error: (msg: string, meta?: unknown) => void } };
   logger.error(fallbackMessage, { error });
   return NextResponse.json({ error: "An unexpected error occurred" }, { status }) as NextResponse<never>;
 }

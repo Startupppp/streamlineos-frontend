@@ -1,6 +1,6 @@
 "use client";
 
-import { format, isWeekend } from "date-fns";
+import { format, isWeekend, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { WorkLogEntryRow } from "./work-log-entry-row";
@@ -103,7 +103,7 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={readOnly || !isOwnLog}
+                  readOnly={readOnly || !isOwnLog || !isToday(date)}
                   status={log?.status ?? undefined}
                 />
               );

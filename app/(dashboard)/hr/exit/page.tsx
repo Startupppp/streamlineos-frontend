@@ -8,9 +8,9 @@ import {
   useHrReviewResignation,
   useCeoReviewResignation,
   useWithdrawResignation,
-  useResignationProgress,
   type Resignation,
 } from "@/lib/api/hooks/hr";
+import { apiClient } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,7 +33,9 @@ import {
   Plus,
   FileText,
   Download,
+  CheckCircle2,
 } from "lucide-react";
+import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
@@ -71,6 +73,8 @@ export default function ExitManagementPage() {
   const [otherReasonCategory, setOtherReasonCategory] = useState("");
   const [willingForExitInterview, setWillingForExitInterview] = useState(false);
   const [companyFeedback, setCompanyFeedback] = useState("");
+  const [resignationLetterUrl, setResignationLetterUrl] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   const [hrApproveId, setHrApproveId] = useState<number | null>(null);
 
@@ -105,6 +109,29 @@ export default function ExitManagementPage() {
     setOtherReasonCategory("");
     setWillingForExitInterview(false);
     setCompanyFeedback("");
+    setResignationLetterUrl(null);
+    setFormKey((k) => k + 1);
+  }, []);
+
+  const handleUploadComplete = useCallback((url: string) => {
+    setResignationLetterUrl(url);
+  }, []);
+
+  const handleViewLetter = useCallback(async (id: number) => {
+    try {
+      const data = await apiClient.get<{ html: string }>(`/hr/exit/${id}/letter`);
+      const win = window.open("", "_blank");
+      if (!win) {
+        toast.error("Popup blocked — please allow popups to view the letter.");
+        return;
+      }
+      win.document.write(
+        `<!DOCTYPE html><html><head><title>Resignation Letter</title><style>body{margin:0;padding:20px 40px;}</style></head><body>${data.html}</body></html>`
+      );
+      win.document.close();
+    } catch {
+      toast.error("Failed to load resignation letter");
+    }
   }, []);
 
   const handleSubmitResignation = useCallback(() => {
@@ -140,6 +167,7 @@ export default function ExitManagementPage() {
         reasonCategory: resolvedCategory || undefined,
         willingForExitInterview,
         companyFeedback: companyFeedback.trim() || undefined,
+        resignationLetterUrl: resignationLetterUrl ?? undefined,
       },
       {
         onSuccess: () => {
@@ -150,7 +178,7 @@ export default function ExitManagementPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, reasonCategory, otherReasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation, resetResignationForm]);
+  }, [reason, reasonCategory, otherReasonCategory, willingForExitInterview, companyFeedback, autoLwd, resignationLetterUrl, createResignation, resetResignationForm]);
 
   const handleHrApprove = useCallback(() => {
     if (!hrApproveId) return;
@@ -308,6 +336,7 @@ export default function ExitManagementPage() {
               onCeoApprove={setCeoApproveId}
               onCeoReject={(id) => handleOpenRejectDialog(id, "ceo")}
               onWithdraw={setWithdrawId}
+              onViewLetter={handleViewLetter}
             />
           ))}
         </div>
@@ -409,17 +438,40 @@ export default function ExitManagementPage() {
           />
         </div>
 
-        <div className="pt-1">
-          <p className="text-xs text-muted-foreground mb-2">
-            Need a template? Download and attach your formal resignation letter:
-          </p>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Resignation Letter{" "}
+            <span className="text-muted-foreground font-normal">(optional)</span>
+          </label>
+          {resignationLetterUrl ? (
+            <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 truncate">Letter uploaded successfully</span>
+              <button
+                type="button"
+                onClick={() => setResignationLetterUrl(null)}
+                className="text-green-600 hover:text-green-800"
+                aria-label="Remove uploaded letter"
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <FileUpload
+              key={formKey}
+              folder="resignations"
+              accept="application/pdf,image/*,.doc,.docx"
+              maxSize={10 * 1024 * 1024}
+              onUploadComplete={handleUploadComplete}
+            />
+          )}
           <button
             type="button"
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <Download className="h-3 w-3" />
-            Download Resignation Letter Template
+            Download template
           </button>
         </div>
       </HrSheet>

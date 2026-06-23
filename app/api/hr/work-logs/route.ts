@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { eq, and, sql } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
-import { formatDateOnly } from "@/lib/date-utils";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -57,6 +57,10 @@ export async function POST(req: NextRequest) {
     const body = await parseBody(req, postWorkLogSchema);
 
     const dateStr = formatDateOnly(body.date);
+    const todayStr = getTodayString();
+    if (dateStr !== todayStr) {
+      return err("Work logs can only be created or updated for today.", 403);
+    }
     const normalizedDescription = body.description
       ? body.description.replace(
           /(^\s*\w|[.!?]\s+\w)/g,

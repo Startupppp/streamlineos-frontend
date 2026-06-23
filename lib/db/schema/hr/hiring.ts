@@ -611,6 +611,56 @@ export const emailSequenceEnrollmentsRelations = relations(emailSequenceEnrollme
   candidate: one(candidates, { fields: [emailSequenceEnrollments.candidateId], references: [candidates.id] }),
 }));
 
+export type VendorStatus = "ACTIVE" | "INACTIVE";
+export type VendorPlacementStatus = "SUBMITTED" | "INTERVIEWING" | "PLACED" | "REJECTED";
+export type VendorInvoiceStatus = "NOT_INVOICED" | "INVOICED" | "PAID";
+
+export const recruitmentVendors = pgTable("recruitment_vendors", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  contactName: text("contact_name"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  website: text("website"),
+  feePercent: decimal("fee_percent", { precision: 5, scale: 2 }),
+  status: text("status").$type<VendorStatus>().notNull().default("ACTIVE"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_recruitment_vendors_org").on(table.orgId),
+]);
+
+export const vendorCandidateSubmissions = pgTable("vendor_candidate_submissions", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").references(() => recruitmentVendors.id, { onDelete: "cascade" }).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id, { onDelete: "set null" }),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  placementStatus: text("placement_status").$type<VendorPlacementStatus>().notNull().default("SUBMITTED"),
+  invoiceStatus: text("invoice_status").$type<VendorInvoiceStatus>().notNull().default("NOT_INVOICED"),
+  invoiceAmount: decimal("invoice_amount", { precision: 15, scale: 2 }),
+  invoiceDate: date("invoice_date"),
+  paidAt: date("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_vendor_submissions_vendor").on(table.vendorId),
+  index("idx_vendor_submissions_candidate").on(table.candidateId),
+]);
+
+export const recruitmentVendorsRelations = relations(recruitmentVendors, ({ one, many }) => ({
+  organization: one(organizations, { fields: [recruitmentVendors.orgId], references: [organizations.id] }),
+  createdByUser: one(users, { fields: [recruitmentVendors.createdBy], references: [users.id] }),
+  submissions: many(vendorCandidateSubmissions),
+}));
+
+export const vendorCandidateSubmissionsRelations = relations(vendorCandidateSubmissions, ({ one }) => ({
+  vendor: one(recruitmentVendors, { fields: [vendorCandidateSubmissions.vendorId], references: [recruitmentVendors.id] }),
+  candidate: one(candidates, { fields: [vendorCandidateSubmissions.candidateId], references: [candidates.id] }),
+  jobPosting: one(jobPostings, { fields: [vendorCandidateSubmissions.jobPostingId], references: [jobPostings.id] }),
+}));
+
 export type HeadcountRequestStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
 
 export const headcountRequests = pgTable("headcount_requests", {

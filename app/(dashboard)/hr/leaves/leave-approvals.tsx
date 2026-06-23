@@ -272,9 +272,9 @@ export function LeaveApprovalsContent({
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Tabs defaultValue="all" className="space-y-4">
-              <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
+              <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1 min-w-max">
                 <TabsTrigger
                   value="all"
                   className="rounded-md px-3 py-1.5 text-xs font-medium transition-all"

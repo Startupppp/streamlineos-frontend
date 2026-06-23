@@ -16,6 +16,8 @@ import {
   ChevronUp,
   XCircle,
   Undo2,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { ProgressTimeline } from "./progress-timeline";
 
@@ -43,6 +45,7 @@ interface ResignationCardProps {
   onCeoApprove: (id: number) => void;
   onCeoReject: (id: number) => void;
   onWithdraw: (id: number) => void;
+  onViewLetter?: (id: number) => void;
 }
 
 export function ResignationCard({
@@ -58,6 +61,7 @@ export function ResignationCard({
   onCeoApprove,
   onCeoReject,
   onWithdraw,
+  onViewLetter,
 }: ResignationCardProps) {
   const daysLeft =
     r.lastWorkingDate
@@ -75,6 +79,7 @@ export function ResignationCard({
 
   const handleToggle = useCallback(() => onToggleExpand(r.id), [r.id, onToggleExpand]);
   const handleWithdraw = useCallback(() => onWithdraw(r.id), [r.id, onWithdraw]);
+  const handleViewLetter = useCallback(() => onViewLetter?.(r.id), [r.id, onViewLetter]);
 
   return (
     <Card className="overflow-hidden">
@@ -174,6 +179,32 @@ export function ResignationCard({
             >
               <Undo2 className="h-3 w-3 mr-1" />
               Withdraw
+            </Button>
+          )}
+
+          {r.resignationLetterUrl && (
+            <a
+              href={r.resignationLetterUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title="Download uploaded resignation letter"
+            >
+              <ExternalLink className="h-3 w-3" />
+              <span className="hidden sm:inline">Letter</span>
+            </a>
+          )}
+
+          {onViewLetter && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0"
+              aria-label="View generated resignation letter"
+              onClick={handleViewLetter}
+              title="View generated resignation letter"
+            >
+              <FileText className="h-3.5 w-3.5" />
             </Button>
           )}
 

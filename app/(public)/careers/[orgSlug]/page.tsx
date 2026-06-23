@@ -139,7 +139,7 @@ export default async function CareersPage({ params }: Props) {
               <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
             <p className="font-medium">No open positions right now</p>
-            <p className="text-sm mt-1">We'll post new openings here when they become available.</p>
+            <p className="text-sm mt-1">We&apos;ll post new openings here when they become available.</p>
           </div>
         )}
       </div>

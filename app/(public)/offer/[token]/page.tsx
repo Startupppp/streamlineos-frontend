@@ -226,7 +226,7 @@ export default function OfferAcceptancePage({ params }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>Decline this offer?</AlertDialogTitle>
             <AlertDialogDescription>
-              Please let us know why you're declining (optional).
+              Please let us know why you&apos;re declining (optional).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea

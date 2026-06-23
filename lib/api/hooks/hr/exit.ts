@@ -117,6 +117,7 @@ export function useCreateResignation() {
       noticePeriodDays?: number;
       willingForExitInterview?: boolean;
       companyFeedback?: string;
+      resignationLetterUrl?: string;
     }) => apiClient.post<Resignation>("/hr/exit", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });

@@ -17,6 +17,7 @@ const createSchema = z.object({
   noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
   willingForExitInterview: z.boolean().optional().default(true),
   companyFeedback: z.string().max(2000).optional(),
+  resignationLetterUrl: z.string().url("Must be a valid URL").optional(),
 });
 
 export async function GET() {
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
       noticePeriodDays: body.noticePeriodDays,
       willingForExitInterview: body.willingForExitInterview,
       companyFeedback: body.companyFeedback || null,
+      resignationLetterUrl: body.resignationLetterUrl ?? null,
       status: "PENDING_HR",
     }).returning();
 
