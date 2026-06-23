@@ -49,6 +49,9 @@ export async function POST(req: NextRequest) {
     }
 
     const scheduledDate = new Date(body.scheduledAt);
+    if (scheduledDate <= new Date()) {
+      return err("Interview must be scheduled for a future date and time.", 400);
+    }
     const endDate = new Date(scheduledDate.getTime() + body.durationMinutes * 60 * 1000);
 
     const typeMap: Record<string, "VIDEO" | "PHONE" | "ONSITE" | "TECHNICAL" | "HR" | "FINAL"> = {

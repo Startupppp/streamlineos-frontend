@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { jobPostings } from "@/lib/db/schema";
+import { jobPostings, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 type RouteParams = { params: Promise<{ jobId: string }> };
@@ -18,16 +18,22 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const jobId = Number(id);
     if (!Number.isFinite(jobId)) return err("Invalid job ID", 400);
 
-    const job = await db.query.jobPostings.findFirst({
-      where: and(eq(jobPostings.id, jobId), eq(jobPostings.orgId, session.orgId)),
-      columns: { id: true, title: true, location: true, type: true },
-    });
+    const [job, org] = await Promise.all([
+      db.query.jobPostings.findFirst({
+        where: and(eq(jobPostings.id, jobId), eq(jobPostings.orgId, session.orgId)),
+        columns: { id: true, title: true, location: true, type: true },
+      }),
+      db.query.organizations.findFirst({
+        where: eq(organizations.id, session.orgId),
+        columns: { slug: true },
+      }),
+    ]);
     if (!job) return err("Job posting not found", 404);
+    if (!org?.slug) return err("Organization not configured", 500);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.streamlineos.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "https://app.streamlineos.com";
 
-    const jobSlug = job.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const baseJobUrl = `${appUrl}/careers/${jobId}/${jobSlug}`;
+    const baseJobUrl = `${appUrl}/careers/${org.slug}/jobs/${jobId}/apply`;
 
     const shareLinks = PLATFORMS.map(({ key, name, baseUrl }) => {
       const utmUrl = `${baseJobUrl}?utm_source=${key.toLowerCase()}&utm_medium=social&utm_campaign=job_${jobId}`;
@@ -43,6 +49,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       title: job.title,
       shareLinks,
       directLink: baseJobUrl,
+      careersPageLink: `${appUrl}/careers/${org.slug}`,
     });
   });
 }

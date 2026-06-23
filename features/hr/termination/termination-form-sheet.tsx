@@ -277,7 +277,7 @@ export function TerminationFormSheet({
             type="number"
             min="0"
             max="9999999"
-            step="1000"
+            step="0.01"
             placeholder="0"
             value={severanceAmount}
             onChange={onSeveranceAmountChange}
