@@ -16,7 +16,6 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, PartyPopper, Calendar, MapPin, Users, UserPlus } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -29,7 +28,6 @@ interface TeamEvent {
 const eventKeys = { all: [...queryKeys.hr.all, "team-events"] as const, list: () => [...eventKeys.all, "list"] as const };
 
 export default function TeamEventsPage() {
-  const { data: session } = useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
@@ -57,19 +55,23 @@ export default function TeamEventsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const resetForm = useCallback(() => { setTitle(""); setDescription(""); setLocation(""); setStartDate(""); setEndDate(""); }, []);
+
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Event title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (!startDate) { toast.error("Event date is required"); return; }
+    if (startDate && new Date(startDate) <= new Date()) { toast.error("Event date must be in the future"); return; }
+    if (endDate && startDate && endDate < startDate) { toast.error("End date must be after start date"); return; }
     create.mutate(
-      { title: title.trim(), description: description || undefined, location: location || undefined, startDate: startDate || undefined, endDate: endDate || undefined },
+      { title: trimmedTitle, description: description.trim() || undefined, location: location.trim() || undefined, startDate, endDate: endDate || undefined },
       {
-        onSuccess: () => {
-          toast.success("Event created"); setSheetOpen(false);
-          setTitle(""); setDescription(""); setLocation(""); setStartDate(""); setEndDate("");
-        },
+        onSuccess: () => { toast.success("Event created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, description, location, startDate, endDate, create]);
+  }, [title, description, location, startDate, endDate, create, resetForm]);
 
   const handleRsvp = useCallback((id: number) => {
     rsvp.mutate(id, {
@@ -125,27 +127,27 @@ export default function TeamEventsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Event" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Event" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Event Title</label>
-          <Input placeholder="e.g., Team Lunch" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <label className="text-sm font-medium">Event Title <span className="text-destructive">*</span></label>
+          <Input placeholder="e.g., Team Lunch" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Event details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea placeholder="Event details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={2000} className="resize-none w-full" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Location</label>
-          <Input placeholder="e.g., Conference Room A" value={location} onChange={(e) => setLocation(e.target.value)} />
+          <Input placeholder="e.g., Conference Room A" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Start Date</label>
-            <Input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
+            <Input type="datetime-local" min={new Date().toISOString().slice(0, 16)} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date</label>
-            <Input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input type="datetime-local" min={startDate || new Date().toISOString().slice(0, 16)} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
         </div>
       </HrSheet>

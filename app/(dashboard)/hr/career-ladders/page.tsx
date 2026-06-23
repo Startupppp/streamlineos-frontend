@@ -17,7 +17,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowUpRight, ChevronsUpDown, Check } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
@@ -32,7 +31,6 @@ interface CareerLadder {
 const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: () => [...clKeys.all, "list"] as const };
 
 export default function CareerLaddersPage() {
-  useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");

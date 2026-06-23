@@ -13,9 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, GraduationCap, BookOpen, Clock, BarChart3 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -28,7 +28,6 @@ interface LearningPath {
 const lpKeys = { all: [...queryKeys.hr.all, "learning-paths"] as const, list: () => [...lpKeys.all, "list"] as const };
 
 export default function LearningPathsPage() {
-  const { data: session } = useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
@@ -55,19 +54,25 @@ export default function LearningPathsPage() {
   const [level, setLevel] = useState("");
   const [hours, setHours] = useState("");
 
+  const resetForm = useCallback(() => { setTitle(""); setDescription(""); setLevel(""); setHours(""); }, []);
+
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
+    const numHours = Number(hours);
+    if (hours && (!Number.isInteger(numHours) || numHours < 1)) {
+      toast.error("Estimated hours must be a positive whole number"); return;
+    }
     create.mutate(
-      { title: title.trim(), description: description || undefined, level: level || undefined, estimatedHours: Number(hours) || undefined },
+      { title: trimmedTitle, description: description.trim() || undefined, level: level || undefined, estimatedHours: numHours || undefined },
       {
-        onSuccess: () => {
-          toast.success("Learning path created"); setSheetOpen(false);
-          setTitle(""); setDescription(""); setLevel(""); setHours("");
-        },
+        onSuccess: () => { toast.success("Learning path created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, description, level, hours, create]);
+  }, [title, description, level, hours, create, resetForm]);
 
   const handleEnroll = useCallback((id: number) => {
     enroll.mutate(id, {
@@ -125,23 +130,30 @@ export default function LearningPathsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Learning Path" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Learning Path" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., Frontend Engineering Track" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <label className="text-sm font-medium">Title <span className="text-destructive">*</span></label>
+          <Input placeholder="e.g., Frontend Engineering Track" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Path overview..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea placeholder="Path overview..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={1000} className="resize-none w-full" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Level</label>
-            <Input placeholder="e.g., Beginner" value={level} onChange={(e) => setLevel(e.target.value)} />
+            <Select value={level} onValueChange={setLevel}>
+              <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectItem value="Beginner">Beginner</SelectItem>
+                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                <SelectItem value="Advanced">Advanced</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Estimated Hours</label>
-            <Input type="number" placeholder="40" value={hours} onChange={(e) => setHours(e.target.value)} />
+            <label className="text-sm font-medium">Est. Hours</label>
+            <Input type="number" min={1} step={1} placeholder="40" value={hours} onChange={(e) => setHours(e.target.value)} />
           </div>
         </div>
       </HrSheet>

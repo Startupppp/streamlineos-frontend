@@ -124,23 +124,23 @@ export default function AssessmentsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Assessment" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Assessment" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., JavaScript Proficiency" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <label className="text-sm font-medium">Title <span className="text-destructive">*</span></label>
+          <Input placeholder="e.g., JavaScript Proficiency" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Assessment details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea placeholder="Assessment details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={2000} className="resize-none w-full" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Category</label>
+            <label className="text-sm font-medium">Category / Skill</label>
             <Input placeholder="e.g., Technical" value={category} onChange={(e) => setCategory(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Duration (min)</label>
-            <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+            <Input type="number" min={1} max={480} step={1} value={duration} onChange={(e) => setDuration(e.target.value)} />
           </div>
         </div>
       </HrSheet>
