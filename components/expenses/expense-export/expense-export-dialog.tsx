@@ -217,9 +217,26 @@ export function ExpenseExportDialog({
     }
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setFormat("xlsx");
+      setIncludeHeader(true);
+      setIncludeTotals(true);
+      setExportComplete(false);
+      setDateFrom(filters.startDate || "");
+      setDateTo(filters.endDate || "");
+      setExportCategory("all");
+      setExportPayment("all");
+      setExportStatus(filters.status && filters.status !== "all" ? String(filters.status) : "all");
+      setExportUserId(filters.userId || "all");
+      setEmailTarget("BOTH");
+    }
+    setOpen(isOpen);
+  };
+
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
           {trigger || (
             <Button variant="outline" className="gap-2">
