@@ -12,7 +12,7 @@ const chatRequestSchema = z.object({
   messages: z
     .array(
       z.object({
-        role: z.enum(["user", "assistant", "system"]),
+        role: z.enum(["user", "assistant"]),
         content: z.string().max(10000),
       })
     )

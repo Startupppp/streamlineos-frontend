@@ -106,7 +106,7 @@ export const CACHE_KEYS = {
   quotasList: (orgId: string) => `sales:quotas:${orgId}`,
   commissionsList: (orgId: string) => `sales:commissions:${orgId}`,
 
-  searchResults: (orgId: string, hash: string) => `search:${orgId}:${hash}`,
+  searchResults: (orgId: string, userId: string, hash: string) => `search:${orgId}:${userId}:${hash}`,
 
   leadBoard: (orgId: string, hash: string) => `leads:board:${orgId}:${hash}`,
   leadStats: (orgId: string, hash: string) => `leads:stats:${orgId}:${hash}`,

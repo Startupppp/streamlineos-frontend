@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const { q, limit } = parseQuery(req, querySchema);
     const queryHash = Buffer.from(q + (limit ?? "")).toString("base64url").slice(0, 32);
     const data = await cached(
-      CACHE_KEYS.searchResults(session.orgId, queryHash),
+      CACHE_KEYS.searchResults(session.orgId, session.user.id, queryHash),
       () => executeSearch(session.orgId, q, limit),
       { ttlSeconds: CACHE_TTL.SHORT },
     );
