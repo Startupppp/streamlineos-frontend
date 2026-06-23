@@ -244,3 +244,24 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   index("idx_ai_usage_org_created").on(table.orgId, table.createdAt),
   index("idx_ai_usage_user").on(table.userId),
 ]);
+
+export type CalendarProvider = "GOOGLE" | "MICROSOFT";
+
+export const userCalendarConnections = pgTable("user_calendar_connections", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  provider: text("provider").$type<CalendarProvider>().notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at"),
+  providerEmail: text("provider_email"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  unique("uq_calendar_connections_user_provider").on(table.userId, table.provider),
+  index("idx_calendar_connections_user").on(table.userId),
+]);
+
+export const userCalendarConnectionsRelations = relations(userCalendarConnections, ({ one }) => ({
+  user: one(users, { fields: [userCalendarConnections.userId], references: [users.id] }),
+}));

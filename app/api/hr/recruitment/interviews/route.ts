@@ -77,6 +77,24 @@ export async function POST(req: NextRequest) {
 
     await invalidateCachePattern(`hr:interviews:list:${session.orgId}:*`);
 
+    void import("@/lib/services/hr/calendar").then(async ({ createCalendarEvent }) => {
+      if (!body.interviewerId) return;
+      const cand = await db.query.candidates.findFirst({
+        where: and(eq(candidates.id, interview.candidateId), eq(candidates.orgId, session.orgId)),
+        columns: { firstName: true, lastName: true, email: true },
+      });
+      const endTime = new Date(interview.scheduledAt.getTime() + (interview.duration ?? 60) * 60_000);
+      await createCalendarEvent(body.interviewerId, {
+        summary: `Interview: ${cand ? `${cand.firstName} ${cand.lastName}` : "Candidate"}`,
+        description: body.notes,
+        location: body.location,
+        startDateTime: interview.scheduledAt.toISOString(),
+        endDateTime: endTime.toISOString(),
+        attendeeEmails: cand?.email ? [cand.email] : [],
+        conferenceLink: body.meetingLink,
+      }).catch(() => undefined);
+    });
+
     void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
       const interviewCandidate = await db.query.candidates.findFirst({
         where: and(eq(candidates.id, interview.candidateId), eq(candidates.orgId, session.orgId)),
