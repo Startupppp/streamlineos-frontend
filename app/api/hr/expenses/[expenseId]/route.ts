@@ -41,7 +41,6 @@ export async function PATCH(
 
     const rawBody = await req.json() as Record<string, unknown>;
 
-    // Route to details update if no status field
     if (!rawBody.status) {
       const body = updateDetailsSchema.safeParse(rawBody);
       if (!body.success) return err("Invalid update data.", 400);

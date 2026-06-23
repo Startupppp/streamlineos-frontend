@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, passwordHistory } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -16,11 +16,7 @@ const schema = z.object({
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as unknown;
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) return err("Invalid input", 400);
-
-    const { currentPassword, newPassword } = parsed.data;
+    const { currentPassword, newPassword } = await parseBody(req, schema);
 
     const user = await db.query.users.findFirst({
       where: eq(users.id, session.user.id),

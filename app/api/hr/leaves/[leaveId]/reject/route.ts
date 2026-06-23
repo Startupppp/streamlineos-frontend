@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveTypes, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -29,17 +29,7 @@ export async function PUT(
       return err("Only HR, Admin, or CEO can reject leave requests.", 403);
     }
 
-    let reason: string;
-    let comment: string | undefined;
-    try {
-      const raw = await req.json() as unknown;
-      const parsed = bodySchema.safeParse(raw);
-      if (!parsed.success) return err("Invalid input", 400);
-      reason = parsed.data.reason;
-      comment = parsed.data.comment;
-    } catch {
-      return err("Invalid request body.", 400);
-    }
+    const { reason, comment } = await parseBody(req, bodySchema);
 
     const existing = await db.query.leaveRequests.findFirst({
       where: and(

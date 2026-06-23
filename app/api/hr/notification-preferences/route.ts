@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { notificationPreferences } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -47,11 +47,7 @@ const updateSchema = z.object({
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    const raw = await req.json() as unknown;
-    const parsed = updateSchema.safeParse(raw);
-    if (!parsed.success) return err("Invalid input", 400);
-
-    const data = parsed.data;
+    const data = await parseBody(req, updateSchema);
 
     const existing = await db.query.notificationPreferences.findFirst({
       where: eq(notificationPreferences.userId, session.user.id),
