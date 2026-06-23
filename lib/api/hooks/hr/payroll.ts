@@ -71,10 +71,15 @@ export function useHrEmployeePayslips(params?: GetEmployeePayslipsInput) {
 
 export function useHrAllPayrolls(params: GetAllPayrollsInput) {
   return useQuery({
-    queryKey: queryKeys.hr.payrolls({ month: params.month }),
-    queryFn: () =>
-      apiClient.get<PayrollWithUser[]>("/hr/payrolls/all", params as unknown as Record<string, unknown>),
+    queryKey: queryKeys.hr.payrolls(params),
+    queryFn: () => {
+      const qs: Record<string, string> = {};
+      if (params.month) qs.month = params.month;
+      if (params.year) qs.year = params.year;
+      return apiClient.get<PayrollWithUser[]>("/hr/payrolls/all", qs);
+    },
     staleTime: 2 * 60_000,
+    enabled: !!(params.month || params.year),
   });
 }
 

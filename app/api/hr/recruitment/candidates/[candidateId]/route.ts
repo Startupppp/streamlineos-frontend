@@ -1,7 +1,7 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { candidates, candidateSlaTracking, candidateApplications, interviews, organizations } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { getCandidateRejectionEmail } from "@/lib/email-templates/hr";
 import { sendEmail } from "@/lib/email";
@@ -82,6 +82,20 @@ export async function PATCH(
     if (!existing) return err("Candidate not found.", 404);
 
     const body = await parseBody(req, updateCandidateSchema);
+
+    if (body.email && body.email !== existing.email) {
+      const emailConflict = await db.query.candidates.findFirst({
+        where: and(
+          eq(candidates.orgId, session.orgId),
+          ilike(candidates.email, body.email.trim()),
+          ne(candidates.id, candidateId),
+        ),
+        columns: { id: true },
+      });
+      if (emailConflict) {
+        return err("A candidate with this email already exists in your organization.", 409);
+      }
+    }
 
     await db
       .update(candidates)

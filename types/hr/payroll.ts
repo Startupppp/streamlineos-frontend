@@ -98,6 +98,8 @@ export interface EmployeePayslip {
 }
 
 export interface PayrollWithUser extends Payroll {
+  generatedByName?: string | null;
+  approvedByName?: string | null;
   user?: {
     firstName: string | null;
     lastName: string | null;
@@ -190,7 +192,8 @@ export interface GetEmployeePayslipsInput {
 }
 
 export interface GetAllPayrollsInput {
-  month: string;
+  month?: string;
+  year?: string;
 }
 
 export interface GenerateEmployeePayslipInput {

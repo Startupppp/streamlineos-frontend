@@ -8,7 +8,8 @@ import {
   users,
 } from "@/lib/db/schema";
 import { incentives, incentiveConfig } from "@/lib/db/schema/crm";
-import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql, like } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type {
   Payroll,
   PayrollWithUser,
@@ -101,7 +102,20 @@ export async function getExpenses(
   };
 }
 
-export async function getAllPayrolls(orgId: string, month: string): Promise<PayrollWithUser[]> {
+export async function getAllPayrolls(
+  orgId: string,
+  filter: { month?: string; year?: string }
+): Promise<PayrollWithUser[]> {
+  const generatorUser = alias(users, "generator_user");
+  const approverUser = alias(users, "approver_user");
+
+  const conditions = [eq(payrolls.orgId, orgId)];
+  if (filter.month) {
+    conditions.push(eq(payrolls.month, filter.month));
+  } else if (filter.year) {
+    conditions.push(like(payrolls.month, `${filter.year}-%`));
+  }
+
   const rows = await db
     .select({
       id: payrolls.id,
@@ -127,10 +141,14 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
       userLastName: users.lastName,
       userDesignation: users.designation,
       userMonthlySalary: users.monthlySalary,
+      generatedByName: generatorUser.firstName,
+      approvedByName: approverUser.firstName,
     })
     .from(payrolls)
     .innerJoin(users, eq(payrolls.userId, users.id))
-    .where(and(eq(payrolls.orgId, orgId), eq(payrolls.month, month)))
+    .leftJoin(generatorUser, eq(payrolls.generatedBy, generatorUser.id))
+    .leftJoin(approverUser, eq(payrolls.approvedBy, approverUser.id))
+    .where(and(...conditions))
     .orderBy(desc(payrolls.createdAt));
 
   return rows.map((r) => ({
@@ -153,6 +171,8 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
     overtimeAmount: r.overtimeAmount,
     payslipUrl: r.payslipUrl,
     createdAt: r.createdAt,
+    generatedByName: r.generatedByName,
+    approvedByName: r.approvedByName,
     user: {
       firstName: r.userFirstName,
       lastName: r.userLastName,

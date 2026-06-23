@@ -3,7 +3,7 @@
 import { useMemo, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { format, subMonths } from "date-fns";
+import { format, subMonths, getYear } from "date-fns";
 import { toast } from "sonner";
 import { Users, Loader2, Plus } from "lucide-react";
 import {
@@ -46,24 +46,34 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
+const CURRENT_YEAR = getYear(new Date());
+const YEARS = Array.from({ length: 5 }, (_, i) => String(CURRENT_YEAR - i));
+
 export default function PayrollPage() {
   const qc = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedMonth =
-    searchParams.get("month") || format(new Date(), "yyyy-MM");
+  const selectedMonth = searchParams.get("month") ?? undefined;
+  const selectedYear = searchParams.get("year") ?? undefined;
+  const viewMode = searchParams.get("view") as "month" | "year" | null;
+  const activeView = viewMode ?? "month";
+  const effectiveMonth = activeView === "month" ? (selectedMonth ?? format(new Date(), "yyyy-MM")) : undefined;
+  const effectiveYear = activeView === "year" ? (selectedYear ?? String(CURRENT_YEAR)) : undefined;
 
-  const setSelectedMonth = useCallback(
-    (month: string) => {
+  const setFilter = useCallback(
+    (update: { month?: string; year?: string; view?: string }) => {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("month", month);
+      if (update.view !== undefined) params.set("view", update.view);
+      if (update.month !== undefined) { params.set("month", update.month); params.delete("year"); }
+      if (update.year !== undefined) { params.set("year", update.year); params.delete("month"); }
       router.replace(`?${params.toString()}`, { scroll: false });
     },
     [searchParams, router],
   );
 
   const { data: allPayrolls, isLoading } = useHrAllPayrolls({
-    month: selectedMonth,
+    month: effectiveMonth,
+    year: effectiveYear,
   });
   const { data: employeesRaw } = useHrEmployees();
 
@@ -84,14 +94,13 @@ export default function PayrollPage() {
   const markPaidMutation = useMarkPayrollPaid();
 
   const invalidate = useCallback(() => {
-    qc.invalidateQueries({
-      queryKey: queryKeys.hr.payrolls({ month: selectedMonth }),
-    });
-  }, [qc, selectedMonth]);
+    qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() });
+  }, [qc]);
 
   const handleGenerateAll = useCallback(() => {
+    const month = effectiveMonth ?? format(new Date(), "yyyy-MM");
     generatePayrollMutation.mutate(
-      { month: selectedMonth },
+      { month },
       {
         onSuccess: () => {
           invalidate();
@@ -200,18 +209,44 @@ export default function PayrollPage() {
       subtitle="Generate and manage employee payrolls"
       actions={
         <div className="flex gap-2 flex-wrap">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[160px] sm:w-[180px]">
+          <Select
+            value={activeView}
+            onValueChange={(v) => setFilter({ view: v })}
+          >
+            <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              {MONTHS.map((month) => (
-                <SelectItem key={month.value} value={month.value}>
-                  {month.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="month">By Month</SelectItem>
+              <SelectItem value="year">By Year</SelectItem>
             </SelectContent>
           </Select>
+
+          {activeView === "month" ? (
+            <Select value={effectiveMonth} onValueChange={(m) => setFilter({ month: m, view: "month" })}>
+              <SelectTrigger className="w-[160px] sm:w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                {MONTHS.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Select value={effectiveYear} onValueChange={(y) => setFilter({ year: y, view: "year" })}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                {YEARS.map((y) => (
+                  <SelectItem key={y} value={y}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <Button variant="outline" onClick={() => form.setOpen(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
@@ -281,15 +316,21 @@ export default function PayrollPage() {
           <EmptyState
             illustration={<EmptyExpensesIllustration className="h-40 w-40" />}
             title="No payroll records yet"
-            description={`No payroll generated for ${format(
-              new Date(selectedMonth + "-01"),
-              "MMMM yyyy",
-            )}. Generate payroll for all employees or create one for an individual.`}
+            description={
+              activeView === "month"
+                ? `No payroll generated for ${format(new Date((effectiveMonth ?? format(new Date(), "yyyy-MM")) + "-01"), "MMMM yyyy")}. Generate payroll for all employees or create one for an individual.`
+                : `No payroll records found for ${effectiveYear}.`
+            }
           />
         ) : (
           <PayrollTable
             payrolls={allPayrolls ?? []}
-            selectedMonth={selectedMonth}
+            title={
+              activeView === "year"
+                ? `Payroll — ${effectiveYear}`
+                : `Payroll for ${format(new Date((effectiveMonth ?? format(new Date(), "yyyy-MM")) + "-01"), "MMMM yyyy")}`
+            }
+            groupByEmployee={activeView === "year"}
             onApprove={handleApprovePayroll}
             onMarkPaid={handleMarkPaid}
             isApprovePending={approvePayrollMutation.isPending}

@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -43,6 +44,10 @@ const addCandidateSchema = z.object({
     .optional()
     .or(z.literal("")),
   source: z.string(),
+  currentRole: z.string().max(100).optional().or(z.literal("")),
+  currentCompany: z.string().max(100).optional().or(z.literal("")),
+  linkedinUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
 });
 
 type AddCandidateForm = z.infer<typeof addCandidateSchema>;
@@ -53,6 +58,10 @@ const DEFAULT_VALUES: AddCandidateForm = {
   email: "",
   phone: "",
   source: "DIRECT",
+  currentRole: "",
+  currentCompany: "",
+  linkedinUrl: "",
+  notes: "",
 };
 
 interface AddCandidateSheetProps {
@@ -72,6 +81,10 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
           email: data.email.trim(),
           phone: data.phone?.trim() || undefined,
           source: data.source,
+          currentRole: data.currentRole?.trim() || undefined,
+          currentCompany: data.currentCompany?.trim() || undefined,
+          linkedinUrl: data.linkedinUrl?.trim() || undefined,
+          notes: data.notes?.trim() || undefined,
         },
         {
           onSuccess: () => {
@@ -106,7 +119,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>First Name *</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -119,7 +132,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>Last Name *</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -134,7 +147,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email *</FormLabel>
                 <FormControl>
                   <Input {...field} type="email" />
                 </FormControl>
@@ -184,6 +197,69 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
               )}
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="currentRole"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Role</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Software Engineer" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="currentCompany"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Company</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Acme Corp" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="linkedinUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>LinkedIn URL</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="https://linkedin.com/in/..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    rows={3}
+                    maxLength={2000}
+                    className="resize-none w-full"
+                    placeholder="Internal notes about this candidate..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       )}
     </EntityFormSheet>

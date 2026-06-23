@@ -1,8 +1,8 @@
-import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -56,6 +56,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createCandidateSchema);
+
+    const existing = await db.query.candidates.findFirst({
+      where: and(
+        eq(candidates.orgId, session.orgId),
+        ilike(candidates.email, body.email.trim()),
+      ),
+      columns: { id: true },
+    });
+    if (existing) {
+      return err("A candidate with this email already exists in your organization.", 409);
+    }
 
     const [candidate] = await db
       .insert(candidates)
