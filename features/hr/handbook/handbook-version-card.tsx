@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { format } from "date-fns";
-import { FileText, Eye, Trash2, ExternalLink } from "lucide-react";
+import { FileText, Eye, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ interface HandbookVersionCardProps {
   version: HandbookVersion;
   onPublish: (id: number) => void;
   onUnpublish: (id: number) => void;
+  onEdit: (version: HandbookVersion) => void;
   onDelete: (id: number) => void;
   isUpdating: boolean;
 }
@@ -30,6 +31,7 @@ export function HandbookVersionCard({
   version: v,
   onPublish,
   onUnpublish,
+  onEdit,
   onDelete,
   isUpdating,
 }: HandbookVersionCardProps) {
@@ -37,6 +39,7 @@ export function HandbookVersionCard({
 
   const handlePublish = useCallback(() => onPublish(v.id), [v.id, onPublish]);
   const handleUnpublish = useCallback(() => onUnpublish(v.id), [v.id, onUnpublish]);
+  const handleEdit = useCallback(() => onEdit(v), [v, onEdit]);
   const handleDelete = useCallback(() => onDelete(v.id), [v.id, onDelete]);
   const handleDocLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
@@ -75,6 +78,17 @@ export function HandbookVersionCard({
           </div>
         </div>
         <div className="flex gap-1.5 shrink-0">
+          {!isPublished && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0"
+              onClick={handleEdit}
+              disabled={isUpdating}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+          )}
           {!isPublished && (
             <Button
               size="sm"

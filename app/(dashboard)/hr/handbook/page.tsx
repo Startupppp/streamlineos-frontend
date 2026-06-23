@@ -76,8 +76,14 @@ function HandbookContent() {
   });
 
   const update = useMutation({
-    mutationFn: ({ id, ...data }: { id: number; status?: "PUBLISHED" | "DRAFT" }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
+    mutationFn: ({ id, ...data }: {
+      id: number;
+      status?: "PUBLISHED" | "DRAFT";
+      title?: string;
+      version?: string;
+      documentUrl?: string;
+      changelog?: string;
+    }) => apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: hbKeys.list() }),
   });
 
@@ -88,6 +94,7 @@ function HandbookContent() {
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editVersion, setEditVersion] = useState<HandbookVersion | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [version, setVersion] = useState("");
   const [title, setTitle] = useState("");
@@ -104,12 +111,13 @@ function HandbookContent() {
     setDocumentUrl("");
     setDocumentInputMode("url");
     setSelectedFile(null);
+    setEditVersion(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }, []);
 
-  const handleCreate = useCallback(async () => {
+  const handleSave = useCallback(async () => {
     const trimmedVersion = version.trim();
     if (!trimmedVersion) { toast.error("Version is required"); return; }
     if (trimmedVersion.length > 20) { toast.error("Version must be at most 20 characters"); return; }
@@ -173,6 +181,27 @@ function HandbookContent() {
       }
     }
 
+    if (editVersion) {
+      update.mutate(
+        {
+          id: editVersion.id,
+          version: trimmedVersion,
+          title: trimmedTitle,
+          changelog: changelog.trim() || undefined,
+          documentUrl: resolvedDocumentUrl ?? "",
+        },
+        {
+          onSuccess: () => {
+            toast.success("Handbook version updated");
+            setSheetOpen(false);
+            resetForm();
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+      return;
+    }
+
     create.mutate(
       {
         version: trimmedVersion,
@@ -189,7 +218,7 @@ function HandbookContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [version, title, changelog, documentUrl, documentInputMode, selectedFile, create, uploadDoc, resetForm]);
+  }, [version, title, changelog, documentUrl, documentInputMode, selectedFile, editVersion, create, update, uploadDoc, resetForm]);
 
   const handleVersionChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setVersion(e.target.value),
@@ -287,9 +316,21 @@ function HandbookContent() {
     if (!open) setDeleteId(null);
   }, []);
 
+  const handleOpenEdit = useCallback((v: HandbookVersion) => {
+    setEditVersion(v);
+    setVersion(v.version);
+    setTitle(v.title);
+    setChangelog(v.changelog ?? "");
+    setDocumentUrl(v.documentUrl ?? "");
+    setDocumentInputMode("url");
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setSheetOpen(true);
+  }, []);
+
   const handleNewVersionClick = useCallback(() => setSheetOpen(true), []);
 
-  const isSubmitting = create.isPending || uploadDoc.isPending;
+  const isSubmitting = create.isPending || update.isPending || uploadDoc.isPending;
 
   if (isLoading) {
     return (
@@ -330,6 +371,7 @@ function HandbookContent() {
               version={v}
               onPublish={handlePublish}
               onUnpublish={handleUnpublish}
+              onEdit={handleOpenEdit}
               onDelete={handleOpenDeleteDialog}
               isUpdating={update.isPending}
             />
@@ -340,9 +382,9 @@ function HandbookContent() {
       <HrSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
-        title="New Handbook Version"
-        onSubmit={handleCreate}
-        submitLabel="Create"
+        title={editVersion ? "Edit Handbook Version" : "New Handbook Version"}
+        onSubmit={handleSave}
+        submitLabel={editVersion ? "Save Changes" : "Create"}
         isPending={isSubmitting}
       >
         <HandbookCreateForm

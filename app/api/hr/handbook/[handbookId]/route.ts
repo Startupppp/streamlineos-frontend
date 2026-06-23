@@ -9,6 +9,9 @@ type RouteParams = { params: Promise<{ handbookId: string }> };
 
 const updateSchema = z.object({
   status: z.enum(["PUBLISHED", "DRAFT"]).optional(),
+  title: z.string().min(2).max(100).optional(),
+  version: z.string().min(1).max(20).optional(),
+  documentUrl: z.string().url().optional().or(z.literal("")),
   changelog: z.string().max(2000).optional(),
 });
 
@@ -26,7 +29,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const body = updateSchema.parse(await req.json());
 
-    const updateData: { publishedAt?: Date | null; publishedBy?: string | null; changelog?: string } = {};
+    const updateData: {
+      publishedAt?: Date | null;
+      publishedBy?: string | null;
+      changelog?: string;
+      title?: string;
+      version?: string;
+      documentUrl?: string | null;
+    } = {};
 
     if (body.status === "PUBLISHED") {
       updateData.publishedAt = new Date();
@@ -34,6 +44,12 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     } else if (body.status === "DRAFT") {
       updateData.publishedAt = null;
       updateData.publishedBy = null;
+    }
+
+    if (!existing.publishedAt) {
+      if (body.title !== undefined) updateData.title = body.title;
+      if (body.version !== undefined) updateData.version = body.version;
+      if (body.documentUrl !== undefined) updateData.documentUrl = body.documentUrl || null;
     }
 
     if (body.changelog !== undefined) {
