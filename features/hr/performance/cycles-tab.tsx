@@ -160,7 +160,7 @@ export function CyclesTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={handleCreate} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setEditCycle(null); setName(""); setType("QUARTERLY"); setPeriodStart(""); setPeriodEnd(""); setDeadline(""); } setSheetOpen(open); }} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={handleCreate} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Cycle Name</label>
           <Input placeholder="e.g., Q2 2026 Review" value={name} onChange={handleNameChange} />

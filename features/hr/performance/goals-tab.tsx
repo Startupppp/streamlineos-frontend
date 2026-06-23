@@ -71,7 +71,7 @@ export function GoalsTab() {
     const trimmedDesc = description.trim();
     if (!editGoal && !userId) { toast.error("Please select an employee"); return; }
     if (!trimmedTitle) { toast.error("Goal title is required"); return; }
-    if (trimmedTitle.length < 3) { toast.error("Goal title must be at least 3 characters"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Goal title must be at least 2 characters"); return; }
     if (trimmedTitle.length > 100) { toast.error("Goal title must be at most 100 characters"); return; }
     if (!/[a-zA-Z0-9]/.test(trimmedTitle)) { toast.error("Goal title must contain at least one letter or number"); return; }
     if (/\s{2,}/.test(trimmedTitle)) { toast.error("Goal title cannot have consecutive spaces"); return; }
