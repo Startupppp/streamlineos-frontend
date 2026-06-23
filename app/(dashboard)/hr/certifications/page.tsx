@@ -41,6 +41,9 @@ export default function CertificationsPage() {
     if (issueDate && expiryDate && expiryDate < issueDate) {
       toast.error("Expiry date must be after the issue date"); return;
     }
+    const trimmedCredentialId = credentialId.trim();
+    if (!trimmedCredentialId) { toast.error("Credential ID is required"); return; }
+    if (trimmedCredentialId.length > 100) { toast.error("Credential ID must be at most 100 characters"); return; }
     if (credentialUrl && credentialUrl.trim() && !credentialUrl.trim().startsWith("http")) {
       toast.error("Credential URL must be a valid URL starting with http"); return;
     }
@@ -48,7 +51,7 @@ export default function CertificationsPage() {
       {
         name: trimmedName, issuingOrganization: trimmedOrg,
         issueDate: issueDate || undefined, expiryDate: expiryDate || undefined,
-        credentialId: credentialId.trim() || undefined, credentialUrl: credentialUrl.trim() || undefined,
+        credentialId: trimmedCredentialId, credentialUrl: credentialUrl.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -137,7 +140,7 @@ export default function CertificationsPage() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Credential ID</label>
+          <label className="text-sm font-medium">Credential ID <span className="text-destructive">*</span></label>
           <Input placeholder="Certificate ID" value={credentialId} onChange={(e) => setCredentialId(e.target.value)} />
         </div>
         <div className="space-y-1.5">

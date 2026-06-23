@@ -17,7 +17,7 @@ const createSchema = z.object({
   issuingOrganization: z.string().trim().min(1, "Issuing organization is required").max(200),
   issueDate: z.string().optional(),
   expiryDate: z.string().optional(),
-  credentialId: z.string().max(100).optional(),
+  credentialId: z.string().min(1, "Credential ID is required").max(100),
   credentialUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
   documentUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
 }).refine(
