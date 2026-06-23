@@ -1,4 +1,4 @@
-import { withAbility, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { fnfSettlements } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -19,7 +19,7 @@ export async function PATCH(
     const fnfId = Number(id);
     if (isNaN(fnfId)) return err("Invalid F&F settlement ID.", 400);
 
-    const body = patchSchema.parse(await req.json());
+    const body = await parseBody(req, patchSchema);
 
     const [existing] = await db
       .select()

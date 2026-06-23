@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reimbursements, users } from "@/lib/db/schema";
@@ -27,8 +27,9 @@ export async function PATCH(
       where: and(eq(reimbursements.id, reimbursementId), eq(reimbursements.orgId, session.orgId)),
     });
     if (!existing) return err("Not found.", 404);
+    if (existing.userId === session.user.id) return err("You cannot approve or reject your own reimbursement.", 403);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(reimbursements).set({
       status: body.status,
       ...(body.status === "APPROVED" && { approvedBy: session.user.id, approvedAt: new Date() }),

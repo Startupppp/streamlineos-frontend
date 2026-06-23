@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { backgroundVerifications } from "@/lib/db/schema";
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can initiate verifications.", 403);
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     const existing = await db.query.backgroundVerifications.findFirst({
       where: and(
@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can update verifications.", 403);
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
 
     const existing = await db.query.backgroundVerifications.findFirst({
       where: and(eq(backgroundVerifications.id, body.id), eq(backgroundVerifications.orgId, session.orgId)),

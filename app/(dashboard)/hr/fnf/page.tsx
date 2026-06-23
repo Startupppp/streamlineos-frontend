@@ -41,8 +41,9 @@ interface FnfSettlement {
 const fnfKeys = { all: [...queryKeys.hr.all, "fnf"] as const, list: () => [...fnfKeys.all, "list"] as const };
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" {
-  if (s === "COMPLETED") return "default";
-  if (s === "IN_PROGRESS") return "secondary";
+  if (s === "PAID") return "default";
+  if (s === "APPROVED") return "secondary";
+  if (s === "PENDING_APPROVAL") return "outline";
   return "outline";
 }
 
@@ -67,7 +68,7 @@ function FnfContent() {
   });
 
   const complete = useMutation({
-    mutationFn: (id: number) => apiClient.patch<{ success: boolean }>(`/hr/fnf/${id}`, { status: "COMPLETED" }),
+    mutationFn: (id: number) => apiClient.patch<{ success: boolean }>(`/hr/fnf/${id}`, { status: "PAID" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
@@ -179,7 +180,7 @@ function FnfContent() {
                   </div>
                   {item.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>}
                 </div>
-                {item.status !== "COMPLETED" && (
+                {item.status !== "PAID" && (
                   <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => setCompleteId(item.id)} disabled={complete.isPending}>
                     <CheckCircle2 className="h-3 w-3 mr-1" />Complete
                   </Button>
