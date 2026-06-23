@@ -2,7 +2,7 @@ import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { reviewCycles } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { createReviewCycleSchema } from "@/lib/validation/hr";
 import type { NextRequest } from "next/server";
 
@@ -24,6 +24,15 @@ export async function POST(req: NextRequest) {
       return err("Only admins can create review cycles.", 403);
     }
     const body = await parseBody(req, createReviewCycleSchema);
+
+    const existingCycle = await db.query.reviewCycles.findFirst({
+      where: and(eq(reviewCycles.orgId, session.orgId), eq(reviewCycles.name, body.name)),
+      columns: { id: true },
+    });
+    if (existingCycle) {
+      return err(`A review cycle named "${body.name}" already exists.`, 409);
+    }
+
     const [cycle] = await db
       .insert(reviewCycles)
       .values({

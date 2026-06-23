@@ -13,7 +13,7 @@ const createGoalSchema = z.object({
   title: z.string().trim().min(2, "Title must be at least 2 characters").max(100, "Title must be at most 100 characters").regex(/[a-zA-Z]/, "Title must contain at least one letter"),
   description: z.string().max(1000).optional(),
   type: z.string().optional(),
-  targetValue: z.number().min(0, "Target value must be non-negative").max(1000000, "Target value cannot exceed 1,000,000").optional(),
+  targetValue: z.number().min(0, "Target value must be non-negative").max(1000000, "Target value cannot exceed 1,000,000").multipleOf(0.01).optional(),
   currentValue: z.number().min(0).optional().default(0),
   unit: z.string().max(50).optional(),
   startDate: z.string().min(1, "Start date is required"),
