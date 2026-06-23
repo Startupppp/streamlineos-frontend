@@ -229,8 +229,13 @@ export const TimerCard = memo(function TimerCard() {
         <p className="text-sm text-muted-foreground text-center italic">
           {isOnBreak && "On break"}
           {isCheckedIn && checkInTime && `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
-          {!isActive && !isInCooldown && "Not clocked in"}
+          {!isActive && !isInCooldown && !isBlockedDay && "Not clocked in"}
           {!isActive && isInCooldown && `Cooldown: ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`}
+          {isBlockedDay && (
+            <span className="text-amber-600 dark:text-amber-400 not-italic">
+              {isSundayToday ? "Sunday — no check-in" : `Holiday: ${todayHolidayName}`}
+            </span>
+          )}
         </p>
 
         {isOnBreak && (
@@ -242,39 +247,49 @@ export const TimerCard = memo(function TimerCard() {
         )}
 
         <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
-          <Button
-            onClick={handleCheckIn}
-            disabled={isActive || isPending || isInCooldown}
-            variant={isActive ? "secondary" : "default"}
-            className={`font-semibold flex-1 ${
-              !isActive && !isInCooldown
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                : ""
-            }`}
-          >
-            {checkInMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <LogIn className="h-4 w-4 mr-2" />
-            )}
-            {isInCooldown
-              ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
-              : "Check In"}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={handleCheckIn}
+                disabled={isActive || isPending || isInCooldown || isBlockedDay}
+                variant={isActive ? "secondary" : "default"}
+                className={`font-semibold flex-1 ${
+                  !isActive && !isInCooldown && !isBlockedDay
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : ""
+                }`}
+              >
+                {checkInMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <LogIn className="h-4 w-4 mr-2" />
+                )}
+                {isInCooldown
+                  ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
+                  : "Check In"}
+              </Button>
+            </TooltipTrigger>
+            {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
+          </Tooltip>
 
           {isActive && (
-            <Button
-              onClick={handleClockAction}
-              disabled={isPending}
-              className="font-semibold bg-rose-600 hover:bg-rose-700 text-white"
-            >
-              {checkOutMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <LogOut className="h-4 w-4 mr-2" />
-              )}
-              Check Out
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleClockAction}
+                  disabled={isPending || isBlockedDay}
+                  className="font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  {checkOutMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <LogOut className="h-4 w-4 mr-2" />
+                  )}
+                  Check Out
+                </Button>
+              </TooltipTrigger>
+              {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
+            </Tooltip>
           )}
         </div>
 
@@ -282,7 +297,7 @@ export const TimerCard = memo(function TimerCard() {
           <Button
             variant="outline"
             onClick={handleBreakToggle}
-            disabled={breakMutation.isPending}
+            disabled={breakMutation.isPending || isBlockedDay}
             className="w-full"
           >
             {breakMutation.isPending ? (
