@@ -1,10 +1,11 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +13,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileSpreadsheet, DollarSign, CheckCircle2, Clock } from "lucide-react";
+import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface FnfSettlement {
   id: number; userId: string; employeeName: string | null; lastWorkingDate: string | null;
@@ -52,6 +55,22 @@ function FnfContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
+  const { data: employeesRaw } = useHrEmployees();
+  const employees = useMemo<Employee[]>(() => {
+    if (Array.isArray(employeesRaw)) return employeesRaw;
+    return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+  }, [employeesRaw]);
+  const employeeOptions = useMemo<ComboboxOption[]>(() =>
+    employees
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        value: e.id,
+        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
+        sublabel: e.designation ?? e.email,
+      })),
+    [employees],
+  );
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
@@ -60,19 +79,22 @@ function FnfContent() {
   const [deductions, setDeductions] = useState("");
   const [notes, setNotes] = useState("");
 
+  const resetForm = useCallback(() => {
+    setUserId(""); setLwd(""); setGrossPay(""); setDeductions(""); setNotes("");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!userId.trim()) { toast.error("Employee ID is required"); return; }
+    if (!userId) { toast.error("Employee is required"); return; }
     create.mutate(
-      { userId: userId.trim(), lastWorkingDate: lwd || undefined, grossPay: Number(grossPay) || undefined, deductions: Number(deductions) || undefined, notes: notes || undefined },
+      { userId, lastWorkingDate: lwd || undefined, grossPay: Number(grossPay) || undefined, deductions: Number(deductions) || undefined, notes: notes || undefined },
       {
         onSuccess: () => {
-          toast.success("FnF settlement created"); setSheetOpen(false);
-          setUserId(""); setLwd(""); setGrossPay(""); setDeductions(""); setNotes("");
+          toast.success("FnF settlement created"); setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, lwd, grossPay, deductions, notes, create]);
+  }, [userId, lwd, grossPay, deductions, notes, create, resetForm]);
 
   const handleComplete = useCallback(() => {
     if (!completeId) return;
@@ -107,16 +129,16 @@ function FnfContent() {
           {items.map((f: FnfSettlement) => (
             <Card key={f.id}>
               <CardContent className="p-4 flex items-center gap-3">
-                <DollarSign className="h-5 w-5 text-muted-foreground shrink-0" />
+                <IndianRupee className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{f.employeeName ?? "Employee"}</p>
                     <Badge variant={statusBadge(f.status)} className="text-[10px]">{f.status ?? "PENDING"}</Badge>
                   </div>
                   <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    {f.netPay && <span className="font-medium text-foreground">Net: ${Number(f.netPay).toLocaleString()}</span>}
-                    {f.grossPay && <span>Gross: ${Number(f.grossPay).toLocaleString()}</span>}
-                    {f.deductions && <span>Ded: ${Number(f.deductions).toLocaleString()}</span>}
+                    {f.netPay && <span className="font-medium text-foreground">Net: ₹{Number(f.netPay).toLocaleString("en-IN")}</span>}
+                    {f.grossPay && <span>Gross: ₹{Number(f.grossPay).toLocaleString("en-IN")}</span>}
+                    {f.deductions && <span>Ded: ₹{Number(f.deductions).toLocaleString("en-IN")}</span>}
                     {f.lastWorkingDate && <span>{format(new Date(f.lastWorkingDate), "MMM d, yyyy")}</span>}
                   </div>
                 </div>
@@ -131,10 +153,16 @@ function FnfContent() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="New FnF Settlement" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="New FnF Settlement" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee User ID</label>
-          <Input placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
+          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <Combobox
+            options={employeeOptions}
+            value={userId}
+            onChange={setUserId}
+            placeholder="Select employee…"
+            searchPlaceholder="Search by name…"
+          />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Last Working Date</label>
@@ -142,17 +170,17 @@ function FnfContent() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Gross Pay</label>
-            <Input type="number" placeholder="0.00" value={grossPay} onChange={(e) => setGrossPay(e.target.value)} />
+            <label className="text-sm font-medium">Gross Pay (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={grossPay} onChange={(e) => setGrossPay(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Deductions</label>
-            <Input type="number" placeholder="0.00" value={deductions} onChange={(e) => setDeductions(e.target.value)} />
+            <label className="text-sm font-medium">Deductions (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={deductions} onChange={(e) => setDeductions(e.target.value)} />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea placeholder="Additional details..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          <Textarea placeholder="Additional details..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={1000} className="resize-none w-full" />
         </div>
       </HrSheet>
 

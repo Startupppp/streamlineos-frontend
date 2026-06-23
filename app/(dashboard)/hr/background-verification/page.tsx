@@ -25,7 +25,8 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ShieldCheck, CheckCircle2, XCircle, BarChart2 } from "lucide-react";
-import type { Employee } from "@/types/hr";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
@@ -89,8 +90,18 @@ function BGVContent() {
   const update = useUpdateBackgroundVerification();
 
   const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as PaginatedEmployees | undefined)?.data ?? []) as Employee[],
     [employeesRaw],
+  );
+  const employeeOptions = useMemo<ComboboxOption[]>(() =>
+    employees
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        value: e.id,
+        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
+        sublabel: e.designation ?? e.email,
+      })),
+    [employees],
   );
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -100,6 +111,10 @@ function BGVContent() {
   const [refNumber, setRefNumber] = useState("");
   const [notes, setNotes] = useState("");
 
+  const resetForm = useCallback(() => {
+    setUserId(""); setType("Identity"); setProvider(""); setRefNumber(""); setNotes("");
+  }, []);
+
   const handleCreate = useCallback(() => {
     if (!userId) { toast.error("Employee is required"); return; }
     create.mutate(
@@ -107,12 +122,12 @@ function BGVContent() {
       {
         onSuccess: () => {
           toast.success("Verification initiated");
-          setSheetOpen(false); setUserId(""); setType("Identity"); setProvider(""); setRefNumber(""); setNotes("");
+          setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, type, provider, refNumber, notes, create]);
+  }, [userId, type, provider, refNumber, notes, create, resetForm]);
 
   const handleUpdateStatus = useCallback((id: number, status: string) => {
     update.mutate({ id, status }, {
@@ -187,23 +202,26 @@ function BGVContent() {
         </TabsContent>
       </Tabs>
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Initiate BGV" onSubmit={handleCreate} submitLabel="Initiate" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Initiate BGV" onSubmit={handleCreate} submitLabel="Initiate" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
-          <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>)}</SelectContent>
-          </Select>
+          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <Combobox
+            options={employeeOptions}
+            value={userId}
+            onChange={setUserId}
+            placeholder="Select employee…"
+            searchPlaceholder="Search by name…"
+          />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Verification Type</label>
+          <label className="text-sm font-medium">Verification Type <span className="text-destructive">*</span></label>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">{BGV_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Provider</label>
+          <label className="text-sm font-medium">Provider / Agency</label>
           <Input placeholder="e.g., AuthBridge" value={provider} onChange={(e) => setProvider(e.target.value)} />
         </div>
         <div className="space-y-1.5">
@@ -212,7 +230,7 @@ function BGVContent() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea placeholder="Additional notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          <Textarea placeholder="Additional notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={500} className="resize-none w-full" />
         </div>
       </HrSheet>
     </PageWrapper>

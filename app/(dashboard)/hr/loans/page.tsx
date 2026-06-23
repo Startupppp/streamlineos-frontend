@@ -43,20 +43,28 @@ export default function LoansPage() {
   const [reason, setReason] = useState("");
   const [totalEmis, setTotalEmis] = useState("6");
 
+  const resetForm = useCallback(() => {
+    setAmount(""); setReason(""); setTotalEmis("6");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!amount || Number(amount) <= 0) { toast.error("Valid amount is required"); return; }
+    const numAmount = Number(amount);
+    if (!amount || numAmount < 1000) { toast.error("Loan amount must be at least ₹1,000"); return; }
+    if (numAmount > 10000000) { toast.error("Loan amount cannot exceed ₹1,00,00,000"); return; }
     if (!reason.trim()) { toast.error("Reason is required"); return; }
+    const numEmis = Number(totalEmis);
+    if (!Number.isInteger(numEmis) || numEmis < 1 || numEmis > 360) { toast.error("Number of EMIs must be a whole number between 1 and 360"); return; }
     create.mutate(
-      { amount: Number(amount), reason: reason.trim(), totalEmis: Number(totalEmis) || 6 },
+      { amount: numAmount, reason: reason.trim(), totalEmis: numEmis },
       {
         onSuccess: () => {
           toast.success("Loan request submitted");
-          setSheetOpen(false); setAmount(""); setReason(""); setTotalEmis("6");
+          setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [amount, reason, totalEmis, create]);
+  }, [amount, reason, totalEmis, create, resetForm]);
 
   const handleApprove = useCallback((id: number) => {
     process.mutate({ id, status: "APPROVED" }, {
@@ -101,13 +109,13 @@ export default function LoansPage() {
                 <Banknote className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">${Number(loan.amount).toLocaleString()}</p>
+                    <p className="text-sm font-semibold">₹{Number(loan.amount).toLocaleString("en-IN")}</p>
                     <Badge variant={statusBadge(loan.status)} className="text-[10px]">{loan.status}</Badge>
                   </div>
                   <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
                     {loan.user?.name && <span>{loan.user.name}</span>}
                     {loan.totalEmis && <span>{loan.paidEmis ?? 0}/{loan.totalEmis} EMIs</span>}
-                    {loan.emiAmount && <span>${Number(loan.emiAmount).toLocaleString()}/mo</span>}
+                    {loan.emiAmount && <span>₹{Number(loan.emiAmount).toLocaleString("en-IN")}/mo</span>}
                     {loan.createdAt && <span>{format(new Date(loan.createdAt), "MMM d, yyyy")}</span>}
                   </div>
                   {loan.reason && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{loan.reason}</p>}
@@ -128,18 +136,21 @@ export default function LoansPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Request Salary Loan" onSubmit={handleCreate} submitLabel="Submit" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Request Salary Loan" onSubmit={handleCreate} submitLabel="Submit" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Loan Amount</label>
-          <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <label className="text-sm font-medium">Loan Amount (₹) <span className="text-destructive">*</span></label>
+          <Input type="number" min="1000" max="10000000" step="1" placeholder="Min ₹1,000" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <p className="text-xs text-muted-foreground">Between ₹1,000 and ₹1,00,00,000</p>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Reason</label>
-          <Textarea placeholder="Why do you need this loan?" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} />
+          <label className="text-sm font-medium">Reason <span className="text-destructive">*</span></label>
+          <Textarea placeholder="Why do you need this loan?" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={500} className="resize-none w-full" />
+          <p className="text-xs text-muted-foreground text-right">{reason.length} / 500</p>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Number of EMIs</label>
-          <Input type="number" placeholder="6" value={totalEmis} onChange={(e) => setTotalEmis(e.target.value)} />
+          <label className="text-sm font-medium">Number of EMIs (monthly installments) <span className="text-destructive">*</span></label>
+          <Input type="number" min="1" max="360" step="1" placeholder="e.g. 6" value={totalEmis} onChange={(e) => setTotalEmis(e.target.value)} />
+          <p className="text-xs text-muted-foreground">Between 1 and 360 months</p>
         </div>
       </HrSheet>
 

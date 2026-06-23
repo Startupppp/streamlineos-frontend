@@ -109,7 +109,7 @@ export default function ReimbursementsPage() {
                     <Badge variant={statusBadge(r.status)} className="text-[10px]">{r.status}</Badge>
                   </div>
                   <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    <span className="font-medium text-foreground">${Number(r.amount).toLocaleString()}</span>
+                    <span className="font-medium text-foreground">₹{Number(r.amount).toLocaleString("en-IN")}</span>
                     {r.user?.name && <span>{r.user.name}</span>}
                     {r.createdAt && <span>{format(new Date(r.createdAt), "MMM d, yyyy")}</span>}
                   </div>
@@ -131,7 +131,17 @@ export default function ReimbursementsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Submit Reimbursement" onSubmit={handleCreate} submitLabel="Submit" isPending={create.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          if (!open) { setCategory("Travel"); setAmount(""); setDescription(""); setReceiptUrl(""); }
+          setSheetOpen(open);
+        }}
+        title="Submit Reimbursement"
+        onSubmit={handleCreate}
+        submitLabel="Submit"
+        isPending={create.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Category</label>
           <Select value={category} onValueChange={setCategory}>
@@ -140,16 +150,16 @@ export default function ReimbursementsPage() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Amount</label>
-          <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <label className="text-sm font-medium">Amount (₹) <span className="text-destructive">*</span></label>
+          <Input type="number" min="1" max="999999" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Details about the expense..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea placeholder="Details about the expense..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={1000} className="resize-none w-full" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Receipt URL</label>
-          <Input placeholder="https://..." value={receiptUrl} onChange={(e) => setReceiptUrl(e.target.value)} />
+          <Input type="url" placeholder="https://..." value={receiptUrl} onChange={(e) => setReceiptUrl(e.target.value)} />
         </div>
       </HrSheet>
 

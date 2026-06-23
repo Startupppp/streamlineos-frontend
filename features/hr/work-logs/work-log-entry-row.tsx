@@ -152,6 +152,7 @@ export function WorkLogEntryRow({
             setIsDirty(true);
           }}
           readOnly={readOnly}
+          maxLength={2000}
           placeholder={isWeekendDay ? "Weekend..." : readOnly ? "No entry" : "What did you work on today?"}
           aria-label={`Work log for ${dateLabel}`}
           className={cn(
