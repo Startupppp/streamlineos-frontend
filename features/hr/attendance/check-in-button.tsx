@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
-import { format } from "date-fns";
+import { format, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
   useHrCheckOut,
   useHrToggleBreak,
+  useHrHolidaysForCalendar,
 } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Clock, Coffee, LogIn, LogOut, Loader2, Play, Pause } from "lucide-react";
@@ -20,7 +22,27 @@ export const TimerCard = memo(function TimerCard() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
 
+  const today = useMemo(() => new Date(), []);
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayStr = format(today, "yyyy-MM-dd");
+  const isSundayToday = getDay(today) === 0;
+
   const { data: statusData, isLoading } = useHrAttendanceStatus({ refetchInterval: 60000, staleTime: 30000 });
+  const { data: holidaysList } = useHrHolidaysForCalendar({ year: todayYear, month: todayMonth });
+
+  const todayHolidayName = useMemo(() => {
+    if (!holidaysList) return null;
+    const match = holidaysList.find((h) => h.date === todayStr);
+    return match?.name ?? null;
+  }, [holidaysList, todayStr]);
+
+  const isBlockedDay = isSundayToday || !!todayHolidayName;
+  const blockedReason = isSundayToday
+    ? "Check-in is not available on Sundays"
+    : todayHolidayName
+      ? `Today is a holiday (${todayHolidayName}) — check-in is not available`
+      : null;
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {

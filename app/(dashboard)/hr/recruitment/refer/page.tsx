@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useReferrals, useCreateReferral } from "@/lib/api/hooks/hr/recruitment/referrals";
+import { useAllReferrals, useSubmitReferral } from "@/lib/api/hooks/hr/recruitment/referrals";
 import { useJobPostings } from "@/lib/api/hooks/hr/recruitment";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +43,9 @@ const referSchema = z.object({
 type ReferFormValues = z.infer<typeof referSchema>;
 
 export default function ReferPage() {
-  const { data: referrals = [], isLoading: loadingReferrals } = useReferrals();
+  const { data: referrals = [], isLoading: loadingReferrals } = useAllReferrals();
   const { data: jobs = [] } = useJobPostings({ status: "OPEN" });
-  const createMutation = useCreateReferral();
+  const createMutation = useSubmitReferral();
 
   const {
     register,
