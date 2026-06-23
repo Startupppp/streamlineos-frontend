@@ -88,6 +88,9 @@ export const queryKeys = {
     atsKanban: () => [...base, "hr", "atsKanban"] as const,
     interviewSlas: () => [...base, "hr", "interviewSlas"] as const,
     slaReport: () => [...base, "hr", "slaReport"] as const,
+    hiringFlows: () => [...base, "hr", "hiringFlows"] as const,
+    hiringFlow: (id: number) => [...base, "hr", "hiringFlow", id] as const,
+    hiringFlowRounds: (flowId: number) => [...base, "hr", "hiringFlowRounds", flowId] as const,
   },
 
   leads: {

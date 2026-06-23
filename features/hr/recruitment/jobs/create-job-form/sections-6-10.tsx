@@ -15,6 +15,7 @@ import { FieldError, SectionTitle } from "./sections-1-5";
 import type { CreateJobFormValues } from "./schema";
 import type { SectionProps } from "./sections-1-5";
 import { cn } from "@/lib/utils";
+import { useHiringFlows } from "@/lib/api/hooks/hr/recruitment";
 
 export function Section6({ form }: SectionProps) {
   const { register, formState: { errors } } = form;
@@ -47,8 +48,9 @@ export function Section6({ form }: SectionProps) {
 }
 
 export function Section7({ form }: SectionProps) {
-  const { register, watch, setValue, formState: { errors } } = form;
+  const { register, watch, setValue, control, formState: { errors } } = form;
   const selectedRounds = watch("interviewRounds") ?? [];
+  const { data: hiringFlows } = useHiringFlows();
 
   const handleRoundToggle = (round: string, checked: boolean) => {
     const next = checked
@@ -65,6 +67,29 @@ export function Section7({ form }: SectionProps) {
           <Label className="text-xs font-medium">Hiring Manager <span className="text-destructive">*</span></Label>
           <Input className="mt-1" placeholder="e.g. John Doe, HR Manager" {...register("hiringManager")} />
           <FieldError message={errors.hiringManager?.message} />
+        </div>
+        <div>
+          <Label className="text-xs font-medium">Hiring Flow Template</Label>
+          <p className="text-[10px] text-muted-foreground mb-1">Optional — assign a reusable interview workflow</p>
+          <Controller
+            name="hiringFlowId"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a hiring flow (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {(hiringFlows ?? []).map((f) => (
+                    <SelectItem key={f.id} value={String(f.id)}>
+                      {f.name}{f.isDefault ? " (Default)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
         <div>
           <Label className="text-xs font-medium">Interview Rounds <span className="text-destructive">*</span></Label>

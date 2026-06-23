@@ -123,10 +123,12 @@ export function CreateJobForm() {
 
       const data = form.getValues();
       const deptId = Number(data.departmentId);
+      const flowId = Number(data.hiringFlowId);
       createJob.mutate(
         {
           title: data.title.trim(),
           departmentId: !isNaN(deptId) && deptId > 0 ? deptId : undefined,
+          hiringFlowId: !isNaN(flowId) && flowId > 0 ? flowId : undefined,
           location: `${data.stateCity}, ${data.country}`,
           type: data.jobType,
           experience: `${data.minExperience}${data.maxExperience != null ? `–${data.maxExperience}` : "+"} years | ${data.educationLevel}`,

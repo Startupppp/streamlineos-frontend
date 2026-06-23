@@ -26,6 +26,7 @@ const createJobSchema = z.object({
     .refine((v) => !/(.)\1{3,}/.test(v.trim()), "Job Title cannot have 4 or more consecutive identical characters")
     .refine((v) => !/\s{2,}/.test(v), "Job Title cannot have multiple consecutive spaces"),
   departmentId: z.number().int().positive().optional(),
+  hiringFlowId: z.number().int().positive().optional(),
   location: z
     .string()
     .min(2, "Location must be at least 2 characters")
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         title: body.title,
         departmentId: body.departmentId,
+        hiringFlowId: body.hiringFlowId,
         location: body.location,
         type: body.type || "FULL_TIME",
         experience: body.experience,

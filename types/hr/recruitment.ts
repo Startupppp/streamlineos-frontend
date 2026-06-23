@@ -1,4 +1,70 @@
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
+export type HiringFlowRoundType = "HR_SCREENING" | "TECHNICAL" | "MANAGER" | "CULTURAL_FIT" | "FINAL" | "CUSTOM";
+export type HiringFlowRoundMode = "VIDEO" | "PHONE" | "ONSITE";
+
+export interface HiringFlowRound {
+  id: number;
+  flowId: number;
+  orgId: string;
+  name: string;
+  roundType: HiringFlowRoundType;
+  mode: HiringFlowRoundMode;
+  durationMinutes: number;
+  slaDays: number | null;
+  questionBankTag: string | null;
+  scorecardTemplateId: number | null;
+  interviewerRoleRestriction: string | null;
+  autoAdvanceThreshold: number | null;
+  orderIndex: number;
+  createdAt: Date | string | null;
+}
+
+export interface HiringFlow {
+  id: number;
+  orgId: string;
+  name: string;
+  isDefault: boolean;
+  createdBy: string;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
+  rounds?: HiringFlowRound[];
+}
+
+export interface CreateHiringFlowInput {
+  name: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateHiringFlowInput {
+  name?: string;
+  isDefault?: boolean;
+}
+
+export interface CreateHiringFlowRoundInput {
+  name: string;
+  roundType: HiringFlowRoundType;
+  mode: HiringFlowRoundMode;
+  durationMinutes?: number;
+  slaDays?: number;
+  questionBankTag?: string;
+  scorecardTemplateId?: number;
+  interviewerRoleRestriction?: string;
+  autoAdvanceThreshold?: number;
+  orderIndex?: number;
+}
+
+export interface UpdateHiringFlowRoundInput {
+  name?: string;
+  roundType?: HiringFlowRoundType;
+  mode?: HiringFlowRoundMode;
+  durationMinutes?: number;
+  slaDays?: number | null;
+  questionBankTag?: string | null;
+  scorecardTemplateId?: number | null;
+  interviewerRoleRestriction?: string | null;
+  autoAdvanceThreshold?: number | null;
+  orderIndex?: number;
+}
 export type CandidateStatus = "NEW" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED" | "REJECTED";
 export type InterviewType = "PHONE" | "VIDEO" | "ONSITE" | "TECHNICAL" | "HR" | "FINAL";
 export type InterviewResult = "PENDING" | "PASSED" | "FAILED" | "NO_SHOW";
@@ -149,6 +215,7 @@ export interface RecruitmentStats {
 export interface CreateJobPostingInput {
   title: string;
   departmentId?: number;
+  hiringFlowId?: number;
   location?: string;
   type?: string;
   experience?: string;

@@ -7,11 +7,43 @@ import {
 import { organizations, users } from "../auth";
 import { departments } from "./employees";
 
+export const hiringFlows = pgTable("hiring_flows", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_hiring_flows_org").on(table.orgId),
+]);
+
+export const hiringFlowRounds = pgTable("hiring_flow_rounds", {
+  id: serial("id").primaryKey(),
+  flowId: integer("flow_id").references(() => hiringFlows.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  roundType: text("round_type").$type<"HR_SCREENING" | "TECHNICAL" | "MANAGER" | "CULTURAL_FIT" | "FINAL" | "CUSTOM">().notNull().default("CUSTOM"),
+  mode: text("mode").$type<"VIDEO" | "PHONE" | "ONSITE">().notNull().default("VIDEO"),
+  durationMinutes: integer("duration_minutes").notNull().default(60),
+  slaDays: integer("sla_days"),
+  questionBankTag: text("question_bank_tag"),
+  scorecardTemplateId: integer("scorecard_template_id").references(() => scorecardTemplates.id),
+  interviewerRoleRestriction: text("interviewer_role_restriction"),
+  autoAdvanceThreshold: integer("auto_advance_threshold"),
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_hiring_flow_rounds_flow").on(table.flowId),
+]);
+
 export const jobPostings = pgTable("job_postings", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   title: text("title").notNull(),
   departmentId: integer("department_id").references(() => departments.id),
+  hiringFlowId: integer("hiring_flow_id").references(() => hiringFlows.id),
   location: text("location"),
   type: text("type").default("FULL_TIME").notNull(),
   experience: text("experience"),
@@ -344,9 +376,22 @@ export const candidateOffers = pgTable("candidate_offers", {
   index("idx_candidate_offers_org").on(table.orgId),
 ]);
 
+export const hiringFlowsRelations = relations(hiringFlows, ({ one, many }) => ({
+  organization: one(organizations, { fields: [hiringFlows.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [hiringFlows.createdBy], references: [users.id] }),
+  rounds: many(hiringFlowRounds),
+  jobPostings: many(jobPostings),
+}));
+
+export const hiringFlowRoundsRelations = relations(hiringFlowRounds, ({ one }) => ({
+  flow: one(hiringFlows, { fields: [hiringFlowRounds.flowId], references: [hiringFlows.id] }),
+  scorecardTemplate: one(scorecardTemplates, { fields: [hiringFlowRounds.scorecardTemplateId], references: [scorecardTemplates.id] }),
+}));
+
 export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
   organization: one(organizations, { fields: [jobPostings.orgId], references: [organizations.id] }),
   department: one(departments, { fields: [jobPostings.departmentId], references: [departments.id] }),
+  hiringFlow: one(hiringFlows, { fields: [jobPostings.hiringFlowId], references: [hiringFlows.id] }),
   postedByUser: one(users, { fields: [jobPostings.postedBy], references: [users.id] }),
   applications: many(candidateApplications),
 }));

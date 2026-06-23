@@ -76,6 +76,7 @@ export const createJobFormSchema = z
     benefits: z.string().max(5000).optional(),
 
     hiringManager: z.string().min(2, "Hiring Manager is required").max(100),
+    hiringFlowId: z.string().optional(),
     interviewRounds: z.array(z.string()).min(1, "Select at least one interview round"),
     questionBankMapping: z.string().min(1, "Question Bank Mapping is required"),
 
@@ -109,7 +110,7 @@ export const SECTION_KEYS: Array<keyof CreateJobFormValues>[] = [
   ["minExperience", "educationLevel"],
   ["requiredSkills"],
   ["overview", "responsibilities", "jobRequirements"],
-  ["hiringManager", "interviewRounds", "questionBankMapping"],
+  ["hiringManager", "hiringFlowId", "interviewRounds", "questionBankMapping"],
   ["resumeRequired", "coverLetterRequired"],
   ["status", "visibility"],
   ["priority", "referralEnabled", "approvalRequired"],
