@@ -37,6 +37,7 @@ const PROTECTED_ROUTES = [
   "/settings",
   "/onboarding",
   "/org-setup",
+  "/owner",
   "/ceo",
   "/sales",
   "/customer-executive",
@@ -155,7 +156,14 @@ export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
   const tier = resolveTier(pathname);
-  if (tier) {
+  const loadTestSecret = process.env.LOAD_TEST_SECRET;
+  const isLoadTestBypass =
+    process.env.NODE_ENV !== "production" &&
+    loadTestSecret &&
+    loadTestSecret.length > 0 &&
+    req.headers.get("x-load-test-secret") === loadTestSecret;
+
+  if (tier && !isLoadTestBypass) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const result = await checkRateLimit(tier, ip);

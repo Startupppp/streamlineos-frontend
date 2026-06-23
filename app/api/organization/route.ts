@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { organizations, organizationMembers } from "@/lib/db/schema";
 import { eq, desc, inArray } from "drizzle-orm";
@@ -45,6 +46,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
+    const ability = await getSessionAbility();
+    if (!ability.can("manage", "all")) {
+      return err("Forbidden", 403);
+    }
+
     const input = await parseBody(req, createOrgSchema);
 
     const existing = await db.query.organizations.findFirst({

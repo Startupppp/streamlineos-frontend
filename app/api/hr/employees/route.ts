@@ -1,10 +1,10 @@
-import { withAuth, ok } from "@/lib/api/helpers";
+import { withAbility, ok } from "@/lib/api/helpers";
 import { cached, CACHE_TTL } from "@/lib/cache";
 import { getEmployees, getEmployeesPaginated } from "@/server/queries/hr";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("read", "hr:employees", async (session) => {
     const { searchParams } = req.nextUrl;
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
