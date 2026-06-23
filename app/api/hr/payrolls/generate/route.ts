@@ -52,18 +52,20 @@ export async function POST(req: NextRequest) {
     const allowances = Number(salary.allowances || 0);
     const deductions = Number(salary.deductions || 0);
 
-    const hra = (basicSalary * hraPercentage) / 100;
-    const grossSalary = basicSalary + hra + allowances + (body.bonus || 0) + (body.overtimeAmount || 0);
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+
+    const hra = round2((basicSalary * hraPercentage) / 100);
+    const grossSalary = round2(basicSalary + hra + allowances + (body.bonus || 0) + (body.overtimeAmount || 0));
 
     const [payYear, payMonth] = body.month.split("-").map(Number);
     const daysInMonth = new Date(payYear, payMonth, 0).getDate();
 
     const PROFESSIONAL_TAX = 200;
-    const lopDeduction = body.lopDays ? (basicSalary / daysInMonth) * body.lopDays : 0;
-    const halfDayDeduction = body.halfDays ? ((basicSalary / daysInMonth) * body.halfDays) / 2 : 0;
-    const totalDeductions = deductions + lopDeduction + halfDayDeduction + (body.otherDeductions || 0) + PROFESSIONAL_TAX;
+    const lopDeduction = body.lopDays ? round2((basicSalary / daysInMonth) * body.lopDays) : 0;
+    const halfDayDeduction = body.halfDays ? round2(((basicSalary / daysInMonth) * body.halfDays) / 2) : 0;
+    const totalDeductions = round2(deductions + lopDeduction + halfDayDeduction + (body.otherDeductions || 0) + PROFESSIONAL_TAX);
 
-    const netSalary = grossSalary - totalDeductions;
+    const netSalary = round2(grossSalary - totalDeductions);
 
     const [payroll] = await db
       .insert(payrolls)

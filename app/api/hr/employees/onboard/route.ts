@@ -203,6 +203,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return ok({ success: true }, 201);
+    return ok({ success: true, userId: newUser.id }, 201);
   });
 }

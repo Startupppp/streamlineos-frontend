@@ -17,6 +17,10 @@ interface PayslipEarningsTableProps {
   overtimeHoursVal: number;
 }
 
+function fmt(value: number): string {
+  return value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function PayslipEarningsTable({
   basicSalary,
   hra,
@@ -68,7 +72,7 @@ export function PayslipEarningsTable({
           <tr>
             <td style={td({ color: "#374151" })}>Basic Pay</td>
             <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{basicSalary.toLocaleString()}/-
+              ₹{fmt(basicSalary)}/-
             </td>
             <td style={td({ color: "#374151" })}>Professional Tax</td>
             <td style={td({ textAlign: "center", color: "#111827" })}>₹200/-</td>
@@ -76,7 +80,7 @@ export function PayslipEarningsTable({
           <tr>
             <td style={td({ color: "#374151" })}>House Rent Allowance</td>
             <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{hra.toLocaleString()}/-
+              ₹{fmt(hra)}/-
             </td>
             <td style={td()}></td>
             <td style={td()}></td>
@@ -84,7 +88,7 @@ export function PayslipEarningsTable({
           <tr>
             <td style={td({ color: "#374151" })}>Special Allowance</td>
             <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{allowances.toLocaleString()}/-
+              ₹{fmt(allowances)}/-
             </td>
             <td style={td()}></td>
             <td style={td()}></td>
@@ -93,7 +97,7 @@ export function PayslipEarningsTable({
             <tr>
               <td style={td({ color: "#374151" })}>{overtimeLabel}</td>
               <td style={td({ textAlign: "center", color: "#111827" })}>
-                ₹{overtimeAmount.toLocaleString()}/-
+                ₹{fmt(overtimeAmount)}/-
               </td>
               <td style={td()}></td>
               <td style={td()}></td>
@@ -102,11 +106,11 @@ export function PayslipEarningsTable({
           <tr style={{ backgroundColor: "#f9fafb" }}>
             <td style={td({ fontWeight: 600, color: "#111827" })}>Total Earnings</td>
             <td style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              ₹{grossSalary.toLocaleString()}/-
+              ₹{fmt(grossSalary)}/-
             </td>
             <td style={td({ fontWeight: 600, color: "#111827" })}>Total Deductions</td>
             <td style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              ₹{deductions.toLocaleString()}/-
+              ₹{fmt(deductions)}/-
             </td>
           </tr>
           <tr style={{ backgroundColor: "#f3f4f6" }}>
@@ -114,7 +118,7 @@ export function PayslipEarningsTable({
             <td style={td()}></td>
             <td style={td({ fontWeight: "bold", color: "#111827" })}>Net Salary</td>
             <td style={td({ textAlign: "center", fontWeight: "bold", color: "#111827" })}>
-              ₹{netSalary.toLocaleString()}/-
+              ₹{fmt(netSalary)}/-
             </td>
           </tr>
         </tbody>

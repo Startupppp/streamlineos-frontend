@@ -135,9 +135,9 @@ export function OnboardingWizard() {
           password: data.password ?? "",
         } as import("@/types/hr").OnboardEmployeeInput,
         {
-          onSuccess: () => {
-            toast.success("Employee onboarded successfully");
-            router.push("/hr");
+          onSuccess: (result) => {
+            toast.success("Employee created successfully");
+            router.push(result.userId ? `/hr/employees/${result.userId}` : "/hr/employees");
           },
           onError: (err) => toast.error(err.message || "Failed to onboard employee"),
         }
