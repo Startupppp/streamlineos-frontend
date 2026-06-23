@@ -82,12 +82,12 @@ function EmailTemplatesContent() {
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) { toast.error("Template Name is required"); return; }
-    if (trimmedName.length < 3) { toast.error("Template Name must be at least 3 characters"); return; }
+    if (trimmedName.length < 2) { toast.error("Template Name must be at least 2 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
     if (/\s{2,}/.test(trimmedName)) { toast.error("Template Name cannot have multiple consecutive spaces"); return; }
     const trimmedSubject = subject.trim();
     if (!trimmedSubject) { toast.error("Subject Line is required"); return; }
-    if (trimmedSubject.length < 3) { toast.error("Subject must be at least 3 characters"); return; }
+    if (trimmedSubject.length < 2) { toast.error("Subject must be at least 2 characters"); return; }
     if (trimmedSubject.length > 200) { toast.error("Subject must be at most 200 characters"); return; }
     const trimmedBody = body.trim();
     if (!trimmedBody) { toast.error("Body is required"); return; }

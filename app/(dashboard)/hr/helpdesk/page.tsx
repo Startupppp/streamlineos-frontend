@@ -216,6 +216,7 @@ export default function HelpdeskPage() {
     const trimmedDesc = description.trim();
     if (!trimmedDesc) { toast.error("Description is required"); return; }
     if (trimmedDesc.length < 10) { toast.error("Description must be at least 10 characters"); return; }
+    if (trimmedDesc.length > 1000) { toast.error("Description must be at most 1000 characters"); return; }
     if (!category) { toast.error("Please select a category"); return; }
     createTicket.mutate(
       { title: trimmedTitle, description: trimmedDesc, category, priority },
