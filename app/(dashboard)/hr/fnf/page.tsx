@@ -24,9 +24,18 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface FnfSettlement {
-  id: number; userId: string; employeeName: string | null; lastWorkingDate: string | null;
-  grossPay: string | null; deductions: string | null; netPay: string | null;
-  status: string | null; notes: string | null; createdAt: string | null;
+  id: number;
+  userId: string;
+  basicDues: string | null;
+  leaveEncashment: string | null;
+  bonusDue: string | null;
+  deductions: string | null;
+  loanRecovery: string | null;
+  netPayable: string | null;
+  status: string | null;
+  notes: string | null;
+  createdAt: string | null;
+  user?: { name: string | null; email: string } | null;
 }
 
 const fnfKeys = { all: [...queryKeys.hr.all, "fnf"] as const, list: () => [...fnfKeys.all, "list"] as const };
@@ -45,8 +54,15 @@ function FnfContent() {
   });
 
   const create = useMutation({
-    mutationFn: (data: { userId: string; lastWorkingDate?: string; grossPay?: number; deductions?: number; notes?: string }) =>
-      apiClient.post<FnfSettlement>("/hr/fnf", data),
+    mutationFn: (data: {
+      userId: string;
+      basicDues?: number;
+      leaveEncashment?: number;
+      bonusDue?: number;
+      deductions?: number;
+      loanRecovery?: number;
+      notes?: string;
+    }) => apiClient.post<FnfSettlement>("/hr/fnf", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: fnfKeys.list() }),
   });
 
@@ -74,19 +90,30 @@ function FnfContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [completeId, setCompleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
-  const [lwd, setLwd] = useState("");
-  const [grossPay, setGrossPay] = useState("");
+  const [basicDues, setBasicDues] = useState("");
+  const [leaveEncashment, setLeaveEncashment] = useState("");
+  const [bonusDue, setBonusDue] = useState("");
   const [deductions, setDeductions] = useState("");
+  const [loanRecovery, setLoanRecovery] = useState("");
   const [notes, setNotes] = useState("");
 
   const resetForm = useCallback(() => {
-    setUserId(""); setLwd(""); setGrossPay(""); setDeductions(""); setNotes("");
+    setUserId(""); setBasicDues(""); setLeaveEncashment("");
+    setBonusDue(""); setDeductions(""); setLoanRecovery(""); setNotes("");
   }, []);
 
   const handleCreate = useCallback(() => {
     if (!userId) { toast.error("Employee is required"); return; }
     create.mutate(
-      { userId, lastWorkingDate: lwd || undefined, grossPay: Number(grossPay) || undefined, deductions: Number(deductions) || undefined, notes: notes || undefined },
+      {
+        userId,
+        basicDues: basicDues ? Number(basicDues) : undefined,
+        leaveEncashment: leaveEncashment ? Number(leaveEncashment) : undefined,
+        bonusDue: bonusDue ? Number(bonusDue) : undefined,
+        deductions: deductions ? Number(deductions) : undefined,
+        loanRecovery: loanRecovery ? Number(loanRecovery) : undefined,
+        notes: notes.trim() || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("FnF settlement created"); setSheetOpen(false); resetForm();
@@ -94,19 +121,19 @@ function FnfContent() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, lwd, grossPay, deductions, notes, create, resetForm]);
+  }, [userId, basicDues, leaveEncashment, bonusDue, deductions, loanRecovery, notes, create, resetForm]);
 
   const handleComplete = useCallback(() => {
     if (!completeId) return;
     complete.mutate(completeId, {
-      onSuccess: () => { toast.success("Settlement completed"); setCompleteId(null); },
+      onSuccess: () => { toast.success("Settlement marked as completed"); setCompleteId(null); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [completeId, complete]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Full & Final" subtitle="Employee settlement processing">
+      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
         <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
       </PageWrapper>
     );
@@ -115,35 +142,45 @@ function FnfContent() {
   return (
     <PageWrapper
       title="Full & Final Settlement"
-      subtitle="Process employee exit settlements"
+      subtitle="Manage full and final settlements for separated employees"
       badge={`${items?.length ?? 0} settlements`}
       actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />New Settlement</Button>}
     >
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
           <EmptyExpensesIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No FnF settlements on record.</p>
+          <p className="text-sm text-muted-foreground">No FnF settlements on record.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {items.map((f: FnfSettlement) => (
-            <Card key={f.id}>
+          {items.map((item: FnfSettlement) => (
+            <Card key={item.id}>
               <CardContent className="p-4 flex items-center gap-3">
-                <IndianRupee className="h-5 w-5 text-muted-foreground shrink-0" />
+                <FileSpreadsheet className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">{f.employeeName ?? "Employee"}</p>
-                    <Badge variant={statusBadge(f.status)} className="text-[10px]">{f.status ?? "PENDING"}</Badge>
+                    {item.user?.name && <p className="text-sm font-semibold">{item.user.name}</p>}
+                    <Badge variant={statusBadge(item.status)} className="text-[10px]">{item.status ?? "DRAFT"}</Badge>
                   </div>
-                  <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    {f.netPay && <span className="font-medium text-foreground">Net: ₹{Number(f.netPay).toLocaleString("en-IN")}</span>}
-                    {f.grossPay && <span>Gross: ₹{Number(f.grossPay).toLocaleString("en-IN")}</span>}
-                    {f.deductions && <span>Ded: ₹{Number(f.deductions).toLocaleString("en-IN")}</span>}
-                    {f.lastWorkingDate && <span>{format(new Date(f.lastWorkingDate), "MMM d, yyyy")}</span>}
+                  <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
+                    {item.netPayable && (
+                      <span className="flex items-center gap-0.5 font-medium text-foreground">
+                        <IndianRupee className="h-3 w-3" />
+                        {Number(item.netPayable).toLocaleString("en-IN")} net
+                      </span>
+                    )}
+                    {item.deductions && Number(item.deductions) > 0 && (
+                      <span>Deductions: ₹{Number(item.deductions).toLocaleString("en-IN")}</span>
+                    )}
+                    {item.loanRecovery && Number(item.loanRecovery) > 0 && (
+                      <span>Loan Recovery: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}</span>
+                    )}
+                    {item.createdAt && <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>}
                   </div>
+                  {item.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>}
                 </div>
-                {f.status !== "COMPLETED" && (
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setCompleteId(f.id)}>
+                {item.status !== "COMPLETED" && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => setCompleteId(item.id)} disabled={complete.isPending}>
                     <CheckCircle2 className="h-3 w-3 mr-1" />Complete
                   </Button>
                 )}
@@ -153,7 +190,14 @@ function FnfContent() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="New FnF Settlement" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }}
+        title="New FnF Settlement"
+        onSubmit={handleCreate}
+        submitLabel="Create Settlement"
+        isPending={create.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
           <Combobox
@@ -164,23 +208,40 @@ function FnfContent() {
             searchPlaceholder="Search by name…"
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Last Working Date</label>
-          <Input type="date" value={lwd} onChange={(e) => setLwd(e.target.value)} />
-        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Gross Pay (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={grossPay} onChange={(e) => setGrossPay(e.target.value)} />
+            <label className="text-sm font-medium">Basic Dues (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={basicDues} onChange={(e) => setBasicDues(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Leave Encashment (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={leaveEncashment} onChange={(e) => setLeaveEncashment(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Bonus Due (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={bonusDue} onChange={(e) => setBonusDue(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Deductions (₹)</label>
             <Input type="number" min="0" step="0.01" placeholder="0.00" value={deductions} onChange={(e) => setDeductions(e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Loan Recovery (₹)</label>
+            <Input type="number" min="0" step="0.01" placeholder="0.00" value={loanRecovery} onChange={(e) => setLoanRecovery(e.target.value)} />
+          </div>
         </div>
+
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea placeholder="Additional details..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={1000} className="resize-none w-full" />
+          <Textarea
+            placeholder="Additional settlement notes…"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            maxLength={500}
+            className="resize-none w-full"
+          />
         </div>
       </HrSheet>
 
@@ -188,7 +249,7 @@ function FnfContent() {
         open={completeId !== null}
         onOpenChange={(open) => { if (!open) setCompleteId(null); }}
         title="Complete Settlement"
-        description="Mark this FnF settlement as completed? This action cannot be undone."
+        description="Are you sure you want to mark this FnF settlement as completed?"
         confirmLabel="Complete"
         onConfirm={handleComplete}
         isPending={complete.isPending}
@@ -199,7 +260,7 @@ function FnfContent() {
 
 export default function FnfPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate allowedRoles={["HR", "CEO"]}>
       <FnfContent />
     </DashboardGate>
   );

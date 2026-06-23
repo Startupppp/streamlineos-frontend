@@ -22,15 +22,18 @@ export async function GET() {
 
     const isAdmin = ability.can("approve", "hr:payroll");
 
-    const data = await db
-      .select()
-      .from(fnfSettlements)
-      .where(
-        isAdmin
-          ? eq(fnfSettlements.orgId, session.orgId)
-          : eq(fnfSettlements.userId, session.user.id)
-      )
-      .orderBy(desc(fnfSettlements.createdAt));
+    const data = await db.query.fnfSettlements.findMany({
+      where: isAdmin
+        ? eq(fnfSettlements.orgId, session.orgId)
+        : and(
+            eq(fnfSettlements.orgId, session.orgId),
+            eq(fnfSettlements.userId, session.user.id)
+          ),
+      orderBy: [desc(fnfSettlements.createdAt)],
+      with: {
+        user: { columns: { name: true, email: true } },
+      },
+    });
 
     return ok(data);
   });

@@ -175,7 +175,7 @@ function EmailTemplatesContent() {
                   <h3 className="text-sm font-semibold leading-tight truncate" title={t.name}>{t.name}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate" title={t.subject}>Subject: {t.subject}</p>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{t.body}</p>
+                <p className="text-xs text-muted-foreground line-clamp-3 break-words">{t.body}</p>
                 <div className="flex gap-2">
                   {t.category && <Badge variant="outline" className="text-[10px]">{t.category}</Badge>}
                 </div>

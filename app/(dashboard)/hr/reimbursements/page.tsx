@@ -115,7 +115,7 @@ export default function ReimbursementsPage() {
                   </div>
                   {r.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{r.description}</p>}
                 </div>
-                {isAdmin && r.status === "PENDING" && (
+                {isAdmin && r.status === "PENDING" && r.userId !== session?.user?.id && (
                   <div className="flex gap-1.5 shrink-0">
                     <Button size="sm" className="h-7 text-xs" onClick={() => handleApprove(r.id)} disabled={process.isPending}>
                       <CheckCircle2 className="h-3 w-3 mr-1" />Approve
@@ -124,6 +124,9 @@ export default function ReimbursementsPage() {
                       <XCircle className="h-3 w-3 mr-1" />Reject
                     </Button>
                   </div>
+                )}
+                {isAdmin && r.status === "PENDING" && r.userId === session?.user?.id && (
+                  <span className="text-[10px] text-muted-foreground italic shrink-0">Cannot approve own</span>
                 )}
               </CardContent>
             </Card>
