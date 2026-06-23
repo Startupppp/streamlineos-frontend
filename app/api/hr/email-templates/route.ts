@@ -1,14 +1,14 @@
-import { withAbility, ok, parseBody } from "@/lib/api/helpers"; 
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { emailTemplates } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  subject: z.string().min(1, "Subject is required"),
-  body: z.string().min(1, "Body is required"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be at most 100 characters"),
+  subject: z.string().trim().min(2, "Subject must be at least 2 characters").max(200, "Subject must be at most 200 characters"),
+  body: z.string().min(10, "Body must be at least 10 characters"),
   category: z.string().optional(),
   variables: z.array(z.string()).optional(),
 });
@@ -28,6 +28,15 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:email-templates", async (session) => {
     const body = await parseBody(req, createSchema);
+
+    const existing = await db.query.emailTemplates.findFirst({
+      where: and(
+        eq(emailTemplates.orgId, session.orgId),
+        sql`lower(trim(${emailTemplates.name})) = ${body.name.toLowerCase()}`,
+      ),
+      columns: { id: true },
+    });
+    if (existing) return err("A template with this name already exists.", 409);
 
     const [record] = await db
       .insert(emailTemplates)

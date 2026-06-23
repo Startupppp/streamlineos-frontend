@@ -6,9 +6,9 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const patchSchema = z.object({
-  name: z.string().min(1).optional(),
-  subject: z.string().min(1).optional(),
-  body: z.string().min(1).optional(),
+  name: z.string().trim().min(2).max(100).optional(),
+  subject: z.string().trim().min(2).max(200).optional(),
+  body: z.string().min(10).optional(),
   category: z.string().optional(),
   variables: z.array(z.string()).optional(),
 });

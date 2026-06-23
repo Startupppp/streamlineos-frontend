@@ -121,17 +121,22 @@ export function ExpenseExportDialog({
   const dateFieldErrors = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const fromInFuture = dateFrom && dateFrom > today;
+    const toInFuture = dateTo && dateTo > today;
     const rangeInvalid = dateFrom && dateTo && dateFrom > dateTo;
     const fromError = fromInFuture
       ? "From date cannot be in the future"
       : rangeInvalid
       ? "From date must be before To date"
       : null;
-    const toError = rangeInvalid ? "To date must be after From date" : null;
+    const toError = toInFuture
+      ? "To date cannot be in the future"
+      : rangeInvalid
+      ? "To date must be after From date"
+      : null;
     return { from: fromError, to: toError };
   }, [dateFrom, dateTo]);
 
-  const dateRangeError = dateFieldErrors.from;
+  const dateRangeError = dateFieldErrors.from ?? dateFieldErrors.to;
 
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
