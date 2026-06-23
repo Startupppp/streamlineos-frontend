@@ -125,7 +125,7 @@ export function useCancelInvitation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: { invitationId: string }) =>
-      apiClient.delete("/organization/invitations", { data: variables }),
+      apiClient.delete("/organization/invitations", variables),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
     },

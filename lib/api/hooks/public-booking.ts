@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -28,7 +27,7 @@ export function usePublicInterviewBooking(token: string) {
       try {
         return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`);
       } catch (e) {
-        if (axios.isAxiosError(e) && e.response?.status === 410) {
+        if (e instanceof Error && e.message.startsWith("410")) {
           throw new InterviewBookingExpiredError();
         }
         throw e;

@@ -37,9 +37,7 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
     const downloadFileName = fileName || extractFileName(fileUrl);
     let blob: Blob;
     if (!isLocalUrl(fileUrl)) {
-      blob = await apiClient.download("/storage/download", {
-        params: { url: fileUrl, attachment: 1 },
-      });
+      blob = await apiClient.download("/storage/download", { url: fileUrl, attachment: 1 });
     } else {
       const url = await getSignedFileUrl(fileUrl);
       const response = await fetch(url);
