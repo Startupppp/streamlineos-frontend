@@ -175,7 +175,7 @@ export default function IncentivesPage() {
 
   function handleSetRate() {
     const parsed = parseFloat(newRate);
-    if (!newRate || isNaN(parsed) || parsed <= 0 || parsed > 100) {
+    if (!newRate || isNaN(parsed) || parsed < 0 || parsed > 100) {
       toast.error("Incentive rate must be between 0 and 100");
       return;
     }
