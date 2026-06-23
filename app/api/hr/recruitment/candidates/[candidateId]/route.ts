@@ -58,10 +58,7 @@ const updateCandidateSchema = z.object({
   portfolioUrl: z.string().url().max(500).optional().or(z.literal("")),
   currentCompany: z.string().max(200).optional(),
   currentRole: z.string().max(200).optional(),
-  experienceYears: z.preprocess(
-    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
-    z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
-  ),
+  experienceYears: z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
   skills: z.array(z.string()).optional(),
   source: z.enum(CANDIDATE_SOURCES).optional(),
   status: z.enum(CANDIDATE_STATUSES).optional(),
@@ -124,26 +121,28 @@ export async function PATCH(
       }
     }
 
+    const updateFields: Parameters<ReturnType<typeof db.update<typeof candidates>>["set"]>[0] = {
+      updatedAt: new Date(),
+    };
+    if (body.firstName !== undefined) updateFields.firstName = body.firstName;
+    if (body.lastName !== undefined) updateFields.lastName = body.lastName;
+    if (body.email !== undefined) updateFields.email = body.email;
+    if (body.phone !== undefined) updateFields.phone = body.phone;
+    if (body.linkedinUrl !== undefined) updateFields.linkedinUrl = body.linkedinUrl || null;
+    if (body.portfolioUrl !== undefined) updateFields.portfolioUrl = body.portfolioUrl || null;
+    if (body.currentCompany !== undefined) updateFields.currentCompany = body.currentCompany;
+    if (body.currentRole !== undefined) updateFields.currentRole = body.currentRole;
+    if (body.experienceYears !== undefined) updateFields.experienceYears = String(body.experienceYears);
+    if (body.skills !== undefined) updateFields.skills = body.skills;
+    if (body.source !== undefined) updateFields.source = body.source;
+    if (body.status !== undefined) updateFields.status = body.status;
+    if (body.notes !== undefined) updateFields.notes = body.notes;
+    if (body.rating !== undefined) updateFields.rating = body.rating;
+    if (body.resumeUrl !== undefined) updateFields.resumeUrl = body.resumeUrl || null;
+
     await db
       .update(candidates)
-      .set({
-        ...(body.firstName !== undefined && { firstName: body.firstName }),
-        ...(body.lastName !== undefined && { lastName: body.lastName }),
-        ...(body.email !== undefined && { email: body.email }),
-        ...(body.phone !== undefined && { phone: body.phone }),
-        ...(body.linkedinUrl !== undefined && { linkedinUrl: body.linkedinUrl || null }),
-        ...(body.portfolioUrl !== undefined && { portfolioUrl: body.portfolioUrl || null }),
-        ...(body.currentCompany !== undefined && { currentCompany: body.currentCompany }),
-        ...(body.currentRole !== undefined && { currentRole: body.currentRole }),
-        ...(body.experienceYears !== undefined && { experienceYears: body.experienceYears }),
-        ...(body.skills !== undefined && { skills: body.skills }),
-        ...(body.source !== undefined && { source: body.source }),
-        ...(body.status !== undefined && { status: body.status }),
-        ...(body.notes !== undefined && { notes: body.notes }),
-        ...(body.rating !== undefined && { rating: body.rating }),
-        ...(body.resumeUrl !== undefined && { resumeUrl: body.resumeUrl || null }),
-        updatedAt: new Date(),
-      })
+      .set(updateFields)
       .where(eq(candidates.id, candidateId));
 
     if (body.status === "REJECTED" && existing.status !== "REJECTED") {

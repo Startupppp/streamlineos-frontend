@@ -18,6 +18,7 @@ const createSchema = z.object({
   fileName: z.string().min(1, "fileName is required"),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
+  targetUserId: z.string().optional(),
 });
 
 
@@ -183,6 +184,15 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createSchema);
 
+    let targetUserId = session.user.id;
+    if (body.targetUserId && body.targetUserId !== session.user.id) {
+      const ability = await getSessionAbility();
+      if (!ability.can("manage", "hr:onboarding")) {
+        return err("Only HR admins can upload documents on behalf of employees.", 403);
+      }
+      targetUserId = body.targetUserId;
+    }
+
     const docType = await db.query.documentTypes.findFirst({
       where: and(
         eq(documentTypes.id, body.documentTypeId),
@@ -198,7 +208,7 @@ export async function POST(req: NextRequest) {
       .where(
         and(
           eq(onboardingDocuments.orgId, session.orgId),
-          eq(onboardingDocuments.userId, session.user.id),
+          eq(onboardingDocuments.userId, targetUserId),
           eq(onboardingDocuments.documentTypeId, body.documentTypeId)
         )
       )
@@ -213,7 +223,7 @@ export async function POST(req: NextRequest) {
       .insert(onboardingDocuments)
       .values({
         orgId: session.orgId,
-        userId: session.user.id,
+        userId: targetUserId,
         documentTypeId: body.documentTypeId,
         fileUrl: body.fileUrl,
         fileName: body.fileName,
@@ -229,19 +239,19 @@ export async function POST(req: NextRequest) {
       onboardingDocumentId: record.id,
       action: auditAction,
       performedBy: session.user.id,
-      metadata: { fileName: body.fileName, version: nextVersion },
+      metadata: { fileName: body.fileName, version: nextVersion, uploadedOnBehalfOf: targetUserId !== session.user.id ? targetUserId : undefined },
     });
 
-    await recalcOnboardingStatus(session.orgId, session.user.id);
+    await recalcOnboardingStatus(session.orgId, targetUserId);
 
     void import("@/lib/services/automation/engine").then(async ({ runAutomationsForEvent }) => {
       const employee = await db.query.users.findFirst({
-        where: eq(users.id, session.user.id),
+        where: eq(users.id, targetUserId),
         columns: { name: true },
       });
       await runAutomationsForEvent(session.orgId, "onboarding.document_submitted", {
         documentId: record.id,
-        userId: session.user.id,
+        userId: targetUserId,
         employeeName: employee?.name ?? "",
         documentTypeName: docType.name,
         status: "SUBMITTED",

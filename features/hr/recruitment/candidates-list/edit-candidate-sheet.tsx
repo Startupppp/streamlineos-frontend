@@ -47,10 +47,7 @@ const editCandidateSchema = z.object({
   source: z.string(),
   currentRole: z.string().max(100).optional().or(z.literal("")),
   currentCompany: z.string().max(100).optional().or(z.literal("")),
-  experienceYears: z.preprocess(
-    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
-    z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
-  ),
+  experienceYears: z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
   skills: z.string().max(500).optional().or(z.literal("")),
   linkedinUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
   notes: z.string().max(2000).optional().or(z.literal("")),
@@ -269,7 +266,10 @@ export function EditCandidateSheet({
                       step={0.5}
                       placeholder="e.g. 3"
                       value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        field.onChange(raw === "" ? undefined : Number(raw));
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

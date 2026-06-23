@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle2, RefreshCw, ExternalLink } from "lucide-react";
+import { CheckCircle2, RefreshCw, ExternalLink, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,11 +22,19 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 
 interface OnboardingDoc {
   id: number;
@@ -52,12 +60,43 @@ interface ReviewSheetProps {
   onClose: () => void;
 }
 
+interface DocumentType {
+  id: number;
+  name: string;
+  isActive: boolean | null;
+}
+
 function useEmployeeOnboardingDocs(userId: string | null) {
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.onboardingDocs(userId ?? undefined),
     queryFn: () =>
       apiClient.get<OnboardingDoc[]>("/hr/onboarding-docs", { params: { userId } }),
     enabled: !!userId,
+  });
+}
+
+function useDocumentTypes() {
+  return useQuery<DocumentType[]>({
+    queryKey: queryKeys.hr.documentTypes(),
+    queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
+  });
+}
+
+function useUploadOnboardingDoc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      documentTypeId: number;
+      fileUrl: string;
+      fileName: string;
+      fileSize?: number;
+      mimeType?: string;
+      targetUserId: string;
+    }) => apiClient.post("/hr/onboarding-docs", data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocs(variables.targetUserId) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
+    },
   });
 }
 
@@ -121,11 +160,20 @@ function formatBytes(bytes: number | null): string {
 
 export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewSheetProps) {
   const reviewMutation = useReviewDocument();
+  const uploadDocMutation = useUploadOnboardingDoc();
+  const uploadFileMutation = useUploadFile();
   const { data: employeeDocs, isLoading: docsLoading } = useEmployeeOnboardingDocs(userId);
+  const { data: documentTypes } = useDocumentTypes();
 
   const [reuploadDoc, setReuploadDoc] = useState<OnboardingDoc | null>(null);
   const [reuploadRemarks, setReuploadRemarks] = useState("");
   const [approveDoc, setApproveDoc] = useState<OnboardingDoc | null>(null);
+
+  const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
+  const [uploadDocTypeId, setUploadDocTypeId] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSheetOpenChange = useCallback(
     (open: boolean) => {
@@ -151,6 +199,57 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
   const handleCloseApprove = useCallback((open: boolean) => {
     if (!open) setApproveDoc(null);
   }, []);
+
+  const handleOpenUploadSheet = useCallback(() => {
+    setUploadDocTypeId("");
+    setUploadFile(null);
+    setUploadSheetOpen(true);
+  }, []);
+
+  const handleCloseUploadSheet = useCallback((open: boolean) => {
+    if (!open) {
+      setUploadDocTypeId("");
+      setUploadFile(null);
+      setUploadSheetOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (file && file.size > 10 * 1024 * 1024) {
+      toast.error("File exceeds 10 MB limit");
+      return;
+    }
+    setUploadFile(file);
+  }, []);
+
+  const handleUploadSubmit = useCallback(async () => {
+    if (!userId) return;
+    if (!uploadDocTypeId) { toast.error("Please select a document type"); return; }
+    if (!uploadFile) { toast.error("Please select a file"); return; }
+    setIsUploading(true);
+    try {
+      const uploaded = await uploadFileMutation.mutateAsync({ file: uploadFile, folder: "onboarding-docs" });
+      await uploadDocMutation.mutateAsync({
+        documentTypeId: Number(uploadDocTypeId),
+        fileUrl: uploaded.url,
+        fileName: uploadFile.name,
+        fileSize: uploaded.size,
+        mimeType: uploaded.mimeType,
+        targetUserId: userId,
+      });
+      toast.success("Document uploaded on behalf of employee");
+      setUploadSheetOpen(false);
+      setUploadDocTypeId("");
+      setUploadFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    } finally {
+      setIsUploading(false);
+    }
+  }, [userId, uploadDocTypeId, uploadFile, uploadFileMutation, uploadDocMutation]);
 
   const handleOpenReupload = useCallback((doc: OnboardingDoc) => {
     setReuploadDoc(doc);
@@ -204,14 +303,29 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
       <Sheet open={userId !== null} onOpenChange={handleSheetOpenChange}>
         <SheetContent side="right" className="flex flex-col p-0 gap-0 sm:max-w-lg w-full">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-            <SheetTitle className="text-base">
-              {userName ?? "Employee"} — Documents
-            </SheetTitle>
-            <SheetDescription className="text-xs">
-              {canReview
-                ? "Review and approve submitted onboarding documents."
-                : "View submitted onboarding documents."}
-            </SheetDescription>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <SheetTitle className="text-base">
+                  {userName ?? "Employee"} — Documents
+                </SheetTitle>
+                <SheetDescription className="text-xs mt-0.5">
+                  {canReview
+                    ? "Review and approve submitted onboarding documents."
+                    : "View submitted onboarding documents."}
+                </SheetDescription>
+              </div>
+              {canReview && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs shrink-0"
+                  onClick={handleOpenUploadSheet}
+                >
+                  <Upload className="h-3 w-3 mr-1" />
+                  Upload
+                </Button>
+              )}
+            </div>
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
@@ -367,6 +481,105 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               )}
               Send Request
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={uploadSheetOpen} onOpenChange={handleCloseUploadSheet}>
+        <SheetContent side="right" className="flex flex-col p-0 gap-0">
+          <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+            <SheetTitle className="text-base">Upload Document</SheetTitle>
+            <SheetDescription className="text-xs">
+              Upload an onboarding document on behalf of{" "}
+              <strong>{userName ?? "this employee"}</strong>.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 px-4 py-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">
+                Document Type <span className="text-destructive">*</span>
+              </Label>
+              <Select value={uploadDocTypeId} onValueChange={setUploadDocTypeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select document type" />
+                </SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {(documentTypes ?? [])
+                    .filter((dt) => dt.isActive !== false)
+                    .map((dt) => (
+                      <SelectItem key={dt.id} value={String(dt.id)}>
+                        {dt.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">
+                File <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  Choose File
+                </Button>
+                {uploadFile && (
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-xs truncate text-muted-foreground max-w-[180px]">
+                      {uploadFile.name}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 shrink-0"
+                      onClick={() => {
+                        setUploadFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="application/pdf,image/*,.doc,.docx"
+                onChange={handleFileChange}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Accepted: PDF, images, Word documents. Max 10 MB.
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 px-4 py-3 border-t flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => handleCloseUploadSheet(false)}
+              disabled={isUploading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleUploadSubmit}
+              disabled={isUploading || !uploadDocTypeId || !uploadFile}
+            >
+              {isUploading ? "Uploading..." : "Upload"}
             </Button>
           </div>
         </SheetContent>
