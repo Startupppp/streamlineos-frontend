@@ -37,6 +37,7 @@ export async function PATCH(
     });
 
     if (!existing) return err("Leave request not found.", 404);
+    if (existing.userId === session.user.id) return err("You cannot approve or reject your own leave request.", 403);
 
     await db.transaction(async (tx) => {
       await tx
