@@ -107,6 +107,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/billing/invoices": ["settings:manage"],
   "/notifications": ["self:attendance"],
   "/ceo": ["reports:view"],
+  "/reports": ["reports:view"],
   "/ai": ["settings:manage"],
   "/blogs/admin": ["settings:manage"],
 };

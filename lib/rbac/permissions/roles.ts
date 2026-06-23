@@ -2,6 +2,7 @@ import { HR_PERMISSIONS } from "./hr";
 import { CRM_PERMISSIONS } from "./crm";
 import { SHARED_PERMISSIONS } from "./shared";
 import { SUPPORT_PERMISSIONS } from "./support";
+import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
   ...HR_PERMISSIONS,
@@ -20,18 +21,18 @@ const EMPLOYEE_SELF_SERVICE = [
 ];
 
 export const SYSTEM_ROLES = [
-  "OWNER",
-  "CEO",
-  "HR",
-  "SALES",
-  "CUSTOMER_SUPPORT",
-  "ENGINEERING",
-  "DESIGN",
-  "VIDEO_EDITOR",
-  "DIGITAL_MARKETING",
-  "BLOG_EDITOR",
-  "BRANCH_MANAGER",
-  "BRANCH_HR",
+  ROLES.OWNER,
+  ROLES.CEO,
+  ROLES.HR,
+  ROLES.SALES,
+  ROLES.CUSTOMER_SUPPORT,
+  ROLES.ENGINEERING,
+  ROLES.DESIGN,
+  ROLES.VIDEO_EDITOR,
+  ROLES.DIGITAL_MARKETING,
+  ROLES.BLOG_EDITOR,
+  ROLES.BRANCH_MANAGER,
+  ROLES.BRANCH_HR,
 ] as const;
 
 export type SystemRole = (typeof SYSTEM_ROLES)[number];
