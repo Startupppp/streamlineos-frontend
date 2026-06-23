@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, startOfDay, differenceInCalendarDays } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import {
@@ -24,6 +24,17 @@ import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
 import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const isSunday = (d: Date) => d.getDay() === 0;
+
+function countNonSundayDays(startStr: string, endStr: string): number {
+  const end = new Date(endStr);
+  const current = new Date(startStr);
+  let count = 0;
+  while (current <= end) {
+    if (current.getDay() !== 0) count++;
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}
 
 const leaveFormSchema = z
   .object({
@@ -113,7 +124,7 @@ export function LeaveRequestSheet({
     }
     const days = watchedHalfDay
       ? 0.5
-      : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
+      : countNonSundayDays(watchedStartDate, watchedEndDate);
     const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
     if (!selectedType) return { requestedDays: days, balancePreview: null };
 

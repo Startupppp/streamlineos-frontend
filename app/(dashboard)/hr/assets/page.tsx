@@ -134,7 +134,7 @@ const assetFormSchema = z.object({
     .number()
     .min(0, "Cost cannot be negative")
     .max(9_999_999, "Cost exceeds maximum")
-    .refine((v) => Math.round(v * 100) / 100 === v, "Maximum 2 decimal places")
+    .multipleOf(0.01, "Maximum 2 decimal places")
     .optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(500).optional(),
