@@ -46,7 +46,7 @@ const hbKeys = {
   list: () => [...hbKeys.all, "list"] as const,
 };
 
-const VERSION_FORMAT_REGEX = /^v?[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)?$/;
+const VERSION_FORMAT_REGEX = /^\d+\.\d+$/;
 const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
 const URL_HTTPS_REGEX = /^https:\/\/.+/;
 
@@ -120,9 +120,9 @@ function HandbookContent() {
   const handleSave = useCallback(async () => {
     const trimmedVersion = version.trim();
     if (!trimmedVersion) { toast.error("Version is required"); return; }
-    if (trimmedVersion.length > 20) { toast.error("Version must be at most 20 characters"); return; }
+    if (trimmedVersion.length > 10) { toast.error("Version must be at most 10 characters"); return; }
     if (!VERSION_FORMAT_REGEX.test(trimmedVersion)) {
-      toast.error("Version must be a valid format (e.g., 1.0, v1.0, 2024-01)");
+      toast.error("Version must be in MAJOR.MINOR format (e.g., 1.0, 2.3)");
       return;
     }
 

@@ -5,15 +5,15 @@ import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
-const VERSION_FORMAT = /^v?[0-9]+(\.[0-9]+)*(-[a-zA-Z0-9]+)?$/;
+const VERSION_FORMAT = /^\d+\.\d+$/;
 const CONSECUTIVE_SPECIAL_CHARS = /[^a-zA-Z0-9 ]{2,}/;
 
 const createSchema = z.object({
   version: z
     .string()
     .min(1, "Version is required")
-    .max(20, "Version must be at most 20 characters")
-    .regex(VERSION_FORMAT, "Version must be a valid format (e.g., 1.0, v1.0, 2024-01)"),
+    .max(10, "Version must be at most 10 characters")
+    .regex(VERSION_FORMAT, "Version must be in MAJOR.MINOR format (e.g., 1.0, 2.3)"),
   title: z
     .string()
     .trim()

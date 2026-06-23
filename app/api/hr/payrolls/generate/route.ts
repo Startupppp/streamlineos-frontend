@@ -9,14 +9,14 @@ import { createAuditLog } from "@/lib/audit-log";
 const generateSinglePayrollSchema = z.object({
   userId: z.string(),
   month: z.string(),
-  lopDays: z.number().optional(),
-  halfDays: z.number().optional(),
-  otherDeductions: z.number().optional(),
-  bonus: z.number().optional(),
+  lopDays: z.number().min(0).optional(),
+  halfDays: z.number().min(0).optional(),
+  otherDeductions: z.number().min(0).optional(),
+  bonus: z.number().min(0).optional(),
   overtimeType: z.enum(["days", "hours"]).optional(),
-  overtimeDays: z.number().optional(),
-  overtimeHours: z.number().optional(),
-  overtimeAmount: z.number().optional(),
+  overtimeDays: z.number().min(0).optional(),
+  overtimeHours: z.number().min(0).optional(),
+  overtimeAmount: z.number().min(0).optional(),
 });
 
 export async function POST(req: NextRequest) {

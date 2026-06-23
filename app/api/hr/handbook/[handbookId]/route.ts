@@ -10,7 +10,7 @@ type RouteParams = { params: Promise<{ handbookId: string }> };
 const updateSchema = z.object({
   status: z.enum(["PUBLISHED", "DRAFT"]).optional(),
   title: z.string().min(2).max(100).optional(),
-  version: z.string().min(1).max(20).optional(),
+  version: z.string().min(1).max(10).regex(/^\d+\.\d+$/, "Version must be in MAJOR.MINOR format (e.g., 1.0, 2.3)").optional(),
   documentUrl: z.string().url().optional().or(z.literal("")),
   changelog: z.string().max(2000).optional(),
 });
