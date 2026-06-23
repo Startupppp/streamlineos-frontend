@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
 
-export function useReferrals() {
+export function useAllReferrals() {
   return useQuery({
     queryKey: queryKeys.hr.referrals(),
     queryFn: () => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals"),
@@ -13,7 +13,7 @@ export function useReferrals() {
   });
 }
 
-export function useCreateReferral() {
+export function useSubmitReferral() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateReferralInput) =>
@@ -24,7 +24,7 @@ export function useCreateReferral() {
   });
 }
 
-export function useUpdateReferral() {
+export function useUpdateReferralStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>

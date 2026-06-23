@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useReferrals, useUpdateReferral } from "@/lib/api/hooks/hr/recruitment/referrals";
-import { useJobPostings } from "@/lib/api/hooks/hr/recruitment";
+import { useAllReferrals, useUpdateReferralStatus } from "@/lib/api/hooks/hr/recruitment/referrals";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,7 +32,7 @@ interface BonusSheetProps {
 }
 
 function BonusSheet({ referral, onClose }: BonusSheetProps) {
-  const updateMutation = useUpdateReferral();
+  const updateMutation = useUpdateReferralStatus();
   const [bonusAmount, setBonusAmount] = useState(referral.bonusAmount ?? "");
 
   const handleMarkPaid = async () => {
@@ -85,8 +84,8 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
 }
 
 export default function ReferralsHRPage() {
-  const { data: referrals = [], isLoading } = useReferrals();
-  const updateMutation = useUpdateReferral();
+  const { data: referrals = [], isLoading } = useAllReferrals();
+  const updateMutation = useUpdateReferralStatus();
   const [bonusReferral, setBonusReferral] = useState<CandidateReferral | null>(null);
 
   const handleStatusChange = useCallback(async (id: number, status: ReferralStatus) => {
