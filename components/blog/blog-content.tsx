@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { cn } from "@/lib/utils";
 
 interface BlogContentProps {
@@ -13,7 +13,7 @@ export function BlogContent({ html, className }: BlogContentProps) {
         "prose blog-prose prose-lg max-w-none dark:prose-invert",
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2", "h3"]), allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, "*": ["class", "style", "id"] } }) }}
     />
   );
 }

@@ -3,7 +3,6 @@
 import React, { useCallback, useMemo } from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
 import { toast } from "sonner";
-import ExcelJS from "exceljs";
 import { useSession } from "next-auth/react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -257,6 +256,7 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
       return;
     }
     try {
+      const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
       const ws = workbook.addWorksheet("Leave Requests");
       ws.columns = [

@@ -2,7 +2,6 @@
 
 import { useCallback, memo, useState } from "react";
 import { format } from "date-fns";
-import JSZip from "jszip";
 import {
   FileText,
   Folder,
@@ -300,6 +299,7 @@ export function DocumentTable({
     if (filesWithUrl.length === 0) return;
     setIsZipping(true);
     try {
+      const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
       const results = await Promise.allSettled(
         filesWithUrl.map(async (doc) => {

@@ -20,7 +20,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Mail, Trash2, Copy } from "lucide-react";
+import { Plus, Mail, Trash2, Copy, Pencil } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 
 interface EmailTemplate {
@@ -47,12 +47,19 @@ function EmailTemplatesContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
   });
 
+  const update = useMutation({
+    mutationFn: ({ id, ...data }: { id: number; name: string; subject: string; body: string; category?: string }) =>
+      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
+  });
+
   const remove = useMutation({
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
@@ -60,24 +67,43 @@ function EmailTemplatesContent() {
   const [category, setCategory] = useState("General");
 
   const resetForm = useCallback(() => {
-    setName(""); setSubject(""); setBody(""); setCategory("General");
+    setName(""); setSubject(""); setBody(""); setCategory("General"); setEditTemplate(null);
   }, []);
 
-  const handleCreate = useCallback(() => {
+  const handleOpenEdit = useCallback((t: EmailTemplate) => {
+    setEditTemplate(t);
+    setName(t.name);
+    setSubject(t.subject);
+    setBody(t.body);
+    setCategory(t.category ?? "General");
+    setSheetOpen(true);
+  }, []);
+
+  const handleSave = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) { toast.error("Template Name is required"); return; }
     if (trimmedName.length < 3) { toast.error("Template Name must be at least 3 characters"); return; }
     if (trimmedName.length > 100) { toast.error("Template Name must be at most 100 characters"); return; }
-    if (/[^a-zA-Z0-9\s\-_()&,.]/.test(trimmedName)) { toast.error("Template Name contains invalid special characters"); return; }
     if (/\s{2,}/.test(trimmedName)) { toast.error("Template Name cannot have multiple consecutive spaces"); return; }
     const trimmedSubject = subject.trim();
     if (!trimmedSubject) { toast.error("Subject Line is required"); return; }
     if (trimmedSubject.length < 3) { toast.error("Subject must be at least 3 characters"); return; }
     if (trimmedSubject.length > 200) { toast.error("Subject must be at most 200 characters"); return; }
-    if (/\s{2,}/.test(trimmedSubject)) { toast.error("Subject cannot have multiple consecutive spaces"); return; }
     const trimmedBody = body.trim();
     if (!trimmedBody) { toast.error("Body is required"); return; }
     if (trimmedBody.length < 10) { toast.error("Body must be at least 10 characters"); return; }
+
+    if (editTemplate) {
+      update.mutate(
+        { id: editTemplate.id, name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
+        {
+          onSuccess: () => { toast.success("Template updated"); setSheetOpen(false); resetForm(); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+      return;
+    }
+
     const isDuplicate = (templates ?? []).some(
       (t) => t.name.trim().toLowerCase() === trimmedName.toLowerCase()
     );
@@ -85,14 +111,11 @@ function EmailTemplatesContent() {
     create.mutate(
       { name: trimmedName, subject: trimmedSubject, body: trimmedBody, category },
       {
-        onSuccess: () => {
-          toast.success("Template created"); setSheetOpen(false);
-          resetForm();
-        },
+        onSuccess: () => { toast.success("Template created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, subject, body, category, create, resetForm, templates]);
+  }, [name, subject, body, category, create, update, resetForm, templates, editTemplate]);
 
   const handleDelete = useCallback(() => {
     if (!deleteId) return;
@@ -140,6 +163,9 @@ function EmailTemplatesContent() {
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(t)}>
                       <Copy className="h-3 w-3" />
                     </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenEdit(t)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(t.id)}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -159,7 +185,7 @@ function EmailTemplatesContent() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Email Template" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title={editTemplate ? "Edit Email Template" : "Create Email Template"} onSubmit={handleSave} submitLabel={editTemplate ? "Save Changes" : "Create"} isPending={create.isPending || update.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Template Name</label>
           <Input placeholder="e.g., Welcome Email" value={name} onChange={(e) => setName(e.target.value)} />
