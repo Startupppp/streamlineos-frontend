@@ -1,10 +1,26 @@
+import { z } from "zod";
+
+export const PASSWORD_RULES = {
+  minLength: 8,
+  maxLength: 128,
+  requireUppercase: true,
+  requireLowercase: true,
+  requireNumber: true,
+  requireSpecial: true,
+  specialChars: "@$!%*?&#^_+=\\-",
+} as const;
+
+export const PASSWORD_REGEX = new RegExp(
+  `^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[${PASSWORD_RULES.specialChars.replace(/[-\\]/g, "\\$&")}])[A-Za-z\\d${PASSWORD_RULES.specialChars.replace(/[-\\]/g, "\\$&")}]{${PASSWORD_RULES.minLength},${PASSWORD_RULES.maxLength}}$`,
+);
+
 export function getPasswordStrength(password: string) {
   const checks = {
-    length: password.length >= 8,
+    length: password.length >= PASSWORD_RULES.minLength,
     lowercase: /[a-z]/.test(password),
     uppercase: /[A-Z]/.test(password),
     number: /\d/.test(password),
-    special: /[@$!%*?&]/.test(password),
+    special: new RegExp(`[${PASSWORD_RULES.specialChars.replace(/[-\\]/g, "\\$&")}]`).test(password),
   };
   const passed = Object.values(checks).filter(Boolean).length;
   let level: "weak" | "fair" | "good" | "strong" = "weak";
@@ -17,12 +33,44 @@ export function getPasswordStrength(password: string) {
 
 export type PasswordStrength = ReturnType<typeof getPasswordStrength>;
 
-export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
 export const PASSWORD_REQUIREMENTS = [
-  { key: "length" as const, label: "8+ characters" },
+  { key: "length" as const, label: `${PASSWORD_RULES.minLength}+ characters` },
   { key: "uppercase" as const, label: "Uppercase" },
   { key: "lowercase" as const, label: "Lowercase" },
   { key: "number" as const, label: "Number" },
   { key: "special" as const, label: "Special char" },
 ] as const;
+
+export function validatePasswordStrength(password: string): {
+  valid: boolean;
+  score: number;
+  missing: string[];
+} {
+  const specialRe = new RegExp(`[${PASSWORD_RULES.specialChars.replace(/[-\\]/g, "\\$&")}]`);
+  const missing: string[] = [];
+
+  if (password.length < PASSWORD_RULES.minLength) missing.push(`At least ${PASSWORD_RULES.minLength} characters`);
+  if (password.length > PASSWORD_RULES.maxLength) missing.push(`No more than ${PASSWORD_RULES.maxLength} characters`);
+  if (!/[A-Z]/.test(password)) missing.push("At least one uppercase letter");
+  if (!/[a-z]/.test(password)) missing.push("At least one lowercase letter");
+  if (!/\d/.test(password)) missing.push("At least one number");
+  if (!specialRe.test(password)) missing.push(`At least one special character (${PASSWORD_RULES.specialChars})`);
+
+  const checks = 5;
+  const passed = checks - Math.min(missing.length, checks);
+  return { valid: missing.length === 0, score: Math.round((passed / checks) * 100), missing };
+}
+
+export const PASSWORD_ZOD_SCHEMA = z
+  .string()
+  .min(PASSWORD_RULES.minLength, `Password must be at least ${PASSWORD_RULES.minLength} characters`)
+  .max(PASSWORD_RULES.maxLength, `Password must not exceed ${PASSWORD_RULES.maxLength} characters`)
+  .superRefine((val, ctx) => {
+    const result = validatePasswordStrength(val);
+    if (!result.valid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.missing[0] ?? "Password does not meet requirements",
+      });
+    }
+  });
