@@ -18,11 +18,16 @@ import { format } from "date-fns";
 import { Plus, PartyPopper, Calendar, MapPin, Users, UserPlus } from "lucide-react";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+import { useSession } from "next-auth/react";
+
+interface Participant {
+  id: number; userId: string; status: string;
+}
 
 interface TeamEvent {
   id: number; title: string; description: string | null; location: string | null;
-  startDate: string | null; endDate: string | null; rsvpCount: number;
-  isRsvped: boolean; createdAt: string | null;
+  date: string | null; time: string | null; maxParticipants: number | null;
+  participants: Participant[]; createdAt: string | null;
 }
 
 const eventKeys = { all: [...queryKeys.hr.all, "team-events"] as const, list: () => [...eventKeys.all, "list"] as const };
@@ -30,6 +35,7 @@ const eventKeys = { all: [...queryKeys.hr.all, "team-events"] as const, list: ()
 export default function TeamEventsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
+  const { data: session } = useSession();
   const isAdmin = ability.can("manage", "hr:employees");
 
   const { data: events, isLoading } = useQuery({
@@ -104,26 +110,30 @@ export default function TeamEventsPage() {
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((ev: TeamEvent) => (
-            <Card key={ev.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-2">
-                <h3 className="text-sm font-semibold leading-tight">{ev.title}</h3>
-                {ev.description && <p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p>}
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  {ev.startDate && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />{format(new Date(ev.startDate), "MMM d, h:mm a")}</span>}
-                  {ev.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{ev.location}</span>}
-                  <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{ev.rsvpCount} going</span>
-                </div>
-                {ev.isRsvped ? (
-                  <Badge variant="default" className="text-[10px] w-full justify-center">Going</Badge>
-                ) : (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => handleRsvp(ev.id)}>
-                    <UserPlus className="h-3 w-3 mr-1" />RSVP
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+          {events.map((ev: TeamEvent) => {
+            const rsvpCount = ev.participants?.length ?? 0;
+            const isRsvped = ev.participants?.some((p) => p.userId === session?.user?.id) ?? false;
+            return (
+              <Card key={ev.id} className="hover:shadow-sm transition-shadow">
+                <CardContent className="p-4 space-y-2">
+                  <h3 className="text-sm font-semibold leading-tight">{ev.title}</h3>
+                  {ev.description && <p className="text-xs text-muted-foreground line-clamp-2">{ev.description}</p>}
+                  <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                    {ev.date && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />{format(new Date(ev.date), "MMM d, yyyy")}{ev.time ? ` · ${ev.time}` : ""}</span>}
+                    {ev.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{ev.location}</span>}
+                    <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{rsvpCount} going{ev.maxParticipants ? ` / ${ev.maxParticipants}` : ""}</span>
+                  </div>
+                  {isRsvped ? (
+                    <Badge variant="default" className="text-[10px] w-full justify-center">Going</Badge>
+                  ) : (
+                    <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => handleRsvp(ev.id)}>
+                      <UserPlus className="h-3 w-3 mr-1" />RSVP
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

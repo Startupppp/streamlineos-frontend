@@ -74,7 +74,7 @@ export default function SurveysPage() {
   const create = useCreateSurvey();
   const update = useUpdateSurvey();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage", "hr:performance");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [closeId, setCloseId] = useState<number | null>(null);
