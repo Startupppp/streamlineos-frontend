@@ -9,7 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Settings, List, CalendarDays, ChevronLeft, ChevronRight, CalendarClock, BarChart2 } from "lucide-react";
-import { BigCalendarWrapper, type BigCalEvent, type View } from "@/features/calendar/big-calendar-wrapper";
+import dynamic from "next/dynamic";
+import type { BigCalEvent, View } from "@/features/calendar/big-calendar-wrapper";
+
+const BigCalendarWrapper = dynamic(
+  () =>
+    import("@/features/calendar/big-calendar-wrapper").then((m) => ({
+      default: m.BigCalendarWrapper,
+    })),
+  { ssr: false },
+);
 import { addMonths, subMonths, addWeeks, subWeeks, format as fmtDate } from "date-fns";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import { InterviewList } from "@/features/hr/recruitment/interviews/interview-list";
