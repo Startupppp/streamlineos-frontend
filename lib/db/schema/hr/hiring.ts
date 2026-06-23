@@ -226,21 +226,34 @@ export const interviewBookingLinks = pgTable("interview_booking_links", {
   index("idx_booking_links_candidate").on(table.candidateId),
 ]);
 
+export type ReferralStatus = "SUBMITTED" | "REVIEWING" | "HIRED" | "REJECTED" | "BONUS_PAID";
+
 export const candidateReferrals = pgTable("candidate_referrals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
   candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
   referredBy: text("referred_by").references(() => users.id).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
   relationship: text("relationship"),
   notes: text("notes"),
+  status: text("status").$type<ReferralStatus>().notNull().default("SUBMITTED"),
   bonusEligible: boolean("bonus_eligible").notNull().default(true),
   bonusAmount: decimal("bonus_amount", { precision: 12, scale: 2 }),
   bonusPaidAt: timestamp("bonus_paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_referrals_candidate").on(table.candidateId),
   index("idx_referrals_referred_by").on(table.referredBy),
+  index("idx_referrals_org").on(table.orgId),
 ]);
+
+export const candidateReferralsRelations = relations(candidateReferrals, ({ one }) => ({
+  organization: one(organizations, { fields: [candidateReferrals.orgId], references: [organizations.id] }),
+  candidate: one(candidates, { fields: [candidateReferrals.candidateId], references: [candidates.id] }),
+  referrer: one(users, { fields: [candidateReferrals.referredBy], references: [users.id] }),
+  jobPosting: one(jobPostings, { fields: [candidateReferrals.jobPostingId], references: [jobPostings.id] }),
+}));
 
 export const calibrationSessions = pgTable("calibration_sessions", {
   id: serial("id").primaryKey(),
