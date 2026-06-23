@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
+import { withAbility, ok, err, parseBody } from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { handbookVersions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";

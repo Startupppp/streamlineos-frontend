@@ -1,4 +1,4 @@
-import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

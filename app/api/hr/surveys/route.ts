@@ -1,4 +1,4 @@
-import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { pulseSurveys, surveyResponses } from "@/lib/db/schema";
@@ -7,15 +7,18 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const createSurveySchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().trim().min(2, "Title must be at least 2 characters").max(100, "Title must be at most 100 characters"),
   questions: z.array(z.object({
     id: z.string().min(1),
     text: z.string().min(1),
     type: z.enum(["rating", "text", "choice"]),
     options: z.array(z.string()).optional(),
-  })).min(1),
+  })).min(1, "At least one question is required"),
   isAnonymous: z.boolean().optional().default(true),
   closesAt: z.string().optional(),
+}).refine((d) => !d.closesAt || new Date(d.closesAt) > new Date(), {
+  message: "Closing date must be in the future",
+  path: ["closesAt"],
 });
 
 const submitResponseSchema = z.object({
@@ -59,8 +62,7 @@ export async function POST(req: NextRequest) {
 
     const ability = await getSessionAbility();
 
-
-    if (!ability.can("manage", "hr:performance"))  return err("Only admins can create surveys.", 403);
+    if (!ability.can("manage", "hr:performance")) return err("Only admins can create surveys.", 403);
     const body = await parseBody(req, createSurveySchema);
     const [survey] = await db.insert(pulseSurveys).values({
       orgId: session.orgId,
