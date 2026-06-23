@@ -50,13 +50,29 @@ export function MeetingsTab() {
     [employeesRaw]
   );
 
+  const resetForm = useCallback(() => {
+    setEmpId("");
+    setScheduledDate("");
+    setScheduledTime("10:00");
+    setDuration("30");
+    setAgenda("");
+  }, []);
+
   const handleCreate = useCallback(() => {
     if (!empId.trim()) { toast.error("Please select an employee"); return; }
     if (!scheduledDate.trim()) { toast.error("Please select a date"); return; }
+    const numDuration = Number(duration);
+    if (!Number.isInteger(numDuration) || numDuration < 15 || numDuration > 480) {
+      toast.error("Duration must be a whole number between 15 and 480 minutes");
+      return;
+    }
+    if (!agenda.trim()) { toast.error("Agenda is required"); return; }
 
     const [yr, mo, dy] = scheduledDate.split("-").map(Number);
     const [hr, mn] = scheduledTime.split(":").map(Number);
     const localDt = new Date(yr, mo - 1, dy, hr, mn, 0, 0);
+
+    if (localDt <= new Date()) { toast.error("Meeting date must be in the future"); return; }
 
     const isDuplicate = (meetings ?? []).some((m: OneOnOneMeeting) => {
       if (m.employeeId !== empId || m.status === "CANCELLED") return false;
@@ -66,20 +82,17 @@ export function MeetingsTab() {
     if (isDuplicate) { toast.error("A meeting with this employee is already scheduled at this time"); return; }
 
     createMeeting.mutate(
-      { employeeId: empId, scheduledAt: localDt.toISOString(), duration: Number(duration) || 30, agenda: agenda || undefined },
+      { employeeId: empId, scheduledAt: localDt.toISOString(), duration: numDuration, agenda: agenda.trim() },
       {
         onSuccess: () => {
           toast.success("Meeting scheduled");
           setSheetOpen(false);
-          setEmpId("");
-          setScheduledDate("");
-          setScheduledTime("10:00");
-          setAgenda("");
+          resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting, meetings]);
+  }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting, meetings, resetForm]);
 
   const handleStatusChange = useCallback((id: number, status: MeetingStatus) => {
     updateMeeting.mutate({ id, status }, {
@@ -157,7 +170,7 @@ export function MeetingsTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Schedule 1-on-1" onSubmit={handleCreate} submitLabel="Schedule" isPending={createMeeting.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
           <Popover open={empPickerOpen} onOpenChange={setEmpPickerOpen}>
@@ -188,7 +201,7 @@ export function MeetingsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Date</label>
-            <Input type="date" value={scheduledDate} onChange={handleScheduledDateChange} />
+            <Input type="date" value={scheduledDate} min={new Date().toISOString().slice(0, 10)} onChange={handleScheduledDateChange} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Time</label>
@@ -197,11 +210,11 @@ export function MeetingsTab() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Duration (min)</label>
-          <Input type="number" value={duration} onChange={handleDurationChange} />
+          <Input type="number" min={15} max={480} step={15} value={duration} onChange={handleDurationChange} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Agenda</label>
-          <Textarea placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} />
+          <Textarea placeholder="Topics to discuss..." value={agenda} onChange={handleAgendaChange} rows={3} maxLength={1000} className="resize-none w-full" />
         </div>
       </HrSheet>
 
