@@ -18,9 +18,9 @@ const createSchema = z.object({
     .max(1, "Only one reason may be selected"),
   detailedExplanation: z.string().optional().default(""),
   effectiveDate: z.string().min(1, "Effective date is required"),
-  severanceAmount: z.number().nonnegative().optional(),
+  severanceAmount: z.number().nonnegative().max(9999999).multipleOf(0.01).optional(),
   noticePeriodWaived: z.boolean().optional().default(false),
-  internalNotes: z.string().optional(),
+  internalNotes: z.string().max(1000).optional(),
 }).superRefine((data, ctx) => {
   const reason = data.reasons[0];
   if (reason && !VALID_REASONS.includes(reason)) {

@@ -130,6 +130,13 @@ export default function TerminationPage() {
       return;
     }
 
+    if (severanceAmount) {
+      const numSeverance = Number(severanceAmount);
+      if (isNaN(numSeverance) || numSeverance < 0) { toast.error("Severance amount must be a non-negative number"); return; }
+      if (numSeverance > 9999999) { toast.error("Severance amount cannot exceed ₹99,99,999"); return; }
+    }
+    if (internalNotes.trim().length > 1000) { toast.error("Internal notes must be at most 1000 characters"); return; }
+
     createTermination.mutate(
       {
         userId: selectedUserId,
