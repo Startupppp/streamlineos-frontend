@@ -60,6 +60,7 @@ export const queryKeys = {
     myOnboardingDocs: () => [...base, "hr", "myOnboardingDocs"] as const,
     teams: (teamId?: string) => [...base, "hr", "teams", teamId] as const,
     diversityReport: () => [...base, "hr", "diversityReport"] as const,
+    bookingLinks: () => [...base, "hr", "bookingLinks"] as const,
     documentTemplates: (params?: Record<string, unknown>) => [...base, "hr", "documentTemplates", params] as const,
     documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
     candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,

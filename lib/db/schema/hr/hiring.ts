@@ -467,3 +467,9 @@ export const candidateOffersRelations = relations(candidateOffers, ({ one }) => 
   jobPosting: one(jobPostings, { fields: [candidateOffers.jobPostingId], references: [jobPostings.id] }),
   offeredByUser: one(users, { fields: [candidateOffers.offeredBy], references: [users.id] }),
 }));
+
+export const interviewBookingLinksRelations = relations(interviewBookingLinks, ({ one }) => ({
+  candidate: one(candidates, { fields: [interviewBookingLinks.candidateId], references: [candidates.id] }),
+  jobPosting: one(jobPostings, { fields: [interviewBookingLinks.jobPostingId], references: [jobPostings.id] }),
+  creator: one(users, { fields: [interviewBookingLinks.createdBy], references: [users.id] }),
+}));
