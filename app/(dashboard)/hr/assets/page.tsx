@@ -130,7 +130,12 @@ const assetFormSchema = z.object({
     .max(100, "Serial number is too long")
     .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Must contain alphanumeric characters"),
   purchaseDate: z.string().optional(),
-  purchaseCost: z.number().min(0, "Cost cannot be negative").max(9_999_999, "Cost exceeds maximum").optional(),
+  purchaseCost: z
+    .number()
+    .min(0, "Cost cannot be negative")
+    .max(9_999_999, "Cost exceeds maximum")
+    .refine((v) => Math.round(v * 100) / 100 === v, "Maximum 2 decimal places")
+    .optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(500).optional(),
 });

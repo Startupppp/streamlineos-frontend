@@ -1,7 +1,7 @@
-import { withAuth, withAbility, ok } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { handbookVersions } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -46,6 +46,18 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:handbook", async (session) => {
     const body = createSchema.parse(await req.json());
+
+    const existing = await db.query.handbookVersions.findFirst({
+      where: and(
+        eq(handbookVersions.orgId, session.orgId),
+        eq(handbookVersions.title, body.title),
+        eq(handbookVersions.version, body.version),
+      ),
+      columns: { id: true },
+    });
+    if (existing) {
+      return err(`A handbook version "${body.version}" with title "${body.title}" already exists.`, 409);
+    }
 
     const [record] = await db
       .insert(handbookVersions)

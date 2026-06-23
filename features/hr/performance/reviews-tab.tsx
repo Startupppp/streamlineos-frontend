@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
@@ -41,6 +42,7 @@ export function ReviewsTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editReview, setEditReview] = useState<PerformanceReview | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [employeeId, setEmployeeId] = useState("");
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [cycleId, setCycleId] = useState("none");
@@ -57,6 +59,11 @@ export function ReviewsTab() {
     if (value !== "none") {
       const cycle = (Array.isArray(cycles) ? cycles : []).find((c: ReviewCycle) => String(c.id) === value);
       if (cycle) {
+        if (cycle.status === "COMPLETED" || cycle.status === "CANCELLED") {
+          toast.error(`This cycle is ${cycle.status.toLowerCase()}. New reviews cannot be added to it.`);
+          setCycleId("none");
+          return;
+        }
         setPeriodStart(cycle.periodStart ?? "");
         setPeriodEnd(cycle.periodEnd ?? "");
       }
@@ -168,26 +175,36 @@ export function ReviewsTab() {
   }
 
   const reviewsList = Array.isArray(reviews) ? reviews : [];
+  const filteredReviews = statusFilter === "all"
+    ? reviewsList
+    : reviewsList.filter((r: PerformanceReview) => (r.status ?? "DRAFT") === statusFilter);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{reviewsList.length} reviews</p>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+          <TabsList className="h-7">
+            <TabsTrigger value="all" className="text-[11px] px-3 h-6">All ({reviewsList.length})</TabsTrigger>
+            <TabsTrigger value="DRAFT" className="text-[11px] px-3 h-6">Draft</TabsTrigger>
+            <TabsTrigger value="IN_PROGRESS" className="text-[11px] px-3 h-6">In Progress</TabsTrigger>
+            <TabsTrigger value="COMPLETED" className="text-[11px] px-3 h-6">Completed</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5 mr-1" />New Review
         </Button>
       </div>
 
-      {reviewsList.length === 0 ? (
+      {filteredReviews.length === 0 ? (
         <EmptyState
           illustration={<EmptyLeaderboardIllustration className="h-32 w-32 opacity-95" />}
-          title="No reviews yet"
-          description="Create your first one."
+          title={statusFilter === "all" ? "No reviews yet" : `No ${statusFilter.toLowerCase().replace("_", " ")} reviews`}
+          description={statusFilter === "all" ? "Create your first one." : "Change the filter to see other reviews."}
           compact
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {reviewsList.map((review: PerformanceReview) => (
+          {filteredReviews.map((review: PerformanceReview) => (
             <Card key={review.id} className="hover:shadow-sm transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
@@ -278,9 +295,13 @@ export function ReviewsTab() {
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
               <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
-              {(Array.isArray(cycles) ? cycles : []).filter((c: ReviewCycle) => c.id != null && String(c.id) !== "" && c.name).map((c: ReviewCycle) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-              ))}
+              {(Array.isArray(cycles) ? cycles : [])
+                .filter((c: ReviewCycle) => c.id != null && String(c.id) !== "" && c.name && c.status !== "COMPLETED" && c.status !== "CANCELLED")
+                .map((c: ReviewCycle) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    <span className="truncate max-w-[200px] block">{c.name}</span>
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

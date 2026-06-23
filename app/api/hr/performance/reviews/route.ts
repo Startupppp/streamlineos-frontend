@@ -66,6 +66,17 @@ export async function POST(req: NextRequest) {
         columns: { id: true },
       });
       if (duplicate) return err("A review for this employee already exists in the selected cycle.", 409);
+    } else {
+      const adHocDuplicate = await db.query.performanceReviews.findFirst({
+        where: and(
+          eq(performanceReviews.orgId, session.orgId),
+          eq(performanceReviews.userId, body.userId),
+          eq(performanceReviews.periodStart, body.periodStart),
+          eq(performanceReviews.periodEnd, body.periodEnd),
+        ),
+        columns: { id: true },
+      });
+      if (adHocDuplicate) return err("A review for this employee with the same period already exists.", 409);
     }
 
     const [review] = await db
