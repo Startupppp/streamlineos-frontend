@@ -226,6 +226,14 @@ export default function CandidatesPage() {
             <CheckSquare className="h-3.5 w-3.5" />
             {selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0 ? "Deselect all" : "Select all"}
           </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5" asChild>
+            <Link href="/hr/recruitment/candidates/import">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Import
+            </Link>
+          </Button>
           <Button size="sm" className="h-8 gap-1.5" onClick={() => setSheetOpen(true)}>
             <Plus className="h-4 w-4" /> Add Candidate
           </Button>
