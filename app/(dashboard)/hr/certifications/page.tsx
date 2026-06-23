@@ -27,24 +27,38 @@ export default function CertificationsPage() {
   const [credentialId, setCredentialId] = useState("");
   const [credentialUrl, setCredentialUrl] = useState("");
 
+  const resetForm = useCallback(() => {
+    setName(""); setOrg(""); setIssueDate(""); setExpiryDate(""); setCredentialId(""); setCredentialUrl("");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!name.trim()) { toast.error("Certification name is required"); return; }
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Certification name is required"); return; }
+    if (trimmedName.length < 2) { toast.error("Certification name must be at least 2 characters"); return; }
+    if (trimmedName.length > 100) { toast.error("Certification name must be at most 100 characters"); return; }
+    const trimmedOrg = org.trim();
+    if (!trimmedOrg) { toast.error("Issuing organization is required"); return; }
+    if (issueDate && expiryDate && expiryDate < issueDate) {
+      toast.error("Expiry date must be after the issue date"); return;
+    }
+    if (credentialUrl && credentialUrl.trim() && !credentialUrl.trim().startsWith("http")) {
+      toast.error("Credential URL must be a valid URL starting with http"); return;
+    }
     create.mutate(
       {
-        name: name.trim(), issuingOrganization: org || undefined,
+        name: trimmedName, issuingOrganization: trimmedOrg,
         issueDate: issueDate || undefined, expiryDate: expiryDate || undefined,
-        credentialId: credentialId || undefined, credentialUrl: credentialUrl || undefined,
+        credentialId: credentialId.trim() || undefined, credentialUrl: credentialUrl.trim() || undefined,
       },
       {
         onSuccess: () => {
           toast.success("Certification added");
-          setSheetOpen(false); setName(""); setOrg(""); setIssueDate(""); setExpiryDate("");
-          setCredentialId(""); setCredentialUrl("");
+          setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, org, issueDate, expiryDate, credentialId, credentialUrl, create]);
+  }, [name, org, issueDate, expiryDate, credentialId, credentialUrl, create, resetForm]);
 
   if (isLoading) {
     return (
@@ -103,13 +117,13 @@ export default function CertificationsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Add Certification" onSubmit={handleCreate} submitLabel="Add" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Add Certification" onSubmit={handleCreate} submitLabel="Add" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Certification Name</label>
+          <label className="text-sm font-medium">Certification Name <span className="text-destructive">*</span></label>
           <Input placeholder="e.g., AWS Solutions Architect" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Issuing Organization</label>
+          <label className="text-sm font-medium">Issuing Organization <span className="text-destructive">*</span></label>
           <Input placeholder="e.g., Amazon Web Services" value={org} onChange={(e) => setOrg(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -128,7 +142,7 @@ export default function CertificationsPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Credential URL</label>
-          <Input placeholder="https://..." value={credentialUrl} onChange={(e) => setCredentialUrl(e.target.value)} />
+          <Input type="url" placeholder="https://..." value={credentialUrl} onChange={(e) => setCredentialUrl(e.target.value)} />
         </div>
       </HrSheet>
     </PageWrapper>
