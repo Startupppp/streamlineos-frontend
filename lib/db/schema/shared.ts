@@ -37,6 +37,8 @@ export const auditLogs = pgTable("audit_logs", {
   index("idx_audit_logs_org_id").on(table.orgId),
   index("idx_audit_logs_action").on(table.action),
   index("idx_audit_logs_created_at").on(table.createdAt),
+  index("idx_audit_logs_org_created").on(table.orgId, table.createdAt),
+  index("idx_audit_logs_org_action").on(table.orgId, table.action),
 ]);
 
 export const pushSubscriptions = pgTable("push_subscriptions", {
