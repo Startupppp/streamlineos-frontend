@@ -1,5 +1,5 @@
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, index, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   jobPostingStatusEnum, candidateStatusEnum, interviewTypeEnum,
   interviewResultEnum, applicationStatusEnum,
@@ -761,4 +761,34 @@ export const recruiterActivityLogRelations = relations(recruiterActivityLog, ({ 
   recruiter: one(users, { fields: [recruiterActivityLog.recruiterId], references: [users.id] }),
   candidate: one(candidates, { fields: [recruiterActivityLog.candidateId], references: [candidates.id] }),
   jobPosting: one(jobPostings, { fields: [recruiterActivityLog.jobPostingId], references: [jobPostings.id] }),
+}));
+
+export interface ReportConfig {
+  entity: "candidates" | "jobs" | "interviews" | "offers";
+  fields: string[];
+  filters: {
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    departmentId?: number;
+  };
+}
+
+export const scheduledReports = pgTable("scheduled_reports", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  reportConfig: jsonb("report_config").$type<ReportConfig>().notNull(),
+  schedule: text("schedule").notNull(),
+  recipients: text("recipients").array().notNull().default(sql`'{}'::text[]`),
+  lastRunAt: timestamp("last_run_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_scheduled_reports_org").on(table.orgId),
+]);
+
+export const scheduledReportsRelations = relations(scheduledReports, ({ one }) => ({
+  organization: one(organizations, { fields: [scheduledReports.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [scheduledReports.createdBy], references: [users.id] }),
 }));

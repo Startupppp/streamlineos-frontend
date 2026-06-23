@@ -106,6 +106,7 @@ export const queryKeys = {
     recruiters: () => [...base, "hr", "recruiters"] as const,
     jobRecruiters: (jobId: number) => [...base, "hr", "jobRecruiters", jobId] as const,
     recruiterActivity: (params?: Record<string, unknown>) => [...base, "hr", "recruiterActivity", params] as const,
+    scheduledReports: () => [...base, "hr", "scheduledReports"] as const,
   },
 
   leads: {

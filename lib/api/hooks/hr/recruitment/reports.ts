@@ -1,0 +1,134 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
+export type ReportEntity = "candidates" | "jobs" | "interviews" | "offers";
+export type ReportSchedule = "WEEKLY" | "MONTHLY";
+
+export interface ReportFilters {
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  departmentId?: number;
+}
+
+export interface ReportConfig {
+  entity: ReportEntity;
+  fields: string[];
+  filters: ReportFilters;
+}
+
+export interface GenerateReportResult {
+  rows: Record<string, unknown>[];
+  entity: ReportEntity;
+  fields: string[];
+  total: number;
+}
+
+export interface ScheduledReport {
+  id: number;
+  name: string;
+  reportConfig: ReportConfig;
+  schedule: ReportSchedule;
+  recipients: string[];
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateScheduledReportInput {
+  name: string;
+  reportConfig: ReportConfig;
+  schedule: ReportSchedule;
+  recipients: string[];
+}
+
+export function useGenerateReport() {
+  return useMutation({
+    mutationFn: (config: ReportConfig) =>
+      apiClient.post<GenerateReportResult>("/hr/recruitment/reports/generate", config),
+  });
+}
+
+export function useScheduledReports() {
+  return useQuery({
+    queryKey: queryKeys.hr.scheduledReports(),
+    queryFn: () => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled"),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useCreateScheduledReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateScheduledReportInput) =>
+      apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.scheduledReports() });
+    },
+  });
+}
+
+export function useDeleteScheduledReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.scheduledReports() });
+    },
+  });
+}
+
+export const ENTITY_FIELDS: Record<ReportEntity, { value: string; label: string }[]> = {
+  candidates: [
+    { value: "id", label: "ID" },
+    { value: "firstName", label: "First Name" },
+    { value: "lastName", label: "Last Name" },
+    { value: "email", label: "Email" },
+    { value: "phone", label: "Phone" },
+    { value: "status", label: "Status" },
+    { value: "source", label: "Source" },
+    { value: "currentCompany", label: "Current Company" },
+    { value: "currentRole", label: "Current Role" },
+    { value: "experienceYears", label: "Experience (Years)" },
+    { value: "rating", label: "Rating" },
+    { value: "aiScore", label: "AI Score" },
+    { value: "location", label: "Location" },
+    { value: "gender", label: "Gender" },
+    { value: "createdAt", label: "Created At" },
+  ],
+  jobs: [
+    { value: "id", label: "ID" },
+    { value: "title", label: "Title" },
+    { value: "status", label: "Status" },
+    { value: "type", label: "Type" },
+    { value: "location", label: "Location" },
+    { value: "openings", label: "Openings" },
+    { value: "salaryMin", label: "Salary Min" },
+    { value: "salaryMax", label: "Salary Max" },
+    { value: "createdAt", label: "Created At" },
+    { value: "applicationDeadline", label: "Deadline" },
+  ],
+  interviews: [
+    { value: "id", label: "ID" },
+    { value: "type", label: "Type" },
+    { value: "scheduledAt", label: "Scheduled At" },
+    { value: "result", label: "Result" },
+    { value: "rating", label: "Rating" },
+    { value: "duration", label: "Duration (min)" },
+    { value: "location", label: "Location" },
+    { value: "createdAt", label: "Created At" },
+  ],
+  offers: [
+    { value: "id", label: "ID" },
+    { value: "offerStatus", label: "Status" },
+    { value: "offeredSalary", label: "Salary" },
+    { value: "offeredDesignation", label: "Designation" },
+    { value: "joiningDate", label: "Joining Date" },
+    { value: "validUntil", label: "Valid Until" },
+    { value: "sentAt", label: "Sent At" },
+    { value: "respondedAt", label: "Responded At" },
+    { value: "createdAt", label: "Created At" },
+  ],
+};
