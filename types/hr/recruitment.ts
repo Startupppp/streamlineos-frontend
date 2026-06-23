@@ -226,11 +226,13 @@ export interface CreateJobPostingInput {
   benefits?: string;
   openings?: number;
   applicationDeadline?: string;
+  status?: JobPostingStatus;
 }
 
 export interface UpdateJobPostingInput {
   title?: string;
   departmentId?: number;
+  hiringFlowId?: number | null;
   location?: string;
   type?: string;
   experience?: string;

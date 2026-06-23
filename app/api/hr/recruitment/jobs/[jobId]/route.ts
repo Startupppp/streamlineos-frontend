@@ -11,6 +11,7 @@ const updateJobSchema = z
   .object({
     title: z.string().min(1).max(200),
     departmentId: z.number().int().positive(),
+    hiringFlowId: z.number().int().positive().nullable(),
     location: z.string().max(200),
     type: z.string().max(50),
     experience: z.string().max(100),
@@ -84,6 +85,7 @@ export async function PATCH(
         ...(body.applicationDeadline !== undefined && {
           applicationDeadline: formatDateOnly(new Date(body.applicationDeadline)),
         }),
+        ...(body.hiringFlowId !== undefined && { hiringFlowId: body.hiringFlowId }),
         updatedAt: new Date(),
       })
       .where(eq(jobPostings.id, jobId));

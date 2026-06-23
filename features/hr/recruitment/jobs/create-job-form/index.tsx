@@ -5,10 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCreateJobPosting } from "@/lib/api/hooks/hr/recruitment";
+import { useCreateJobPosting, useUpdateJobPosting } from "@/lib/api/hooks/hr/recruitment";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormSidebar } from "./sidebar";
@@ -19,6 +18,8 @@ import {
   Section6, Section7, Section8, Section9, Section10,
 } from "./sections-6-10";
 import { createJobFormSchema, SECTION_KEYS, type CreateJobFormValues } from "./schema";
+import { parseJobToFormValues } from "./parse-job";
+import type { JobPosting } from "@/types/hr/recruitment";
 
 const STEPS = [
   { title: "Basic Job Details", subtitle: "Title, dept, type" },
@@ -60,11 +61,19 @@ function buildRequirements(data: CreateJobFormValues): string {
   return parts.join("\n\n");
 }
 
-export function CreateJobForm() {
+interface CreateJobFormProps {
+  job?: JobPosting;
+}
+
+export function CreateJobForm({ job }: CreateJobFormProps) {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const createJob = useCreateJobPosting();
+  const updateJob = useUpdateJobPosting();
   const { data: departments } = useHrDepartments();
+  const isEdit = !!job;
+
+  const parsed = job ? parseJobToFormValues(job) : {};
 
   const form = useForm<CreateJobFormValues>({
     resolver: zodResolver(createJobFormSchema),
@@ -83,6 +92,7 @@ export function CreateJobForm() {
       referralEnabled: true,
       approvalRequired: false,
       status: "DRAFT",
+      ...parsed,
     },
   });
 
@@ -124,36 +134,48 @@ export function CreateJobForm() {
       const data = form.getValues();
       const deptId = Number(data.departmentId);
       const flowId = Number(data.hiringFlowId);
-      createJob.mutate(
-        {
-          title: data.title.trim(),
-          departmentId: !isNaN(deptId) && deptId > 0 ? deptId : undefined,
-          hiringFlowId: !isNaN(flowId) && flowId > 0 ? flowId : undefined,
-          location: `${data.stateCity}, ${data.country}`,
-          type: data.jobType,
-          experience: `${data.minExperience}${data.maxExperience != null ? `–${data.maxExperience}` : "+"} years | ${data.educationLevel}`,
-          salaryMin: data.salaryMin,
-          salaryMax: data.salaryMax,
-          description: buildDescription(data),
-          requirements: buildRequirements(data),
-          benefits: data.benefits || undefined,
-          openings: data.openings,
-          applicationDeadline: data.applicationDeadline || undefined,
-        },
-        {
+      const payload = {
+        title: data.title.trim(),
+        departmentId: !isNaN(deptId) && deptId > 0 ? deptId : undefined,
+        hiringFlowId: !isNaN(flowId) && flowId > 0 ? flowId : undefined,
+        location: `${data.stateCity}, ${data.country}`,
+        type: data.jobType,
+        experience: `${data.minExperience}${data.maxExperience != null ? `–${data.maxExperience}` : "+"} years | ${data.educationLevel}`,
+        salaryMin: data.salaryMin,
+        salaryMax: data.salaryMax,
+        description: buildDescription(data),
+        requirements: buildRequirements(data),
+        benefits: data.benefits || undefined,
+        openings: data.openings,
+        applicationDeadline: data.applicationDeadline || undefined,
+        status,
+      };
+
+      if (isEdit && job) {
+        updateJob.mutate({ id: job.id, ...payload }, {
+          onSuccess: () => {
+            toast.success("Job posting updated");
+            router.push("/hr/recruitment/jobs");
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        });
+      } else {
+        createJob.mutate(payload, {
           onSuccess: () => {
             toast.success(status === "DRAFT" ? "Job saved as draft" : "Job published successfully");
             router.push("/hr/recruitment/jobs");
           },
           onError: (e) => toast.error(getErrorMessage(e)),
-        }
-      );
+        });
+      }
     },
-    [form, createJob, router]
+    [form, createJob, updateJob, router, isEdit, job]
   );
 
   const handleSaveDraft = useCallback(() => handleSubmit("DRAFT"), [handleSubmit]);
   const handlePublish = useCallback(() => handleSubmit("OPEN"), [handleSubmit]);
+
+  const isPending = createJob.isPending || updateJob.isPending;
 
   const steps = STEPS.map((s, i) => ({
     ...s,
@@ -176,23 +198,20 @@ export function CreateJobForm() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSaveDraft}
-              disabled={createJob.isPending}
-            >
-              {createJob.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-              Save as Draft
-            </Button>
-            <Button
-              size="sm"
-              onClick={handlePublish}
-              disabled={createJob.isPending}
-            >
-              {createJob.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-              Publish Job
-            </Button>
+            {isEdit ? (
+              <Button size="sm" onClick={handleSaveDraft} disabled={isPending}>
+                Save Changes
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending}>
+                  Save as Draft
+                </Button>
+                <Button size="sm" onClick={handlePublish} disabled={isPending}>
+                  Publish Job
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -219,8 +238,8 @@ export function CreateJobForm() {
               Next
             </Button>
           ) : (
-            <Button size="sm" onClick={handlePublish} disabled={createJob.isPending}>
-              Publish Job
+            <Button size="sm" onClick={handlePublish} disabled={isPending}>
+              {isEdit ? "Save Changes" : "Publish Job"}
             </Button>
           )}
         </div>

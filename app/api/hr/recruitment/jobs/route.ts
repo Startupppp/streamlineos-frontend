@@ -45,6 +45,7 @@ const createJobSchema = z.object({
   benefits: z.string().max(5000).optional(),
   openings: z.number().int().min(1).max(9999).optional(),
   applicationDeadline: z.string().optional(),
+  status: z.enum(["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]).optional(),
 }).refine(
   (d) => {
     if (d.salaryMin !== undefined && d.salaryMax !== undefined) {
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
         applicationDeadline: body.applicationDeadline
           ? formatDateOnly(new Date(body.applicationDeadline))
           : undefined,
-        status: "DRAFT",
+        status: body.status ?? "DRAFT",
         postedBy: session.user.id,
       })
       .returning();
