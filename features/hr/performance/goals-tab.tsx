@@ -83,6 +83,10 @@ export function GoalsTab() {
     }
     if (!startDate) { toast.error("Start date is required"); return; }
     if (!endDate) { toast.error("End date is required"); return; }
+    if (!editGoal) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (startDate < today) { toast.error("Start date cannot be in the past"); return; }
+    }
     if (endDate < startDate) { toast.error("End date must be after start date"); return; }
 
     if (editGoal) {

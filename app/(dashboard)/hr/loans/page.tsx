@@ -1,9 +1,9 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
-  useSalaryLoans, useCreateSalaryLoan, useProcessSalaryLoan,
+  useSalaryLoans, useCreateSalaryLoan, useProcessSalaryLoan, useHrEmployees,
   type SalaryLoan,
 } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -15,12 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Landmark, CheckCircle2, XCircle, Banknote } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Plus, CheckCircle2, XCircle, Banknote } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (s === "ACTIVE" || s === "REPAID") return "default";
@@ -30,21 +31,31 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" | "d
 }
 
 export default function LoansPage() {
-  const { data: session } = useSession();
   const { data: loans, isLoading } = useSalaryLoans();
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
   const ability = useAbility();
   const isAdmin = ability.can("approve", "hr:expenses");
+  const { data: employeesRaw } = useHrEmployees({ limit: 500 });
+
+  const employeeOptions = useMemo<ComboboxOption[]>(() => {
+    const list = (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as PaginatedEmployees | undefined)?.data ?? []) as Employee[];
+    return list.filter((e) => e.isActive).map((e) => ({
+      value: e.id,
+      label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
+      sublabel: e.designation ?? e.email,
+    }));
+  }, [employeesRaw]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [totalEmis, setTotalEmis] = useState("6");
+  const [targetUserId, setTargetUserId] = useState("");
 
   const resetForm = useCallback(() => {
-    setAmount(""); setReason(""); setTotalEmis("6");
+    setAmount(""); setReason(""); setTotalEmis("6"); setTargetUserId("");
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -55,7 +66,7 @@ export default function LoansPage() {
     const numEmis = Number(totalEmis);
     if (!Number.isInteger(numEmis) || numEmis < 1 || numEmis > 360) { toast.error("Number of EMIs must be a whole number between 1 and 360"); return; }
     create.mutate(
-      { amount: numAmount, reason: reason.trim(), totalEmis: numEmis },
+      { amount: numAmount, reason: reason.trim(), totalEmis: numEmis, userId: isAdmin && targetUserId ? targetUserId : undefined },
       {
         onSuccess: () => {
           toast.success("Loan request submitted");
@@ -64,7 +75,7 @@ export default function LoansPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [amount, reason, totalEmis, create, resetForm]);
+  }, [amount, reason, totalEmis, targetUserId, isAdmin, create, resetForm]);
 
   const handleApprove = useCallback((id: number) => {
     process.mutate({ id, status: "APPROVED" }, {
@@ -137,6 +148,18 @@ export default function LoansPage() {
       )}
 
       <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Request Salary Loan" onSubmit={handleCreate} submitLabel="Submit" isPending={create.isPending}>
+        {isAdmin && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Employee <span className="text-muted-foreground font-normal">(optional — defaults to yourself)</span></label>
+            <Combobox
+              options={employeeOptions}
+              value={targetUserId}
+              onChange={setTargetUserId}
+              placeholder="Select employee…"
+              searchPlaceholder="Search by name…"
+            />
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Loan Amount (₹) <span className="text-destructive">*</span></label>
           <Input type="number" min="1000" max="10000000" step="1" placeholder="Min ₹1,000" value={amount} onChange={(e) => setAmount(e.target.value)} />

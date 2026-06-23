@@ -35,7 +35,7 @@ export function useSalaryLoans() {
 export function useCreateSalaryLoan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { amount: number; reason: string; totalEmis?: number }) =>
+    mutationFn: (data: { amount: number; reason: string; totalEmis?: number; userId?: string }) =>
       apiClient.post<SalaryLoan>("/hr/loans", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: loanKeys.list() }),
   });

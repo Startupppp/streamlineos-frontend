@@ -223,7 +223,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     } finally {
       setIsImporting(false);
     }
-  }, [file, categoryMapping, autoApprove, onSuccess]);
+  }, [file, categoryMapping, autoApprove, onSuccess, importMutation]);
 
   const validCount = parsedRows.filter((r) => r.valid).length;
 
@@ -233,7 +233,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       onOpenChange={handleSheetOpenChange}
       title="Import Expenses"
       description="Upload a CSV file to bulk-import expenses."
-      onSubmit={handleImport}
+      onSubmit={importResult ? handleCancel : handleImport}
       submitLabel={
         importResult
           ? "Close"
