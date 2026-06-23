@@ -57,14 +57,29 @@ export default function BulkImportPage() {
         parsedHeaders = result.meta.fields ?? [];
         parsedRows = result.data as ParsedRow[];
       } else {
-        const XLSX = (await import("xlsx")).default;
+        const ExcelJS = (await import("exceljs")).default;
+        const workbook = new ExcelJS.Workbook();
         const arrayBuffer = await file.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]!]!;
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-        if (jsonData.length === 0) { toast.error("No data found in file"); return; }
-        parsedHeaders = Object.keys(jsonData[0]!);
-        parsedRows = jsonData.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, String(v)])));
+        await workbook.xlsx.load(arrayBuffer);
+        const worksheet = workbook.worksheets[0];
+        if (!worksheet) { toast.error("No data found in file"); return; }
+        const firstRow = worksheet.getRow(1);
+        const colCount = firstRow.cellCount;
+        parsedHeaders = Array.from({ length: colCount }, (_, i) => {
+          const cell = firstRow.getCell(i + 1);
+          return cell.text ?? "";
+        });
+        const dataRows: ParsedRow[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+          const entry: ParsedRow = {};
+          parsedHeaders.forEach((header, idx) => {
+            entry[header] = row.getCell(idx + 1).text ?? "";
+          });
+          dataRows.push(entry);
+        });
+        if (dataRows.length === 0) { toast.error("No data found in file"); return; }
+        parsedRows = dataRows;
       }
 
       if (parsedHeaders.length === 0) { toast.error("No columns detected"); return; }

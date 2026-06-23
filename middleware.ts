@@ -9,7 +9,6 @@ import { logger } from "@/lib/logger";
 import { redis } from "@/lib/redis";
 import { PLATFORM_OWNER_ROLE, OWNER_HOME } from "@/lib/platform/role";
 import { ROLES } from "@/lib/constants/roles";
-import { randomBytes } from "crypto";
 
 function buildCsp(nonce: string): string {
   return [
@@ -171,7 +170,9 @@ const BOT_BLOCKED_PREFIXES = [
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-  const nonce = randomBytes(16).toString("base64");
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   const tier = resolveTier(pathname);
   const loadTestSecret = process.env.LOAD_TEST_SECRET;
