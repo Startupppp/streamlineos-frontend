@@ -611,6 +611,34 @@ export const emailSequenceEnrollmentsRelations = relations(emailSequenceEnrollme
   candidate: one(candidates, { fields: [emailSequenceEnrollments.candidateId], references: [candidates.id] }),
 }));
 
+export type CandidateMessageDirection = "INBOUND" | "OUTBOUND";
+export type CandidateMessageChannel = "EMAIL" | "WHATSAPP" | "IN_APP";
+
+export const candidateMessages = pgTable("candidate_messages", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  direction: text("direction").$type<CandidateMessageDirection>().notNull().default("OUTBOUND"),
+  channel: text("channel").$type<CandidateMessageChannel>().notNull().default("EMAIL"),
+  subject: text("subject"),
+  body: text("body").notNull(),
+  sentBy: text("sent_by").references(() => users.id),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  readAt: timestamp("read_at"),
+  externalId: text("external_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_candidate_messages_org").on(table.orgId),
+  index("idx_candidate_messages_candidate").on(table.candidateId),
+  index("idx_candidate_messages_sent").on(table.sentAt),
+]);
+
+export const candidateMessagesRelations = relations(candidateMessages, ({ one }) => ({
+  organization: one(organizations, { fields: [candidateMessages.orgId], references: [organizations.id] }),
+  candidate: one(candidates, { fields: [candidateMessages.candidateId], references: [candidates.id] }),
+  sender: one(users, { fields: [candidateMessages.sentBy], references: [users.id] }),
+}));
+
 export type RecruiterActivityAction = "CALL_MADE" | "EMAIL_SENT" | "CANDIDATE_ADDED" | "NOTE_ADDED" | "INTERVIEW_SCHEDULED";
 
 export const jobRecruiters = pgTable("job_recruiters", {

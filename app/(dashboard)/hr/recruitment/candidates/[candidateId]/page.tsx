@@ -33,6 +33,7 @@ import {
   ClipboardCheck,
   FileSignature,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import type { CandidateStatus, Interview, InterviewType } from "@/types/hr";
 import { DocumentsTab } from "@/features/hr/recruitment/candidate-detail/documents-tab";
@@ -49,6 +50,7 @@ import {
   ScheduleInterviewSheet,
   ApplyToJobSheet,
 } from "./_components/candidate-sheets";
+import { MessagesTab } from "./_components/messages-tab";
 
 export default function CandidateDetailPage() {
   const { candidateId } = useParams<{ candidateId: string }>();
@@ -328,6 +330,10 @@ export default function CandidateDetailPage() {
                 <Users className="h-3.5 w-3.5 mr-1.5" />
                 Calibration
               </TabsTrigger>
+              <TabsTrigger value="messages">
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                Messages
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="applications">
@@ -406,6 +412,10 @@ export default function CandidateDetailPage() {
 
             <TabsContent value="calibration">
               <CalibrationTab candidateId={id} />
+            </TabsContent>
+
+            <TabsContent value="messages">
+              <MessagesTab candidateId={id} candidateEmail={candidate.email} />
             </TabsContent>
           </Tabs>
         </div>
