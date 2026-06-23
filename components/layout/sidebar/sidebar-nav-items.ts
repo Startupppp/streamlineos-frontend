@@ -140,6 +140,8 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Booking Links", icon: Share2, href: "/hr/recruitment/booking-links", requiredPermission: "hr:employees:create" },
           { label: "Automations", icon: Zap, href: "/hr/recruitment/automations", requiredPermission: "hr:employees:create" },
           { label: "Email Sequences", icon: MailOpen, href: "/hr/recruitment/email-sequences", requiredPermission: "hr:employees:create" },
+          { label: "Referrals", icon: Gift, href: "/hr/recruitment/referrals", requiredPermission: "hr:employees:create" },
+          { label: "Refer a Candidate", icon: Share2, href: "/hr/recruitment/refer" },
         ],
       },
     ],

@@ -305,6 +305,37 @@ export interface UpdateInterviewInput {
   recordingPlatform?: string | null;
 }
 
+export type ReferralStatus = "SUBMITTED" | "REVIEWING" | "HIRED" | "REJECTED" | "BONUS_PAID";
+
+export interface CandidateReferral {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  referredBy: string;
+  jobPostingId: number | null;
+  relationship: string | null;
+  notes: string | null;
+  status: ReferralStatus;
+  bonusEligible: boolean;
+  bonusAmount: string | null;
+  bonusPaidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: { id: number; firstName: string; lastName: string; email: string };
+  referrer?: { id: string; name: string | null; email: string };
+  jobPosting?: { id: number; title: string } | null;
+}
+
+export interface CreateReferralInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  jobPostingId?: number;
+  relationship?: string;
+  notes?: string;
+}
+
 export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
 export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
 
