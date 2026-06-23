@@ -15,7 +15,14 @@
     "setup:r2": "tsx --env-file=.env scripts/setup-r2-buckets.ts",
     "seed:owner": "tsx --env-file=.env scripts/seed-platform-owner.ts",
     "seed:blog": "npx tsx --env-file=.env scripts/seed-blog.ts",
-    "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts"
+    "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
+    "load-test:session": "tsx --env-file=.env scripts/load-tests/get-session.ts",
+    "load-test:verify": "tsx --env-file=.env scripts/load-tests/verify-endpoints.ts",
+    "load-test:smoke": "bash scripts/load-tests/run.sh scripts/load-tests/smoke.js",
+    "load-test:hr": "bash scripts/load-tests/run.sh scripts/load-tests/hr-modules.js",
+    "load-test:recruitment": "bash scripts/load-tests/run.sh scripts/load-tests/recruitment-hub.js",
+    "load-test:chat": "bash scripts/load-tests/run.sh scripts/load-tests/chat.js",
+    "load-test:all": "bash scripts/load-tests/run.sh scripts/load-tests/all.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -73,6 +80,7 @@
     "framer-motion": "^12.23.25",
     "html2canvas": "^1.4.1",
     "inngest": "^4.1.1",
+    "isomorphic-dompurify": "^3.18.0",
     "jspdf": "^4.2.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.556.0",

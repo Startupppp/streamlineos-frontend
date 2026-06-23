@@ -1,5 +1,6 @@
 "use client";
 
+import DOMPurify from "isomorphic-dompurify";
 import { Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -80,7 +81,7 @@ export function TemplateList({
             <div
               className="bg-white rounded-b-lg"
               style={{ minHeight: "500px" }}
-              dangerouslySetInnerHTML={{ __html: preview.html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.html) }}
             />
           </CardContent>
         </Card>

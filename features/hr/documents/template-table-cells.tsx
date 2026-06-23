@@ -1,5 +1,6 @@
 "use client";
 
+import DOMPurify from "isomorphic-dompurify";
 import { useState, useCallback } from "react";
 import { Eye, Trash2, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,7 @@ export function PreviewDialog({ template }: { template: DocumentTemplate }) {
             </AlertDialogHeader>
             <div
               className="max-h-[60vh] overflow-y-auto rounded-md border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: template.htmlContent }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(template.htmlContent) }}
             />
             <AlertDialogFooter>
               <AlertDialogCancel>Close</AlertDialogCancel>

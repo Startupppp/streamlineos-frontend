@@ -1,3 +1,4 @@
+import DOMPurify from "isomorphic-dompurify";
 import { cn } from "@/lib/utils";
 
 interface BlogContentProps {
@@ -12,7 +13,7 @@ export function BlogContent({ html, className }: BlogContentProps) {
         "prose blog-prose prose-lg max-w-none dark:prose-invert",
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
     />
   );
 }
