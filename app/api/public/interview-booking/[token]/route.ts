@@ -92,40 +92,60 @@ export async function POST(req: NextRequest, { params }: Params) {
     IN_PERSON: "ONSITE",
   };
 
-  const [interview] = await db
-    .insert(interviews)
-    .values({
-      orgId: link.orgId,
-      candidateId: link.candidateId,
-      jobPostingId: link.jobPostingId,
-      interviewerId: link.interviewerIds[0] ?? link.createdBy,
-      type: typeMap[link.interviewType] ?? "VIDEO",
-      scheduledAt: slotStart,
-      duration: link.durationMinutes,
-      notes: link.notes,
-      result: "PENDING",
-      remindersSent: {},
-    })
-    .returning();
+  let interview: { id: number };
+  try {
+    interview = await db.transaction(async (tx) => {
+      const [claimed] = await tx
+        .update(interviewBookingLinks)
+        .set({ status: "booked", selectedSlot: slotStart, updatedAt: new Date() })
+        .where(and(
+          eq(interviewBookingLinks.id, link.id),
+          eq(interviewBookingLinks.status, "pending"),
+        ))
+        .returning({ id: interviewBookingLinks.id });
 
-  await db.insert(calendarEvents).values({
-    orgId: link.orgId,
-    title: `Interview (self-scheduled)`,
-    description: link.notes ?? `Self-scheduled ${link.interviewType} interview`,
-    startDate: slotStart,
-    endDate,
-    allDay: false,
-    category: "interview",
-    entityType: "interview",
-    entityId: String(interview.id),
-    createdBy: link.createdBy,
-    attendeeIds: link.interviewerIds,
-  });
+      if (!claimed) {
+        throw new Error("ALREADY_BOOKED");
+      }
 
-  await db
-    .update(interviewBookingLinks)
-    .set({ status: "booked", selectedSlot: slotStart, updatedAt: new Date() })
-    .where(eq(interviewBookingLinks.id, link.id));
+      const [created] = await tx
+        .insert(interviews)
+        .values({
+          orgId: link.orgId,
+          candidateId: link.candidateId,
+          jobPostingId: link.jobPostingId,
+          interviewerId: link.interviewerIds[0] ?? link.createdBy,
+          type: typeMap[link.interviewType] ?? "VIDEO",
+          scheduledAt: slotStart,
+          duration: link.durationMinutes,
+          notes: link.notes,
+          result: "PENDING",
+          remindersSent: {},
+        })
+        .returning();
+
+      await tx.insert(calendarEvents).values({
+        orgId: link.orgId,
+        title: `Interview (self-scheduled)`,
+        description: link.notes ?? `Self-scheduled ${link.interviewType} interview`,
+        startDate: slotStart,
+        endDate,
+        allDay: false,
+        category: "interview",
+        entityType: "interview",
+        entityId: String(created.id),
+        createdBy: link.createdBy,
+        attendeeIds: link.interviewerIds,
+      });
+
+      return created;
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "ALREADY_BOOKED") {
+      return NextResponse.json({ error: "This booking link has already been used." }, { status: 410 });
+    }
+    throw e;
+  }
 
   void (async () => {
     try {
