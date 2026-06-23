@@ -35,7 +35,7 @@ export const createJobFormSchema = z
       .number({ error: "Enter a valid number" })
       .int("Must be a whole number")
       .min(1, "At least 1 opening required")
-      .max(9999, "Too many openings"),
+      .max(999, "Too many openings"),
 
     country: z.string().min(1, "Country is required"),
     stateCity: z.string().min(2, "State/City is required").max(100, "Too long"),
