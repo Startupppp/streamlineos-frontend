@@ -6,6 +6,7 @@ import { users, mfaBackupCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { invalidateUserSession } from "@/lib/auth";
+import { decrypt } from "@/lib/encryption";
 
 const schema = z.union([
   z.object({ token: z.string().length(6), backupCode: z.undefined() }),
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       return err("Invalid backup code", 400);
     }
 
-    const valid = verifyTotpToken(body.token!, user.totpSecret);
+    const valid = verifyTotpToken(body.token!, decrypt(user.totpSecret));
     if (!valid) return err("Invalid token", 400);
 
     await db.update(users).set({ totpEnabled: true }).where(eq(users.id, session.user.id));

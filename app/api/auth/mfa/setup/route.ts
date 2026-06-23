@@ -1,5 +1,6 @@
 import { withAuth, ok } from "@/lib/api/helpers";
 import { generateTotpSecret, generateTotpUri, generateQrCodeDataUrl, generateBackupCodes, hashBackupCode } from "@/lib/totp";
+import { encrypt } from "@/lib/encryption";
 import { db } from "@/lib/db";
 import { users, mfaBackupCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -14,7 +15,7 @@ export async function POST() {
     const hashedCodes = await Promise.all(plainCodes.map(hashBackupCode));
 
     await db.transaction(async (tx) => {
-      await tx.update(users).set({ totpSecret: secret }).where(eq(users.id, session.user.id));
+      await tx.update(users).set({ totpSecret: encrypt(secret) }).where(eq(users.id, session.user.id));
 
       await tx.delete(mfaBackupCodes).where(
         eq(mfaBackupCodes.userId, session.user.id)
