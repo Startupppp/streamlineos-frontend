@@ -23,3 +23,4 @@ export * from "./key-results";
 export * from "./dashboard";
 export * from "./onboarding";
 export * from "./document-templates";
+export * from "./hr-settings";
