@@ -39,13 +39,26 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createOneOnOneSchema);
 
+    const scheduledTime = new Date(body.scheduledAt);
+    const duplicate = await db.query.oneOnOneMeetings.findFirst({
+      where: and(
+        eq(oneOnOneMeetings.orgId, session.orgId),
+        eq(oneOnOneMeetings.employeeId, body.employeeId),
+        eq(oneOnOneMeetings.scheduledAt, scheduledTime),
+      ),
+      columns: { id: true },
+    });
+    if (duplicate) {
+      return err("A 1-on-1 is already scheduled with this employee at this time.", 409);
+    }
+
     const [meeting] = await db
       .insert(oneOnOneMeetings)
       .values({
         orgId: session.orgId,
         managerId: session.user.id,
         employeeId: body.employeeId,
-        scheduledAt: new Date(body.scheduledAt),
+        scheduledAt: scheduledTime,
         duration: body.duration ?? 30,
         agenda: body.agenda,
         meetingLink: body.meetingLink || undefined,
