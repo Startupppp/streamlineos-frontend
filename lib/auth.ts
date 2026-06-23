@@ -129,23 +129,6 @@ const credentialsProvider = Credentials({
         await db.update(users).set({ loginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
       }
 
-      const existingMembership = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, user.id),
-      });
-      if (!existingMembership) {
-        const org = await db.query.organizations.findFirst();
-        if (org) {
-          await db
-            .insert(organizationMembers)
-            .values({
-              userId: user.id,
-              orgId: org.id,
-              role: user.role || "ENGINEERING",
-            })
-            .onConflictDoNothing();
-        }
-      }
-
       const fullName =
         user.firstName && user.lastName
           ? `${user.firstName} ${user.lastName}`
