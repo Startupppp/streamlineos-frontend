@@ -73,6 +73,15 @@ export function useUpdatePerformanceReview() {
   });
 }
 
+export function useDeletePerformanceReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/performance/reviews/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviews() }),
+  });
+}
+
 export function useUpdateGoal() {
   const qc = useQueryClient();
   return useMutation({

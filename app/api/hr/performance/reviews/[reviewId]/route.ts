@@ -23,6 +23,29 @@ export async function GET(
   });
 }
 
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ reviewId: string }> }
+) {
+  return withAuth(async (session) => {
+    const { reviewId: id } = await params;
+    const reviewId = Number(id);
+    if (!reviewId) return err("Invalid review ID.", 400);
+
+    const existing = await db.query.performanceReviews.findFirst({
+      where: and(eq(performanceReviews.id, reviewId), eq(performanceReviews.orgId, session.orgId)),
+      columns: { id: true, status: true },
+    });
+    if (!existing) return err("Review not found.", 404);
+    if (existing.status === "COMPLETED") return err("Completed reviews cannot be deleted.", 409);
+
+    await db.delete(performanceReviews).where(
+      and(eq(performanceReviews.id, reviewId), eq(performanceReviews.orgId, session.orgId))
+    );
+    return ok({ success: true });
+  });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }

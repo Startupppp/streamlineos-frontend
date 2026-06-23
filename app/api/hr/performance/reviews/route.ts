@@ -56,6 +56,18 @@ export async function POST(req: NextRequest) {
     });
     if (!targetMember) return err("Employee not found in your organization.", 404);
 
+    if (body.cycleId) {
+      const duplicate = await db.query.performanceReviews.findFirst({
+        where: and(
+          eq(performanceReviews.orgId, session.orgId),
+          eq(performanceReviews.userId, body.userId),
+          eq(performanceReviews.cycleId, body.cycleId),
+        ),
+        columns: { id: true },
+      });
+      if (duplicate) return err("A review for this employee already exists in the selected cycle.", 409);
+    }
+
     const [review] = await db
       .insert(performanceReviews)
       .values({

@@ -6,6 +6,7 @@ import {
   useReviewCycles,
   useCreatePerformanceReview,
   useUpdatePerformanceReview,
+  useDeletePerformanceReview,
   useHrEmployees,
 } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,12 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Star, CheckCircle2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check } from "lucide-react";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
@@ -35,7 +37,9 @@ export function ReviewsTab() {
   const { data: cycles } = useReviewCycles();
   const createReview = useCreatePerformanceReview();
   const updateReview = useUpdatePerformanceReview();
+  const deleteReview = useDeletePerformanceReview();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [employeeId, setEmployeeId] = useState("");
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
   const [cycleId, setCycleId] = useState("none");
@@ -114,6 +118,14 @@ export function ReviewsTab() {
     });
   }, [updateReview]);
 
+  const handleDelete = useCallback(() => {
+    if (!deleteId) return;
+    deleteReview.mutate(deleteId, {
+      onSuccess: () => { toast.success("Review deleted"); setDeleteId(null); },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteId, deleteReview]);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handlePeriodStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value), []);
@@ -150,12 +162,19 @@ export function ReviewsTab() {
                   <Badge variant={review.status === "COMPLETED" ? "default" : review.status === "IN_PROGRESS" ? "secondary" : "outline"} className="text-[10px]">
                     {review.status ?? "DRAFT"}
                   </Badge>
-                  {review.overallRating && (
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star className="h-3 w-3 fill-current" />
-                      <span className="text-xs font-bold">{Number(review.overallRating).toFixed(1)}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {review.overallRating && (
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="h-3 w-3 fill-current" />
+                        <span className="text-xs font-bold">{Number(review.overallRating).toFixed(1)}</span>
+                      </div>
+                    )}
+                    {review.status !== "COMPLETED" && (
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(review.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 mb-1">
                   <Avatar className="h-6 w-6">
@@ -241,6 +260,17 @@ export function ReviewsTab() {
           </div>
         )}
       </HrSheet>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        title="Delete Review"
+        description="Are you sure you want to delete this performance review? This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+        isPending={deleteReview.isPending}
+      />
     </div>
   );
 }
