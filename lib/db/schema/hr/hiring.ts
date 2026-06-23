@@ -611,6 +611,38 @@ export const emailSequenceEnrollmentsRelations = relations(emailSequenceEnrollme
   candidate: one(candidates, { fields: [emailSequenceEnrollments.candidateId], references: [candidates.id] }),
 }));
 
+export type HeadcountRequestStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
+
+export const headcountRequests = pgTable("headcount_requests", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  departmentId: integer("department_id").references((): AnyPgColumn => departments.id),
+  requestedBy: text("requested_by").references(() => users.id).notNull(),
+  requestedRole: text("requested_role").notNull(),
+  level: text("level"),
+  justification: text("justification"),
+  targetDate: date("target_date"),
+  status: text("status").$type<HeadcountRequestStatus>().notNull().default("DRAFT"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectedReason: text("rejected_reason"),
+  linkedJobPostingId: integer("linked_job_posting_id").references(() => jobPostings.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_headcount_requests_org").on(table.orgId),
+  index("idx_headcount_requests_status").on(table.status),
+  index("idx_headcount_requests_dept").on(table.departmentId),
+]);
+
+export const headcountRequestsRelations = relations(headcountRequests, ({ one }) => ({
+  organization: one(organizations, { fields: [headcountRequests.orgId], references: [organizations.id] }),
+  requestedByUser: one(users, { fields: [headcountRequests.requestedBy], references: [users.id] }),
+  approvedByUser: one(users, { fields: [headcountRequests.approvedBy], references: [users.id] }),
+  department: one(departments, { fields: [headcountRequests.departmentId], references: [departments.id] }),
+  linkedJob: one(jobPostings, { fields: [headcountRequests.linkedJobPostingId], references: [jobPostings.id] }),
+}));
+
 export type CandidateMessageDirection = "INBOUND" | "OUTBOUND";
 export type CandidateMessageChannel = "EMAIL" | "WHATSAPP" | "IN_APP";
 

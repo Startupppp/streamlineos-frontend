@@ -1,0 +1,389 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import { useHrDepartments } from "@/lib/api/hooks/hr";
+import { useRouter } from "next/navigation";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+type HeadcountStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
+
+interface HeadcountRequest {
+  id: number;
+  orgId: string;
+  departmentId: number | null;
+  requestedBy: string;
+  requestedRole: string;
+  level: string | null;
+  justification: string | null;
+  targetDate: string | null;
+  status: HeadcountStatus;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectedReason: string | null;
+  linkedJobPostingId: number | null;
+  createdAt: string;
+  departmentName: string | null;
+  requesterName: string | null;
+  requesterEmail: string | null;
+}
+
+const STATUS_COLORS: Record<HeadcountStatus, string> = {
+  DRAFT: "secondary",
+  SUBMITTED: "outline",
+  APPROVED: "default",
+  REJECTED: "destructive",
+  JOB_CREATED: "default",
+} as const;
+
+const HR_ROLES = ["CEO", "HR", "ADMIN", "HR_MANAGER"];
+
+function statusLabel(s: HeadcountStatus): string {
+  return s === "JOB_CREATED" ? "Job Created" : s.charAt(0) + s.slice(1).toLowerCase();
+}
+
+interface RequestSheetProps {
+  initial?: HeadcountRequest | null;
+  onClose: () => void;
+}
+
+function RequestSheet({ initial, onClose }: RequestSheetProps) {
+  const qc = useQueryClient();
+  const { data: departments } = useHrDepartments();
+  const [role, setRole] = useState(initial?.requestedRole ?? "");
+  const [level, setLevel] = useState(initial?.level ?? "");
+  const [deptId, setDeptId] = useState(String(initial?.departmentId ?? ""));
+  const [justification, setJustification] = useState(initial?.justification ?? "");
+  const [targetDate, setTargetDate] = useState(initial?.targetDate ?? "");
+  const [submitStatus, setSubmitStatus] = useState<"DRAFT" | "SUBMITTED">("DRAFT");
+
+  const create = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiClient.post("/hr/recruitment/headcount", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      toast.success("Request created");
+      onClose();
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const update = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiClient.patch(`/hr/recruitment/headcount/${initial?.id}`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      toast.success("Request updated");
+      onClose();
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const handleSubmit = useCallback((status: "DRAFT" | "SUBMITTED") => {
+    if (!role.trim()) { toast.error("Role is required"); return; }
+    const payload = {
+      requestedRole: role.trim(),
+      level: level.trim() || undefined,
+      departmentId: deptId ? Number(deptId) : undefined,
+      justification: justification.trim() || undefined,
+      targetDate: targetDate || undefined,
+      status,
+    };
+    if (initial) update.mutate(payload);
+    else create.mutate(payload);
+  }, [role, level, deptId, justification, targetDate, initial, create, update]);
+
+  const isPending = create.isPending || update.isPending;
+
+  return (
+    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <SheetContent className="w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>{initial ? "Edit" : "New"} Headcount Request</SheetTitle>
+          <SheetDescription>Submit a request to hire for a new or replacement position</SheetDescription>
+        </SheetHeader>
+        <div className="py-4 space-y-3">
+          <div className="space-y-1.5">
+            <Label>Role <span className="text-destructive">*</span></Label>
+            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Software Engineer" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Level</Label>
+            <Input value={level} onChange={(e) => setLevel(e.target.value)} placeholder="e.g. L4, Senior, Lead" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Department</Label>
+            <Select value={deptId} onValueChange={setDeptId}>
+              <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+              <SelectContent>
+                {departments?.map((d) => (
+                  <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Target Start Date</Label>
+            <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Justification</Label>
+            <Textarea
+              rows={4}
+              value={justification}
+              onChange={(e) => setJustification(e.target.value)}
+              placeholder="Why is this hire needed?"
+            />
+          </div>
+        </div>
+        <SheetFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
+          <Button variant="secondary" onClick={() => handleSubmit("DRAFT")} disabled={isPending} className="flex-1">
+            Save Draft
+          </Button>
+          <Button onClick={() => handleSubmit("SUBMITTED")} disabled={isPending} className="flex-1">
+            {isPending ? "Saving..." : "Submit for Approval"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+interface RejectDialogProps {
+  requestId: number;
+  onClose: () => void;
+}
+
+function RejectDialog({ requestId, onClose }: RejectDialogProps) {
+  const qc = useQueryClient();
+  const [reason, setReason] = useState("");
+  const reject = useMutation({
+    mutationFn: () => apiClient.post(`/hr/recruitment/headcount/${requestId}/reject`, { reason }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      toast.success("Request rejected");
+      onClose();
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  return (
+    <AlertDialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject Request</AlertDialogTitle>
+          <AlertDialogDescription>
+            <Textarea
+              rows={3}
+              placeholder="Reason for rejection (optional)"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="mt-2"
+            />
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={() => reject.mutate()} disabled={reject.isPending}>
+            {reject.isPending ? "Rejecting..." : "Reject"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function RequestCard({
+  req,
+  isHr,
+  onEdit,
+  onApprove,
+  onReject,
+  onCreateJob,
+}: {
+  req: HeadcountRequest;
+  isHr: boolean;
+  onEdit: (r: HeadcountRequest) => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
+  onCreateJob: (id: number) => void;
+}) {
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="pt-4 pb-3 space-y-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="font-semibold text-sm">{req.requestedRole}</p>
+            {req.level && <p className="text-xs text-muted-foreground">{req.level}</p>}
+          </div>
+          <Badge variant={STATUS_COLORS[req.status] as "default" | "secondary" | "outline" | "destructive"} className="text-[10px] shrink-0">
+            {statusLabel(req.status)}
+          </Badge>
+        </div>
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          {req.departmentName && <p>Dept: {req.departmentName}</p>}
+          {req.targetDate && <p>Target: {format(new Date(req.targetDate), "MMM d, yyyy")}</p>}
+          <p>By: {req.requesterName ?? req.requesterEmail}</p>
+          {req.rejectedReason && <p className="text-destructive">Reason: {req.rejectedReason}</p>}
+          {req.linkedJobPostingId && (
+            <p>Job ID: #{req.linkedJobPostingId}</p>
+          )}
+        </div>
+        {req.justification && (
+          <p className="text-xs text-muted-foreground line-clamp-2 border-t pt-2">{req.justification}</p>
+        )}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {req.status === "DRAFT" && (
+            <Button size="sm" variant="outline" onClick={() => onEdit(req)}>Edit</Button>
+          )}
+          {isHr && req.status === "SUBMITTED" && (
+            <>
+              <Button size="sm" onClick={() => onApprove(req.id)}>Approve</Button>
+              <Button size="sm" variant="destructive" onClick={() => onReject(req.id)}>Reject</Button>
+            </>
+          )}
+          {isHr && req.status === "APPROVED" && !req.linkedJobPostingId && (
+            <Button size="sm" onClick={() => onCreateJob(req.id)}>Create Job Posting</Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function HeadcountPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const qc = useQueryClient();
+  const role = (session?.user as { role?: string })?.role ?? "";
+  const isHr = HR_ROLES.includes(role);
+
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: queryKeys.hr.headcountRequests(),
+    queryFn: () => apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount"),
+    staleTime: 2 * 60_000,
+  });
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<HeadcountRequest | null>(null);
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
+
+  const approve = useMutation({
+    mutationFn: (id: number) => apiClient.post(`/hr/recruitment/headcount/${id}/approve`, {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      toast.success("Request approved");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const createJob = useMutation({
+    mutationFn: (id: number) => apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}),
+    onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      toast.success("Job posting created");
+      router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const handleNewRequest = useCallback(() => {
+    setEditingRequest(null);
+    setSheetOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((r: HeadcountRequest) => {
+    setEditingRequest(r);
+    setSheetOpen(true);
+  }, []);
+
+  const handleCloseSheet = useCallback(() => {
+    setSheetOpen(false);
+    setEditingRequest(null);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  return (
+    <PageWrapper
+      title="Headcount Planning"
+      subtitle="Submit and track headcount requests for new hires"
+      badge={`${requests.length} requests`}
+      actions={
+        <Button size="sm" onClick={handleNewRequest}>
+          <svg className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Request
+        </Button>
+      }
+    >
+      {requests.length === 0 ? (
+        <EmptyState
+          illustration={
+            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          }
+          title="No headcount requests"
+          description="Submit a request to start the hiring approval process."
+          action={{ label: "Create Request", onClick: handleNewRequest }}
+        />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {requests.map((req) => (
+            <RequestCard
+              key={req.id}
+              req={req}
+              isHr={isHr}
+              onEdit={handleEdit}
+              onApprove={(id) => approve.mutate(id)}
+              onReject={(id) => setRejectingId(id)}
+              onCreateJob={(id) => createJob.mutate(id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {sheetOpen && (
+        <RequestSheet initial={editingRequest} onClose={handleCloseSheet} />
+      )}
+      {rejectingId !== null && (
+        <RejectDialog requestId={rejectingId} onClose={() => setRejectingId(null)} />
+      )}
+    </PageWrapper>
+  );
+}

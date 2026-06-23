@@ -98,6 +98,7 @@ export const queryKeys = {
     referrals: () => [...base, "hr", "referrals"] as const,
     offerTemplates: () => [...base, "hr", "offerTemplates"] as const,
     scorecardAnalytics: (params?: Record<string, unknown>) => [...base, "hr", "scorecardAnalytics", params] as const,
+    headcountRequests: (params?: Record<string, unknown>) => [...base, "hr", "headcountRequests", params] as const,
     candidateMessages: (candidateId?: number) => [...base, "hr", "candidateMessages", candidateId] as const,
     messageThreads: () => [...base, "hr", "messageThreads"] as const,
     recruiters: () => [...base, "hr", "recruiters"] as const,
