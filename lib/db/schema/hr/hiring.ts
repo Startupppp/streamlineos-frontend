@@ -531,6 +531,24 @@ export const pipelineAutomationsRelations = relations(pipelineAutomations, ({ on
   creator: one(users, { fields: [pipelineAutomations.createdBy], references: [users.id] }),
 }));
 
+export const offerLetterTemplates = pgTable("offer_letter_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  htmlContent: text("html_content").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_offer_letter_templates_org").on(table.orgId),
+]);
+
+export const offerLetterTemplatesRelations = relations(offerLetterTemplates, ({ one }) => ({
+  organization: one(organizations, { fields: [offerLetterTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [offerLetterTemplates.createdBy], references: [users.id] }),
+}));
+
 export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
 export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
 
