@@ -13,8 +13,8 @@ const listSchema = z.object({
   type: z.enum(["CALL", "EMAIL", "MEETING", "CUSTOM"]).optional(),
   entityType: z.enum(["LEAD", "DEAL", "CONTACT", "PROJECT"]).optional(),
   entityId: z.string().optional(),
-  limit: z.string().optional().transform((v) => (v ? Math.min(Number(v), 100) : 50)),
-  page: z.string().optional().transform((v) => (v ? Math.max(Number(v), 1) : 1)),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  page: z.coerce.number().int().min(1).default(1),
 });
 
 

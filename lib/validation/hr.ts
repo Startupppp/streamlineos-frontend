@@ -14,7 +14,7 @@ export const updateProfileInputSchema = z.object({
   designation: z.string().optional(),
   departmentId: z.number().int().positive().optional(),
   phone: z.string().regex(/^[\d+\s-]+$/, "Please enter a valid phone number").optional().or(z.literal("")),
-  image: z.string().optional(),
+  image: z.string().url().startsWith("https://").optional().or(z.literal("")),
 });
 
 export const changePasswordInputSchema = z.object({

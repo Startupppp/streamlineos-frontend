@@ -78,6 +78,9 @@ const serverSchema = z.object({
 
   ABLY_API_KEY: z.string().optional(),
 
+  INNGEST_EVENT_KEY: z.string().optional(),
+  INNGEST_SIGNING_KEY: z.string().optional(),
+
   TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
