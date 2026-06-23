@@ -205,28 +205,33 @@ export async function POST(req: NextRequest) {
       );
 
       void (async () => {
-        const hrMembers = await db
+        const hrMemberIds = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)
           .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-        for (const m of hrMembers) {
-          const hrUser = await db.query.users.findFirst({
-            where: eq(users.id, m.userId),
-            columns: { email: true, name: true },
-          });
-          if (hrUser?.email) {
-            await sendLeaveRequestEmail(
-              hrUser.email,
-              hrUser.name ?? "HR",
-              session.user.name ?? "Employee",
-              leaveType?.name ?? "Leave",
-              formatDateOnly(new Date(body.startDate)),
-              formatDateOnly(new Date(body.endDate)),
-              body.reason ?? "No reason provided"
-            );
-          }
-        }
+        if (hrMemberIds.length === 0) return;
+
+        const hrUsers = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(inArray(users.id, hrMemberIds.map((m) => m.userId)));
+
+        await Promise.all(
+          hrUsers
+            .filter((u) => u.email)
+            .map((u) =>
+              sendLeaveRequestEmail(
+                u.email!,
+                u.name ?? "HR",
+                session.user.name ?? "Employee",
+                leaveType?.name ?? "Leave",
+                formatDateOnly(new Date(body.startDate)),
+                formatDateOnly(new Date(body.endDate)),
+                body.reason ?? "No reason provided"
+              )
+            )
+        );
       })().catch(() => {});
 
       return ok({ success: true }, 201);

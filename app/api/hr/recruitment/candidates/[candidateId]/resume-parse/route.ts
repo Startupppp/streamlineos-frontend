@@ -41,11 +41,17 @@ export async function POST(req: NextRequest, { params }: Params) {
       const buffer = Buffer.from(await file.arrayBuffer());
       text = await extractResumeText(buffer, file.type);
     } else {
-      const body = await req.json();
-      if (typeof body.resumeText !== "string" || !body.resumeText.trim()) {
+      let body: unknown;
+      try {
+        body = await req.json();
+      } catch {
+        return err("Invalid JSON body", 400);
+      }
+      if (typeof body !== "object" || body === null || typeof (body as Record<string, unknown>).resumeText !== "string" || !(body as Record<string, unknown>).resumeText) {
         return err("resumeText is required", 400);
       }
-      text = body.resumeText.slice(0, 100000);
+      text = ((body as Record<string, unknown>).resumeText as string).trim().slice(0, 100000);
+      if (!text) return err("resumeText is required", 400);
     }
 
     const parsed = await parseResumeText(text);

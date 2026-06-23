@@ -4,7 +4,7 @@ import { getHolidays } from "@/server/queries/hr";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { holidays, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, or, sql } from "drizzle-orm";
+import { eq, and, or, sql, inArray } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
@@ -76,19 +76,24 @@ export async function POST(req: NextRequest) {
     await invalidateCachePattern(`hr:holidays:${session.orgId}:*`);
 
     void (async () => {
-      const members = await db
+      const memberIds = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
         .where(eq(organizationMembers.orgId, session.orgId));
 
-      const emails: string[] = [];
-      for (const m of members) {
-        const u = await db.query.users.findFirst({
-          where: eq(users.id, m.userId),
-          columns: { email: true, isActive: true },
-        });
-        if (u?.email && u.isActive) emails.push(u.email);
-      }
+      if (memberIds.length === 0) return;
+
+      const activeUsers = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(
+          and(
+            inArray(users.id, memberIds.map((m) => m.userId)),
+            eq(users.isActive, true)
+          )
+        );
+
+      const emails = activeUsers.map((u) => u.email).filter(Boolean) as string[];
 
       if (emails.length > 0) {
         await sendBulkHolidayAnnouncement(

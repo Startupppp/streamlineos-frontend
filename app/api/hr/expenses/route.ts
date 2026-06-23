@@ -3,7 +3,7 @@ import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getExpenses } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { expenses, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
@@ -119,26 +119,31 @@ export async function POST(req: NextRequest) {
 
     try {
       if (!isAdminRole) {
-        const hrMembers = await db
+        const hrMemberIds = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)
           .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
 
-        for (const m of hrMembers) {
-          const hrUser = await db.query.users.findFirst({
-            where: eq(users.id, m.userId),
-            columns: { email: true, name: true },
-          });
-          if (hrUser?.email) {
-            await sendExpenseSubmittedEmail(
-              hrUser.email,
-              hrUser.name ?? "HR",
-              session.user.name ?? "Employee",
-              body.category,
-              body.amount.toString(),
-              body.description ?? ""
-            );
-          }
+        if (hrMemberIds.length > 0) {
+          const hrUsers = await db
+            .select({ email: users.email, name: users.name })
+            .from(users)
+            .where(inArray(users.id, hrMemberIds.map((m) => m.userId)));
+
+          await Promise.all(
+            hrUsers
+              .filter((u) => u.email)
+              .map((u) =>
+                sendExpenseSubmittedEmail(
+                  u.email!,
+                  u.name ?? "HR",
+                  session.user.name ?? "Employee",
+                  body.category,
+                  body.amount.toString(),
+                  body.description ?? ""
+                )
+              )
+          );
         }
       }
     } catch {  }
