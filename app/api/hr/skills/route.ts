@@ -35,9 +35,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await parseBody(req, createSchema);
+    const targetUserId = body.userId ?? session.user.id;
+
+    const existing = await db.query.employeeSkills.findFirst({
+      where: and(
+        eq(employeeSkills.orgId, session.orgId),
+        eq(employeeSkills.userId, targetUserId),
+        eq(employeeSkills.skillName, body.skillName),
+      ),
+      columns: { id: true },
+    });
+    if (existing) {
+      return ok(existing);
+    }
+
     const [skill] = await db.insert(employeeSkills).values({
       orgId: session.orgId,
-      userId: body.userId ?? session.user.id,
+      userId: targetUserId,
       skillName: body.skillName,
       level: body.level,
     }).returning();
