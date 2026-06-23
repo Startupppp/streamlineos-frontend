@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 interface CareerLadder {
   id: number; title: string; department: string | null; description: string | null;
-  levels: { title: string; requirements: string }[] | null;
+  levels: { level: number; title: string; description: string; minExperience: number; skills: string[] }[] | null;
   createdAt: string | null;
 }
 
@@ -33,7 +33,7 @@ const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: ()
 export default function CareerLaddersPage() {
   const qc = useQueryClient();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage", "hr:career-ladders");
   const { data: departments } = useHrDepartments();
 
   const { data: ladders, isLoading } = useQuery({

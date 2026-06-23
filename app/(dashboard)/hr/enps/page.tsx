@@ -40,11 +40,12 @@ function scoreLabel(score: number): { label: string; variant: "default" | "secon
 export default function EnpsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage", "hr:performance");
 
   const { data: scores, isLoading } = useQuery({
     queryKey: enpsKeys.list(),
     queryFn: () => apiClient.get<EnpsScore[]>("/hr/enps"),
+    enabled: isAdmin,
   });
 
   const submit = useMutation({

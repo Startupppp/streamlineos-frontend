@@ -7,36 +7,32 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { Plus, ClipboardCheck, Clock, Users, PlayCircle } from "lucide-react";
+import { Plus, ClipboardCheck, Clock, Users } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
 interface Assessment {
-  id: number; title: string; description: string | null; category: string | null;
-  durationMinutes: number | null; status: string | null; questionCount: number;
-  completedCount: number; createdAt: string | null;
+  id: number;
+  title: string;
+  skillName: string;
+  questions: { id: string; question: string; options: string[]; correctIndex: number }[] | null;
+  passingScore: number;
+  timeLimit: number | null;
+  createdAt: string;
+  attempts: { id: number; score: number | null; passed: boolean }[];
 }
 
 const assessKeys = { all: [...queryKeys.hr.all, "assessments"] as const, list: () => [...assessKeys.all, "list"] as const };
 
-function statusBadge(s: string | null): "default" | "secondary" | "outline" {
-  if (s === "PUBLISHED") return "default";
-  if (s === "DRAFT") return "secondary";
-  return "outline";
-}
-
 export default function AssessmentsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage", "hr:performance");
 
   const { data: items, isLoading } = useQuery({
     queryKey: assessKeys.list(),
@@ -44,18 +40,17 @@ export default function AssessmentsPage() {
   });
 
   const create = useMutation({
-    mutationFn: (data: { title: string; description?: string; category?: string; durationMinutes?: number }) =>
+    mutationFn: (data: { title: string; skillName?: string; durationMinutes?: number }) =>
       apiClient.post<Assessment>("/hr/assessments", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: assessKeys.list() }),
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  const [skillName, setSkillName] = useState("");
   const [duration, setDuration] = useState("30");
 
-  const resetForm = useCallback(() => { setTitle(""); setDescription(""); setCategory(""); setDuration("30"); }, []);
+  const resetForm = useCallback(() => { setTitle(""); setSkillName(""); setDuration("30"); }, []);
 
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
@@ -67,13 +62,13 @@ export default function AssessmentsPage() {
       toast.error("Duration must be a whole number between 1 and 480 minutes"); return;
     }
     create.mutate(
-      { title: trimmedTitle, description: description.trim() || undefined, category: category.trim() || undefined, durationMinutes: numDuration || 30 },
+      { title: trimmedTitle, skillName: skillName.trim() || undefined, durationMinutes: numDuration || 30 },
       {
         onSuccess: () => { toast.success("Assessment created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, description, category, duration, create, resetForm]);
+  }, [title, skillName, duration, create, resetForm]);
 
   if (isLoading) {
     return (
@@ -99,28 +94,23 @@ export default function AssessmentsPage() {
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((a: Assessment) => (
-            <Card key={a.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <Badge variant={statusBadge(a.status)} className="text-[10px]">{a.status ?? "DRAFT"}</Badge>
-                  {a.category && <span className="text-[10px] text-muted-foreground">{a.category}</span>}
-                </div>
-                <h3 className="text-sm font-semibold leading-tight">{a.title}</h3>
-                {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  {a.durationMinutes && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{a.durationMinutes} min</span>}
-                  <span className="flex items-center gap-0.5"><ClipboardCheck className="h-3 w-3" />{a.questionCount} questions</span>
-                  <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{a.completedCount} completed</span>
-                </div>
-                {a.status === "PUBLISHED" && (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs">
-                    <PlayCircle className="h-3 w-3 mr-1" />Take Assessment
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+          {items.map((a: Assessment) => {
+            const questionCount = a.questions?.length ?? 0;
+            const completedCount = a.attempts?.length ?? 0;
+            return (
+              <Card key={a.id} className="hover:shadow-sm transition-shadow">
+                <CardContent className="p-4 space-y-2">
+                  {a.skillName && <span className="text-[10px] text-muted-foreground">{a.skillName}</span>}
+                  <h3 className="text-sm font-semibold leading-tight">{a.title}</h3>
+                  <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                    {a.timeLimit && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{a.timeLimit} min</span>}
+                    <span className="flex items-center gap-0.5"><ClipboardCheck className="h-3 w-3" />{questionCount} questions</span>
+                    <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{completedCount} completed</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -129,14 +119,10 @@ export default function AssessmentsPage() {
           <label className="text-sm font-medium">Title <span className="text-destructive">*</span></label>
           <Input placeholder="e.g., JavaScript Proficiency" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Assessment details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={2000} className="resize-none w-full" />
-        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Category / Skill</label>
-            <Input placeholder="e.g., Technical" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <label className="text-sm font-medium">Skill / Category</label>
+            <Input placeholder="e.g., Technical" value={skillName} onChange={(e) => setSkillName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Duration (min)</label>
