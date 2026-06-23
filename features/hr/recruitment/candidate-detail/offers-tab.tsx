@@ -198,7 +198,7 @@ export function OffersTab({ candidateId }: Props) {
                       <SelectTrigger className="h-7 text-xs w-36">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
                         {OFFER_STATUSES.map((s) => (
                           <SelectItem key={s} value={s} className="text-xs">
                             {STATUS_CONFIG[s].label}

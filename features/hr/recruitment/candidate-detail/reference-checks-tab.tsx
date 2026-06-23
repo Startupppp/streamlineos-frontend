@@ -237,7 +237,7 @@ function ReferenceCheckCard({
         <div className="flex items-center gap-1 shrink-0">
           <Select value={status} onValueChange={handleStatusChange} disabled={updateCheck.isPending}>
             <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {STATUS_OPTIONS.map((s) => (
                 <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
               ))}

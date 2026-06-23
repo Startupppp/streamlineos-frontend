@@ -292,6 +292,8 @@ export default function HelpdeskPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
+                    maxLength={1000}
+                    className="resize-none w-full"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -301,7 +303,7 @@ export default function HelpdeskPage() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
                         {CATEGORY_OPTIONS.map((c) => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
@@ -314,7 +316,7 @@ export default function HelpdeskPage() {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
                         {PRIORITY_OPTIONS.map((p) => (
                           <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                         ))}
@@ -325,7 +327,9 @@ export default function HelpdeskPage() {
               </div>
             </SheetScrollArea>
             <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>
+              <Button variant="outline" className="flex-1" onClick={() => {
+                setTitle(""); setDescription(""); setCategory(""); setPriority("MEDIUM"); setSheetOpen(false);
+              }}>
                 Cancel
               </Button>
               <Button className="flex-1" onClick={handleCreateTicket} disabled={createTicket.isPending}>
@@ -353,7 +357,7 @@ export default function HelpdeskPage() {
             <SelectTrigger className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {STATUS_OPTIONS.map((s) => (
                 <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
               ))}

@@ -79,7 +79,7 @@ export function Section7({ form }: SectionProps) {
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select a hiring flow (optional)" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="">None</SelectItem>
                   {(hiringFlows ?? []).map((f) => (
                     <SelectItem key={f.id} value={String(f.id)}>
@@ -164,7 +164,7 @@ export function Section9({ form }: SectionProps) {
           <Controller name="status" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="DRAFT">Draft</SelectItem>
                 <SelectItem value="OPEN">Published</SelectItem>
                 <SelectItem value="CLOSED">Closed</SelectItem>
@@ -178,7 +178,7 @@ export function Section9({ form }: SectionProps) {
           <Controller name="visibility" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="PUBLIC">Public</SelectItem>
                 <SelectItem value="INTERNAL">Internal Only</SelectItem>
               </SelectContent>

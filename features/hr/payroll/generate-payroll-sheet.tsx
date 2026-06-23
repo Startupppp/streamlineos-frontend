@@ -139,7 +139,7 @@ export function GeneratePayrollSheet({
           <SelectTrigger>
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {FORM_MONTHS.map((m) => (
               <SelectItem key={m.value} value={m.value}>
                 {m.label}
@@ -155,7 +155,7 @@ export function GeneratePayrollSheet({
           <SelectTrigger>
             <SelectValue placeholder="Select employee" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {employees.map((emp) => (
               <SelectItem key={emp.id} value={emp.id}>
                 {emp.firstName} {emp.lastName} — ₹{parseFloat(emp.monthlySalary || "0").toLocaleString("en-IN")}/month
@@ -250,7 +250,7 @@ export function GeneratePayrollSheet({
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="days">Days</SelectItem>
                     <SelectItem value="hours">Hours</SelectItem>
                   </SelectContent>

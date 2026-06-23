@@ -180,7 +180,7 @@ export default function NewDocumentPage() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {TEMPLATES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}

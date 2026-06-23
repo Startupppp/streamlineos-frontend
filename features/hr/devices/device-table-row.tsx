@@ -77,7 +77,7 @@ export function DeviceTableRow({
               {device.status || "ACTIVE"}
             </Badge>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="ACTIVE">Active</SelectItem>
             <SelectItem value="INACTIVE">Inactive</SelectItem>
             <SelectItem value="LOST">Lost</SelectItem>

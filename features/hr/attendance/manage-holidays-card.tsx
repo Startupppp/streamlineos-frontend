@@ -166,7 +166,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
             <SelectTrigger className="w-[100px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {yearOptions.map((y) => (
                 <SelectItem key={y} value={String(y)} className="text-xs">
                   {y}

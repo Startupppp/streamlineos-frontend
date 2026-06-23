@@ -174,7 +174,7 @@ export function DeviceFormContent({
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="Laptop">Laptop</SelectItem>
                     <SelectItem value="Phone">Phone</SelectItem>
                     <SelectItem value="Monitor">Monitor</SelectItem>

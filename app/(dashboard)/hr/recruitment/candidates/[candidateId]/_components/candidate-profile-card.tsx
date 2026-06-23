@@ -139,7 +139,7 @@ export const CandidateProfileCard = memo(function CandidateProfileCard({
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {STATUSES.map((s) => (
                 <StatusItem key={s} status={s} />
               ))}

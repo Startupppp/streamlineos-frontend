@@ -180,7 +180,7 @@ export function WorkLogFilterActions({
         <SelectTrigger className="w-[90px] sm:w-[100px] h-9" aria-label="Select year">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[var(--radix-select-trigger-width)]">
           {availableYears.map((y) => (
             <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
           ))}
@@ -191,7 +191,7 @@ export function WorkLogFilterActions({
         <SelectTrigger className="w-[130px] sm:w-[150px] h-9" aria-label="Select quarter">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[var(--radix-select-trigger-width)]">
           <SelectItem value="1">Q1 (Jan - Mar)</SelectItem>
           <SelectItem value="2">Q2 (Apr - Jun)</SelectItem>
           <SelectItem value="3">Q3 (Jul - Sep)</SelectItem>
@@ -290,7 +290,7 @@ export function WorkLogFilterActions({
               <Label className="text-sm font-medium">Year</Label>
               <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select year" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                   ))}
@@ -302,7 +302,7 @@ export function WorkLogFilterActions({
               <Label className="text-sm font-medium">Quarter</Label>
               <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select quarter" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="1">Q1 (Jan - Mar)</SelectItem>
                   <SelectItem value="2">Q2 (Apr - Jun)</SelectItem>
                   <SelectItem value="3">Q3 (Jul - Sep)</SelectItem>

@@ -297,7 +297,7 @@ export function CreateExpenseDialog({
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                       ))}
@@ -371,7 +371,7 @@ export function CreateExpenseDialog({
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {paymentMethods.map((method) => (
                         <SelectItem key={method} value={method}>{method}</SelectItem>
                       ))}

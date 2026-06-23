@@ -243,7 +243,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                   <label className="text-sm font-medium">Status</label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="scheduled">Scheduled</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
@@ -256,7 +256,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                   <label className="text-sm font-medium">Decision</label>
                   <Select value={decision} onValueChange={setDecision}>
                     <SelectTrigger><SelectValue placeholder="No decision yet" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {DECISIONS.map((d) => (
                         <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                       ))}

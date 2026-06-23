@@ -132,7 +132,7 @@ export function BgvTracker({
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {BGV_STATUSES.map((s) => (
                       <SelectItem key={s.value} value={s.value}>
                         {s.label}

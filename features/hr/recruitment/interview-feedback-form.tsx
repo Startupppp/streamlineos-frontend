@@ -96,7 +96,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
         <label className="text-sm font-medium">Result</label>
         <Select value={result} onValueChange={(v) => setResult(v as InterviewResult)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="PENDING">Pending</SelectItem>
             <SelectItem value="PASSED">Passed</SelectItem>
             <SelectItem value="FAILED">Failed</SelectItem>

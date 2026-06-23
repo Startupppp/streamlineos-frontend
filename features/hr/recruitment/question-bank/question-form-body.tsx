@@ -258,7 +258,7 @@ export function QuestionFormBody({
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c.replace("_", " ")}
@@ -278,7 +278,7 @@ export function QuestionFormBody({
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {DIFFICULTIES.map((d) => (
                 <SelectItem key={d} value={d}>
                   {d}

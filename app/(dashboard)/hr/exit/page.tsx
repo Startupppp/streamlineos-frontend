@@ -14,6 +14,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -38,7 +39,7 @@ import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
-import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
+import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
 const NOTICE_PERIOD_DAYS = 60;
 
@@ -67,6 +68,7 @@ export default function ExitManagementPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonCategory, setReasonCategory] = useState("");
+  const [otherReasonCategory, setOtherReasonCategory] = useState("");
   const [willingForExitInterview, setWillingForExitInterview] = useState(false);
   const [companyFeedback, setCompanyFeedback] = useState("");
 
@@ -100,6 +102,7 @@ export default function ExitManagementPage() {
   const resetResignationForm = useCallback(() => {
     setReason("");
     setReasonCategory("");
+    setOtherReasonCategory("");
     setWillingForExitInterview(false);
     setCompanyFeedback("");
   }, []);
@@ -107,6 +110,10 @@ export default function ExitManagementPage() {
   const handleSubmitResignation = useCallback(() => {
     if (!reasonCategory) {
       toast.error("Please select a reason category");
+      return;
+    }
+    if (reasonCategory === RESIGNATION_REASON_OTHER && !otherReasonCategory.trim()) {
+      toast.error("Please specify your reason for selecting 'Other'");
       return;
     }
     const trimmedReason = reason.trim();
@@ -122,12 +129,15 @@ export default function ExitManagementPage() {
       toast.error("Detailed explanation must be at most 2000 characters");
       return;
     }
+    const resolvedCategory = reasonCategory === RESIGNATION_REASON_OTHER
+      ? otherReasonCategory.trim()
+      : reasonCategory;
     createResignation.mutate(
       {
         reason: trimmedReason,
         lastWorkingDate: autoLwd,
         noticePeriodDays: NOTICE_PERIOD_DAYS,
-        reasonCategory: reasonCategory || undefined,
+        reasonCategory: resolvedCategory || undefined,
         willingForExitInterview,
         companyFeedback: companyFeedback.trim() || undefined,
       },
@@ -140,7 +150,7 @@ export default function ExitManagementPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, reasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation, resetResignationForm]);
+  }, [reason, reasonCategory, otherReasonCategory, willingForExitInterview, companyFeedback, autoLwd, createResignation, resetResignationForm]);
 
   const handleHrApprove = useCallback(() => {
     if (!hrApproveId) return;
@@ -329,7 +339,7 @@ export default function ExitManagementPage() {
             <SelectTrigger>
               <SelectValue placeholder="Select a category..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {REASON_CATEGORIES.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
@@ -338,6 +348,20 @@ export default function ExitManagementPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {reasonCategory === RESIGNATION_REASON_OTHER && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">
+              Specify Reason <span className="text-destructive">*</span>
+            </label>
+            <Input
+              placeholder="Briefly describe your reason..."
+              value={otherReasonCategory}
+              onChange={(e) => setOtherReasonCategory(e.target.value)}
+              maxLength={100}
+            />
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">
@@ -348,7 +372,12 @@ export default function ExitManagementPage() {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={4}
+            maxLength={2000}
+            className="resize-none w-full"
           />
+          <p className="text-[11px] text-muted-foreground text-right">
+            {reason.length} / 2000 (min 50)
+          </p>
         </div>
 
         <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
@@ -375,6 +404,8 @@ export default function ExitManagementPage() {
             value={companyFeedback}
             onChange={(e) => setCompanyFeedback(e.target.value)}
             rows={3}
+            maxLength={1000}
+            className="resize-none w-full"
           />
         </div>
 
@@ -443,6 +474,8 @@ export default function ExitManagementPage() {
             value={rejectRemarks}
             onChange={(e) => setRejectRemarks(e.target.value)}
             rows={4}
+            maxLength={1000}
+            className="resize-none w-full"
           />
         </div>
       </HrSheet>

@@ -188,7 +188,7 @@ export function TerminationFormSheet({
           <SelectTrigger aria-label="Select termination reason">
             <SelectValue placeholder="Select a reason..." />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {TERMINATION_REASONS.map((reason) => (
               <SelectItem key={reason} value={reason}>
                 {reason}

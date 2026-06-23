@@ -192,14 +192,14 @@ function BGVContent() {
           <label className="text-sm font-medium">Employee</label>
           <Select value={userId} onValueChange={setUserId}>
             <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-            <SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>)}</SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Verification Type</label>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{BGV_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">{BGV_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">

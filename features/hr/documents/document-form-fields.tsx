@@ -109,7 +109,7 @@ export function DocumentFormFields({
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {filteredDocumentTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -134,7 +134,7 @@ export function DocumentFormFields({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {filteredCategories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
@@ -163,7 +163,7 @@ export function DocumentFormFields({
                     <SelectValue placeholder="Select employee (optional)" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="none">No specific employee</SelectItem>
                   {filteredEmployees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>

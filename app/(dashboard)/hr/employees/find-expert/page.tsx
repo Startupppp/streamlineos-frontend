@@ -126,7 +126,7 @@ export default function FindExpertPage() {
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               <SelectItem value="__all__">All Departments</SelectItem>
               {(departments ?? []).map((d) => (
                 <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
@@ -138,7 +138,7 @@ export default function FindExpertPage() {
             <SelectTrigger className="w-[150px] h-8 text-xs">
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               <SelectItem value="__all__">All Roles</SelectItem>
               {ROLES.map((r) => (
                 <SelectItem key={r} value={r}>{r.charAt(0) + r.slice(1).toLowerCase()}</SelectItem>

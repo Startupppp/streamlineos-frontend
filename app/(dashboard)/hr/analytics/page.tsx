@@ -44,7 +44,7 @@ function DateRangeSelector({
       <SelectTrigger className="h-8 w-36 text-xs">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="w-[var(--radix-select-trigger-width)]">
         <SelectItem value="month">This Month</SelectItem>
         <SelectItem value="quarter">This Quarter</SelectItem>
         <SelectItem value="year">This Year</SelectItem>

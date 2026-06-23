@@ -1,7 +1,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -15,14 +15,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
+import { Plus, CheckCircle2, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface AssetReturn {
   id: number; userId: string; employeeName: string | null; assetName: string;
@@ -48,6 +51,21 @@ export default function AssetReturnsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
+  const { data: employeesRaw } = useHrEmployees();
+  const employees = useMemo<Employee[]>(() => {
+    if (Array.isArray(employeesRaw)) return employeesRaw;
+    return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+  }, [employeesRaw]);
+  const employeeOptions = useMemo<ComboboxOption[]>(() =>
+    employees
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        value: e.id,
+        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
+        sublabel: e.designation ?? e.email,
+      })),
+    [employees]
+  );
 
   const { data: items, isLoading } = useQuery({
     queryKey: arKeys.list(),
@@ -146,13 +164,22 @@ export default function AssetReturnsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Log Asset Return" onSubmit={handleCreate} submitLabel="Log" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => {
+        if (!open) { setUserId(""); setAssetName(""); setAssetType("Laptop"); setSerialNumber(""); setNotes(""); }
+        setSheetOpen(open);
+      }} title="Log Asset Return" onSubmit={handleCreate} submitLabel="Log" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee User ID</label>
-          <Input placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
+          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <Combobox
+            options={employeeOptions}
+            value={userId}
+            onChange={setUserId}
+            placeholder="Select employee…"
+            searchPlaceholder="Search by name…"
+          />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Asset Name</label>
+          <label className="text-sm font-medium">Asset Name <span className="text-destructive">*</span></label>
           <Input placeholder="e.g., MacBook Pro 16" value={assetName} onChange={(e) => setAssetName(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -160,7 +187,7 @@ export default function AssetReturnsPage() {
             <label className="text-sm font-medium">Asset Type</label>
             <Select value={assetType} onValueChange={setAssetType}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{ASSET_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">{ASSET_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
@@ -170,7 +197,7 @@ export default function AssetReturnsPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea placeholder="Any notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          <Textarea placeholder="Any notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="resize-none w-full" />
         </div>
       </HrSheet>
 

@@ -388,7 +388,7 @@ export default function CandidatesPage() {
                     <SelectTrigger className="h-7 flex-1 text-xs bg-muted/40 border-border/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {STAGE_CONFIG.map((s) => (
                         <SelectItem key={s.value} value={s.value}>
                           <span className="flex items-center gap-1.5">

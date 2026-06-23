@@ -266,7 +266,7 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {INTERVIEW_FORMATS.map((f) => (
                     <SelectItem key={f.value} value={f.value}>
                       {f.label}

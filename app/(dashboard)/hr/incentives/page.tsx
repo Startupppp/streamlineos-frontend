@@ -237,7 +237,7 @@ export default function IncentivesPage() {
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all" className="text-xs">All Status</SelectItem>
             <SelectItem value="PENDING" className="text-xs">Pending</SelectItem>
             <SelectItem value="APPROVED" className="text-xs">Approved</SelectItem>

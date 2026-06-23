@@ -60,7 +60,7 @@ export function HrFilterBar({
         <SelectTrigger className="h-8 w-[130px] text-xs">
           <SelectValue placeholder="Department" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[var(--radix-select-trigger-width)]">
           <SelectItem value="All">All Depts</SelectItem>
           {departments.map((d) => (
             <SelectItem key={d} value={d}>
@@ -77,7 +77,7 @@ export function HrFilterBar({
         <SelectTrigger className="h-8 w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[var(--radix-select-trigger-width)]">
           <SelectItem value="All">All Status</SelectItem>
           <SelectItem value="Active">Active</SelectItem>
           <SelectItem value="Inactive">Inactive</SelectItem>
@@ -91,7 +91,7 @@ export function HrFilterBar({
         <SelectTrigger className="h-8 w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[var(--radix-select-trigger-width)]">
           <SelectItem value="All">All Roles</SelectItem>
           <SelectItem value="CEO">CEO</SelectItem>
           <SelectItem value="HR">HR</SelectItem>

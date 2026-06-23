@@ -196,7 +196,7 @@ export default function PayrollPage() {
             <SelectTrigger className="w-[160px] sm:w-[180px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               {MONTHS.map((month) => (
                 <SelectItem key={month.value} value={month.value}>
                   {month.label}

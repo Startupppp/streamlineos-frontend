@@ -104,7 +104,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
               <SelectTrigger className="h-8 w-[110px] text-xs border-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {MONTH_NAMES.map((m, i) => (
                   <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
                 ))}
@@ -117,7 +117,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
               <SelectTrigger className="h-8 w-[72px] text-xs border-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {yearOptions.map((y) => (
                   <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
                 ))}

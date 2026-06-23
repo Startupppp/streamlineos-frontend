@@ -185,7 +185,7 @@ export function EditCandidateSheet({
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       <SelectItem value="DIRECT">Direct</SelectItem>
                       <SelectItem value="REFERRAL">Referral</SelectItem>
                       <SelectItem value="LINKEDIN">LinkedIn</SelectItem>

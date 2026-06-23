@@ -83,7 +83,7 @@ export const ScheduleInterviewSheet = memo(function ScheduleInterviewSheet({
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {INTERVIEW_TYPES.map((t) => (
               <InterviewTypeItem key={t} type={t} />
             ))}
@@ -164,7 +164,7 @@ export const ApplyToJobSheet = memo(function ApplyToJobSheet({
           <SelectTrigger>
             <SelectValue placeholder="Select a job" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {openJobs?.map((j) => (
               <JobOptionItem key={j.id} job={j} />
             ))}

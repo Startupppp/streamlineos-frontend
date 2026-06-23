@@ -389,7 +389,7 @@ function RoundFormSheet({
             <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
             <Select value={roundType} onValueChange={(v) => setValue("roundType", v as RoundFormValues["roundType"], { shouldValidate: true })}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_TYPES.map(({ value, label }) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
                 ))}
@@ -400,7 +400,7 @@ function RoundFormSheet({
             <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
             <Select value={mode} onValueChange={(v) => setValue("mode", v as RoundFormValues["mode"], { shouldValidate: true })}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_MODES.map(({ value, label }) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
                 ))}

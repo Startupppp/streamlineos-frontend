@@ -210,7 +210,7 @@ export function HrEmployeeTable({
               <SelectTrigger className="h-7 w-[64px] text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {PAGE_SIZE_OPTIONS.map((s) => (
                   <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
                 ))}

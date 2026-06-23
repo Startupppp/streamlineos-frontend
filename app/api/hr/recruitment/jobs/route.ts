@@ -16,7 +16,7 @@ const listSchema = z.object({
 const VALID_JOB_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "FREELANCE", "TEMPORARY", "CONSULTANT", "APPRENTICESHIP", "COMMISSION_BASED"] as const;
 const MAX_SALARY = 999_999_999;
 
-const createJobSchema = z.object({
+const createJobBaseSchema = z.object({
   title: z
     .string()
     .min(2, "Job Title must be at least 2 characters")
@@ -46,7 +46,9 @@ const createJobSchema = z.object({
   openings: z.number().int().min(1).max(9999).optional(),
   applicationDeadline: z.string().optional(),
   status: z.enum(["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]).optional(),
-}).refine(
+});
+
+const createJobSchema = createJobBaseSchema.refine(
   (d) => {
     if (d.salaryMin !== undefined && d.salaryMax !== undefined) {
       return d.salaryMin <= d.salaryMax;
@@ -55,6 +57,8 @@ const createJobSchema = z.object({
   },
   { message: "Minimum salary must be ≤ maximum salary", path: ["salaryMin"] }
 );
+
+type CreateJobInput = z.infer<typeof createJobBaseSchema>;
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can create job postings.", 403);
     }
 
-    const body = await parseBody(req, createJobSchema);
+    const body = await parseBody(req, createJobSchema) as CreateJobInput;
 
     const normalizedTitle = body.title.trim().toLowerCase();
     const normalizedLocation = (body.location ?? "").trim().toLowerCase();

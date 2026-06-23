@@ -168,7 +168,7 @@ function EmailTemplatesContent() {
           <label className="text-sm font-medium">Category</label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
@@ -177,7 +177,7 @@ function EmailTemplatesContent() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Body</label>
-          <Textarea placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={(e) => setBody(e.target.value)} rows={6} />
+          <Textarea placeholder="Email body. Use {{name}}, {{date}} as variables..." value={body} onChange={(e) => setBody(e.target.value)} rows={6} className="resize-none w-full" />
         </div>
       </HrSheet>
 

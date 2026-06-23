@@ -50,7 +50,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {assignableRoles.map((role) => (
                     <SelectItem key={role.slug} value={role.slug}>{role.name}</SelectItem>
                   ))}

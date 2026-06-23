@@ -303,7 +303,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="w-[var(--radix-select-trigger-width)]">
                           {TEMPLATE_TYPES.map((t) => (
                             <SelectItem key={t.value} value={t.value}>
                               {t.label}

@@ -169,7 +169,7 @@ export function CyclesTab() {
           <label className="text-sm font-medium">Type</label>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
               <SelectItem value="QUARTERLY">Quarterly — 3-month cycle</SelectItem>
               <SelectItem value="HALF_YEARLY">Half-Yearly — 6-month cycle</SelectItem>
               <SelectItem value="ANNUAL">Annual — Full-year cycle</SelectItem>

@@ -198,7 +198,7 @@ export function LeaveRequestSheet({
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {leaveTypes.map((t) => (
                       <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
                     ))}
@@ -278,7 +278,7 @@ export function LeaveRequestSheet({
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       <SelectItem value="AM">AM (Morning — first half)</SelectItem>
                       <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
                     </SelectContent>
@@ -301,7 +301,7 @@ export function LeaveRequestSheet({
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="LOW">
                       <span className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />Low
@@ -337,7 +337,7 @@ export function LeaveRequestSheet({
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {approvers.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
                           {u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}

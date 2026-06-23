@@ -46,7 +46,7 @@ export function Section1({ form, departments }: SectionProps) {
             <Controller name="departmentId" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select department" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {departments && departments.length > 0 ? (
                     departments.map((d) => (
                       <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
@@ -78,7 +78,7 @@ export function Section1({ form, departments }: SectionProps) {
             <Controller name="jobType" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="FULL_TIME">Full-Time</SelectItem>
                   <SelectItem value="PART_TIME">Part-Time</SelectItem>
                   <SelectItem value="CONTRACT">Contract</SelectItem>
@@ -98,7 +98,7 @@ export function Section1({ form, departments }: SectionProps) {
             <Controller name="workMode" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select mode" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="ONSITE">On-site</SelectItem>
                   <SelectItem value="REMOTE">Remote</SelectItem>
                   <SelectItem value="HYBRID">Hybrid</SelectItem>
@@ -129,7 +129,7 @@ export function Section2({ form }: SectionProps) {
           <Controller name="country" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="e.g. India, USA, UK" /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="India">India</SelectItem>
                 <SelectItem value="United States">United States</SelectItem>
                 <SelectItem value="United Kingdom">United Kingdom</SelectItem>
@@ -183,7 +183,7 @@ export function Section3({ form }: SectionProps) {
             <Controller name="currency" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select currency" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="INR">INR</SelectItem>
                   <SelectItem value="USD">USD</SelectItem>
                   <SelectItem value="EUR">EUR</SelectItem>
@@ -200,7 +200,7 @@ export function Section3({ form }: SectionProps) {
             <Controller name="salaryType" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
                   <SelectItem value="ANNUAL">Annual</SelectItem>
                   <SelectItem value="HOURLY">Hourly</SelectItem>
@@ -251,7 +251,7 @@ export function Section4({ form }: SectionProps) {
           <Controller name="educationLevel" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="Select level" /></SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="HIGH_SCHOOL">High School</SelectItem>
                 <SelectItem value="DIPLOMA">Diploma</SelectItem>
                 <SelectItem value="BACHELORS">Bachelor&apos;s Degree</SelectItem>

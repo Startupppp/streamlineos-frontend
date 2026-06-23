@@ -96,7 +96,7 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
           <SelectTrigger className="h-8 text-xs w-48">
             <SelectValue placeholder="Document type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
             {DOCUMENT_TYPES.map((t) => (
               <SelectItem key={t.value} value={t.value}>
                 {t.label}

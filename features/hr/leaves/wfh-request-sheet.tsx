@@ -150,7 +150,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {WFH_REASONS.map((reason) => (
                       <SelectItem key={reason} value={reason}>{reason}</SelectItem>
                     ))}
@@ -173,7 +173,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
                       <SelectValue placeholder="Select approver" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {approvers.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
                         {u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}
