@@ -9,18 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { getInitials } from "@/lib/format-utils";
 
 import type { Termination } from "@/lib/api/hooks/hr";
-
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 interface TerminationDetailSheetProps {
   open: boolean;

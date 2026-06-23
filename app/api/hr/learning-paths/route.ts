@@ -10,16 +10,20 @@ const listSchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
+const stepSchema = z.object({
+  order: z.number().int().min(1),
+  type: z.enum(["assessment", "certification"]),
+  referenceId: z.number().int().positive(),
+  title: z.string().min(1),
+});
+
 const createSchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().min(2).max(200),
   description: z.string().max(1000).optional(),
   targetRole: z.string().max(100).optional(),
-  steps: z.array(z.object({
-    order: z.number().int().min(1),
-    type: z.enum(["assessment", "certification"]),
-    referenceId: z.number().int().positive(),
-    title: z.string().min(1),
-  })).min(1),
+  level: z.string().max(50).optional(),
+  estimatedHours: z.number().int().positive().optional(),
+  steps: z.preprocess((v) => (v == null ? [] : v), z.array(stepSchema)).optional().default([]),
 });
 
 export async function GET(req: NextRequest) {

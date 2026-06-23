@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
+import { getInitials } from "@/lib/format-utils";
 import { SupportActivityLog } from "@/components/support/support-activity-log";
 import type { SupportTicketStatus } from "@/types/support";
 
@@ -46,16 +47,6 @@ interface PendingAttachment {
   fileUrl: string;
   fileSize: number;
   mimeType: string;
-}
-
-function getInitials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 function toTitleCase(str: string) {

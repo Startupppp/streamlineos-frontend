@@ -19,6 +19,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { resolveImageUrl } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
+import { getInitials } from "@/lib/format-utils";
 import {
   useSupportActivity,
   type SupportActivityAction,
@@ -35,16 +36,6 @@ const ACTION_ICONS: Record<SupportActivityAction, LucideIcon> = {
   resolved: CheckCircle2,
   reopened: RotateCcw,
 };
-
-function getInitials(name: string | null | undefined) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 function describeChange(entry: SupportActivityEntry) {
   if (entry.fromValue && entry.toValue) {

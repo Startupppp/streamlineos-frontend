@@ -6,17 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Check } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
-
-function getInitials(name: string) {
-  return (
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "?"
-  );
-}
+import { getInitials } from "@/lib/format-utils";
 
 interface OrgMember {
   id: string;

@@ -15,92 +15,77 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, ThumbsUp, BarChart3, Users, Calendar } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Plus, ThumbsUp, MessageSquare, User, EyeOff } from "lucide-react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
+import { Switch } from "@/components/ui/switch";
 
-interface EnpsSurvey {
-  id: number; title: string; status: string | null; score: number | null;
-  promoters: number; passives: number; detractors: number;
-  totalResponses: number; closesAt: string | null; createdAt: string | null;
+interface EnpsScore {
+  id: number;
+  score: number;
+  comment: string | null;
+  isAnonymous: boolean;
+  period: string;
+  createdAt: string | null;
 }
 
 const enpsKeys = { all: [...queryKeys.hr.all, "enps"] as const, list: () => [...enpsKeys.all, "list"] as const };
 
-function scoreColor(score: number | null): string {
-  if (score === null) return "text-muted-foreground";
-  if (score >= 50) return "text-green-600";
-  if (score >= 0) return "text-amber-600";
-  return "text-red-600";
-}
-
-function statusBadge(s: string | null): "default" | "secondary" | "outline" {
-  if (s === "ACTIVE") return "default";
-  if (s === "CLOSED") return "outline";
-  return "secondary";
+function scoreLabel(score: number): { label: string; variant: "default" | "secondary" | "outline" } {
+  if (score >= 9) return { label: "Promoter", variant: "default" };
+  if (score >= 7) return { label: "Passive", variant: "secondary" };
+  return { label: "Detractor", variant: "outline" };
 }
 
 export default function EnpsPage() {
-  const { data: session } = useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
 
-  const { data: surveys, isLoading } = useQuery({
+  const { data: scores, isLoading } = useQuery({
     queryKey: enpsKeys.list(),
-    queryFn: () => apiClient.get<EnpsSurvey[]>("/hr/enps"),
-  });
-
-  const create = useMutation({
-    mutationFn: (data: { title: string; closesAt?: string }) =>
-      apiClient.post<EnpsSurvey>("/hr/enps", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: enpsKeys.list() }),
+    queryFn: () => apiClient.get<EnpsScore[]>("/hr/enps"),
   });
 
   const submit = useMutation({
-    mutationFn: (data: { surveyId: number; score: number; feedback?: string }) =>
-      apiClient.post<{ success: boolean }>("/hr/enps/respond", data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: enpsKeys.list() }); toast.success("Response submitted"); },
+    mutationFn: (data: { score: number; comment?: string; isAnonymous?: boolean }) =>
+      apiClient.post<EnpsScore>("/hr/enps", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: enpsKeys.list() }),
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [closesAt, setClosesAt] = useState("");
-  const [respondId, setRespondId] = useState<number | null>(null);
   const [npsScore, setNpsScore] = useState("8");
-  const [feedback, setFeedback] = useState("");
+  const [comment, setComment] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(true);
 
-  const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    create.mutate(
-      { title: title.trim(), closesAt: closesAt || undefined },
+  const resetForm = useCallback(() => { setNpsScore("8"); setComment(""); setIsAnonymous(true); }, []);
+
+  const handleSubmit = useCallback(() => {
+    const numScore = Number(npsScore);
+    if (!Number.isInteger(numScore) || numScore < 0 || numScore > 10) {
+      toast.error("Score must be a whole number between 0 and 10"); return;
+    }
+    submit.mutate(
+      { score: numScore, comment: comment.trim() || undefined, isAnonymous },
       {
         onSuccess: () => {
-          toast.success("eNPS survey created"); setSheetOpen(false);
-          setTitle(""); setClosesAt("");
+          toast.success("eNPS response submitted"); setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, closesAt, create]);
+  }, [npsScore, comment, isAnonymous, submit, resetForm]);
 
-  const handleSubmitResponse = useCallback(() => {
-    if (!respondId) return;
-    submit.mutate(
-      { surveyId: respondId, score: Number(npsScore), feedback: feedback || undefined },
-      {
-        onSuccess: () => { setRespondId(null); setNpsScore("8"); setFeedback(""); },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [respondId, npsScore, feedback, submit]);
+  const promoters = (scores ?? []).filter((s) => s.score >= 9).length;
+  const detractors = (scores ?? []).filter((s) => s.score <= 6).length;
+  const total = scores?.length ?? 0;
+  const enpsValue = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : null;
 
   if (isLoading) {
     return (
       <PageWrapper title="Employee NPS" subtitle="Measure employee loyalty">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44" />)}
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
       </PageWrapper>
     );
@@ -110,65 +95,80 @@ export default function EnpsPage() {
     <PageWrapper
       title="Employee NPS"
       subtitle="Measure and track employee Net Promoter Score"
-      badge={`${surveys?.length ?? 0} surveys`}
-      actions={isAdmin ? <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />New eNPS</Button> : undefined}
+      badge={enpsValue !== null ? `Score: ${enpsValue > 0 ? "+" : ""}${enpsValue}` : `${total} responses`}
+      actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Submit Score</Button>}
     >
-      {!surveys?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No eNPS surveys yet.</p>
-        </CardContent></Card>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {surveys.map((s: EnpsSurvey) => (
-            <Card key={s.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <Badge variant={statusBadge(s.status)} className="text-[10px]">{s.status ?? "DRAFT"}</Badge>
-                  {s.score !== null && (
-                    <span className={`text-lg font-bold ${scoreColor(s.score)}`}>{s.score}</span>
-                  )}
-                </div>
-                <h3 className="text-sm font-semibold leading-tight">{s.title}</h3>
-                <div className="flex gap-3 text-[10px]">
-                  <span className="text-green-600">Promoters: {s.promoters}</span>
-                  <span className="text-amber-600">Passives: {s.passives}</span>
-                  <span className="text-red-600">Detractors: {s.detractors}</span>
-                </div>
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5"><Users className="h-3 w-3" />{s.totalResponses} responses</span>
-                  {s.closesAt && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />Closes {format(new Date(s.closesAt), "MMM d")}</span>}
-                </div>
-                {s.status === "ACTIVE" && (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => setRespondId(s.id)}>
-                    <BarChart3 className="h-3 w-3 mr-1" />Respond
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+      {total > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <Card><CardContent className="p-3 text-center">
+            <p className="text-xs text-muted-foreground">Promoters</p>
+            <p className="text-lg font-bold text-green-600">{promoters}</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-3 text-center">
+            <p className="text-xs text-muted-foreground">Passives</p>
+            <p className="text-lg font-bold text-amber-600">{total - promoters - detractors}</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-3 text-center">
+            <p className="text-xs text-muted-foreground">Detractors</p>
+            <p className="text-lg font-bold text-red-600">{detractors}</p>
+          </CardContent></Card>
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create eNPS Survey" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., Q1 2026 eNPS" value={title} onChange={(e) => setTitle(e.target.value)} />
+      {!scores?.length ? (
+        <Card><CardContent className="py-12 text-center">
+          <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
+          <p className="text-sm text-muted-foreground">No eNPS responses yet.</p>
+        </CardContent></Card>
+      ) : isAdmin ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {scores.map((s: EnpsScore) => {
+            const { label, variant } = scoreLabel(s.score);
+            return (
+              <Card key={s.id} className="hover:shadow-sm transition-shadow">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold">{s.score}<span className="text-sm text-muted-foreground">/10</span></span>
+                    <Badge variant={variant} className="text-[10px]">{label}</Badge>
+                  </div>
+                  {s.comment && <p className="text-xs text-muted-foreground line-clamp-2 flex items-start gap-1"><MessageSquare className="h-3 w-3 shrink-0 mt-0.5" />{s.comment}</p>}
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    {s.isAnonymous ? <EyeOff className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                    <span>{s.isAnonymous ? "Anonymous" : "Named"}</span>
+                    <span>·</span>
+                    <span>{s.period}</span>
+                    {s.createdAt && <><span>·</span><span>{format(new Date(s.createdAt), "MMM d")}</span></>}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Closes At</label>
-          <Input type="date" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
-        </div>
-      </HrSheet>
+      ) : (
+        <Card><CardContent className="py-8 text-center">
+          <ThumbsUp className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Your responses are submitted anonymously. Thank you for participating.</p>
+        </CardContent></Card>
+      )}
 
-      <HrSheet open={respondId !== null} onOpenChange={(open) => { if (!open) setRespondId(null); }} title="eNPS Response" onSubmit={handleSubmitResponse} submitLabel="Submit" isPending={submit.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Submit eNPS Score" onSubmit={handleSubmit} submitLabel="Submit" isPending={submit.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">On a scale of 0-10, how likely are you to recommend this company?</label>
-          <Input type="number" min={0} max={10} value={npsScore} onChange={(e) => setNpsScore(e.target.value)} />
+          <label className="text-sm font-medium">
+            On a scale of 0–10, how likely are you to recommend this company as a place to work? <span className="text-destructive">*</span>
+          </label>
+          <Input type="number" min={0} max={10} step={1} value={npsScore} onChange={(e) => setNpsScore(e.target.value)} />
+          <p className="text-xs text-muted-foreground">0 = Not at all likely · 10 = Extremely likely</p>
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Feedback (optional)</label>
-          <Textarea placeholder="Tell us why..." value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={3} />
+          <label className="text-sm font-medium">What&apos;s the main reason for your score? (optional)</label>
+          <Textarea placeholder="Share your thoughts..." value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={500} className="resize-none w-full" />
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Submit anonymously</p>
+            <p className="text-xs text-muted-foreground">Your name won&apos;t be attached to this response</p>
+          </div>
+          <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
         </div>
       </HrSheet>
     </PageWrapper>

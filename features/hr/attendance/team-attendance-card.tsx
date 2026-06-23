@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Search, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
 import { useHrTeamAttendanceStatus } from "@/lib/api/hooks/hr";
 import { resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import type { TeamAttendanceEntry } from "@/types/hr";
 
 function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
@@ -39,15 +40,6 @@ function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
         </Badge>
       );
   }
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
 }
 
 export const TeamAttendanceCard = memo(function TeamAttendanceCard() {

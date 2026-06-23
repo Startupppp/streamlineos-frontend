@@ -36,11 +36,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import { Check, Plus, Target } from "lucide-react";
-
-function getInitials(name: string) {
-  return name?.split("").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
-}
 
 const targetSchema = z
   .object({

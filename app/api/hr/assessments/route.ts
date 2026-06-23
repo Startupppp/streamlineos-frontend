@@ -6,15 +6,20 @@ import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
+const questionSchema = z.object({
+  id: z.string().min(1),
+  question: z.string().min(1),
+  options: z.array(z.string()).min(2),
+  correctIndex: z.number().int().min(0),
+});
+
 const createSchema = z.object({
-  title: z.string().min(1).max(200),
-  skillName: z.string().min(1).max(100),
-  questions: z.array(z.object({
-    id: z.string().min(1),
-    question: z.string().min(1),
-    options: z.array(z.string()).min(2),
-    correctIndex: z.number().int().min(0),
-  })).min(1),
+  title: z.string().min(2).max(200),
+  description: z.string().max(2000).optional(),
+  skillName: z.string().max(100).optional(),
+  category: z.string().max(100).optional(),
+  durationMinutes: z.number().int().positive().max(480).optional(),
+  questions: z.preprocess((v) => (v == null ? [] : v), z.array(questionSchema)).optional().default([]),
   passingScore: z.number().int().min(0).max(100).optional().default(70),
   timeLimit: z.number().int().positive().optional(),
 });
@@ -77,10 +82,10 @@ export async function POST(req: NextRequest) {
     const [assessment] = await db.insert(skillAssessments).values({
       orgId: session.orgId,
       title: body.title,
-      skillName: body.skillName,
-      questions: body.questions,
+      skillName: body.skillName ?? body.category ?? "",
+      questions: body.questions ?? [],
       passingScore: body.passingScore,
-      timeLimit: body.timeLimit,
+      timeLimit: body.durationMinutes ?? body.timeLimit,
       createdBy: session.user.id,
     }).returning();
 

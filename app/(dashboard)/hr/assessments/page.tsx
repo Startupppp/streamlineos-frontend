@@ -16,7 +16,6 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ClipboardCheck, Clock, Users, PlayCircle } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -35,7 +34,6 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" {
 }
 
 export default function AssessmentsPage() {
-  const { data: session } = useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
@@ -57,19 +55,25 @@ export default function AssessmentsPage() {
   const [category, setCategory] = useState("");
   const [duration, setDuration] = useState("30");
 
+  const resetForm = useCallback(() => { setTitle(""); setDescription(""); setCategory(""); setDuration("30"); }, []);
+
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 200) { toast.error("Title must be at most 200 characters"); return; }
+    const numDuration = Number(duration);
+    if (duration && (!Number.isInteger(numDuration) || numDuration < 1 || numDuration > 480)) {
+      toast.error("Duration must be a whole number between 1 and 480 minutes"); return;
+    }
     create.mutate(
-      { title: title.trim(), description: description || undefined, category: category || undefined, durationMinutes: Number(duration) || 30 },
+      { title: trimmedTitle, description: description.trim() || undefined, category: category.trim() || undefined, durationMinutes: numDuration || 30 },
       {
-        onSuccess: () => {
-          toast.success("Assessment created"); setSheetOpen(false);
-          setTitle(""); setDescription(""); setCategory(""); setDuration("30");
-        },
+        onSuccess: () => { toast.success("Assessment created"); setSheetOpen(false); resetForm(); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, description, category, duration, create]);
+  }, [title, description, category, duration, create, resetForm]);
 
   if (isLoading) {
     return (
