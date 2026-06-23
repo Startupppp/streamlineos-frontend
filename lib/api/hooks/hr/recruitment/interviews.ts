@@ -56,6 +56,7 @@ export interface ScheduleInterviewInput {
   format?: "VIDEO" | "PHONE" | "IN_PERSON";
   interviewers: string[];
   notes?: string;
+  meetLink?: string;
   createMeet?: boolean;
   notifyChannels?: { email: boolean; whatsapp: boolean };
 }
@@ -449,7 +450,44 @@ export function useCreateBookingLink() {
       apiClient.post<BookingLinkResponse>("/hr/recruitment/interviews/self-schedule", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.bookingLinks() });
     },
+  });
+}
+
+export interface HrBookingLink {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  jobPostingId: number | null;
+  token: string;
+  durationMinutes: number;
+  interviewType: string;
+  status: "pending" | "booked" | "expired" | "cancelled";
+  expiresAt: string;
+  createdBy: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  candidate: { id: number; firstName: string; lastName: string; email: string } | null;
+  jobPosting: { id: number; title: string } | null;
+  creator: { id: string; name: string | null } | null;
+}
+
+export function useHrBookingLinks() {
+  return useQuery({
+    queryKey: queryKeys.hr.bookingLinks(),
+    queryFn: () => apiClient.get<HrBookingLink[]>("/hr/recruitment/booking-links"),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useRevokeBookingLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/booking-links/${id}`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.bookingLinks() }),
   });
 }
 

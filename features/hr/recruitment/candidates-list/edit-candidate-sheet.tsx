@@ -28,15 +28,27 @@ import {
 } from "@/components/ui/select";
 
 const editCandidateSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(100),
-  lastName: z.string().min(1, "Last name is required").max(100),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional().or(z.literal("")),
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be at most 50 characters")
+    .regex(/[a-zA-Z]/, "First name must contain at least one letter"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be at most 50 characters")
+    .regex(/[a-zA-Z]/, "Last name must contain at least one letter"),
+  email: z.string().email("Invalid email").max(254, "Email must be at most 254 characters"),
+  phone: z
+    .string()
+    .regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid phone number (7–15 digits)")
+    .optional()
+    .or(z.literal("")),
   source: z.string(),
-  currentRole: z.string().optional().or(z.literal("")),
-  currentCompany: z.string().optional().or(z.literal("")),
-  linkedinUrl: z.string().optional().or(z.literal("")),
-  notes: z.string().optional().or(z.literal("")),
+  currentRole: z.string().max(100).optional().or(z.literal("")),
+  currentCompany: z.string().max(100).optional().or(z.literal("")),
+  linkedinUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
 });
 
 type EditCandidateForm = z.infer<typeof editCandidateSchema>;
@@ -254,6 +266,8 @@ export function EditCandidateSheet({
                   <Textarea
                     {...field}
                     rows={3}
+                    maxLength={2000}
+                    className="resize-none w-full"
                     placeholder="Internal notes about this candidate..."
                   />
                 </FormControl>

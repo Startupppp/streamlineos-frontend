@@ -26,10 +26,22 @@ import {
 } from "@/components/ui/select";
 
 const addCandidateSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(100),
-  lastName: z.string().min(1, "Last name is required").max(100),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional().or(z.literal("")),
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be at most 50 characters")
+    .regex(/[a-zA-Z]/, "First name must contain at least one letter"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be at most 50 characters")
+    .regex(/[a-zA-Z]/, "Last name must contain at least one letter"),
+  email: z.string().email("Invalid email").max(254, "Email must be at most 254 characters"),
+  phone: z
+    .string()
+    .regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid phone number (7–15 digits)")
+    .optional()
+    .or(z.literal("")),
   source: z.string(),
 });
 
@@ -162,6 +174,8 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                       <SelectItem value="REFERRAL">Referral</SelectItem>
                       <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
                       <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
+                      <SelectItem value="NAUKRI">Naukri</SelectItem>
+                      <SelectItem value="CAREERS_PAGE">Careers Page</SelectItem>
                       <SelectItem value="CAMPUS">Campus</SelectItem>
                     </SelectContent>
                   </Select>

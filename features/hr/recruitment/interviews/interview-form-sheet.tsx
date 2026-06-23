@@ -69,6 +69,7 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
   const [format_, setFormat_] = useState<InterviewFormat>("VIDEO");
   const [scheduledAt, setScheduledAt] = useState("");
   const [duration, setDuration] = useState("60");
+  const [meetLink, setMeetLink] = useState("");
   const [interviewerIds, setInterviewerIds] = useState<string[]>([]);
   const [notifyEmail, setNotifyEmail] = useState(true);
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(false);
@@ -113,6 +114,7 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
     setCandidateId("");
     setJobPostingId("");
     setScheduledAt("");
+    setMeetLink("");
     setInterviewerIds([]);
     setNotifyEmail(true);
     setNotifyWhatsApp(false);
@@ -125,8 +127,22 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
       toast.error("Candidate and scheduled date are required");
       return;
     }
+    const scheduledDate = new Date(scheduledAt);
+    if (scheduledDate <= new Date()) {
+      toast.error("Interview date must be in the future");
+      return;
+    }
     if (interviewerIds.length === 0) {
       toast.error("At least one interviewer is required");
+      return;
+    }
+    const numDuration = Number(duration);
+    if (!Number.isInteger(numDuration) || numDuration < 15 || numDuration > 480) {
+      toast.error("Duration must be a whole number between 15 and 480 minutes");
+      return;
+    }
+    if (format_ === "VIDEO" && !meetLink.trim()) {
+      toast.error("Meet link is required for video interviews");
       return;
     }
     scheduleInterview.mutate(
@@ -134,8 +150,9 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
         candidateId: Number(candidateId),
         jobPostingId: jobPostingId ? Number(jobPostingId) : undefined,
         format: format_,
-        scheduledAt: new Date(scheduledAt).toISOString(),
-        durationMinutes: Number(duration) || 60,
+        scheduledAt: scheduledDate.toISOString(),
+        durationMinutes: numDuration,
+        meetLink: meetLink.trim() || undefined,
         interviewers: interviewerIds,
         notifyChannels: { email: notifyEmail, whatsapp: notifyWhatsApp },
       },
@@ -148,7 +165,7 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [candidateId, jobPostingId, format_, scheduledAt, duration, interviewerIds, notifyEmail, notifyWhatsApp, scheduleInterview, resetForm, onOpenChange]);
+  }, [candidateId, jobPostingId, format_, scheduledAt, duration, meetLink, interviewerIds, notifyEmail, notifyWhatsApp, scheduleInterview, resetForm, onOpenChange]);
 
   function handleFormatChange(v: string) {
     setFormat_(v as InterviewFormat);
@@ -249,7 +266,7 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
               <SelectTrigger>
                 <SelectValue placeholder="Select position..." />
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
+              <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto">
                 {jobPostings?.map((jp: { id: number; title: string }) => (
                   <SelectItem key={jp.id} value={String(jp.id)}>
                     {jp.title}
@@ -280,6 +297,8 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
               <Input
                 type="number"
                 min={15}
+                max={480}
+                step={15}
                 value={duration}
                 onChange={handleDurationChange}
               />
@@ -293,9 +312,24 @@ export function InterviewFormSheet({ open, onOpenChange }: InterviewFormSheetPro
             <Input
               type="datetime-local"
               value={scheduledAt}
+              min={new Date().toISOString().slice(0, 16)}
               onChange={handleScheduledAtChange}
             />
           </div>
+
+          {format_ === "VIDEO" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">
+                Meet Link <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="url"
+                placeholder="https://meet.google.com/..."
+                value={meetLink}
+                onChange={(e) => setMeetLink(e.target.value)}
+              />
+            </div>
+          )}
 
           {availabilityData && availabilityData.availability.length > 0 && (
             <InterviewerAvailabilityGrid
