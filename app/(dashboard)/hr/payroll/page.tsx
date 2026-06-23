@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, subMonths } from "date-fns";
@@ -34,6 +34,9 @@ import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-she
 import { PayrollStats } from "@/features/hr/payroll/payroll-stats";
 import { PayrollPageSkeleton } from "@/features/hr/payroll/payroll-page-skeleton";
 import { usePayslipForm } from "@/features/hr/payroll/use-payslip-form";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { PayslipDetailSheet } from "@/features/hr/payslips/payslip-detail-sheet";
+import type { PayrollWithUser } from "@/types/hr";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);
@@ -73,6 +76,7 @@ export default function PayrollPage() {
   );
 
   const form = usePayslipForm({ employees });
+  const [previewPayroll, setPreviewPayroll] = useState<PayrollWithUser | null>(null);
 
   const generatePayrollMutation = useGeneratePayroll();
   const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
@@ -169,6 +173,10 @@ export default function PayrollPage() {
 
   const handleDownloadPayslip = useCallback((payrollId: number) => {
     window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
+  }, []);
+
+  const handlePreviewPayroll = useCallback((payroll: PayrollWithUser) => {
+    setPreviewPayroll(payroll);
   }, []);
 
   const totalGross =
@@ -287,9 +295,39 @@ export default function PayrollPage() {
             isApprovePending={approvePayrollMutation.isPending}
             isMarkPaidPending={markPaidMutation.isPending}
             onDownload={handleDownloadPayslip}
+            onPreview={handlePreviewPayroll}
           />
         )}
       </div>
+
+      <Sheet open={!!previewPayroll} onOpenChange={(v) => { if (!v) setPreviewPayroll(null); }}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Payslip Preview</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <PayslipDetailSheet
+              payslip={previewPayroll ? {
+                month: previewPayroll.month,
+                basicSalary: previewPayroll.basicSalary,
+                hra: previewPayroll.hra,
+                grossSalary: previewPayroll.grossSalary,
+                deductions: previewPayroll.deductions,
+                netSalary: previewPayroll.netSalary,
+                overtimeAmount: previewPayroll.overtimeAmount,
+                overtimeType: previewPayroll.overtimeType,
+                overtimeDays: previewPayroll.overtimeDays,
+                overtimeHours: previewPayroll.overtimeHours,
+                user: previewPayroll.user ? {
+                  firstName: previewPayroll.user.firstName,
+                  lastName: previewPayroll.user.lastName,
+                  designation: previewPayroll.user.designation,
+                } : null,
+              } : undefined}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </PageWrapper>
   );
 }

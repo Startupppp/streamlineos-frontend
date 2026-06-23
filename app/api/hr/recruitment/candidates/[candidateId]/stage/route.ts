@@ -12,6 +12,15 @@ import type { NextRequest } from "next/server";
 const CANDIDATE_STAGES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
 type CandidateStage = (typeof CANDIDATE_STAGES)[number];
 
+const ALLOWED_TRANSITIONS: Record<CandidateStage, CandidateStage[]> = {
+  NEW: ["SCREENING", "REJECTED"],
+  SCREENING: ["INTERVIEW", "REJECTED"],
+  INTERVIEW: ["OFFER", "REJECTED"],
+  OFFER: ["HIRED", "REJECTED"],
+  HIRED: [],
+  REJECTED: ["SCREENING"],
+};
+
 const stageSchema = z.object({
   stage: z.enum(CANDIDATE_STAGES),
 });
@@ -35,6 +44,15 @@ export async function PATCH(
 
     if (existing.status === newStage) {
       return ok({ id: candidateId, stage: newStage, changed: false });
+    }
+
+    const currentStage = existing.status as CandidateStage;
+    const allowed = ALLOWED_TRANSITIONS[currentStage] ?? [];
+    if (!allowed.includes(newStage)) {
+      return err(
+        `Cannot move candidate from ${currentStage} to ${newStage}. ${currentStage === "REJECTED" ? "Rejected candidates must be re-opened to Screening first." : `Valid transitions from ${currentStage}: ${allowed.join(", ") || "none"}.`}`,
+        422,
+      );
     }
 
     const [updated] = await db

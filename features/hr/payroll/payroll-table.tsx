@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { Check, CreditCard, Download } from "lucide-react";
+import { Check, CreditCard, Download, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 import type { PayrollWithUser } from "@/types/hr";
@@ -32,6 +32,7 @@ interface PayrollTableProps {
   isApprovePending: boolean;
   isMarkPaidPending: boolean;
   onDownload?: (payrollId: number) => void;
+  onPreview?: (payroll: PayrollWithUser) => void;
 }
 
 export function PayrollTable({
@@ -42,6 +43,7 @@ export function PayrollTable({
   isApprovePending,
   isMarkPaidPending,
   onDownload,
+  onPreview,
 }: PayrollTableProps) {
   return (
     <Card>
@@ -120,6 +122,16 @@ export function PayrollTable({
                             >
                               <CreditCard className="h-3 w-3 mr-1" />
                               Mark Paid
+                            </Button>
+                          )}
+                          {(payroll.status === "APPROVED" || payroll.status === "PAID") && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onPreview?.(payroll)}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview
                             </Button>
                           )}
                           {payroll.status === "PAID" && (

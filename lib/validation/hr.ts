@@ -332,6 +332,9 @@ export const updatePerformanceReviewSchema = z.object({
   overallRating: z.number().min(0).max(10).optional(),
   comments: z.string().max(2000).optional(),
   status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]).optional(),
+  periodStart: z.string().optional(),
+  periodEnd: z.string().optional(),
+  cycleId: z.number().int().positive().optional(),
 });
 
 export const createOneOnOneSchema = z.object({

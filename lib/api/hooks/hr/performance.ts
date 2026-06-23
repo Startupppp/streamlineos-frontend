@@ -67,7 +67,7 @@ export function useCreatePerformanceReview() {
 export function useUpdatePerformanceReview() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdatePerformanceReviewInput & { id: number }) =>
+    mutationFn: ({ id, ...data }: UpdatePerformanceReviewInput & { id: number; periodStart?: string; periodEnd?: string; cycleId?: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/reviews/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.performanceReviews() }),
   });

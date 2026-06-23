@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,16 @@ export default function DocumentsPage() {
 
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
+
+  const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
+
+  useEffect(() => {
+    if (!foldersKey) return;
+    try {
+      const stored = localStorage.getItem(foldersKey);
+      if (stored) setCustomFolders(JSON.parse(stored) as string[]);
+    } catch { /* ignore */ }
+  }, [foldersKey]);
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 
@@ -133,7 +143,13 @@ export default function DocumentsPage() {
   const handleCategoryChange = (value: string) => { setSelectedCategory(value); setPage(1); };
 
   const handleNewFolder = (name: string) => {
-    setCustomFolders((prev) => [...prev, name]);
+    setCustomFolders((prev) => {
+      const updated = [...prev, name];
+      if (foldersKey) {
+        try { localStorage.setItem(foldersKey, JSON.stringify(updated)); } catch { /* ignore */ }
+      }
+      return updated;
+    });
     setSelectedCategory(name);
     setNewFolderName("");
     setIsNewFolderOpen(false);

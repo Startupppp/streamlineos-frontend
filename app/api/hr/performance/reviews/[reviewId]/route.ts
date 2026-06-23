@@ -61,6 +61,11 @@ export async function PATCH(
     if (!existing) return err("Review not found.", 404);
 
     const body = await parseBody(req, updatePerformanceReviewSchema);
+
+    if (existing.status === "COMPLETED" && (body.periodStart !== undefined || body.periodEnd !== undefined || body.cycleId !== undefined)) {
+      return err("Cannot edit period or cycle for a completed review.", 409);
+    }
+
     await db.update(performanceReviews).set({
       ...(body.ratings !== undefined && { ratings: body.ratings }),
       ...(body.strengths !== undefined && { strengths: body.strengths }),
@@ -68,6 +73,9 @@ export async function PATCH(
       ...(body.overallRating !== undefined && { overallRating: body.overallRating.toString() }),
       ...(body.comments !== undefined && { comments: body.comments }),
       ...(body.status !== undefined && { status: body.status }),
+      ...(body.periodStart !== undefined && { periodStart: body.periodStart }),
+      ...(body.periodEnd !== undefined && { periodEnd: body.periodEnd }),
+      ...(body.cycleId !== undefined && { cycleId: body.cycleId }),
       updatedAt: new Date(),
     }).where(eq(performanceReviews.id, reviewId));
     return ok({ success: true });

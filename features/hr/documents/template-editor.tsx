@@ -276,23 +276,6 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. Software Engineer Offer Letter"
-                          autoFocus
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="type"
                   render={({ field }) => (
                     <FormItem>
@@ -311,6 +294,23 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Software Engineer Offer Letter"
+                          autoFocus
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

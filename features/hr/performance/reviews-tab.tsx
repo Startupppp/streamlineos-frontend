@@ -27,7 +27,7 @@ import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-re
 import { toast } from "sonner";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Star, CheckCircle2, Trash2, ChevronsUpDown, Check, Pencil } from "lucide-react";
 import type { Employee, PerformanceReview, ReviewCycle } from "@/types/hr";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 
@@ -39,6 +39,7 @@ export function ReviewsTab() {
   const updateReview = useUpdatePerformanceReview();
   const deleteReview = useDeletePerformanceReview();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editReview, setEditReview] = useState<PerformanceReview | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [employeeId, setEmployeeId] = useState("");
   const [employeePickerOpen, setEmployeePickerOpen] = useState(false);
@@ -62,11 +63,15 @@ export function ReviewsTab() {
     }
   }, [cycles]);
 
+  const resetForm = useCallback(() => {
+    setEmployeeId("");
+    setCycleId("none");
+    setPeriodStart("");
+    setPeriodEnd("");
+    setEditReview(null);
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!employeeId) {
-      toast.error("Please select an employee");
-      return;
-    }
     if (!periodStart || !periodEnd) {
       toast.error("Period dates are required");
       return;
@@ -88,6 +93,28 @@ export function ReviewsTab() {
         }
       }
     }
+
+    if (editReview) {
+      updateReview.mutate({
+        id: editReview.id,
+        periodStart,
+        periodEnd,
+        cycleId: cycleId !== "none" ? Number(cycleId) : undefined,
+      }, {
+        onSuccess: () => {
+          toast.success("Review updated");
+          setSheetOpen(false);
+          resetForm();
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+      return;
+    }
+
+    if (!employeeId) {
+      toast.error("Please select an employee");
+      return;
+    }
     const selectedEmployee = employees.find((e) => e.id === employeeId);
     if (selectedEmployee?.joiningDate && periodStart < selectedEmployee.joiningDate.toString().slice(0, 10)) {
       toast.error("Period start date cannot be earlier than the employee's joining date");
@@ -102,14 +129,19 @@ export function ReviewsTab() {
       onSuccess: () => {
         toast.success("Review created");
         setSheetOpen(false);
-        setEmployeeId("");
-        setCycleId("none");
-        setPeriodStart("");
-        setPeriodEnd("");
+        resetForm();
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [employeeId, cycleId, periodStart, periodEnd, createReview, employees, cycles]);
+  }, [editReview, employeeId, cycleId, periodStart, periodEnd, createReview, updateReview, employees, cycles, resetForm]);
+
+  const handleOpenEdit = useCallback((review: PerformanceReview) => {
+    setEditReview(review);
+    setCycleId(review.cycleId ? String(review.cycleId) : "none");
+    setPeriodStart(review.periodStart ?? "");
+    setPeriodEnd(review.periodEnd ?? "");
+    setSheetOpen(true);
+  }, []);
 
   const handleComplete = useCallback((id: number) => {
     updateReview.mutate({ id, status: "COMPLETED" }, {
@@ -126,7 +158,7 @@ export function ReviewsTab() {
     });
   }, [deleteId, deleteReview]);
 
-  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
 
   const handlePeriodStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value), []);
   const handlePeriodEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value), []);
@@ -170,9 +202,14 @@ export function ReviewsTab() {
                       </div>
                     )}
                     {review.status !== "COMPLETED" && (
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(review.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenEdit(review)}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(review.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -198,34 +235,43 @@ export function ReviewsTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Review" onSubmit={handleCreate} submitLabel="Create" isPending={createReview.isPending}>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee</label>
-          <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
-                <span className="truncate">{employees.find((e) => e.id === employeeId)?.name ?? employees.find((e) => e.id === employeeId)?.email ?? "Select employee"}</span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search employees..." />
-                <CommandList className="max-h-48 overflow-y-auto">
-                  <CommandEmpty>No employee found.</CommandEmpty>
-                  <CommandGroup>
-                    {employees.map((e) => (
-                      <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmployeeId(e.id); setEmployeePickerOpen(false); }}>
-                        <Check className={cn("mr-2 h-4 w-4", employeeId === e.id ? "opacity-100" : "opacity-0")} />
-                        {e.name ?? e.email}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(v) => { if (!v) resetForm(); setSheetOpen(v); }}
+        title={editReview ? "Edit Review" : "Create Review"}
+        onSubmit={handleCreate}
+        submitLabel={editReview ? "Save Changes" : "Create"}
+        isPending={createReview.isPending || updateReview.isPending}
+      >
+        {!editReview && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Employee</label>
+            <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
+                  <span className="truncate">{employees.find((e) => e.id === employeeId)?.name ?? employees.find((e) => e.id === employeeId)?.email ?? "Select employee"}</span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search employees..." />
+                  <CommandList className="max-h-48 overflow-y-auto">
+                    <CommandEmpty>No employee found.</CommandEmpty>
+                    <CommandGroup>
+                      {employees.map((e) => (
+                        <CommandItem key={e.id} value={`${e.name ?? ""} ${e.email}`} onSelect={() => { setEmployeeId(e.id); setEmployeePickerOpen(false); }}>
+                          <Check className={cn("mr-2 h-4 w-4", employeeId === e.id ? "opacity-100" : "opacity-0")} />
+                          {e.name ?? e.email}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Review Cycle (optional)</label>
           <Select value={cycleId} onValueChange={handleCycleChange}>
