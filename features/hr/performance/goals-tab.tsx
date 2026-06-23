@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Target, Calendar, MoreHorizontal, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Target, Calendar, MoreHorizontal, Trash2, Pencil, ChevronsUpDown, Check } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -37,6 +37,7 @@ export function GoalsTab() {
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [userPickerOpen, setUserPickerOpen] = useState(false);
@@ -51,10 +52,24 @@ export function GoalsTab() {
     [employeesRaw]
   );
 
-  const handleCreate = useCallback(() => {
+  const resetForm = useCallback(() => {
+    setUserId(""); setTitle(""); setDescription(""); setTargetValue(""); setStartDate(""); setEndDate(""); setEditGoal(null);
+  }, []);
+
+  const handleOpenEdit = useCallback((goal: Goal) => {
+    setEditGoal(goal);
+    setTitle(goal.title);
+    setDescription(goal.description ?? "");
+    setTargetValue(goal.targetValue != null ? String(goal.targetValue) : "");
+    setStartDate(typeof goal.startDate === "string" ? goal.startDate.slice(0, 10) : "");
+    setEndDate(typeof goal.endDate === "string" ? goal.endDate.slice(0, 10) : "");
+    setSheetOpen(true);
+  }, []);
+
+  const handleSave = useCallback(() => {
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
-    if (!userId) { toast.error("Please select an employee"); return; }
+    if (!editGoal && !userId) { toast.error("Please select an employee"); return; }
     if (!trimmedTitle) { toast.error("Goal title is required"); return; }
     if (trimmedTitle.length < 3) { toast.error("Goal title must be at least 3 characters"); return; }
     if (trimmedTitle.length > 100) { toast.error("Goal title must be at most 100 characters"); return; }
@@ -69,6 +84,22 @@ export function GoalsTab() {
     if (!startDate) { toast.error("Start date is required"); return; }
     if (!endDate) { toast.error("End date is required"); return; }
     if (endDate < startDate) { toast.error("End date must be after start date"); return; }
+
+    if (editGoal) {
+      updateGoal.mutate({
+        goalId: editGoal.id,
+        title: trimmedTitle,
+        description: trimmedDesc || undefined,
+        targetValue: targetValue !== "" ? Number(targetValue) : undefined,
+        startDate,
+        endDate,
+      }, {
+        onSuccess: () => { toast.success("Goal updated"); setSheetOpen(false); resetForm(); },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+      return;
+    }
+
     createGoal.mutate({
       userId,
       title: trimmedTitle,
@@ -78,19 +109,10 @@ export function GoalsTab() {
       startDate,
       endDate,
     }, {
-      onSuccess: () => {
-        toast.success("Goal created");
-        setSheetOpen(false);
-        setUserId("");
-        setTitle("");
-        setDescription("");
-        setTargetValue("");
-        setStartDate("");
-        setEndDate("");
-      },
+      onSuccess: () => { toast.success("Goal created"); setSheetOpen(false); resetForm(); },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [userId, title, description, targetValue, startDate, endDate, createGoal]);
+  }, [userId, title, description, targetValue, startDate, endDate, editGoal, createGoal, updateGoal, resetForm]);
 
   const handleTargetValueChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -113,7 +135,7 @@ export function GoalsTab() {
     });
   }, [deleteId, deleteGoal]);
 
-  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
@@ -150,6 +172,7 @@ export function GoalsTab() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleOpenEdit(goal)}><Pencil className="h-3.5 w-3.5 mr-1.5" />Edit</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, (goal.progress ?? 0) + 10)}>+10% Progress</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, 100)}>Mark Complete</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(goal.id)}><Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete</DropdownMenuItem>
@@ -171,8 +194,8 @@ export function GoalsTab() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Goal" onSubmit={handleCreate} submitLabel="Create" isPending={createGoal.isPending}>
-        <div className="space-y-1.5">
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title={editGoal ? "Edit Goal" : "Create Goal"} onSubmit={handleSave} submitLabel={editGoal ? "Save Changes" : "Create"} isPending={createGoal.isPending || updateGoal.isPending}>
+        {!editGoal && <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
           <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
             <PopoverTrigger asChild>
@@ -198,7 +221,7 @@ export function GoalsTab() {
               </Command>
             </PopoverContent>
           </Popover>
-        </div>
+        </div>}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
           <Input placeholder="e.g., Complete Q2 OKRs" value={title} onChange={handleTitleChange} />

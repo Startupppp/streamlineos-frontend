@@ -6,12 +6,14 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const updateGoalBodySchema = z.object({
-  title: z.string().min(1).optional(),
+  title: z.string().min(1).max(100).optional(),
   description: z.string().max(1000).optional(),
   targetValue: z.number().positive().optional(),
   currentValue: z.number().min(0).optional(),
   status: z.enum(["IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   progress: z.number().min(0).max(100).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 export async function PATCH(
@@ -37,6 +39,8 @@ export async function PATCH(
       ...(body.currentValue !== undefined && { currentValue: body.currentValue.toString() }),
       ...(body.status !== undefined && { status: body.status }),
       ...(body.progress !== undefined && { progress: body.progress }),
+      ...(body.startDate !== undefined && { startDate: body.startDate }),
+      ...(body.endDate !== undefined && { endDate: body.endDate }),
       updatedAt: new Date(),
     }).where(eq(goals.id, goalId));
 

@@ -76,7 +76,7 @@ export function useUpdatePerformanceReview() {
 export function useUpdateGoal() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ goalId, ...data }: { goalId: number; title?: string; description?: string; targetValue?: number; currentValue?: number; status?: string; progress?: number }) =>
+    mutationFn: ({ goalId, ...data }: { goalId: number; title?: string; description?: string; targetValue?: number; currentValue?: number; status?: string; progress?: number; startDate?: string; endDate?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/goals/${goalId}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.goals() }),
   });
