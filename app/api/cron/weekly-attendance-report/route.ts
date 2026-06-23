@@ -6,7 +6,7 @@ import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
-  const dupeCheck = cronIdempotencyCheck("weekly-attendance-report");
+  const dupeCheck = await cronIdempotencyCheck("weekly-attendance-report");
   if (dupeCheck) return dupeCheck;
 
   try {

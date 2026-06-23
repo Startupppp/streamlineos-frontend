@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
+import { redis } from "@/lib/redis";
 
 export function verifyCronSecret(authHeader: string | null): NextResponse | null {
   const cronSecret = process.env.CRON_SECRET;
@@ -24,19 +25,22 @@ export function verifyCronSecret(authHeader: string | null): NextResponse | null
 
   return null;
 }
-const cronLastRun = new Map<string, number>();
 
-export function cronIdempotencyCheck(jobName: string, windowMs: number = 5 * 60_000): NextResponse | null {
-  const now = Date.now();
-  const lastRun = cronLastRun.get(jobName);
+export async function cronIdempotencyCheck(
+  jobName: string,
+  windowSec: number = 300,
+): Promise<NextResponse | null> {
+  if (!redis) return null;
 
-  if (lastRun && now - lastRun < windowMs) {
+  const key = `cron:lock:${jobName}`;
+  const set = await redis.set(key, "1", { nx: true, ex: windowSec });
+
+  if (set === null) {
     return NextResponse.json(
-      { skipped: true, message: `Job "${jobName}" already ran ${Math.round((now - lastRun) / 1000)}s ago` },
-      { status: 200 }
+      { skipped: true, message: `Job "${jobName}" is already running or ran recently` },
+      { status: 200 },
     );
   }
 
-  cronLastRun.set(jobName, now);
   return null;
 }

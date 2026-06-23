@@ -9,7 +9,7 @@ import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
-  const dupeCheck = cronIdempotencyCheck("monthly-leave-reset");
+  const dupeCheck = await cronIdempotencyCheck("monthly-leave-reset");
   if (dupeCheck) return dupeCheck;
 
   try {
