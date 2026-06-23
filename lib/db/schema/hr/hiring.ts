@@ -58,6 +58,7 @@ export const jobPostings = pgTable("job_postings", {
   closingDate: timestamp("closing_date"),
   postedBy: text("posted_by").references(() => users.id),
   externalPostingIds: jsonb("external_posting_ids").$type<Record<string, string>>(),
+  isInternal: boolean("is_internal").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [

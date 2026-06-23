@@ -103,10 +103,17 @@ export default function JobPostingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as JobPostingStatus | null;
+  const visibilityFilter = searchParams.get("visibility");
 
-  const { data: jobs, isLoading } = useJobPostings(
+  const { data: allJobs, isLoading } = useJobPostings(
     statusFilter ? { status: statusFilter } : undefined
   );
+
+  const jobs = allJobs?.filter((job) => {
+    if (visibilityFilter === "internal") return job.isInternal === true;
+    if (visibilityFilter === "external") return !job.isInternal;
+    return true;
+  });
   const updateJob = useUpdateJobPosting();
   const deleteJob = useDeleteJobPosting();
   const publishToBoards = usePublishJobToBoards();
@@ -189,14 +196,24 @@ export default function JobPostingsPage() {
         </div>
       }
       filters={
-        <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
-          <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-          <SelectContent className="w-[var(--radix-select-trigger-width)]">
-            {STATUS_OPTIONS.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
+            <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={visibilityFilter ?? "ALL"} onValueChange={(v) => setFilter("visibility", v)}>
+            <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              <SelectItem value="ALL">All Postings</SelectItem>
+              <SelectItem value="external">External</SelectItem>
+              <SelectItem value="internal">Internal Only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       }
     >
       <Card>

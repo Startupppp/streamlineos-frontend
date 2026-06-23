@@ -91,6 +91,7 @@ export interface JobPosting {
   closingDate: string | null;
   postedBy: string | null;
   externalPostingIds: Record<string, string> | null;
+  isInternal: boolean | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   _count?: { applications?: number };
