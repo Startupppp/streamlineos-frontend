@@ -66,9 +66,10 @@ export async function POST(req: NextRequest) {
 
     if (redis && activeSessions.length > 0) {
       const SESSION_JWT_TTL = 8 * 3600;
+      const redisClient = redis;
       await Promise.all(
         activeSessions.map((s) =>
-          redis.set(`revoked:session:${s.id}`, "1", { ex: SESSION_JWT_TTL })
+          redisClient.set(`revoked:session:${s.id}`, "1", { ex: SESSION_JWT_TTL })
         )
       );
     }

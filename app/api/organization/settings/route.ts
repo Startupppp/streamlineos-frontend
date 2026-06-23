@@ -40,7 +40,7 @@ export async function GET() {
       });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load organization settings",
+        "Failed to load organization settings",
         500
       );
     }
@@ -160,7 +160,7 @@ export async function PATCH(req: NextRequest) {
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to update organization settings",
+        "Failed to update organization settings",
         500
       );
     }

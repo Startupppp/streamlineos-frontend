@@ -75,7 +75,7 @@ export async function GET() {
       });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load branches",
+        "Failed to load branches",
         500,
       );
     }
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       return ok(branch, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to create branch",
+        "Failed to create branch",
         500,
       );
     }

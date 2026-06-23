@@ -10,7 +10,7 @@ export interface CandidateOffer {
   candidateId: number;
   jobPostingId: number | null;
   offeredBy: string | null;
-  offerStatus: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "DECLINED" | "COUNTERED" | "EXPIRED";
+  offerStatus: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "DECLINED" | "COUNTERED" | "EXPIRED" | "PENDING_APPROVAL" | "APPROVAL_REJECTED";
   offeredSalary: string | null;
   offeredDesignation: string | null;
   joiningDate: string | null;
@@ -20,6 +20,9 @@ export interface CandidateOffer {
   sentAt: string | null;
   viewedAt: string | null;
   respondedAt: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  approvalRemarks: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +78,36 @@ export function useDeleteCandidateOffer(candidateId: number) {
   return useMutation({
     mutationFn: (offerId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export function useSubmitOfferForApproval(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (offerId: number) =>
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export function useApproveOffer(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export function useRejectOfferApproval(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
+      apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/reject-approval`, { remarks }),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
   });

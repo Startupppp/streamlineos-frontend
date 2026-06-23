@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load members",
+        "Failed to load members",
         500
       );
     }
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       return ok({ success: true, invitationId }, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to invite user",
+        "Failed to invite user",
         500
       );
     }

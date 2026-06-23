@@ -51,7 +51,7 @@ export async function GET(
       return ok(messages);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load messages",
+        "Failed to load messages",
         500
       );
     }
@@ -143,7 +143,7 @@ export async function POST(
       return ok(message, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to add message",
+        "Failed to add message",
         500
       );
     }

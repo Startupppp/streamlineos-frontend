@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load support tickets",
+        "Failed to load support tickets",
         500
       );
     }
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       return ok(ticket, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to create support ticket",
+        "Failed to create support ticket",
         500
       );
     }

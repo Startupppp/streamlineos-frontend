@@ -19,7 +19,6 @@ import { format } from "date-fns";
 import {
   Plus, ClipboardList, Calendar, Play, Archive, BarChart3,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
@@ -71,7 +70,6 @@ const SurveyCard = memo(function SurveyCard({ s, isAdmin, onPublish, onClose }: 
 
 
 export default function SurveysPage() {
-  const { data: session } = useSession();
   const { data: surveys, isLoading } = usePulseSurveys();
   const create = useCreateSurvey();
   const update = useUpdateSurvey();
@@ -83,21 +81,30 @@ export default function SurveysPage() {
   const [title, setTitle] = useState("");
   const [closesAt, setClosesAt] = useState("");
 
+  const resetForm = useCallback(() => { setTitle(""); setClosesAt(""); }, []);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleCreate = useCallback(() => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) { toast.error("Survey title is required"); return; }
+    if (trimmedTitle.length < 2) { toast.error("Survey title must be at least 2 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Survey title must be at most 100 characters"); return; }
+    if (closesAt) {
+      const closeDate = new Date(closesAt);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (closeDate <= today) { toast.error("Close date must be a future date"); return; }
+    }
     create.mutate(
-      { title: title.trim(), questions: [{ id: "q1", text: "How satisfied are you?", type: "rating" }], closesAt: closesAt || undefined },
+      { title: trimmedTitle, questions: [{ id: "q1", text: "How satisfied are you?", type: "rating" }], closesAt: closesAt || undefined },
       {
         onSuccess: () => {
-          toast.success("Survey created"); setSheetOpen(false);
-          setTitle(""); setClosesAt("");
+          toast.success("Survey created"); setSheetOpen(false); resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [title, closesAt, create]);
+  }, [title, closesAt, create, resetForm]);
 
   const handlePublish = useCallback((id: number) => {
     update.mutate({ id, status: "ACTIVE" }, {
@@ -156,14 +163,14 @@ export default function SurveysPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Survey" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Survey" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Survey Title</label>
-          <Input placeholder="e.g., Q1 Engagement Survey" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <label className="text-sm font-medium">Survey Title <span className="text-destructive">*</span></label>
+          <Input placeholder="e.g., Q1 Engagement Survey" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Closes At</label>
-          <Input type="date" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} />
+          <Input type="date" value={closesAt} min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} onChange={(e) => setClosesAt(e.target.value)} />
         </div>
         <p className="text-xs text-muted-foreground">A default satisfaction question will be added. Edit questions after creation.</p>
       </HrSheet>

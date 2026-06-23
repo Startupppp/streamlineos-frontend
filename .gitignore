@@ -14,6 +14,7 @@
 /coverage
 /playwright-report
 /test-results
+/scripts/load-tests/results
 /tests/e2e/fixtures/.auth
 /tests/e2e/loading-screenshots
 

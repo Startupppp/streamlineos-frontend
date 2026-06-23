@@ -108,10 +108,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eef3fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#03060f" },
-  ],
+  themeColor: "#eef3fb",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -136,8 +133,9 @@ export default function RootLayout({
         <GoogleTagManagerNoscript />
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <SessionProvider>

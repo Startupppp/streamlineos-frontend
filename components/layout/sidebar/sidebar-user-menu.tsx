@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -77,8 +76,6 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
         <p className="text-xs font-semibold text-foreground truncate">{name}</p>
         <p className="text-[11px] text-muted-foreground truncate mt-0.5">{email}</p>
       </div>
-      <DropdownMenuSeparator />
-      <ThemeToggle variant="menu-item" />
       <DropdownMenuSeparator />
       <DropdownMenuItem asChild>
         <Link href="/settings" className="gap-2 cursor-pointer">

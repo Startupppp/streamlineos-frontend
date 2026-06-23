@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       return ok(events);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load calendar events",
+        "Failed to load calendar events",
         500
       );
     }

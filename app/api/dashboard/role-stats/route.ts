@@ -7,7 +7,7 @@ export async function GET() {
       const stats = await getRoleStats(session.orgId);
       return ok(stats);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed", 500);
+      return err("An unexpected error occurred", 500);
     }
   });
 }

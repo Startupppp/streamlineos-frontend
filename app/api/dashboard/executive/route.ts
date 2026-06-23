@@ -16,7 +16,7 @@ export async function GET() {
       );
       return ok(data);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed to load executive dashboard", 500);
+      return err("Failed to load executive dashboard", 500);
     }
   });
 }

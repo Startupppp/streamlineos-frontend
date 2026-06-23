@@ -369,6 +369,9 @@ export const candidateOffers = pgTable("candidate_offers", {
   sentAt: timestamp("sent_at"),
   viewedAt: timestamp("viewed_at"),
   respondedAt: timestamp("responded_at"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  approvalRemarks: text("approval_remarks"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [

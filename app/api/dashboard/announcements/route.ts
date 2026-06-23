@@ -25,7 +25,7 @@ export async function GET() {
       const data = await getActiveAnnouncements(session.orgId);
       return ok(data);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed to load announcements", 500);
+      return err("Failed to load announcements", 500);
     }
   });
 }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       await invalidateCache(CACHE_KEYS.announcementsList(session.orgId));
       return ok(row, 201);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed to create announcement", 500);
+      return err("Failed to create announcement", 500);
     }
   });
 }
@@ -67,7 +67,7 @@ export async function DELETE(req: NextRequest) {
       await invalidateCache(CACHE_KEYS.announcementsList(session.orgId));
       return ok({ success: true });
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed to delete announcement", 500);
+      return err("Failed to delete announcement", 500);
     }
   });
 }

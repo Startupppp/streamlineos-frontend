@@ -7,7 +7,7 @@ export async function GET() {
       const data = await getManagerDashboard(session.orgId, session.user.id);
       return ok(data);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed to load manager dashboard", 500);
+      return err("Failed to load manager dashboard", 500);
     }
   });
 }

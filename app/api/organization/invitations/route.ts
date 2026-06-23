@@ -22,7 +22,7 @@ export async function GET() {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load invitations",
+        "Failed to load invitations",
         500
       );
     }
@@ -50,7 +50,7 @@ export async function DELETE(req: NextRequest) {
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to cancel invitation",
+        "Failed to cancel invitation",
         500
       );
     }

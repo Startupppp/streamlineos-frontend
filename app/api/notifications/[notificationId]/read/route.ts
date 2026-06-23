@@ -27,7 +27,7 @@ export async function PATCH(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to mark notification as read",
+        "Failed to mark notification as read",
         500
       );
     }

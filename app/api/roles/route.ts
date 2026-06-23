@@ -25,7 +25,7 @@ export async function GET() {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load roles",
+        "Failed to load roles",
         500
       );
     }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       return ok(created, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to create role",
+        "Failed to create role",
         500
       );
     }

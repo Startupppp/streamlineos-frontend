@@ -7,7 +7,7 @@ export async function GET() {
       const activities = await getTodayActivities(session.orgId);
       return ok(activities);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed", 500);
+      return err("An unexpected error occurred", 500);
     }
   });
 }

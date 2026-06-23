@@ -14,7 +14,7 @@ export async function GET() {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load unread count",
+        "Failed to load unread count",
         500
       );
     }

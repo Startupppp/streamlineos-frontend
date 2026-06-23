@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load role permissions",
+        "Failed to load role permissions",
         500
       );
     }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to assign role permission",
+        "Failed to assign role permission",
         500
       );
     }

@@ -54,7 +54,7 @@ export async function PATCH(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to update member role",
+        "Failed to update member role",
         500
       );
     }
@@ -98,7 +98,7 @@ export async function DELETE(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to remove member",
+        "Failed to remove member",
         500
       );
     }

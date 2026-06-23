@@ -12,7 +12,7 @@ export async function GET() {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load recurring invoices",
+        "Failed to load recurring invoices",
         500,
       );
     }

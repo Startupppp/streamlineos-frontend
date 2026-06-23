@@ -25,7 +25,7 @@ export async function POST() {
       return ok(result);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to generate recurring invoices",
+        "Failed to generate recurring invoices",
         500,
       );
     }

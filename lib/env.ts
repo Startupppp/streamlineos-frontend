@@ -40,6 +40,7 @@ const serverSchema = z.object({
 
   ENCRYPTION_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  LOAD_TEST_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
 
   RESEND_API_KEY: z.string().optional(),

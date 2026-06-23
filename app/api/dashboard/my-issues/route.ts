@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       }));
       return ok(mapped);
     } catch (error) {
-      return err(error instanceof Error ? error.message : "Failed", 500);
+      return err("An unexpected error occurred", 500);
     }
   });
 }

@@ -12,7 +12,7 @@ export async function GET() {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load active sprint",
+        "Failed to load active sprint",
         500
       );
     }

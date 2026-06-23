@@ -37,6 +37,12 @@ export function err(message: string, status = 400): NextResponse<never> {
   return NextResponse.json({ error: message }, { status }) as NextResponse<never>;
 }
 
+export function serverErr(fallbackMessage: string, error: unknown, status = 500): NextResponse<never> {
+  const { logger } = require("@/lib/logger") as { logger: { error: (msg: string, meta?: unknown) => void } };
+  logger.error(fallbackMessage, { error });
+  return NextResponse.json({ error: "An unexpected error occurred" }, { status }) as NextResponse<never>;
+}
+
 export type RouteResponse = NextResponse | Response;
 
 export async function withAuth(

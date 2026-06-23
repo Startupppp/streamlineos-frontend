@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load payroll report",
+        "Failed to load payroll report",
         500
       );
     }

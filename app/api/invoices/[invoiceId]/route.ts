@@ -45,7 +45,7 @@ export async function GET(
       return ok(invoice);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load invoice",
+        "Failed to load invoice",
         500
       );
     }
@@ -188,7 +188,7 @@ export async function PATCH(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to update invoice",
+        "Failed to update invoice",
         500
       );
     }

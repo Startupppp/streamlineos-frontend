@@ -75,7 +75,7 @@ export async function GET(
       return ok(branch);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load branch",
+        "Failed to load branch",
         500
       );
     }
@@ -111,7 +111,7 @@ export async function PATCH(
       return ok(updated);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to update branch",
+        "Failed to update branch",
         500
       );
     }
@@ -144,7 +144,7 @@ export async function DELETE(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to delete branch",
+        "Failed to delete branch",
         500
       );
     }

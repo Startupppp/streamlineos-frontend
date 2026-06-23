@@ -29,7 +29,7 @@ export async function GET(
       return ok(role);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load role",
+        "Failed to load role",
         500
       );
     }
@@ -81,7 +81,7 @@ export async function PATCH(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to update role",
+        "Failed to update role",
         500
       );
     }
@@ -136,7 +136,7 @@ export async function DELETE(
       return ok({ success: true });
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to delete role",
+        "Failed to delete role",
         500
       );
     }

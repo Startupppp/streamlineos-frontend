@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       return ok(data);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to load invoices",
+        "Failed to load invoices",
         500,
       );
     }
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return ok(invoice, 201);
     } catch (error) {
       return err(
-        error instanceof Error ? error.message : "Failed to create invoice",
+        "Failed to create invoice",
         500,
       );
     }
