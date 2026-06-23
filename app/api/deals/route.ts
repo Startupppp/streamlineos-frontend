@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCache, invalidateCachePattern, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { getDeals } from "@/server/queries/crm";
 import { createAuditLog } from "@/lib/audit-log";
@@ -30,7 +30,7 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("read", "crm:deals", async (session) => {
     const filters = parseQuery(req, listSchema);
     const hash = Buffer.from(
       JSON.stringify({ ...filters, userId: session.user.id, role: session.user.role }),
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("create", "crm:deals", async (session) => {
     const input = await parseBody(req, createSchema);
 
     const [deal] = await db.insert(deals).values({

@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { revalidateTag } from "next/cache";
-import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
 import { getInvoices } from "@/server/queries/invoice";
 import { CacheTag, orgScopedTag } from "@/lib/api/cache-tags";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@/lib/services/invoices";
 
 export async function GET(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("read", "accounting", async (session) => {
     try {
       const { status, clientId, page, limit } = parseQuery(req, listInvoicesSchema);
       const data = await getInvoices(session.orgId, { status, clientId, page, limit });
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("create", "accounting", async (session) => {
     try {
       const input = await parseBody(req, createInvoiceSchema);
       const { invoice, posted } = await createInvoice(session.orgId, session.user.id, input);

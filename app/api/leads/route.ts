@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
@@ -68,7 +68,7 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("read", "crm:leads", async (session) => {
     const filters = parseQuery(req, listSchema);
     const orgId = session.orgId!;
     const role = session.user.role ?? "";
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth(async (session) => {
+  return withAbility("create", "crm:leads", async (session) => {
     const input = await parseBody(req, createSchema);
     const orgId = session.orgId!;
     const userId = session.user.id;
