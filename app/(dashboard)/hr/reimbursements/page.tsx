@@ -39,7 +39,7 @@ export default function ReimbursementsPage() {
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("approve", "hr:expenses");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
@@ -49,9 +49,14 @@ export default function ReimbursementsPage() {
   const [receiptUrl, setReceiptUrl] = useState("");
 
   const handleCreate = useCallback(() => {
-    if (!amount || Number(amount) <= 0) { toast.error("Valid amount is required"); return; }
+    const numAmount = Number(amount);
+    if (!amount || numAmount <= 0) { toast.error("Valid amount is required"); return; }
+    if (numAmount < 1) { toast.error("Amount must be at least ₹1"); return; }
+    if (numAmount > 999999) { toast.error("Amount must be at most ₹9,99,999"); return; }
+    if (receiptUrl && !/^(https?:\/\/|www\.)\S+/.test(receiptUrl.trim())) { toast.error("Enter a valid URL (e.g. https://... or www....)"); return; }
+    const normalizedUrl = receiptUrl && receiptUrl.trim().startsWith("www.") ? `https://${receiptUrl.trim()}` : receiptUrl.trim();
     create.mutate(
-      { category, amount: Number(amount), description: description || undefined, receiptUrl: receiptUrl || undefined },
+      { category, amount: numAmount, description: description || undefined, receiptUrl: normalizedUrl || undefined },
       {
         onSuccess: () => {
           toast.success("Reimbursement submitted");
@@ -162,7 +167,7 @@ export default function ReimbursementsPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Receipt URL</label>
-          <Input type="url" placeholder="https://..." value={receiptUrl} onChange={(e) => setReceiptUrl(e.target.value)} />
+          <Input type="text" placeholder="https://... or www.example.com" value={receiptUrl} onChange={(e) => setReceiptUrl(e.target.value)} />
         </div>
       </HrSheet>
 

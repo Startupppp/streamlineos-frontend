@@ -163,12 +163,12 @@ export default function IncentivesPage() {
     const dotIndex = raw.indexOf(".");
     if (dotIndex !== -1) {
       const decimals = raw.slice(dotIndex + 1);
-      if (decimals.length > 2) {
-        setNewRate(raw.slice(0, dotIndex + 3));
+      if (decimals.length > 4) {
+        setNewRate(raw.slice(0, dotIndex + 5));
         return;
       }
     }
-    if (/^\d{0,5}(\.\d{0,2})?$/.test(raw)) {
+    if (/^\d{0,5}(\.\d{0,4})?$/.test(raw)) {
       setNewRate(raw);
     }
   }
@@ -179,8 +179,8 @@ export default function IncentivesPage() {
       toast.error("Incentive rate must be between 0 and 100");
       return;
     }
-    if (!/^\d{1,5}(\.\d{1,2})?$/.test(newRate)) {
-      toast.error("Rate must have at most 2 decimal places");
+    if (!/^\d{1,5}(\.\d{1,4})?$/.test(newRate)) {
+      toast.error("Rate must have at most 4 decimal places");
       return;
     }
     setConfigMutation.mutate(

@@ -9,11 +9,12 @@ import type { NextRequest } from "next/server";
 const createSchema = z.object({
   userId: z.string().min(1),
   resignationId: z.number().int().positive().optional(),
-  basicDues: z.number().optional(),
-  leaveEncashment: z.number().optional(),
-  bonusDue: z.number().optional(),
-  deductions: z.number().optional(),
-  loanRecovery: z.number().optional(),
+  basicDues: z.number().min(0).optional(),
+  leaveEncashment: z.number().min(0).optional(),
+  bonusDue: z.number().min(0).optional(),
+  deductions: z.number().min(0).optional(),
+  loanRecovery: z.number().min(0).optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export async function GET() {
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
         deductions: deductions.toString(),
         loanRecovery: loanRecovery.toString(),
         netPayable: netPayable.toString(),
+        notes: body.notes ?? null,
         status: "DRAFT",
       })
       .returning();

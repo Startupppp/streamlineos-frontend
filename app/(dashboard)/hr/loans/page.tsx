@@ -35,7 +35,7 @@ export default function LoansPage() {
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("approve", "hr:expenses");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
