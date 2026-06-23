@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
@@ -32,7 +32,7 @@ export async function PATCH(
     const pipId = Number(id);
     if (!pipId) return err("Invalid ID.", 400);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(performanceImprovementPlans).set({
       ...body,
       updatedAt: new Date(),

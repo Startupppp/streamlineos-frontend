@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { performanceImprovementPlans } from "@/lib/db/schema";
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "hr:performance"))  return err("Only admins can create PIPs.", 403);
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const [pip] = await db.insert(performanceImprovementPlans).values({
       orgId: session.orgId,
       userId: body.userId,

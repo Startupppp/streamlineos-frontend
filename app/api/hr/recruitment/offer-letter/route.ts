@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { candidates, jobPostings, richDocuments, organizations } from "@/lib/db/schema";
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can generate offer letters.", 403);
 
-    const body = schema.parse(await req.json());
+    const body = await parseBody(req, schema);
 
     const [candidate, job, org] = await Promise.all([
       db.query.candidates.findFirst({

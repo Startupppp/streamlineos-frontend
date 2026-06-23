@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { emailTemplates, candidates } from "@/lib/db/schema";
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return err("Email not configured. Set RESEND_API_KEY or SENDGRID_API_KEY.", 400);
     }
 
-    const body = sendSchema.parse(await req.json());
+    const body = await parseBody(req, sendSchema);
     let subject = body.subject;
     let emailBody = body.body;
 

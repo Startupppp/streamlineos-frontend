@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -40,7 +40,7 @@ export async function PATCH(
     const isAdmin = ability.can("manage", "hr:documents");
     if (!isOwner && !isAdmin) return err("Not authorized to update this document.", 403);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     const [updated] = await db
       .update(documents)
       .set({

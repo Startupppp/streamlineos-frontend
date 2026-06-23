@@ -1,4 +1,4 @@
-import { withAbility, ok } from "@/lib/api/helpers";
+import { withAbility, ok , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { emailTemplates } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -27,7 +27,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:email-templates", async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     const [record] = await db
       .insert(emailTemplates)

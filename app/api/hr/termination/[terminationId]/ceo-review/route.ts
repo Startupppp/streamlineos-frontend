@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { terminations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -30,7 +30,7 @@ export async function PATCH(
     if (!existing) return err("Termination not found.", 404);
     if (existing.status !== "PENDING_CEO") return err("Termination is not pending CEO review.", 400);
 
-    const body = reviewSchema.parse(await req.json());
+    const body = await parseBody(req, reviewSchema);
     const newStatus = body.decision === "approve" ? "APPROVED" : "REJECTED";
 
     if (body.decision === "reject" && !body.remarks) {

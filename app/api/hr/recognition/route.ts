@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { recognitions } from "@/lib/db/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
@@ -26,7 +26,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     if (body.toUserId === session.user.id) return err("You cannot send kudos to yourself.", 400);
 
     const windowStart = subHours(new Date(), 24);

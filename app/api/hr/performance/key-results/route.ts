@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { keyResults, goals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const goal = await db.query.goals.findFirst({
       where: and(eq(goals.id, body.goalId), eq(goals.orgId, session.orgId)),
     });
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(keyResults).set({
       ...(body.currentValue !== undefined && { currentValue: body.currentValue.toString() }),
       ...(body.progress !== undefined && { progress: body.progress }),

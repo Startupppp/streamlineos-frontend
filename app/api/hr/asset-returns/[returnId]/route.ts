@@ -1,4 +1,4 @@
-import { withAbility, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { assetReturns } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -20,7 +20,7 @@ export async function PATCH(
     const returnId = Number(id);
     if (isNaN(returnId)) return err("Invalid asset return ID.", 400);
 
-    const body = patchSchema.parse(await req.json());
+    const body = await parseBody(req, patchSchema);
 
     const [existing] = await db
       .select()

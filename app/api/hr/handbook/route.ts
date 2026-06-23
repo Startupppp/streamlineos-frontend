@@ -1,4 +1,4 @@
-import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { handbookVersions } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -45,7 +45,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:handbook", async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     const existing = await db.query.handbookVersions.findFirst({
       where: and(

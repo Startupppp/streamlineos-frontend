@@ -1,4 +1,4 @@
-import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { assetReturns } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:assets", async (session) => {
     let body: z.infer<typeof createSchema>;
     try {
-      body = createSchema.parse(await req.json());
+      body = await parseBody(req, createSchema);
     } catch (e) {
       if (e instanceof ZodError) {
         return err(e.issues.map((issue) => issue.message).join(", "), 400);

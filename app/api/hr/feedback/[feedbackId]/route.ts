@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { feedbackRequests } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -27,7 +27,7 @@ export async function PATCH(
     const feedbackId = Number(id);
     if (isNaN(feedbackId)) return err("Invalid feedback ID.", 400);
 
-    const body = patchSchema.parse(await req.json());
+    const body = await parseBody(req, patchSchema);
 
     const [existing] = await db
       .select()

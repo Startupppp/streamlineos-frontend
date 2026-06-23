@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAbility, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { handbookVersions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     });
     if (!existing) return err("Handbook version not found", 404);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
 
     const updateData: {
       publishedAt?: Date | null;

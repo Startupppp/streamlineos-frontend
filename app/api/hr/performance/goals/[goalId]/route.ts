@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { goals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -30,7 +30,7 @@ export async function PATCH(
     });
     if (!existing) return err("Goal not found.", 404);
 
-    const body = updateGoalBodySchema.parse(await req.json());
+    const body = await parseBody(req, updateGoalBodySchema);
 
     await db.update(goals).set({
       ...(body.title !== undefined && { title: body.title }),

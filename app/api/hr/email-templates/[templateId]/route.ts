@@ -1,4 +1,4 @@
-import { withAbility, ok, err } from "@/lib/api/helpers";
+import { withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { emailTemplates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -22,7 +22,7 @@ export async function PATCH(
     const templateId = Number(id);
     if (isNaN(templateId)) return err("Invalid template ID.", 400);
 
-    const body = patchSchema.parse(await req.json());
+    const body = await parseBody(req, patchSchema);
 
     const [updated] = await db
       .update(emailTemplates)

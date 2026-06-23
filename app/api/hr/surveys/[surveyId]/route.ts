@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { pulseSurveys } from "@/lib/db/schema";
@@ -23,7 +23,7 @@ export async function PATCH(
     const surveyId = Number(id);
     if (!surveyId) return err("Invalid ID.", 400);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(pulseSurveys).set(body).where(
       and(eq(pulseSurveys.id, surveyId), eq(pulseSurveys.orgId, session.orgId))
     );

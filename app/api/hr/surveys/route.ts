@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { pulseSurveys, surveyResponses } from "@/lib/db/schema";
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const contentType = req.headers.get("x-action");
 
     if (contentType === "respond") {
-      const body = submitResponseSchema.parse(await req.json());
+      const body = await parseBody(req, submitResponseSchema);
       const survey = await db.query.pulseSurveys.findFirst({
         where: and(eq(pulseSurveys.id, body.surveyId), eq(pulseSurveys.orgId, session.orgId)),
       });
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
 
     if (!ability.can("manage", "hr:performance"))  return err("Only admins can create surveys.", 403);
-    const body = createSurveySchema.parse(await req.json());
+    const body = await parseBody(req, createSurveySchema);
     const [survey] = await db.insert(pulseSurveys).values({
       orgId: session.orgId,
       title: body.title,

@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -44,7 +44,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(users).set({
       ...(body.firstName && { firstName: body.firstName }),
       ...(body.lastName && { lastName: body.lastName }),

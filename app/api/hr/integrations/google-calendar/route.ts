@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { interviews, users, candidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -11,7 +11,7 @@ const syncSchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = syncSchema.parse(await req.json());
+    const body = await parseBody(req, syncSchema);
 
     const interview = await db.query.interviews.findFirst({
       where: and(eq(interviews.id, body.interviewId), eq(interviews.orgId, session.orgId)),

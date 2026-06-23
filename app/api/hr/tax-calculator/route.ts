@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -38,7 +38,7 @@ function calculateTax(taxableIncome: number, slabs: typeof OLD_REGIME_SLABS): nu
 
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
-    const body = calcSchema.parse(await req.json());
+    const body = await parseBody(req, calcSchema);
     const { annualCtc, basicPercentage, hraPercentage, regime, pfOptOut } = body;
 
     const basic = (annualCtc * basicPercentage) / 100;

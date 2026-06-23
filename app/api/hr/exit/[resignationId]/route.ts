@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, exitChecklists, users, fnfSettlements } from "@/lib/db/schema";
@@ -60,7 +60,7 @@ export async function PATCH(
     });
     if (!existing) return err("Resignation not found.", 404);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     const role = session.user.role;
     const ability = await getSessionAbility();
 

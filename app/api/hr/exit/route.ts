@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { resignations, organizationMembers, users } from "@/lib/db/schema";
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return err("CEO users cannot submit a resignation through this system.", 403);
     }
 
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     const existing = await db.query.resignations.findFirst({
       where: and(

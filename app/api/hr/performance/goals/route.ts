@@ -9,17 +9,17 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const createGoalSchema = z.object({
-  userId: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
+  userId: z.string().min(1, "Employee is required"),
+  title: z.string().trim().min(2, "Title must be at least 2 characters").max(100, "Title must be at most 100 characters").regex(/[a-zA-Z]/, "Title must contain at least one letter"),
+  description: z.string().max(1000).optional(),
   type: z.string().optional(),
-  targetValue: z.number().optional(),
-  currentValue: z.number(),
-  unit: z.string().optional(),
-  startDate: z.string(),
-  endDate: z.string(),
+  targetValue: z.number().min(0, "Target value must be non-negative").max(1000000, "Target value cannot exceed 1,000,000").optional(),
+  currentValue: z.number().min(0).optional().default(0),
+  unit: z.string().max(50).optional(),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
   parentGoalId: z.number().optional(),
-});
+}).refine((d) => new Date(d.endDate) > new Date(d.startDate), { message: "End date must be after start date", path: ["endDate"] });
 
 const updateGoalSchema = z.object({
   goalId: z.number(),

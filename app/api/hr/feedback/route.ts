@@ -1,4 +1,4 @@
-import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { feedbackRequests } from "@/lib/db/schema";
 import { and, eq, or, desc } from "drizzle-orm";
@@ -35,7 +35,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:feedback", async (session) => {
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     if (body.subjectUserId === body.reviewerUserId && body.type !== "SELF") {
       return err("Subject and reviewer cannot be the same person for non-self feedback.", 400);

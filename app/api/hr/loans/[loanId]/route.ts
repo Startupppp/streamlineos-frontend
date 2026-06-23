@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { salaryLoans } from "@/lib/db/schema";
@@ -28,7 +28,7 @@ export async function PATCH(
     });
     if (!existing) return err("Loan not found.", 404);
 
-    const body = updateSchema.parse(await req.json());
+    const body = await parseBody(req, updateSchema);
     await db.update(salaryLoans).set({
       ...(body.status && { status: body.status }),
       ...(body.status === "APPROVED" && { approvedBy: session.user.id, approvedAt: new Date() }),

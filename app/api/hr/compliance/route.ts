@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { policyAcknowledgments, documents } from "@/lib/db/schema";
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "hr:documents"))  return err("Only admins can send acknowledgment requests.", 403);
-    const body = sendAckSchema.parse(await req.json());
+    const body = await parseBody(req, sendAckSchema);
 
     const doc = await db.query.documents.findFirst({
       where: and(eq(documents.id, body.documentId), eq(documents.orgId, session.orgId)),
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = ackSchema.parse(await req.json());
+    const body = await parseBody(req, ackSchema);
 
     const existing = await db.query.policyAcknowledgments.findFirst({
       where: and(

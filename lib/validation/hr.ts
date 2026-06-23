@@ -292,7 +292,9 @@ export const createReviewCycleSchema = z.object({
   periodEnd: z.string().min(1, "End date is required"),
   deadline: z.string().optional(),
   description: z.string().max(500).optional(),
-});
+})
+  .refine((d) => new Date(d.periodEnd) > new Date(d.periodStart), { message: "Period end must be after period start", path: ["periodEnd"] })
+  .refine((d) => !d.deadline || new Date(d.deadline) >= new Date(d.periodEnd), { message: "Submission deadline must be on or after period end", path: ["deadline"] });
 
 export const updateReviewCycleSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -319,7 +321,7 @@ export const createPerformanceReviewSchema = z.object({
   improvements: z.string().max(2000).optional(),
   overallRating: z.number().min(0).max(10).optional(),
   comments: z.string().max(2000).optional(),
-});
+}).refine((d) => new Date(d.periodEnd) > new Date(d.periodStart), { message: "Review end date must be after start date", path: ["periodEnd"] });
 
 export const updatePerformanceReviewSchema = z.object({
   ratings: z.array(z.object({
@@ -340,10 +342,10 @@ export const updatePerformanceReviewSchema = z.object({
 export const createOneOnOneSchema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   scheduledAt: z.string().min(1, "Date/time is required"),
-  duration: z.number().int().min(15).max(180).optional().default(30),
-  agenda: z.string().max(1000).optional(),
-  meetingLink: z.string().url().optional().or(z.literal("")),
-});
+  duration: z.number().int().min(15, "Duration must be at least 15 minutes").max(480, "Duration cannot exceed 480 minutes").optional().default(30),
+  agenda: z.string().min(1, "Agenda is required").max(1000),
+  meetingLink: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+}).refine((d) => new Date(d.scheduledAt) > new Date(), { message: "Meeting must be scheduled in the future", path: ["scheduledAt"] });
 
 export const updateOneOnOneSchema = z.object({
   scheduledAt: z.string().optional(),

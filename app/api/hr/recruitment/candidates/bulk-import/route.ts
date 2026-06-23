@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return err("Forbidden", 403);
     }
 
-    const body = bodySchema.parse(await req.json());
+    const body = await parseBody(req, bodySchema);
 
     const existingCandidates = await db.query.candidates.findMany({
       where: eq(candidates.orgId, session.orgId),

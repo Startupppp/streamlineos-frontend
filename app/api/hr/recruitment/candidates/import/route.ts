@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can bulk import.", 403);
 
-    const body = importSchema.parse(await req.json());
+    const body = await parseBody(req, importSchema);
     const values = body.candidates.map((c) => ({
       orgId: session.orgId,
       firstName: c.firstName.trim(),

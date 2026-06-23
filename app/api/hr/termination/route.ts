@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err , parseBody} from "@/lib/api/helpers"; 
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { terminations, users, organizationMembers } from "@/lib/db/schema";
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       return err("Only HR or CEO can initiate terminations.", 403);
     }
 
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
 
     if (body.userId === session.user.id) return err("You cannot terminate yourself.", 400);
 
