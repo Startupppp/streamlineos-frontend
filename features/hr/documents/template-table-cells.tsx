@@ -114,7 +114,7 @@ export function DeleteConfirm({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete template?</AlertDialogTitle>
           <AlertDialogDescription>
-            &ldquo;{template.title}&rdquo; will be deactivated. This action cannot be undone.
+            &ldquo;{template.title}&rdquo; will be permanently deleted. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
