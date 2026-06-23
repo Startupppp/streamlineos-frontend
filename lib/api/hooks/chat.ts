@@ -32,7 +32,6 @@ export function useChatChannels(enabled = true) {
     queryKey: queryKeys.chat.myChannels(),
     queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
     staleTime: 2 * 60_000,
-    refetchInterval: 30_000,
     enabled,
   });
 }
@@ -79,7 +78,6 @@ export function useChatUnreadTotal(enabled = true) {
     queryKey: queryKeys.chat.unreadTotal(),
     queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
     staleTime: 2 * 60_000,
-    refetchInterval: 30_000,
     enabled,
   });
 }
@@ -88,8 +86,8 @@ export function useChatOnlineUsers(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.onlineUsers(),
     queryFn: () => apiClient.get<OnlineUser[]>("/chat/presence/online"),
-    refetchInterval: 30_000,
-    staleTime: 10_000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
     enabled,
   });
 }
@@ -116,15 +114,8 @@ export function useChatSearchMessages(query: string, channelId?: number) {
   });
 }
 
-export function useChatTyping(channelId: number, enabled: boolean) {
-  return useQuery({
-    queryKey: queryKeys.chat.typing(channelId),
-    queryFn: () =>
-      apiClient.get<TypingIndicator[]>(`/chat/channels/${channelId}/typing`),
-    staleTime: 2 * 60_000,
-    refetchInterval: 4_000,
-    enabled: enabled && channelId > 0,
-  });
+export function useChatTyping(_channelId: number, _enabled: boolean) {
+  return { data: undefined as TypingIndicator[] | undefined };
 }
 
 export function useSendMessage() {
@@ -288,10 +279,7 @@ export function useChatHeartbeat() {
 }
 
 export function useSetTyping() {
-  return useMutation({
-    mutationFn: ({ channelId }: { channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/typing`),
-  });
+  return { mutate: (_input: { channelId: number }) => {} };
 }
 
 export function useCreatePoll() {

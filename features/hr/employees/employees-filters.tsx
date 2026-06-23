@@ -80,6 +80,9 @@ export function EmployeesFilters({
           <SelectItem value="inactive" className="text-xs">
             Inactive
           </SelectItem>
+          <SelectItem value="terminated" className="text-xs">
+            Terminated
+          </SelectItem>
         </SelectContent>
       </Select>
       <Button variant="outline" size="sm" className="h-8 text-xs" asChild>

@@ -19,8 +19,7 @@ export async function GET(_req: NextRequest) {
       const tokenRequest = await rest.auth.createTokenRequest({
         clientId: session.user.id,
         capability: {
-
-          [`chat:${session.orgId}:*`]: ["subscribe", "history"],
+          [`chat:${session.orgId}:*`]: ["subscribe", "publish", "history"],
         },
         ttl: 3_600 * 1_000,
       });

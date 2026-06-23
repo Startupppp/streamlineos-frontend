@@ -208,14 +208,17 @@ export default function HelpdeskPage() {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) { toast.error("Ticket title is required"); return; }
     if (trimmedTitle.length < 5) { toast.error("Ticket title must be at least 5 characters"); return; }
-    if (trimmedTitle.length > 150) { toast.error("Ticket title must be at most 150 characters"); return; }
+    if (trimmedTitle.length > 100) { toast.error("Ticket title must be at most 100 characters"); return; }
     if (!/[a-zA-Z0-9]/.test(trimmedTitle)) { toast.error("Ticket title must contain at least one letter or digit"); return; }
     if (/^[^a-zA-Z0-9]+$/.test(trimmedTitle)) { toast.error("Ticket title cannot consist of only special characters"); return; }
     if (/\s{2,}/.test(title)) { toast.error("Ticket title cannot have multiple consecutive spaces"); return; }
     if (title !== trimmedTitle) { toast.error("Ticket title cannot have leading or trailing spaces"); return; }
+    const trimmedDesc = description.trim();
+    if (!trimmedDesc) { toast.error("Description is required"); return; }
+    if (trimmedDesc.length < 10) { toast.error("Description must be at least 10 characters"); return; }
     if (!category) { toast.error("Please select a category"); return; }
     createTicket.mutate(
-      { title: trimmedTitle, description: description.trim() || undefined, category, priority },
+      { title: trimmedTitle, description: trimmedDesc, category, priority },
       {
         onSuccess: () => {
           toast.success("Ticket created successfully");
@@ -263,7 +266,7 @@ export default function HelpdeskPage() {
       subtitle="Submit and track your support tickets"
       badge={`${stats.total} tickets`}
       actions={
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Sheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setTitle(""); setDescription(""); setCategory(""); setPriority("MEDIUM"); } setSheetOpen(open); }}>
           <SheetTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -286,7 +289,7 @@ export default function HelpdeskPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Description</label>
+                  <label className="text-sm font-medium">Description <span className="text-destructive">*</span></label>
                   <Textarea
                     placeholder="Provide more details..."
                     value={description}

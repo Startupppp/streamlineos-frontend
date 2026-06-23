@@ -42,6 +42,7 @@ export function WorkLogEntryRow({
   const [prevInitial, setPrevInitial] = useState(initialContent);
   const [prevInitialLink, setPrevInitialLink] = useState(initialWorkLink);
   const [isDirty, setIsDirty] = useState(false);
+  const [linkError, setLinkError] = useState("");
 
   if (initialContent !== prevInitial) {
     setPrevInitial(initialContent);
@@ -55,10 +56,20 @@ export function WorkLogEntryRow({
   const hasUnsavedChanges = content !== initialContent || workLink !== initialWorkLink;
 
   const handleSave = () => {
-    if (hasUnsavedChanges) {
-      onSave(content, workLink);
-      setIsDirty(false);
+    if (!hasUnsavedChanges) return;
+    if (workLink.trim()) {
+      try {
+        new URL(workLink.trim());
+        setLinkError("");
+      } catch {
+        setLinkError("Invalid URL. Please enter a valid link (e.g. https://example.com)");
+        return;
+      }
+    } else {
+      setLinkError("");
     }
+    onSave(content, workLink);
+    setIsDirty(false);
   };
 
   const handleDiscard = () => {
@@ -163,18 +174,22 @@ export function WorkLogEntryRow({
         />
 
         {!readOnly && (
-          <div className="flex items-center gap-2">
-            <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <Input
-              placeholder="Link (optional) — paste URL to doc, PR, sheet, or file"
-              className="h-7 text-xs"
-              type="url"
-              value={workLink}
-              onChange={(e) => {
-                setWorkLink(e.target.value);
-                setIsDirty(true);
-              }}
-            />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Input
+                placeholder="Link (optional) — paste URL to doc, PR, sheet, or file"
+                className={cn("h-7 text-xs", linkError && "border-destructive focus-visible:ring-destructive")}
+                type="url"
+                value={workLink}
+                onChange={(e) => {
+                  setWorkLink(e.target.value);
+                  setIsDirty(true);
+                  if (linkError) setLinkError("");
+                }}
+              />
+            </div>
+            {linkError && <p className="text-xs text-destructive pl-5">{linkError}</p>}
           </div>
         )}
 

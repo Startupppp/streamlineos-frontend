@@ -139,6 +139,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Interviewer Performance", icon: Star, href: "/hr/recruitment/interviewer-performance", requiredPermission: "hr:employees:create" },
           { label: "Booking Links", icon: Share2, href: "/hr/recruitment/booking-links", requiredPermission: "hr:employees:create" },
           { label: "Automations", icon: Zap, href: "/hr/recruitment/automations", requiredPermission: "hr:employees:create" },
+          { label: "Email Sequences", icon: MailOpen, href: "/hr/recruitment/email-sequences", requiredPermission: "hr:employees:create" },
         ],
       },
     ],

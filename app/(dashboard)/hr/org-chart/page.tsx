@@ -330,7 +330,7 @@ export default function OrgChartPage() {
         </TabsContent>
 
         <TabsContent value="departments">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {deptGroups.map(([name, members]) => (
               <Card key={name}>
                 <CardContent className="p-4">

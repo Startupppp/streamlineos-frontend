@@ -108,7 +108,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
         defaultValues={{
           date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
           reason: "",
-          approverId: "",
+          approverId: approvers.length === 1 ? approvers[0].id : "",
         }}
         onSubmit={handleSubmit}
         isSubmitting={createWfhRequest.isPending}
@@ -137,32 +137,34 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="approverId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Approver</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select approver" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {approvers.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name ||
-                            `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
-                            u.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {approvers.length > 1 && (
+              <FormField
+                control={form.control}
+                name="approverId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Approver</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select approver" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {approvers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name ||
+                              `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+                              u.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="reason"

@@ -377,6 +377,7 @@ export function LeaveRequestSheet({
             <FileUpload
               folder="leave-attachments"
               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              maxSize={5 * 1024 * 1024}
               onUploadComplete={handleAttachmentUpload}
             />
           </div>

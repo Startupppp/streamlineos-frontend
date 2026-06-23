@@ -2,6 +2,8 @@
 
 import { format, parseISO } from "date-fns";
 import { PayslipEarningsTable } from "./payslip-earnings-table";
+import { useOrgSettings } from "@/lib/api/hooks/organization";
+import { resolveImageUrl } from "@/lib/utils";
 
 export interface PayslipUser {
   firstName?: string | null;
@@ -42,6 +44,11 @@ interface PayslipPrintViewProps {
 }
 
 export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProps) {
+  const { data: orgSettings } = useOrgSettings({ staleTime: 30 * 60_000 });
+  const orgName = orgSettings?.name ?? "STREAMLINEOS";
+  const orgLogoUrl = orgSettings?.logo ? resolveImageUrl(orgSettings.logo) : null;
+  const orgInitial = orgName.charAt(0).toUpperCase();
+
   const basicSalary = parseFloat(payslip.basicSalary || "0");
   const hra = parseFloat(payslip.hra || "0");
   const allowances = parseFloat(payslip.allowances || "0");
@@ -74,7 +81,7 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
           letterSpacing: "20px",
         }}
       >
-        STREAMLINEOS
+        {orgName.toUpperCase()}
       </div>
 
       <div className="relative" style={{ zIndex: 1 }}>
@@ -88,12 +95,14 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#ffffff",
-              fontSize: "24px",
-              fontWeight: "bold",
+              overflow: "hidden",
             }}
           >
-            V
+            {orgLogoUrl ? (
+              <img src={orgLogoUrl} alt={orgName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span style={{ color: "#ffffff", fontSize: "24px", fontWeight: "bold" }}>{orgInitial}</span>
+            )}
           </div>
           <div>
             <h1
@@ -105,13 +114,8 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
                 margin: 0,
               }}
             >
-              STREAMLINEOS
+              {orgName.toUpperCase()}
             </h1>
-            <p
-              style={{ color: "#0f2b7f", fontSize: "12px", letterSpacing: "4px", margin: 0 }}
-            >
-              CAPITAL ADVISORS LLP
-            </p>
           </div>
         </div>
 

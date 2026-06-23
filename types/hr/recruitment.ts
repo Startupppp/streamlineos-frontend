@@ -304,3 +304,56 @@ export interface UpdateInterviewInput {
   recordingUrl?: string | null;
   recordingPlatform?: string | null;
 }
+
+export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
+export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
+
+export interface EmailSequenceStep {
+  id: number;
+  sequenceId: number;
+  stepOrder: number;
+  delayDays: number;
+  subject: string;
+  htmlBody: string;
+  createdAt: string;
+}
+
+export interface EmailSequenceEnrollment {
+  id: number;
+  sequenceId: number;
+  candidateId: number;
+  currentStep: number;
+  status: EmailSequenceEnrollmentStatus;
+  enrolledAt: string;
+  nextSendAt: string | null;
+  completedAt: string | null;
+}
+
+export interface EmailSequence {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  triggerType: EmailSequenceTrigger;
+  targetAudience: Record<string, unknown>;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  steps?: EmailSequenceStep[];
+  enrollments?: Pick<EmailSequenceEnrollment, "id" | "status">[];
+  creator?: { id: string; name: string | null };
+}
+
+export interface CreateEmailSequenceInput {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  triggerType?: EmailSequenceTrigger;
+  targetAudience?: Record<string, unknown>;
+  steps?: Omit<EmailSequenceStep, "id" | "sequenceId" | "createdAt">[];
+}
+
+export interface UpdateEmailSequenceInput extends Partial<CreateEmailSequenceInput> {
+  steps?: Omit<EmailSequenceStep, "id" | "sequenceId" | "createdAt">[];
+}

@@ -69,10 +69,10 @@ export function CyclesTab() {
       if (periodStart < today) { toast.error("Period start date cannot be earlier than today"); return; }
     }
     if (!periodEnd) { toast.error("Period end date is required"); return; }
-    if (periodEnd < periodStart) { toast.error("Period end must be after period start"); return; }
-    if (deadline && (deadline < periodStart || deadline > periodEnd)) {
-      toast.error("Deadline must fall within the review period dates"); return;
-    }
+    if (periodEnd <= periodStart) { toast.error("Period end must be after period start"); return; }
+    if (periodStart === periodEnd) { toast.error("Period start and end dates cannot be the same"); return; }
+    if (!deadline) { toast.error("Submission deadline is required"); return; }
+    if (deadline <= periodEnd) { toast.error("Submission deadline must be after period end"); return; }
     if (editCycle) {
       updateCycle.mutate(
         { id: editCycle.id, name: trimmedName, type, periodStart, periodEnd, deadline: deadline || undefined },
@@ -190,12 +190,12 @@ export function CyclesTab() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <Input type="date" value={periodEnd} onChange={handlePeriodEndChange} />
+            <Input type="date" value={periodEnd} min={periodStart || undefined} onChange={handlePeriodEndChange} />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Submission Deadline</label>
-          <Input type="date" value={deadline} onChange={handleDeadlineChange} />
+          <Input type="date" value={deadline} min={periodEnd || undefined} onChange={handleDeadlineChange} />
         </div>
       </HrSheet>
 

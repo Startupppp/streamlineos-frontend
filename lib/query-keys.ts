@@ -92,6 +92,9 @@ export const queryKeys = {
     hiringFlows: () => [...base, "hr", "hiringFlows"] as const,
     hiringFlow: (id: number) => [...base, "hr", "hiringFlow", id] as const,
     hiringFlowRounds: (flowId: number) => [...base, "hr", "hiringFlowRounds", flowId] as const,
+    emailSequences: () => [...base, "hr", "emailSequences"] as const,
+    emailSequence: (id: number) => [...base, "hr", "emailSequence", id] as const,
+    pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
   },
 
   leads: {

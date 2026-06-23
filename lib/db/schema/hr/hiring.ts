@@ -517,3 +517,64 @@ export const pipelineAutomationsRelations = relations(pipelineAutomations, ({ on
   organization: one(organizations, { fields: [pipelineAutomations.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [pipelineAutomations.createdBy], references: [users.id] }),
 }));
+
+export type EmailSequenceTrigger = "MANUAL" | "CANDIDATE_ADDED" | "APPLICATION_RECEIVED" | "STAGE_CHANGED" | "OFFER_SENT";
+export type EmailSequenceEnrollmentStatus = "ACTIVE" | "COMPLETED" | "UNSUBSCRIBED" | "BOUNCED";
+
+export const emailSequences = pgTable("email_sequences", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  triggerType: text("trigger_type").$type<EmailSequenceTrigger>().notNull().default("MANUAL"),
+  targetAudience: jsonb("target_audience").$type<Record<string, unknown>>().default({}),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_email_sequences_org").on(table.orgId),
+]);
+
+export const emailSequenceSteps = pgTable("email_sequence_steps", {
+  id: serial("id").primaryKey(),
+  sequenceId: integer("sequence_id").references(() => emailSequences.id, { onDelete: "cascade" }).notNull(),
+  stepOrder: integer("step_order").notNull(),
+  delayDays: integer("delay_days").notNull().default(0),
+  subject: text("subject").notNull(),
+  htmlBody: text("html_body").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_sequence_steps_sequence").on(table.sequenceId),
+]);
+
+export const emailSequenceEnrollments = pgTable("email_sequence_enrollments", {
+  id: serial("id").primaryKey(),
+  sequenceId: integer("sequence_id").references(() => emailSequences.id, { onDelete: "cascade" }).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  currentStep: integer("current_step").notNull().default(0),
+  status: text("status").$type<EmailSequenceEnrollmentStatus>().notNull().default("ACTIVE"),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  nextSendAt: timestamp("next_send_at"),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("idx_email_sequence_enrollments_sequence").on(table.sequenceId),
+  index("idx_email_sequence_enrollments_candidate").on(table.candidateId),
+  index("idx_email_sequence_enrollments_next_send").on(table.nextSendAt),
+]);
+
+export const emailSequencesRelations = relations(emailSequences, ({ one, many }) => ({
+  organization: one(organizations, { fields: [emailSequences.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [emailSequences.createdBy], references: [users.id] }),
+  steps: many(emailSequenceSteps),
+  enrollments: many(emailSequenceEnrollments),
+}));
+
+export const emailSequenceStepsRelations = relations(emailSequenceSteps, ({ one }) => ({
+  sequence: one(emailSequences, { fields: [emailSequenceSteps.sequenceId], references: [emailSequences.id] }),
+}));
+
+export const emailSequenceEnrollmentsRelations = relations(emailSequenceEnrollments, ({ one }) => ({
+  sequence: one(emailSequences, { fields: [emailSequenceEnrollments.sequenceId], references: [emailSequences.id] }),
+  candidate: one(candidates, { fields: [emailSequenceEnrollments.candidateId], references: [candidates.id] }),
+}));

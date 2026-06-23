@@ -28,8 +28,6 @@ import {
   useDeleteMessage,
   useEditMessage,
   useChatOnlineUsers,
-  useSetTyping,
-  useChatTyping,
   useChatOrgUsers,
   useToggleReaction,
 } from "@/lib/hooks/trpc-hooks";
@@ -74,9 +72,8 @@ export function MessagePanel({
   const editMessage = useEditMessage();
   const toggleReaction = useToggleReaction(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
-  const setTyping = useSetTyping();
-  const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
   const lastTypingSent = useRef(0);
+  const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -90,8 +87,6 @@ export function MessagePanel({
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
     return `${names[0]} and ${names.length - 1} others are typing...`;
   }, [typingUsers]);
-
-  const { isConnected: ablyConnected } = useChatRealtime(channelId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -298,7 +293,7 @@ export function MessagePanel({
     el.style.height = Math.min(el.scrollHeight, 160) + "px";
     if (value.trim() && Date.now() - lastTypingSent.current > 3000) {
       lastTypingSent.current = Date.now();
-      setTyping.mutate({ channelId });
+      publishTyping();
     }
     const cursorPos = el.selectionStart ?? value.length;
     const textBefore = value.slice(0, cursorPos);
