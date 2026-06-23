@@ -21,7 +21,7 @@ const createSchema = z.object({
   title: z.string().min(2).max(200),
   description: z.string().max(1000).optional(),
   targetRole: z.string().max(100).optional(),
-  level: z.string().max(50).optional(),
+  level: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
   estimatedHours: z.number().int().positive().optional(),
   steps: z.preprocess((v) => (v == null ? [] : v), z.array(stepSchema)).optional().default([]),
 });
