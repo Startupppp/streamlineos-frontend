@@ -8,8 +8,8 @@ import type { NextRequest } from "next/server";
 type Params = { params: Promise<{ documentTypeId: string }> };
 
 const patchSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100).optional(),
+  description: z.string().max(500).optional(),
   isMandatory: z.boolean().optional(),
   isActive: z.boolean().optional(),
   applicableRoles: z.array(z.string()).optional(),

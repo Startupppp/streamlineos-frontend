@@ -7,8 +7,8 @@ import type { NextRequest } from "next/server";
 import { getSessionAbility } from "@/lib/abilities-server";
 
 const createSchema = z.object({
-  name: z.string().min(1, "name is required"),
-  description: z.string().optional(),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be at most 100 characters"),
+  description: z.string().max(500, "Description must be at most 500 characters").optional(),
   isMandatory: z.boolean().optional().default(true),
   applicableRoles: z.array(z.string()).optional().default([]),
   sortOrder: z.number().int().optional().default(0),
