@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { skillAssessments, assessmentAttempts } from "@/lib/db/schema";
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const action = req.headers.get("x-action");
 
     if (action === "submit") {
-      const body = submitSchema.parse(await req.json());
+      const body = await parseBody(req, submitSchema);
       const assessment = await db.query.skillAssessments.findFirst({
         where: and(eq(skillAssessments.id, body.assessmentId), eq(skillAssessments.orgId, session.orgId)),
       });
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
 
 
     if (!ability.can("manage", "hr:performance"))  return err("Only admins can create assessments.", 403);
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const [assessment] = await db.insert(skillAssessments).values({
       orgId: session.orgId,
       title: body.title,

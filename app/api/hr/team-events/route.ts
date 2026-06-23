@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { teamEvents, teamEventParticipants } from "@/lib/db/schema";
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const ability = await getSessionAbility();
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can create events.", 403);
-    const body = createSchema.parse(await req.json());
+    const body = await parseBody(req, createSchema);
     const rawDate = body.date ?? body.startDate ?? "";
     const eventDate = rawDate.includes("T") ? rawDate.split("T")[0] : rawDate;
     const eventTime = body.time ?? (rawDate.includes("T") ? rawDate.split("T")[1]?.slice(0, 5) : undefined);
