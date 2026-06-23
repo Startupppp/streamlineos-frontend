@@ -73,6 +73,8 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hash(body.password || nanoid(32), 12);
     const userId = randomUUID();
 
+    const resolvedEmployeeId = body.employeeId?.trim() || `EMP-${nanoid(6).toUpperCase()}`;
+
     const [newUser] = await db
       .insert(users)
       .values({
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
         designation: body.designation,
         departmentId: body.departmentId,
         role: body.role || "ENGINEERING",
-        employeeId: body.employeeId,
+        employeeId: resolvedEmployeeId,
         joiningDate: body.joiningDate ? formatDateOnly(new Date(body.joiningDate)) : undefined,
         dateOfBirth: body.dateOfBirth ? formatDateOnly(new Date(body.dateOfBirth)) : undefined,
         skills: body.skills ? (() => {

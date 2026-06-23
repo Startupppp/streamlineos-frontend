@@ -35,6 +35,18 @@ export async function POST(req: NextRequest) {
       return err("No active salary structure found for this employee.", 400);
     }
 
+    const existingPayroll = await db.query.payrolls.findFirst({
+      where: and(
+        eq(payrolls.orgId, session.orgId),
+        eq(payrolls.userId, body.userId),
+        eq(payrolls.month, body.month),
+      ),
+      columns: { id: true },
+    });
+    if (existingPayroll) {
+      return err(`Payroll for this employee and month (${body.month}) already exists.`, 409);
+    }
+
     const basicSalary = Number(salary.basicSalary);
     const hraPercentage = Number(salary.hraPercentage || 50);
     const allowances = Number(salary.allowances || 0);
