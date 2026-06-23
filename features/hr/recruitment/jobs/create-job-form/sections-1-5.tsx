@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { ChipInput } from "./chip-input";
 import type { CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
+import { useBranches } from "@/lib/api/hooks";
+import { useMemo } from "react";
 
 export interface SectionProps {
   form: UseFormReturn<CreateJobFormValues>;
@@ -119,11 +122,47 @@ export function Section1({ form, departments }: SectionProps) {
 }
 
 export function Section2({ form }: SectionProps) {
-  const { register, control, formState: { errors } } = form;
+  const { register, control, setValue, formState: { errors } } = form;
+  const { data: branches } = useBranches();
+  const branchOptions = useMemo<ComboboxOption[]>(() =>
+    (branches ?? [])
+      .filter((b) => b.status === "ACTIVE")
+      .map((b) => ({
+        value: String(b.id),
+        label: b.name,
+        sublabel: [b.city, b.state, b.country].filter(Boolean).join(", "),
+      })),
+    [branches],
+  );
+
+  const handleBranchSelect = (branchId: string) => {
+    const branch = (branches ?? []).find((b) => String(b.id) === branchId);
+    if (!branch) return;
+    if (branch.country) setValue("country", branch.country, { shouldValidate: true });
+    const cityState = [branch.city, branch.state].filter(Boolean).join(", ");
+    if (cityState) setValue("stateCity", cityState, { shouldValidate: true });
+    setValue("officeLocation", branch.name, { shouldValidate: true });
+  };
+
   return (
     <div>
       <SectionTitle title="Location Details" subtitle="Where this role is based" />
       <div className="grid gap-4">
+        {branchOptions.length > 0 && (
+          <div>
+            <Label className="text-xs font-medium">Auto-fill from Branch <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <div className="mt-1">
+              <Combobox
+                options={branchOptions}
+                value=""
+                onChange={handleBranchSelect}
+                placeholder="Select a branch to auto-fill location…"
+                searchPlaceholder="Search branches…"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Selecting a branch pre-fills the fields below</p>
+          </div>
+        )}
         <div>
           <Label className="text-xs font-medium">Country <span className="text-destructive">*</span></Label>
           <Controller name="country" control={control} render={({ field }) => (

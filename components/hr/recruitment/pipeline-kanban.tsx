@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo } from "react";
+import { ArrowRight, XCircle } from "lucide-react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import {
   AlertDialog,
@@ -147,18 +148,60 @@ export function PipelineKanban({
     if (!open) setPendingReject(null);
   }, []);
 
+  const FLOW_STAGES = [
+    { label: "New", color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300", count: stageMap["NEW"]?.length ?? 0 },
+    { label: "Screening", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", count: stageMap["SCREENING"]?.length ?? 0 },
+    { label: "Interview", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", count: stageMap["INTERVIEW"]?.length ?? 0 },
+    { label: "Offer", color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", count: stageMap["OFFER"]?.length ?? 0 },
+    { label: "Hired", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", count: stageMap["HIRED"]?.length ?? 0 },
+  ];
+  const rejectedCount = stageMap["REJECTED"]?.length ?? 0;
+
   if (isLoading) {
     return (
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4">
-        {COLUMNS.map((col) => (
-          <ColumnSkeleton key={col.id} col={col} />
-        ))}
+      <div className="space-y-4">
+        <div className="hidden xl:flex items-center gap-1.5 px-1">
+          {FLOW_STAGES.map((s, i) => (
+            <div key={s.label} className="flex items-center gap-1.5">
+              <div className="h-6 w-20 rounded bg-muted animate-pulse" />
+              {i < FLOW_STAGES.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />}
+            </div>
+          ))}
+        </div>
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {COLUMNS.map((col) => (
+            <ColumnSkeleton key={col.id} col={col} />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <>
+      <div className="hidden xl:flex items-center gap-1.5 px-1 mb-3 flex-wrap">
+        {FLOW_STAGES.map((s, i) => (
+          <div key={s.label} className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${s.color}`}>
+              {s.label}
+              {s.count > 0 && (
+                <span className="ml-0.5 font-bold">{s.count}</span>
+              )}
+            </span>
+            {i < FLOW_STAGES.length - 1 && (
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+            )}
+          </div>
+        ))}
+        {rejectedCount > 0 && (
+          <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+            <XCircle className="h-3 w-3" />
+            Rejected
+            <span className="font-bold">{rejectedCount}</span>
+          </span>
+        )}
+      </div>
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 pb-4 items-start">
           {COLUMNS.map((col) => (
