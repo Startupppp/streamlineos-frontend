@@ -610,3 +610,45 @@ export const emailSequenceEnrollmentsRelations = relations(emailSequenceEnrollme
   sequence: one(emailSequences, { fields: [emailSequenceEnrollments.sequenceId], references: [emailSequences.id] }),
   candidate: one(candidates, { fields: [emailSequenceEnrollments.candidateId], references: [candidates.id] }),
 }));
+
+export type RecruiterActivityAction = "CALL_MADE" | "EMAIL_SENT" | "CANDIDATE_ADDED" | "NOTE_ADDED" | "INTERVIEW_SCHEDULED";
+
+export const jobRecruiters = pgTable("job_recruiters", {
+  id: serial("id").primaryKey(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  assignedBy: text("assigned_by").references(() => users.id).notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_job_recruiters_job_user").on(table.jobPostingId, table.userId),
+  index("idx_job_recruiters_job").on(table.jobPostingId),
+  index("idx_job_recruiters_user").on(table.userId),
+]);
+
+export const recruiterActivityLog = pgTable("recruiter_activity_log", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  recruiterId: text("recruiter_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  action: text("action").$type<RecruiterActivityAction>().notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "set null" }),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_recruiter_activity_org").on(table.orgId),
+  index("idx_recruiter_activity_recruiter").on(table.recruiterId),
+  index("idx_recruiter_activity_created").on(table.createdAt),
+]);
+
+export const jobRecruitersRelations = relations(jobRecruiters, ({ one }) => ({
+  jobPosting: one(jobPostings, { fields: [jobRecruiters.jobPostingId], references: [jobPostings.id] }),
+  user: one(users, { fields: [jobRecruiters.userId], references: [users.id] }),
+  assignedByUser: one(users, { fields: [jobRecruiters.assignedBy], references: [users.id] }),
+}));
+
+export const recruiterActivityLogRelations = relations(recruiterActivityLog, ({ one }) => ({
+  organization: one(organizations, { fields: [recruiterActivityLog.orgId], references: [organizations.id] }),
+  recruiter: one(users, { fields: [recruiterActivityLog.recruiterId], references: [users.id] }),
+  candidate: one(candidates, { fields: [recruiterActivityLog.candidateId], references: [candidates.id] }),
+  jobPosting: one(jobPostings, { fields: [recruiterActivityLog.jobPostingId], references: [jobPostings.id] }),
+}));

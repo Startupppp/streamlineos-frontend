@@ -97,6 +97,9 @@ export const queryKeys = {
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
     referrals: () => [...base, "hr", "referrals"] as const,
     offerTemplates: () => [...base, "hr", "offerTemplates"] as const,
+    recruiters: () => [...base, "hr", "recruiters"] as const,
+    jobRecruiters: (jobId: number) => [...base, "hr", "jobRecruiters", jobId] as const,
+    recruiterActivity: (params?: Record<string, unknown>) => [...base, "hr", "recruiterActivity", params] as const,
   },
 
   leads: {

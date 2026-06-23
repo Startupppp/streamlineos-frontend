@@ -144,6 +144,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Refer a Candidate", icon: Share2, href: "/hr/recruitment/refer" },
           { label: "Internal Jobs", icon: Briefcase, href: "/hr/recruitment/internal-jobs" },
           { label: "Offer Templates", icon: LayoutTemplate, href: "/hr/recruitment/offer-templates", requiredPermission: "hr:employees:create" },
+          { label: "Recruiters", icon: UserCog, href: "/hr/recruitment/recruiters", requiredPermission: "hr:employees:create" },
         ],
       },
     ],
