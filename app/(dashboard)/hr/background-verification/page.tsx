@@ -32,10 +32,17 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
-  if (s === "CLEAR") return "default";
+  if (s === "PASSED") return "default";
   if (s === "IN_PROGRESS") return "secondary";
-  if (s === "FLAGGED") return "destructive";
+  if (s === "FAILED") return "destructive";
   return "outline";
+}
+
+function statusLabel(s: string | null): string {
+  if (s === "PASSED") return "Passed";
+  if (s === "FAILED") return "Failed";
+  if (s === "IN_PROGRESS") return "In Progress";
+  return s ?? "Pending";
 }
 
 function ComplianceDashboard() {
@@ -167,7 +174,7 @@ function BGVContent() {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold">{bgv.user?.name ?? "Employee"}</p>
                         <Badge variant="outline" className="text-[10px]">{bgv.type}</Badge>
-                        <Badge variant={statusBadge(bgv.status)} className="text-[10px]">{bgv.status ?? "PENDING"}</Badge>
+                        <Badge variant={statusBadge(bgv.status)} className="text-[10px]">{statusLabel(bgv.status)}</Badge>
                       </div>
                       <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
                         {bgv.provider && <span>Provider: {bgv.provider}</span>}
@@ -175,13 +182,13 @@ function BGVContent() {
                         {bgv.createdAt && <span>{format(new Date(bgv.createdAt), "MMM d, yyyy")}</span>}
                       </div>
                     </div>
-                    {(!bgv.status || bgv.status === "IN_PROGRESS") && (
+                    {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
                       <div className="flex gap-1.5 shrink-0">
-                        <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "CLEAR")} disabled={update.isPending}>
-                          <CheckCircle2 className="h-3 w-3 mr-1" />Clear
+                        <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "PASSED")} disabled={update.isPending}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />Pass
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FLAGGED")} disabled={update.isPending}>
-                          <XCircle className="h-3 w-3 mr-1" />Flag
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FAILED")} disabled={update.isPending}>
+                          <XCircle className="h-3 w-3 mr-1" />Fail
                         </Button>
                       </div>
                     )}

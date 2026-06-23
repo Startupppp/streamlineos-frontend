@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { backgroundVerifications } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -38,6 +38,23 @@ export async function POST(req: NextRequest) {
 
     if (!ability.can("manage", "hr:employees"))  return err("Only admins can initiate verifications.", 403);
     const body = createSchema.parse(await req.json());
+
+    const existing = await db.query.backgroundVerifications.findFirst({
+      where: and(
+        eq(backgroundVerifications.orgId, session.orgId),
+        eq(backgroundVerifications.userId, body.userId),
+        eq(backgroundVerifications.type, body.type),
+        notInArray(backgroundVerifications.status, ["PASSED", "FAILED"])
+      ),
+      columns: { id: true, status: true },
+    });
+    if (existing) {
+      return err(
+        `An active ${body.type} verification already exists for this employee (status: ${existing.status}). Complete or update the existing check first.`,
+        409
+      );
+    }
+
     const [bgv] = await db.insert(backgroundVerifications).values({
       orgId: session.orgId,
       userId: body.userId,
