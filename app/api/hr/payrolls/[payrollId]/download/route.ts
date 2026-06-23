@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { NextRequest } from "next/server";
 import { getSessionAbility } from "@/lib/abilities-server";
+import { decrypt, decryptBankDetails } from "@/lib/encryption";
 
 export async function GET(
   _req: NextRequest,
@@ -70,8 +71,8 @@ export async function GET(
     const addressLine = [orgAddress?.city, orgAddress?.state, orgAddress?.country]
       .filter(Boolean).join(", ");
 
-    const pan = employee?.taxId ?? "—";
-    const bank = employee?.bankDetails;
+    const pan = employee?.taxId ? decrypt(employee.taxId) : "—";
+    const bank = decryptBankDetails(employee?.bankDetails ?? null);
     const maskedAccount = bank?.accountNumber
       ? "XXXX" + bank.accountNumber.slice(-4)
       : "—";

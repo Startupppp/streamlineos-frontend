@@ -4,6 +4,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { decrypt, encryptBankDetails, decryptBankDetails } from "@/lib/encryption";
 
 const updateSchema = z.object({
   firstName: z.string().min(1).max(50).optional(),
@@ -32,8 +33,12 @@ export async function GET() {
       where: eq(users.id, session.user.id),
     });
     if (!user) return err("User not found.", 404);
-    const { password, totpSecret, googleRefreshToken, ...profile } = user;
-    return ok(profile);
+    const { password, totpSecret, googleRefreshToken, bankDetails, taxId, ...profile } = user;
+    return ok({
+      ...profile,
+      taxId: taxId ? decrypt(taxId) : null,
+      bankDetails: decryptBankDetails(bankDetails),
+    });
   });
 }
 
@@ -47,7 +52,7 @@ export async function PATCH(req: NextRequest) {
       ...(body.phone !== undefined && { phone: body.phone }),
       ...(body.whatsappNumber !== undefined && { whatsappNumber: body.whatsappNumber }),
       ...(body.emergencyContact && { emergencyContact: body.emergencyContact }),
-      ...(body.bankDetails && { bankDetails: body.bankDetails }),
+      ...(body.bankDetails && { bankDetails: encryptBankDetails(body.bankDetails) }),
     }).where(eq(users.id, session.user.id));
     return ok({ success: true });
   });

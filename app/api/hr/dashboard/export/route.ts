@@ -3,6 +3,7 @@ import { withAuth, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { organizationMembers, users, departments, departmentMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { decrypt } from "@/lib/encryption";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,7 @@ export async function GET(_req: NextRequest) {
         r.gender ?? "",
         r.dateOfBirth ?? "",
         r.joiningDate ?? "",
-        r.taxId ?? "",
+        r.taxId ? decrypt(r.taxId) : "",
         r.joinedAt ? new Date(r.joinedAt).toISOString().slice(0, 10) : "",
       ]),
     );

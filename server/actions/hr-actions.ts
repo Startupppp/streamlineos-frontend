@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendAccountDeactivationEmail } from "@/lib/email";
 import { ROLES, ADMIN_ROLES, EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
+import { encrypt, decrypt, encryptBankDetails, decryptBankDetails } from "@/lib/encryption";
 import { getSessionAbility } from "@/lib/abilities-server";
 
 export async function getEmployees() {
@@ -51,8 +52,12 @@ export async function getEmployeeById(userId: string) {
 
   if (rows.length === 0) return null;
 
-  return rows[0].user;
-
+  const raw = rows[0].user;
+  return {
+    ...raw,
+    taxId: raw.taxId ? decrypt(raw.taxId) : null,
+    bankDetails: decryptBankDetails(raw.bankDetails),
+  };
 }
 
 export async function updateEmployee(data: {
@@ -111,9 +116,9 @@ export async function updateEmployee(data: {
                 joiningDate: data.joiningDate ? data.joiningDate.toISOString().split('T')[0] : undefined,
                 skills: data.skills,
                 experienceYears: data.experienceYears ? String(data.experienceYears) : undefined,
-                taxId: data.taxId,
+                taxId: data.taxId ? encrypt(data.taxId) : undefined,
                 monthlySalary: data.monthlySalary !== undefined ? String(data.monthlySalary) : undefined,
-                bankDetails: data.bankDetails,
+                bankDetails: data.bankDetails ? encryptBankDetails(data.bankDetails) : undefined,
             })
             .where(eq(users.id, data.id));
 

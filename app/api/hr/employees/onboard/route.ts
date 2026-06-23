@@ -1,4 +1,5 @@
 import { withAbility, ok, err, parseBody } from "@/lib/api/helpers";
+import { encrypt, encryptBankDetails, type BankDetails } from "@/lib/encryption";
 import { db } from "@/lib/db";
 import { users, organizationMembers, salaryStructures, passwordResetTokens } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -107,9 +108,11 @@ export async function POST(req: NextRequest) {
             }, []);
         })() : undefined,
         experienceYears: body.experienceYears?.toString(),
-        taxId: body.taxId,
+        taxId: body.taxId ? encrypt(body.taxId) : undefined,
         monthlySalary: body.monthlySalary?.toString(),
-        bankDetails: body.bankDetails as typeof users.$inferInsert["bankDetails"],
+        bankDetails: body.bankDetails?.accountNumber
+          ? encryptBankDetails(body.bankDetails as BankDetails)
+          : undefined,
         isActive: true,
         hasDashboardAccess: true,
         isPasswordChangeRequired: true,

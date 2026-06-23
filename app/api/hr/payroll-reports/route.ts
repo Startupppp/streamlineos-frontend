@@ -2,6 +2,7 @@ import { withAbility, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { payrolls, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { decrypt } from "@/lib/encryption";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
           userId: e.userId,
           name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim(),
           email: e.email,
-          pan: e.taxId,
+          pan: e.taxId ? decrypt(e.taxId) : null,
           totalGross: Number(e.totalGross ?? 0).toFixed(2),
           totalNet: Number(e.totalNet ?? 0).toFixed(2),
           totalDeductions: Number(e.totalDeductions ?? 0).toFixed(2),

@@ -57,14 +57,7 @@ export const users = pgTable("users", {
   joiningDate: date("joining_date"),
   dateOfBirth: date("date_of_birth"),
   taxId: text("tax_id"),
-  bankDetails: jsonb("bank_details").$type<{
-    accountNumber: string;
-    bankName: string;
-    branch: string;
-    ifsc: string;
-    accountHolder: string;
-    pfUanNumber?: string;
-  }>(),
+  bankDetails: text("bank_details"),
   image: text("image"),
   role: text("role").default("ENGINEERING").notNull(),
   departmentId: integer("department_id"),

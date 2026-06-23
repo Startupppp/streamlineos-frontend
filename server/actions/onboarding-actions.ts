@@ -6,6 +6,7 @@ import { users, documents, onboardingSteps, organizationMembers, leaveTypes, lea
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
+import { encrypt, encryptBankDetails } from "@/lib/encryption";
 import { auth, invalidateUserSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
@@ -91,8 +92,8 @@ export async function updateBankDetails(formData: FormData) {
 
   try {
     await db.update(users).set({
-      bankDetails: bankDetails,
-      taxId: taxId,
+      bankDetails: bankDetails.accountNumber ? encryptBankDetails(bankDetails) : undefined,
+      taxId: taxId ? encrypt(taxId) : undefined,
     }).where(eq(users.id, userId));
 
     await updateOnboardingStep(userId, "Bank Details", "COMPLETED");

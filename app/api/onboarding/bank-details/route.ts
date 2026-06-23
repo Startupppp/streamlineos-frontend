@@ -1,4 +1,5 @@
 import { withAuth, ok, parseBody } from "@/lib/api/helpers";
+import { encrypt, encryptBankDetails } from "@/lib/encryption";
 import { db } from "@/lib/db";
 import { users, onboardingSteps } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -38,14 +39,14 @@ export async function PATCH(req: NextRequest) {
     const body = await parseBody(req, schema);
 
     await db.update(users).set({
-      bankDetails: {
+      bankDetails: encryptBankDetails({
         accountNumber: body.accountNumber,
         bankName: body.bankName,
         branch: body.branch ?? "",
         ifsc: body.ifsc,
         accountHolder: body.accountHolder,
-      },
-      ...(body.taxId ? { taxId: body.taxId } : {}),
+      }),
+      ...(body.taxId ? { taxId: encrypt(body.taxId) } : {}),
     }).where(eq(users.id, session.user.id));
 
     await upsertOnboardingStep(session.user.id, session.orgId, "Bank Details");

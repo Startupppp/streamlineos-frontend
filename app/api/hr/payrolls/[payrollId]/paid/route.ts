@@ -9,6 +9,7 @@ import { generatePayslipPdf } from "@/lib/payslip-pdf";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
+import { decrypt, decryptBankDetails } from "@/lib/encryption";
 
 export async function PATCH(
   _req: NextRequest,
@@ -69,7 +70,7 @@ export async function PATCH(
           .filter(Boolean)
           .join(", ");
 
-        const bank = employee.bankDetails;
+        const bank = decryptBankDetails(employee.bankDetails);
         const maskedAccount = bank?.accountNumber
           ? "XXXX" + bank.accountNumber.slice(-4)
           : "—";
@@ -84,7 +85,7 @@ export async function PATCH(
             employeeId: employee.employeeId ?? undefined,
             designation: employee.designation ?? undefined,
             department: employee.team ?? employee.role ?? undefined,
-            panNumber: employee.taxId ?? undefined,
+            panNumber: employee.taxId ? decrypt(employee.taxId) : undefined,
             pfUan: bank?.pfUanNumber || undefined,
             bankName: bank?.bankName ?? undefined,
             maskedAccount,

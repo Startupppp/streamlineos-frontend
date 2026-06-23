@@ -45,3 +45,25 @@ export function decrypt(ciphertext: string): string {
 export function isEncrypted(value: string): boolean {
   return value.startsWith(PREFIX);
 }
+
+export interface BankDetails {
+  accountNumber: string;
+  bankName: string;
+  branch: string;
+  ifsc: string;
+  accountHolder: string;
+  pfUanNumber?: string;
+}
+
+export function encryptBankDetails(details: BankDetails): string {
+  return encrypt(JSON.stringify(details));
+}
+
+export function decryptBankDetails(encrypted: string | null | undefined): BankDetails | null {
+  if (!encrypted) return null;
+  try {
+    return JSON.parse(decrypt(encrypted)) as BankDetails;
+  } catch {
+    return null;
+  }
+}

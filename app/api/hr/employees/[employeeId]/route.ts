@@ -1,4 +1,5 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { encrypt, encryptBankDetails, type BankDetails } from "@/lib/encryption";
 import { getEmployee } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { users, organizationMembers, onboardingTasks } from "@/lib/db/schema";
@@ -135,9 +136,13 @@ export async function PATCH(
     if (body.role !== undefined && isOwnerOrAdmin) updateData.role = body.role;
     if (body.gender !== undefined) updateData.gender = body.gender;
     if (body.experienceYears !== undefined) updateData.experienceYears = body.experienceYears;
-    if (body.taxId !== undefined) updateData.taxId = body.taxId;
+    if (body.taxId !== undefined) updateData.taxId = body.taxId ? encrypt(body.taxId) : "";
     if (body.monthlySalary !== undefined && isOwnerOrAdmin) updateData.monthlySalary = body.monthlySalary;
-    if (body.bankDetails !== undefined) updateData.bankDetails = body.bankDetails;
+    if (body.bankDetails !== undefined) {
+      updateData.bankDetails = body.bankDetails
+        ? encryptBankDetails(body.bankDetails as BankDetails)
+        : null;
+    }
     if (body.designation !== undefined) updateData.designation = body.designation;
     if (body.departmentId !== undefined) updateData.departmentId = body.departmentId;
     if (body.phone !== undefined) updateData.phone = body.phone;
