@@ -15,14 +15,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, GraduationCap, BookOpen, Clock, BarChart3 } from "lucide-react";
+import { Plus, GraduationCap, Clock } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 
 interface LearningPath {
-  id: number; title: string; description: string | null; level: string | null;
-  courseCount: number; estimatedHours: number | null; enrolledCount: number;
-  isEnrolled: boolean; createdAt: string | null;
+  id: number;
+  title: string;
+  description: string | null;
+  level: string | null;
+  estimatedHours: number | null;
+  targetRole: string | null;
+  createdAt: string | null;
 }
 
 const lpKeys = { all: [...queryKeys.hr.all, "learning-paths"] as const, list: () => [...lpKeys.all, "list"] as const };
@@ -30,7 +34,7 @@ const lpKeys = { all: [...queryKeys.hr.all, "learning-paths"] as const, list: ()
 export default function LearningPathsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = ability.can("manage", "hr:performance");
 
   const { data: paths, isLoading } = useQuery({
     queryKey: lpKeys.list(),
@@ -40,11 +44,6 @@ export default function LearningPathsPage() {
   const create = useMutation({
     mutationFn: (data: { title: string; description?: string; level?: string; estimatedHours?: number }) =>
       apiClient.post<LearningPath>("/hr/learning-paths", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: lpKeys.list() }),
-  });
-
-  const enroll = useMutation({
-    mutationFn: (id: number) => apiClient.post<{ success: boolean }>(`/hr/learning-paths/${id}`, { action: "enroll" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: lpKeys.list() }),
   });
 
@@ -74,13 +73,6 @@ export default function LearningPathsPage() {
     );
   }, [title, description, level, hours, create, resetForm]);
 
-  const handleEnroll = useCallback((id: number) => {
-    enroll.mutate(id, {
-      onSuccess: () => toast.success("Enrolled successfully"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [enroll]);
-
   if (isLoading) {
     return (
       <PageWrapper title="Learning Paths" subtitle="Structured learning programs">
@@ -101,7 +93,7 @@ export default function LearningPathsPage() {
       {!paths?.length ? (
         <Card><CardContent className="py-12 text-center">
           <EmptyDocumentsIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No learning paths available.</p>
+          <p className="text-sm text-muted-foreground">No learning paths available.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -114,15 +106,11 @@ export default function LearningPathsPage() {
                 </div>
                 <h3 className="text-sm font-semibold leading-tight">{lp.title}</h3>
                 {lp.description && <p className="text-xs text-muted-foreground line-clamp-2">{lp.description}</p>}
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5"><BookOpen className="h-3 w-3" />{lp.courseCount} courses</span>
-                  {lp.estimatedHours && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{lp.estimatedHours}h</span>}
-                  <span className="flex items-center gap-0.5"><BarChart3 className="h-3 w-3" />{lp.enrolledCount} enrolled</span>
-                </div>
-                {lp.isEnrolled ? (
-                  <Badge variant="default" className="text-[10px] w-full justify-center">Enrolled</Badge>
-                ) : (
-                  <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => handleEnroll(lp.id)}>Enroll</Button>
+                {(lp.estimatedHours || lp.targetRole) && (
+                  <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                    {lp.estimatedHours && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{lp.estimatedHours}h</span>}
+                    {lp.targetRole && <span>{lp.targetRole}</span>}
+                  </div>
                 )}
               </CardContent>
             </Card>

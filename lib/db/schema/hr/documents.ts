@@ -113,6 +113,8 @@ export const learningPaths = pgTable("learning_paths", {
   title: text("title").notNull(),
   description: text("description"),
   targetRole: text("target_role"),
+  level: text("level"),
+  estimatedHours: integer("estimated_hours"),
   steps: jsonb("steps").$type<{ order: number; type: "assessment" | "certification"; referenceId: number; title: string }[]>(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

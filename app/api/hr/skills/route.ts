@@ -12,7 +12,7 @@ const listSchema = z.object({
 
 const createSchema = z.object({
   userId: z.string().min(1).optional(),
-  skillName: z.string().min(1).max(100),
+  skillName: z.string().trim().min(2, "Skill name must be at least 2 characters").max(50, "Skill name must be at most 50 characters"),
   level: z.number().int().min(1).max(5).optional().default(1),
 });
 

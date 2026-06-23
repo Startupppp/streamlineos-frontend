@@ -13,14 +13,17 @@ const listSchema = z.object({
 
 const createSchema = z.object({
   userId: z.string().min(1).optional(),
-  name: z.string().min(1, "Name is required").max(200),
-  issuingOrganization: z.string().max(200).optional(),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be at most 100 characters"),
+  issuingOrganization: z.string().trim().min(1, "Issuing organization is required").max(200),
   issueDate: z.string().optional(),
   expiryDate: z.string().optional(),
   credentialId: z.string().max(100).optional(),
-  credentialUrl: z.string().url().optional().or(z.literal("")),
-  documentUrl: z.string().url().optional().or(z.literal("")),
-});
+  credentialUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  documentUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+}).refine(
+  (d) => !d.issueDate || !d.expiryDate || d.expiryDate >= d.issueDate,
+  { message: "Expiry date must be after the issue date", path: ["expiryDate"] },
+);
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {

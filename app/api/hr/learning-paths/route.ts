@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
       title: body.title,
       description: body.description,
       targetRole: body.targetRole,
+      level: body.level,
+      estimatedHours: body.estimatedHours,
       steps: body.steps,
       createdBy: session.user.id,
     }).returning();
