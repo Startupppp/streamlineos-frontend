@@ -174,6 +174,8 @@ export function LeaveRequestSheet({
     );
   }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
 
+  const { isValid, isDirty } = form.formState;
+
   return (
     <HrSheet
       open={open}
@@ -183,6 +185,7 @@ export function LeaveRequestSheet({
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel="Submit Request"
       isPending={requestLeaveMutation.isPending}
+      submitDisabled={!isValid && isDirty}
     >
       <Form {...form}>
         <div className="space-y-4">

@@ -222,6 +222,7 @@ export function LeavesWfhContent() {
                 <LeaveApprovalsContent
                   incomingLeaveRequests={incomingLeaveRequests}
                   allIncomingLeaveRequests={allIncomingLeaveRequests}
+                  currentUserId={session?.user?.id}
                   isLoading={approvalsLoading}
                 />
               </TabsContent>

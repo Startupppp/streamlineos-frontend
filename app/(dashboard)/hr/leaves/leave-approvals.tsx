@@ -55,10 +55,12 @@ function LeaveStatusBadge({ status }: { status: string }) {
 function LeaveApprovalItem({
   req,
   processingId,
+  currentUserId,
   onProcess,
 }: {
   req: LeaveRequest;
   processingId: number | null;
+  currentUserId: string | undefined;
   onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
 }) {
   const status = req.status ?? "PENDING";
@@ -66,6 +68,7 @@ function LeaveApprovalItem({
   const priority = req.priority || "MEDIUM";
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
   const lopDays = Number(req.lopDays ?? 0);
+  const isSelfRequest = !!currentUserId && req.user?.id === currentUserId;
 
   const handleApprove = useCallback(() => onProcess(req.id, "APPROVED"), [req.id, onProcess]);
   const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
@@ -113,20 +116,24 @@ function LeaveApprovalItem({
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-3">
           {isPending ? (
-            <>
-              <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
-                {processingId === req.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                )}
-                Approve
-              </Button>
-              <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
-                <XCircle className="h-3 w-3 mr-1" />
-                Reject
-              </Button>
-            </>
+            isSelfRequest ? (
+              <span className="text-xs text-muted-foreground italic">Cannot approve own request</span>
+            ) : (
+              <>
+                <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
+                  {processingId === req.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                  )}
+                  Approve
+                </Button>
+                <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Reject
+                </Button>
+              </>
+            )
           ) : (
             <LeaveStatusBadge status={status} />
           )}
@@ -136,7 +143,7 @@ function LeaveApprovalItem({
   );
 }
 
-function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
+function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveRequest[]; currentUserId: string | undefined }) {
   const approveMutation = useApproveLeaveDedicated();
   const rejectMutation = useRejectLeaveDedicated();
   const processingId = approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
@@ -169,6 +176,7 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
           key={req.id}
           req={req}
           processingId={isPending ? (processingId ?? null) : null}
+          currentUserId={currentUserId}
           onProcess={handleProcess}
         />
       ))}
@@ -179,12 +187,14 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
   allIncomingLeaveRequests: LeaveRequest[];
+  currentUserId?: string;
   isLoading?: boolean;
 }
 
 export function LeaveApprovalsContent({
   incomingLeaveRequests,
   allIncomingLeaveRequests,
+  currentUserId,
 }: LeaveApprovalsContentProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
@@ -313,28 +323,28 @@ export function LeaveApprovalsContent({
                 {allIncomingLeaveRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No leave requests" description="There are no leave requests to display." />
                 ) : (
-                  <LeaveApprovalsList requests={allIncomingLeaveRequests} />
+                  <LeaveApprovalsList requests={allIncomingLeaveRequests} currentUserId={currentUserId} />
                 )}
               </TabsContent>
               <TabsContent value="pending">
                 {incomingLeaveRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No pending leave requests" description="All leave requests have been processed." />
                 ) : (
-                  <LeaveApprovalsList requests={incomingLeaveRequests} />
+                  <LeaveApprovalsList requests={incomingLeaveRequests} currentUserId={currentUserId} />
                 )}
               </TabsContent>
               <TabsContent value="approved">
                 {approvedRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No approved leave requests" description="No leave requests have been approved yet." />
                 ) : (
-                  <LeaveApprovalsList requests={approvedRequests} />
+                  <LeaveApprovalsList requests={approvedRequests} currentUserId={currentUserId} />
                 )}
               </TabsContent>
               <TabsContent value="rejected">
                 {rejectedRequests.length === 0 ? (
                   <EmptyState illustration={<EmptyApprovalIllustration />} title="No rejected leave requests" description="No leave requests have been rejected." />
                 ) : (
-                  <LeaveApprovalsList requests={rejectedRequests} />
+                  <LeaveApprovalsList requests={rejectedRequests} currentUserId={currentUserId} />
                 )}
               </TabsContent>
             </Tabs>

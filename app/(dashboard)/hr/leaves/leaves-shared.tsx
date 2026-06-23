@@ -75,6 +75,7 @@ export interface LeaveRequest {
   leaveType: { name: string } | null;
   approver?: { name: string | null } | null;
   user?: {
+    id?: string | null;
     firstName: string | null;
     lastName: string | null;
     email: string;
