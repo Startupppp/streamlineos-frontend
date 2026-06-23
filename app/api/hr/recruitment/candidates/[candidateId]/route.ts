@@ -47,7 +47,7 @@ export async function GET(
 }
 
 const CANDIDATE_STATUSES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
-const CANDIDATE_SOURCES = ["LINKEDIN", "NAUKRI", "INDEED", "REFERRAL", "CAREERS_PAGE", "DIRECT"] as const;
+const CANDIDATE_SOURCES = ["LINKEDIN", "NAUKRI", "INDEED", "REFERRAL", "CAREERS_PAGE", "DIRECT", "JOB_PORTAL", "CAMPUS"] as const;
 
 const updateCandidateSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
@@ -58,7 +58,10 @@ const updateCandidateSchema = z.object({
   portfolioUrl: z.string().url().max(500).optional().or(z.literal("")),
   currentCompany: z.string().max(200).optional(),
   currentRole: z.string().max(200).optional(),
-  experienceYears: z.string().optional(),
+  experienceYears: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+    z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
+  ),
   skills: z.array(z.string()).optional(),
   source: z.enum(CANDIDATE_SOURCES).optional(),
   status: z.enum(CANDIDATE_STATUSES).optional(),

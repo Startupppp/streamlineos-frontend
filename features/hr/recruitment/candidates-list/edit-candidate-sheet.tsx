@@ -47,6 +47,11 @@ const editCandidateSchema = z.object({
   source: z.string(),
   currentRole: z.string().max(100).optional().or(z.literal("")),
   currentCompany: z.string().max(100).optional().or(z.literal("")),
+  experienceYears: z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+    z.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50 years").optional(),
+  ),
+  skills: z.string().max(500).optional().or(z.literal("")),
   linkedinUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
@@ -75,6 +80,8 @@ export function EditCandidateSheet({
       source: candidate?.source ?? "DIRECT",
       currentRole: candidate?.currentRole ?? "",
       currentCompany: candidate?.currentCompany ?? "",
+      experienceYears: candidate?.experienceYears != null ? Number(candidate.experienceYears) : undefined,
+      skills: candidate?.skills?.join(", ") ?? "",
       linkedinUrl: candidate?.linkedinUrl ?? "",
       notes: candidate?.notes ?? "",
     }),
@@ -94,6 +101,10 @@ export function EditCandidateSheet({
           source: data.source || undefined,
           currentRole: data.currentRole?.trim() || undefined,
           currentCompany: data.currentCompany?.trim() || undefined,
+          experienceYears: data.experienceYears,
+          skills: data.skills?.trim()
+            ? data.skills.split(",").map((s) => s.trim()).filter(Boolean)
+            : [],
           linkedinUrl: data.linkedinUrl?.trim() || undefined,
           notes: data.notes?.trim() || undefined,
         },
@@ -235,6 +246,44 @@ export function EditCandidateSheet({
                   <FormLabel>Current Company</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="e.g. Acme Corp" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="experienceYears"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Experience (years)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      min={0}
+                      max={50}
+                      step={0.5}
+                      placeholder="e.g. 3"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="skills"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skills</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="React, Node.js, SQL..." />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
