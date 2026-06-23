@@ -93,10 +93,14 @@ const verifySchema = z.object({
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
+    if (!isRazorpayConfigured()) {
+      return err("Payment gateway not configured. Contact support.", 503);
+    }
+
     const input = await parseBody(req, verifySchema);
 
     const generatedSignature = crypto
-      .createHmac("sha256", RAZORPAY_KEY_SECRET ?? "")
+      .createHmac("sha256", RAZORPAY_KEY_SECRET!)
       .update(`${input.razorpay_order_id}|${input.razorpay_payment_id}`)
       .digest("hex");
 
