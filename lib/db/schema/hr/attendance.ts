@@ -46,7 +46,9 @@ export const wfhRequests = pgTable("wfh_requests", {
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
-});
+}, (table) => [
+  uniqueIndex("uniq_wfh_requests_user_date").on(table.userId, table.date),
+]);
 
 export const helpdeskTickets = pgTable("helpdesk_tickets", {
   id: serial("id").primaryKey(),

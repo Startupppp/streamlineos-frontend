@@ -24,10 +24,11 @@ export async function GET(req: NextRequest) {
           role: role || undefined,
           userId,
           branch: { role, branchId, userId },
+          limitPerStatus: limit,
         });
         const out: Record<string, unknown[]> = {};
-        for (const [status, leads] of Object.entries(board)) {
-          out[status] = (leads as unknown[]).slice(0, limit);
+        for (const [status, items] of Object.entries(board)) {
+          out[status] = (items as unknown[]).slice(0, limit);
         }
         return out;
       },

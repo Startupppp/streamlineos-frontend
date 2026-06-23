@@ -100,7 +100,7 @@ export async function getLeads(
 
 export async function getLeadBoard(
   orgId: string,
-  opts?: { role?: string; userId?: string; branch?: BranchContext }
+  opts?: { role?: string; userId?: string; branch?: BranchContext; limitPerStatus?: number }
 ) {
   const filters = [eq(leads.orgId, orgId)];
   const role = opts?.role;
@@ -131,10 +131,13 @@ export async function getLeadBoard(
     }
   }
 
+  const statusCount = 6;
+  const cap = (opts?.limitPerStatus ?? 50) * statusCount;
   const allLeads = await db.query.leads.findMany({
     where: and(...filters),
     with: { assignedTo: { columns: { id: true, name: true, image: true } } },
     orderBy: [desc(leads.createdAt)],
+    limit: cap,
   });
 
   const board: Record<string, typeof allLeads> = {
@@ -174,17 +177,16 @@ export async function getLeadStats(
     statsFilters.push(eq(leads.assignedToId, filters.userId));
   }
 
-  let allLeads = await db.query.leads.findMany({ where: and(...statsFilters) });
-
   if (filters?.dateFrom) {
-    const from = new Date(filters.dateFrom);
-    allLeads = allLeads.filter((l) => new Date(l.createdAt!) >= from);
+    statsFilters.push(gte(leads.createdAt, new Date(filters.dateFrom)));
   }
   if (filters?.dateTo) {
     const to = new Date(filters.dateTo);
     to.setHours(23, 59, 59, 999);
-    allLeads = allLeads.filter((l) => new Date(l.createdAt!) <= to);
+    statsFilters.push(lte(leads.createdAt, to));
   }
+
+  const allLeads = await db.query.leads.findMany({ where: and(...statsFilters) });
 
   const total = allLeads.length;
   const byStatus = {
@@ -204,13 +206,8 @@ export async function getLeadStats(
   const unassigned = allLeads.filter((l) => !l.assignedToId).length;
 
   const now = new Date();
-  const thisMonth = allLeads.filter((l) => {
-    const created = new Date(l.createdAt!);
-    return (
-      created.getMonth() === now.getMonth() &&
-      created.getFullYear() === now.getFullYear()
-    );
-  }).length;
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonth = allLeads.filter((l) => new Date(l.createdAt!) >= thisMonthStart).length;
 
   return {
     total,

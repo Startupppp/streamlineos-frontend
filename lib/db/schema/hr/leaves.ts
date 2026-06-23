@@ -1,5 +1,5 @@
-import { pgTable, text, serial, timestamp, boolean, decimal, date, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, serial, timestamp, boolean, decimal, date, integer, index, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 import { leaveStatusEnum } from "../enums";
 import { organizations, users } from "../auth";
 
@@ -23,6 +23,7 @@ export const leaveBalances = pgTable("leave_balances", {
 }, (table) => [
   uniqueIndex("uniq_leave_balances_user_type_year").on(table.userId, table.leaveTypeId, table.year),
   index("idx_leave_balances_org_year").on(table.orgId, table.year),
+  check("chk_leave_balance_non_negative", sql`${table.balance} >= 0`),
 ]);
 
 export const leaveRequests = pgTable("leave_requests", {

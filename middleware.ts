@@ -97,7 +97,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support/macros": ["support:macros:view"],
   "/support/routing": ["support:macros:view"],
   "/settings/automations": ["settings:automations:view"],
-  "/chat": ["chat:submit_lead", "self:attendance"],
+  "/chat": ["self:attendance"],
   "/sales": ["dashboard:sales:view"],
   "/customer-executive": ["dashboard:customer-executive:view"],
   "/settings": ["settings:view"],

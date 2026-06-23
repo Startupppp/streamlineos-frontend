@@ -1,10 +1,11 @@
 import { type NextRequest } from "next/server";
-import { withAbility, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCache, invalidateCachePattern, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { getDeals } from "@/server/queries/crm";
 import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
-import { deals } from "@/lib/db/schema";
+import { deals, organizationMembers } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
 const listSchema = z.object({
@@ -47,6 +48,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAbility("create", "crm:deals", async (session) => {
     const input = await parseBody(req, createSchema);
+
+    if (input.assignedToId && input.assignedToId !== session.user.id) {
+      const member = await db.query.organizationMembers.findFirst({
+        where: and(eq(organizationMembers.userId, input.assignedToId), eq(organizationMembers.orgId, session.orgId!)),
+        columns: { userId: true },
+      });
+      if (!member) return err("Assigned user is not a member of this organization", 400);
+    }
 
     const [deal] = await db.insert(deals).values({
       orgId: session.orgId!,

@@ -1,10 +1,10 @@
 import { type NextRequest } from "next/server";
-import { withAbility, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { withAbility, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import { cached, invalidateCachePattern, CACHE_TTL } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
-import { leads, notifications, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { leads, notifications, users, organizationMembers } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
@@ -96,6 +96,14 @@ export async function POST(req: NextRequest) {
     const input = await parseBody(req, createSchema);
     const orgId = session.orgId!;
     const userId = session.user.id;
+
+    if (input.assignedToId) {
+      const member = await db.query.organizationMembers.findFirst({
+        where: and(eq(organizationMembers.userId, input.assignedToId), eq(organizationMembers.orgId, orgId)),
+        columns: { userId: true },
+      });
+      if (!member) return err("Assigned user is not a member of this organization", 400);
+    }
 
     const [newLead] = await db.insert(leads).values({
       orgId,

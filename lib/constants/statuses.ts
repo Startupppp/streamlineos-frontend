@@ -97,17 +97,6 @@ export const QUOTE_STATUSES = {
 
 export type QuoteStatus = (typeof QUOTE_STATUSES)[keyof typeof QUOTE_STATUSES];
 
-export const TERMINATION_STATUSES = {
-  DRAFT: "DRAFT",
-  PENDING_CEO: "PENDING_CEO",
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
-  SENT: "SENT",
-  COMPLETED: "COMPLETED",
-} as const;
-
-export type TerminationStatus = (typeof TERMINATION_STATUSES)[keyof typeof TERMINATION_STATUSES];
-
 export const SURVEY_STATUSES = {
   DRAFT: "DRAFT",
   ACTIVE: "ACTIVE",
