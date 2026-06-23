@@ -2,7 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
 import { terminations, users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import { writeAuditLog } from "@/lib/db/audit";
 import { TERMINATION_REASON_OTHER, TERMINATION_REASONS } from "@/lib/constants/hr-separation";
@@ -132,16 +132,26 @@ export async function POST(req: NextRequest) {
       return err("This employee has already been terminated or is inactive.", 400);
     }
 
-    const existingCompleted = await db.query.terminations.findFirst({
+    const existingActive = await db.query.terminations.findFirst({
       where: and(
         eq(terminations.userId, body.userId),
         eq(terminations.orgId, session.orgId),
-        eq(terminations.status, "COMPLETED")
+        notInArray(terminations.status, ["REJECTED"])
       ),
-      columns: { id: true },
+      columns: { id: true, status: true },
     });
-    if (existingCompleted) {
-      return err("This employee already has a completed termination.", 400);
+    if (existingActive) {
+      const statusLabel =
+        existingActive.status === "COMPLETED"
+          ? "completed"
+          : existingActive.status === "PENDING_CEO"
+            ? "pending CEO review"
+            : existingActive.status === "APPROVED"
+              ? "approved"
+              : existingActive.status === "SENT"
+                ? "in progress (email sent)"
+                : "in draft";
+      return err(`This employee already has an active termination record (${statusLabel}). Only one active termination is allowed at a time.`, 409);
     }
 
     const isCeoInitiator = session.user.role === "CEO";

@@ -1,9 +1,9 @@
-import { withAuth, withAbility, ok } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { assetReturns } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
@@ -35,7 +35,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:assets", async (session) => {
-    const body = createSchema.parse(await req.json());
+    let body: z.infer<typeof createSchema>;
+    try {
+      body = createSchema.parse(await req.json());
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return err(e.issues.map((issue) => issue.message).join(", "), 400);
+      }
+      return err("Invalid request body", 400);
+    }
 
     const [record] = await db
       .insert(assetReturns)

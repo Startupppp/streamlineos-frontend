@@ -12,9 +12,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -24,8 +21,8 @@ import { Plus, CheckCircle2, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import { useHrEmployees, useHrAssets } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
 
 interface AssetReturn {
   id: number; userId: string; employeeName: string | null; assetName: string;
@@ -36,8 +33,6 @@ interface AssetReturn {
 
 const arKeys = { all: [...queryKeys.hr.all, "asset-returns"] as const, list: () => [...arKeys.all, "list"] as const };
 
-const ASSET_TYPES = ["Laptop", "Phone", "Monitor", "Keyboard", "Mouse", "Headset", "Access Card", "Other"];
-const CONDITIONS = ["Good", "Fair", "Damaged", "Missing"];
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (s === "RETURNED") return "default";
@@ -67,13 +62,31 @@ export default function AssetReturnsPage() {
     [employees]
   );
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [returnId, setReturnId] = useState<number | null>(null);
+  const [userId, setUserId] = useState("");
+
+  const { data: allAssets } = useHrAssets();
+  const assignedAssets = useMemo<Asset[]>(() => {
+    if (!allAssets || !userId) return [];
+    return allAssets.filter((a) => a.assignedTo === userId && a.status === "ASSIGNED");
+  }, [allAssets, userId]);
+  const assetOptions = useMemo<ComboboxOption[]>(() =>
+    assignedAssets.map((a) => ({
+      value: String(a.id),
+      label: a.name,
+      sublabel: [a.type, a.serialNumber ? `S/N: ${a.serialNumber}` : null].filter(Boolean).join(" · "),
+    })),
+    [assignedAssets]
+  );
+
   const { data: items, isLoading } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
   });
 
   const create = useMutation({
-    mutationFn: (data: { userId: string; assetName: string; assetType?: string; serialNumber?: string; notes?: string }) =>
+    mutationFn: (data: { userId: string; assetName: string; assetId?: number; notes?: string }) =>
       apiClient.post<AssetReturn>("/hr/asset-returns", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
@@ -83,28 +96,55 @@ export default function AssetReturnsPage() {
       apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, { status: "RETURNED", condition }),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [returnId, setReturnId] = useState<number | null>(null);
-  const [userId, setUserId] = useState("");
+  const [selectedAssetId, setSelectedAssetId] = useState("");
   const [assetName, setAssetName] = useState("");
-  const [assetType, setAssetType] = useState("Laptop");
-  const [serialNumber, setSerialNumber] = useState("");
   const [notes, setNotes] = useState("");
 
+  const selectedAsset = useMemo<Asset | undefined>(
+    () => assignedAssets.find((a) => String(a.id) === selectedAssetId),
+    [assignedAssets, selectedAssetId]
+  );
+
+  const handleEmployeeChange = useCallback((id: string) => {
+    setUserId(id);
+    setSelectedAssetId("");
+    setAssetName("");
+  }, []);
+
+  const handleAssetChange = useCallback((id: string) => {
+    setSelectedAssetId(id);
+    const asset = (allAssets ?? []).find((a) => String(a.id) === id);
+    if (asset) setAssetName(asset.name);
+    else setAssetName("");
+  }, [allAssets]);
+
+  const resetSheetState = useCallback(() => {
+    setUserId("");
+    setSelectedAssetId("");
+    setAssetName("");
+    setNotes("");
+  }, []);
+
   const handleCreate = useCallback(() => {
-    if (!userId.trim() || !assetName.trim()) { toast.error("Employee ID and asset name are required"); return; }
+    if (!userId.trim()) { toast.error("Please select an employee"); return; }
+    if (!assetName.trim()) { toast.error("Please select or enter an asset name"); return; }
     create.mutate(
-      { userId: userId.trim(), assetName: assetName.trim(), assetType, serialNumber: serialNumber || undefined, notes: notes || undefined },
+      {
+        userId: userId.trim(),
+        assetName: assetName.trim(),
+        assetId: selectedAsset ? selectedAsset.id : undefined,
+        notes: notes || undefined,
+      },
       {
         onSuccess: () => {
-          toast.success("Asset return logged"); setSheetOpen(false);
-          setUserId(""); setAssetName(""); setAssetType("Laptop"); setSerialNumber(""); setNotes("");
+          toast.success("Asset return logged");
+          setSheetOpen(false);
+          resetSheetState();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, assetName, assetType, serialNumber, notes, create]);
+  }, [userId, assetName, selectedAsset, notes, create, resetSheetState]);
 
   const handleMarkReturned = useCallback(() => {
     if (!returnId) return;
@@ -164,40 +204,84 @@ export default function AssetReturnsPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => {
-        if (!open) { setUserId(""); setAssetName(""); setAssetType("Laptop"); setSerialNumber(""); setNotes(""); }
-        setSheetOpen(open);
-      }} title="Log Asset Return" onSubmit={handleCreate} submitLabel="Log" isPending={create.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          if (!open) resetSheetState();
+          setSheetOpen(open);
+        }}
+        title="Log Asset Return"
+        onSubmit={handleCreate}
+        submitLabel="Log Return"
+        isPending={create.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
           <Combobox
             options={employeeOptions}
             value={userId}
-            onChange={setUserId}
+            onChange={handleEmployeeChange}
             placeholder="Select employee…"
             searchPlaceholder="Search by name…"
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Asset Name <span className="text-destructive">*</span></label>
-          <Input placeholder="e.g., MacBook Pro 16" value={assetName} onChange={(e) => setAssetName(e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+
+        {userId && (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Asset Type</label>
-            <Select value={assetType} onValueChange={setAssetType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">{ASSET_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
+            <label className="text-sm font-medium">Assigned Asset <span className="text-destructive">*</span></label>
+            {assetOptions.length > 0 ? (
+              <Combobox
+                options={assetOptions}
+                value={selectedAssetId}
+                onChange={handleAssetChange}
+                placeholder="Select asset to return…"
+                searchPlaceholder="Search assets…"
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground py-2">
+                No assets currently assigned to this employee. Enter name manually below.
+              </p>
+            )}
           </div>
+        )}
+
+        {userId && (assetOptions.length === 0 || !selectedAssetId) && (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Serial Number</label>
-            <Input placeholder="S/N" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+            <label className="text-sm font-medium">
+              Asset Name <span className="text-destructive">*</span>
+              {assetOptions.length > 0 && (
+                <span className="text-muted-foreground font-normal text-xs ml-1">(or enter manually)</span>
+              )}
+            </label>
+            <Input
+              placeholder="e.g., MacBook Pro 16"
+              value={assetName}
+              onChange={(e) => setAssetName(e.target.value)}
+            />
           </div>
-        </div>
+        )}
+
+        {selectedAsset && (
+          <div className="rounded-md bg-muted/50 border border-border p-3 text-xs space-y-1">
+            <p><span className="font-medium">Type:</span> {selectedAsset.type}</p>
+            {selectedAsset.serialNumber && (
+              <p><span className="font-medium">Serial Number:</span> {selectedAsset.serialNumber}</p>
+            )}
+            {selectedAsset.brand && (
+              <p><span className="font-medium">Brand:</span> {selectedAsset.brand}</p>
+            )}
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea placeholder="Any notes..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="resize-none w-full" />
+          <Textarea
+            placeholder="Any notes about condition or return circumstances…"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            className="resize-none w-full"
+          />
         </div>
       </HrSheet>
 

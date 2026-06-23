@@ -17,34 +17,43 @@ interface TerminationDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reviewRecord: Termination | null;
-  reviewDecision: "approve" | "reject" | null;
-  ceoRemarks: string;
-  onCeoRemarksChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  isPending: boolean;
-  onSubmit: () => void;
+  reviewDecision?: "approve" | "reject" | null;
+  ceoRemarks?: string;
+  onCeoRemarksChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  isPending?: boolean;
+  onSubmit?: () => void;
+  isViewOnly?: boolean;
 }
 
 export function TerminationDetailSheet({
   open,
   onOpenChange,
   reviewRecord,
-  reviewDecision,
-  ceoRemarks,
+  reviewDecision = null,
+  ceoRemarks = "",
   onCeoRemarksChange,
-  isPending,
+  isPending = false,
   onSubmit,
+  isViewOnly = false,
 }: TerminationDetailSheetProps) {
+  const title = isViewOnly
+    ? "Termination Details"
+    : reviewDecision === "approve"
+      ? "Approve Termination"
+      : "Reject Termination";
+
+  const description = isViewOnly
+    ? "Read-only view of termination record."
+    : "Review the termination details before making a decision.";
+
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={
-        reviewDecision === "approve"
-          ? "Approve Termination"
-          : "Reject Termination"
-      }
-      description="Review the termination details before making a decision."
-      onSubmit={onSubmit}
+      title={title}
+      description={description}
+      onSubmit={isViewOnly ? undefined : onSubmit}
+      showSubmit={!isViewOnly}
       submitLabel={
         reviewDecision === "approve" ? (
           <span className="flex items-center gap-1.5">
@@ -134,29 +143,45 @@ export function TerminationDetailSheet({
             </div>
           )}
 
-          <Separator />
+          {!isViewOnly && (
+            <>
+              <Separator />
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">
+                  CEO Remarks{" "}
+                  {reviewDecision === "reject" ? (
+                    <span className="text-destructive">*</span>
+                  ) : (
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  )}
+                </Label>
+                <Textarea
+                  placeholder={
+                    reviewDecision === "reject"
+                      ? "Remarks are required when rejecting..."
+                      : "Add any remarks or comments..."
+                  }
+                  value={ceoRemarks}
+                  onChange={onCeoRemarksChange}
+                  rows={3}
+                  aria-label="CEO remarks"
+                  className="resize-none"
+                />
+              </div>
+            </>
+          )}
 
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">
-              CEO Remarks{" "}
-              {reviewDecision === "reject" ? (
-                <span className="text-destructive">*</span>
-              ) : (
-                <span className="text-muted-foreground font-normal">(optional)</span>
-              )}
-            </Label>
-            <Textarea
-              placeholder={
-                reviewDecision === "reject"
-                  ? "Remarks are required when rejecting..."
-                  : "Add any remarks or comments..."
-              }
-              value={ceoRemarks}
-              onChange={onCeoRemarksChange}
-              rows={3}
-              aria-label="CEO remarks"
-            />
-          </div>
+          {isViewOnly && reviewRecord.ceoRemarks && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  CEO Remarks
+                </Label>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{reviewRecord.ceoRemarks}</p>
+              </div>
+            </>
+          )}
         </>
       )}
     </HrSheet>

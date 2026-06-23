@@ -11,6 +11,7 @@ import {
   User,
   BadgeDollarSign,
   Check,
+  Eye,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ interface TerminationCardProps {
   record: Termination;
   isHR: boolean;
   isCEO: boolean;
+  onView: (record: Termination) => void;
   onSubmit: (id: number) => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
@@ -61,6 +63,7 @@ function TerminationCard({
   record,
   isHR,
   isCEO,
+  onView,
   onSubmit,
   onApprove,
   onReject,
@@ -145,6 +148,17 @@ function TerminationCard({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs"
+              onClick={() => onView(record)}
+              aria-label={`View termination details for ${employee?.name ?? "employee"}`}
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              View
+            </Button>
+
             {isHR && status === "DRAFT" && (
               <Button
                 size="sm"
@@ -251,6 +265,7 @@ interface TerminationListProps {
   isCEO: boolean;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
+  onView: (record: Termination) => void;
   onSubmit: (id: number) => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
@@ -266,6 +281,7 @@ export function TerminationList({
   isCEO,
   statusFilter,
   onStatusFilterChange,
+  onView,
   onSubmit,
   onApprove,
   onReject,
@@ -330,6 +346,7 @@ export function TerminationList({
               record={record}
               isHR={isHR}
               isCEO={isCEO}
+              onView={onView}
               onSubmit={onSubmit}
               onApprove={onApprove}
               onReject={onReject}

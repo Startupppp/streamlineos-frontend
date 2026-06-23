@@ -71,6 +71,9 @@ export default function TerminationPage() {
   const [emailRecord, setEmailRecord] = useState<Termination | null>(null);
   const [completeId, setCompleteId] = useState<number | null>(null);
 
+  const [viewRecord, setViewRecord] = useState<Termination | null>(null);
+  const [viewSheetOpen, setViewSheetOpen] = useState(false);
+
   const employees = useMemo<Employee[]>(() => {
     if (!employeesData) return [];
     if (Array.isArray(employeesData)) return employeesData as Employee[];
@@ -249,6 +252,16 @@ export default function TerminationPage() {
     if (r) handleOpenCeoReview(r, "reject");
   }, [terminations, handleOpenCeoReview]);
 
+  const handleViewRecord = useCallback((record: Termination) => {
+    setViewRecord(record);
+    setViewSheetOpen(true);
+  }, []);
+
+  const handleViewSheetOpenChange = useCallback((open: boolean) => {
+    setViewSheetOpen(open);
+    if (!open) setViewRecord(null);
+  }, []);
+
   const handleCreateOpen = useCallback(() => setCreateOpen(true), []);
 
   const handleCreateSheetOpenChange = useCallback((open: boolean) => {
@@ -309,6 +322,7 @@ export default function TerminationPage() {
         isCEO={isCEO}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        onView={handleViewRecord}
         onSubmit={(id) => setSubmitId(id)}
         onApprove={handleApprove}
         onReject={handleReject}
@@ -360,6 +374,13 @@ export default function TerminationPage() {
         onCeoRemarksChange={handleCeoRemarksChange}
         isPending={ceoReview.isPending}
         onSubmit={handleCeoReviewSubmit}
+      />
+
+      <TerminationDetailSheet
+        open={viewSheetOpen}
+        onOpenChange={handleViewSheetOpenChange}
+        reviewRecord={viewRecord}
+        isViewOnly
       />
 
       <ConfirmDialog
