@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useInitiateOnboarding } from "@/lib/api/hooks/hr/onboarding";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface OnboardingInitiateSheetProps {
   open: boolean;
@@ -18,10 +20,28 @@ interface OnboardingInitiateSheetProps {
 export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitiateSheetProps) {
   const [userId, setUserId] = useState("");
   const initiate = useInitiateOnboarding();
+  const { data: employeesRaw } = useHrEmployees({ limit: 500 });
+
+  const employees = useMemo<Employee[]>(() => {
+    if (!employeesRaw) return [];
+    if (Array.isArray(employeesRaw)) return employeesRaw as Employee[];
+    return (employeesRaw as PaginatedEmployees).data ?? [];
+  }, [employeesRaw]);
+
+  const employeeOptions = useMemo<ComboboxOption[]>(() =>
+    employees
+      .filter((e) => e.isActive)
+      .map((e) => ({
+        value: e.id,
+        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
+        sublabel: e.designation ?? e.employeeId ?? e.email,
+      })),
+    [employees]
+  );
 
   const handleSubmit = useCallback(() => {
     if (!userId.trim()) {
-      toast.error("Please enter a user ID");
+      toast.error("Please select an employee");
       return;
     }
     initiate.mutate(userId.trim(), {
@@ -42,10 +62,6 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
     [onOpenChange]
   );
 
-  const handleUserIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserId(e.target.value);
-  }, []);
-
   return (
     <HrSheet
       open={open}
@@ -58,16 +74,17 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
     >
       <div className="space-y-1.5">
         <Label className="text-sm font-medium">
-          Employee User ID <span className="text-destructive">*</span>
+          Employee <span className="text-destructive">*</span>
         </Label>
-        <Input
-          placeholder="user_..."
+        <Combobox
+          options={employeeOptions}
           value={userId}
-          onChange={handleUserIdChange}
-          aria-label="Employee user ID"
+          onChange={setUserId}
+          placeholder="Select an employee…"
+          searchPlaceholder="Search by name…"
         />
         <p className="text-[11px] text-muted-foreground">
-          Enter the internal user ID of the employee to onboard.
+          Select the employee to initiate onboarding for.
         </p>
       </div>
     </HrSheet>
