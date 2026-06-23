@@ -1,7 +1,7 @@
-import { withAuth, withAbility, ok } from "@/lib/api/helpers";
+import { withAuth, withAbility, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { fnfSettlements } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { fnfSettlements, organizationMembers } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -39,6 +39,17 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAbility("manage", "hr:exit", async (session) => {
     const body = createSchema.parse(await req.json());
+
+    const member = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, body.userId),
+        eq(organizationMembers.orgId, session.orgId),
+      ),
+      columns: { userId: true },
+    });
+    if (!member) {
+      return err("User not found in your organization", 404);
+    }
 
     const basicDues = body.basicDues ?? 0;
     const leaveEncashment = body.leaveEncashment ?? 0;

@@ -143,7 +143,10 @@ export async function POST(req: NextRequest) {
           ),
         }),
         db.query.leaveTypes.findFirst({
-          where: eq(leaveTypes.id, body.leaveTypeId),
+          where: and(
+            eq(leaveTypes.id, body.leaveTypeId),
+            eq(leaveTypes.orgId, session.orgId),
+          ),
           columns: { name: true },
         }),
       ]);
