@@ -244,6 +244,24 @@ export function useCreateScorecardTemplate() {
   });
 }
 
+export function useUpdateScorecardTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number; name?: string; criteria?: ScorecardCriterion[] }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
+  });
+}
+
+export function useDeleteScorecardTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
+  });
+}
+
 export function useInterviewScorecard(interviewId: number) {
   return useQuery({
     queryKey: queryKeys.hr.interviewScorecard(interviewId),
