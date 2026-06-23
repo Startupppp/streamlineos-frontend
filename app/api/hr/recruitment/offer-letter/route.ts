@@ -1,7 +1,7 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getSessionAbility } from "@/lib/abilities-server";
 import { db } from "@/lib/db";
-import { candidates, jobPostings, richDocuments } from "@/lib/db/schema";
+import { candidates, jobPostings, richDocuments, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -21,18 +21,23 @@ export async function POST(req: NextRequest) {
 
     const body = schema.parse(await req.json());
 
-    const [candidate, job] = await Promise.all([
+    const [candidate, job, org] = await Promise.all([
       db.query.candidates.findFirst({
         where: and(eq(candidates.id, body.candidateId), eq(candidates.orgId, session.orgId)),
       }),
       db.query.jobPostings.findFirst({
         where: and(eq(jobPostings.id, body.jobPostingId), eq(jobPostings.orgId, session.orgId)),
       }),
+      db.query.organizations.findFirst({
+        where: eq(organizations.id, session.orgId),
+        columns: { name: true },
+      }),
     ]);
 
     if (!candidate) return err("Candidate not found.", 404);
     if (!job) return err("Job posting not found.", 404);
 
+    const companyName = org?.name ?? "Our Organization";
     const candidateName = `${candidate.firstName} ${candidate.lastName}`;
     const content = {
       type: "doc",
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest) {
         { type: "paragraph", content: [{ type: "text", text: `Date: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}` }] },
         { type: "paragraph" },
         { type: "paragraph", content: [{ type: "text", text: `Dear ${candidateName},` }] },
-        { type: "paragraph", content: [{ type: "text", text: `We are pleased to offer you the position of ${job.title} at our organization. Your start date will be ${body.startDate}.` }] },
+        { type: "paragraph", content: [{ type: "text", text: `We are pleased to offer you the position of ${job.title} at ${companyName}. Your start date will be ${body.startDate}.` }] },
         { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Compensation" }] },
         { type: "bulletList", content: [
           { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `Annual CTC: ₹${body.salary}` }] }] },
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
         { type: "paragraph", content: [{ type: "text", text: "We look forward to having you on our team!" }] },
         { type: "paragraph" },
         { type: "paragraph", content: [{ type: "text", text: "Best regards," }] },
-        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: "HR Team" }] },
+        { type: "paragraph", content: [{ type: "text", marks: [{ type: "bold" }], text: `HR Team — ${companyName}` }] },
       ],
     };
 

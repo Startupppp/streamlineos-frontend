@@ -34,11 +34,11 @@ async function get<T>(url: string, params?: Record<string, unknown>): Promise<T>
   return parseResponse<T>(res);
 }
 
-async function post<T>(url: string, data?: unknown): Promise<T> {
+async function post<T>(url: string, data?: unknown, config?: { headers?: Record<string, string> }): Promise<T> {
   const res = await fetch(buildUrl(url), {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(config?.headers ?? {}) },
     body: data !== undefined ? JSON.stringify(data) : undefined,
   });
   return parseResponse<T>(res);
