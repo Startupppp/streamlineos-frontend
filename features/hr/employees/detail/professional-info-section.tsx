@@ -2,7 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import {
-  FormControl, FormField, FormItem, FormLabel, FormMessage,
+  FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -43,7 +43,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel>System Role</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger className="w-full">
@@ -67,6 +67,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   )}
                 </SelectContent>
               </Select>
+              <FormDescription>Platform access level (e.g. HR Manager, Employee)</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -84,6 +85,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   placeholder="Select Department"
                 />
               </FormControl>
+              <FormDescription>Organizational unit (e.g. Engineering, Sales)</FormDescription>
               <FormMessage />
             </FormItem>
           )}

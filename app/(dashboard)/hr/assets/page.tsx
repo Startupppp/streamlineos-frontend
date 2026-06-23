@@ -15,8 +15,6 @@ import {
   Trash2,
   UserPlus,
   UserMinus,
-  ChevronsUpDown,
-  Check,
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,19 +44,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
   Form,
   FormControl,
   FormField,
@@ -71,6 +56,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -88,7 +74,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { Asset, AssetStatus, Employee } from "@/types/hr";
+import type { Asset, Employee } from "@/types/hr";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 
 function fmtCost(amount: string | number | null) {
@@ -144,7 +130,7 @@ const assetFormSchema = z.object({
     .max(100, "Serial number is too long")
     .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Must contain alphanumeric characters"),
   purchaseDate: z.string().optional(),
-  purchaseCost: z.string().optional(),
+  purchaseCost: z.number().min(0, "Cost cannot be negative").max(9_999_999, "Cost exceeds maximum").optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(500).optional(),
 });
@@ -157,93 +143,12 @@ interface AssignDialogState {
   currentAssignedTo: string | null;
 }
 
-function EmployeeCombobox({
-  employees,
-  value,
-  onChange,
-  placeholder = "Select employee",
-}: {
-  employees: Employee[];
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  const filtered = employees.filter((emp) => {
-    const name = `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.toLowerCase();
-    return name.includes(search.toLowerCase()) || emp.email.toLowerCase().includes(search.toLowerCase());
-  });
-
-  const selected = employees.find((e) => e.id === value);
-
-  const handleSelect = useCallback(
-    (id: string) => {
-      onChange(id);
-      setOpen(false);
-      setSearch("");
-    },
-    [onChange],
-  );
-
-  const handleOpenChange = useCallback((o: boolean) => {
-    setOpen(o);
-    if (!o) setSearch("");
-  }, []);
-
-  return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between font-normal"
-        >
-          <span className="truncate">
-            {selected
-              ? `${selected.firstName ?? ""} ${selected.lastName ?? ""}`.trim() || selected.email
-              : placeholder}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command shouldFilter={false}>
-          <CommandInput
-            placeholder="Search by name or email..."
-            value={search}
-            onValueChange={setSearch}
-          />
-          <CommandList>
-            <CommandEmpty>No employees found.</CommandEmpty>
-            <CommandGroup>
-              {filtered.map((emp) => (
-                <CommandItem
-                  key={emp.id}
-                  value={emp.id}
-                  onSelect={() => handleSelect(emp.id)}
-                >
-                  <Check
-                    className={cn("mr-2 h-4 w-4", value === emp.id ? "opacity-100" : "opacity-0")}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-sm">
-                      {`${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email}
-                    </span>
-                    {emp.designation && (
-                      <span className="text-xs text-muted-foreground">{emp.designation}</span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
+function buildEmployeeOptions(employees: Employee[]): ComboboxOption[] {
+  return employees.map((emp) => ({
+    value: emp.id,
+    label: `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email,
+    sublabel: emp.designation ?? emp.email,
+  }));
 }
 
 function AssetForm({
@@ -310,7 +215,7 @@ function AssetForm({
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {ASSET_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
@@ -383,7 +288,14 @@ function AssetForm({
               <FormItem>
                 <FormLabel>Purchase Cost (₹)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="0" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    min={0}
+                    step={0.01}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -412,7 +324,7 @@ function AssetForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional notes..." rows={2} {...field} />
+                <Textarea placeholder="Optional notes..." rows={2} className="resize-none w-full" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -440,6 +352,7 @@ export default function HrAssetsPage() {
   const { data, isLoading } = useHrAssets();
   const { data: employeesRaw } = useHrEmployees(undefined);
   const employees = (employeesRaw ?? []) as Employee[];
+  const employeeOptions = buildEmployeeOptions(employees);
 
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
@@ -470,7 +383,7 @@ export default function HrAssetsPage() {
       model: "",
       serialNumber: "",
       purchaseDate: "",
-      purchaseCost: "",
+      purchaseCost: undefined,
       location: "",
       notes: "",
     },
@@ -507,7 +420,7 @@ export default function HrAssetsPage() {
           model: values.model,
           serialNumber: values.serialNumber,
           purchaseDate: values.purchaseDate || undefined,
-          purchaseCost: values.purchaseCost ? Number(values.purchaseCost) : undefined,
+          purchaseCost: values.purchaseCost,
           location: values.location || undefined,
           notes: values.notes || undefined,
         },
@@ -534,7 +447,7 @@ export default function HrAssetsPage() {
         model: asset.model ?? "",
         serialNumber: asset.serialNumber ?? "",
         purchaseDate: asset.purchaseDate ?? "",
-        purchaseCost: asset.purchaseCost ?? "",
+        purchaseCost: asset.purchaseCost != null ? Number(asset.purchaseCost) : undefined,
         location: asset.location ?? "",
         notes: asset.notes ?? "",
       });
@@ -558,7 +471,7 @@ export default function HrAssetsPage() {
           model: values.model,
           serialNumber: values.serialNumber,
           purchaseDate: values.purchaseDate || undefined,
-          purchaseCost: values.purchaseCost ? Number(values.purchaseCost) : undefined,
+          purchaseCost: values.purchaseCost,
           location: values.location || undefined,
           notes: values.notes || undefined,
         },
@@ -572,16 +485,6 @@ export default function HrAssetsPage() {
       );
     },
     [editAsset, updateAsset],
-  );
-
-  const handleStatusChange = useCallback(
-    (assetId: number, status: string) => {
-      updateAsset.mutate(
-        { assetId, status: status as AssetStatus },
-        { onError: (e) => toast.error(getErrorMessage(e)) },
-      );
-    },
-    [updateAsset],
   );
 
   const handleOpenAssign = useCallback((asset: Asset) => {
@@ -706,6 +609,7 @@ export default function HrAssetsPage() {
             <TabsTrigger value="AVAILABLE" className="text-xs px-3 h-7">Available</TabsTrigger>
             <TabsTrigger value="ASSIGNED" className="text-xs px-3 h-7">Assigned</TabsTrigger>
             <TabsTrigger value="MAINTENANCE" className="text-xs px-3 h-7">Maintenance</TabsTrigger>
+            <TabsTrigger value="RETIRED" className="text-xs px-3 h-7">Retired</TabsTrigger>
           </TabsList>
         </Tabs>
       }
@@ -791,27 +695,14 @@ export default function HrAssetsPage() {
                             {asset.serialNumber ?? "—"}
                           </TableCell>
                           <TableCell>
-                            <Select
-                              value={asset.status ?? "AVAILABLE"}
-                              onValueChange={(v) => handleStatusChange(asset.id, v)}
+                            <span
+                              className={cn(
+                                "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                                badge.className,
+                              )}
                             >
-                              <SelectTrigger className="h-7 w-auto border-0 p-0 shadow-none gap-1 focus:ring-0">
-                                <span
-                                  className={cn(
-                                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                                    badge.className,
-                                  )}
-                                >
-                                  {badge.label}
-                                </span>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="AVAILABLE">Available</SelectItem>
-                                <SelectItem value="ASSIGNED">Assigned</SelectItem>
-                                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                                <SelectItem value="RETIRED">Retired</SelectItem>
-                              </SelectContent>
-                            </Select>
+                              {badge.label}
+                            </span>
                           </TableCell>
                           <TableCell className="text-sm">
                             {assignedName ? (
@@ -922,11 +813,13 @@ export default function HrAssetsPage() {
               <label className="text-sm font-medium">
                 {assignDialog?.currentAssignedTo ? "Reassign to Employee" : "Assign to Employee"}
               </label>
-              <EmployeeCombobox
-                employees={employees}
+              <Combobox
+                key={assignDialog?.assetId ?? "closed"}
+                options={employeeOptions}
                 value={assignEmpId}
                 onChange={setAssignEmpId}
-                placeholder="Select employee"
+                placeholder="Select employee…"
+                searchPlaceholder="Search by name or email…"
               />
             </div>
             {assignDialog?.currentAssignedTo && (

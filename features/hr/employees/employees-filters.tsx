@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,9 @@ export function EmployeesFilters({
           </SelectItem>
         </SelectContent>
       </Select>
+      <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+        <Link href="/hr/termination">View Terminated</Link>
+      </Button>
       {hasFilters && (
         <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={onClear}>
           <X className="h-3.5 w-3.5 mr-1" />

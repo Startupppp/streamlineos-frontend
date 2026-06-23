@@ -16,11 +16,24 @@ import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professi
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
 
 const formSchema = z.object({
-  firstName: z.string().min(2, "First name is required"),
-  lastName: z.string().min(2, "Last name is required"),
+  firstName: z
+    .string()
+    .trim()
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must be at most 50 characters")
+    .regex(/^[A-Za-z\s'-]+$/, "Only alphabetic characters, spaces, hyphens and apostrophes are allowed")
+    .refine((v) => !/\s{2,}/.test(v), "First name cannot have consecutive spaces"),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must be at most 50 characters")
+    .regex(/^[A-Za-z\s'-]+$/, "Only alphabetic characters, spaces, hyphens and apostrophes are allowed")
+    .refine((v) => !/\s{2,}/.test(v), "Last name cannot have consecutive spaces"),
   role: z.string(),
   designation: z
     .string()
+    .trim()
     .min(2, "Designation must be at least 2 characters")
     .max(100, "Designation must be at most 100 characters")
     .refine((v) => /[a-zA-Z]/.test(v), "Designation must contain at least one letter")
@@ -36,7 +49,7 @@ const formSchema = z.object({
     }, "Phone number must not contain letters")
     .refine((val) => {
       if (!val) return true;
-      const digits = val.replace(/[\s+\-()]/g, "");
+      const digits = val.replace(/\D/g, "");
       return digits.length >= 7 && digits.length <= 15;
     }, "Phone number must be 7–15 digits")
     .optional()
@@ -52,13 +65,13 @@ const formSchema = z.object({
       return v.split(",").every((s) => !s.trim() || /[a-zA-Z]/.test(s.trim()));
     }, "Each skill must contain at least one letter")
     .optional(),
-  taxId: z.string().optional(),
-  monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
-  bankAccount: z.string().optional(),
-  bankName: z.string().optional(),
-  branch: z.string().optional(),
-  ifsc: z.string().optional(),
-  accountHolder: z.string().optional(),
+  taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
+  monthlySalary: z.number().min(0, "Salary cannot be negative").max(9_999_999, "Salary exceeds maximum allowed value").optional(),
+  bankAccount: z.string().regex(/^\d{9,18}$/, "Account number must be 9–18 digits").optional().or(z.literal("")),
+  bankName: z.string().regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters").optional().or(z.literal("")),
+  branch: z.string().regex(/^[A-Za-z\s]+$/, "Branch name must contain only letters").optional().or(z.literal("")),
+  ifsc: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC code format (e.g. SBIN0001234)").optional().or(z.literal("")),
+  accountHolder: z.string().regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters").optional().or(z.literal("")),
 }).superRefine((data, ctx) => {
   if (data.skills?.trim()) {
     const parts = data.skills.split(",").map((s) => s.trim()).filter(Boolean);

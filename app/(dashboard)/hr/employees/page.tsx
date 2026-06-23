@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { LayoutGrid, List, Users, UserPlus } from "lucide-react";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,6 +41,8 @@ export default function EmployeesPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [view, setView] = useState<ViewMode>("grid");
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const employees = useMemo(
     () =>
       (Array.isArray(rawEmployees)
@@ -58,8 +61,8 @@ export default function EmployeesPage() {
 
   const filtered = useMemo(() => {
     let result = employees;
-    if (search) {
-      const lower = search.toLowerCase();
+    if (debouncedSearch) {
+      const lower = debouncedSearch.toLowerCase();
       result = result.filter(
         (e) =>
           e.name?.toLowerCase().includes(lower) ||
@@ -79,7 +82,7 @@ export default function EmployeesPage() {
       );
     }
     return result;
-  }, [employees, search, filterDept, filterStatus]);
+  }, [employees, debouncedSearch, filterDept, filterStatus]);
 
   const hasFilters =
     search !== "" || filterDept !== "all" || filterStatus !== "all";
@@ -169,6 +172,9 @@ export default function EmployeesPage() {
             <TableHeader>
               <TableRow className="text-xs">
                 <TableHead scope="col">Employee</TableHead>
+                <TableHead scope="col" className="w-[110px]">
+                  Employee ID
+                </TableHead>
                 <TableHead scope="col" className="w-[160px]">
                   Designation
                 </TableHead>

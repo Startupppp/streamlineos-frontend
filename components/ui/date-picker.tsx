@@ -19,6 +19,7 @@ interface DatePickerProps {
   fromYear?: number;
   toYear?: number;
   id?: string;
+  disabledDays?: (date: Date) => boolean;
 }
 
 function parseDateValue(value: string | undefined): Date | undefined {
@@ -38,6 +39,7 @@ export function DatePicker({
   fromYear = 1950,
   toYear = new Date().getFullYear() + 5,
   id,
+  disabledDays,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
@@ -81,6 +83,7 @@ export function DatePicker({
           fromYear={fromYear}
           toYear={toYear}
           initialFocus
+          disabled={disabledDays}
         />
       </PopoverContent>
     </Popover>

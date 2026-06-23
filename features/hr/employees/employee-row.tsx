@@ -30,15 +30,11 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
               {displayName[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{displayName}</p>
-            {emp.employeeId && (
-              <p className="text-[11px] text-muted-foreground">
-                {emp.employeeId}
-              </p>
-            )}
-          </div>
+          <p className="text-sm font-medium truncate min-w-0">{displayName}</p>
         </Link>
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground font-mono">
+        {emp.employeeId ?? "—"}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
         {emp.designation ?? "—"}

@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 
 import { TERMINATION_REASONS, TERMINATION_REASON_OTHER } from "@/lib/constants/hr-separation";
@@ -122,6 +123,20 @@ export function TerminationFormSheet({
     [employees, selectedUserId]
   );
 
+  const employeeOptions = useMemo(
+    () =>
+      employees
+        .filter((emp) => emp.role !== "CEO" && emp.isActive)
+        .map((emp) => {
+          const label =
+            emp.firstName && emp.lastName
+              ? `${emp.firstName} ${emp.lastName}`
+              : (emp.name ?? emp.email);
+          return { value: emp.id, label, sublabel: emp.designation ?? emp.email };
+        }),
+    [employees]
+  );
+
   const letterPreview = useMemo(
     () =>
       buildLetterPreview({
@@ -154,25 +169,13 @@ export function TerminationFormSheet({
         <Label className="text-sm font-medium">
           Employee <span className="text-destructive">*</span>
         </Label>
-        <Select value={selectedUserId} onValueChange={onSelectedUserIdChange}>
-          <SelectTrigger aria-label="Select employee">
-            <SelectValue placeholder="Select an employee..." />
-          </SelectTrigger>
-          <SelectContent>
-            {employees
-              .filter((emp) => emp.role !== "CEO" && emp.isActive)
-              .map((emp) => (
-                <SelectItem key={emp.id} value={emp.id}>
-                  <span className="flex flex-col">
-                    <span>{emp.name ?? "Unnamed"}</span>
-                    {emp.designation && (
-                      <span className="text-xs text-muted-foreground">{emp.designation}</span>
-                    )}
-                  </span>
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          options={employeeOptions}
+          value={selectedUserId}
+          onChange={onSelectedUserIdChange}
+          placeholder="Select an employee…"
+          searchPlaceholder="Search by name…"
+        />
       </div>
 
       <Separator />
@@ -218,6 +221,8 @@ export function TerminationFormSheet({
           value={remarks}
           onChange={onRemarksChange}
           rows={4}
+          maxLength={2000}
+          className="resize-none w-full"
           aria-label="Remarks"
         />
         {isOtherReason && (
@@ -271,6 +276,7 @@ export function TerminationFormSheet({
           <Input
             type="number"
             min="0"
+            max="9999999"
             step="1000"
             placeholder="0"
             value={severanceAmount}
@@ -291,6 +297,8 @@ export function TerminationFormSheet({
           value={internalNotes}
           onChange={onInternalNotesChange}
           rows={3}
+          maxLength={1000}
+          className="resize-none w-full"
           aria-label="Internal notes"
         />
       </div>

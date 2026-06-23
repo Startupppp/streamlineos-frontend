@@ -177,8 +177,8 @@ export function AppSidebar({
       >
         <div
           className={cn(
-            "flex items-center h-14 shrink-0 border-b border-sidebar-border",
-            isCollapsed ? "relative justify-center px-0" : "justify-between px-4"
+            "relative flex items-center h-14 shrink-0 border-b border-sidebar-border",
+            isCollapsed ? "justify-center px-0" : "justify-between px-4"
           )}
         >
           {!isCollapsed && (

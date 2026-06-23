@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,14 +30,17 @@ const WFH_REASONS = [
   "Other",
 ] as const;
 
+const isSunday = (d: Date) => d.getDay() === 0;
+
 const wfhFormSchema = z.object({
   date: z
     .string()
     .min(1, "Date is required")
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-    .refine((v) => v >= format(new Date(), "yyyy-MM-dd"), "Date cannot be in the past"),
+    .refine((v) => v >= format(new Date(), "yyyy-MM-dd"), "Date cannot be in the past")
+    .refine((v) => new Date(v).getDay() !== 0, "Cannot select a Sunday"),
   reason: z.string().min(1, "Reason is required"),
-  notes: z.string().optional(),
+  notes: z.string().max(500).optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
 type WfhFormValues = z.infer<typeof wfhFormSchema>;
@@ -60,6 +63,23 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
       approverId: "",
     },
   });
+
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+        reason: "",
+        notes: "",
+        approverId: "",
+      });
+    }
+  }, [open, form]);
+
+  useEffect(() => {
+    if (approvers.length === 1 && !form.getValues("approverId")) {
+      form.setValue("approverId", approvers[0].id);
+    }
+  }, [approvers, form]);
 
   const onSubmit = useCallback((data: WfhFormValues) => {
     createWfhRequest.mutate(
@@ -110,6 +130,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
                     onChange={field.onChange}
                     fromDate={startOfDay(new Date())}
                     placeholder="Select date"
+                    disabledDays={isSunday}
                   />
                 </FormControl>
                 <FormMessage />

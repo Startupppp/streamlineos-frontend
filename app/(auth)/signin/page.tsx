@@ -192,50 +192,54 @@ export default function SignInPage() {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-[13px] font-medium">
+            <div className="grid">
+              <Label
+                htmlFor="password"
+                className="row-start-1 col-start-1 self-center text-[13px] font-medium"
+              >
                 Password
               </Label>
+              <div className="relative row-start-2 col-start-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  {...form.register("password", {
+                    onChange: (e) => setPasswordValue(e.target.value),
+                  })}
+                  disabled={isPending}
+                  className={cn(
+                    "h-9 text-sm pr-9",
+                    form.formState.errors.password &&
+                      "border-destructive focus-visible:ring-destructive/30",
+                  )}
+                  aria-invalid={!!form.formState.errors.password}
+                  aria-describedby={
+                    form.formState.errors.password ? "pw-error" : undefined
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               <Link
                 href="/forgot-password"
-                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+                className="row-start-1 col-start-1 justify-self-end self-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
               >
                 Forgot password?
               </Link>
-            </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                {...form.register("password", {
-                  onChange: (e) => setPasswordValue(e.target.value),
-                })}
-                disabled={isPending}
-                className={cn(
-                  "h-9 text-sm pr-9",
-                  form.formState.errors.password &&
-                    "border-destructive focus-visible:ring-destructive/30",
-                )}
-                aria-invalid={!!form.formState.errors.password}
-                aria-describedby={
-                  form.formState.errors.password ? "pw-error" : undefined
-                }
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
             </div>
             {form.formState.errors.password && (
               <p
