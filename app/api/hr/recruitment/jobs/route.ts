@@ -44,7 +44,10 @@ const createJobBaseSchema = z.object({
   requirements: z.string().max(5000).optional(),
   benefits: z.string().max(5000).optional(),
   openings: z.number().int().min(1).max(999).optional(),
-  applicationDeadline: z.string().optional(),
+  applicationDeadline: z
+    .string()
+    .refine((d) => !d || new Date(d) >= new Date(new Date().toDateString()), "Application deadline cannot be in the past")
+    .optional(),
   status: z.enum(["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]).optional(),
 });
 

@@ -12,11 +12,13 @@ const listSchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 });
 
+const NAME_REGEX = /[a-zA-Z]/;
+
 const createCandidateSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Valid email is required"),
-  phone: z.string().optional(),
+  firstName: z.string().trim().min(1, "First name is required").max(50, "First name must be at most 50 characters").regex(NAME_REGEX, "First name must contain at least one letter"),
+  lastName: z.string().trim().min(1, "Last name is required").max(50, "Last name must be at most 50 characters").regex(NAME_REGEX, "Last name must contain at least one letter"),
+  email: z.string().trim().email("Valid email is required").max(254, "Email must be at most 254 characters"),
+  phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, "Phone must be 8-15 digits, optionally starting with +").optional().or(z.literal("")),
   resumeUrl: z.string().url().optional().or(z.literal("")),
   linkedinUrl: z.string().url().optional().or(z.literal("")),
   portfolioUrl: z.string().url().optional().or(z.literal("")),
