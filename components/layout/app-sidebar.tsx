@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
+import { usePendingApprovals } from "@/lib/api/hooks/dashboard";
 import { flattenNavRoutes, getNavGroupsForUser } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
@@ -91,29 +92,11 @@ export function AppSidebar({
     });
   }, []);
 
-  const [pendingLeaves, setPendingLeaves] = useState(0);
-
-  useEffect(() => {
-    if (!isAdmin || !session?.user) return;
-    let cancelled = false;
-    async function fetchCounts() {
-      try {
-        const { getPendingApprovalCount } = await import(
-          "@/server/actions/leave-actions"
-        );
-        const count = await getPendingApprovalCount();
-        if (!cancelled) setPendingLeaves(count);
-      } catch {
-        if (!cancelled) setPendingLeaves(0);
-      }
-    }
-    fetchCounts();
-    const id = setInterval(fetchCounts, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [session, isAdmin]);
+  const { data: pendingApprovalsData } = usePendingApprovals({
+    enabled: isAdmin && !!session?.user,
+    refetchIntervalInBackground: false,
+  });
+  const pendingLeaves = pendingApprovalsData?.pendingLeaves ?? 0;
 
   const { data: chatUnread } = useChatUnreadTotal();
   const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
