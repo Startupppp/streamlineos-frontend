@@ -29,7 +29,6 @@ import { Adapter } from "next-auth/adapters";
 import { logger } from "./logger";
 import { redis } from "./redis";
 import { randomUUID } from "crypto";
-import { getDeviceId } from "./device-fingerprint";
 import { sendAccountLockedEmail, sendNewDeviceLoginEmail } from "./email";
 import { createAuditLog } from "./audit-log";
 import { getUserPermissions } from "@/server/queries/rbac";
@@ -203,9 +202,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.orgId = null;
         token.sessionId = randomUUID();
 
-        const userAgent = "";
-        const ipAddress = "";
-        const deviceId = getDeviceId(userAgent, ipAddress);
+        const deviceId = token.sessionId as string;
 
         db.insert(userSessions).values({
           id: token.sessionId,
@@ -221,26 +218,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           targetType: "user",
           metadata: { email: user.email },
         }).catch(() => {});
-
-        if (redis) {
-          const existingSessions = await db.query.userSessions.findMany({
-            where: eq(userSessions.userId, user.id as string),
-            columns: { deviceId: true },
-          }).catch(() => []);
-
-          const knownDeviceIds = existingSessions
-            .map((s) => s.deviceId)
-            .filter((d): d is string => d !== null && d !== undefined);
-
-          const isNewDevice = !knownDeviceIds.includes(deviceId);
-          if (isNewDevice && knownDeviceIds.length > 0 && user.email) {
-            sendNewDeviceLoginEmail(user.email, user.name ?? user.email, {
-              userAgent,
-              ipAddress,
-              time: new Date().toISOString(),
-            }).catch(() => {});
-          }
-        }
       }
 
       if (token.id) {
