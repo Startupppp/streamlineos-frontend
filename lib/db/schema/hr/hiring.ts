@@ -132,6 +132,7 @@ export const candidateApplications = pgTable("candidate_applications", {
   appliedAt: timestamp("applied_at").defaultNow().notNull(),
   coverLetter: text("cover_letter"),
   notes: text("notes"),
+  trackingToken: text("tracking_token").unique(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
   index("idx_applications_candidate").on(table.candidateId),
@@ -372,6 +373,8 @@ export const candidateOffers = pgTable("candidate_offers", {
   approvedBy: text("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
   approvalRemarks: text("approval_remarks"),
+  acceptanceToken: text("acceptance_token").unique(),
+  acceptanceTokenExpiresAt: timestamp("acceptance_token_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
