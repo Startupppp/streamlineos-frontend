@@ -479,3 +479,41 @@ export const interviewBookingLinksRelations = relations(interviewBookingLinks, (
   jobPosting: one(jobPostings, { fields: [interviewBookingLinks.jobPostingId], references: [jobPostings.id] }),
   creator: one(users, { fields: [interviewBookingLinks.createdBy], references: [users.id] }),
 }));
+
+export type PipelineTrigger =
+  | "STAGE_CHANGED"
+  | "INTERVIEW_RESULT_SET"
+  | "SLA_BREACHED"
+  | "OFFER_SENT"
+  | "OFFER_ACCEPTED"
+  | "OFFER_REJECTED"
+  | "SCORECARD_SUBMITTED";
+
+export type PipelineAction =
+  | "SEND_EMAIL"
+  | "MOVE_TO_STAGE"
+  | "CREATE_INTERVIEW"
+  | "SEND_NOTIFICATION"
+  | "NOTIFY_HIRING_MANAGER";
+
+export const pipelineAutomations = pgTable("pipeline_automations", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  trigger: text("trigger").$type<PipelineTrigger>().notNull(),
+  triggerConditions: jsonb("trigger_conditions").$type<Record<string, unknown>>().default({}),
+  action: text("action").$type<PipelineAction>().notNull(),
+  actionPayload: jsonb("action_payload").$type<Record<string, unknown>>().default({}),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_pipeline_automations_org").on(table.orgId),
+  index("idx_pipeline_automations_trigger").on(table.trigger),
+]);
+
+export const pipelineAutomationsRelations = relations(pipelineAutomations, ({ one }) => ({
+  organization: one(organizations, { fields: [pipelineAutomations.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [pipelineAutomations.createdBy], references: [users.id] }),
+}));

@@ -138,6 +138,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Diversity Report", icon: Users, href: "/hr/recruitment/diversity-report", requiredPermission: "hr:employees:create" },
           { label: "Interviewer Performance", icon: Star, href: "/hr/recruitment/interviewer-performance", requiredPermission: "hr:employees:create" },
           { label: "Booking Links", icon: Share2, href: "/hr/recruitment/booking-links", requiredPermission: "hr:employees:create" },
+          { label: "Automations", icon: Zap, href: "/hr/recruitment/automations", requiredPermission: "hr:employees:create" },
         ],
       },
     ],
