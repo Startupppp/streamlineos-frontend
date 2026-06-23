@@ -113,6 +113,7 @@ export interface Candidate {
   skills: string[] | null;
   source: string | null;
   sourceUrl: string | null;
+  location: string | null;
   status: CandidateStatus | null;
   notes: string | null;
   rating: number | null;

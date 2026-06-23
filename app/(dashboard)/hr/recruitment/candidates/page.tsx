@@ -214,7 +214,7 @@ export default function CandidatesPage() {
               <Button size="sm" variant="destructive" className="h-8 gap-1.5 text-xs" onClick={() => setBulkRejectOpen(true)}>
                 <XCircle className="h-3.5 w-3.5" /> Reject Selected
               </Button>
-              {selectedIds.size >= 2 && selectedIds.size <= 3 && (
+              {selectedIds.size >= 2 && selectedIds.size <= 4 && (
                 <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => setCompareOpen(true)}>
                   <GitCompare className="h-3.5 w-3.5" /> Compare
                 </Button>
