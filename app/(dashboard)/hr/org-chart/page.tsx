@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useHrOrgChart, useHrDepartments } from "@/lib/api/hooks/hr";
+import { useHrOrgChart } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -223,7 +223,6 @@ function TreeLegend() {
 
 export default function OrgChartPage() {
   const { data: rawNodes, isLoading } = useHrOrgChart();
-  const { data: departments } = useHrDepartments();
 
   const employees = useMemo<OrgChartNode[]>(() => {
     if (!Array.isArray(rawNodes)) return [];
@@ -253,21 +252,15 @@ export default function OrgChartPage() {
     });
   }, [tree]);
 
-  const deptMap = useMemo(() => {
-    const map = new Map<number, string>();
-    departments?.forEach((d) => map.set(d.id, d.name));
-    return map;
-  }, [departments]);
-
   const deptGroups = useMemo(() => {
     const groups = new Map<string, OrgChartNode[]>();
     for (const emp of employees) {
-      const name = emp.departmentId ? (deptMap.get(emp.departmentId) ?? "Other") : "Unassigned";
+      const name = emp.departmentName ?? (emp.departmentId ? "Other" : "Unassigned");
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name)!.push(emp);
     }
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [employees, deptMap]);
+  }, [employees]);
 
   if (isLoading) {
     return (

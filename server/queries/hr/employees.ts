@@ -274,11 +274,15 @@ function toTitleCase(str: string): string {
 }
 
 export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
-  const members = await db.query.organizationMembers.findMany({
-    where: eq(organizationMembers.orgId, orgId),
-    with: { user: true },
-  });
+  const [members, deptRows] = await Promise.all([
+    db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: { user: true },
+    }),
+    db.select({ id: departments.id, name: departments.name }).from(departments).where(eq(departments.orgId, orgId)),
+  ]);
 
+  const deptMap = new Map<number, string>(deptRows.map((d) => [d.id, d.name]));
   const seen = new Set<string>();
   const result: OrgChartNode[] = [];
 
@@ -294,6 +298,7 @@ export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
       designation: u.designation,
       image: u.image,
       departmentId: u.departmentId,
+      departmentName: u.departmentId ? (deptMap.get(u.departmentId) ?? null) : null,
       reportingTo: u.reportingTo,
     });
   }

@@ -26,7 +26,6 @@ export {
   sendExpenseRejectedEmail,
   sendExpensePaidEmail,
   sendDocumentExpiryReminderEmail,
-  sendPayslipGeneratedEmail,
   sendWeeklyAttendanceReportEmail,
   sendMonthlyExpenseReportEmail,
   sendResignationSubmittedEmail,

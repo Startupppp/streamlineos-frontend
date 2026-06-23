@@ -73,6 +73,7 @@ export interface OrgChartNode {
   designation: string | null;
   image: string | null;
   departmentId: number | null;
+  departmentName: string | null;
   reportingTo: string | null;
 }
 

@@ -31,6 +31,7 @@ interface WorkLogMonthGroupProps {
   searchTerm: string;
   logs: WorkLog[] | undefined;
   readOnly: boolean;
+  approvedLeaveDates?: Set<string>;
   currentUserId?: string;
   onSave: (date: string, content: string, workLink: string) => void;
   isSaving: boolean;
@@ -47,6 +48,7 @@ export function WorkLogMonthGroup({
   searchTerm,
   logs,
   readOnly,
+  approvedLeaveDates,
   currentUserId,
   onSave,
   isSaving,
@@ -93,6 +95,7 @@ export function WorkLogMonthGroup({
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
               const isOwnLog = !log?.userId || !currentUserId || log.userId === currentUserId;
+              const isLeaveDay = approvedLeaveDates?.has(dateStr) ?? false;
               return (
                 <WorkLogEntryRow
                   key={dateStr}
@@ -103,7 +106,7 @@ export function WorkLogMonthGroup({
                   onSave={(content, workLink) => onSave(dateStr, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
-                  readOnly={readOnly || !isOwnLog || !isToday(date)}
+                  readOnly={readOnly || !isOwnLog || !isToday(date) || isLeaveDay}
                   status={log?.status ?? undefined}
                 />
               );

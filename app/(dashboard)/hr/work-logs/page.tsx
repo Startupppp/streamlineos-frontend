@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
-import { useGetWorkLogs, useUpsertWorkLog } from "@/lib/api/hooks/hr";
+import { useGetWorkLogs, useUpsertWorkLog, useHrMyLeaveRequests } from "@/lib/api/hooks/hr";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -142,6 +142,22 @@ export default function WorkLogsPage() {
     });
   }, []);
 
+  const { data: myLeaveData } = useHrMyLeaveRequests();
+
+  const approvedLeaveDates = useMemo<Set<string>>(() => {
+    const dateSet = new Set<string>();
+    const requests = (myLeaveData as { requests?: { status: string; startDate: string; endDate: string }[] } | undefined)?.requests ?? [];
+    const today = new Date();
+    const todayStr = format(today, "yyyy-MM-dd");
+    for (const req of requests) {
+      if (req.status !== "APPROVED") continue;
+      if (req.startDate <= todayStr && req.endDate >= todayStr) {
+        dateSet.add(todayStr);
+      }
+    }
+    return dateSet;
+  }, [myLeaveData]);
+
   const { data: logs, isLoading } = useGetWorkLogs({
     year,
     quarter,
@@ -230,6 +246,14 @@ export default function WorkLogsPage() {
   }, [days, filterDay, searchTerm]);
 
   const handleExportWorkLogs = useCallback(async () => {
+    type LeaveRequest = { status: string; startDate: string; endDate: string; reason?: string | null; leaveType?: { name: string } | null };
+    const leaveRequests = ((myLeaveData as { requests?: LeaveRequest[] } | undefined)?.requests ?? []).filter(
+      (r): r is LeaveRequest => r.status === "APPROVED"
+    );
+
+    const getLeaveForDate = (dateStr: string): LeaveRequest | undefined =>
+      leaveRequests.find((r) => r.startDate <= dateStr && r.endDate >= dateStr);
+
     try {
       const ExcelJS = (await import("exceljs")).default;
       const workbook = new ExcelJS.Workbook();
@@ -243,12 +267,12 @@ export default function WorkLogsPage() {
       sheet.columns = [
         { header: "Date", key: "date", width: 15 },
         { header: "Day", key: "day", width: 12 },
+        { header: "Hours", key: "hours", width: 8 },
         { header: "Description", key: "description", width: 50 },
-        { header: "Status", key: "status", width: 12 },
+        { header: "Status", key: "status", width: 14 },
       ];
 
       const headerRow = sheet.getRow(1);
-      headerRow.font = { bold: true };
       headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
       headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
 
@@ -256,12 +280,20 @@ export default function WorkLogsPage() {
       for (const date of filteredDays) {
         const dateStr = format(date, "yyyy-MM-dd");
         const log = logs?.find((l) => l.date === dateStr);
-        sheet.addRow({
+        const leave = getLeaveForDate(dateStr);
+        const row = sheet.addRow({
           date: format(date, "dd MMM yyyy"),
           day: format(date, "EEEE"),
-          description: log?.description || "",
-          status: log?.status === "PENDING" ? "LOGGED" : (log?.status || (log?.description ? "LOGGED" : "")),
+          hours: log?.ticket ? "" : (log?.description ? "8" : (leave ? "" : "")),
+          description: leave
+            ? `On Leave — ${leave.leaveType?.name ?? "Leave"}${leave.reason ? `: ${leave.reason}` : ""}`
+            : (log?.description || ""),
+          status: leave ? "ON LEAVE" : (log?.status === "PENDING" ? "LOGGED" : (log?.status || (log?.description ? "LOGGED" : ""))),
         });
+        if (leave) {
+          row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
+          row.font = { color: { argb: "FF856404" } };
+        }
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -276,7 +308,7 @@ export default function WorkLogsPage() {
     } catch {
       toast.error("Failed to export work logs");
     }
-  }, [days, logs, selectedUserId, allEmployees, quarter, year, filterDay]);
+  }, [days, logs, myLeaveData, selectedUserId, allEmployees, quarter, year, filterDay]);
 
   const sharedFilterProps = {
     filters,
@@ -378,6 +410,7 @@ export default function WorkLogsPage() {
                   logs={logs}
                   currentUserId={session?.user?.id}
                   readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
+                  approvedLeaveDates={approvedLeaveDates}
                   onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
                   isSaving={upsertLog.isPending}
                 />
