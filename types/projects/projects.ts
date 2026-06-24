@@ -1,4 +1,12 @@
-import type { ProjectStatusValue, ViewLayoutType, IntakeStatus, IntakeSource, StateGroup, CycleStatus, ModuleStatus } from "./shared";
+import type {
+  ProjectStatusValue,
+  ViewLayoutType,
+  IntakeStatus,
+  IntakeSource,
+  StateGroup,
+  CycleStatus,
+  ModuleStatus,
+} from "./shared";
 import type { Ticket } from "./tasks";
 
 export interface ProjectSettings {
@@ -214,9 +222,9 @@ export interface CreateProjectInput {
   key?: string;
   managerId?: string;
   clientId?: string;
-  startDate?: Date | string;
-  endDate?: Date | string;
   memberIds?: string[];
+  endDate?: Date | string;
+  startDate?: Date | string;
   modules?: {
     sprints: boolean;
     epics: boolean;
