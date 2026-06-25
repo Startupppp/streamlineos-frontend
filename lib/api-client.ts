@@ -1,7 +1,40 @@
-const BASE_URL = "/api";
+const SAME_ORIGIN = "/api";
+const EXTERNAL_API = process.env.NEXT_PUBLIC_API_URL;
+
+let cachedToken: { value: string; expiresAt: number } | null = null;
+
+async function getBackendToken(): Promise<string | null> {
+  if (!EXTERNAL_API) return null;
+  const now = Date.now();
+  if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;
+  const res = await fetch(`${SAME_ORIGIN}/auth/backend-token`, { credentials: "include" });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { token: string; expiresIn: number };
+  cachedToken = { value: data.token, expiresAt: now + data.expiresIn * 1000 };
+  return data.token;
+}
+
+async function authedFetch(url: string, init: RequestInit): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (EXTERNAL_API) {
+    const token = await getBackendToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
+  let res = await fetch(url, { ...init, headers, credentials: "include" });
+  if (EXTERNAL_API && res.status === 401) {
+    cachedToken = null;
+    const token = await getBackendToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+      res = await fetch(url, { ...init, headers, credentials: "include" });
+    }
+  }
+  return res;
+}
 
 function buildUrl(path: string, params?: Record<string, unknown>): string {
-  const url = `${BASE_URL}${path}`;
+  const base = EXTERNAL_API ?? SAME_ORIGIN;
+  const url = `${base}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const search = new URLSearchParams(
     Object.entries(params)
@@ -26,18 +59,16 @@ async function parseResponse<T>(res: Response): Promise<T> {
 }
 
 async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
-  const res = await fetch(buildUrl(url, params), {
+  const res = await authedFetch(buildUrl(url, params), {
     method: "GET",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
   return parseResponse<T>(res);
 }
 
 async function post<T>(url: string, data?: unknown, config?: { headers?: Record<string, string> }): Promise<T> {
-  const res = await fetch(buildUrl(url), {
+  const res = await authedFetch(buildUrl(url), {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json", ...(config?.headers ?? {}) },
     body: data !== undefined ? JSON.stringify(data) : undefined,
   });
@@ -45,9 +76,8 @@ async function post<T>(url: string, data?: unknown, config?: { headers?: Record<
 }
 
 async function put<T>(url: string, data?: unknown): Promise<T> {
-  const res = await fetch(buildUrl(url), {
+  const res = await authedFetch(buildUrl(url), {
     method: "PUT",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: data !== undefined ? JSON.stringify(data) : undefined,
   });
@@ -55,9 +85,8 @@ async function put<T>(url: string, data?: unknown): Promise<T> {
 }
 
 async function patch<T>(url: string, data?: unknown): Promise<T> {
-  const res = await fetch(buildUrl(url), {
+  const res = await authedFetch(buildUrl(url), {
     method: "PATCH",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: data !== undefined ? JSON.stringify(data) : undefined,
   });
@@ -65,9 +94,8 @@ async function patch<T>(url: string, data?: unknown): Promise<T> {
 }
 
 async function del<T>(url: string, data?: unknown): Promise<T> {
-  const res = await fetch(buildUrl(url), {
+  const res = await authedFetch(buildUrl(url), {
     method: "DELETE",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: data !== undefined ? JSON.stringify(data) : undefined,
   });
@@ -75,18 +103,16 @@ async function del<T>(url: string, data?: unknown): Promise<T> {
 }
 
 async function upload<T>(url: string, formData: FormData): Promise<T> {
-  const res = await fetch(buildUrl(url), {
+  const res = await authedFetch(buildUrl(url), {
     method: "POST",
-    credentials: "include",
     body: formData,
   });
   return parseResponse<T>(res);
 }
 
 async function download(url: string, params?: Record<string, unknown>): Promise<Blob> {
-  const res = await fetch(buildUrl(url, params), {
+  const res = await authedFetch(buildUrl(url, params), {
     method: "GET",
-    credentials: "include",
   });
   if (!res.ok) {
     let message = `${res.status} ${res.statusText}`;
