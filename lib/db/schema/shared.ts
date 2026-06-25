@@ -255,10 +255,13 @@ export const userCalendarConnections = pgTable("user_calendar_connections", {
   refreshToken: text("refresh_token"),
   expiresAt: timestamp("expires_at"),
   providerEmail: text("provider_email"),
+  isPrimary: boolean("is_primary").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => [
-  unique("uq_calendar_connections_user_provider").on(table.userId, table.provider),
+  unique("uq_calendar_connections_user_account")
+    .on(table.userId, table.provider, table.providerEmail)
+    .nullsNotDistinct(),
   index("idx_calendar_connections_user").on(table.userId),
 ]);
 

@@ -1,7 +1,9 @@
 import { db } from "@/lib/db";
 import { userCalendarConnections } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import type { CalendarProvider } from "@/lib/db/schema";
+
+type CalendarConnectionRow = typeof userCalendarConnections.$inferSelect;
 
 interface TokenResponse {
   access_token: string;
@@ -13,11 +15,6 @@ interface TokenResponse {
 interface BusySlot {
   start: string;
   end: string;
-}
-
-interface FreeBusyResult {
-  userId: string;
-  busy: BusySlot[];
 }
 
 interface CalendarEventPayload {
@@ -61,15 +58,7 @@ async function refreshMicrosoftToken(refreshToken: string): Promise<TokenRespons
   return res.json() as Promise<TokenResponse>;
 }
 
-async function getValidAccessToken(userId: string, provider: CalendarProvider): Promise<string | null> {
-  const conn = await db.query.userCalendarConnections.findFirst({
-    where: and(
-      eq(userCalendarConnections.userId, userId),
-      eq(userCalendarConnections.provider, provider)
-    ),
-  });
-  if (!conn) return null;
-
+async function getValidTokenForConnection(conn: CalendarConnectionRow): Promise<string | null> {
   const isExpired = conn.expiresAt && conn.expiresAt < new Date();
   if (!isExpired) return conn.accessToken;
 
@@ -77,7 +66,7 @@ async function getValidAccessToken(userId: string, provider: CalendarProvider): 
 
   try {
     const tokens =
-      provider === "GOOGLE"
+      conn.provider === "GOOGLE"
         ? await refreshGoogleToken(conn.refreshToken)
         : await refreshMicrosoftToken(conn.refreshToken);
 
@@ -100,100 +89,237 @@ async function getValidAccessToken(userId: string, provider: CalendarProvider): 
   }
 }
 
+async function fetchProviderBusy(
+  provider: CalendarProvider,
+  token: string,
+  timeMin: Date,
+  timeMax: Date
+): Promise<BusySlot[]> {
+  if (provider === "GOOGLE") {
+    const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString(),
+        items: [{ id: "primary" }],
+      }),
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { calendars: Record<string, { busy: BusySlot[] }> };
+    return data.calendars?.primary?.busy ?? [];
+  }
+
+  const res = await fetch("https://graph.microsoft.com/v1.0/me/calendarView/delta", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Prefer: `outlook.timezone="UTC"`,
+    },
+  });
+  if (!res.ok) return [];
+  const data = (await res.json()) as {
+    value: { start: { dateTime: string }; end: { dateTime: string } }[];
+  };
+  return (data.value ?? []).map((e) => ({ start: e.start.dateTime, end: e.end.dateTime }));
+}
+
+async function pushProviderEvent(
+  provider: CalendarProvider,
+  token: string,
+  payload: CalendarEventPayload
+): Promise<void> {
+  if (provider === "GOOGLE") {
+    await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        summary: payload.summary,
+        description: [payload.description, payload.conferenceLink].filter(Boolean).join("\n\n"),
+        location: payload.location,
+        start: { dateTime: payload.startDateTime, timeZone: "UTC" },
+        end: { dateTime: payload.endDateTime, timeZone: "UTC" },
+        attendees: payload.attendeeEmails.map((email) => ({ email })),
+        sendNotifications: true,
+      }),
+    });
+    return;
+  }
+
+  await fetch("https://graph.microsoft.com/v1.0/me/events", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subject: payload.summary,
+      body: {
+        contentType: "text",
+        content: [payload.description, payload.conferenceLink].filter(Boolean).join("\n\n"),
+      },
+      location: { displayName: payload.location ?? "" },
+      start: { dateTime: payload.startDateTime, timeZone: "UTC" },
+      end: { dateTime: payload.endDateTime, timeZone: "UTC" },
+      attendees: payload.attendeeEmails.map((email) => ({
+        emailAddress: { address: email },
+        type: "required",
+      })),
+      isOnlineMeeting: Boolean(payload.conferenceLink),
+    }),
+  });
+}
+
 export async function getFreeBusy(
   userId: string,
   timeMin: Date,
   timeMax: Date
 ): Promise<BusySlot[]> {
-  for (const provider of ["GOOGLE", "MICROSOFT"] as CalendarProvider[]) {
-    const token = await getValidAccessToken(userId, provider);
+  const connections = await db
+    .select()
+    .from(userCalendarConnections)
+    .where(eq(userCalendarConnections.userId, userId));
+
+  const busy: BusySlot[] = [];
+  for (const conn of connections) {
+    const token = await getValidTokenForConnection(conn);
     if (!token) continue;
-
     try {
-      if (provider === "GOOGLE") {
-        const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            timeMin: timeMin.toISOString(),
-            timeMax: timeMax.toISOString(),
-            items: [{ id: "primary" }],
-          }),
-        });
-        if (!res.ok) continue;
-        const data = await res.json() as { calendars: Record<string, { busy: BusySlot[] }> };
-        return data.calendars?.primary?.busy ?? [];
-      }
-
-      if (provider === "MICROSOFT") {
-        const res = await fetch("https://graph.microsoft.com/v1.0/me/calendarView/delta", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Prefer: `outlook.timezone="UTC"`,
-          },
-        });
-        if (!res.ok) continue;
-        const data = await res.json() as { value: { start: { dateTime: string }; end: { dateTime: string } }[] };
-        return (data.value ?? []).map((e) => ({ start: e.start.dateTime, end: e.end.dateTime }));
-      }
+      const slots = await fetchProviderBusy(conn.provider, token, timeMin, timeMax);
+      busy.push(...slots);
     } catch {
       continue;
     }
   }
 
-  return [];
+  return busy;
 }
 
 export async function createCalendarEvent(
   organizerId: string,
   payload: CalendarEventPayload
 ): Promise<void> {
-  for (const provider of ["GOOGLE", "MICROSOFT"] as CalendarProvider[]) {
-    const token = await getValidAccessToken(organizerId, provider);
-    if (!token) continue;
+  const connections = await db
+    .select()
+    .from(userCalendarConnections)
+    .where(eq(userCalendarConnections.userId, organizerId))
+    .orderBy(desc(userCalendarConnections.isPrimary), userCalendarConnections.id);
 
-    try {
-      if (provider === "GOOGLE") {
-        await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            summary: payload.summary,
-            description: [payload.description, payload.conferenceLink].filter(Boolean).join("\n\n"),
-            location: payload.location,
-            start: { dateTime: payload.startDateTime, timeZone: "UTC" },
-            end: { dateTime: payload.endDateTime, timeZone: "UTC" },
-            attendees: payload.attendeeEmails.map((email) => ({ email })),
-            sendNotifications: true,
-          }),
-        });
-        return;
-      }
+  const connection = connections.find((c) => c.isPrimary) ?? connections[0];
+  if (!connection) return;
 
-      if (provider === "MICROSOFT") {
-        await fetch("https://graph.microsoft.com/v1.0/me/events", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            subject: payload.summary,
-            body: { contentType: "text", content: [payload.description, payload.conferenceLink].filter(Boolean).join("\n\n") },
-            location: { displayName: payload.location ?? "" },
-            start: { dateTime: payload.startDateTime, timeZone: "UTC" },
-            end: { dateTime: payload.endDateTime, timeZone: "UTC" },
-            attendees: payload.attendeeEmails.map((email) => ({
-              emailAddress: { address: email },
-              type: "required",
-            })),
-            isOnlineMeeting: Boolean(payload.conferenceLink),
-          }),
-        });
-        return;
-      }
-    } catch {
-      continue;
+  const token = await getValidTokenForConnection(connection);
+  if (!token) return;
+
+  try {
+    await pushProviderEvent(connection.provider, token, payload);
+  } catch {
+    return;
+  }
+}
+
+export async function upsertCalendarConnection(params: {
+  userId: string;
+  provider: CalendarProvider;
+  tokens: TokenResponse;
+  email: string;
+}): Promise<void> {
+  const { userId, provider, tokens, email } = params;
+  const expiresAt = tokens.expires_in
+    ? new Date(Date.now() + tokens.expires_in * 1000)
+    : undefined;
+
+  const existing = await db
+    .select({ id: userCalendarConnections.id })
+    .from(userCalendarConnections)
+    .where(eq(userCalendarConnections.userId, userId));
+
+  await db
+    .insert(userCalendarConnections)
+    .values({
+      userId,
+      provider,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt,
+      providerEmail: email,
+      isPrimary: existing.length === 0,
+    })
+    .onConflictDoUpdate({
+      target: [
+        userCalendarConnections.userId,
+        userCalendarConnections.provider,
+        userCalendarConnections.providerEmail,
+      ],
+      set: {
+        accessToken: tokens.access_token,
+        ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
+        ...(expiresAt ? { expiresAt } : {}),
+      },
+    });
+}
+
+export async function disconnectCalendarConnection(
+  userId: string,
+  connectionId: number
+): Promise<boolean> {
+  const [connection] = await db
+    .select({ id: userCalendarConnections.id, isPrimary: userCalendarConnections.isPrimary })
+    .from(userCalendarConnections)
+    .where(
+      and(
+        eq(userCalendarConnections.id, connectionId),
+        eq(userCalendarConnections.userId, userId)
+      )
+    )
+    .limit(1);
+  if (!connection) return false;
+
+  await db.delete(userCalendarConnections).where(eq(userCalendarConnections.id, connectionId));
+
+  if (connection.isPrimary) {
+    const [next] = await db
+      .select({ id: userCalendarConnections.id })
+      .from(userCalendarConnections)
+      .where(eq(userCalendarConnections.userId, userId))
+      .orderBy(desc(userCalendarConnections.id))
+      .limit(1);
+    if (next) {
+      await db
+        .update(userCalendarConnections)
+        .set({ isPrimary: true })
+        .where(eq(userCalendarConnections.id, next.id));
     }
   }
+
+  return true;
+}
+
+export async function setPrimaryCalendar(
+  userId: string,
+  connectionId: number
+): Promise<boolean> {
+  const [connection] = await db
+    .select({ id: userCalendarConnections.id })
+    .from(userCalendarConnections)
+    .where(
+      and(
+        eq(userCalendarConnections.id, connectionId),
+        eq(userCalendarConnections.userId, userId)
+      )
+    )
+    .limit(1);
+  if (!connection) return false;
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(userCalendarConnections)
+      .set({ isPrimary: false })
+      .where(eq(userCalendarConnections.userId, userId));
+    await tx
+      .update(userCalendarConnections)
+      .set({ isPrimary: true })
+      .where(eq(userCalendarConnections.id, connectionId));
+  });
+
+  return true;
 }
 
 export async function getConnectedCalendars(userId: string) {
@@ -202,11 +328,13 @@ export async function getConnectedCalendars(userId: string) {
       id: userCalendarConnections.id,
       provider: userCalendarConnections.provider,
       providerEmail: userCalendarConnections.providerEmail,
+      isPrimary: userCalendarConnections.isPrimary,
       expiresAt: userCalendarConnections.expiresAt,
       updatedAt: userCalendarConnections.updatedAt,
     })
     .from(userCalendarConnections)
-    .where(eq(userCalendarConnections.userId, userId));
+    .where(eq(userCalendarConnections.userId, userId))
+    .orderBy(desc(userCalendarConnections.isPrimary), userCalendarConnections.id);
 }
 
 export function buildGoogleAuthUrl(state: string): string {

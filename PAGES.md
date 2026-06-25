@@ -237,6 +237,7 @@ Ordered money-path first. Check off each page after fixing.
 - [ ] `/settings/email-templates` — Email templates
 - [ ] `/settings/custom-fields` — Custom fields
 - [ ] `/settings/integrations/recruitment` — Integrations
+- [x] `/settings/integrations/calendar` — Calendar integration — multi-account connect (multiple Google/Microsoft accounts), default-calendar selection, per-account disconnect; free/busy unioned across all calendars
 - [ ] `/settings/data-hub` — Data hub
 - [ ] `/settings/ai` — AI settings
 
