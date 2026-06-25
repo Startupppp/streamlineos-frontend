@@ -13,7 +13,7 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: "Backend token not configured" }, { status: 503 });
   }
 
-  const branchId = (session as { branchId?: number | null }).branchId ?? null;
+  const branchId = session.branchId ?? null;
   const token = await new SignJWT({
     orgId: session.orgId,
     branchId,
@@ -23,7 +23,7 @@ export async function GET(): Promise<NextResponse> {
     plan: session.plan ?? null,
     isPlatformAdmin: session.user.isPlatformAdmin === true,
     isOrgOwner: session.user.isOrgOwner === true,
-    sessionId: (session as { sessionId?: string }).sessionId ?? "",
+    sessionId: session.sessionId ?? "",
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(session.user.id)

@@ -362,6 +362,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
       }
       session.orgId = token.orgId ?? null;
+      session.branchId = token.branchId ?? null;
       session.sessionId = token.sessionId;
       session.plan = token.plan ?? null;
       session.permissions = token.permissions ?? [];

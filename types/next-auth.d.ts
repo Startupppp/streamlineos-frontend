@@ -5,6 +5,7 @@ import type { Plan } from "@/lib/billing/feature-gates";
 declare module "next-auth" {
   interface Session {
     orgId?: string | null;
+    branchId?: number | null;
     sessionId?: string;
     plan?: Plan | null;
     permissions?: string[];
