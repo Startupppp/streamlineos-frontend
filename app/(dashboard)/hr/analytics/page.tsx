@@ -145,7 +145,7 @@ function AnalyticsContent() {
         <DateRangeSelector value={dateRange} onChange={setDateRange} />
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         <ExecutiveKPIs
           totalEmployees={totalEmployees}
           attritionRate={attritionRate}
@@ -156,13 +156,21 @@ function AnalyticsContent() {
 
         <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
 
-        <RecruitmentSection isLoading={isRecruitmentLoading} />
+        <div className="border-t border-border/60 pt-2">
+          <RecruitmentSection isLoading={isRecruitmentLoading} />
+        </div>
 
-        <AttendanceSection year={analyticsYear} month={analyticsMonth} />
+        <div className="border-t border-border/60 pt-2">
+          <AttendanceSection year={analyticsYear} month={analyticsMonth} />
+        </div>
 
-        <LeaveSection year={analyticsYear} />
+        <div className="border-t border-border/60 pt-2">
+          <LeaveSection year={analyticsYear} />
+        </div>
 
-        <AttritionSection isLoading={isAttritionLoading} />
+        <div className="border-t border-border/60 pt-2">
+          <AttritionSection isLoading={isAttritionLoading} />
+        </div>
       </div>
     </PageWrapper>
   );
