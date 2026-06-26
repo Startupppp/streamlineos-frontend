@@ -28,11 +28,16 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
         <CardContent className="p-6 space-y-4">
           <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-2.5 w-full rounded-full" />
+          <div className="grid grid-cols-3 gap-2">
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
+          </div>
+          <Skeleton className="h-9 w-full rounded-lg" />
         </CardContent>
       </Card>
     );
@@ -41,18 +46,22 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
   const usedPercent = (stats.approved / WFH_MONTHLY_QUOTA) * 100;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Home className="h-5 w-5 text-blue-600" />
+    <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
+      <CardHeader className="pb-3 pt-5">
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
+            <Home className="h-4 w-4 text-violet-600" />
+          </div>
           WFH Balance
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pb-5">
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Monthly Quota</span>
-            <span className="font-semibold">{stats.approved} / {WFH_MONTHLY_QUOTA}</span>
+          <div className="flex justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <span>Monthly Quota</span>
+            <span className="text-foreground normal-case text-sm font-semibold tracking-normal">
+              {stats.approved} / {WFH_MONTHLY_QUOTA}
+            </span>
           </div>
           <Progress
             value={usedPercent}
@@ -61,31 +70,31 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           />
         </div>
 
-        <p className="text-sm text-muted-foreground text-center">
-          Remaining Balance:{" "}
-          <span className="font-semibold text-foreground">{stats.remaining} Days</span>
-          {" "}/ Year
-        </p>
-
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{stats.remaining}</p>
-            <p className="text-xs text-muted-foreground">Remaining</p>
+          <div className="rounded-xl bg-emerald-100 dark:bg-emerald-950/40 p-3 text-center">
+            <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400 leading-none mb-1">
+              {stats.remaining}
+            </p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Left</p>
           </div>
-          <div className="rounded-lg bg-blue-500/10 p-3 text-center">
-            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.approved}</p>
-            <p className="text-xs text-muted-foreground">Approved</p>
+          <div className="rounded-xl bg-violet-100 dark:bg-violet-950/40 p-3 text-center">
+            <p className="text-3xl font-bold tabular-nums text-violet-700 dark:text-violet-400 leading-none mb-1">
+              {stats.approved}
+            </p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Used</p>
           </div>
-          <div className="rounded-lg bg-amber-500/10 p-3 text-center">
-            <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
-            <p className="text-xs text-muted-foreground">Pending</p>
+          <div className="rounded-xl bg-amber-100 dark:bg-amber-950/40 p-3 text-center">
+            <p className="text-3xl font-bold tabular-nums text-amber-700 dark:text-amber-400 leading-none mb-1">
+              {stats.pending}
+            </p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pending</p>
           </div>
         </div>
 
         <RequestWfhDialog
           trigger={
-            <Button className="w-full" variant="outline">
-              <Home className="h-4 w-4 mr-2" />
+            <Button className="w-full gap-1.5 h-9 duration-200" variant="outline">
+              <Home className="h-4 w-4" />
               Apply for WFH
             </Button>
           }
