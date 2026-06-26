@@ -154,47 +154,95 @@ export function GoalsTab() {
   const goalsList = Array.isArray(goals) ? goals : [];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{goalsList.length} goals</p>
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5 mr-1" />New Goal
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Goals</p>
+          <p className="text-3xl font-bold tabular-nums text-foreground">{goalsList.length}</p>
+        </div>
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" />New Goal
         </Button>
       </div>
 
       {goalsList.length === 0 ? (
-        <EmptyState icon={Target} title="No goals set yet" compact />
+        <EmptyState illustration={<Target className="h-8 w-8 text-muted-foreground" />} title="No goals set yet" compact />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {goalsList.map((goal: Goal) => (
-            <Card key={goal.id}>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <Badge variant={goal.status === "COMPLETED" ? "default" : "secondary"} className="text-[10px]">
-                    {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleOpenEdit(goal)}><Pencil className="h-3.5 w-3.5 mr-1.5" />Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, (goal.progress ?? 0) + 10)}>+10% Progress</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, 100)}>Mark Complete</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(goal.id)}><Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <p className="text-sm font-semibold leading-tight">{goal.title}</p>
-                {goal.endDate && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" />Due {format(new Date(goal.endDate), "MMM d, yyyy")}</p>}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium">{goal.progress ?? 0}%</span>
+          {goalsList.map((goal: Goal) => {
+            const progress = goal.progress ?? 0;
+            const isCompleted = goal.status === "COMPLETED" || progress >= 100;
+            const accentClass = isCompleted
+              ? "border-l-emerald-500"
+              : progress > 0
+              ? "border-l-blue-500"
+              : "border-l-slate-300 dark:border-l-slate-600";
+            const statusBadgeClass = isCompleted
+              ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+              : goal.status === "IN_PROGRESS"
+              ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+              : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+
+            return (
+              <Card
+                key={goal.id}
+                className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+              >
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
+                      {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleOpenEdit(goal)}>
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, (goal.progress ?? 0) + 10)}>
+                          +10% Progress
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleProgressUpdate(goal.id, 100)}>
+                          Mark Complete
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(goal.id)}>
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <Progress value={goal.progress ?? 0} className="h-1.5" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <p className="text-sm font-semibold text-foreground leading-tight">{goal.title}</p>
+                  {goal.endDate && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-5 w-5 rounded-md bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+                        <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        Due {format(new Date(goal.endDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Progress</span>
+                      <span className="text-[10px] font-bold text-foreground">{progress}%</span>
+                    </div>
+                    <Progress
+                      value={progress}
+                      className={cn(
+                        "h-1.5",
+                        isCompleted ? "[&>div]:bg-emerald-500" : "[&>div]:bg-blue-500"
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

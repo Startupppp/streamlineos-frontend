@@ -180,18 +180,18 @@ export function ReviewsTab() {
     : reviewsList.filter((r: PerformanceReview) => (r.status ?? "DRAFT") === statusFilter);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-          <TabsList className="h-7">
+          <TabsList className="h-7 bg-muted/50">
             <TabsTrigger value="all" className="text-[11px] px-3 h-6">All ({reviewsList.length})</TabsTrigger>
             <TabsTrigger value="DRAFT" className="text-[11px] px-3 h-6">Draft</TabsTrigger>
             <TabsTrigger value="IN_PROGRESS" className="text-[11px] px-3 h-6">In Progress</TabsTrigger>
             <TabsTrigger value="COMPLETED" className="text-[11px] px-3 h-6">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button size="sm" onClick={handleOpenSheet}>
-          <Plus className="h-3.5 w-3.5 mr-1" />New Review
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" />New Review
         </Button>
       </div>
 
@@ -204,51 +204,86 @@ export function ReviewsTab() {
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredReviews.map((review: PerformanceReview) => (
-            <Card key={review.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant={review.status === "COMPLETED" ? "default" : review.status === "IN_PROGRESS" ? "secondary" : "outline"} className="text-[10px]">
-                    {review.status ?? "DRAFT"}
-                  </Badge>
-                  <div className="flex items-center gap-1">
-                    {review.overallRating && (
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-3 w-3 fill-current" />
-                        <span className="text-xs font-bold">{Number(review.overallRating).toFixed(1)}</span>
-                      </div>
-                    )}
-                    {review.status !== "COMPLETED" && (
-                      <>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleOpenEdit(review)}>
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(review.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </>
-                    )}
+          {filteredReviews.map((review: PerformanceReview) => {
+            const accentClass =
+              review.status === "COMPLETED"
+                ? "border-l-emerald-500"
+                : review.status === "IN_PROGRESS"
+                ? "border-l-blue-500"
+                : review.status === "ARCHIVED"
+                ? "border-l-slate-400"
+                : "border-l-amber-400";
+            const statusBadgeClass =
+              review.status === "COMPLETED"
+                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                : review.status === "IN_PROGRESS"
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                : review.status === "ARCHIVED"
+                ? "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+
+            return (
+              <Card
+                key={review.id}
+                className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+              >
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBadgeClass}`}>
+                      {review.status ?? "DRAFT"}
+                    </Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {review.overallRating && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                          <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            {Number(review.overallRating).toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                      {review.status !== "COMPLETED" && (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors duration-200" onClick={() => handleOpenEdit(review)}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors duration-200" onClick={() => setDeleteId(review.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
-                    <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{review.user?.name?.[0] ?? "?"}</AvatarFallback>
-                  </Avatar>
-                  <p className="text-sm font-medium truncate">{review.user?.name ?? "Employee"}</p>
-                </div>
-                <p className="text-[10px] text-muted-foreground mb-2">
-                  {review.periodStart} → {review.periodEnd}
-                  {review.reviewer?.name && <> &middot; by {review.reviewer.name}</>}
-                </p>
-                {review.status !== "COMPLETED" && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs w-full" onClick={() => handleComplete(review.id)}>
-                    <CheckCircle2 className="h-3 w-3 mr-1" />Mark Complete
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7 shrink-0">
+                      <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
+                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                        {review.user?.name?.[0] ?? "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{review.user?.name ?? "Employee"}</p>
+                      {review.reviewer?.name && (
+                        <p className="text-[10px] text-muted-foreground truncate">by {review.reviewer.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    {review.periodStart} → {review.periodEnd}
+                  </p>
+                  {review.status !== "COMPLETED" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs w-full border border-border/60 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400 transition-colors duration-200"
+                      onClick={() => handleComplete(review.id)}
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1.5" />Mark Complete
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
