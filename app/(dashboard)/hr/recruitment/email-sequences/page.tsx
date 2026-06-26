@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -296,11 +297,7 @@ export default function EmailSequencesPage() {
     <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns to nurture candidates at each pipeline stage." actions={pageActions}>
       {sequences.length === 0 ? (
         <EmptyState
-          illustration={
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          }
+          illustration={<EmptyMailIllustration />}
           title="No email sequences"
           description="Create your first drip campaign to automatically follow up with candidates."
           action={{ label: "New Sequence", onClick: () => setIsCreateOpen(true) }}

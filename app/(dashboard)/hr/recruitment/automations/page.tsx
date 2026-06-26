@@ -18,6 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -155,6 +156,7 @@ export default function RecruitmentAutomationsPage() {
         <LoadingState variant="list" rows={3} />
       ) : !automations?.length ? (
         <EmptyState
+          illustration={<EmptyActivityIllustration />}
           title="No automations yet"
           description="Create automations to trigger actions when pipeline events occur."
           action={{ label: "New Automation", onClick: () => setSheetOpen(true) }}

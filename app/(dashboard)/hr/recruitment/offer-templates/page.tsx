@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -236,11 +237,7 @@ export default function OfferTemplatesPage() {
     >
       {templates.length === 0 ? (
         <EmptyState
-          illustration={
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          }
+          illustration={<EmptyDocumentsIllustration />}
           title="No offer templates"
           description="Create a reusable offer letter template to speed up your hiring process."
           action={{ label: "New Template", onClick: () => setIsCreateOpen(true) }}

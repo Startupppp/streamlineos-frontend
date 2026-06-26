@@ -19,6 +19,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
   useCandidateOffers,
@@ -214,7 +215,7 @@ export function OffersTab({ candidateId }: Props) {
       {isLoading ? (
         <LoadingState variant="list" rows={2} />
       ) : !offers?.length ? (
-        <EmptyState title="No offers created yet" compact />
+        <EmptyState illustration={<EmptyDocumentsIllustration />} title="No offers created yet" compact />
       ) : (
         <div className="space-y-3">
           {offers.map((offer) => {
