@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useTicketActivity,
   type TicketActivityAction,
@@ -98,7 +99,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
         </p>
       ) : !data || data.length === 0 ? (
         <EmptyState
-          icon={History}
+          illustration={<EmptyActivityIllustration />}
           title="No activity yet"
           description="Changes to this ticket will appear here."
           compact

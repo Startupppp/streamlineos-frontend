@@ -33,6 +33,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -42,7 +43,6 @@ import {
   Circle,
   Type,
   Save,
-  PenTool,
 } from "lucide-react";
 import {
   useWhiteboards,
@@ -604,7 +604,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
       ) : !boards || boards.length === 0 ? (
         <div className="flex flex-1">
           <EmptyState
-            icon={PenTool}
+            illustration={<EmptyUploadIllustration />}
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with notes and shapes."
             action={{ label: "New Board", onClick: handleOpenCreate }}
@@ -656,7 +656,7 @@ export default function WhiteboardPage({ params }: { params: Promise<{ projectId
             ) : (
               <div className="flex flex-1 items-center justify-center">
                 <EmptyState
-                  icon={PenTool}
+                  illustration={<EmptyUploadIllustration />}
                   title="Select a board"
                   description="Choose a board from the list to start editing."
                   compact

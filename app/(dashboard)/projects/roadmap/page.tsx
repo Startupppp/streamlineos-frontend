@@ -9,7 +9,6 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
-  Map as MapIcon,
   MessageSquare,
   Megaphone,
   ArrowBigUp,
@@ -56,6 +55,11 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  EmptyProjectsIllustration,
+  EmptyMailIllustration,
+  EmptyTicketIllustration,
+} from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   useRoadmapItems,
@@ -353,7 +357,7 @@ function RoadmapTab({ search }: { search: string }) {
 
       {total === 0 ? (
         <EmptyState
-          icon={MapIcon}
+          illustration={<EmptyProjectsIllustration />}
           title="No roadmap items yet"
           description="Plan what's coming and share it publicly with your users."
           action={{ label: "Add roadmap item", onClick: () => setSheetOpen(true) }}
@@ -548,7 +552,7 @@ function FeedbackTab({ search }: { search: string }) {
   if (!data || data.length === 0) {
     return (
       <EmptyState
-        icon={MessageSquare}
+        illustration={<EmptyMailIllustration />}
         title="No feedback yet"
         description="Feedback submitted from your public board will appear here, sorted by votes."
         className="flex-1"
@@ -761,7 +765,7 @@ function ChangelogTab() {
 
       {!data || data.length === 0 ? (
         <EmptyState
-          icon={Megaphone}
+          illustration={<EmptyTicketIllustration />}
           title="No changelog entries yet"
           description="Announce shipped features, improvements and fixes to your users."
           action={{ label: "Add entry", onClick: () => setSheetOpen(true) }}

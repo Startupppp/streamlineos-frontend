@@ -15,6 +15,10 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  EmptyLeaderboardIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
+import {
   BarChart,
   Bar,
   AreaChart,
@@ -106,7 +110,7 @@ function VelocitySection({ projectId }: { projectId: number }) {
         />
       ) : chartData.length === 0 ? (
         <EmptyState
-          icon={Gauge}
+          illustration={<EmptyLeaderboardIllustration />}
           title="No sprint data yet"
           description="Velocity appears once you have active or completed sprints with estimated work."
           compact
@@ -186,7 +190,7 @@ function BurnupSection({ projectId }: { projectId: number }) {
         />
       ) : sprints.length === 0 || chartData.length === 0 ? (
         <EmptyState
-          icon={TrendingUp}
+          illustration={<EmptyLeaderboardIllustration />}
           title="No sprint to chart"
           description="Burnup tracks completed work against scope across a sprint's date range."
           compact
@@ -294,7 +298,7 @@ function CfdSection({ projectId }: { projectId: number }) {
         />
       ) : chartData.length === 0 ? (
         <EmptyState
-          icon={Layers}
+          illustration={<EmptyLeaderboardIllustration />}
           title="No flow history yet"
           description="The cumulative flow diagram accrues one data point per day. Capture today's snapshot to start building history."
           action={{ label: capture.isPending ? "Capturing…" : "Capture today's snapshot", onClick: handleCapture }}
@@ -350,7 +354,7 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
         />
       ) : chain.length === 0 ? (
         <EmptyState
-          icon={Route}
+          illustration={<EmptySearchIllustration />}
           title="No dependency chain yet"
           description="Add 'blocks' relations between tickets to compute the critical path."
           compact
