@@ -8,7 +8,7 @@ import {
   Shield,
   Sparkles,
   Briefcase,
-  Mail,
+  Headphones,
   Wallet,
   ClipboardList,
   type LucideIcon,
@@ -107,11 +107,11 @@ export const modules: Module[] = [
     accent: "from-indigo-500/15 to-cyan-500/5",
   },
   {
-    icon: Mail,
-    title: "Marketing & Outreach",
+    icon: Headphones,
+    title: "Support & Knowledge",
     description:
-      "Email templates, landing pages, social analytics, and content briefs — marketing in the same workspace.",
-    tags: ["Email", "Landing", "Social"],
+      "Helpdesk tickets, canned responses, routing rules, and a searchable knowledge base — support in the same workspace.",
+    tags: ["Helpdesk", "KB", "Macros"],
     accent: "from-blue-500/15 to-cyan-500/5",
   },
   {
@@ -125,7 +125,7 @@ export const modules: Module[] = [
 ];
 
 export const stats = [
-  { value: 30, suffix: "+", label: "Core modules" },
+  { value: 22, suffix: "+", label: "Integrated apps" },
   { value: 99.99, suffix: "%", label: "Uptime SLA", decimals: 2 },
   { value: 100, suffix: "ms", label: "Realtime delivery", prefix: "<" },
   { value: 14, suffix: " min", label: "To get started" },
