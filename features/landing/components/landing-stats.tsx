@@ -8,7 +8,13 @@ export function LandingStats() {
   return (
     <section className="relative py-12 lg:py-16">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="relative rounded-2xl glass-panel-strong overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
+          className="relative rounded-2xl glass-panel-strong overflow-hidden"
+        >
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[260px] w-[700px] rounded-full bg-blue-400/15 blur-[100px] pointer-events-none" />
           <div className="relative grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-200/70">
             {stats.map((stat, i) => (
@@ -34,7 +40,7 @@ export function LandingStats() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

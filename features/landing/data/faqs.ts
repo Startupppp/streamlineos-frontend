@@ -12,7 +12,7 @@ export const faqs: FAQ[] = [
   {
     question: "Can I use only the modules I need?",
     answer:
-      "Yes. HR, Projects, CRM, Chat, Calendar, Analytics, Recruitment, and Marketing are all opt-in. Turn on what you need today; enable the rest from settings when you're ready. Permissions follow modules — users only see what their role unlocks.",
+      "Yes. HR, Projects, CRM, Chat, Calendar, Analytics, Recruitment, Accounting, and Support are all opt-in. Turn on what you need today; enable the rest from settings when you're ready. Permissions follow modules — users only see what their role unlocks.",
   },
   {
     question: "Is StreamlineOS suitable for multiple legal entities?",

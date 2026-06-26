@@ -38,16 +38,13 @@ export function LandingCTA() {
               </div>
 
               <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] leading-[0.98] text-white mb-5">
-                Run your company
+                Unleash your
                 <br />
-                <span className="text-cyan-300">
-                  on one OS.
-                </span>
+                <span className="text-cyan-300">growth potential.</span>
               </h2>
 
               <p className="text-slate-400 text-base lg:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-                30 minutes to set up. Zero credit card. Cancel whenever — but
-                you probably won&apos;t.
+                Start now — it&apos;s free. No credit card required. Instant access.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -57,7 +54,7 @@ export function LandingCTA() {
                       size="lg"
                       className="bg-white text-slate-900 hover:bg-slate-100 font-bold border-0 h-12 px-8 text-[15px]"
                     >
-                      Start for free
+                      Start now — it&apos;s free
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>

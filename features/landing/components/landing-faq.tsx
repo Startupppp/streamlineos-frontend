@@ -46,15 +46,17 @@ export function LandingFAQ() {
                   <span className="font-display text-base font-semibold text-slate-900">
                     {f.question}
                   </span>
-                  <span
-                    className={`h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  <motion.span
+                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
+                    className={`h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0 ${
                       isOpen
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white rotate-45 shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
+                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.5)]"
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                  </span>
+                  </motion.span>
                 </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (
