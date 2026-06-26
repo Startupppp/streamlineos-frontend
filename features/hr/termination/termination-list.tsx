@@ -80,11 +80,11 @@ function TerminationCard({
   const extraCount = reasonsList.length - 2;
 
   return (
-    <Card>
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-rose-500">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            <AvatarFallback className="text-xs font-semibold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400">
               {getInitials(employee?.name ?? null)}
             </AvatarFallback>
           </Avatar>
@@ -94,7 +94,10 @@ function TerminationCard({
               <p className="text-sm font-semibold truncate">{employee?.name ?? "Employee"}</p>
               <StatusBadge status={status} label={statusLabel(status)} className="text-[10px] shrink-0" />
               {emailStatus === "failed" && (
-                <Badge variant="destructive" className="text-[10px] shrink-0">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
+                >
                   Email Failed
                 </Badge>
               )}
@@ -121,12 +124,12 @@ function TerminationCard({
                 </span>
               )}
               {noticePeriodWaived && (
-                <span className="text-amber-600 dark:text-amber-400">Notice waived</span>
+                <span className="text-amber-600 dark:text-amber-400 font-medium">Notice waived</span>
               )}
             </div>
 
             {status === "REJECTED" && record.ceoRemarks && (
-              <p className="text-[11px] text-destructive mt-1 line-clamp-2">
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 line-clamp-2">
                 CEO: {record.ceoRemarks}
               </p>
             )}
@@ -134,12 +137,12 @@ function TerminationCard({
             {reasonsList.length > 0 && (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                 {visibleReasons.map((r) => (
-                  <Badge key={r} variant="outline" className="text-[9px] py-0 h-4">
+                  <Badge key={r} variant="outline" className="text-[9px] py-0 h-4 font-semibold">
                     {r}
                   </Badge>
                 ))}
                 {extraCount > 0 && (
-                  <Badge variant="outline" className="text-[9px] py-0 h-4">
+                  <Badge variant="outline" className="text-[9px] py-0 h-4 font-semibold">
                     +{extraCount} more
                   </Badge>
                 )}
@@ -151,11 +154,11 @@ function TerminationCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs"
+              className="h-7 text-xs gap-1.5 duration-200"
               onClick={() => onView(record)}
               aria-label={`View termination details for ${employee?.name ?? "employee"}`}
             >
-              <Eye className="h-3 w-3 mr-1" />
+              <Eye className="h-3 w-3" />
               View
             </Button>
 
@@ -163,12 +166,12 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="h-7 text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
                 aria-label={`Submit termination for ${employee?.name ?? "employee"} for CEO approval`}
               >
-                <AlertTriangle className="h-3 w-3 mr-1" />
+                <AlertTriangle className="h-3 w-3" />
                 Submit for Approval
               </Button>
             )}
@@ -177,12 +180,12 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="h-7 text-xs gap-1.5 duration-200"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
                 aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for CEO approval`}
               >
-                <AlertTriangle className="h-3 w-3 mr-1" />
+                <AlertTriangle className="h-3 w-3" />
                 Resubmit
               </Button>
             )}
@@ -192,21 +195,21 @@ function TerminationCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-7 text-xs gap-1.5 duration-200"
                   onClick={() => onApprove(record.id)}
                   aria-label={`Approve termination for ${employee?.name ?? "employee"}`}
                 >
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  <CheckCircle2 className="h-3 w-3" />
                   Approve
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs text-destructive hover:text-destructive"
+                  className="h-7 text-xs gap-1.5 duration-200 text-rose-600 hover:text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
                   onClick={() => onReject(record.id)}
                   aria-label={`Reject termination for ${employee?.name ?? "employee"}`}
                 >
-                  <XCircle className="h-3 w-3 mr-1" />
+                  <XCircle className="h-3 w-3" />
                   Reject
                 </Button>
               </>
@@ -216,11 +219,11 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="h-7 text-xs gap-1.5 duration-200"
                 onClick={() => onSendEmail(record)}
                 aria-label={`Send termination email to ${employee?.name ?? "employee"}`}
               >
-                <Mail className="h-3 w-3 mr-1" />
+                <Mail className="h-3 w-3" />
                 Send Email
               </Button>
             )}
@@ -229,18 +232,20 @@ function TerminationCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs"
+                className="h-7 text-xs gap-1.5 duration-200"
                 onClick={() => onComplete(record.id)}
                 disabled={isCompleting}
                 aria-label={`Complete termination for ${employee?.name ?? "employee"}`}
               >
-                <Check className="h-3 w-3 mr-1" />
+                <Check className="h-3 w-3" />
                 Complete
               </Button>
             )}
 
             {status === "COMPLETED" && (
-              <span className="text-[11px] text-muted-foreground italic">Completed</span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+                Completed
+              </span>
             )}
           </div>
         </div>
@@ -312,14 +317,14 @@ export function TerminationList({
             key={value}
             size="sm"
             variant={statusFilter === value ? "default" : "outline"}
-            className="h-7 text-xs"
+            className="h-7 text-xs gap-1.5 duration-200"
             onClick={() => onStatusFilterChange(value)}
           >
             {label}
             {statusCounts[value] > 0 && (
               <Badge
                 variant={statusFilter === value ? "secondary" : "outline"}
-                className="ml-1.5 text-[9px] px-1.5 py-0 h-4"
+                className="ml-1 text-[9px] px-1.5 py-0 h-4 font-semibold"
               >
                 {statusCounts[value]}
               </Badge>
@@ -330,7 +335,7 @@ export function TerminationList({
 
       {list.length === 0 ? (
         <EmptyState
-          icon={User}
+          illustration={<User className="h-8 w-8 text-muted-foreground" />}
           title={
             statusFilter === "ALL"
               ? "No termination records found"
