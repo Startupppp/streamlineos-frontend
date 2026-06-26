@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   useGitConnections,
@@ -355,7 +356,7 @@ export default function GitIntegrationPage() {
       ) : !connections || connections.length === 0 ? (
         <div className="flex-1 flex flex-col gap-4">
           <EmptyState
-            icon={GitBranch}
+            illustration={<EmptyDevicesIllustration />}
             title="No repositories connected"
             description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
             action={{ label: "Add connection", onClick: handleOpenDialog }}

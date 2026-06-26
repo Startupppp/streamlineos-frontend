@@ -45,7 +45,8 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, Route, Trash2, Pencil, ChevronUp, ChevronDown } from "lucide-react";
+import { EmptySearchIllustration } from "@/components/illustrations";
+import { Plus, Trash2, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import {
   useRoutingRules,
   useCreateRoutingRule,
@@ -581,7 +582,7 @@ export default function SupportRoutingPage() {
         </div>
       ) : (
         <EmptyState
-          icon={Route}
+          illustration={<EmptySearchIllustration />}
           title="No routing rules yet"
           description="Create rules to auto-assign and prioritise tickets as they arrive."
           action={{ label: "New Rule", onClick: () => setCreateOpen(true) }}

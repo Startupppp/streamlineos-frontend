@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Copy, Check, Pencil, Trash2, ArrowUp, ArrowDown, BookOpen } from "lucide-react";
+import { Plus, Copy, Check, Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import {
   usePlaybookEntries,
   useCreatePlaybookEntry,
@@ -336,7 +337,7 @@ export default function SalesPlaybookPage() {
       ) : entries.length === 0 ? (
         <div className="flex-1 flex items-center justify-center min-h-[50vh]">
           <EmptyState
-            icon={BookOpen}
+            illustration={<EmptyPublicDocsIllustration />}
             title="No playbook entries yet"
             description="Build a shared library of scripts, objection handlers, and best practices for your team."
             action={canManage ? { label: "Add your first playbook entry", onClick: () => setCreateOpen(true) } : undefined}
@@ -345,7 +346,7 @@ export default function SalesPlaybookPage() {
       ) : filtered.length === 0 ? (
         <div className="flex-1 flex items-center justify-center min-h-[40vh]">
           <EmptyState
-            icon={BookOpen}
+            illustration={<EmptyPublicDocsIllustration />}
             title="No matching entries"
             description="Try a different search term."
           />

@@ -28,7 +28,8 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, MessageSquareText, Copy, Pencil, Trash2, Search } from "lucide-react";
+import { EmptyMailIllustration } from "@/components/illustrations";
+import { Plus, Copy, Pencil, Trash2, Search } from "lucide-react";
 import {
   useSupportMacros,
   useCreateMacro,
@@ -281,7 +282,7 @@ export default function SupportMacrosPage() {
         </div>
       ) : (
         <EmptyState
-          icon={MessageSquareText}
+          illustration={<EmptyMailIllustration />}
           title={search.trim() ? "No matching responses" : "No canned responses yet"}
           description={
             search.trim()

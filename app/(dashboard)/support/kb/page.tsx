@@ -43,6 +43,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPublicDocsIllustration, EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   BookOpen,
   Plus,
@@ -502,7 +503,7 @@ export default function KnowledgeBasePage() {
             />
           ) : articles.length === 0 ? (
             <EmptyState
-              icon={BookOpen}
+              illustration={<EmptyPublicDocsIllustration />}
               title="No articles found"
               description="Create your first help center article to get started."
               action={{ label: "New Article", onClick: () => setNewArticleOpen(true) }}
@@ -587,7 +588,7 @@ export default function KnowledgeBasePage() {
             />
           ) : categories.length === 0 ? (
             <EmptyState
-              icon={FolderTree}
+              illustration={<EmptyDocumentsIllustration />}
               title="No categories yet"
               description="Group your articles into categories for the help center."
               action={{ label: "New Category", onClick: () => setCategoryDialogOpen(true) }}

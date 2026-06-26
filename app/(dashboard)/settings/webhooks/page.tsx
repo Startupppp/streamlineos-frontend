@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Plus, Webhook, Trash2, ToggleLeft, ToggleRight, Copy, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ToggleLeft, ToggleRight, Copy, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -36,6 +37,11 @@ const AVAILABLE_EVENTS = [
   { id: "invoice.created", label: "Invoice Created" },
   { id: "invoice.paid", label: "Invoice Paid" },
   { id: "employee.onboarded", label: "Employee Onboarded" },
+  { id: "inventory.stock.low", label: "Inventory Stock Low" },
+  { id: "inventory.purchase_order.received", label: "Purchase Order Received" },
+  { id: "inventory.sales_order.confirmed", label: "Sales Order Confirmed" },
+  { id: "inventory.sales_order.shipped", label: "Sales Order Shipped" },
+  { id: "inventory.product.updated", label: "Product Updated" },
 ];
 
 function isValidWebhookUrl(value: string): boolean {
@@ -182,7 +188,7 @@ export default function WebhooksPage() {
         {(!webhooks || webhooks.length === 0) ? (
           <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
             <EmptyState
-              icon={Webhook}
+              illustration={<EmptyDevicesIllustration />}
               title="No webhooks configured"
               description="Webhooks let external services receive notifications when events happen in your CRM."
               action={{ label: "Add Webhook", onClick: handleOpenCreate }}
