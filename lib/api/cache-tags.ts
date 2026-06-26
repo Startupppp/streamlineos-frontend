@@ -52,6 +52,11 @@ export const CacheTag = {
   blogCategories: "blog-categories",
   careers: "careers",
   dashboard: "dashboard",
+  invSalesOrders: "inv-sales-orders",
+  invDashboard: "inv-dashboard",
+  invStockSummary: "inv-stock-summary",
+  invReorderReport: "inv-reorder-report",
+  invMovements: "inv-movements",
 } as const;
 
 export type CacheTagName = (typeof CacheTag)[keyof typeof CacheTag];
