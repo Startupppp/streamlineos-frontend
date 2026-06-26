@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -18,48 +17,63 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
       : (emp.name ?? "—");
 
   return (
-    <TableRow className="hover:bg-muted/50">
+    <TableRow className="hover:bg-muted/50 transition-colors duration-200 group">
       <TableCell>
         <Link
           href={`/hr/employees/${emp.id}`}
           className="flex items-center gap-3"
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(emp.image)} />
-            <AvatarFallback className="bg-blue-500/10 text-blue-600 text-xs font-semibold">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold">
               {displayName[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <p className="text-sm font-medium truncate min-w-0">{displayName}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
+              {displayName}
+            </p>
+            {emp.email && (
+              <p className="text-[11px] text-muted-foreground truncate">
+                {emp.email}
+              </p>
+            )}
+          </div>
         </Link>
       </TableCell>
       <TableCell className="text-xs text-muted-foreground font-mono">
         {emp.employeeId ?? "—"}
       </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
+      <TableCell className="text-xs text-muted-foreground">
         {emp.designation ?? "—"}
       </TableCell>
       <TableCell>
         {department ? (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
             {department}
-          </Badge>
+          </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-sm text-muted-foreground truncate max-w-[180px]">
+      <TableCell className="text-xs text-muted-foreground truncate max-w-[180px]">
         {emp.email}
       </TableCell>
       <TableCell>
         <span
           className={cn(
-            "inline-block text-[9px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5 border",
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             emp.isActive
-              ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
-              : "bg-muted text-muted-foreground border-border",
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+              : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
           )}
         >
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              emp.isActive ? "bg-emerald-500" : "bg-slate-400",
+            )}
+          />
           {emp.isActive ? "Active" : "Inactive"}
         </span>
       </TableCell>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   canDeleteEmployee,
   getDisplayName,
@@ -80,19 +81,19 @@ export function HrEmployeeTable({
   );
 
   return (
-    <Card className="border-border flex flex-col flex-1 min-h-0">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
       <CardContent className="p-0 flex flex-col flex-1 min-h-0">
         <div className="overflow-auto flex-1 min-h-0" role="region" aria-label="Employee directory table">
           <div className="min-w-[700px]">
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow className="hover:bg-muted/40 bg-muted/40">
+                  <TableHead className="font-semibold text-foreground/80">Name</TableHead>
+                  <TableHead className="font-semibold text-foreground/80">Email</TableHead>
+                  <TableHead className="font-semibold text-foreground/80">Role</TableHead>
+                  <TableHead className="font-semibold text-foreground/80">Department</TableHead>
+                  <TableHead className="font-semibold text-foreground/80">Status</TableHead>
+                  <TableHead className="text-right font-semibold text-foreground/80">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,62 +114,65 @@ export function HrEmployeeTable({
                   }
 
                   return (
-                    <TableRow key={user.id} className="group">
+                    <TableRow key={user.id} className="group hover:bg-muted/50 transition-colors duration-200">
                       <TableCell>
                         <Link
                           href={`/hr/employees/${user.id}`}
                           className="flex items-center gap-3"
                         >
-                          <Avatar className="h-8 w-8 border border-border shrink-0">
+                          <Avatar className="h-8 w-8 shrink-0">
                             <AvatarImage src={resolveImageUrl(user.image)} alt="" />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
-                            {displayName}
-                          </span>
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-200 whitespace-nowrap block truncate">
+                              {displayName}
+                            </span>
+                          </div>
                         </Link>
                       </TableCell>
 
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {user.email}
                       </TableCell>
 
                       <TableCell>
                         {user.designation ? (
-                          <Badge variant="outline" className="text-xs font-normal whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700 whitespace-nowrap">
                             {user.designation}
-                          </Badge>
+                          </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
 
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {user.department?.name ?? "—"}
                       </TableCell>
 
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs gap-1.5 ${
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                             isActive
-                              ? "text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 bg-emerald-500/10"
-                              : "text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 bg-slate-500/10"
-                          }`}
+                              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                              : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+                          )}
                         >
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              isActive ? "bg-emerald-500" : "bg-slate-400"
-                            }`}
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              isActive ? "bg-emerald-500" : "bg-slate-400",
+                            )}
                           />
                           {isActive ? "Active" : "Inactive"}
-                        </Badge>
+                        </span>
                       </TableCell>
 
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -203,9 +207,9 @@ export function HrEmployeeTable({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-t border-border shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-t border-border bg-muted/20 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] text-muted-foreground">Rows per page</span>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Rows</span>
             <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
               <SelectTrigger className="h-7 w-[64px] text-xs">
                 <SelectValue />
@@ -265,7 +269,7 @@ export function HrEmployeeTable({
               <ChevronsRight className="h-3.5 w-3.5" />
             </Button>
             <div className="flex items-center gap-1.5 ml-1">
-              <span className="text-[12px] text-muted-foreground">Go to</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Go to</span>
               <Input
                 type="number"
                 min={1}
