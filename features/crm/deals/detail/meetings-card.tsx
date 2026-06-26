@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Trash2, Video, ExternalLink } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 
 interface Meeting {
@@ -36,7 +37,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
       </CardHeader>
       <CardContent>
         {!meetings?.length ? (
-          <EmptyState icon={Calendar} title="No meetings scheduled" compact />
+          <EmptyState illustration={<EmptyCalendarIllustration />} title="No meetings scheduled" compact />
         ) : (
           <div className="space-y-3">
             {meetings.map((m) => (

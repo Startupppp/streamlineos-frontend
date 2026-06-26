@@ -13,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuotes, useCreateQuote } from "@/lib/api/hooks/quotes";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
-import { Plus, Search, FileText, Download, Trash2 } from "lucide-react";
+import { Plus, Search, Download, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
@@ -289,7 +290,7 @@ export default function QuotesPage() {
         </div>
       ) : !data?.quotes?.length ? (
         <EmptyState
-          icon={FileText}
+          illustration={<EmptyDocumentsIllustration />}
           title="No quotes found"
           description="Create your first quote to start closing deals."
           action={{ label: "New Quote", onClick: () => setCreateOpen(true) }}
