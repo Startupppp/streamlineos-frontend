@@ -3,6 +3,7 @@
 import { format, isWeekend, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { WorkLogEntryRow } from "./work-log-entry-row";
 
 interface WorkLog {
@@ -55,42 +56,64 @@ export function WorkLogMonthGroup({
 }: WorkLogMonthGroupProps) {
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
+  const totalHours = filled * 8;
+
+  const handleToggle = () => onToggle(monthKey);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onToggle(monthKey);
+    }
+  };
 
   return (
-    <Card>
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader
-        className="cursor-pointer select-none"
-        onClick={() => onToggle(monthKey)}
+        className={cn(
+          "cursor-pointer select-none sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/60 py-3 px-4",
+          !isCollapsed && "shadow-sm",
+        )}
+        onClick={handleToggle}
         role="button"
         tabIndex={0}
         aria-expanded={!isCollapsed}
         aria-controls={regionId}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onToggle(monthKey);
-          }
-        }}
+        onKeyDown={handleKeyDown}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-            )}
-            <CardTitle className="text-base sm:text-lg truncate">{label}</CardTitle>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-7 w-7 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              )}
+            </div>
+            <CardTitle className="text-sm font-semibold text-foreground truncate">{label}</CardTitle>
           </div>
-          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap shrink-0">
-            {searchTerm.trim()
-              ? `${displayDays.length} match${displayDays.length !== 1 ? "es" : ""}`
-              : `${filled}/${weekdays} logged`}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {!searchTerm.trim() && filled > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700 font-mono tabular-nums">
+                {totalHours}h
+              </span>
+            )}
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+              {searchTerm.trim()
+                ? `${displayDays.length} match${displayDays.length !== 1 ? "es" : ""}`
+                : `${filled}/${weekdays} logged`}
+            </span>
+          </div>
         </div>
       </CardHeader>
       {!isCollapsed && (
-        <CardContent id={regionId} role="region" aria-label={`Work logs for ${label}`} className="px-3 sm:px-6">
-          <div className="space-y-2 sm:space-y-4">
+        <CardContent
+          id={regionId}
+          role="region"
+          aria-label={`Work logs for ${label}`}
+          className="px-3 sm:px-4 py-3 sm:py-4"
+        >
+          <div className="space-y-2 sm:space-y-3">
             {displayDays.map((date) => {
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
