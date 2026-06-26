@@ -1,0 +1,26 @@
+import type { Permission } from "./types";
+
+export const INVENTORY_PERMISSIONS: Permission[] = [
+  { name: "inventory:products:view", resource: "inventory:products", action: "view", description: "View products list and details" },
+  { name: "inventory:products:create", resource: "inventory:products", action: "create", description: "Create new products" },
+  { name: "inventory:products:update", resource: "inventory:products", action: "update", description: "Update product information" },
+  { name: "inventory:products:delete", resource: "inventory:products", action: "delete", description: "Delete products" },
+  { name: "inventory:products:import", resource: "inventory:products", action: "import", description: "Import products via CSV" },
+  { name: "inventory:stock:view", resource: "inventory:stock", action: "view", description: "View stock levels and movements" },
+  { name: "inventory:stock:adjust", resource: "inventory:stock", action: "adjust", description: "Create stock adjustments" },
+  { name: "inventory:stock:transfer", resource: "inventory:stock", action: "transfer", description: "Create stock transfers between locations" },
+  { name: "inventory:warehouses:view", resource: "inventory:warehouses", action: "view", description: "View warehouses and locations" },
+  { name: "inventory:warehouses:manage", resource: "inventory:warehouses", action: "manage", description: "Create and manage warehouses and locations" },
+  { name: "inventory:vendors:view", resource: "inventory:vendors", action: "view", description: "View vendor list and details" },
+  { name: "inventory:vendors:manage", resource: "inventory:vendors", action: "manage", description: "Create and manage vendors" },
+  { name: "inventory:purchase-orders:view", resource: "inventory:purchase-orders", action: "view", description: "View purchase orders" },
+  { name: "inventory:purchase-orders:create", resource: "inventory:purchase-orders", action: "create", description: "Create purchase orders" },
+  { name: "inventory:purchase-orders:approve", resource: "inventory:purchase-orders", action: "approve", description: "Approve and send purchase orders" },
+  { name: "inventory:purchase-orders:receive", resource: "inventory:purchase-orders", action: "receive", description: "Receive goods against purchase orders" },
+  { name: "inventory:sales-orders:view", resource: "inventory:sales-orders", action: "view", description: "View sales orders" },
+  { name: "inventory:sales-orders:create", resource: "inventory:sales-orders", action: "create", description: "Create sales orders" },
+  { name: "inventory:sales-orders:confirm", resource: "inventory:sales-orders", action: "confirm", description: "Confirm sales orders and commit stock" },
+  { name: "inventory:sales-orders:ship", resource: "inventory:sales-orders", action: "ship", description: "Ship sales orders and deduct stock" },
+  { name: "inventory:sales-orders:invoice", resource: "inventory:sales-orders", action: "invoice", description: "Generate invoices from sales orders" },
+  { name: "inventory:reports:view", resource: "inventory:reports", action: "view", description: "View inventory reports and analytics" },
+];
