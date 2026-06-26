@@ -32,6 +32,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import {
   useHealthScores,
   useHealthConfig,
@@ -372,7 +373,7 @@ export default function AccountHealthPage() {
       ) : items.length === 0 ? (
         <div className="flex flex-1 min-h-[60vh] items-center justify-center">
           <EmptyState
-            icon={HeartPulse}
+            illustration={<EmptyPersonIllustration />}
             title="No health scores yet"
             description="Run a recompute to generate scores across your client accounts from their latest signals."
             action={{ label: "Recompute now", onClick: handleRecompute }}
