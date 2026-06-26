@@ -42,7 +42,11 @@ function StatusBadge({ status }: { status: TeamAttendanceEntry["status"] }) {
   }
 }
 
-export const TeamAttendanceCard = memo(function TeamAttendanceCard() {
+export const TeamAttendanceCard = memo(function TeamAttendanceCard({
+  expanded = false,
+}: {
+  expanded?: boolean;
+}) {
   const { data, isLoading } = useHrTeamAttendanceStatus();
   const [search, setSearch] = useState("");
 
@@ -110,7 +114,13 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard() {
         ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">No employees found.</p>
         ) : (
-          <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+          <div
+            className={
+              expanded
+                ? "space-y-1 pr-1"
+                : "max-h-72 space-y-1 overflow-y-auto pr-1"
+            }
+          >
             {filtered.map((entry) => (
               <div
                 key={entry.userId}
