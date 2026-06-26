@@ -9,8 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users } from "lucide-react";
 import { useVendorsOutstanding } from "@/lib/api/hooks/accounting";
 
 export default function VendorsListPage() {
@@ -51,7 +51,7 @@ export default function VendorsListPage() {
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
-          icon={Users}
+          illustration={<EmptyTeamIllustration />}
           title="No vendors found"
           description="Mark CRM clients as vendors and record purchase bills to see them here."
         />

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Receipt } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { usePurchaseBills } from "@/lib/api/hooks/accounting";
 import type { PurchaseBillStatus } from "@/types/accounting";
 
@@ -105,7 +105,7 @@ export default function PurchaseBillsListPage() {
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
-          icon={Receipt}
+          illustration={<EmptyExpensesIllustration />}
           title="No purchase bills yet"
           description="Record a vendor bill to start tracking accounts payable."
           action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
