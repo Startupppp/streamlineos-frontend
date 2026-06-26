@@ -53,12 +53,20 @@ export function AdminExpenseItem({
   const adminCatLabel = ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
 
   return (
-    <div className="flex items-start gap-4 px-4 py-4 hover:bg-muted/20 transition-colors">
+    <div
+      className={cn(
+        "flex items-start gap-4 px-4 py-4 hover:bg-muted/20 transition-colors duration-200 border-l-4",
+        status === "PENDING" && "border-l-amber-400",
+        status === "APPROVED" && "border-l-emerald-400",
+        status === "REJECTED" && "border-l-rose-400",
+        status === "PAID" && "border-l-slate-400",
+      )}
+    >
       <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
         <div
           className={cn(
-            "relative w-[100px] h-[80px] rounded-lg bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-900/20 dark:to-rose-800/20 flex items-center justify-center overflow-hidden border border-rose-200/50 dark:border-rose-800/30",
-            expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all"
+            "relative w-[96px] h-[76px] rounded-xl bg-muted/60 flex items-center justify-center overflow-hidden border border-border",
+            expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all duration-200"
           )}
           onClick={() => expense.receiptUrl && viewFile(expense.receiptUrl)}
         >
@@ -68,14 +76,14 @@ export function AdminExpenseItem({
               alt="Receipt"
               fill
               unoptimized
-              className="object-cover rounded-lg"
+              className="object-cover rounded-xl"
             />
           ) : (
-            <Receipt className="h-7 w-7 text-rose-400" />
+            <Receipt className="h-6 w-6 text-muted-foreground/50" />
           )}
         </div>
         {expense.receiptUrl && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
@@ -99,65 +107,66 @@ export function AdminExpenseItem({
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <Badge
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
-              status === "PENDING"
-                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                : status === "APPROVED"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-            }`}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              status === "PENDING" && "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+              status === "APPROVED" && "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+              status === "REJECTED" && "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+              status === "PAID" && "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
+            )}
           >
-            {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : "Rejected"}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
+            {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : status === "PAID" ? "Paid" : "Rejected"}
+          </span>
+          <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
             #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
           </span>
         </div>
-        <h4 className="font-semibold text-[15px] text-foreground mb-0.5">
+        <h4 className="font-semibold text-sm text-foreground mb-0.5 truncate">
           {expense.merchant || expense.description || "Expense Claim"}
         </h4>
-        <p className="text-sm text-muted-foreground line-clamp-1 mb-2.5">
+        <p className="text-xs text-muted-foreground line-clamp-1 mb-2.5">
           {expense.description || "-"}
         </p>
-        <div className="flex items-center gap-2 text-sm flex-wrap">
-          <Avatar className="h-6 w-6">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Avatar className="h-5 w-5">
             <AvatarImage src={resolveImageUrl(expense.user?.image)} />
-            <AvatarFallback className="text-[10px] bg-muted">
+            <AvatarFallback className="text-[9px] bg-muted">
               {expense.user?.firstName?.[0]}{expense.user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
-          <span className="font-medium text-foreground text-sm">
+          <span className="font-medium text-foreground text-xs">
             {currentUserId && expense.userId === currentUserId
               ? "Created by Me"
               : [expense.user?.firstName, expense.user?.lastName].filter(Boolean).join(" ") ||
                 expense.user?.email ||
                 "Employee"}
           </span>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-muted-foreground text-sm">{expense.category || "General"}</span>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-muted-foreground text-sm">
+          <span className="text-muted-foreground text-xs">·</span>
+          <span className="text-muted-foreground text-xs">
             {format(new Date(expense.expenseDate), "MMM dd, yyyy")}
           </span>
         </div>
       </div>
 
       <div className="text-right min-w-[130px] flex-shrink-0 hidden lg:block">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Category</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Category</p>
         <div className="flex items-center gap-1.5 justify-end">
-          <CatIcon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{adminCatLabel}</span>
+          <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", catConfig.bg)}>
+            <CatIcon className={cn("h-3.5 w-3.5", catConfig.text)} />
+          </div>
+          <span className="text-xs font-medium text-foreground">{adminCatLabel}</span>
         </div>
         {expense.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[130px]">{expense.description}</p>
+          <p className="text-[11px] text-muted-foreground mt-1 truncate max-w-[130px]">{expense.description}</p>
         )}
       </div>
 
-      <div className="text-right min-w-[150px] flex-shrink-0">
-        <p className="text-2xl font-bold text-foreground">{formatINR(expense.amount)}</p>
-        <p className="text-xs text-muted-foreground mb-3">INR</p>
+      <div className="text-right min-w-[160px] flex-shrink-0">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Amount</p>
+        <p className="text-2xl font-bold tabular-nums text-foreground">{formatINR(expense.amount)}</p>
+        <p className="text-[10px] text-muted-foreground mb-3">INR</p>
 
         {isRejecting ? (
           <div className="space-y-2 text-left">
@@ -165,16 +174,16 @@ export function AdminExpenseItem({
               placeholder="Reason for rejection (required)..."
               value={rejectionReason}
               onChange={(e) => onRejectionReasonChange(e.target.value)}
-              className="text-sm h-9"
+              className="text-xs h-8"
             />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onRejectCancel}>
+            <div className="flex justify-end gap-1.5">
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={onRejectCancel}>
                 Cancel
               </Button>
               <Button
                 size="sm"
                 variant="destructive"
-                className="h-8 text-xs"
+                className="h-8 text-xs gap-1.5"
                 disabled={!rejectionReason}
                 onClick={() => onRejectConfirm(expense.id)}
               >
@@ -183,18 +192,18 @@ export function AdminExpenseItem({
             </div>
           </div>
         ) : status === "PENDING" ? (
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-1.5">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+              className="h-8 text-xs gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-950/30"
               onClick={() => onRejectStart(expense.id)}
             >
               Reject
             </Button>
             <Button
               size="sm"
-              className="h-8 text-xs"
+              className="h-8 text-xs gap-1.5"
               onClick={() => onApprove(expense.id)}
               disabled={isPending}
             >
@@ -234,33 +243,48 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
   });
 
   return (
-    <TableRow className="hover:bg-muted/30 transition-colors">
-      <TableCell className="px-6 py-4 text-sm font-medium">
+    <TableRow className="hover:bg-muted/30 transition-colors duration-200">
+      <TableCell
+        className={cn(
+          "px-6 py-4 text-xs font-semibold tabular-nums border-l-4",
+          status === "PENDING" && "border-l-amber-400",
+          status === "APPROVED" && "border-l-emerald-400",
+          status === "REJECTED" && "border-l-rose-400",
+          status === "PAID" && "border-l-slate-400",
+        )}
+      >
         #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
       </TableCell>
-      <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+      <TableCell className="px-6 py-4 text-xs text-muted-foreground">
         {format(new Date(expense.expenseDate), "MMM dd, yyyy")}
       </TableCell>
       <TableCell className="px-6 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${catConfig.bg} ${catConfig.text}`}>
-          <CatIcon className="h-3.5 w-3.5" />
+        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", catConfig.bg, catConfig.text)}>
+          <CatIcon className="h-3 w-3" />
           {catConfig.label}
         </span>
       </TableCell>
-      <TableCell className="px-6 py-4 text-sm max-w-[200px] truncate">
+      <TableCell className="px-6 py-4 text-xs text-foreground max-w-[200px] truncate">
         {expense.description || expense.merchant || "-"}
       </TableCell>
-      <TableCell className="px-6 py-4 text-sm font-bold">
+      <TableCell className="px-6 py-4 text-sm font-bold tabular-nums text-foreground">
         {formatINR(expense.amount)}
       </TableCell>
       <TableCell className="px-6 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            statusStyle.bg,
+            statusStyle.text,
+            statusStyle.border,
+          )}
+        >
           {status === "PAID" ? (
             <CheckCircle2 className="h-3 w-3" />
           ) : status === "REJECTED" ? (
             <XCircle className="h-3 w-3" />
           ) : (
-            <span className={`size-1.5 rounded-full ${statusStyle.dot}`} />
+            <span className={cn("size-1.5 rounded-full", statusStyle.dot)} />
           )}
           {STATUS_LABELS[status] || status}
         </span>
@@ -270,7 +294,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs text-blue-600 border-blue-500/20 hover:bg-blue-500/5"
+            className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/30"
             onClick={() => onResubmit(expense)}
           >
             Resubmit
@@ -279,11 +303,11 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-blue-600 hover:text-blue-600/80"
+            className="h-8 w-8 text-blue-600 hover:text-blue-600/80 hover:bg-blue-50 dark:hover:bg-blue-950/30"
             onClick={() => onEdit(toEditPayload())}
             aria-label="Edit"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
           </Button>
         ) : (
           <Button
@@ -299,7 +323,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
             }}
             aria-label="View"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3.5 w-3.5" />
           </Button>
         )}
       </TableCell>

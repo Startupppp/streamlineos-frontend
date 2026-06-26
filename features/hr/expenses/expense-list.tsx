@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";
@@ -24,7 +25,7 @@ interface PaginationProps {
   endItem: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  variant?:"admin" |"member";
+  variant?: "admin" | "member";
 }
 
 function ExpensePagination({
@@ -33,17 +34,21 @@ function ExpensePagination({
   endItem,
   totalPages,
   onPageChange,
-  variant ="member",
+  variant = "member",
 }: PaginationProps) {
   if (pagination.total === 0 || totalPages <= 1) return null;
 
-  if (variant ==="admin") {
+  if (variant === "admin") {
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
-        <span className="text-sm text-muted-foreground">
-          Showing <strong className="text-foreground">{startItem}</strong> to{""}
-          <strong className="text-foreground">{endItem}</strong> of{""}
-          <strong className="text-foreground">{pagination.total}</strong> results
+      <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/20">
+        <span className="text-xs text-muted-foreground">
+          Showing{" "}
+          <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
+          to{" "}
+          <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
+          of{" "}
+          <strong className="font-semibold text-foreground">{pagination.total}</strong>{" "}
+          results
         </span>
         <div className="flex items-center gap-1">
           <Button
@@ -54,7 +59,7 @@ function ExpensePagination({
             onClick={() => onPageChange(pagination.page - 1)}
             aria-label="Previous page"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
           {(() => {
             const maxVisible = 5;
@@ -65,7 +70,7 @@ function ExpensePagination({
           })().map((p) => (
             <Button
               key={p}
-              variant={p === pagination.page ?"default" :"outline"}
+              variant={p === pagination.page ? "default" : "outline"}
               size="icon"
               className="h-8 w-8 text-xs"
               onClick={() => onPageChange(p)}
@@ -81,7 +86,7 @@ function ExpensePagination({
             onClick={() => onPageChange(pagination.page + 1)}
             aria-label="Next page"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -89,32 +94,39 @@ function ExpensePagination({
   }
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t">
-      <span className="text-sm text-muted-foreground">
-        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of{""}
-        <strong>{pagination.total}</strong> claims
+    <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/20">
+      <span className="text-xs text-muted-foreground">
+        Showing{" "}
+        <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
+        to{" "}
+        <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
+        of{" "}
+        <strong className="font-semibold text-foreground">{pagination.total}</strong>{" "}
+        claims
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
+          className="h-8 text-xs gap-1.5"
           disabled={pagination.page <= 1}
           onClick={() => onPageChange(pagination.page - 1)}
         >
+          <ChevronLeft className="h-3.5 w-3.5" />
           Previous
         </Button>
-        <span className="text-xs text-muted-foreground">
-          Page {pagination.page} of {totalPages}
+        <span className="text-xs text-muted-foreground px-1">
+          {pagination.page} / {totalPages}
         </span>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
+          className="h-8 text-xs gap-1.5"
           disabled={pagination.page >= totalPages}
           onClick={() => onPageChange(pagination.page + 1)}
         >
           Next
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
@@ -161,31 +173,35 @@ export function AdminExpenseList({
   onShowAll,
 }: AdminExpenseListProps) {
   return (
-    <Card className="shadow-sm border">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-base font-semibold">Recent Claims</h3>
-          <span className="text-sm text-muted-foreground">
-            Showing {startItem}-{endItem} of {pagination.total}{""}
-            {statusFilter ==="PENDING" ?"pending" :"total"}
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/20">
+          <h3 className="text-sm font-semibold text-foreground">Expense Claims</h3>
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {startItem}–{endItem} of {pagination.total}{" "}
+            {statusFilter === "PENDING" ? "pending" : "total"}
           </span>
         </div>
 
         {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <EmptyExpensesIllustration className="mb-3" />
-            <h3 className="text-lg font-medium">No expenses found</h3>
-            <p className="text-muted-foreground mb-4">
-              {statusFilter !=="ALL" ?"Try adjusting your filters" :"No expense claims to review"}
-            </p>
-            {statusFilter !=="ALL" && (
-              <Button variant="outline" onClick={onShowAll}>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">No expenses found</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {statusFilter !== "ALL" ? "Try adjusting your filters" : "No expense claims to review"}
+              </p>
+            </div>
+            {statusFilter !== "ALL" && (
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onShowAll}>
                 Show All Claims
               </Button>
             )}
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-border">
             {expenses.map((expense) => (
               <AdminExpenseItem
                 key={expense.id}
@@ -247,24 +263,28 @@ export function MemberExpenseList({
   onPageChange,
 }: MemberExpenseListProps) {
   return (
-    <Card className="overflow-hidden shadow-sm border">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
         {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <EmptyExpensesIllustration className="mb-3" />
-            <h3 className="text-lg font-medium">No expenses found</h3>
-            <p className="text-muted-foreground mb-4">
-              {statusFilter !=="ALL" || activeFilterCount > 0
-                ?"Try adjusting your filters"
-                :"Submit your first expense claim to get started"}
-            </p>
-            {statusFilter !=="ALL" ? (
-              <Button variant="outline" onClick={onShowAll}>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">No expenses found</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {statusFilter !== "ALL" || activeFilterCount > 0
+                  ? "Try adjusting your filters"
+                  : "Submit your first expense claim to get started"}
+              </p>
+            </div>
+            {statusFilter !== "ALL" ? (
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onShowAll}>
                 Show All Claims
               </Button>
             ) : (
-              <Button onClick={onCreateNew}>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onCreateNew}>
+                <Plus className="h-3.5 w-3.5" />
                 Submit New Claim
               </Button>
             )}
@@ -273,30 +293,30 @@ export function MemberExpenseList({
           <>
             <ScrollArea className="w-full max-h-[60vh]" type="auto" role="region" aria-label="Expense claims table">
               <div className="min-w-[640px]">
-              <Table>
-                <caption className="sr-only">Expense claims</caption>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Claim ID</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Category</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Description</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Amount</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
-                    <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expenses.map((expense) => (
-                    <MemberExpenseItem
-                      key={expense.id}
-                      expense={expense}
-                      onEdit={onEdit}
-                      onResubmit={onResubmit}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
+                <Table>
+                  <caption className="sr-only">Expense claims</caption>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Claim ID</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Date</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Category</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Description</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Amount</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Status</TableHead>
+                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3 text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenses.map((expense) => (
+                      <MemberExpenseItem
+                        key={expense.id}
+                        expense={expense}
+                        onEdit={onEdit}
+                        onResubmit={onResubmit}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </ScrollArea>
 
