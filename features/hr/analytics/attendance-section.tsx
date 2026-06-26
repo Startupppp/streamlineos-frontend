@@ -1,7 +1,6 @@
 "use client";
 
 import { useHrAttendanceAnalytics } from "@/lib/api/hooks/hr/analytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
 import {
@@ -13,7 +12,17 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { SectionSkeleton, EmptyChart, SimpleBar } from "./shared";
+import {
+  AnalyticsChartCard,
+  AnalyticsSectionHeader,
+  CHART_SEMANTIC,
+  EmptyChart,
+  SectionSkeleton,
+  SimpleBar,
+  chartAxisTick,
+  chartGridProps,
+  chartTooltipStyle,
+} from "./shared";
 
 interface AttendanceSectionProps {
   year: number;
@@ -25,13 +34,13 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        <div className="h-4 w-40 bg-muted rounded animate-pulse" />
-        <div className="grid md:grid-cols-2 gap-3">
+      <section className="space-y-4">
+        <div className="h-5 w-44 animate-pulse rounded bg-muted" />
+        <div className="grid gap-3 md:grid-cols-2">
           <SectionSkeleton rows={5} />
           <SectionSkeleton rows={6} />
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -43,9 +52,13 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
   }));
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Attendance Analytics</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <section className="space-y-4">
+      <AnalyticsSectionHeader
+        title="Attendance Analytics"
+        description="Check-in volume by department and day for the selected period."
+      />
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <StatCard
           label="Total Logs (Month)"
           value={data.totalAttendanceLogs}
@@ -69,61 +82,56 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Department-wise Attendance</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            {data.byDepartment.length > 0 ? (
-              <SimpleBar
-                data={data.byDepartment.map((d) => ({
-                  label: d.department,
-                  value: d.count,
-                }))}
-              />
-            ) : (
-              <EmptyChart label="No department attendance data" />
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 md:grid-cols-2">
+        <AnalyticsChartCard title="Department-wise Attendance">
+          {data.byDepartment.length > 0 ? (
+            <SimpleBar
+              data={data.byDepartment.map((d) => ({
+                label: d.department,
+                value: d.count,
+              }))}
+            />
+          ) : (
+            <EmptyChart label="No department attendance data" />
+          )}
+        </AnalyticsChartCard>
 
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Daily Attendance Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {dailyChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart
-                  data={dailyChartData}
-                  margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 9 }}
-                    interval={4}
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart label="No daily attendance data" />
-            )}
-          </CardContent>
-        </Card>
+        <AnalyticsChartCard title="Daily Attendance Trend">
+          {dailyChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={dailyChartData}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                barCategoryGap="28%"
+              >
+                <CartesianGrid {...chartGridProps} />
+                <XAxis
+                  dataKey="date"
+                  tick={chartAxisTick}
+                  interval={Math.max(0, Math.floor(dailyChartData.length / 8) - 1)}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={chartAxisTick}
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  fill={CHART_SEMANTIC.primary}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={24}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChart label="No daily attendance data" />
+          )}
+        </AnalyticsChartCard>
       </div>
-    </div>
+    </section>
   );
 }
