@@ -91,7 +91,7 @@ export function LeavesWfhContent() {
               variant="outline"
               size="sm"
               onClick={handleOpenWfhSheet}
-              className="gap-1.5"
+              className="gap-1.5 h-8"
             >
               <Home className="h-3.5 w-3.5" />
               Request WFH
@@ -99,7 +99,7 @@ export function LeavesWfhContent() {
             <Button
               size="sm"
               onClick={handleOpenLeaveSheet}
-              className="gap-1.5"
+              className="gap-1.5 h-8"
             >
               <Plus className="h-3.5 w-3.5" />
               Request Leave
@@ -108,7 +108,6 @@ export function LeavesWfhContent() {
         }
       >
         <div className="space-y-5">
-
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard
               label="Available Days"
@@ -131,14 +130,16 @@ export function LeavesWfhContent() {
           </div>
 
           {approvedLeavesThisWeek.length > 0 && (
-            <Card className="border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10">
+            <Card className="rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10 shadow-sm overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                  <Users className="h-4 w-4" />
+                <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                    <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
                   Who&apos;s Out This Week
-                  <Badge variant="secondary" className="ml-1 text-xs">
+                  <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
                     {approvedLeavesThisWeek.length}
-                  </Badge>
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -160,7 +161,7 @@ export function LeavesWfhContent() {
                           {leave.user?.firstName} {leave.user?.lastName}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(leave.startDate),"MMM dd")} –{""}
+                          {format(new Date(leave.startDate),"MMM dd")} –{" "}
                           {format(new Date(leave.endDate),"MMM dd")}
                           {leave.leaveType && (
                             <span className="ml-1 text-amber-600 dark:text-amber-400">
@@ -177,35 +178,40 @@ export function LeavesWfhContent() {
           )}
 
           <Tabs defaultValue="my-leaves">
-            <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
+            <TabsList className="h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start">
               <TabsTrigger
                 value="my-leaves"
-                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
               >
                 My Leaves
+                {myLeaveRequests.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                    {myLeaveRequests.length}
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger
                 value="wfh"
-                className="rounded-md px-4 py-2 text-sm font-medium transition-all"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
               >
                 Work From Home
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="approvals"
-                  className="relative rounded-md px-4 py-2 text-sm font-medium transition-all"
+                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2.5 px-4 text-sm font-medium transition-colors duration-200"
                 >
                   Approvals
                   {totalPendingApprovals > 0 && (
-                    <Badge className="ml-2 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-bold border-0">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-rose-500 text-[10px] font-bold text-white">
                       {totalPendingApprovals}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
               )}
             </TabsList>
 
-            <TabsContent value="my-leaves" className="mt-4">
+            <TabsContent value="my-leaves" className="mt-5">
               <LeavesTabContent
                 balances={balances}
                 myLeaveRequests={myLeaveRequests}
@@ -213,12 +219,12 @@ export function LeavesWfhContent() {
               />
             </TabsContent>
 
-            <TabsContent value="wfh" className="mt-4">
+            <TabsContent value="wfh" className="mt-5">
               <WfhTabContent />
             </TabsContent>
 
             {isAdmin && (
-              <TabsContent value="approvals" className="mt-4">
+              <TabsContent value="approvals" className="mt-5">
                 <LeaveApprovalsContent
                   incomingLeaveRequests={incomingLeaveRequests}
                   allIncomingLeaveRequests={allIncomingLeaveRequests}

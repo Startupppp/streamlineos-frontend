@@ -117,13 +117,13 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
       isPending={createWfhRequest.isPending}
     >
       <Form {...form}>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <FormField
             control={form.control}
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Date</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Date</FormLabel>
                 <FormControl>
                   <DatePicker
                     value={field.value}
@@ -143,10 +143,10 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Reason</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Reason</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm">
+                    <SelectTrigger className="text-sm h-9">
                       <SelectValue placeholder="Select reason" />
                     </SelectTrigger>
                   </FormControl>
@@ -166,10 +166,10 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="approverId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Approver</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Approver</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm">
+                    <SelectTrigger className="text-sm h-9">
                       <SelectValue placeholder="Select approver" />
                     </SelectTrigger>
                   </FormControl>
@@ -191,13 +191,14 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">
-                  Notes <span className="text-muted-foreground">(optional)</span>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Notes{" "}
+                  <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Any additional details..."
-                    className="resize-none text-sm"
+                    className="resize-none text-sm min-h-[80px]"
                     rows={3}
                     {...field}
                   />

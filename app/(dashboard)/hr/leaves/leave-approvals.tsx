@@ -18,7 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
@@ -38,17 +38,17 @@ function LeaveStatusBadge({ status }: { status: string }) {
     },
     REJECTED: {
       label: "Rejected",
-      className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+      className: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
       icon: XCircle,
     },
   };
   const c = config[status] ?? config.PENDING;
   const Icon = c.icon;
   return (
-    <Badge variant="outline" className={`text-xs flex items-center gap-1 ${c.className}`}>
+    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", c.className)}>
       <Icon className="h-3 w-3" aria-hidden="true" />
       {c.label}
-    </Badge>
+    </span>
   );
 }
 
@@ -74,34 +74,43 @@ function LeaveApprovalItem({
   const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
 
   return (
-    <div className="rounded-xl bg-muted/30 border border-border" role="listitem">
+    <div
+      className={cn(
+        "rounded-xl bg-card border border-border overflow-hidden transition-colors duration-200 hover:bg-muted/20 border-l-4",
+        status === "APPROVED" ? "border-l-emerald-500" :
+        status === "REJECTED" ? "border-l-rose-500" :
+        "border-l-amber-500"
+      )}
+      role="listitem"
+    >
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={resolveImageUrl(req.user?.image)} />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
               {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-sm font-semibold text-foreground">
                 {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
               </p>
-              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 gap-1 ${pConfig.textColor} border-current/20`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
+              <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-current/20", pConfig.textColor)}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
                 {pConfig.label}
-              </Badge>
+              </span>
               {lopDays > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 text-orange-600 border-orange-400/30 bg-orange-500/10">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400">
                   <AlertTriangle className="h-2.5 w-2.5" />
                   LOP: {lopDays}d
-                </Badge>
+                </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
-              {format(new Date(req.endDate), "MMM dd, yyyy")}
+            <p className="text-xs text-muted-foreground mt-0.5">
+              <span className="font-medium text-foreground/80">{req.leaveType?.name}</span>
+              {" · "}
+              {format(new Date(req.startDate), "MMM dd")} – {format(new Date(req.endDate), "MMM dd, yyyy")}
             </p>
             {req.reason && (
               <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
@@ -120,16 +129,26 @@ function LeaveApprovalItem({
               <span className="text-xs text-muted-foreground italic">Cannot approve own request</span>
             ) : (
               <>
-                <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
+                <Button
+                  size="sm"
+                  className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
+                  disabled={processingId === req.id}
+                  onClick={handleApprove}
+                >
                   {processingId === req.id ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    <CheckCircle2 className="h-3 w-3" />
                   )}
                   Approve
                 </Button>
-                <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
-                  <XCircle className="h-3 w-3 mr-1" />
+                <Button
+                  size="sm"
+                  className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+                  disabled={processingId === req.id}
+                  onClick={handleReject}
+                >
+                  <XCircle className="h-3 w-3" />
                   Reject
                 </Button>
               </>
@@ -170,7 +189,7 @@ function LeaveApprovalsList({ requests, currentUserId }: { requests: LeaveReques
   }, [approveMutation, rejectMutation]);
 
   return (
-    <div className="space-y-4" role="list" aria-label="Leave approvals">
+    <div className="space-y-3" role="list" aria-label="Leave approvals">
       {requests.map((req) => (
         <LeaveApprovalItem
           key={req.id}
@@ -262,59 +281,63 @@ export function LeaveApprovalsContent({
   return (
     <>
       <div className="space-y-6">
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+                <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              </div>
               Leave Requests
               {allIncomingLeaveRequests.length > 0 && (
-                <Badge variant="secondary" className="ml-1">{allIncomingLeaveRequests.length}</Badge>
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+                  {allIncomingLeaveRequests.length}
+                </span>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="overflow-x-auto">
+          <CardContent className="pt-0 overflow-x-auto">
             <Tabs defaultValue="all" className="space-y-4">
-              <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1 min-w-max">
+              <TabsList className="h-auto bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start min-w-max">
                 <TabsTrigger
                   value="all"
-                  className="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
                 >
                   All
-                  <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                     {allIncomingLeaveRequests.length}
-                  </Badge>
+                  </span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="pending"
-                  className="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
                 >
                   Pending
                   {incomingLeaveRequests.length > 0 && (
-                    <Badge className="ml-1.5 h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-bold border-0">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white">
                       {incomingLeaveRequests.length}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="approved"
-                  className="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
                 >
                   Approved
                   {approvedRequests.length > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                       {approvedRequests.length}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
-                  className="rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-foreground pb-3 pt-2 px-4 text-xs font-medium transition-colors duration-200"
                 >
                   Rejected
                   {rejectedRequests.length > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                    <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                       {rejectedRequests.length}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
               </TabsList>
@@ -351,17 +374,21 @@ export function LeaveApprovalsContent({
           </CardContent>
         </Card>
 
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" aria-hidden="true" />
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center">
+                <Home className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <Badge variant="secondary" className="ml-1">{pendingWfhRequests.length}</Badge>
+                <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                  {pendingWfhRequests.length}
+                </span>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {!pendingWfhRequests || pendingWfhRequests.length === 0 ? (
               <EmptyState
                 illustration={<EmptyCalendarIllustration />}
@@ -402,30 +429,30 @@ export function LeaveApprovalsContent({
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <SheetContent className="sm:max-w-sm p-0 flex flex-col">
           <SheetHeader className="p-5 pb-4 border-b">
-            <SheetTitle className="text-base">Reject WFH Request</SheetTitle>
+            <SheetTitle className="text-base font-semibold">Reject WFH Request</SheetTitle>
             <p className="text-sm text-muted-foreground">
               Provide a reason for rejecting this request (optional).
             </p>
           </SheetHeader>
           <div className="flex-1 p-5 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Rejection Reason</label>
+              <Label className="text-xs font-medium text-foreground">Rejection Reason</Label>
               <Textarea
                 placeholder="E.g. Not enough prior notice, project deadline..."
                 value={rejectionReason}
                 onChange={handleRejectionReasonChange}
                 rows={4}
-                className="resize-none"
+                className="resize-none text-sm"
               />
             </div>
           </div>
           <div className="flex gap-2 p-5 pt-4 border-t">
-            <Button variant="outline" className="flex-1" onClick={handleRejectCancel}>
+            <Button variant="outline" className="flex-1 h-9" onClick={handleRejectCancel}>
               Cancel
             </Button>
             <Button
               variant="destructive"
-              className="flex-1"
+              className="flex-1 h-9"
               onClick={handleWfhRejectConfirm}
               disabled={processWfhRequestMutation.isPending}
             >
@@ -461,12 +488,22 @@ function WfhApprovalActions({
 
   return (
     <div className="flex gap-2">
-      <Button size="sm" variant="default" onClick={handleApprove} disabled={isPending} className="h-8">
-        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+      <Button
+        size="sm"
+        className="h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-semibold px-3 gap-1 border-0 transition-colors duration-200"
+        onClick={handleApprove}
+        disabled={isPending}
+      >
+        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
         Approve
       </Button>
-      <Button size="sm" variant="outline" onClick={handleReject} disabled={isPending} className="h-8">
-        <XCircle className="h-3 w-3 mr-1" />
+      <Button
+        size="sm"
+        className="h-7 rounded-full bg-transparent border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[11px] font-semibold px-3 gap-1 transition-colors duration-200"
+        onClick={handleReject}
+        disabled={isPending}
+      >
+        <XCircle className="h-3 w-3" />
         Reject
       </Button>
     </div>

@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-import { Filter, Download, CalendarDays } from "lucide-react";
+import { Filter, Download, CalendarDays, TrendingUp, History } from "lucide-react";
 import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/lib/api/hooks/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
@@ -49,11 +49,16 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
   ]);
 
   return (
-    <Card className="border-border">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Balance Overview</CardTitle>
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+            <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+          </div>
+          Balance Overview
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="flex items-center gap-4">
           <div className="h-[120px] w-[120px] shrink-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -84,20 +89,20 @@ function LeaveBalanceDonut({ balances }: { balances: LeaveBalance[] }) {
           </div>
           <div className="space-y-2.5 flex-1 min-w-0">
             {data.map((item, i) => (
-              <div key={item.name} className="space-y-0.5">
+              <div key={item.name} className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
+                      className="h-2 w-2 rounded-full shrink-0"
                       style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
                     />
-                    <span className="text-xs text-muted-foreground truncate">{item.name}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground truncate">{item.name}</span>
                   </div>
-                  <span className="text-xs font-semibold text-foreground shrink-0">
+                  <span className="text-[11px] font-semibold text-foreground shrink-0 tabular-nums">
                     {item.remaining}/{item.total}
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-muted overflow-hidden ml-4">
+                <div className="h-1 rounded-full bg-muted overflow-hidden ml-3.5">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -140,14 +145,16 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
   const todayStr = format(today, "yyyy-MM-dd");
 
   return (
-    <Card className="border-border">
-      <CardHeader className="pb-2">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
+          <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+            <CalendarDays className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+          </div>
           Who&apos;s Out This Week
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="grid grid-cols-7 gap-1">
           {leavesPerDay.map(({ day, leaves }) => {
             const isToday = format(day, "yyyy-MM-dd") === todayStr;
@@ -155,7 +162,7 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
               <div
                 key={day.toISOString()}
                 className={cn(
-                  "rounded-lg p-1.5 min-h-[64px] flex flex-col",
+                  "rounded-lg p-1.5 min-h-[64px] flex flex-col transition-colors duration-200",
                   isToday
                     ? "bg-blue-500/10 border border-blue-500/30"
                     : "bg-muted/30 border border-transparent",
@@ -164,7 +171,7 @@ function LeaveCalendarWidget({ approvedLeaves }: { approvedLeaves: ApprovedLeave
                 <div
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight mb-1",
-                    isToday ? "text-blue-600" : "text-muted-foreground",
+                    isToday ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
                   )}
                 >
                   {format(day, "EEE")}
@@ -300,9 +307,9 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-base font-semibold text-foreground">Overview</h2>
-        <p className="text-sm text-muted-foreground">
+      <div className="space-y-0.5">
+        <h2 className="text-sm font-semibold text-foreground">Overview</h2>
+        <p className="text-xs text-muted-foreground">
           Your leave balances and history for {currentYear}.
         </p>
       </div>
@@ -325,13 +332,18 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
         <LeaveCalendarWidget approvedLeaves={approvedLeavesThisWeek} />
       </div>
 
-      <Card className="border-border">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-foreground">Request History</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center">
+                <History className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              </div>
+              Request History
+            </CardTitle>
             <div className="flex items-center gap-3 shrink-0">
               <button
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                 aria-label="Filter requests"
               >
                 <Filter className="h-3.5 w-3.5" />
@@ -339,7 +351,7 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
               </button>
               <button
                 onClick={handleExportExcel}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                 aria-label="Export to Excel"
               >
                 <Download className="h-3.5 w-3.5" />
@@ -360,14 +372,14 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
               <div className="min-w-[600px]">
                 <table className="w-full">
                   <caption className="sr-only">Your leave request history</caption>
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Type</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Date Requested</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Period</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Priority</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Status</th>
-                      <th className="text-right text-xs font-medium text-muted-foreground py-2.5 px-3">Action</th>
+                  <thead className="bg-muted/40">
+                    <tr>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Type</th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Date Requested</th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Period</th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Priority</th>
+                      <th className="text-left text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Status</th>
+                      <th className="text-right text-[11px] font-semibold text-foreground/80 uppercase tracking-wider py-2.5 px-3">Action</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -199,16 +199,16 @@ export function LeaveRequestSheet({
       submitDisabled={!isValid && isDirty}
     >
       <Form {...form}>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <FormField
             control={form.control}
             name="leaveTypeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Leave Type</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Leave Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm">
+                    <SelectTrigger className="text-sm h-9">
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                   </FormControl>
@@ -223,95 +223,100 @@ export function LeaveRequestSheet({
             )}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">From</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      fromDate={minDate ? new Date(minDate) : undefined}
-                      placeholder="Start date"
-                      disabledDays={isSunday}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">To</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      fromDate={watchedStartDate ? new Date(watchedStartDate) : (minDate ? new Date(minDate) : undefined)}
-                      placeholder="End date"
-                      disabledDays={isSunday}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Date Range</p>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">From</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        fromDate={minDate ? new Date(minDate) : undefined}
+                        placeholder="Start date"
+                        disabledDays={isSunday}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">To</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        fromDate={watchedStartDate ? new Date(watchedStartDate) : (minDate ? new Date(minDate) : undefined)}
+                        placeholder="End date"
+                        disabledDays={isSunday}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
-          <FormField
-            control={form.control}
-            name="halfDay"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <FormLabel className="text-xs font-normal text-muted-foreground !mt-0">
-                  Half Day Request
-                </FormLabel>
-              </FormItem>
-            )}
-          />
-
-          {watchedHalfDay && (
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
             <FormField
               control={form.control}
-              name="halfDayPeriod"
+              name="halfDay"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-medium">Half Day Period</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                      <SelectItem value="AM">AM (Morning — first half)</SelectItem>
-                      <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
+                <FormItem className="flex items-center gap-2.5">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormLabel className="text-xs font-medium text-foreground !mt-0 cursor-pointer">
+                    Half Day Request
+                  </FormLabel>
                 </FormItem>
               )}
             />
-          )}
+
+            {watchedHalfDay && (
+              <FormField
+                control={form.control}
+                name="halfDayPeriod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">Period</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="text-sm h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                        <SelectItem value="AM">AM (Morning — first half)</SelectItem>
+                        <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
 
           <FormField
             control={form.control}
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Priority</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Priority</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm">
+                    <SelectTrigger className="text-sm h-9">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
@@ -344,10 +349,10 @@ export function LeaveRequestSheet({
               name="approverId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-medium">Approver</FormLabel>
+                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Approver</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm h-9">
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
                     </FormControl>
@@ -370,11 +375,11 @@ export function LeaveRequestSheet({
             name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-medium">Reason</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Reason</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="E.g. Family function, Doctor appointment..."
-                    className="resize-none text-sm"
+                    className="resize-none text-sm min-h-[80px]"
                     rows={3}
                     {...field}
                   />
@@ -384,9 +389,10 @@ export function LeaveRequestSheet({
             )}
           />
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium mb-1 block">
-              Attach Document <span className="text-muted-foreground">(Optional)</span>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block">
+              Attach Document{" "}
+              <span className="normal-case font-normal text-muted-foreground tracking-normal">(Optional)</span>
             </label>
             <FileUpload
               folder="leave-attachments"
@@ -397,7 +403,7 @@ export function LeaveRequestSheet({
           </div>
 
           {balancePreview && requestedDays > 0 && (
-            <div className={`flex items-start gap-2 p-3 rounded-lg border text-xs ${
+            <div className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs ${
               balancePreview.after < 0
                 ? "bg-destructive/10 border-destructive/20 text-destructive"
                 : "bg-muted/50 border-border text-foreground"
@@ -418,7 +424,7 @@ export function LeaveRequestSheet({
           )}
 
           {leaveDayLimitError && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
               <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               <p className="text-xs text-destructive">{leaveDayLimitError}</p>
             </div>
