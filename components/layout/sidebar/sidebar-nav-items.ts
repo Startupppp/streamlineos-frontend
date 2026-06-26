@@ -11,6 +11,7 @@ import {
   GitBranch, Building2, UserCog, SlidersHorizontal, UserX,
   Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
   FormInput, FileSearch, LayoutTemplate, Grid3X3, Calculator,
+  Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -278,6 +279,21 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "GSTR-3B", icon: BarChart2, href: "/accounting/gstr-3b", requiredPermission: "accounting:view" },
         ],
       },
+    ],
+  },
+  {
+    label: "Inventory",
+    requiredPermission: ["inventory:stock:view", "inventory:products:view"],
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/inventory", requiredPermission: "inventory:stock:view" },
+      { label: "Products", icon: Tag, href: "/inventory/products", requiredPermission: "inventory:products:view" },
+      { label: "Stock Levels", icon: Warehouse, href: "/inventory/stock", requiredPermission: "inventory:stock:view" },
+      { label: "Movements", icon: ArrowLeftRight, href: "/inventory/stock/movements", requiredPermission: "inventory:stock:view" },
+      { label: "Warehouses", icon: Building2, href: "/inventory/warehouses", requiredPermission: "inventory:warehouses:view" },
+      { label: "Purchase Orders", icon: ShoppingCart, href: "/inventory/purchase-orders", requiredPermission: "inventory:purchase-orders:view" },
+      { label: "Sales Orders", icon: FileText, href: "/inventory/sales-orders", requiredPermission: "inventory:sales-orders:view" },
+      { label: "Vendors", icon: Truck, href: "/inventory/vendors", requiredPermission: "inventory:vendors:view" },
+      { label: "Reports", icon: BarChart3, href: "/inventory/reports/stock-summary", requiredPermission: "inventory:reports:view" },
     ],
   },
   {
