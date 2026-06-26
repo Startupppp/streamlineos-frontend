@@ -3,6 +3,13 @@
 **Last updated:** 2026-06-26 (overnight autonomous run)
 **Legend:** ✅ done · 🔄 in progress · ⏳ queued · 🔒 blocked (needs your environment) · ⛔ deliberately NOT done unattended (would risk breakage)
 
+## 🧪 FUNCTIONAL-TESTED vs LIVE DB + FIXES (2026-06-26)
+Backend started on :1500 against live Neon DB; functional-tested with **5 role tokens** (owner/platform/HR-mgr/sales-rep/member) via a JWT-minting harness (`backend/scripts/functional/`). **839 routes exercised, multi-row real data.** Results:
+- **RBAC verified ENFORCED:** dedicated access-matrix = **330 gated routes × roles, 1067 assertions, 0 authorization defects** — every unauthorized role gets 403, authorized gets in (incl. CEO-only vs HR/ADMIN recruitment gates).
+- **28 bugs found + FIXED (`436c9cf`):** (a) **DB schema drift** — 14 recruitment/hiring tables + 13 columns were MISSING from live DB (never pushed) → recruitment/public-hiring 500s; fixed via reviewed **additive idempotent SQL** (`backend/drizzle-sync-recruitment.sql`, applied to live DB). (b) **org-owner lockout** — ~40 inline role-string gates ignored isOrgOwner/isPlatformAdmin → owner 403'd on own org; fixed with shared `hasRoleOrPrivileged` bypass (CASL + scope-only flags left alone). (c) payroll-summary filtered invalid enum `SUBMITTED` → `PENDING_APPROVAL`.
+- **✅ ALL 13 FUNCTIONAL SUITES GREEN (re-verified post-fix, `88af36c`):** rbac-matrix 1067/0 · leads 80/0 · crm-core 210/0 · deals 80/0 · finance 108/0 · hr-a 177/0 · hr-b 164/0 · hr-c 161/0 · recruit 166/0 · projects 200/0 · comms 86/0 · productivity 113/0 · admin-infra 199/0 = **~2810 assertions, 0 failures**, 839+ routes, all roles, vs live DB. Last fix: interviewer-performance raw-`sql` date filters mis-bound Date under postgres `prepare:false` → `gte()` (commit `8855e54`).
+- **MIGRATION BACKEND FULLY VALIDATED.** Remaining = **frontend cutover** (route migrated domains to backend + delete dead Next routes). Completion workflow `complete-migration` ran Reverify (✓) but its CutoverPlan/Apply phases hit the **session limit (resets 9:40pm Asia/Calcutta)** — resume after reset OR do manually. Backend running on :1500 (node dist) for functional tests.
+
 ## ✅✅ BACKEND PORT COMPLETE — ALL PORTABLE ROUTES MIGRATED (2026-06-26)
 **Master/main `631ee83` (now on GitHub remote `Startupppp/streamlineos-backend`, branch `main`): 47 feature modules, 61 unit + 1002 e2e (53 suites) green, tree clean.** Every PORTABLE route of the 699-route frontend surface is now ported + integrated + tested:
 - CRM: leads (complete 36 handlers), contacts, targets, csat, deals, clients, crm, quotes, customer-executive, sales, reports.

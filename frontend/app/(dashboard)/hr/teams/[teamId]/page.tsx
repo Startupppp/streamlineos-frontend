@@ -15,7 +15,22 @@ import { queryKeys } from "@/lib/query-keys";
 import { ArrowLeft } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
-import type { TeamDetail } from "@/app/api/hr/teams/[teamId]/route";
+interface TeamMember {
+  id: string;
+  name: string | null;
+  image: string | null;
+  designation: string | null;
+  email: string;
+  role: string;
+}
+
+interface TeamDetail {
+  id: number;
+  name: string;
+  managerId: string | null;
+  managerName: string | null;
+  members: TeamMember[];
+}
 
 function useTeamDetail(teamId: string) {
   return useQuery({
