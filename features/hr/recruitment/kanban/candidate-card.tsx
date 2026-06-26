@@ -2,16 +2,29 @@
 
 import { memo, useCallback } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Briefcase, MailIcon, Star, GripVertical } from "lucide-react";
+import { Briefcase, MailIcon, Star, GripVertical, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AtsPipelineCandidate } from "@/types/hr";
 import { getInitials } from "./types";
 import { SlaBadge } from "./sla-badge";
+import { formatDistanceToNow } from "date-fns";
 
 interface CandidateCardProps {
   candidate: AtsPipelineCandidate;
   index: number;
   onClick: (candidate: AtsPipelineCandidate) => void;
+}
+
+const SOURCE_COLORS: Record<string, string> = {
+  LINKEDIN: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  REFERRAL: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  DIRECT: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  JOB_PORTAL: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  CAMPUS: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+};
+
+function getSourceColor(source: string) {
+  return SOURCE_COLORS[source] ?? "bg-muted text-muted-foreground";
 }
 
 export const CandidateCard = memo(function CandidateCard({
@@ -23,6 +36,9 @@ export const CandidateCard = memo(function CandidateCard({
     onClick(candidate);
   }, [onClick, candidate]);
 
+  const initials = getInitials(candidate.name);
+  const hasRating = candidate.rating !== null && candidate.rating !== undefined;
+
   return (
     <Draggable draggableId={String(candidate.id)} index={index}>
       {(provided, snapshot) => (
@@ -33,23 +49,23 @@ export const CandidateCard = memo(function CandidateCard({
           className={cn(
             "group relative rounded-xl bg-card border border-border/70 shadow-sm cursor-pointer select-none transition-all duration-200",
             "hover:shadow-md hover:border-border hover:-translate-y-0.5",
-            snapshot.isDragging && "shadow-xl border-primary/40 ring-2 ring-primary/20 rotate-1 scale-105"
+            snapshot.isDragging && "shadow-xl border-primary/40 ring-2 ring-primary/20 rotate-1 scale-[1.03]"
           )}
         >
           <div
             {...provided.dragHandleProps}
-            className="absolute top-2.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2.5 right-2 opacity-0 group-hover:opacity-60 transition-opacity cursor-grab active:cursor-grabbing"
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
 
-          <div className="p-3">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-primary/25 to-primary/10 text-primary border border-primary/20">
-                {getInitials(candidate.name)}
+          <div className="p-3 space-y-2.5">
+            <div className="flex items-center gap-2.5 pr-5">
+              <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
+                {initials}
               </div>
-              <div className="min-w-0 flex-1 pr-5">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-foreground truncate leading-tight">{candidate.name}</p>
                 <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                   {candidate.jobTitle ? (
@@ -69,18 +85,42 @@ export const CandidateCard = memo(function CandidateCard({
 
             <div className="flex items-center gap-1.5 flex-wrap">
               {candidate.source && (
-                <span className="inline-flex items-center text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground border border-border/50">
-                  {candidate.source}
+                <span className={cn(
+                  "inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
+                  getSourceColor(candidate.source)
+                )}>
+                  {candidate.source.replace(/_/g, " ")}
                 </span>
               )}
               {candidate.slaStatus && <SlaBadge status={candidate.slaStatus} />}
-              {candidate.rating !== null && candidate.rating !== undefined && (
-                <div className="flex items-center gap-0.5 ml-auto">
-                  <Star className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />
-                  <span className="text-[10px] font-semibold text-amber-600">{candidate.rating}</span>
-                </div>
-              )}
             </div>
+
+            {(hasRating || candidate.appliedAt) && (
+              <div className="flex items-center justify-between">
+                {hasRating ? (
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-2.5 w-2.5",
+                          i < (candidate.rating ?? 0)
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-border fill-transparent"
+                        )}
+                      />
+                    ))}
+                    <span className="text-[10px] font-semibold text-amber-600 ml-0.5">{candidate.rating}</span>
+                  </div>
+                ) : <span />}
+                {candidate.appliedAt && (
+                  <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                    <Clock className="h-2.5 w-2.5" />
+                    {formatDistanceToNow(new Date(candidate.appliedAt), { addSuffix: true })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

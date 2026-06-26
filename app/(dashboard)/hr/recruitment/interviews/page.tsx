@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Settings, List, CalendarDays, ChevronLeft, ChevronRight, CalendarClock, BarChart2 } from "lucide-react";
+import { Settings, List, CalendarDays, ChevronLeft, ChevronRight, CalendarClock, BarChart2, Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { BigCalEvent, View } from "@/features/calendar/big-calendar-wrapper";
 
@@ -123,6 +123,9 @@ export default function InterviewsPage() {
               <Settings className="mr-1.5 h-3.5 w-3.5" />
               SLA Config
             </Link>
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-4 w-4" /> Schedule
           </Button>
           <InterviewFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
         </div>
