@@ -2,6 +2,7 @@
 
 import { User } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -190,7 +191,7 @@ export function LeadActivityTimeline({
           </ScrollArea>
         ) : (
           <EmptyState
-            icon={User}
+            illustration={<EmptyPersonIllustration />}
             title="No activities yet"
             description="Log your first interaction with this lead"
             compact

@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
+import { fadeIn, transitionBase } from "./variants";
 
 type Props = {
   children: ReactNode;
@@ -11,7 +13,14 @@ type Props = {
 
 export function Marquee({ children, speed = 32, className, reverse }: Props) {
   return (
-    <div className={`relative overflow-hidden ${className ?? ""}`}>
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-5% 0px" }}
+      variants={fadeIn}
+      transition={{ ...transitionBase, duration: 0.7 }}
+      className={`relative overflow-hidden ${className ?? ""}`}
+    >
       <div
         className="marquee-track"
         style={{
@@ -22,6 +31,6 @@ export function Marquee({ children, speed = 32, className, reverse }: Props) {
         {children}
         {children}
       </div>
-    </div>
+    </motion.div>
   );
 }

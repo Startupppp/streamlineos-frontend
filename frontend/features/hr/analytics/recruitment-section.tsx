@@ -1,7 +1,6 @@
 "use client";
 
 import { useRecruitmentStats } from "@/lib/api/hooks/hr/recruitment";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { Briefcase, Users, TrendingUp, Clock } from "lucide-react";
@@ -13,7 +12,15 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { PIE_COLORS, SectionSkeleton, EmptyChart, SimpleBar } from "./shared";
+import {
+  AnalyticsChartCard,
+  AnalyticsSectionHeader,
+  EmptyChart,
+  PIE_COLORS,
+  SectionSkeleton,
+  SimpleBar,
+  chartTooltipStyle,
+} from "./shared";
 
 interface RecruitmentSectionProps {
   isLoading: boolean;
@@ -24,14 +31,14 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
 
   if (isLoading || !stats) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-40" />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <section className="space-y-4">
+        <Skeleton className="h-5 w-40" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           <SectionSkeleton rows={2} />
           <SectionSkeleton rows={2} />
           <SectionSkeleton rows={2} />
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -45,9 +52,13 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
     .map(([stage, count]) => ({ label: stage.replace(/_/g, " "), value: count }));
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Recruitment Analytics</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <section className="space-y-4">
+      <AnalyticsSectionHeader
+        title="Recruitment Analytics"
+        description="Pipeline volume, sources, and hiring efficiency."
+      />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard
           label="Open Positions"
           value={stats.openJobs}
@@ -78,62 +89,44 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Candidate Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            {funnelData.length > 0 ? (
-              <SimpleBar data={funnelData} />
-            ) : (
-              <EmptyChart label="No pipeline data" />
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 md:grid-cols-2">
+        <AnalyticsChartCard title="Candidate Pipeline">
+          {funnelData.length > 0 ? (
+            <SimpleBar data={funnelData} />
+          ) : (
+            <EmptyChart label="No pipeline data" />
+          )}
+        </AnalyticsChartCard>
 
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Candidate Sources</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            {stats.sources.length > 0 ? (
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie
-                    data={stats.sources.map((s) => ({ name: s.source, value: s.count }))}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={60}
-                    innerRadius={36}
-                    paddingAngle={2}
-                  >
-                    {stats.sources.map((_, idx) => (
-                      <Cell
-                        key={idx}
-                        fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart label="No source data" />
-            )}
-          </CardContent>
-        </Card>
+        <AnalyticsChartCard title="Candidate Sources">
+          {stats.sources.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={stats.sources.map((s) => ({ name: s.source, value: s.count }))}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={72}
+                  innerRadius={44}
+                  paddingAngle={3}
+                  stroke="var(--card)"
+                  strokeWidth={2}
+                >
+                  {stats.sources.map((_, idx) => (
+                    <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChart label="No source data" />
+          )}
+        </AnalyticsChartCard>
       </div>
-    </div>
+    </section>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -399,11 +400,7 @@ export default function VendorsPage() {
     >
       {vendors.length === 0 ? (
         <EmptyState
-          illustration={
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          }
+          illustration={<EmptyTeamIllustration />}
           title="No vendors yet"
           description="Add a recruitment agency or staffing partner to track submissions and placements."
           action={isHr ? { label: "Add Vendor", onClick: handleAdd } : undefined}

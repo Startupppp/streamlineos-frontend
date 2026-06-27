@@ -1,7 +1,8 @@
 "use client";
 
-import { Phone, Mail, MapPin, Calendar, Clock, MessageSquare } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, MessageSquare } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ interface LeadActivityTabProps {
 
 export function LeadActivityTab({ activities }: LeadActivityTabProps) {
   if (activities.length === 0) {
-    return <EmptyState icon={Clock} title="No activities yet" compact />;
+    return <EmptyState illustration={<EmptyActivityIllustration />} title="No activities yet" compact />;
   }
 
   return (

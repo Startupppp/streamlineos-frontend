@@ -11,25 +11,22 @@ import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-car
 
 export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-hidden min-w-0">
-
-      <ScrollArea className="min-w-0 w-full lg:w-72 xl:w-80 lg:shrink-0 lg:h-full">
-        <div className="space-y-5 pr-1 pb-6">
+    <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
+        <div className="space-y-4">
           <TimerCard />
           <WfhBalancesCard />
           {isAdmin && <TeamAttendanceCard />}
         </div>
-      </ScrollArea>
 
-      <ScrollArea className="flex-1 min-w-0 lg:h-full">
-        <div className="space-y-5 pr-1 pb-6">
+        <div className="space-y-4">
           <AttendanceCalendar userId={userId} />
           <AttendanceHeatmap userId={userId} />
           {isAdmin && <ManageHolidaysCard />}
-          <DailyHistoryTable />
         </div>
-      </ScrollArea>
+      </div>
 
+      <DailyHistoryTable />
     </div>
   );
 }

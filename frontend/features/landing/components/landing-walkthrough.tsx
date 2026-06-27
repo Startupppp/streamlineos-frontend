@@ -230,13 +230,17 @@ function DeliverVisual() {
             <span>{col.title}</span>
             <span>{col.count}</span>
           </div>
-          {col.items.map((it) => (
-            <div
+          {col.items.map((it, ti) => (
+            <motion.div
               key={it}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.35, delay: ci * 0.1 + ti * 0.06 }}
               className="rounded-md bg-white border border-slate-200 p-2 text-[10px] text-slate-700 leading-tight shadow-sm"
             >
               {it}
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       ))}

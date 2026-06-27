@@ -36,6 +36,10 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  EmptyTasksIllustration,
+  EmptyActivityIllustration,
+} from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   ArrowLeft,
@@ -392,7 +396,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           </div>
           {detail.keyResults.length === 0 ? (
             <EmptyState
-              icon={ListChecks}
+              illustration={<EmptyTasksIllustration />}
               compact
               title="No key results"
               description="Edit this goal to add measurable key results."
@@ -421,7 +425,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           </div>
           {detail.links.length === 0 ? (
             <EmptyState
-              icon={Link2}
+              illustration={<EmptyActivityIllustration />}
               compact
               title="No linked work"
               description="Connect projects or tickets that contribute to this goal."
@@ -469,7 +473,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           </div>
           {detail.updates.length === 0 ? (
             <EmptyState
-              icon={History}
+              illustration={<EmptyActivityIllustration />}
               compact
               title="No updates yet"
               description="Check-ins on key results will appear here."

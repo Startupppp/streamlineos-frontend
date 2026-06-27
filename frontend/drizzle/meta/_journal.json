@@ -386,6 +386,13 @@
       "when": 1782090000000,
       "tag": "0122_hr_automation_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1782490728440,
+      "tag": "0055_aspiring_iron_patriot",
+      "breakpoints": true
     }
   ]
 }

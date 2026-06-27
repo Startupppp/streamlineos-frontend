@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Target,
@@ -224,7 +225,7 @@ export default function GoalsPage() {
       ) : !hasGoals ? (
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">
           <EmptyState
-            icon={Target}
+            illustration={<EmptyTargetIllustration />}
             title="No goals yet"
             description="Create your first objective with measurable key results to start tracking progress."
             action={{ label: "New Goal", onClick: () => setCreateOpen(true) }}

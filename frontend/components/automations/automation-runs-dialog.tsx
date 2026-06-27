@@ -12,7 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { History, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
+import { EmptyActivityIllustration } from "@/components/illustrations";
+import { CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAutomationRuns, type AutomationRunStatus } from "@/lib/api/hooks/automations";
 
@@ -67,7 +68,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
         ) : !runs || runs.length === 0 ? (
           <EmptyState
             compact
-            icon={History}
+            illustration={<EmptyActivityIllustration />}
             title="No runs yet"
             description="This automation hasn't executed yet."
           />

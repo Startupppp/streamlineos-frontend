@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   useTicketGitLinks,
   type GitProvider,
@@ -109,7 +110,7 @@ export function GitTicketLinks({ ticketId, projectId }: GitTicketLinksProps) {
       ) : !links || links.length === 0 ? (
         <EmptyState
           compact
-          icon={GitCommit}
+          illustration={<EmptyActivityIllustration />}
           title="No linked activity"
           description="Reference this ticket's key in a commit or PR to link it."
         />

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   usePublicRoadmap,
@@ -339,7 +340,7 @@ export default function PublicRoadmapPage() {
             onRetry={() => refetch()}
           />
         ) : !data ? (
-          <EmptyState icon={Sparkles} title="No roadmap available" className="flex-1" />
+          <EmptyState illustration={<EmptySprintIllustration />} title="No roadmap available" className="flex-1" />
         ) : (
           <div className="space-y-10">
             <section>

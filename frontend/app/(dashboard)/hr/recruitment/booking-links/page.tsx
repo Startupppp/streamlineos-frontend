@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -81,6 +82,7 @@ export default function BookingLinksPage() {
     >
       {!links?.length ? (
         <EmptyState
+          illustration={<EmptyCalendarIllustration />}
           title="No booking links yet"
           description="Send self-scheduling links to candidates from their profile or the interviews page."
         />

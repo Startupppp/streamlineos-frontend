@@ -33,6 +33,8 @@ import { hrOnboardingOverdue } from "./hr-onboarding-overdue";
 import { hrOnboardingCompleted } from "./hr-onboarding-completed";
 import { hrAttendanceAnomaly } from "./hr-attendance-anomaly";
 import { hrCertificationExpiry } from "./hr-certification-expiry";
+import { invLowStockCheck } from "./inv-low-stock-check";
+import { invPoOverdueAlert } from "./inv-po-overdue-alert";
 
 export const inngestFunctions = [
   dailyNotifications,
@@ -68,4 +70,6 @@ export const inngestFunctions = [
   hrOnboardingCompleted,
   hrAttendanceAnomaly,
   hrCertificationExpiry,
+  invLowStockCheck,
+  invPoOverdueAlert,
 ];

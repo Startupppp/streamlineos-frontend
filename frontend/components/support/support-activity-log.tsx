@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
 import { getInitials } from "@/lib/format-utils";
@@ -73,7 +74,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
     return (
       <EmptyState
         compact
-        icon={Activity}
+        illustration={<EmptyActivityIllustration />}
         title="No activity yet"
         description="Status, priority, and assignment changes will appear here."
       />

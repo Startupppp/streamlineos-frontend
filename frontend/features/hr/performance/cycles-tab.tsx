@@ -26,6 +26,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ReviewCycle } from "@/types/hr";
 
+function getCycleProgress(cycle: ReviewCycle): number {
+  if (cycle.status === "COMPLETED") return 100;
+  if (cycle.status === "DRAFT" || cycle.status === "CANCELLED") return 0;
+  if (!cycle.periodStart || !cycle.periodEnd) return 0;
+  const start = new Date(cycle.periodStart).getTime();
+  const end = new Date(cycle.periodEnd).getTime();
+  const now = Date.now();
+  if (now <= start) return 0;
+  if (now >= end) return 100;
+  return Math.round(((now - start) / (end - start)) * 100);
+}
+
 export function CyclesTab() {
   const { data: cycles, isLoading } = useReviewCycles();
   const createCycle = useCreateReviewCycle();
@@ -115,48 +127,104 @@ export function CyclesTab() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{cycles?.length ?? 0} cycles</p>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-3.5 w-3.5 mr-1" />New Cycle
+        <div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Cycles</p>
+          <p className="text-3xl font-bold tabular-nums text-foreground">{cycles?.length ?? 0}</p>
+        </div>
+        <Button size="sm" className="h-8 gap-1.5" onClick={openCreate}>
+          <Plus className="h-3.5 w-3.5" />New Cycle
         </Button>
       </div>
 
       {!cycles?.length ? (
-        <EmptyState icon={Calendar} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
+        <EmptyState illustration={<Calendar className="h-8 w-8 text-muted-foreground" />} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
       ) : (
         <div className="space-y-2">
-          {cycles.map((cycle: ReviewCycle) => (
-            <Card key={cycle.id}>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">{cycle.name}</p>
-                    <Badge variant={cycle.status === "ACTIVE" ? "default" : cycle.status === "COMPLETED" ? "secondary" : "outline"} className="text-[10px]">{cycle.status}</Badge>
+          {cycles.map((cycle: ReviewCycle) => {
+            const progress = getCycleProgress(cycle);
+            const accentClass =
+              cycle.status === "ACTIVE"
+                ? "border-l-emerald-500"
+                : cycle.status === "COMPLETED"
+                ? "border-l-blue-500"
+                : cycle.status === "CANCELLED"
+                ? "border-l-rose-400"
+                : "border-l-slate-300 dark:border-l-slate-600";
+            const badgeClass =
+              cycle.status === "ACTIVE"
+                ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+                : cycle.status === "COMPLETED"
+                ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
+                : cycle.status === "CANCELLED"
+                ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
+                : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+            const progressBarClass =
+              cycle.status === "ACTIVE"
+                ? "bg-emerald-500"
+                : cycle.status === "COMPLETED"
+                ? "bg-blue-500"
+                : cycle.status === "CANCELLED"
+                ? "bg-rose-400"
+                : "bg-slate-300 dark:bg-slate-600";
+
+            return (
+              <Card
+                key={cycle.id}
+                className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-shadow duration-200 hover:shadow-md ${accentClass}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1 space-y-2.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-foreground truncate">{cycle.name}</p>
+                        <Badge className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                          {cycle.status ?? "DRAFT"}
+                        </Badge>
+                        {cycle.type && (
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                            {cycle.type.replace("_", " ")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {cycle.periodStart} → {cycle.periodEnd}
+                        {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
+                      </p>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Completion</span>
+                          <span className="text-[10px] font-semibold text-foreground">{progress}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${progressBarClass}`}
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-200">
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(cycle)}>
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(cycle.id)}>
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {cycle.periodStart} → {cycle.periodEnd}
-                    {cycle.deadline && <> &middot; Deadline: {cycle.deadline}</>}
-                    {cycle.type && <> &middot; {cycle.type}</>}
-                  </p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEdit(cycle)}>
-                      <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(cycle.id)}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

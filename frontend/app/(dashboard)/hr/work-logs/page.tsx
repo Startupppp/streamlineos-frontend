@@ -98,15 +98,18 @@ export default function WorkLogsPage() {
   const { data: departments } = useHrDepartments();
 
   const allEmployees = useMemo(
-    () => (isAdminOrCeo
-      ? (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]
-      : []),
-    [employeesRaw, isAdminOrCeo]
+    () =>
+      isAdminOrCeo
+        ? (Array.isArray(employeesRaw)
+            ? employeesRaw
+            : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[]
+        : [],
+    [employeesRaw, isAdminOrCeo],
   );
 
   const employees = useMemo(
     () => allEmployees.filter((e) => e.id !== session?.user?.id && e.isActive !== false),
-    [allEmployees, session?.user?.id]
+    [allEmployees, session?.user?.id],
   );
 
   const activeFilterCount = useMemo(() => {
@@ -122,7 +125,7 @@ export default function WorkLogsPage() {
 
   const joiningYear = useMemo(() => {
     const targetId = draftFilters.selectedUserId || session?.user?.id;
-    const emp = allEmployees.find(e => e.id === targetId);
+    const emp = allEmployees.find((e) => e.id === targetId);
     if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
     return currentYear;
   }, [allEmployees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
@@ -146,7 +149,12 @@ export default function WorkLogsPage() {
 
   const approvedLeaveDates = useMemo<Set<string>>(() => {
     const dateSet = new Set<string>();
-    const requests = (myLeaveData as { requests?: { status: string; startDate: string; endDate: string }[] } | undefined)?.requests ?? [];
+    const requests =
+      (
+        myLeaveData as
+          | { requests?: { status: string; startDate: string; endDate: string }[] }
+          | undefined
+      )?.requests ?? [];
     const today = new Date();
     const todayStr = format(today, "yyyy-MM-dd");
     for (const req of requests) {
@@ -211,9 +219,13 @@ export default function WorkLogsPage() {
     return counts;
   }, [logs, monthGroups]);
 
+  const totalHours = useMemo(
+    () => Object.values(filledCounts).reduce((sum, count) => sum + count * 8, 0),
+    [filledCounts],
+  );
+
   const filterDay = useCallback(
     (date: Date) => {
-
       if (filters.month !== undefined && date.getMonth() !== filters.month) return false;
 
       const dateStr = format(date, "yyyy-MM-dd");
@@ -246,10 +258,16 @@ export default function WorkLogsPage() {
   }, [days, filterDay, searchTerm]);
 
   const handleExportWorkLogs = useCallback(async () => {
-    type LeaveRequest = { status: string; startDate: string; endDate: string; reason?: string | null; leaveType?: { name: string } | null };
-    const leaveRequests = ((myLeaveData as { requests?: LeaveRequest[] } | undefined)?.requests ?? []).filter(
-      (r): r is LeaveRequest => r.status === "APPROVED"
-    );
+    type LeaveRequest = {
+      status: string;
+      startDate: string;
+      endDate: string;
+      reason?: string | null;
+      leaveType?: { name: string } | null;
+    };
+    const leaveRequests = (
+      (myLeaveData as { requests?: LeaveRequest[] } | undefined)?.requests ?? []
+    ).filter((r): r is LeaveRequest => r.status === "APPROVED");
 
     const getLeaveForDate = (dateStr: string): LeaveRequest | undefined =>
       leaveRequests.find((r) => r.startDate <= dateStr && r.endDate >= dateStr);
@@ -284,11 +302,15 @@ export default function WorkLogsPage() {
         const row = sheet.addRow({
           date: format(date, "dd MMM yyyy"),
           day: format(date, "EEEE"),
-          hours: log?.ticket ? "" : (log?.description ? "8" : (leave ? "" : "")),
+          hours: log?.ticket ? "" : log?.description ? "8" : leave ? "" : "",
           description: leave
             ? `On Leave — ${leave.leaveType?.name ?? "Leave"}${leave.reason ? `: ${leave.reason}` : ""}`
-            : (log?.description || ""),
-          status: leave ? "ON LEAVE" : (log?.status === "PENDING" ? "LOGGED" : (log?.status || (log?.description ? "LOGGED" : ""))),
+            : log?.description || "",
+          status: leave
+            ? "ON LEAVE"
+            : log?.status === "PENDING"
+              ? "LOGGED"
+              : log?.status || (log?.description ? "LOGGED" : ""),
         });
         if (leave) {
           row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
@@ -297,7 +319,9 @@ export default function WorkLogsPage() {
       }
 
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -324,6 +348,8 @@ export default function WorkLogsPage() {
     isAdminOrCeo,
   };
 
+  const handleClearSearch = () => setSearchTerm("");
+
   return (
     <PageWrapper
       title="Work Logs"
@@ -337,25 +363,19 @@ export default function WorkLogsPage() {
             })()
           : "Track your daily tasks and activities."
       }
-      actions={
-        <WorkLogFilterActions
-          {...sharedFilterProps}
-          onExport={handleExportWorkLogs}
-        />
-      }
+      actions={<WorkLogFilterActions {...sharedFilterProps} onExport={handleExportWorkLogs} />}
       filters={
-        <WorkLogFiltersPanel
-          {...sharedFilterProps}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
+        <WorkLogFiltersPanel {...sharedFilterProps} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       }
     >
       <div className="space-y-4">
         {filters.departmentId && !filters.selectedUserId ? (
-          <Card>
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
+              <div className="flex flex-col items-center justify-center text-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Department filter is applied. Select an employee from this department to view their work logs.
                 </p>
@@ -363,33 +383,61 @@ export default function WorkLogsPage() {
             </CardContent>
           </Card>
         ) : isLoading ? (
-          <Card>
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <CardContent className="py-12">
-              <div className="flex justify-center" role="status" aria-label="Loading work logs">
+              <div
+                className="flex flex-col items-center justify-center gap-3"
+                role="status"
+                aria-label="Loading work logs"
+              >
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Loading work logs
+                </p>
               </div>
             </CardContent>
           </Card>
         ) : !hasSearchResults ? (
-          <Card>
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <EmptyTimeIllustration className="mb-4 h-40 w-40 opacity-95" />
-                <h3 className="text-lg font-medium text-foreground">No results found</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+              <div className="flex flex-col items-center justify-center text-center gap-3">
+                <EmptyTimeIllustration className="mb-2 h-40 w-40 opacity-95" />
+                <h3 className="text-sm font-semibold text-foreground">No results found</h3>
+                <p className="text-sm text-muted-foreground">
                   No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
                 </p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={() => setSearchTerm("")}>
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 mt-1" onClick={handleClearSearch}>
                   Clear Search
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
+            {!isLoading && logs && totalHours > 0 && (
+              <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-emerald-500">
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+                        {totalHours}
+                        <span className="text-lg ml-1 font-semibold">h</span>
+                      </p>
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
+                        Total logged — Q{quarter} {year}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {monthGroups.map((group) => {
               const filteredDays = group.days.filter(filterDay);
-              const hasActiveFilter = !!searchTerm.trim() || filters.month !== undefined || !!filters.dateFrom || !!filters.dateTo;
+              const hasActiveFilter =
+                !!searchTerm.trim() ||
+                filters.month !== undefined ||
+                !!filters.dateFrom ||
+                !!filters.dateTo;
               if (hasActiveFilter && filteredDays.length === 0) return null;
 
               const isCollapsed = collapsedMonths.has(group.monthKey);
@@ -411,7 +459,9 @@ export default function WorkLogsPage() {
                   currentUserId={session?.user?.id}
                   readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   approvedLeaveDates={approvedLeaveDates}
-                  onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
+                  onSave={(date, content, workLink) =>
+                    upsertLog.mutate({ date, description: content, workLink })
+                  }
                   isSaving={upsertLog.isPending}
                 />
               );

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { LandingNav } from "@/features/landing/components/landing-nav";
 import { LandingFooter } from "@/features/landing/landing-footer";
 import { VisitTracker } from "@/features/analytics/visit-tracker";
+import { PublicMain } from "@/features/landing/components/public-main";
 
 type Props = {
   children: ReactNode;
@@ -13,19 +14,10 @@ export function PublicShell({ children, className }: Props) {
     <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950 overflow-x-clip">
       <VisitTracker />
       <LandingNav />
-      <main className={`flex-1 pt-28 pb-16 lg:pt-32 lg:pb-24 ${className ?? ""}`}>
-        {children}
-      </main>
+      <PublicMain className={className}>{children}</PublicMain>
       <LandingFooter />
     </div>
   );
 }
 
-type EyebrowProps = { children: ReactNode };
-export function PublicEyebrow({ children }: EyebrowProps) {
-  return (
-    <p className="text-[13px] font-medium text-blue-600 mb-3">
-      {children}
-    </p>
-  );
-}
+export { PublicEyebrow } from "@/features/landing/components/public-eyebrow";

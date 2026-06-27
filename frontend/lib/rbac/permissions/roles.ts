@@ -2,6 +2,7 @@ import { HR_PERMISSIONS } from "./hr";
 import { CRM_PERMISSIONS } from "./crm";
 import { SHARED_PERMISSIONS } from "./shared";
 import { SUPPORT_PERMISSIONS } from "./support";
+import { INVENTORY_PERMISSIONS } from "./inventory";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -9,6 +10,7 @@ export const PERMISSIONS = [
   ...CRM_PERMISSIONS,
   ...SHARED_PERMISSIONS,
   ...SUPPORT_PERMISSIONS,
+  ...INVENTORY_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [
@@ -204,6 +206,32 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:view",
     "projects:tickets:view",
     "reports:view",
+  ],
+
+  INVENTORY_MANAGER: [
+    "inventory:products:view",
+    "inventory:products:create",
+    "inventory:products:update",
+    "inventory:products:delete",
+    "inventory:products:import",
+    "inventory:stock:view",
+    "inventory:stock:adjust",
+    "inventory:stock:transfer",
+    "inventory:warehouses:view",
+    "inventory:warehouses:manage",
+    "inventory:vendors:view",
+    "inventory:vendors:manage",
+    "inventory:purchase-orders:view",
+    "inventory:purchase-orders:create",
+    "inventory:purchase-orders:approve",
+    "inventory:purchase-orders:receive",
+    "inventory:sales-orders:view",
+    "inventory:sales-orders:create",
+    "inventory:sales-orders:confirm",
+    "inventory:sales-orders:ship",
+    "inventory:sales-orders:invoice",
+    "inventory:reports:view",
+    "accounting:view",
   ],
 };
 

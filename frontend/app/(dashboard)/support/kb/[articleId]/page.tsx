@@ -27,6 +27,11 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  EmptyMailIllustration,
+  EmptyTicketIllustration,
+  EmptyUploadIllustration,
+} from "@/components/illustrations";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -199,7 +204,7 @@ function ArticleFeedbackPanel({ article }: { article: KbArticleDetail }) {
           <LoadingState variant="list" rows={2} />
         ) : feedback.length === 0 ? (
           <EmptyState
-            icon={MessageSquare}
+            illustration={<EmptyMailIllustration />}
             title="No feedback yet"
             description="Reader feedback will appear here."
             compact
@@ -321,7 +326,7 @@ function InternalCommentsPanel({ article }: { article: KbArticleDetail }) {
           />
         ) : comments.length === 0 ? (
           <EmptyState
-            icon={MessagesSquare}
+            illustration={<EmptyTicketIllustration />}
             title="No comments yet"
             description="Internal notes are only visible to your team."
             compact
@@ -484,7 +489,7 @@ function ArticleAttachmentsPanel({ article }: { article: KbArticleDetail }) {
           />
         ) : attachments.length === 0 ? (
           <EmptyState
-            icon={Paperclip}
+            illustration={<EmptyUploadIllustration />}
             title="No attachments yet"
             description="Upload PDFs or docs readers can download."
             compact

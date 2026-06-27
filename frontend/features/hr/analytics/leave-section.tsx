@@ -1,7 +1,6 @@
 "use client";
 
 import { useHrLeaveAnalytics } from "@/lib/api/hooks/hr/leaves-expenses";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ResponsiveContainer,
   BarChart,
@@ -15,7 +14,18 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { PIE_COLORS, SectionSkeleton, EmptyChart, SimpleBar } from "./shared";
+import {
+  AnalyticsChartCard,
+  AnalyticsSectionHeader,
+  CHART_SEMANTIC,
+  EmptyChart,
+  PIE_COLORS,
+  SectionSkeleton,
+  SimpleBar,
+  chartAxisTick,
+  chartGridProps,
+  chartTooltipStyle,
+} from "./shared";
 
 interface LeaveSectionProps {
   year: number;
@@ -26,15 +36,15 @@ export function LeaveSection({ year }: LeaveSectionProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
-        <div className="h-4 w-36 bg-muted rounded animate-pulse" />
-        <div className="grid md:grid-cols-2 gap-3">
+      <section className="space-y-4">
+        <div className="h-5 w-36 animate-pulse rounded bg-muted" />
+        <div className="grid gap-3 md:grid-cols-2">
           <SectionSkeleton rows={5} />
           <SectionSkeleton rows={4} />
           <SectionSkeleton rows={4} />
           <SectionSkeleton rows={4} />
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -46,7 +56,7 @@ export function LeaveSection({ year }: LeaveSectionProps) {
   }));
 
   const deptData = data.byDepartment.map((d) => ({
-    dept: d.department.length > 8 ? `${d.department.slice(0, 8)}…` : d.department,
+    dept: d.department.length > 10 ? `${d.department.slice(0, 10)}…` : d.department,
     approved: d.approved,
     pending: d.pending,
     rejected: d.rejected,
@@ -65,137 +75,134 @@ export function LeaveSection({ year }: LeaveSectionProps) {
     }));
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Leave Analytics</h3>
-      <div className="grid md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Department-wise Leave Trends</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {deptData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                  data={deptData}
-                  margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+    <section className="space-y-4">
+      <AnalyticsSectionHeader
+        title="Leave Analytics"
+        description="Approved leave trends, types, and department utilization."
+      />
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <AnalyticsChartCard title="Department-wise Leave Trends">
+          {deptData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={deptData}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                barCategoryGap="24%"
+                barGap={4}
+              >
+                <CartesianGrid {...chartGridProps} />
+                <XAxis
+                  dataKey="dept"
+                  tick={chartAxisTick}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={chartAxisTick}
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+                <Bar
+                  dataKey="approved"
+                  fill={CHART_SEMANTIC.success}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={18}
+                />
+                <Bar
+                  dataKey="pending"
+                  fill={CHART_SEMANTIC.warning}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={18}
+                />
+                <Bar
+                  dataKey="rejected"
+                  fill={CHART_SEMANTIC.danger}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={18}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChart label="No department leave data" />
+          )}
+        </AnalyticsChartCard>
+
+        <AnalyticsChartCard title="Monthly Leave Trend (Approved)">
+          {monthlyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={monthlyData}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                barCategoryGap="32%"
+              >
+                <CartesianGrid {...chartGridProps} />
+                <XAxis
+                  dataKey="month"
+                  tick={chartAxisTick}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={chartAxisTick}
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  fill={CHART_SEMANTIC.primary}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={28}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChart label="No monthly leave data" />
+          )}
+        </AnalyticsChartCard>
+
+        <AnalyticsChartCard title="Leave Type Breakdown">
+          {leaveTypeData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={leaveTypeData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={72}
+                  innerRadius={44}
+                  paddingAngle={3}
+                  stroke="var(--card)"
+                  strokeWidth={2}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="dept"
-                    tick={{ fontSize: 9 }}
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="approved" fill="#10b981" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="pending" fill="#f59e0b" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="rejected" fill="#ef4444" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart label="No department leave data" />
-            )}
-          </CardContent>
-        </Card>
+                  {leaveTypeData.map((_, idx) => (
+                    <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 4 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChart label="No leave type data" />
+          )}
+        </AnalyticsChartCard>
 
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Monthly Leave Trend (Approved)</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {monthlyData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                  data={monthlyData}
-                  margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 10 }}
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart label="No monthly leave data" />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Leave Type Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            {leaveTypeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={leaveTypeData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={65}
-                    innerRadius={36}
-                    paddingAngle={2}
-                  >
-                    {leaveTypeData.map((_, idx) => (
-                      <Cell
-                        key={idx}
-                        fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 11,
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 6,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart label="No leave type data" />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm">Avg Leave Days by Department</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            {avgDaysData.length > 0 ? (
-              <SimpleBar data={avgDaysData} />
-            ) : (
-              <EmptyChart label="No utilization data" />
-            )}
-          </CardContent>
-        </Card>
+        <AnalyticsChartCard title="Avg Leave Days by Department">
+          {avgDaysData.length > 0 ? (
+            <SimpleBar data={avgDaysData} />
+          ) : (
+            <EmptyChart label="No utilization data" />
+          )}
+        </AnalyticsChartCard>
       </div>
-    </div>
+    </section>
   );
 }

@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
 import type { ExpenseFilters, ExpenseCategory } from "@/server/actions/expense-query";
@@ -37,39 +38,47 @@ export function AdminExpenseFilters({
   onUserChange,
 }: AdminExpenseFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      {([
-        { key: "ALL" as StatusFilter, label: "All Claims", count: null },
-        { key: "PENDING" as StatusFilter, label: "Pending", count: pendingCount },
-        { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
-        { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
-      ]).map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onStatusChange(item.key)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-            statusFilter === item.key
-              ? "bg-foreground text-background border-foreground"
-              : "bg-white dark:bg-background text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50"
-          }`}
-        >
-          {item.label}
-          {item.count !== null && (
-            <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-              statusFilter === item.key ? "bg-white/20 dark:bg-black/20" : "bg-muted"
-            }`}>
-              {item.count}
-            </span>
-          )}
-        </button>
-      ))}
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {([
+          { key: "ALL" as StatusFilter, label: "All Claims", count: null },
+          { key: "PENDING" as StatusFilter, label: "Pending", count: pendingCount },
+          { key: "APPROVED" as StatusFilter, label: "Approved", count: null },
+          { key: "REJECTED" as StatusFilter, label: "Rejected", count: null },
+        ]).map((item) => (
+          <button
+            key={item.key}
+            onClick={() => onStatusChange(item.key)}
+            className={cn(
+              "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
+              statusFilter === item.key
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50",
+            )}
+          >
+            {item.label}
+            {item.count !== null && (
+              <span
+                className={cn(
+                  "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
+                  statusFilter === item.key
+                    ? "bg-white/20 dark:bg-black/20"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {item.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
       {employees.length > 0 && onUserChange && (
         <Select
           value={selectedUserId || "all"}
           onValueChange={(v) => onUserChange(v === "all" ? "" : v)}
         >
-          <SelectTrigger className="h-9 w-[180px] text-sm" aria-label="Filter by employee">
-            <SelectValue placeholder="Spent By" />
+          <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Filter by employee">
+            <SelectValue placeholder="All Employees" />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Employees</SelectItem>
@@ -103,8 +112,12 @@ export function MemberExpenseFilters({
   const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED"] as const;
 
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-between">
-      <div className="flex items-center gap-1 bg-muted p-1 rounded-lg" role="tablist" aria-label="Filter by status">
+    <div className="flex flex-wrap gap-3 items-center justify-between">
+      <div
+        className="flex items-center gap-0.5 bg-muted p-1 rounded-xl"
+        role="tablist"
+        aria-label="Filter by status"
+      >
         {statuses.map((s, i, arr) => (
           <button
             key={s}
@@ -121,21 +134,22 @@ export function MemberExpenseFilters({
               onStatusChange(arr[nextIdx]);
               (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
             }}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={cn(
+              "h-7 px-3 rounded-lg text-xs font-medium transition-all duration-200",
               statusFilter === s
                 ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
             {s === "ALL" ? "All Claims" : STATUS_LABELS[s]}
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Select value={datePreset} onValueChange={(v) => onDatePresetChange(v as DatePreset)}>
-          <SelectTrigger className="h-9 w-[160px] text-sm" aria-label="Filter expenses by date range">
-            <Filter className="h-3.5 w-3.5 mr-1.5" />
-            <SelectValue placeholder="Filter by Date" />
+          <SelectTrigger className="h-8 w-[150px] text-xs gap-1.5" aria-label="Filter expenses by date range">
+            <Filter className="h-3 w-3 shrink-0" />
+            <SelectValue placeholder="All Time" />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Time</SelectItem>
@@ -149,8 +163,8 @@ export function MemberExpenseFilters({
           filters={filters}
           categories={categories}
           trigger={
-            <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Download report">
-              <Download className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Download report">
+              <Download className="h-3.5 w-3.5" />
             </Button>
           }
         />

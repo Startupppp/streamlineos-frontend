@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -24,7 +25,7 @@ import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Separator } from "@/components/ui/separator";
 import {
-  Plus, AlertTriangle, MoreHorizontal, Trash2, Pencil,
+  Plus, MoreHorizontal, Trash2, Pencil,
   CheckCircle2, Calendar, ChevronsUpDown, Check,
 } from "lucide-react";
 import {
@@ -191,7 +192,7 @@ export function PIPTab() {
       </div>
 
       {pipsList.length === 0 ? (
-        <EmptyState icon={AlertTriangle} title="No PIPs issued yet" compact />
+        <EmptyState illustration={<EmptyApprovalIllustration />} title="No PIPs issued yet" compact />
       ) : (
         <div className="space-y-2">
           {pipsList.map((pip) => (

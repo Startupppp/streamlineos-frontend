@@ -1,0 +1,221 @@
+"use client";
+
+import { useState, type ChangeEvent } from "react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
+import { useMovementsReport } from "@/lib/api/hooks/inventory/reports";
+import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
+
+type MovementType = "RECEIPT" | "SHIPMENT" | "ADJUSTMENT" | "TRANSFER_IN" | "TRANSFER_OUT" | "RETURN";
+
+interface MovementRow {
+  id: number;
+  type: MovementType;
+  productName: string;
+  sku: string;
+  warehouseName: string | null;
+  locationName: string | null;
+  quantity: number;
+  balanceAfter: number | null;
+  referenceType: string | null;
+  referenceNumber: string | null;
+  notes: string | null;
+  createdAt: string;
+  performedBy: string | null;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+}
+
+const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "ALL", label: "All types" },
+  { value: "RECEIPT", label: "Receipt" },
+  { value: "SHIPMENT", label: "Shipment" },
+  { value: "ADJUSTMENT", label: "Adjustment" },
+  { value: "TRANSFER_IN", label: "Transfer In" },
+  { value: "TRANSFER_OUT", label: "Transfer Out" },
+  { value: "RETURN", label: "Return" },
+];
+
+const TYPE_VARIANT: Record<MovementType, "default" | "secondary" | "destructive" | "outline"> = {
+  RECEIPT: "default",
+  SHIPMENT: "outline",
+  ADJUSTMENT: "secondary",
+  TRANSFER_IN: "default",
+  TRANSFER_OUT: "outline",
+  RETURN: "secondary",
+};
+
+const TYPE_CLASS: Record<MovementType, string> = {
+  RECEIPT: "bg-green-100 text-green-800 border-green-200",
+  SHIPMENT: "bg-blue-100 text-blue-800 border-blue-200",
+  ADJUSTMENT: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  TRANSFER_IN: "bg-green-100 text-green-800 border-green-200",
+  TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200",
+  RETURN: "bg-purple-100 text-purple-800 border-purple-200",
+};
+
+function formatDate(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+}
+
+export default function MovementsReportPage() {
+  const [warehouseId, setWarehouseId] = useState<string>("");
+  const [movementType, setMovementType] = useState<string>("ALL");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const warehousesQuery = useWarehouses();
+  const warehouses = (warehousesQuery.data ?? []) as Warehouse[];
+
+  const query = useMovementsReport({
+    warehouseId: warehouseId ? Number(warehouseId) : undefined,
+    type: movementType === "ALL" ? undefined : movementType,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    limit: 200,
+  });
+
+  function handleWarehouseChange(value: string): void {
+    setWarehouseId(value === "ALL" ? "" : value);
+  }
+
+  function handleTypeChange(value: string): void {
+    setMovementType(value);
+  }
+
+  function handleDateFromChange(event: ChangeEvent<HTMLInputElement>): void {
+    setDateFrom(event.target.value);
+  }
+
+  function handleDateToChange(event: ChangeEvent<HTMLInputElement>): void {
+    setDateTo(event.target.value);
+  }
+
+  const rawData = query.data as MovementRow[] | { items?: MovementRow[] } | null | undefined;
+  const rows: MovementRow[] = Array.isArray(rawData)
+    ? rawData
+    : (rawData?.items ?? []);
+
+  return (
+    <PageWrapper
+      eyebrow="Inventory · Reports"
+      title="Stock Movements"
+      subtitle="Full audit trail of all inventory movements — receipts, shipments, adjustments, and transfers."
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4 flex-wrap">
+        <Select value={warehouseId || "ALL"} onValueChange={handleWarehouseChange}>
+          <SelectTrigger className="w-full sm:max-w-[180px]">
+            <SelectValue placeholder="All warehouses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All warehouses</SelectItem>
+            {warehouses.map((w) => (
+              <SelectItem key={w.id} value={String(w.id)}>
+                {w.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={movementType} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-full sm:max-w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={handleDateFromChange}
+          className="w-full sm:max-w-[160px]"
+        />
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={handleDateToChange}
+          className="w-full sm:max-w-[160px]"
+        />
+      </div>
+
+      {query.isLoading && <LoadingState variant="table" rows={10} />}
+      {query.error && <ErrorState description={query.error.message} />}
+
+      {!query.isLoading && !query.error && rows.length === 0 && (
+        <EmptyState
+          illustration={<EmptyActivityIllustration />}
+          title="No movements found"
+          description="No stock movements match the selected filters."
+        />
+      )}
+
+      {rows.length > 0 && (
+        <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
+          <Table className="min-w-[900px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Warehouse</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead className="text-right">Balance After</TableHead>
+                <TableHead>Reference</TableHead>
+                <TableHead>Performed By</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="text-xs whitespace-nowrap">{formatDate(row.createdAt)}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={TYPE_VARIANT[row.type]}
+                      className={TYPE_CLASS[row.type]}
+                    >
+                      {row.type.replace(/_/g, " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{row.productName}</TableCell>
+                  <TableCell className="font-mono text-xs">{row.sku}</TableCell>
+                  <TableCell>{row.warehouseName ?? "—"}</TableCell>
+                  <TableCell>{row.locationName ?? "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">
+                    <span className={row.quantity >= 0 ? "text-green-700" : "text-red-700"}>
+                      {row.quantity >= 0 ? "+" : ""}{row.quantity}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.balanceAfter !== null ? row.balanceAfter : "—"}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {row.referenceType && row.referenceNumber
+                      ? `${row.referenceType} ${row.referenceNumber}`
+                      : row.notes ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-xs">{row.performedBy ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </PageWrapper>
+  );
+}

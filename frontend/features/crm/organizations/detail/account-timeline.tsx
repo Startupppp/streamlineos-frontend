@@ -2,8 +2,9 @@
 
 import type { ElementType } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { UserPlus, TrendingUp, Link2, FileText, Clock } from "lucide-react";
+import { UserPlus, TrendingUp, Link2, FileText } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import type { OrgTimelineEvent, OrgTimelineEventType } from "@/types/crm";
 
@@ -23,7 +24,7 @@ interface AccountTimelineProps {
 
 export function AccountTimeline({ events }: AccountTimelineProps) {
   if (events.length === 0) {
-    return <EmptyState icon={Clock} title="No activity yet" compact />;
+    return <EmptyState illustration={<EmptyActivityIllustration />} title="No activity yet" compact />;
   }
 
   return (

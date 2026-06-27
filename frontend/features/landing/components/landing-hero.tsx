@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "./motion/magnetic";
+import { Marquee } from "./motion/marquee";
+import { HERO_APP_CHIPS } from "../data/apps";
+import { cheapestAnnualLabel } from "@/lib/pricing";
 
 const EASE_OUT_QUART = [0.22, 1, 0.36, 1] as const;
 
@@ -64,9 +67,9 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-display text-5xl sm:text-6xl lg:text-[5rem] xl:text-[5.5rem] font-extrabold tracking-[-0.03em] leading-[0.98] mb-5 text-slate-900"
+            className="font-display text-5xl sm:text-6xl lg:text-[4.5rem] xl:text-[5rem] font-extrabold tracking-[-0.03em] leading-[0.98] mb-4 text-slate-900"
           >
-            Run your company
+            All your business
             <br />
             on <span className="brand-sweep">one platform.</span>
           </motion.h1>
@@ -76,11 +79,22 @@ export function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-sans mx-auto lg:mx-0 mb-7 max-w-xl text-[15px] sm:text-base lg:text-lg text-slate-600 leading-relaxed"
+            className="font-display mx-auto lg:mx-0 mb-2 max-w-xl text-lg sm:text-xl font-bold text-slate-900"
           >
-            HR, projects, CRM, chat, and analytics — unified in a workspace that
-            scales from your first hire to your hundredth branch. Sub-100ms
-            realtime. AI-assisted everywhere.
+            Simple, efficient, yet affordable!
+          </motion.p>
+
+          <motion.p
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            className="font-sans mx-auto lg:mx-0 mb-6 max-w-xl text-[15px] sm:text-base text-slate-600 leading-relaxed"
+          >
+            <span className="font-semibold text-blue-600">{cheapestAnnualLabel()}</span> per
+            seat / month (annual) for{" "}
+            <span className="font-semibold text-slate-900">all apps</span> — HR, projects, CRM,
+            chat, accounting, and more. Sub-100ms realtime. AI-assisted everywhere.
           </motion.p>
 
           <motion.div
@@ -93,14 +107,14 @@ export function LandingHero() {
             <Magnetic strength={0.35}>
               <Link href="/signin">
                 <Button size="lg" className="h-12 px-7 text-[15px]">
-                  Start for free
+                  Start now — it&apos;s free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </Magnetic>
-            <a href="#features">
+            <a href="#apps">
               <Button size="lg" variant="outline" className="h-12 px-7 text-[15px]">
-                See it in action
+                View all apps
                 <ChevronRight className="ml-1.5 h-4 w-4" />
               </Button>
             </a>
@@ -115,9 +129,34 @@ export function LandingHero() {
           >
             <span>No credit card</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span>14-day free trial</span>
+            <span>Instant access</span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span>Cancel anytime</span>
+            <span>Free up to 3 seats</span>
+          </motion.div>
+
+          <motion.div
+            custom={5}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            className="mt-8 -mx-4 lg:mx-0 hidden sm:block"
+          >
+            <Marquee speed={52}>
+              <div className="flex gap-2 px-2">
+                {HERO_APP_CHIPS.map((app) => {
+                  const Icon = app.icon;
+                  return (
+                    <span
+                      key={app.id}
+                      className="inline-flex items-center gap-1.5 shrink-0 rounded-md bg-white/80 border border-slate-200/80 px-2.5 py-1.5 text-[11px] font-medium text-slate-700"
+                    >
+                      <Icon className="h-3 w-3 text-blue-600" aria-hidden />
+                      {app.name}
+                    </span>
+                  );
+                })}
+              </div>
+            </Marquee>
           </motion.div>
         </div>
 

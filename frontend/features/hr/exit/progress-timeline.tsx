@@ -18,9 +18,12 @@ export function ProgressTimeline({ id }: { id: number }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-1 px-4 pb-3">
+      <div className="px-4 py-3 space-y-2.5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-5 w-full rounded-full" />
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+            <Skeleton className="h-3 w-24 rounded" />
+          </div>
         ))}
       </div>
     );
@@ -32,47 +35,52 @@ export function ProgressTimeline({ id }: { id: number }) {
   }));
 
   return (
-    <div className="px-4 pb-3 pt-1">
-      <div className="flex items-center gap-0">
+    <div className="px-4 py-3">
+      <div className="flex flex-col">
         {steps.map((step, i) => (
-          <div key={step.step} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1 shrink-0">
+          <div key={step.step} className="flex items-start gap-3">
+            <div className="flex flex-col items-center shrink-0">
               <div
                 className={cn(
-                  "h-4 w-4 rounded-full border-2 transition-colors",
+                  "h-4 w-4 rounded-full border-2 transition-colors shrink-0",
                   step.status === "completed"
-                    ? "bg-primary border-primary"
+                    ? "bg-emerald-500 border-emerald-500"
                     : step.status === "current"
-                    ? "bg-background border-primary ring-2 ring-primary/30"
-                    : "bg-background border-muted-foreground/30"
+                    ? "bg-background border-blue-500 ring-2 ring-blue-500/30"
+                    : "bg-background border-slate-300 dark:border-slate-600"
                 )}
               />
+              {i < steps.length - 1 && (
+                <div
+                  className={cn(
+                    "w-0.5 h-5 mt-0.5",
+                    step.status === "completed"
+                      ? "bg-emerald-500"
+                      : "bg-slate-200 dark:bg-slate-700"
+                  )}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 pb-1 min-w-0 -mt-0.5">
               <span
                 className={cn(
-                  "text-[9px] text-center leading-tight max-w-[52px]",
+                  "text-[11px] leading-tight",
                   step.status === "completed"
-                    ? "text-primary font-medium"
+                    ? "text-emerald-700 dark:text-emerald-400 font-medium"
                     : step.status === "current"
-                    ? "text-foreground font-medium"
+                    ? "text-foreground font-semibold"
                     : "text-muted-foreground"
                 )}
               >
                 {step.label}
               </span>
               {step.status === "completed" && step.timestamp && (
-                <span className="text-[8px] text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
                   {format(new Date(step.timestamp), "MMM d")}
                 </span>
               )}
             </div>
-            {i < steps.length - 1 && (
-              <div
-                className={cn(
-                  "h-0.5 flex-1 mx-1 mb-4",
-                  step.status === "completed" ? "bg-primary" : "bg-muted-foreground/20"
-                )}
-              />
-            )}
           </div>
         ))}
       </div>

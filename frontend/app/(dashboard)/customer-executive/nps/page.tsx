@@ -10,7 +10,6 @@ import {
   Check,
   Play,
   Square,
-  MessageSquareText,
   ThumbsUp,
   ThumbsDown,
   Minus,
@@ -50,6 +49,10 @@ import { StatCard } from "@/components/ui/stat-card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  EmptyMailIllustration,
+  EmptyLeaderboardIllustration,
+} from "@/components/illustrations";
 import {
   useNpsSurveys,
   useNpsStats,
@@ -210,7 +213,7 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
               <h3 className="text-sm font-semibold">Responses ({data.responses.length})</h3>
               {data.responses.length === 0 ? (
                 <EmptyState
-                  icon={MessageSquareText}
+                  illustration={<EmptyMailIllustration />}
                   title="No responses yet"
                   description="Share the public link to start collecting feedback."
                   compact
@@ -501,7 +504,7 @@ export default function NpsPage() {
           ) : (
             <div className="flex flex-1 min-h-[40vh] items-center justify-center">
               <EmptyState
-                icon={Gauge}
+                illustration={<EmptyLeaderboardIllustration />}
                 title="No NPS surveys yet"
                 description="Create a survey, activate it, and share the public link to start measuring loyalty."
                 action={{ label: "New Survey", onClick: () => setCreateOpen(true) }}

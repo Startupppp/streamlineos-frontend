@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Pencil, Save, X, FileText } from "lucide-react";
+import { Pencil, Save, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateCrmOrganization } from "@/lib/api/hooks/crm";
@@ -43,7 +44,7 @@ export function AccountNotes({ organizationId, initialNotes }: AccountNotesProps
         {notes ? (
           <p className="text-sm text-foreground whitespace-pre-wrap">{notes}</p>
         ) : (
-          <EmptyState icon={FileText} title="No notes yet" compact />
+          <EmptyState illustration={<EmptyDocumentsIllustration />} title="No notes yet" compact />
         )}
         <Button
           variant="ghost"

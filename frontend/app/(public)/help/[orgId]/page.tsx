@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import { BookOpen, Search, FileText, FolderTree, ArrowRight } from "lucide-react";
 import { usePublicKb } from "@/lib/api/hooks/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
@@ -106,7 +107,7 @@ export default function PublicHelpCenterPage() {
 
             {articles.length === 0 ? (
               <EmptyState
-                icon={FileText}
+                illustration={<EmptyPublicDocsIllustration />}
                 title="No articles found"
                 description={
                   search.trim()

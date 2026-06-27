@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -24,7 +25,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Users, Clock, MoreHorizontal, Trash2, ChevronsUpDown, Check } from "lucide-react";
+import { Plus, Clock, MoreHorizontal, Trash2, ChevronsUpDown, Check } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -130,7 +131,7 @@ export function MeetingsTab() {
       </div>
 
       {!meetings?.length ? (
-        <EmptyState icon={Users} title="No 1-on-1 meetings scheduled" compact />
+        <EmptyState illustration={<EmptyTeamIllustration />} title="No 1-on-1 meetings scheduled" compact />
       ) : (
         <div className="space-y-2">
           {meetings.map((m: OneOnOneMeeting) => (

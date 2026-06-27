@@ -19,7 +19,8 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Plus, Zap, Pencil, Trash2, History } from "lucide-react";
+import { EmptyActivityIllustration } from "@/components/illustrations";
+import { Plus, Pencil, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -176,7 +177,7 @@ export default function AutomationsPage() {
       ) : !rules || rules.length === 0 ? (
         <div className="flex flex-1 min-h-[60vh]">
           <EmptyState
-            icon={Zap}
+            illustration={<EmptyActivityIllustration />}
             title="No automations yet"
             description="Create your first rule to react to leads, deals, tickets and invoices automatically."
             action={{ label: "New Automation", onClick: () => setCreateOpen(true) }}

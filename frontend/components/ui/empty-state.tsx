@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import type { LucideIcon } from "lucide-react";
 import { Button } from "./button";
 import Link from "next/link";
 
@@ -13,7 +12,6 @@ interface ActionProps {
 }
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
   illustration?: React.ReactNode;
   title: string;
   description?: string;
@@ -54,7 +52,6 @@ function ActionButton({
 }
 
 export function EmptyState({
-  icon: Icon,
   illustration,
   title,
   description,
@@ -74,22 +71,12 @@ export function EmptyState({
       )}
     >
       {illustration ? (
-        <div className={cn(compact ? "mb-2 [&>svg]:h-10 [&>svg]:w-10" : "mb-5")}>
-          {illustration}
-        </div>
-      ) : Icon ? (
         <div
           className={cn(
-            "rounded-xl bg-muted flex items-center justify-center",
-            compact ? "h-8 w-8 mb-2" : "h-12 w-12 mb-5"
+            compact ? "mb-2 [&>svg]:h-10 [&>svg]:w-10" : "mb-5 [&>svg]:h-32 [&>svg]:w-32"
           )}
         >
-          <Icon
-            className={cn(
-              "text-muted-foreground/60",
-              compact ? "h-4 w-4" : "h-6 w-6"
-            )}
-          />
+          {illustration}
         </div>
       ) : null}
 

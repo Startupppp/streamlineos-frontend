@@ -5,6 +5,7 @@ const MIGRATED_PREFIXES = [
   "/contacts",
   "/targets",
   "/csat",
+  "/inventory",
   "/accounting",
   "/audit-log",
   "/blog",

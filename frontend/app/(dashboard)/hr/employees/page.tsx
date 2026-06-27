@@ -142,7 +142,7 @@ export default function EmployeesPage() {
     >
       {filtered.length === 0 ? (
         <EmptyState
-          icon={Users}
+          illustration={<Users className="h-8 w-8 text-muted-foreground" />}
           title="No employees match your filters"
           description={
             hasFilters
@@ -166,25 +166,25 @@ export default function EmployeesPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <Table>
             <caption className="sr-only">Employee directory</caption>
             <TableHeader>
-              <TableRow className="text-xs">
-                <TableHead scope="col">Employee</TableHead>
-                <TableHead scope="col" className="w-[110px]">
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead scope="col" className="font-semibold text-foreground/80">Employee</TableHead>
+                <TableHead scope="col" className="w-[110px] font-semibold text-foreground/80">
                   Employee ID
                 </TableHead>
-                <TableHead scope="col" className="w-[160px]">
+                <TableHead scope="col" className="w-[160px] font-semibold text-foreground/80">
                   Designation
                 </TableHead>
-                <TableHead scope="col" className="w-[140px]">
+                <TableHead scope="col" className="w-[140px] font-semibold text-foreground/80">
                   Department
                 </TableHead>
-                <TableHead scope="col" className="w-[200px]">
+                <TableHead scope="col" className="w-[200px] font-semibold text-foreground/80">
                   Email
                 </TableHead>
-                <TableHead scope="col" className="w-[90px]">
+                <TableHead scope="col" className="w-[90px] font-semibold text-foreground/80">
                   Status
                 </TableHead>
               </TableRow>

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Users } from "lucide-react";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { useCustomersOutstanding } from "@/lib/api/hooks/accounting";
 
 function formatCurrency(value: string): string {
@@ -77,7 +77,7 @@ export default function CustomerLedgersPage() {
           />
         ) : items.length === 0 ? (
           <EmptyState
-            icon={Users}
+            illustration={<EmptyTeamIllustration />}
             title="No customers found"
             description={
               search

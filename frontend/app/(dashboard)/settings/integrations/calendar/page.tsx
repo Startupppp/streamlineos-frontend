@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -187,7 +188,7 @@ export default function CalendarIntegrationsPage() {
               </div>
             ) : (
               <EmptyState
-                icon={CalendarCheck2}
+                illustration={<EmptyCalendarIllustration />}
                 title="No calendars connected"
                 description="Connect a Google or Microsoft Outlook account below to enable availability checks and automatic interview events."
               />

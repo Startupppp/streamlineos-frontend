@@ -168,148 +168,176 @@ export function TerminationFormSheet({
       isPending={isPending}
       submitDisabled={submitDisabled}
     >
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Employee <span className="text-destructive">*</span>
-        </Label>
-        <Combobox
-          options={employeeOptions}
-          value={selectedUserId}
-          onChange={onSelectedUserIdChange}
-          placeholder="Select an employee…"
-          searchPlaceholder="Search by name…"
-        />
-      </div>
-
-      <Separator />
-
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Termination Reason <span className="text-destructive">*</span>
-        </Label>
-        <Select value={selectedReason} onValueChange={onSelectedReasonChange}>
-          <SelectTrigger aria-label="Select termination reason">
-            <SelectValue placeholder="Select a reason..." />
-          </SelectTrigger>
-          <SelectContent className="w-[var(--radix-select-trigger-width)]">
-            {TERMINATION_REASONS.map((reason) => (
-              <SelectItem key={reason} value={reason}>
-                {reason}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Remarks{" "}
-          {isOtherReason ? (
-            <span className="text-destructive">*</span>
-          ) : (
-            <span className="text-muted-foreground font-normal">(optional)</span>
-          )}
-        </Label>
-        {isOtherReason && (
-          <p className="text-[11px] text-amber-600 dark:text-amber-400">
-            Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
-          </p>
-        )}
-        <Textarea
-          placeholder={
-            isOtherReason
-              ? "Describe the specific reason (min. 10 characters)..."
-              : "Additional remarks or context..."
-          }
-          value={remarks}
-          onChange={onRemarksChange}
-          rows={4}
-          maxLength={2000}
-          className="resize-none w-full"
-          aria-label="Remarks"
-        />
-        {isOtherReason && (
-          <p className="text-[11px] text-muted-foreground">
-            {remarks.length} / 10 min characters
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Effective Date <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          type="date"
-          value={effectiveDate}
-          min={format(new Date(), "yyyy-MM-dd")}
-          onChange={onEffectiveDateChange}
-          aria-label="Effective date"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Must be today or a future date.
+      <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-950/20 px-3 py-2.5">
+        <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-400">
+          Sensitive Action
+        </p>
+        <p className="text-[11px] text-rose-600/80 dark:text-rose-400/70 mt-0.5">
+          Termination records are permanent and will initiate the offboarding process once approved.
         </p>
       </div>
 
-      <Separator />
-
-      <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
-        <div>
-          <p className="text-sm font-medium">Notice Period Waived</p>
-          <p className="text-xs text-muted-foreground">
-            Employee will not be required to serve notice period.
-          </p>
-        </div>
-        <Switch
-          checked={noticePeriodWaived}
-          onCheckedChange={onNoticePeriodWaivedChange}
-          aria-label="Notice period waived"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Severance Amount{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
-        </Label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-            ₹
-          </span>
-          <Input
-            type="number"
-            min="0"
-            max="9999999"
-            step="0.01"
-            placeholder="0"
-            value={severanceAmount}
-            onChange={onSeveranceAmountChange}
-            className="pl-6"
-            aria-label="Severance amount"
+      <div className="space-y-3">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Employee
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Select Employee <span className="text-rose-500">*</span>
+          </Label>
+          <Combobox
+            options={employeeOptions}
+            value={selectedUserId}
+            onChange={onSelectedUserIdChange}
+            placeholder="Select an employee…"
+            searchPlaceholder="Search by name…"
           />
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
-          Internal Notes{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
-        </Label>
-        <Textarea
-          placeholder="Notes visible only to HR and management..."
-          value={internalNotes}
-          onChange={onInternalNotesChange}
-          rows={3}
-          maxLength={1000}
-          className="resize-none w-full"
-          aria-label="Internal notes"
-        />
+      <Separator />
+
+      <div className="space-y-3">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Termination Details
+        </p>
+
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Termination Reason <span className="text-rose-500">*</span>
+          </Label>
+          <Select value={selectedReason} onValueChange={onSelectedReasonChange}>
+            <SelectTrigger aria-label="Select termination reason">
+              <SelectValue placeholder="Select a reason..." />
+            </SelectTrigger>
+            <SelectContent className="w-[var(--radix-select-trigger-width)]">
+              {TERMINATION_REASONS.map((reason) => (
+                <SelectItem key={reason} value={reason}>
+                  {reason}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Remarks{" "}
+            {isOtherReason ? (
+              <span className="text-rose-500">*</span>
+            ) : (
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            )}
+          </Label>
+          {isOtherReason && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+              Required: Describe the specific reason for selecting &apos;Other&apos; (min. 10 characters).
+            </p>
+          )}
+          <Textarea
+            placeholder={
+              isOtherReason
+                ? "Describe the specific reason (min. 10 characters)..."
+                : "Additional remarks or context..."
+            }
+            value={remarks}
+            onChange={onRemarksChange}
+            rows={4}
+            maxLength={2000}
+            className="resize-none w-full"
+            aria-label="Remarks"
+          />
+          {isOtherReason && (
+            <p className="text-[11px] text-muted-foreground">
+              {remarks.length} / 10 min characters
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Effective Date <span className="text-rose-500">*</span>
+          </Label>
+          <Input
+            type="date"
+            value={effectiveDate}
+            min={format(new Date(), "yyyy-MM-dd")}
+            onChange={onEffectiveDateChange}
+            aria-label="Effective date"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Must be today or a future date.
+          </p>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Terms & Compensation
+        </p>
+
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+          <div>
+            <p className="text-sm font-medium">Notice Period Waived</p>
+            <p className="text-xs text-muted-foreground">
+              Employee will not be required to serve notice period.
+            </p>
+          </div>
+          <Switch
+            checked={noticePeriodWaived}
+            onCheckedChange={onNoticePeriodWaivedChange}
+            aria-label="Notice period waived"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Severance Amount{" "}
+            <span className="text-muted-foreground font-normal">(optional)</span>
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              ₹
+            </span>
+            <Input
+              type="number"
+              min="0"
+              max="9999999"
+              step="0.01"
+              placeholder="0"
+              value={severanceAmount}
+              onChange={onSeveranceAmountChange}
+              className="pl-6"
+              aria-label="Severance amount"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Internal Notes{" "}
+            <span className="text-muted-foreground font-normal">(optional)</span>
+          </Label>
+          <Textarea
+            placeholder="Notes visible only to HR and management..."
+            value={internalNotes}
+            onChange={onInternalNotesChange}
+            rows={3}
+            maxLength={1000}
+            className="resize-none w-full"
+            aria-label="Internal notes"
+          />
+        </div>
       </div>
 
       <Separator />
 
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">Letter Preview</Label>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Letter Preview
+        </p>
         <Textarea
           readOnly
           value={letterPreview}

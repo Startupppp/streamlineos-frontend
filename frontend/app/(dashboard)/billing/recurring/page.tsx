@@ -19,6 +19,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   useRecurringInvoices,
@@ -110,7 +111,7 @@ export default function RecurringInvoicesPage() {
         <div className="flex-1 min-h-[60vh] flex">
           <EmptyState
             className="flex-1"
-            icon={Repeat}
+            illustration={<EmptyTimeIllustration />}
             title="No recurring invoices"
             description="Mark an invoice as recurring with an interval and a next date to schedule automatic generation."
             action={{ label: "Go to invoices", href: "/billing/invoices" }}

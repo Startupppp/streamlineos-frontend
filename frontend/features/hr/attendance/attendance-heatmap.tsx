@@ -103,12 +103,12 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
 
   return (
-    <Card className="overflow-hidden border-border shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
-              <Activity className="h-4 w-4 text-blue-500" />
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-blue-600" />
             </div>
             Attendance Heatmap
           </CardTitle>
@@ -116,19 +116,19 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 duration-200"
               onClick={handlePrevYear}
               aria-label="Previous year"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[50px] text-center text-foreground">
+            <span className="text-sm font-semibold min-w-[50px] text-center text-foreground">
               {year}
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 duration-200"
               onClick={handleNextYear}
               disabled={year >= new Date().getFullYear()}
               aria-label="Next year"
@@ -138,37 +138,32 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
           </div>
         </div>
         {data?.summary && (
-          <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
-            <span>
-              <span className="font-semibold text-foreground">
-                {data.summary.totalDays}
-              </span>{" "}
-              days
-            </span>
-            <span>
-              <span className="font-semibold text-foreground">
-                {data.summary.totalHours}h
-              </span>{" "}
-              worked
-            </span>
-            <span>
-              <span className="font-semibold text-foreground">
-                {data.summary.avgHoursPerDay}h
-              </span>{" "}
-              avg/day
-            </span>
-            <span>
-              <span className="font-semibold text-foreground">
-                {data.summary.longestStreak}d
-              </span>{" "}
-              longest streak
-            </span>
+          <div className="flex flex-wrap gap-4 mt-3 p-3 rounded-xl bg-muted/30">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Days</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.totalDays}</span>
+            </div>
+            <div className="w-px bg-border" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Hours</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.totalHours}h</span>
+            </div>
+            <div className="w-px bg-border" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Avg/Day</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.avgHoursPerDay}h</span>
+            </div>
+            <div className="w-px bg-border" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Streak</span>
+              <span className="text-sm font-bold text-foreground tabular-nums">{data.summary.longestStreak}d</span>
+            </div>
           </div>
         )}
       </CardHeader>
       <CardContent className="pb-5">
         {isLoading ? (
-          <div className="space-y-1.5">
+          <div className="rounded-xl bg-muted/20 p-4 space-y-1.5">
             {Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="flex gap-1">
                 {Array.from({ length: 53 }).map((__, j) => (
@@ -178,7 +173,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
             ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl bg-muted/10 p-3">
             <div className="inline-block min-w-max">
               <div className="flex mb-1 ml-8">
                 {monthPositions.map(({ month, col }) => (
@@ -222,7 +217,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                         return (
                           <div
                             key={rowIdx}
-                            className={`h-3 w-3 rounded-[2px] cursor-default transition-opacity hover:opacity-70 ${cls}`}
+                            className={`h-3 w-3 rounded-[2px] cursor-default transition-opacity duration-200 hover:opacity-70 ${cls}`}
                             title={title}
                             role="gridcell"
                             aria-label={title}
@@ -233,15 +228,15 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
                   ))}
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 mt-3">
-                <span className="text-[10px] text-muted-foreground">Less</span>
+              <div className="flex items-center gap-1.5 mt-3 pl-8">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Less</span>
                 {[0, 1, 2, 3, 4].map((level) => (
                   <div
                     key={level}
                     className={`h-3 w-3 rounded-[2px] ${intensityClasses[level]}`}
                   />
                 ))}
-                <span className="text-[10px] text-muted-foreground">More</span>
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">More</span>
               </div>
             </div>
           </div>

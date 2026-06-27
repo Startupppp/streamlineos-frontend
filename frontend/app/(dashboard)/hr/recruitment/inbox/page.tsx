@@ -5,6 +5,7 @@ import { useMessageThreads, useCandidateMessages, useSendCandidateMessage } from
 import type { MessageThread, CandidateMessage, MessageChannel } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -219,11 +220,7 @@ export default function InboxPage() {
     <PageWrapper title="Candidate Inbox" subtitle="Manage candidate conversations across channels">
       {threads.length === 0 ? (
         <EmptyState
-          illustration={
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          }
+          illustration={<EmptyInboxIllustration />}
           title="No messages yet"
           description="Send the first message to a candidate from their profile page."
         />

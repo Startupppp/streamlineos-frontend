@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -121,11 +122,7 @@ export default function InternalJobsPage() {
     >
       {jobs.length === 0 ? (
         <EmptyState
-          illustration={
-            <svg className="h-10 w-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          }
+          illustration={<EmptySearchIllustration />}
           title="No internal openings"
           description="There are no internal job openings available at this time. Check back later."
         />

@@ -1,0 +1,179 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  PRICING,
+  PRICING_TIERS,
+  type BillingPeriod,
+  type PricingTier,
+} from "@/lib/pricing";
+import { PricingBillingToggle } from "./pricing-billing-toggle";
+import { IncludedAppsGrid } from "./included-apps-grid";
+import { EASE_OUT } from "./motion/variants";
+
+const fmt = (n: number) => `${PRICING.currency}${n.toLocaleString("en-IN")}`;
+
+const TIER_SUMMARY: Record<PricingTier["id"], string[]> = {
+  starter: [
+    "All core apps",
+    `Up to ${PRICING.starterSeatLimit} seats`,
+    "StreamlineOS Cloud",
+    "Community support",
+  ],
+  startup: [
+    "All apps",
+    "Unlimited seats",
+    "Workflow automation",
+    "Email support",
+  ],
+  growth: [
+    "All apps",
+    "AI assistance",
+    "Multi-org & multi-branch",
+    "Priority support",
+  ],
+  enterprise: [
+    "All apps",
+    "Dedicated infrastructure",
+    "Custom SLA & compliance",
+    "Self-hosting option",
+  ],
+};
+
+type PricingTierGridProps = {
+  showAppsGrid?: boolean;
+  defaultPeriod?: BillingPeriod;
+};
+
+export function PricingTierGrid({
+  showAppsGrid = true,
+  defaultPeriod = "annual",
+}: PricingTierGridProps) {
+  const [period, setPeriod] = useState<BillingPeriod>(defaultPeriod);
+
+  return (
+    <>
+      <PricingBillingToggle period={period} onChange={setPeriod} className="mb-8" />
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {PRICING_TIERS.map((tier, i) => (
+          <PricingCard key={tier.id} tier={tier} period={period} index={i} />
+        ))}
+      </div>
+      {showAppsGrid ? (
+        <IncludedAppsGrid compact title="Every app. One price." subtitle="" />
+      ) : null}
+    </>
+  );
+}
+
+function PricingCard({
+  tier,
+  period,
+  index,
+}: {
+  tier: PricingTier;
+  period: BillingPeriod;
+  index: number;
+}) {
+  const isFree = tier.monthly === 0;
+  const displayPrice =
+    period === "annual" ? tier.priceLabel.annual : tier.priceLabel.monthly;
+  const comparePrice =
+    period === "annual" && tier.monthly && tier.annual && tier.monthly > tier.annual
+      ? fmt(tier.monthly)
+      : null;
+  const bullets = TIER_SUMMARY[tier.id];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-5% 0px" }}
+      transition={{ duration: 0.4, delay: index * 0.04, ease: EASE_OUT }}
+      className={`relative flex flex-col rounded-2xl border bg-white transition-shadow hover:shadow-md ${
+        tier.highlight
+          ? "border-blue-300 shadow-sm ring-1 ring-blue-200/60"
+          : "border-slate-200/90 shadow-sm"
+      }`}
+    >
+      {tier.badge ? (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[11px] font-semibold text-white tracking-wide">
+          {tier.badge}
+        </div>
+      ) : null}
+
+      <div className="border-b border-slate-100 px-5 pt-6 pb-5">
+        <h3 className="font-display text-lg font-bold text-slate-900">{tier.name}</h3>
+        <p className="mt-0.5 text-xs text-slate-500">{tier.tagline}</p>
+
+        <div className="mt-5 flex items-baseline gap-2 flex-wrap">
+          {comparePrice ? (
+            <span className="text-base font-medium text-slate-400 line-through tabular-nums">
+              {comparePrice}
+            </span>
+          ) : null}
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={displayPrice}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE_OUT }}
+              className="font-display text-3xl font-extrabold text-slate-900 tabular-nums leading-none"
+            >
+              {displayPrice}
+            </motion.span>
+          </AnimatePresence>
+          <span className="text-sm text-slate-500">
+            {isFree ? tier.period : "/ user / mo"}
+          </span>
+        </div>
+
+        {period === "annual" && !isFree && tier.monthly && tier.annual ? (
+          <p className="mt-2 text-xs font-medium text-emerald-600">
+            Save {PRICING.annualDiscountPct}% vs monthly
+          </p>
+        ) : null}
+      </div>
+
+      <ul className="flex-1 space-y-2.5 px-5 py-5">
+        {bullets.map((item) => (
+          <li
+            key={item}
+            className="flex items-start gap-2.5 text-sm text-slate-600 leading-snug"
+          >
+            <Check
+              className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+              strokeWidth={2.5}
+              aria-hidden
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+
+      <div className="space-y-2 px-5 pb-5">
+        <Link href={tier.ctaHref} className="block">
+          <Button
+            variant={tier.highlight ? "default" : "outline"}
+            className="h-10 w-full font-semibold"
+          >
+            {isFree ? "Start free" : tier.cta}
+            <ArrowRight className="ml-2 h-3.5 w-3.5" aria-hidden />
+          </Button>
+        </Link>
+        {!isFree && tier.id !== "enterprise" ? (
+          <Link href={`${tier.ctaHref}&trial=1`} className="block">
+            <Button variant="ghost" className="h-9 w-full text-xs text-slate-500">
+              Try free for 14 days
+            </Button>
+          </Link>
+        ) : null}
+      </div>
+    </motion.div>
+  );
+}

@@ -107,7 +107,7 @@ export async function withAuth(
   }
 }
 
-export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage" | "approve" | "generate" | "view";
+export type AbilityVerb = "create" | "read" | "update" | "delete" | "manage" | "approve" | "generate" | "view" | "receive" | "confirm" | "ship" | "invoice" | "transfer" | "adjust";
 
 export type AbilitySubject =
   | "all"
@@ -165,7 +165,15 @@ export type AbilitySubject =
   | "settings:email-templates"
   | "settings:webhooks"
   | "settings:onboarding"
-  | "settings:mfa";
+  | "settings:mfa"
+  | "inventory"
+  | "inventory:products"
+  | "inventory:stock"
+  | "inventory:warehouses"
+  | "inventory:vendors"
+  | "inventory:purchase-orders"
+  | "inventory:sales-orders"
+  | "inventory:reports";
 
 export async function withAbility(
   verb: AbilityVerb,

@@ -26,6 +26,12 @@ interface WorkLogEntryRowProps {
   status?: string;
 }
 
+const statusPillClass: Record<string, string> = {
+  APPROVED: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+  PENDING: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+  REJECTED: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+};
+
 export function WorkLogEntryRow({
   date,
   initialContent,
@@ -110,44 +116,71 @@ export function WorkLogEntryRow({
     <div
       title={statusLabel}
       className={cn(
-        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border shadow-sm hover:shadow-md transition-all",
-        isWeekendDay ? "bg-blue-500/[0.03] dark:bg-blue-500/[0.05]" : "bg-card",
+        "flex flex-col sm:flex-row rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200",
+        isWeekendDay ? "bg-blue-500/[0.02] dark:bg-blue-500/[0.04]" : "bg-card",
         hasUnsavedChanges
           ? "border-l-4 border-l-amber-500"
           : content
-            ? "border-l-4 border-l-green-500"
+            ? "border-l-4 border-l-emerald-500"
             : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
       )}
     >
-      <div className="sm:w-32 md:w-36 flex-shrink-0 flex sm:flex-col items-center sm:items-start gap-1.5">
-        <span className="font-bold text-lg sm:text-xl text-foreground leading-none">{format(date, "dd")}</span>
-        <span className="text-muted-foreground text-xs font-medium">{format(date, "MMM, EEEE")}</span>
-        <div className="flex items-center gap-1.5">
+      <div className="sm:w-28 md:w-32 flex-shrink-0 flex sm:flex-col items-start gap-1.5 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-border/60">
+        <div className="flex sm:flex-col items-baseline sm:items-start gap-2 sm:gap-0.5">
+          <span
+            className={cn(
+              "font-bold text-2xl sm:text-3xl tabular-nums leading-none",
+              isWeekendDay ? "text-blue-600 dark:text-blue-400" : "text-foreground",
+            )}
+          >
+            {format(date, "dd")}
+          </span>
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {format(date, "MMM, EEE")}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1 mt-0.5">
           {isWeekendDay && (
-            <span className="text-[10px] bg-blue-500/10 dark:bg-blue-500/20 px-1.5 py-0.5 rounded font-medium text-blue-600 inline-block">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
               Weekend
             </span>
           )}
           {hasUnsavedChanges && (
-            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded font-medium text-amber-700 dark:text-amber-400 inline-block">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
               Draft
             </span>
           )}
           {!hasUnsavedChanges && initialContent && (
-            <span className="text-[10px] bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded font-medium text-green-700 dark:text-green-400 inline-block">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
               Saved
+            </span>
+          )}
+          {status && !hasUnsavedChanges && (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                statusPillClass[status] ??
+                  "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+              )}
+            >
+              {status}
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex-1 min-w-0 space-y-2">
+      <div className="flex-1 min-w-0 space-y-2 p-3 sm:p-4">
         {ticket && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className="flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800 font-mono">
               <Ticket className="h-3 w-3" />
               #{ticket.ticketNumber}
-            </Badge>
+            </span>
+            {ticket.project && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
+                {ticket.project.key}
+              </span>
+            )}
             <span className="text-sm font-medium text-foreground truncate">{ticket.title}</span>
             {ticket.project && (
               <span className="text-xs text-muted-foreground">— {ticket.project.name}</span>
@@ -155,23 +188,32 @@ export function WorkLogEntryRow({
           </div>
         )}
 
-        <Textarea
-          value={content}
-          onChange={(e) => {
-            if (readOnly) return;
-            setContent(e.target.value);
-            setIsDirty(true);
-          }}
-          readOnly={readOnly}
-          maxLength={2000}
-          placeholder={isWeekendDay ? "Weekend..." : readOnly ? "No entry" : "What did you work on today?"}
-          aria-label={`Work log for ${dateLabel}`}
-          className={cn(
-            "resize-none focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
-            isWeekendDay && !content ? "min-h-[36px] opacity-50" : "min-h-[60px]",
-            readOnly && "cursor-default opacity-75",
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <Textarea
+              value={content}
+              onChange={(e) => {
+                if (readOnly) return;
+                setContent(e.target.value);
+                setIsDirty(true);
+              }}
+              readOnly={readOnly}
+              maxLength={2000}
+              placeholder={isWeekendDay ? "Weekend..." : readOnly ? "No entry" : "What did you work on today?"}
+              aria-label={`Work log for ${dateLabel}`}
+              className={cn(
+                "resize-none focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
+                isWeekendDay && !content ? "min-h-[36px] opacity-50" : "min-h-[60px]",
+                readOnly && "cursor-default opacity-75",
+              )}
+            />
+          </div>
+          {!hasUnsavedChanges && content && (
+            <span className="font-mono text-[11px] font-semibold text-muted-foreground tabular-nums mt-2 shrink-0">
+              8h
+            </span>
           )}
-        />
+        </div>
 
         {!readOnly && (
           <div className="space-y-1">
@@ -198,7 +240,7 @@ export function WorkLogEntryRow({
             href={initialWorkLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
           >
             <ExternalLink className="h-3 w-3" />
             {initialWorkLink}
@@ -206,30 +248,19 @@ export function WorkLogEntryRow({
         )}
 
         {highlighted && !hasUnsavedChanges && (
-          <p className="text-xs text-muted-foreground px-1 truncate">
-            {highlighted}
-          </p>
+          <p className="text-xs text-muted-foreground px-1 truncate">{highlighted}</p>
         )}
 
         {hasUnsavedChanges && !readOnly && (
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              className="h-7 text-xs gap-1.5"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3" />
-              )}
+            <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
               Save
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs text-muted-foreground"
+              className="h-8 text-xs text-muted-foreground"
               onClick={handleDiscard}
               disabled={isSaving}
             >

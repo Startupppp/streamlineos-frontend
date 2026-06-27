@@ -208,48 +208,62 @@ export default function PayrollPage() {
       title="Payroll Management"
       subtitle="Generate and manage employee payrolls"
       actions={
-        <div className="flex gap-2 flex-wrap">
-          <Select
-            value={activeView}
-            onValueChange={(v) => setFilter({ view: v })}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 p-1">
+            <Select
+              value={activeView}
+              onValueChange={(v) => setFilter({ view: v })}
+            >
+              <SelectTrigger className="h-7 w-[100px] border-0 bg-transparent shadow-none text-xs font-medium focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                <SelectItem value="month">By Month</SelectItem>
+                <SelectItem value="year">By Year</SelectItem>
+              </SelectContent>
+            </Select>
+            {activeView === "month" ? (
+              <Select
+                value={effectiveMonth}
+                onValueChange={(m) => setFilter({ month: m, view: "month" })}
+              >
+                <SelectTrigger className="h-7 w-[150px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {MONTHS.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select
+                value={effectiveYear}
+                onValueChange={(y) => setFilter({ year: y, view: "year" })}
+              >
+                <SelectTrigger className="h-7 w-[80px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {YEARS.map((y) => (
+                    <SelectItem key={y} value={y}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={() => form.setOpen(true)}
           >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              <SelectItem value="month">By Month</SelectItem>
-              <SelectItem value="year">By Year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {activeView === "month" ? (
-            <Select value={effectiveMonth} onValueChange={(m) => setFilter({ month: m, view: "month" })}>
-              <SelectTrigger className="w-[160px] sm:w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {MONTHS.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select value={effectiveYear} onValueChange={(y) => setFilter({ year: y, view: "year" })}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {YEARS.map((y) => (
-                  <SelectItem key={y} value={y}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          <Button variant="outline" onClick={() => form.setOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-3.5 w-3.5" />
             Individual
           </Button>
 
@@ -292,13 +306,15 @@ export default function PayrollPage() {
           />
 
           <Button
+            size="sm"
+            className="h-9 gap-1.5"
             onClick={handleGenerateAll}
             disabled={generatePayrollMutation.isPending}
           >
             {generatePayrollMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Users className="mr-2 h-4 w-4" />
+              <Users className="h-3.5 w-3.5" />
             )}
             Generate All
           </Button>

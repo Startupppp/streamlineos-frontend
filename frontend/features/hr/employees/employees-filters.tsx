@@ -40,13 +40,17 @@ export function EmployeesFilters({
   onStatusChange,
   onClear,
 }: EmployeesFiltersProps) {
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onSearchChange(e.target.value);
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={handleSearchChange}
           placeholder="Search name, email, ID…"
           className="pl-8 h-8 w-60 text-xs"
         />
@@ -85,12 +89,12 @@ export function EmployeesFilters({
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" asChild>
         <Link href="/hr/termination">View Terminated</Link>
       </Button>
       {hasFilters && (
-        <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={onClear}>
-          <X className="h-3.5 w-3.5 mr-1" />
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" onClick={onClear}>
+          <X className="h-3.5 w-3.5" />
           Clear
         </Button>
       )}

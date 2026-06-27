@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Wallet } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useCashFlow, type CashFlowSection } from "@/lib/api/hooks/accounting";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
@@ -187,7 +187,7 @@ export default function CashFlowPage() {
           />
         ) : !report || !hasActivity ? (
           <EmptyState
-            icon={Wallet}
+            illustration={<EmptyExpensesIllustration />}
             title="No cash activity for this range"
             description="Pick a different date range or post entries that move cash or bank balances."
           />

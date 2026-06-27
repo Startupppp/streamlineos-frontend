@@ -10,8 +10,8 @@ import { AnimatedLogo } from "./animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
 
 const navLinks = [
+  { label: "Apps", href: "#apps" },
   { label: "Features", href: "#features" },
-  { label: "Modules", href: "#modules" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];

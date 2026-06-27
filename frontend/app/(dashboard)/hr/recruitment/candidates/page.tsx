@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCandidates, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -20,6 +19,7 @@ import { toast } from "sonner";
 import {
   Plus, Search, Mail, Phone, Star, XCircle, CheckSquare,
   GitCompare, MoreVertical, Pencil, Trash2, Building2, Clock, ArrowLeft, Users,
+  Upload,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Candidate, CandidateStatus } from "@/types/hr";
@@ -27,6 +27,7 @@ import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candi
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
+import { cn } from "@/lib/utils";
 
 const STAGE_CONFIG: {
   value: CandidateStatus;
@@ -34,14 +35,56 @@ const STAGE_CONFIG: {
   accent: string;
   pill: string;
   dot: string;
-  count?: number;
+  activePill: string;
 }[] = [
-  { value: "NEW", label: "New", accent: "border-l-slate-400", pill: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200", dot: "bg-slate-400" },
-  { value: "SCREENING", label: "Screening", accent: "border-l-blue-500", pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300", dot: "bg-blue-500" },
-  { value: "INTERVIEW", label: "Interview", accent: "border-l-amber-500", pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300", dot: "bg-amber-500" },
-  { value: "OFFER", label: "Offer", accent: "border-l-purple-500", pill: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300", dot: "bg-purple-500" },
-  { value: "HIRED", label: "Hired", accent: "border-l-emerald-500", pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300", dot: "bg-emerald-500" },
-  { value: "REJECTED", label: "Rejected", accent: "border-l-rose-400", pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300", dot: "bg-rose-400" },
+  {
+    value: "NEW",
+    label: "New",
+    accent: "border-l-slate-400",
+    pill: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    dot: "bg-slate-400",
+    activePill: "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-800",
+  },
+  {
+    value: "SCREENING",
+    label: "Screening",
+    accent: "border-l-blue-500",
+    pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    dot: "bg-blue-500",
+    activePill: "bg-blue-600 text-white",
+  },
+  {
+    value: "INTERVIEW",
+    label: "Interview",
+    accent: "border-l-amber-500",
+    pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-500",
+    activePill: "bg-amber-600 text-white",
+  },
+  {
+    value: "OFFER",
+    label: "Offer",
+    accent: "border-l-violet-500",
+    pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    dot: "bg-violet-500",
+    activePill: "bg-violet-600 text-white",
+  },
+  {
+    value: "HIRED",
+    label: "Hired",
+    accent: "border-l-emerald-500",
+    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    activePill: "bg-emerald-600 text-white",
+  },
+  {
+    value: "REJECTED",
+    label: "Rejected",
+    accent: "border-l-rose-400",
+    pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+    dot: "bg-rose-400",
+    activePill: "bg-rose-600 text-white",
+  },
 ];
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -73,8 +116,10 @@ function CandidateCardSkeleton() {
         </div>
         <Skeleton className="h-5 w-16 rounded-full" />
       </div>
-      <Skeleton className="h-3 w-full" />
-      <Skeleton className="h-3 w-3/4" />
+      <div className="space-y-1.5">
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
       <div className="flex gap-2">
         <Skeleton className="h-5 w-16 rounded-full" />
         <Skeleton className="h-5 w-20 rounded-full" />
@@ -195,47 +240,68 @@ export default function CandidatesPage() {
     );
   }, [selectedIds, bulkReject]);
 
+  const handleCloseEditSheet = useCallback((open: boolean) => {
+    setEditSheetOpen(open);
+    if (!open) setEditingCandidate(null);
+  }, []);
+
+  const handleCloseDeleteDialog = useCallback((open: boolean) => {
+    setDeleteDialogOpen(open);
+    if (!open) setDeletingCandidate(null);
+  }, []);
+
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6 pb-10">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-            <Link href="/hr/recruitment"><ArrowLeft className="h-4 w-4" /></Link>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
+            <Link href="/hr/recruitment" aria-label="Back to recruitment">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </Button>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Candidates</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Candidates</h1>
             <p className="text-xs text-muted-foreground">{filteredCandidates.length} in pipeline</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
           {selectedIds.size > 0 && (
             <>
-              <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+              <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-primary-foreground">{selectedIds.size}</span>
+                </div>
+                selected
+              </div>
               <Button size="sm" variant="destructive" className="h-8 gap-1.5 text-xs" onClick={() => setBulkRejectOpen(true)}>
-                <XCircle className="h-3.5 w-3.5" /> Reject Selected
+                <XCircle className="h-3.5 w-3.5" /> Reject
               </Button>
               {selectedIds.size >= 2 && selectedIds.size <= 4 && (
                 <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => setCompareOpen(true)}>
                   <GitCompare className="h-3.5 w-3.5" /> Compare
                 </Button>
               )}
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedIds(new Set())}>Clear</Button>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedIds(new Set())}>
+                Clear
+              </Button>
             </>
           )}
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleSelectAll} title="Select all">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={handleSelectAll}
+          >
             <CheckSquare className="h-3.5 w-3.5" />
             {selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0 ? "Deselect all" : "Select all"}
           </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" asChild>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" asChild>
             <Link href="/hr/recruitment/candidates/import">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              Import
+              <Upload className="h-3.5 w-3.5" /> Import
             </Link>
           </Button>
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-4 w-4" /> Add Candidate
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5" /> Add Candidate
           </Button>
         </div>
       </div>
@@ -244,16 +310,21 @@ export default function CandidatesPage() {
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search candidates..."
+            placeholder="Search candidates…"
             value={searchQuery}
             onChange={(e) => setFilter("q", e.target.value || null)}
-            className="pl-9 h-9 bg-muted/30"
+            className="pl-9 h-9"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setFilter("status", null)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${!statusFilter ? "bg-foreground text-background shadow" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer",
+              !statusFilter
+                ? "bg-foreground text-background shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
           >
             All · {candidates?.length ?? 0}
           </button>
@@ -264,9 +335,12 @@ export default function CandidatesPage() {
               <button
                 key={s.value}
                 onClick={() => setFilter("status", s.value)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${active ? s.pill + " shadow ring-1 ring-inset ring-current/20" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5",
+                  active ? s.activePill + " shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${active ? s.dot : "bg-muted-foreground/40"}`} />
+                <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", active ? "bg-current opacity-70" : s.dot)} />
                 {s.label} · {cnt}
               </button>
             );
@@ -279,19 +353,23 @@ export default function CandidatesPage() {
           {Array.from({ length: 6 }).map((_, i) => <CandidateCardSkeleton key={i} />)}
         </div>
       ) : filteredCandidates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+        <div className="flex flex-col items-center justify-center flex-1 py-24 gap-4 text-center">
           <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center">
-            <Users className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+            <Users className="h-7 w-7 text-muted-foreground" />
           </div>
-          <p className="text-sm font-medium text-foreground">
-            {searchQuery ? "No candidates match your search" : "No candidates yet"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {searchQuery ? "Try a different search term or clear the filter" : "Add your first candidate to get started"}
-          </p>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {searchQuery ? "No candidates match your search" : "No candidates yet"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {searchQuery
+                ? "Try a different search term or clear the filter"
+                : "Add your first candidate to start building your pipeline"}
+            </p>
+          </div>
           {!searchQuery && (
-            <Button size="sm" className="mt-2" onClick={() => setSheetOpen(true)}>
-              <Plus className="h-4 w-4 mr-1.5" /> Add Candidate
+            <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Candidate
             </Button>
           )}
         </div>
@@ -303,19 +381,32 @@ export default function CandidatesPage() {
             return (
               <div
                 key={candidate.id}
-                className={`relative group rounded-2xl border bg-card border-l-4 ${cfg.accent} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isSelected ? "ring-2 ring-primary/40 shadow-md" : "border-border/70"}`}
+                className={cn(
+                  "relative group rounded-2xl border bg-card border-l-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+                  cfg.accent,
+                  isSelected
+                    ? "border-primary/30 ring-2 ring-primary/20 shadow-sm"
+                    : "border-border/70"
+                )}
               >
-                <div className="absolute top-3 right-3 flex items-center gap-1 z-10" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="absolute top-3 right-3 flex items-center gap-1 z-10"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => handleToggleSelect(candidate.id, e.target.checked)}
                     aria-label={`Select ${candidate.firstName} ${candidate.lastName}`}
-                    className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer opacity-60 group-hover:opacity-100 transition-opacity"
+                    className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
                         <MoreVertical className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -324,7 +415,10 @@ export default function CandidatesPage() {
                         <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => openDeleteDialog(candidate)}>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => openDeleteDialog(candidate)}
+                      >
                         <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -333,7 +427,7 @@ export default function CandidatesPage() {
 
                 <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-5 pr-16">
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
                       {getInitials(candidate.firstName, candidate.lastName)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -342,7 +436,8 @@ export default function CandidatesPage() {
                       </h3>
                       {candidate.currentRole && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {candidate.currentRole}{candidate.currentCompany ? ` · ${candidate.currentCompany}` : ""}
+                          {candidate.currentRole}
+                          {candidate.currentCompany && ` · ${candidate.currentCompany}`}
                         </p>
                       )}
                     </div>
@@ -367,19 +462,27 @@ export default function CandidatesPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.pill}`}>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", cfg.pill)}>
                       {cfg.label}
                     </span>
                     {candidate.rating !== null && candidate.rating !== undefined && (
                       <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`h-3 w-3 ${i < candidate.rating! ? "text-amber-500 fill-amber-500" : "text-border"}`} />
+                          <Star
+                            key={i}
+                            className={cn(
+                              "h-3 w-3",
+                              i < candidate.rating!
+                                ? "text-amber-500 fill-amber-500"
+                                : "text-border fill-transparent"
+                            )}
+                          />
                         ))}
                       </div>
                     )}
                     {candidate.createdAt && (
-                      <div className="flex items-center gap-1 ml-auto text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-0.5 ml-auto text-[10px] text-muted-foreground">
                         <Clock className="h-2.5 w-2.5" />
                         {formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true })}
                       </div>
@@ -387,7 +490,10 @@ export default function CandidatesPage() {
                   </div>
                 </Link>
 
-                <div className="px-5 pb-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="px-5 pb-4 flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <AIScoreCandidateButton candidateId={candidate.id} compact />
                   <Select
                     value={candidate.status ?? "NEW"}
@@ -400,7 +506,7 @@ export default function CandidatesPage() {
                       {STAGE_CONFIG.map((s) => (
                         <SelectItem key={s.value} value={s.value}>
                           <span className="flex items-center gap-1.5">
-                            <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
                             {s.label}
                           </span>
                         </SelectItem>
@@ -419,7 +525,7 @@ export default function CandidatesPage() {
         onOpenChange={setBulkRejectOpen}
         title={`Reject ${selectedIds.size} candidate(s)?`}
         description="This will move all selected candidates to Rejected and send automated rejection emails. This action cannot be undone."
-        confirmLabel={bulkReject.isPending ? "Rejecting..." : `Reject ${selectedIds.size} Candidate(s)`}
+        confirmLabel={bulkReject.isPending ? "Rejecting…" : `Reject ${selectedIds.size} Candidate(s)`}
         destructive
         onConfirm={handleBulkReject}
       />
@@ -433,18 +539,17 @@ export default function CandidatesPage() {
       <EditCandidateSheet
         open={editSheetOpen}
         candidate={editingCandidate}
-        onOpenChange={(open) => { setEditSheetOpen(open); if (!open) setEditingCandidate(null); }}
+        onOpenChange={handleCloseEditSheet}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
-        onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletingCandidate(null); }}
+        onOpenChange={handleCloseDeleteDialog}
         title="Delete candidate?"
         description={`This will permanently delete ${deletingCandidate?.firstName} ${deletingCandidate?.lastName} and all related data. This cannot be undone.`}
-        confirmLabel={deleteCandidate.isPending ? "Deleting..." : "Delete Candidate"}
+        confirmLabel={deleteCandidate.isPending ? "Deleting…" : "Delete Candidate"}
         destructive
         onConfirm={handleDelete}
       />
     </div>
   );
 }
-

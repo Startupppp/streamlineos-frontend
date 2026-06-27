@@ -252,9 +252,15 @@ export default function ExpensesPage() {
         subtitle="Review and manage pending employee expense claims."
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            {pendingCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+                {pendingCount} pending
+              </span>
+            )}
             <Button
               variant="outline"
-              className="gap-2"
+              size="sm"
+              className="h-9 gap-1.5 text-sm"
               onClick={() => setIsImportOpen(true)}
             >
               <Upload className="h-4 w-4" />
@@ -264,13 +270,13 @@ export default function ExpensesPage() {
               filters={filters}
               categories={expenseCategories}
               trigger={
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm">
                   <Download className="h-4 w-4" />
-                  Export Report
+                  Export
                 </Button>
               }
             />
-            <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+            <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4" />
               Add Expense
             </Button>
@@ -354,7 +360,7 @@ export default function ExpensesPage() {
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       actions={
-        <Button onClick={() => setIsCreateOpen(true)}>
+        <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           Submit New Claim
         </Button>
