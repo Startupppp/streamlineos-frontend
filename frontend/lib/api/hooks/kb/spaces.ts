@@ -13,11 +13,11 @@ export function useKbSpaces() {
   });
 }
 
-export function useKbSpace(id: number) {
+export function useKbSpace(spaceId: number) {
   return useQuery({
-    queryKey: queryKeys.kb.space(id),
-    queryFn: () => apiClient.get<KbSpace>(`/kb/spaces/${id}`),
-    enabled: Number.isFinite(id) && id > 0,
+    queryKey: queryKeys.kb.space(spaceId),
+    queryFn: () => apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`),
+    enabled: Number.isFinite(spaceId) && spaceId > 0,
     staleTime: 60_000,
   });
 }
@@ -35,11 +35,11 @@ export function useCreateKbSpace() {
 export function useUpdateKbSpace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdateSpaceInput) =>
-      apiClient.patch<KbSpace>(`/kb/spaces/${id}`, data),
+    mutationFn: ({ spaceId, ...data }: UpdateSpaceInput) =>
+      apiClient.patch<KbSpace>(`/kb/spaces/${spaceId}`, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaces() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.space(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.space(variables.spaceId) });
     },
   });
 }
@@ -47,10 +47,10 @@ export function useUpdateKbSpace() {
 export function useDeleteKbSpace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/kb/spaces/${id}`),
-    onSuccess: (_data, id) => {
+    mutationFn: (spaceId: number) => apiClient.delete<{ success: boolean }>(`/kb/spaces/${spaceId}`),
+    onSuccess: (_data, spaceId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaces() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.space(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.space(spaceId) });
     },
   });
 }

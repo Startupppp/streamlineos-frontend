@@ -19,7 +19,7 @@ export function HelpfulVote({ articleId }: HelpfulVoteProps) {
     if (vote.isPending) return;
     setSelected(helpful);
     vote.mutate(
-      { id: articleId, helpful },
+      { articleId, helpful },
       {
         onSuccess: () => toast.success("Thanks for your feedback!"),
         onError: (error) => {

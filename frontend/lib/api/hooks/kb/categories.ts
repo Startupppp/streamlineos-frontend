@@ -28,8 +28,8 @@ export function useCreateKbCategory(spaceId: number) {
 export function useUpdateKbCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdateCategoryInput) =>
-      apiClient.patch<KbCategory>(`/kb/categories/${id}`, data),
+    mutationFn: ({ categoryId, ...data }: UpdateCategoryInput) =>
+      apiClient.patch<KbCategory>(`/kb/categories/${categoryId}`, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaceCategories(variables.spaceId) });
     },
@@ -39,8 +39,8 @@ export function useUpdateKbCategory() {
 export function useDeleteKbCategory() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id }: { id: number; spaceId: number }) =>
-      apiClient.delete<{ success: boolean }>(`/kb/categories/${id}`),
+    mutationFn: ({ categoryId }: { categoryId: number; spaceId: number }) =>
+      apiClient.delete<{ success: boolean }>(`/kb/categories/${categoryId}`),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaceCategories(variables.spaceId) });
     },

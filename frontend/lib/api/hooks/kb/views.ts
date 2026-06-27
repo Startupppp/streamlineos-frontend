@@ -5,6 +5,6 @@ import { apiClient } from "@/lib/api-client";
 
 export function useLogKbArticleView() {
   return useMutation({
-    mutationFn: (id: number) => apiClient.post<{ success: true }>(`/kb/articles/${id}/view`),
+    mutationFn: (articleId: number) => apiClient.post<{ success: true }>(`/kb/articles/${articleId}/view`),
   });
 }

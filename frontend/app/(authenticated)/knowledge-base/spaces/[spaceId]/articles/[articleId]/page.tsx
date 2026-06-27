@@ -232,7 +232,7 @@ export default function KbArticleReaderPage() {
 
   function handleVerify() {
     verify.mutate(
-      { id: articleId },
+      { articleId },
       {
         onSuccess: () => toast.success("Article marked as verified"),
         onError: (error) => toast.error(getApiError(error)),

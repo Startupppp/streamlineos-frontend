@@ -282,7 +282,7 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
               if (liveKey !== key && live.title) {
                 updateArticle.mutate(
                   {
-                    id: created.id,
+                    articleId: created.id,
                     title: live.title,
                     content: live.content,
                     contentText: live.contentText,
@@ -310,7 +310,7 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
 
       updateArticle.mutate(
         {
-          id: articleId,
+          articleId,
           title: snapshot.title,
           content: snapshot.content,
           contentText: snapshot.contentText,
@@ -425,7 +425,7 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
       {
         onSuccess: (data) => {
           updateArticle.mutate(
-            { id, excerpt: data.content.trim() },
+            { articleId: id, excerpt: data.content.trim() },
             {
               onSuccess: () => toast.success("Excerpt updated from summary"),
               onError: (error) => toast.error(getErrorMessage(error)),
@@ -463,7 +463,7 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
     if (key !== lastSavedKeyRef.current && snapshot.title) {
       updateArticle.mutate(
         {
-          id,
+          articleId: id,
           title: snapshot.title,
           content: snapshot.content,
           contentText: snapshot.contentText,

@@ -85,7 +85,7 @@ export function ArticleSettingsSheet({
         .filter(Boolean);
       updateArticle.mutate(
         {
-          id: article.id,
+          articleId: article.id,
           categoryId: data.categoryId === CATEGORY_NONE ? null : Number(data.categoryId),
           tags: tags.length > 0 ? tags : null,
           excerpt: data.excerpt.trim() || null,

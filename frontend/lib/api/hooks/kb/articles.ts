@@ -23,20 +23,20 @@ export function useKbArticles(params: ListArticlesParams) {
   });
 }
 
-export function useKbArticle(id: number) {
+export function useKbArticle(articleId: number) {
   return useQuery({
-    queryKey: queryKeys.kb.article(id),
-    queryFn: () => apiClient.get<KbArticle>(`/kb/articles/${id}`),
-    enabled: Number.isFinite(id) && id > 0,
+    queryKey: queryKeys.kb.article(articleId),
+    queryFn: () => apiClient.get<KbArticle>(`/kb/articles/${articleId}`),
+    enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 60_000,
   });
 }
 
-export function useKbArticleVersions(id: number) {
+export function useKbArticleVersions(articleId: number) {
   return useQuery({
-    queryKey: queryKeys.kb.articleVersions(id),
-    queryFn: () => apiClient.get<KbArticleVersion[]>(`/kb/articles/${id}/versions`),
-    enabled: Number.isFinite(id) && id > 0,
+    queryKey: queryKeys.kb.articleVersions(articleId),
+    queryFn: () => apiClient.get<KbArticleVersion[]>(`/kb/articles/${articleId}/versions`),
+    enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 60_000,
   });
 }
@@ -54,11 +54,11 @@ export function useCreateKbArticle() {
 export function useUpdateKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdateArticleInput) =>
-      apiClient.patch<KbArticle>(`/kb/articles/${id}`, data),
+    mutationFn: ({ articleId, ...data }: UpdateArticleInput) =>
+      apiClient.patch<KbArticle>(`/kb/articles/${articleId}`, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.articleId) });
     },
   });
 }
@@ -66,10 +66,10 @@ export function useUpdateKbArticle() {
 export function useDeleteKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/kb/articles/${id}`),
-    onSuccess: (_data, id) => {
+    mutationFn: (articleId: number) => apiClient.delete<{ success: boolean }>(`/kb/articles/${articleId}`),
+    onSuccess: (_data, articleId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(articleId) });
     },
   });
 }
@@ -77,10 +77,10 @@ export function useDeleteKbArticle() {
 export function usePublishKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => apiClient.post<KbArticle>(`/kb/articles/${id}/publish`),
-    onSuccess: (_data, id) => {
+    mutationFn: (articleId: number) => apiClient.post<KbArticle>(`/kb/articles/${articleId}/publish`),
+    onSuccess: (_data, articleId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(articleId) });
     },
   });
 }
@@ -88,10 +88,10 @@ export function usePublishKbArticle() {
 export function useUnpublishKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => apiClient.post<KbArticle>(`/kb/articles/${id}/unpublish`),
-    onSuccess: (_data, id) => {
+    mutationFn: (articleId: number) => apiClient.post<KbArticle>(`/kb/articles/${articleId}/unpublish`),
+    onSuccess: (_data, articleId) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(articleId) });
     },
   });
 }
@@ -99,11 +99,11 @@ export function useUnpublishKbArticle() {
 export function useVerifyKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: VerifyArticleInput) =>
-      apiClient.post<KbArticle>(`/kb/articles/${id}/verify`, data),
+    mutationFn: ({ articleId, ...data }: VerifyArticleInput) =>
+      apiClient.post<KbArticle>(`/kb/articles/${articleId}/verify`, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.articleId) });
     },
   });
 }
@@ -111,11 +111,11 @@ export function useVerifyKbArticle() {
 export function useVoteKbArticle() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: VoteArticleInput) =>
-      apiClient.post<KbArticle>(`/kb/articles/${id}/vote`, data),
+    mutationFn: ({ articleId, ...data }: VoteArticleInput) =>
+      apiClient.post<KbArticle>(`/kb/articles/${articleId}/vote`, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.articleId) });
     },
   });
 }
@@ -123,12 +123,12 @@ export function useVoteKbArticle() {
 export function useRestoreKbArticleVersion() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, versionNumber }: { id: number; versionNumber: number }) =>
-      apiClient.post<KbArticle>(`/kb/articles/${id}/versions/${versionNumber}/restore`),
+    mutationFn: ({ articleId, versionNumber }: { articleId: number; versionNumber: number }) =>
+      apiClient.post<KbArticle>(`/kb/articles/${articleId}/versions/${versionNumber}/restore`),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.articles() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.articleVersions(variables.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.article(variables.articleId) });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.articleVersions(variables.articleId) });
     },
   });
 }

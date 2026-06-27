@@ -84,7 +84,7 @@ export interface CreateSpaceInput {
 }
 
 export interface UpdateSpaceInput {
-  id: number;
+  spaceId: number;
   name?: string;
   slug?: string;
   description?: string | null;
@@ -103,7 +103,7 @@ export interface CreateCategoryInput {
 }
 
 export interface UpdateCategoryInput {
-  id: number;
+  categoryId: number;
   spaceId: number;
   name?: string;
   slug?: string;
@@ -131,7 +131,7 @@ export interface CreateArticleInput {
 }
 
 export interface UpdateArticleInput {
-  id: number;
+  articleId: number;
   title?: string;
   spaceId?: number | null;
   categoryId?: number | null;
@@ -149,13 +149,13 @@ export interface UpdateArticleInput {
 }
 
 export interface VerifyArticleInput {
-  id: number;
+  articleId: number;
   note?: string;
   reviewIntervalDays?: number | null;
 }
 
 export interface VoteArticleInput {
-  id: number;
+  articleId: number;
   helpful: boolean;
 }
 

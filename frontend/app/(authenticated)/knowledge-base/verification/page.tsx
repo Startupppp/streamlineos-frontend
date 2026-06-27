@@ -99,9 +99,9 @@ export default function KnowledgeBaseVerificationPage() {
     return map;
   }, [spacesQuery.data]);
 
-  function handleVerify(id: number) {
+  function handleVerify(articleId: number) {
     verify.mutate(
-      { id },
+      { articleId },
       {
         onSuccess: () => {
           toast.success("Article marked as verified");
@@ -157,7 +157,7 @@ export default function KnowledgeBaseVerificationPage() {
                     key={item.id}
                     item={item}
                     spaceName={item.spaceId !== null ? spaceNames.get(item.spaceId) ?? null : null}
-                    isVerifying={verify.isPending && verify.variables?.id === item.id}
+                    isVerifying={verify.isPending && verify.variables?.articleId === item.id}
                     onVerify={handleVerify}
                   />
                 ))}
