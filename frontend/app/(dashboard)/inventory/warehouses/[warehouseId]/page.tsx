@@ -46,18 +46,6 @@ interface Location {
   children?: Location[];
 }
 
-interface WarehouseDetail {
-  id: number;
-  name: string;
-  code: string;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  country?: string | null;
-  isDefault: boolean;
-  isActive: boolean;
-}
-
 interface AddLocationFormState {
   name: string;
   code: string;
@@ -137,8 +125,8 @@ export default function WarehouseDetailPage({
     parentLocationId: "",
   });
 
-  const warehouse = warehouseData as WarehouseDetail | undefined;
-  const locations = (Array.isArray(locationsData) ? locationsData : []) as Location[];
+  const warehouse = warehouseData;
+  const locations = Array.isArray(locationsData) ? locationsData : [];
 
   const grouped = useMemo(() => groupByType(locations), [locations]);
 
@@ -181,8 +169,9 @@ export default function WarehouseDetailPage({
         warehouseId,
         name,
         code,
-        [form.locationType.toLowerCase()]: code,
-      } as Parameters<typeof createLocation.mutate>[0],
+        locationType: form.locationType,
+        parentLocationId: form.parentLocationId ? Number(form.parentLocationId) : undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Location added");
@@ -380,14 +369,14 @@ export default function WarehouseDetailPage({
               <div className="space-y-1.5">
                 <Label htmlFor="loc-parent">Parent Location</Label>
                 <Select
-                  value={form.parentLocationId}
-                  onValueChange={(v) => setField("parentLocationId", v)}
+                  value={form.parentLocationId || "none"}
+                  onValueChange={(v) => setField("parentLocationId", v === "none" ? "" : v)}
                 >
                   <SelectTrigger id="loc-parent">
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {parentOptions.map((loc) => (
                       <SelectItem key={loc.id} value={String(loc.id)}>
                         {loc.name} ({loc.code})

@@ -146,7 +146,7 @@ export default function WarehousesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<WarehouseFormState>(blankForm());
 
-  const warehouses = (Array.isArray(data) ? data : []) as Warehouse[];
+  const warehouses = Array.isArray(data) ? data : [];
 
   const setField = useCallback(
     (key: keyof WarehouseFormState, value: string) => {

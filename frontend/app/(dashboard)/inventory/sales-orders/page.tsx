@@ -12,20 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useSalesOrders } from "@/lib/api/hooks/inventory/sales-orders";
+import { useSalesOrders, type SalesOrderStatus } from "@/lib/api/hooks/inventory/sales-orders";
 
-type SoStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "INVOICED" | "CANCELLED";
+type SoStatus = SalesOrderStatus;
 type StatusFilter = "ALL" | SoStatus;
-
-interface SalesOrder {
-  id: number;
-  soNumber: string;
-  customerName: string | null;
-  orderDate: string | null;
-  expectedShipDate: string | null;
-  total: string;
-  status: SoStatus;
-}
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "ALL", label: "All statuses" },
@@ -86,10 +76,7 @@ export default function SalesOrdersListPage() {
     setDateTo(event.target.value);
   }
 
-  const rawData = query.data as { items?: SalesOrder[] } | SalesOrder[] | null | undefined;
-  const items: SalesOrder[] = Array.isArray(rawData)
-    ? rawData
-    : (rawData?.items ?? []);
+  const items = query.data?.items ?? [];
 
   return (
     <PageWrapper

@@ -28,22 +28,29 @@ import { toast } from "sonner";
 import {
   useCreateProduct,
   useUpdateProduct,
-  useProductCategories,
-  useProductUoms,
+  useCategories,
+  useUom,
 } from "@/lib/api/hooks/inventory";
 import type { InventoryProduct } from "@/types/inventory";
+
+const numberFieldSchema = z
+  .string()
+  .refine(
+    (v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0),
+    "Must be 0 or more",
+  );
 
 const productFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   sku: z.string().min(1, "SKU is required").max(100),
   barcode: z.string().max(100).optional().or(z.literal("")),
-  categoryId: z.coerce.number().int().positive().optional(),
-  uomId: z.coerce.number().int().positive().optional(),
+  categoryId: z.number().int().positive().optional(),
+  uomId: z.number().int().positive().optional(),
   description: z.string().optional().or(z.literal("")),
-  costPrice: z.coerce.number().nonnegative("Must be 0 or more").default(0),
-  sellingPrice: z.coerce.number().nonnegative("Must be 0 or more").default(0),
-  reorderPoint: z.coerce.number().nonnegative("Must be 0 or more").default(0),
-  hasVariants: z.boolean().default(false),
+  costPrice: numberFieldSchema,
+  sellingPrice: numberFieldSchema,
+  reorderPoint: numberFieldSchema,
+  hasVariants: z.boolean(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -56,8 +63,8 @@ interface ProductFormProps {
 export function ProductForm({ product, onSuccess }: ProductFormProps) {
   const isEdit = !!product;
 
-  const { data: categories = [] } = useProductCategories();
-  const { data: uoms = [] } = useProductUoms();
+  const { data: categories = [] } = useCategories();
+  const { data: uoms = [] } = useUom();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct(product?.id ?? 0);
 
@@ -70,9 +77,9 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
       categoryId: undefined,
       uomId: undefined,
       description: "",
-      costPrice: 0,
-      sellingPrice: 0,
-      reorderPoint: 0,
+      costPrice: "",
+      sellingPrice: "",
+      reorderPoint: "",
       hasVariants: false,
     },
   });
@@ -86,9 +93,9 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
         categoryId: product.categoryId ?? undefined,
         uomId: product.uomId ?? undefined,
         description: product.description ?? "",
-        costPrice: Number(product.costPrice),
-        sellingPrice: Number(product.sellingPrice),
-        reorderPoint: Number(product.reorderPoint),
+        costPrice: String(Number(product.costPrice)),
+        sellingPrice: String(Number(product.sellingPrice)),
+        reorderPoint: String(Number(product.reorderPoint)),
         hasVariants: product.hasVariants,
       });
     }
@@ -102,9 +109,9 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
       categoryId: values.categoryId,
       uomId: values.uomId,
       description: values.description || undefined,
-      costPrice: values.costPrice,
-      sellingPrice: values.sellingPrice,
-      reorderPoint: values.reorderPoint,
+      costPrice: Number(values.costPrice),
+      sellingPrice: Number(values.sellingPrice),
+      reorderPoint: Number(values.reorderPoint),
       hasVariants: values.hasVariants,
     };
 

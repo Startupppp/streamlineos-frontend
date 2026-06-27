@@ -4,16 +4,72 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-interface SalesOrderFilters {
-  customerId?: number;
-  status?: string;
+export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "INVOICED" | "CANCELLED";
+
+export interface SalesOrderFilters {
+  clientId?: number;
+  status?: SalesOrderStatus;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
   limit?: number;
 }
 
-interface SoLine {
+export interface SalesOrderListItem {
+  id: number;
+  soNumber: string;
+  customerName: string | null;
+  orderDate: string | null;
+  expectedShipDate: string | null;
+  total: string;
+  status: SalesOrderStatus;
+}
+
+export interface SalesOrdersListResponse {
+  items: SalesOrderListItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface SalesOrderLine {
+  id: number;
+  productId: number;
+  productName: string | null;
+  productSku: string | null;
+  quantity: string;
+  unitPrice: string;
+  taxRate: string | null;
+  discount: string | null;
+  lineTotal: string;
+}
+
+export interface SalesOrderDetail {
+  id: number;
+  soNumber: string;
+  customerName: string | null;
+  status: SalesOrderStatus;
+  orderDate: string | null;
+  expectedShipDate: string | null;
+  currency: string | null;
+  shippingAddress: string | null;
+  notes: string | null;
+  subtotal: string;
+  total: string;
+  invoiceId: number | null;
+  invoiceNumber: string | null;
+  lines: SalesOrderLine[];
+}
+
+export interface AtpEntry {
+  productId: number;
+  onHand: number;
+  committed: number;
+  onOrder: number;
+  available: number;
+}
+
+export interface CreateSalesOrderLineInput {
   productId: number;
   quantity: number;
   unitPrice: number;
@@ -21,67 +77,223 @@ interface SoLine {
   discount?: number;
 }
 
-interface CreateSalesOrderInput {
+export interface CreateSalesOrderInput {
   customerId?: number;
   warehouseId: number;
+  orderDate?: string;
   expectedShipDate?: string;
-  lines: SoLine[];
-  notes?: string;
   currency?: string;
   shippingAddress?: string;
+  notes?: string;
+  lines: CreateSalesOrderLineInput[];
 }
 
-interface SoActionInput {
+export interface CreatedSalesOrder {
+  id: number;
+  soNumber: string;
+}
+
+export interface CreatedInvoice {
+  id: number;
+  invoiceNumber: string;
+}
+
+export interface ConfirmSalesOrderInput {
   soId: number;
 }
 
-interface ShipSalesOrderInput {
+export interface ShipSalesOrderInput {
   soId: number;
-  shippedLines: Array<{
-    productId: number;
-    shippedQty: number;
-    locationId?: number;
-  }>;
+  shippedLines: Array<{ productId: number; shippedQty: number; locationId?: number }>;
+  shipDate?: string;
   trackingNumber?: string;
   notes?: string;
 }
 
-interface InvoiceSalesOrderInput {
+export interface InvoiceSalesOrderInput {
   soId: number;
-  notes?: string;
+}
+
+interface RawNamedRef {
+  id: number;
+  name: string | null;
+}
+
+interface RawListSalesOrder {
+  id: number;
+  soNumber: string;
+  status: SalesOrderStatus;
+  orderDate: string | null;
+  requiredDate: string | null;
+  total: string;
+  client: RawNamedRef | null;
+}
+
+interface RawListResponse {
+  items: RawListSalesOrder[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface RawProductRef {
+  id: number;
+  name: string | null;
+  sku: string | null;
+}
+
+interface RawVariantRef {
+  product: RawProductRef | null;
+}
+
+interface RawDetailLine {
+  id: number;
+  productVariantId: number;
+  quantity: string;
+  unitPrice: string;
+  taxRate: string | null;
+  amount: string;
+  productVariant: RawVariantRef | null;
+}
+
+interface RawInvoiceRef {
+  id: number;
+  invoiceNumber: string | null;
+}
+
+interface RawDetailSalesOrder {
+  id: number;
+  soNumber: string;
+  status: SalesOrderStatus;
+  orderDate: string | null;
+  requiredDate: string | null;
+  currency: string | null;
+  shippingAddress: string | null;
+  notes: string | null;
+  subtotal: string;
+  total: string;
+  invoiceId: number | null;
+  client: RawNamedRef | null;
+  invoice: RawInvoiceRef | null;
+  lines: RawDetailLine[];
+}
+
+interface RawAtpEntry {
+  productVariantId: number;
+  onHand: number;
+  committed: number;
+  onOrder: number;
+  available: number;
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function mapListItem(raw: RawListSalesOrder): SalesOrderListItem {
+  return {
+    id: raw.id,
+    soNumber: raw.soNumber,
+    customerName: raw.client?.name ?? null,
+    orderDate: raw.orderDate,
+    expectedShipDate: raw.requiredDate,
+    total: raw.total,
+    status: raw.status,
+  };
+}
+
+function mapDetailLine(raw: RawDetailLine): SalesOrderLine {
+  return {
+    id: raw.id,
+    productId: raw.productVariantId,
+    productName: raw.productVariant?.product?.name ?? null,
+    productSku: raw.productVariant?.product?.sku ?? null,
+    quantity: raw.quantity,
+    unitPrice: raw.unitPrice,
+    taxRate: raw.taxRate,
+    discount: null,
+    lineTotal: raw.amount,
+  };
+}
+
+function mapDetail(raw: RawDetailSalesOrder): SalesOrderDetail {
+  return {
+    id: raw.id,
+    soNumber: raw.soNumber,
+    customerName: raw.client?.name ?? null,
+    status: raw.status,
+    orderDate: raw.orderDate,
+    expectedShipDate: raw.requiredDate,
+    currency: raw.currency,
+    shippingAddress: raw.shippingAddress,
+    notes: raw.notes,
+    subtotal: raw.subtotal,
+    total: raw.total,
+    invoiceId: raw.invoiceId,
+    invoiceNumber: raw.invoice?.invoiceNumber ?? null,
+    lines: raw.lines.map(mapDetailLine),
+  };
+}
+
+function mapAtp(raw: RawAtpEntry): AtpEntry {
+  return {
+    productId: raw.productVariantId,
+    onHand: raw.onHand,
+    committed: raw.committed,
+    onOrder: raw.onOrder,
+    available: raw.available,
+  };
 }
 
 export function useSalesOrders(filters?: SalesOrderFilters) {
-  return useQuery<unknown, Error>({
-    queryKey: queryKeys.inventory.salesOrders(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<unknown>("/inventory/sales-orders", {
-        ...(filters?.customerId ? { customerId: String(filters.customerId) } : {}),
+  return useQuery<SalesOrdersListResponse, Error>({
+    queryKey: queryKeys.inventory.salesOrders(
+      filters
+        ? {
+            status: filters.status,
+            clientId: filters.clientId,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+            page: filters.page,
+            limit: filters.limit,
+          }
+        : undefined,
+    ),
+    queryFn: async () => {
+      const raw = await apiClient.get<RawListResponse>("/inventory/sales-orders", {
         ...(filters?.status ? { status: filters.status } : {}),
-        ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
-        ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
+        ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }),
+      });
+      return {
+        items: raw.items.map(mapListItem),
+        total: raw.total,
+        page: raw.page,
+        totalPages: raw.totalPages,
+      };
+    },
     staleTime: 2 * 60_000,
   });
 }
 
 export function useSalesOrder(soId: number) {
-  return useQuery<unknown, Error>({
+  return useQuery<SalesOrderDetail, Error>({
     queryKey: queryKeys.inventory.salesOrder(soId),
-    queryFn: () =>
-      apiClient.get<unknown>(`/inventory/sales-orders/${soId}`),
+    queryFn: async () =>
+      mapDetail(await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`)),
     enabled: soId > 0,
     staleTime: 2 * 60_000,
   });
 }
 
 export function useSoAtp(soId: number) {
-  return useQuery<unknown, Error>({
+  return useQuery<AtpEntry[], Error>({
     queryKey: [...queryKeys.inventory.salesOrder(soId), "atp"] as const,
-    queryFn: () =>
-      apiClient.get<unknown>(`/inventory/sales-orders/${soId}/atp`),
+    queryFn: async () => {
+      const raw = await apiClient.get<RawAtpEntry[]>(`/inventory/sales-orders/${soId}/atp`);
+      return raw.map(mapAtp);
+    },
     enabled: soId > 0,
     staleTime: 1 * 60_000,
   });
@@ -89,9 +301,24 @@ export function useSoAtp(soId: number) {
 
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, CreateSalesOrderInput>({
+  return useMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
     mutationFn: (data) =>
-      apiClient.post<unknown>("/inventory/sales-orders", data),
+      apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
+        clientId: data.customerId,
+        orderDate: data.orderDate ?? todayIso(),
+        requiredDate: data.expectedShipDate,
+        shippingAddress: data.shippingAddress,
+        warehouseId: data.warehouseId,
+        currency: data.currency,
+        notes: data.notes,
+        lines: data.lines.map((line, index) => ({
+          productVariantId: line.productId,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice.toFixed(4),
+          taxRate: (line.taxRate ?? 0).toFixed(2),
+          lineOrder: index,
+        })),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
     },
@@ -100,24 +327,26 @@ export function useCreateSalesOrder() {
 
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, SoActionInput>({
-    mutationFn: ({ soId }) =>
-      apiClient.post<unknown>(`/inventory/sales-orders/${soId}/confirm`, {}),
-    onSuccess: (_, vars) => {
+  return useMutation<void, Error, ConfirmSalesOrderInput>({
+    mutationFn: ({ soId }) => apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(vars.soId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }
 
 export function useShipSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, ShipSalesOrderInput>({
-    mutationFn: ({ soId, ...data }) =>
-      apiClient.post<unknown>(`/inventory/sales-orders/${soId}/ship`, data),
-    onSuccess: (_, vars) => {
+  return useMutation<void, Error, ShipSalesOrderInput>({
+    mutationFn: ({ soId, shipDate, trackingNumber, notes }) =>
+      apiClient.post<void>(`/inventory/sales-orders/${soId}/ship`, {
+        shipDate: shipDate ?? todayIso(),
+        notes: notes ?? (trackingNumber ? `Tracking: ${trackingNumber}` : undefined),
+      }),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(vars.soId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });
@@ -125,12 +354,11 @@ export function useShipSalesOrder() {
 
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, InvoiceSalesOrderInput>({
-    mutationFn: ({ soId, ...data }) =>
-      apiClient.post<unknown>(`/inventory/sales-orders/${soId}/invoice`, data),
-    onSuccess: (_, vars) => {
+  return useMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
+    mutationFn: ({ soId }) => apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(vars.soId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.salesOrder(variables.soId) });
     },
   });
 }

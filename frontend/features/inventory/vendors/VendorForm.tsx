@@ -34,9 +34,13 @@ const vendorFormSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  leadTimeDays: z.coerce.number().int().nonnegative().default(0),
-  paymentTermsDays: z.coerce.number().int().nonnegative().default(30),
-  currency: z.string().min(1).max(10).default("INR"),
+  leadTimeDays: z
+    .string()
+    .refine((v) => v === "" || (!Number.isNaN(Number(v)) && Number(v) >= 0), "Must be a non-negative number"),
+  paymentTermsDays: z
+    .string()
+    .refine((v) => v === "" || (!Number.isNaN(Number(v)) && Number(v) >= 0), "Must be a non-negative number"),
+  currency: z.string().min(1).max(10),
   notes: z.string().optional().or(z.literal("")),
 });
 
@@ -63,8 +67,8 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
       phone: "",
       address: "",
       gstin: "",
-      leadTimeDays: 0,
-      paymentTermsDays: 30,
+      leadTimeDays: "0",
+      paymentTermsDays: "30",
       currency: "INR",
       notes: "",
     },
@@ -81,8 +85,8 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
               phone: vendor.phone ?? "",
               address: vendor.address ?? "",
               gstin: vendor.gstin ?? "",
-              leadTimeDays: vendor.leadTimeDays,
-              paymentTermsDays: vendor.paymentTermsDays,
+              leadTimeDays: String(vendor.leadTimeDays),
+              paymentTermsDays: String(vendor.paymentTermsDays),
               currency: vendor.currency,
               notes: vendor.notes ?? "",
             }
@@ -93,8 +97,8 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
               phone: "",
               address: "",
               gstin: "",
-              leadTimeDays: 0,
-              paymentTermsDays: 30,
+              leadTimeDays: "0",
+              paymentTermsDays: "30",
               currency: "INR",
               notes: "",
             },
@@ -110,8 +114,8 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
       phone: values.phone || undefined,
       address: values.address || undefined,
       gstin: values.gstin || undefined,
-      leadTimeDays: values.leadTimeDays,
-      paymentTermsDays: values.paymentTermsDays,
+      leadTimeDays: values.leadTimeDays === "" ? undefined : Number(values.leadTimeDays),
+      paymentTermsDays: values.paymentTermsDays === "" ? undefined : Number(values.paymentTermsDays),
       currency: values.currency,
       notes: values.notes || undefined,
     };

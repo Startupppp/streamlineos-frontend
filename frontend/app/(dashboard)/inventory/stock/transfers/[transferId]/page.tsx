@@ -22,47 +22,14 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useTransfer, useCompleteTransfer } from "@/lib/api/hooks/inventory/stock";
+import {
+  useTransfer,
+  useCompleteTransfer,
+  type TransferDetail,
+  type TransferStatus,
+} from "@/lib/api/hooks/inventory/stock";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-
-type TransferStatus = "PENDING" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
-
-interface TransferLine {
-  id: number;
-  productName?: string;
-  sku?: string;
-  quantity: number;
-  quantityReceived: number;
-  notes?: string | null;
-  productVariant?: {
-    sku?: string;
-    product?: { name?: string };
-  } | null;
-}
-
-interface TransferDetail {
-  id: number;
-  referenceNumber: string;
-  status: TransferStatus;
-  notes?: string | null;
-  createdAt: string;
-  completedAt?: string | null;
-  createdByName?: string | null;
-  fromLocation?: {
-    id: number;
-    name: string;
-    code: string;
-    warehouse?: { id: number; name: string };
-  } | null;
-  toLocation?: {
-    id: number;
-    name: string;
-    code: string;
-    warehouse?: { id: number; name: string };
-  } | null;
-  lines?: TransferLine[];
-}
 
 const STATUS_COLORS: Record<TransferStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
@@ -154,21 +121,17 @@ export default function TransferDetailPage({
   const { data: transferData, isLoading } = useTransfer(transferId);
   const completeMutation = useCompleteTransfer();
 
-  const transfer = transferData as TransferDetail | undefined;
+  const transfer = transferData ?? undefined;
 
   const handleComplete = useCallback(() => {
     if (!transfer) return;
-    const receivedLines =
-      transfer.lines?.map((l) => ({
-        productId:
-          l.productVariant?.product
-            ? (l.productVariant as { productId?: number }).productId ?? 0
-            : 0,
-        receivedQty: l.quantity,
-      })) ?? [];
+    const lines = transfer.lines.map((l) => ({
+      transferLineId: l.id,
+      quantityReceived: l.quantity,
+    }));
 
     completeMutation.mutate(
-      { transferId, receivedLines },
+      { transferId, lines },
       {
         onSuccess: () => toast.success("Transfer completed"),
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
@@ -308,16 +271,10 @@ export default function TransferDetailPage({
                     </TableHeader>
                     <TableBody>
                       {lines.map((line) => {
-                        const productName =
-                          line.productName ??
-                          line.productVariant?.product?.name ??
-                          "—";
-                        const sku =
-                          line.sku ??
-                          line.productVariant?.sku ??
-                          "—";
-                        const requested = Number(line.quantity);
-                        const received = Number(line.quantityReceived);
+                        const productName = line.productName;
+                        const sku = line.sku;
+                        const requested = line.quantity;
+                        const received = line.quantityReceived;
                         const variance = received - requested;
                         const isShort = variance < 0;
                         const isOver = variance > 0;

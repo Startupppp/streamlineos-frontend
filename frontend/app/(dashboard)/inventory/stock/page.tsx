@@ -25,22 +25,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useStockLevels } from "@/lib/api/hooks/inventory/stock";
+import { useStockLevels, type StockLevelRow } from "@/lib/api/hooks/inventory/stock";
 import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
 import { cn } from "@/lib/utils";
-
-interface StockRow {
-  id: number;
-  productName: string;
-  sku: string;
-  warehouseName?: string | null;
-  locationCode?: string | null;
-  onHand: number;
-  committed: number;
-  onOrder: number;
-  reorderPoint?: number;
-  minStockLevel?: number;
-}
 
 interface WarehouseOption {
   id: number;
@@ -49,7 +36,7 @@ interface WarehouseOption {
 
 type StockStatus = "critical" | "low" | "ok";
 
-function getStockStatus(row: StockRow): StockStatus {
+function getStockStatus(row: StockLevelRow): StockStatus {
   const available = row.onHand - row.committed;
   if (row.reorderPoint != null && available <= row.reorderPoint) return "critical";
   if (row.minStockLevel != null && available <= row.minStockLevel) return "low";
@@ -66,7 +53,7 @@ function StockStatusIcon({ status }: { status: StockStatus }) {
   return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-label="Stock OK" />;
 }
 
-function StockTable({ rows }: { rows: StockRow[] }) {
+function StockTable({ rows }: { rows: StockLevelRow[] }) {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <Table>
@@ -169,16 +156,9 @@ export default function StockLevelsPage() {
   );
   const { data: warehousesData } = useWarehouses();
 
-  const warehouses = (Array.isArray(warehousesData) ? warehousesData : []) as WarehouseOption[];
+  const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
 
-  const rawRows = useMemo(() => {
-    const data = stockData as { items?: StockRow[]; data?: StockRow[] } | StockRow[] | null;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.items)) return data.items;
-    if (Array.isArray(data.data)) return data.data;
-    return [];
-  }, [stockData]);
+  const rawRows = useMemo<StockLevelRow[]>(() => stockData?.items ?? [], [stockData]);
 
   const rows = useMemo(() => {
     if (!lowStockOnly) return rawRows;

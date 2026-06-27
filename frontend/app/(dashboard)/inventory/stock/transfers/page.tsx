@@ -38,27 +38,15 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useTransfers, useCreateTransfer } from "@/lib/api/hooks/inventory/stock";
+import {
+  useTransfers,
+  useCreateTransfer,
+  type TransferListItem,
+  type TransferStatus,
+} from "@/lib/api/hooks/inventory/stock";
 import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-
-type TransferStatus = "PENDING" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
-
-interface Transfer {
-  id: number;
-  referenceNumber: string;
-  status: TransferStatus;
-  fromLocation?: { name?: string; warehouse?: { name?: string } } | null;
-  fromWarehouseName?: string | null;
-  toWarehouseName?: string | null;
-  toLocation?: { name?: string; warehouse?: { name?: string } } | null;
-  createdAt: string;
-  completedAt?: string | null;
-  createdByName?: string | null;
-  lines?: unknown[];
-  notes?: string | null;
-}
 
 interface WarehouseOption {
   id: number;
@@ -87,7 +75,7 @@ const STATUS_LABELS: Record<TransferStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
-const ALL_STATUSES = Object.keys(STATUS_LABELS) as TransferStatus[];
+const ALL_STATUSES: TransferStatus[] = ["PENDING", "IN_TRANSIT", "COMPLETED", "CANCELLED"];
 
 function blankForm(): TransferFormState {
   return { fromWarehouseId: "", toWarehouseId: "", productId: "", quantity: "", notes: "" };
@@ -127,19 +115,9 @@ export default function TransfersPage() {
   const { data: warehousesData } = useWarehouses();
   const createMutation = useCreateTransfer();
 
-  const warehouses = (Array.isArray(warehousesData) ? warehousesData : []) as WarehouseOption[];
+  const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
 
-  const allTransfers = useMemo(() => {
-    const data = transfersData as
-      | { items?: Transfer[]; data?: Transfer[] }
-      | Transfer[]
-      | null;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.items)) return data.items;
-    if (Array.isArray(data.data)) return data.data;
-    return [];
-  }, [transfersData]);
+  const allTransfers = useMemo<TransferListItem[]>(() => transfersData ?? [], [transfersData]);
 
   const transfers = useMemo(() => {
     if (statusFilter === "all") return allTransfers;
@@ -198,23 +176,6 @@ export default function TransfersPage() {
       },
     );
   }, [form, createMutation]);
-
-  function getWarehouseLabel(transfer: Transfer, side: "from" | "to"): string {
-    if (side === "from") {
-      return (
-        transfer.fromWarehouseName ??
-        transfer.fromLocation?.warehouse?.name ??
-        transfer.fromLocation?.name ??
-        "—"
-      );
-    }
-    return (
-      transfer.toWarehouseName ??
-      transfer.toLocation?.warehouse?.name ??
-      transfer.toLocation?.name ??
-      "—"
-    );
-  }
 
   return (
     <PageWrapper
@@ -300,13 +261,13 @@ export default function TransfersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground">
-                        {getWarehouseLabel(transfer, "from")}
+                        {transfer.fromLocationName ?? "—"}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground">
-                        {getWarehouseLabel(transfer, "to")}
+                        {transfer.toLocationName ?? "—"}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground tabular-nums">
-                        {transfer.lines?.length ?? 0}
+                        {transfer.lineCount}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(transfer.createdAt), "dd MMM yyyy")}

@@ -3,67 +3,81 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import type {
+  PurchaseOrder,
+  PurchaseOrderSummary,
+  PurchaseOrderStatus,
+  CreatePurchaseOrderInput,
+  ReceiveGoodsInput,
+  GoodsReceiptNote,
+} from "@/types/inventory";
 
-interface PurchaseOrderFilters {
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+type PurchaseOrderFilters = {
   vendorId?: number;
-  status?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  status?: PurchaseOrderStatus;
   page?: number;
-  limit?: number;
-}
+  pageSize?: number;
+};
 
-interface PoLine {
-  productId: number;
+interface CreatePoLineWire {
+  productVariantId: number;
   quantity: number;
-  unitPrice: number;
-  taxRate?: number;
+  unitCost: string;
+  taxRate: string;
+  lineOrder: number;
 }
 
-interface CreatePurchaseOrderInput {
+interface CreatePoWire {
   vendorId: number;
-  warehouseId: number;
-  expectedDate?: string;
-  lines: PoLine[];
-  notes?: string;
+  orderDate: string;
+  expectedDeliveryDate?: string;
+  warehouseId?: number;
   currency?: string;
+  notes?: string;
+  lines: CreatePoLineWire[];
 }
 
 interface SendPurchaseOrderInput {
-  poId: number;
-}
-
-interface ReceiveGoodsInput {
-  poId: number;
-  receivedLines: Array<{
-    productId: number;
-    receivedQty: number;
-    locationId?: number;
-  }>;
-  notes?: string;
+  poId?: number;
 }
 
 export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
-  return useQuery<unknown, Error>({
-    queryKey: queryKeys.inventory.purchaseOrders(filters as Record<string, unknown>),
+  return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
+    queryKey: queryKeys.inventory.purchaseOrders(filters),
     queryFn: () =>
-      apiClient.get<unknown>("/inventory/purchase-orders", {
+      apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         ...(filters?.vendorId ? { vendorId: String(filters.vendorId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
-        ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
-        ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
-        ...(filters?.limit ? { limit: String(filters.limit) } : {}),
+        ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
       }),
     staleTime: 2 * 60_000,
   });
 }
 
-export function usePurchaseOrder(poId: number) {
-  return useQuery<unknown, Error>({
-    queryKey: queryKeys.inventory.purchaseOrder(poId),
+export function useVendorPurchaseOrders(vendorId: number) {
+  return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
+    queryKey: queryKeys.inventory.purchaseOrders({ vendorId }),
     queryFn: () =>
-      apiClient.get<unknown>(`/inventory/purchase-orders/${poId}`),
+      apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
+        vendorId: String(vendorId),
+      }),
+    enabled: vendorId > 0,
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function usePurchaseOrder(poId: number) {
+  return useQuery<PurchaseOrder, Error>({
+    queryKey: queryKeys.inventory.purchaseOrder(poId),
+    queryFn: () => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`),
     enabled: poId > 0,
     staleTime: 2 * 60_000,
   });
@@ -71,35 +85,54 @@ export function usePurchaseOrder(poId: number) {
 
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, CreatePurchaseOrderInput>({
-    mutationFn: (data) =>
-      apiClient.post<unknown>("/inventory/purchase-orders", data),
+  return useMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
+    mutationFn: (data) => {
+      const body: CreatePoWire = {
+        vendorId: data.vendorId,
+        orderDate: data.orderDate,
+        expectedDeliveryDate: data.expectedDeliveryDate,
+        warehouseId: data.warehouseId,
+        currency: data.currency,
+        notes: data.notes,
+        lines: data.lines.map((line) => ({
+          productVariantId: line.productVariantId,
+          quantity: line.quantity,
+          unitCost: line.unitCost.toFixed(4),
+          taxRate: (line.taxRate ?? 0).toFixed(2),
+          lineOrder: line.lineOrder ?? 0,
+        })),
+      };
+      return apiClient.post<PurchaseOrderSummary>("/inventory/purchase-orders", body);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
     },
   });
 }
 
-export function useSendPurchaseOrder() {
+export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, SendPurchaseOrderInput>({
-    mutationFn: ({ poId }) =>
-      apiClient.post<unknown>(`/inventory/purchase-orders/${poId}/send`, {}),
-    onSuccess: (_, vars) => {
+  return useMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
+    mutationFn: (vars) => {
+      const id = poId ?? vars?.poId;
+      if (!id) throw new Error("Purchase order id is required");
+      return apiClient.post<PurchaseOrderSummary>(`/inventory/purchase-orders/${id}/send`, {});
+    },
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(vars.poId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(result.id) });
     },
   });
 }
 
-export function useReceiveGoods() {
+export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, ReceiveGoodsInput>({
-    mutationFn: ({ poId, ...data }) =>
-      apiClient.post<unknown>(`/inventory/purchase-orders/${poId}/receive`, data),
-    onSuccess: (_, vars) => {
+  return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
+    mutationFn: (data) =>
+      apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
-      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(vars.poId) });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevels() });
     },
   });

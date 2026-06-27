@@ -26,12 +26,19 @@ const attributeEntrySchema = z.object({
   value: z.string().min(1, "Value required"),
 });
 
+const numberFieldSchema = z
+  .string()
+  .refine(
+    (v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0),
+    "Must be 0 or more",
+  );
+
 const variantFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   sku: z.string().min(1, "SKU is required").max(100),
-  costPrice: z.coerce.number().nonnegative("Must be 0 or more").default(0),
-  sellingPrice: z.coerce.number().nonnegative("Must be 0 or more").default(0),
-  attributes: z.array(attributeEntrySchema).default([]),
+  costPrice: numberFieldSchema,
+  sellingPrice: numberFieldSchema,
+  attributes: z.array(attributeEntrySchema),
 });
 
 type VariantFormValues = z.infer<typeof variantFormSchema>;
@@ -128,8 +135,8 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
     defaultValues: {
       name: "",
       sku: "",
-      costPrice: 0,
-      sellingPrice: 0,
+      costPrice: "",
+      sellingPrice: "",
       attributes: [],
     },
   });
@@ -158,8 +165,8 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
     form.reset({
       name: "",
       sku: "",
-      costPrice: 0,
-      sellingPrice: 0,
+      costPrice: "",
+      sellingPrice: "",
       attributes: [],
     });
     setSheetOpen(true);
@@ -175,8 +182,8 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
       {
         name: values.name,
         sku: values.sku,
-        costPrice: values.costPrice,
-        sellingPrice: values.sellingPrice,
+        costPrice: Number(values.costPrice),
+        sellingPrice: Number(values.sellingPrice),
         attributeValues,
       },
       {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
@@ -37,29 +37,16 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useAdjustments, useCreateAdjustment } from "@/lib/api/hooks/inventory/stock";
+import {
+  useAdjustments,
+  useCreateAdjustment,
+  type AdjustmentListItem,
+  type AdjustmentReason,
+  type AdjustmentType,
+} from "@/lib/api/hooks/inventory/stock";
 import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-
-type AdjustmentType = "IN" | "OUT" | "SET";
-
-interface AdjustmentLine {
-  productName?: string;
-  sku?: string;
-  quantityChange: number;
-}
-
-interface Adjustment {
-  id: number;
-  referenceNumber: string;
-  reason: string;
-  status: string;
-  notes?: string | null;
-  createdAt: string;
-  createdByName?: string | null;
-  lines?: AdjustmentLine[];
-}
 
 interface WarehouseOption {
   id: number;
@@ -69,21 +56,34 @@ interface WarehouseOption {
 interface AdjFormState {
   warehouseId: string;
   productId: string;
+  locationId: string;
   adjustmentType: AdjustmentType;
   quantity: string;
-  reason: string;
+  reason: AdjustmentReason;
   notes: string;
 }
 
-const REASON_LABELS: Record<string, string> = {
-  DAMAGED: "Damaged",
-  EXPIRED: "Expired",
-  THEFT: "Theft / Loss",
-  FOUND: "Found",
-  CORRECTION: "Correction",
+const REASON_LABELS: Record<AdjustmentReason, string> = {
+  PURCHASE: "Purchase",
+  SALE: "Sale",
   RETURN: "Return",
+  DAMAGE: "Damage",
+  EXPIRY: "Expiry",
+  THEFT: "Theft / Loss",
+  RECOUNT: "Recount",
   OTHER: "Other",
 };
+
+const REASON_OPTIONS: AdjustmentReason[] = [
+  "PURCHASE",
+  "SALE",
+  "RETURN",
+  "DAMAGE",
+  "EXPIRY",
+  "THEFT",
+  "RECOUNT",
+  "OTHER",
+];
 
 const STATUS_COLORS: Record<string, string> = {
   POSTED: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
@@ -95,9 +95,10 @@ function blankForm(): AdjFormState {
   return {
     warehouseId: "",
     productId: "",
+    locationId: "",
     adjustmentType: "IN",
     quantity: "",
-    reason: "CORRECTION",
+    reason: "RECOUNT",
     notes: "",
   };
 }
@@ -135,19 +136,9 @@ export default function AdjustmentsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<AdjFormState>(blankForm());
 
-  const adjustments = useMemo(() => {
-    const data = adjData as
-      | { items?: Adjustment[]; data?: Adjustment[] }
-      | Adjustment[]
-      | null;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.items)) return data.items;
-    if (Array.isArray(data.data)) return data.data;
-    return [];
-  }, [adjData]);
+  const adjustments: AdjustmentListItem[] = adjData?.items ?? [];
 
-  const warehouses = (Array.isArray(warehousesData) ? warehousesData : []) as WarehouseOption[];
+  const warehouses: WarehouseOption[] = Array.isArray(warehousesData) ? warehousesData : [];
 
   const setField = useCallback(
     <K extends keyof AdjFormState>(key: K, value: AdjFormState[K]) => {
@@ -155,6 +146,17 @@ export default function AdjustmentsPage() {
     },
     [],
   );
+
+  const handleReasonChange = useCallback((value: string) => {
+    const match = REASON_OPTIONS.find((reason) => reason === value);
+    if (match) setForm((prev) => ({ ...prev, reason: match }));
+  }, []);
+
+  const handleTypeChange = useCallback((value: string) => {
+    if (value === "IN" || value === "OUT" || value === "SET") {
+      setForm((prev) => ({ ...prev, adjustmentType: value }));
+    }
+  }, []);
 
   const handleOpenSheet = useCallback(() => {
     setForm(blankForm());
@@ -171,17 +173,19 @@ export default function AdjustmentsPage() {
   const handleSubmit = useCallback(() => {
     const warehouseId = Number(form.warehouseId);
     const productId = Number(form.productId);
+    const locationId = Number(form.locationId);
     const quantity = Number(form.quantity);
 
     if (!warehouseId) { toast.error("Warehouse is required"); return; }
-    if (!productId) { toast.error("Product ID is required"); return; }
+    if (!productId) { toast.error("Product variant ID is required"); return; }
+    if (!locationId) { toast.error("Location ID is required"); return; }
     if (!quantity || isNaN(quantity) || quantity <= 0) { toast.error("Quantity must be a positive number"); return; }
-    if (!form.reason) { toast.error("Reason is required"); return; }
 
     createMutation.mutate(
       {
         warehouseId,
         productId,
+        locationId,
         adjustmentType: form.adjustmentType,
         quantity,
         reason: form.reason,
@@ -249,10 +253,10 @@ export default function AdjustmentsPage() {
                         {format(new Date(adj.createdAt), "dd MMM yyyy")}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs">
-                        {REASON_LABELS[adj.reason] ?? adj.reason}
+                        {REASON_LABELS[adj.reason]}
                       </TableCell>
                       <TableCell className="py-2.5 text-xs text-muted-foreground tabular-nums">
-                        {adj.lines?.length ?? 0}
+                        {adj.lineCount}
                       </TableCell>
                       <TableCell className="py-2.5">
                         <Badge
@@ -304,20 +308,30 @@ export default function AdjustmentsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-product">Product ID <span className="text-destructive">*</span></Label>
+              <Label htmlFor="adj-product">Product Variant ID <span className="text-destructive">*</span></Label>
               <Input
                 id="adj-product"
                 type="number"
-                placeholder="Product ID"
+                placeholder="Product variant ID"
                 value={form.productId}
                 onChange={(e) => setField("productId", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="adj-location">Location ID <span className="text-destructive">*</span></Label>
+              <Input
+                id="adj-location"
+                type="number"
+                placeholder="Location ID"
+                value={form.locationId}
+                onChange={(e) => setField("locationId", e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="adj-type">Adjustment Type <span className="text-destructive">*</span></Label>
               <Select
                 value={form.adjustmentType}
-                onValueChange={(v) => setField("adjustmentType", v as AdjustmentType)}
+                onValueChange={handleTypeChange}
               >
                 <SelectTrigger id="adj-type">
                   <SelectValue />
@@ -342,14 +356,14 @@ export default function AdjustmentsPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="adj-reason">Reason <span className="text-destructive">*</span></Label>
-              <Select value={form.reason} onValueChange={(v) => setField("reason", v)}>
+              <Select value={form.reason} onValueChange={handleReasonChange}>
                 <SelectTrigger id="adj-reason">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(REASON_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
+                  {REASON_OPTIONS.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {REASON_LABELS[reason]}
                     </SelectItem>
                   ))}
                 </SelectContent>

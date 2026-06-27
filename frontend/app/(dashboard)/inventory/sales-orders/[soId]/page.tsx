@@ -16,44 +16,11 @@ import {
   useConfirmSalesOrder,
   useShipSalesOrder,
   useInvoiceSalesOrder,
+  type SalesOrderStatus,
+  type AtpEntry,
 } from "@/lib/api/hooks/inventory/sales-orders";
 
-type SoStatus = "DRAFT" | "CONFIRMED" | "SHIPPED" | "INVOICED" | "CANCELLED";
-
-interface SoLine {
-  id: number;
-  productId: number;
-  productName: string | null;
-  productSku: string | null;
-  quantity: string | number;
-  unitPrice: string | number;
-  taxRate: string | number | null;
-  discount: string | number | null;
-  lineTotal: string | number;
-}
-
-interface SalesOrderDetail {
-  id: number;
-  soNumber: string;
-  customerName: string | null;
-  status: SoStatus;
-  orderDate: string | null;
-  expectedShipDate: string | null;
-  currency: string | null;
-  shippingAddress: string | null;
-  notes: string | null;
-  subtotal: string | number;
-  total: string | number;
-  invoiceId: number | null;
-  invoiceNumber: string | null;
-  lines: SoLine[];
-}
-
-interface AtpEntry {
-  productId: number;
-  available: number;
-  requested: number;
-}
+type SoStatus = SalesOrderStatus;
 
 interface SalesOrderDetailPageProps {
   params: Promise<{ soId: string }>;
@@ -121,8 +88,8 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   const shipMutation = useShipSalesOrder();
   const invoiceMutation = useInvoiceSalesOrder();
 
-  const so = query.data as SalesOrderDetail | null | undefined;
-  const atpData = (atpQuery.data as AtpEntry[] | null | undefined) ?? [];
+  const so = query.data;
+  const atpData = atpQuery.data ?? [];
 
   function getAtp(productId: number): AtpEntry | undefined {
     return atpData.find((a) => a.productId === productId);

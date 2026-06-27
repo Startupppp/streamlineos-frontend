@@ -131,7 +131,7 @@ function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
 
     try {
       const grn = await receiveMutation.mutateAsync(payload);
-      toast.success(`GRN ${(grn as { grnNumber?: string }).grnNumber ?? ""} recorded`);
+      toast.success(`GRN ${grn.grnNumber} recorded`);
       handleOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to receive goods");

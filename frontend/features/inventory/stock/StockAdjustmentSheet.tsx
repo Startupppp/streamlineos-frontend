@@ -116,11 +116,11 @@ export function StockAdjustmentSheet({ open, onOpenChange, onSuccess }: StockAdj
     }
 
     const validLines = lines.filter(
-      (l) => l.productVariantId.trim() && l.quantityChange.trim()
+      (l) => l.productVariantId.trim() && l.locationId.trim() && l.quantityChange.trim()
     );
 
     if (validLines.length === 0) {
-      toast.error("Add at least one line with a product and quantity");
+      toast.error("Add at least one line with a product, location, and quantity");
       return;
     }
 
@@ -264,7 +264,6 @@ export function StockAdjustmentSheet({ open, onOpenChange, onSuccess }: StockAdj
                         className="text-xs text-muted-foreground"
                       >
                         Location ID
-                        <span className="ml-1">(optional)</span>
                       </Label>
                       <Input
                         id={`adj-location-${index}`}

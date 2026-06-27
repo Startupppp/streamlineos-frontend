@@ -37,14 +37,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCategories, useCreateCategory } from "@/lib/api/hooks/inventory";
-
-interface Category {
-  id: number;
-  name: string;
-  description?: string | null;
-  parentId?: number | null;
-  parentName?: string | null;
-}
+import type { InventoryCategory } from "@/types/inventory";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
@@ -58,7 +51,7 @@ function CreateCategoryForm({
   categories,
   onSuccess,
 }: {
-  categories: Category[];
+  categories: InventoryCategory[];
   onSuccess: () => void;
 }) {
   const createMutation = useCreateCategory();
@@ -77,7 +70,7 @@ function CreateCategoryForm({
       await createMutation.mutateAsync({
         name: values.name,
         description: values.description || undefined,
-        parentId: values.parentId ? Number(values.parentId) : undefined,
+        parentCategoryId: values.parentId ? Number(values.parentId) : undefined,
       });
       toast.success(`Category "${values.name}" created`);
       form.reset();
@@ -165,7 +158,8 @@ function CreateCategoryForm({
 export default function CategoriesPage() {
   const [formKey, setFormKey] = useState<number>(0);
   const query = useCategories();
-  const categories = (query.data ?? []) as Category[];
+  const categories = query.data ?? [];
+  const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
 
   function handleFormSuccess(): void {
     setFormKey((k) => k + 1);
@@ -225,7 +219,9 @@ export default function CategoriesPage() {
                       {cat.name}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {cat.parentName ?? "—"}
+                      {cat.parentCategoryId != null
+                        ? categoryNameById.get(cat.parentCategoryId) ?? "—"
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                       {cat.description ?? "—"}

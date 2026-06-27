@@ -131,10 +131,7 @@ export function ReceiveGoodsDialog({ po, open, onOpenChange }: ReceiveGoodsDialo
     [po.lines, onOpenChange]
   );
 
-  const selectedWarehouse = warehouses.find(
-    (w: { id: number; locations?: { id: number; name: string; code: string }[] }) =>
-      w.id === po.warehouseId
-  ) as { id: number; locations?: { id: number; name: string; code: string }[] } | undefined;
+  const selectedWarehouse = warehouses.find((w) => w.id === po.warehouseId);
 
   const locations = selectedWarehouse?.locations ?? [];
 

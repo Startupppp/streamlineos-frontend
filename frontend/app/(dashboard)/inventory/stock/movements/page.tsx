@@ -23,73 +23,62 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useStockTransactions } from "@/lib/api/hooks/inventory/stock";
+import {
+  useStockTransactions,
+  type StockTransaction,
+  type TransactionType,
+} from "@/lib/api/hooks/inventory/stock";
 import { cn } from "@/lib/utils";
 
-type TxnType =
-  | "PURCHASE_RECEIPT"
-  | "SALE_ISSUE"
-  | "ADJUSTMENT_IN"
-  | "ADJUSTMENT_OUT"
-  | "TRANSFER_IN"
-  | "TRANSFER_OUT"
-  | "RETURN_IN"
-  | "RETURN_OUT"
-  | "OPENING";
-
-interface Transaction {
-  id: number;
-  createdAt: string;
-  productName: string;
-  sku: string;
-  transactionType: TxnType;
-  quantityChange: number;
-  quantityBefore: number;
-  quantityAfter: number;
-  referenceType?: string | null;
-  referenceId?: string | null;
-  createdByName?: string | null;
-}
-
-const TXN_TYPE_LABELS: Record<TxnType, string> = {
-  PURCHASE_RECEIPT: "Purchase Receipt",
-  SALE_ISSUE: "Sale Issue",
+const TXN_TYPE_LABELS: Record<TransactionType, string> = {
+  PURCHASE: "Purchase",
+  SALE: "Sale",
   ADJUSTMENT_IN: "Adjustment In",
   ADJUSTMENT_OUT: "Adjustment Out",
   TRANSFER_IN: "Transfer In",
   TRANSFER_OUT: "Transfer Out",
   RETURN_IN: "Return In",
   RETURN_OUT: "Return Out",
-  OPENING: "Opening",
+  GRN: "Goods Receipt",
 };
 
-const TXN_TYPE_COLORS: Record<TxnType, string> = {
-  PURCHASE_RECEIPT: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  SALE_ISSUE: "bg-red-50 text-red-700 border-red-200/70",
+const TXN_TYPE_COLORS: Record<TransactionType, string> = {
+  PURCHASE: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
+  SALE: "bg-red-50 text-red-700 border-red-200/70",
   ADJUSTMENT_IN: "bg-blue-50 text-blue-700 border-blue-200/70",
   ADJUSTMENT_OUT: "bg-orange-50 text-orange-700 border-orange-200/70",
   TRANSFER_IN: "bg-violet-50 text-violet-700 border-violet-200/70",
   TRANSFER_OUT: "bg-purple-50 text-purple-700 border-purple-200/70",
   RETURN_IN: "bg-teal-50 text-teal-700 border-teal-200/70",
   RETURN_OUT: "bg-rose-50 text-rose-700 border-rose-200/70",
-  OPENING: "bg-slate-50 text-slate-600 border-slate-200/70",
+  GRN: "bg-slate-50 text-slate-600 border-slate-200/70",
 };
 
 type DatePreset = "7d" | "30d" | "90d" | "all";
 
-function getDateRange(preset: DatePreset): { dateFrom?: string; dateTo?: string } {
+function getDateRange(preset: DatePreset): { fromDate?: string; toDate?: string } {
   if (preset === "all") return {};
   const now = new Date();
   const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
   return {
-    dateFrom: format(startOfDay(subDays(now, days)), "yyyy-MM-dd"),
-    dateTo: format(endOfDay(now), "yyyy-MM-dd"),
+    fromDate: format(startOfDay(subDays(now, days)), "yyyy-MM-dd"),
+    toDate: format(endOfDay(now), "yyyy-MM-dd"),
   };
 }
 
-const ALL_TXN_TYPES = Object.keys(TXN_TYPE_LABELS) as TxnType[];
+const ALL_TXN_TYPES: TransactionType[] = [
+  "PURCHASE",
+  "SALE",
+  "ADJUSTMENT_IN",
+  "ADJUSTMENT_OUT",
+  "TRANSFER_IN",
+  "TRANSFER_OUT",
+  "RETURN_IN",
+  "RETURN_OUT",
+  "GRN",
+];
 
-function TxnTypeBadge({ type }: { type: TxnType }) {
+function TxnTypeBadge({ type }: { type: TransactionType }) {
   return (
     <Badge
       className={cn(
@@ -129,35 +118,28 @@ function MovementsTableSkeleton() {
 
 export default function MovementsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>("30d");
-  const [txnTypeFilter, setTxnTypeFilter] = useState<TxnType | "all">("all");
+  const [txnTypeFilter, setTxnTypeFilter] = useState<TransactionType | "all">("all");
 
   const dateRange = useMemo(() => getDateRange(datePreset), [datePreset]);
 
   const filters = useMemo(
     () => ({
       ...dateRange,
-      ...(txnTypeFilter !== "all" ? { type: txnTypeFilter } : {}),
+      ...(txnTypeFilter !== "all" ? { transactionType: txnTypeFilter } : {}),
     }),
     [dateRange, txnTypeFilter],
   );
 
   const { data: txnData, isLoading } = useStockTransactions(filters);
 
-  const transactions = useMemo(() => {
-    const data = txnData as { items?: Transaction[]; data?: Transaction[] } | Transaction[] | null;
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.items)) return data.items;
-    if (Array.isArray(data.data)) return data.data;
-    return [];
-  }, [txnData]);
+  const transactions: StockTransaction[] = txnData?.items ?? [];
 
   const handleDatePresetChange = useCallback((val: string) => {
     setDatePreset(val as DatePreset);
   }, []);
 
   const handleTypeChange = useCallback((val: string) => {
-    setTxnTypeFilter(val as TxnType | "all");
+    setTxnTypeFilter(val as TransactionType | "all");
   }, []);
 
   return (
@@ -233,10 +215,10 @@ export default function MovementsPage() {
                         </TableCell>
                         <TableCell className="py-2.5">
                           <div className="font-medium text-foreground truncate max-w-[180px]">
-                            {txn.productName}
+                            {txn.productVariant?.product?.name ?? txn.productVariant?.name ?? "—"}
                           </div>
                           <div className="text-[11px] font-mono text-muted-foreground">
-                            {txn.sku}
+                            {txn.productVariant?.sku ?? "—"}
                           </div>
                         </TableCell>
                         <TableCell className="py-2.5">
@@ -261,7 +243,7 @@ export default function MovementsPage() {
                           {ref || "—"}
                         </TableCell>
                         <TableCell className="py-2.5 text-xs text-muted-foreground">
-                          {txn.createdByName ?? "—"}
+                          {txn.creator?.name ?? "—"}
                         </TableCell>
                       </TableRow>
                     );

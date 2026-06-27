@@ -9,58 +9,44 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { useMovementsReport } from "@/lib/api/hooks/inventory/reports";
+import { useMovementsReport, type MovementType } from "@/lib/api/hooks/inventory/reports";
 import { useWarehouses } from "@/lib/api/hooks/inventory/warehouses";
-
-type MovementType = "RECEIPT" | "SHIPMENT" | "ADJUSTMENT" | "TRANSFER_IN" | "TRANSFER_OUT" | "RETURN";
-
-interface MovementRow {
-  id: number;
-  type: MovementType;
-  productName: string;
-  sku: string;
-  warehouseName: string | null;
-  locationName: string | null;
-  quantity: number;
-  balanceAfter: number | null;
-  referenceType: string | null;
-  referenceNumber: string | null;
-  notes: string | null;
-  createdAt: string;
-  performedBy: string | null;
-}
-
-interface Warehouse {
-  id: number;
-  name: string;
-}
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
-  { value: "RECEIPT", label: "Receipt" },
-  { value: "SHIPMENT", label: "Shipment" },
-  { value: "ADJUSTMENT", label: "Adjustment" },
+  { value: "PURCHASE", label: "Purchase" },
+  { value: "SALE", label: "Sale" },
+  { value: "GRN", label: "Goods Receipt" },
+  { value: "ADJUSTMENT_IN", label: "Adjustment In" },
+  { value: "ADJUSTMENT_OUT", label: "Adjustment Out" },
   { value: "TRANSFER_IN", label: "Transfer In" },
   { value: "TRANSFER_OUT", label: "Transfer Out" },
-  { value: "RETURN", label: "Return" },
+  { value: "RETURN_IN", label: "Return In" },
+  { value: "RETURN_OUT", label: "Return Out" },
 ];
 
 const TYPE_VARIANT: Record<MovementType, "default" | "secondary" | "destructive" | "outline"> = {
-  RECEIPT: "default",
-  SHIPMENT: "outline",
-  ADJUSTMENT: "secondary",
+  PURCHASE: "default",
+  SALE: "outline",
+  GRN: "default",
+  ADJUSTMENT_IN: "secondary",
+  ADJUSTMENT_OUT: "secondary",
   TRANSFER_IN: "default",
   TRANSFER_OUT: "outline",
-  RETURN: "secondary",
+  RETURN_IN: "secondary",
+  RETURN_OUT: "secondary",
 };
 
 const TYPE_CLASS: Record<MovementType, string> = {
-  RECEIPT: "bg-green-100 text-green-800 border-green-200",
-  SHIPMENT: "bg-blue-100 text-blue-800 border-blue-200",
-  ADJUSTMENT: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  TRANSFER_IN: "bg-green-100 text-green-800 border-green-200",
+  PURCHASE: "bg-green-100 text-green-800 border-green-200",
+  SALE: "bg-blue-100 text-blue-800 border-blue-200",
+  GRN: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  ADJUSTMENT_IN: "bg-green-100 text-green-800 border-green-200",
+  ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200",
   TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200",
-  RETURN: "bg-purple-100 text-purple-800 border-purple-200",
+  RETURN_IN: "bg-purple-100 text-purple-800 border-purple-200",
+  RETURN_OUT: "bg-purple-100 text-purple-800 border-purple-200",
 };
 
 function formatDate(value: string): string {
@@ -75,7 +61,7 @@ export default function MovementsReportPage() {
   const [dateTo, setDateTo] = useState<string>("");
 
   const warehousesQuery = useWarehouses();
-  const warehouses = (warehousesQuery.data ?? []) as Warehouse[];
+  const warehouses = warehousesQuery.data ?? [];
 
   const query = useMovementsReport({
     warehouseId: warehouseId ? Number(warehouseId) : undefined,
@@ -101,10 +87,7 @@ export default function MovementsReportPage() {
     setDateTo(event.target.value);
   }
 
-  const rawData = query.data as MovementRow[] | { items?: MovementRow[] } | null | undefined;
-  const rows: MovementRow[] = Array.isArray(rawData)
-    ? rawData
-    : (rawData?.items ?? []);
+  const rows = query.data ?? [];
 
   return (
     <PageWrapper

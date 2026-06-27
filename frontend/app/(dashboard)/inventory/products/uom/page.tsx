@@ -30,12 +30,6 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useUom, useCreateUom } from "@/lib/api/hooks/inventory";
 
-interface UomOption {
-  id: number;
-  name: string;
-  abbreviation: string;
-}
-
 const uomSchema = z.object({
   name: z.string().min(1, "Name is required"),
   abbreviation: z
@@ -122,7 +116,7 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
 export default function UomPage() {
   const [formKey, setFormKey] = useState<number>(0);
   const query = useUom();
-  const uomList = (query.data ?? []) as UomOption[];
+  const uomList = query.data ?? [];
 
   function handleFormSuccess(): void {
     setFormKey((k) => k + 1);

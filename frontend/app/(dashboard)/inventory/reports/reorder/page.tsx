@@ -10,19 +10,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport } from "@/lib/api/hooks/inventory/reports";
 
-interface ReorderRow {
-  productId: number;
-  productName: string;
-  sku: string;
-  categoryName: string | null;
-  warehouseName: string | null;
-  availableQty: number;
-  reorderPoint: number;
-  reorderQty: number | null;
-  costPrice: string | number | null;
-  vendorName: string | null;
-}
-
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {
     return <Badge variant="destructive" className="text-[11px]">Out of stock</Badge>;
@@ -37,10 +24,7 @@ function UrgencyBadge({ available, reorderPoint }: { available: number; reorderP
 export default function ReorderReportPage() {
   const query = useReorderReport();
 
-  const rawData = query.data as ReorderRow[] | { items?: ReorderRow[] } | null | undefined;
-  const rows: ReorderRow[] = Array.isArray(rawData)
-    ? rawData
-    : (rawData?.items ?? []);
+  const rows = query.data ?? [];
 
   const outOfStock = rows.filter((r) => r.availableQty <= 0).length;
   const critical = rows.filter((r) => r.availableQty > 0 && r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25).length;

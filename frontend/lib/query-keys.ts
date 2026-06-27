@@ -575,6 +575,7 @@ export const queryKeys = {
     all: [...base, "inventory"] as const,
     products: (params?: Record<string, unknown>) => [...base, "inventory", "products", params] as const,
     product: (id: number) => [...base, "inventory", "product", id] as const,
+    productVariants: (params?: Record<string, unknown>) => [...base, "inventory", "productVariants", params] as const,
     productStockLevels: (id: number) => [...base, "inventory", "product", id, "stock"] as const,
     categories: () => [...base, "inventory", "categories"] as const,
     uom: () => [...base, "inventory", "uom"] as const,

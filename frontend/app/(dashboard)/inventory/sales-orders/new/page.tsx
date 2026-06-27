@@ -173,9 +173,8 @@ export default function NewSalesOrderPage() {
           discount: num(ln.discount) || undefined,
         })),
       });
-      const so = result as { id: number; soNumber: string };
-      toast.success(`Sales order ${so.soNumber} created`);
-      router.push(`/inventory/sales-orders/${so.id}`);
+      toast.success(`Sales order ${result.soNumber} created`);
+      router.push(`/inventory/sales-orders/${result.id}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create sales order";
       toast.error(message);

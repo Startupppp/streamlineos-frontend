@@ -88,8 +88,8 @@ export function SoActionButtons({ soId, status, onSuccess, lines = [] }: SoActio
       {
         soId,
         shippedLines,
+        shipDate,
         trackingNumber: trackingNumber.trim() || undefined,
-        notes: shipDate ? `Ship date: ${shipDate}` : undefined,
       },
       {
         onSuccess: () => {

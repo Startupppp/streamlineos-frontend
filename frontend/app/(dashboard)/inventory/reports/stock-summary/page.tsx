@@ -8,22 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { useStockSummary } from "@/lib/api/hooks/inventory/reports";
-
-interface StockSummaryRow {
-  productId: number;
-  productName: string;
-  sku: string;
-  categoryName: string | null;
-  uom: string | null;
-  warehouseName: string | null;
-  onHandQty: number;
-  reservedQty: number;
-  availableQty: number;
-  reorderPoint: number | null;
-  costPrice: string | number | null;
-  totalValue: string | number | null;
-}
+import { useStockSummary, type StockSummaryRow } from "@/lib/api/hooks/inventory/reports";
 
 function StockLevelBadge({ available, reorderPoint }: { available: number; reorderPoint: number | null }) {
   if (reorderPoint !== null && available <= 0) {
@@ -68,10 +53,7 @@ function handleExportCsv(rows: StockSummaryRow[]): void {
 export default function StockSummaryReportPage() {
   const query = useStockSummary();
 
-  const rawData = query.data as StockSummaryRow[] | { items?: StockSummaryRow[] } | null | undefined;
-  const rows: StockSummaryRow[] = Array.isArray(rawData)
-    ? rawData
-    : (rawData?.items ?? []);
+  const rows = query.data ?? [];
 
   return (
     <PageWrapper
