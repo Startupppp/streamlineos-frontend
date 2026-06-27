@@ -9,6 +9,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - When I say "go", pick the next unchecked page in PAGES.md.
 - If a task is ambiguous, ask briefly before coding.
 - Check the rules in .claude/ before starting any task.
+- NEVER run git commits, pushes, or checkouts (nor branch/merge/pull/fetch/reset/stash/rebase). The user commits manually — leave all changes in the working tree. This applies to you AND every subagent/workflow you launch.
 - LIVING RULES: if during any fix I mention a new rule, preference, or correction, immediately add it to this CLAUDE.md under the correct section (concisely worded), confirm you added it, and follow it from that point on in every page.
 
 ## Code quality
