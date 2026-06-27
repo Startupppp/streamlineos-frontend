@@ -85,11 +85,11 @@ const credentialsProvider = Credentials({
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as Record<string, unknown>;
         const msg = (data.message as string) ?? "Invalid credentials";
-        if (msg.startsWith("ACCOUNT_LOCKED:")) throw new Error(msg);
+        if (msg.startsWith("ACCOUNT_LOCKED:") || msg === "SUBSCRIPTION_INACTIVE") throw new Error(msg);
         return null;
       }
 
-      const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean };
+      const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean; daysUntilExpiry?: number };
 
       const user = await db.query.users.findFirst({
         where: eq(users.id, data.userId),
@@ -110,9 +110,10 @@ const credentialsProvider = Credentials({
         forceChangePassword: data.forceChangePassword,
         isActive: user.isActive,
         hasDashboardAccess: user.hasDashboardAccess ?? true,
+        daysUntilExpiry: data.daysUntilExpiry,
       };
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith("ACCOUNT_LOCKED:")) throw err;
+      if (err instanceof Error && (err.message.startsWith("ACCOUNT_LOCKED:") || err.message === "SUBSCRIPTION_INACTIVE")) throw err;
       logger.error("Auth: backend login error", { error: err });
       return null;
     }
@@ -170,6 +171,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = null;
         token.sessionId = randomUUID();
+        if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
 
         const deviceId = token.sessionId as string;
 
@@ -336,6 +338,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.plan = token.plan ?? null;
       session.permissions = token.permissions ?? [];
       session.enabledModules = token.enabledModules ?? [];
+      if (token.daysUntilExpiry !== undefined) session.daysUntilExpiry = token.daysUntilExpiry;
       if (session.user) {
         session.user.isPlatformAdmin = token.isPlatformAdmin ?? false;
         session.user.isOrgOwner = token.isOrgOwner ?? false;

@@ -87,6 +87,9 @@ export default function SignInPage() {
               `Account locked. Try again in ${formatLockoutTime(isNaN(secs) ? 900 : secs)}.`,
             );
           }
+          if (result.error === "SUBSCRIPTION_INACTIVE") {
+            throw new Error("SUBSCRIPTION_INACTIVE");
+          }
           throw new Error("Invalid email or password.");
         }
         return result;
@@ -108,6 +111,10 @@ export default function SignInPage() {
       }
     },
     onError: (error) => {
+      if (error instanceof Error && error.message === "SUBSCRIPTION_INACTIVE") {
+        window.location.href = "/subscription-expired";
+        return;
+      }
       toast.error(getErrorMessage(error));
     },
   });

@@ -2,9 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SignJWT } from "jose";
 import { auth } from "@/lib/auth";
 import { proxyToBackend } from "@/lib/api/backend-proxy";
+import type { Session } from "next-auth";
 
-async function makeBackendToken(session: Awaited<ReturnType<typeof auth>>): Promise<string | null> {
-  if (!session?.user?.id || !session.orgId) return null;
+async function makeBackendToken(session: Session): Promise<string | null> {
+  if (!session.user?.id || !session.orgId) return null;
   const secret = process.env.BACKEND_JWT_SECRET;
   if (!secret) return null;
   return new SignJWT({
