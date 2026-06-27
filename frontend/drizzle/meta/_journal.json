@@ -393,6 +393,13 @@
       "when": 1782490728440,
       "tag": "0123_inventory_module",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1782600000000,
+      "tag": "0126_auth_devices_login_history",
+      "breakpoints": true
     }
   ]
 }
