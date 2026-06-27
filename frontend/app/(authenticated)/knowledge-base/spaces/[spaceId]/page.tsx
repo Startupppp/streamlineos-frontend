@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { FolderPlus, Plus } from "lucide-react";
+import { FolderPlus, Plus, Users } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -63,6 +63,7 @@ export default function KnowledgeBaseSpaceDetailPage() {
   const articles = articlesQuery.data;
 
   const newArticleHref = `/knowledge-base/spaces/${spaceId}/new`;
+  const membersHref = `/knowledge-base/spaces/${spaceId}/members`;
 
   const handleSelectCategory = (id: number | null) => {
     setSelectedCategoryId(id);
@@ -124,6 +125,11 @@ export default function KnowledgeBaseSpaceDetailPage() {
       noInternalScroll
       actions={
         <>
+          <Button asChild variant="outline" size="sm">
+            <Link href={membersHref}>
+              <Users className="mr-1 h-4 w-4" /> Manage access
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" onClick={handleOpenCreateCollection}>
             <FolderPlus className="mr-1 h-4 w-4" /> New collection
           </Button>

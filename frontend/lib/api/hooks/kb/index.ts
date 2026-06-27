@@ -1,4 +1,5 @@
 export * from "./spaces";
+export * from "./members";
 export * from "./categories";
 export * from "./articles";
 export * from "./search";

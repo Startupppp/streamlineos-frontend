@@ -474,6 +474,7 @@ export const queryKeys = {
     spaces: () => [...base, "kb", "spaces"] as const,
     space: (id: number) => [...base, "kb", "space", id] as const,
     spaceCategories: (spaceId: number) => [...base, "kb", "spaceCategories", spaceId] as const,
+    spaceMembers: (spaceId: number) => [...base, "kb", "spaceMembers", spaceId] as const,
     categories: () => [...base, "kb", "categories"] as const,
     articles: (params?: Record<string, unknown>) => [...base, "kb", "articles", params] as const,
     article: (id: number) => [...base, "kb", "article", id] as const,

@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { apiClient } from "@/lib/api-client";
 import type { Employee } from "@/types/hr";
 
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
@@ -180,8 +181,15 @@ export default function PayrollPage() {
     [markPaidMutation, invalidate],
   );
 
-  const handleDownloadPayslip = useCallback((payrollId: number) => {
-    window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
+  const handleDownloadPayslip = useCallback(async (payrollId: number) => {
+    try {
+      const blob = await apiClient.download(`/hr/payrolls/${payrollId}/download`);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   }, []);
 
   const handlePreviewPayroll = useCallback((payroll: PayrollWithUser) => {

@@ -264,3 +264,23 @@ export interface KbAnalyticsRange {
   from?: string;
   to?: string;
 }
+
+export type KbSpaceRole = "viewer" | "commenter" | "editor" | "publisher" | "admin";
+
+export interface KbSpaceMember {
+  id: number;
+  spaceId: number;
+  userId: string | null;
+  role: string | null;
+  team: string | null;
+  spaceRole: KbSpaceRole;
+  userName: string | null;
+  userEmail: string | null;
+  userImage: string | null;
+}
+
+export interface AddKbSpaceMemberInput {
+  userId?: string;
+  role?: string;
+  spaceRole: KbSpaceRole;
+}

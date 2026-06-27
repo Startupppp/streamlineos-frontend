@@ -119,7 +119,7 @@ const MIGRATED_PREFIXES = [
   "/hr/team-events",
   "/hr/teams",
   "/hr/wfh",
-  "/hr/work-logs/export",
+  "/hr/work-logs",
   "/invoices",
   "/kb",
   "/leads",
