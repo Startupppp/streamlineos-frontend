@@ -49,6 +49,7 @@ const MIGRATED_PREFIXES = [
   "/hr/employees",
   "/hr/enps",
   "/hr/exit",
+  "/hr/expenses",
   "/hr/feedback",
   "/hr/fnf",
   "/hr/handbook",
