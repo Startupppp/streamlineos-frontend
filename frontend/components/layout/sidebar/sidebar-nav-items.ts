@@ -186,6 +186,7 @@ export const NAV_GROUPS: NavGroup[] = [
         children: [
           { label: "Organizations", icon: Network, href: "/crm/organizations", requiredPermission: "crm:clients:read" },
           { label: "Territories", icon: Map, href: "/crm/territories", requiredPermission: "branch:read" },
+          { label: "CSAT Surveys", icon: Smile, href: "/crm/csat", requiredPermission: "crm:clients:read" },
         ],
       },
       { label: "Targets", icon: Trophy, href: "/crm/targets", requiredPermission: "crm:targets:view" },

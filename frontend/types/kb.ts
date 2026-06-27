@@ -284,3 +284,26 @@ export interface AddKbSpaceMemberInput {
   role?: string;
   spaceRole: KbSpaceRole;
 }
+
+export interface KbAiDraftInput {
+  prompt: string;
+  title?: string;
+}
+
+export interface KbAiImproveInput {
+  text: string;
+  instruction?: string;
+}
+
+export interface KbAiSummarizeInput {
+  text: string;
+}
+
+export interface KbAiTranslateInput {
+  text: string;
+  locale: string;
+}
+
+export interface KbAiContent {
+  content: string;
+}

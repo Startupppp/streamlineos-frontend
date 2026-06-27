@@ -262,13 +262,19 @@ export const queryKeys = {
     all: [...base, "rbac"] as const,
     userPermissions: () => [...base, "rbac", "userPermissions"] as const,
     allPermissions: () => [...base, "rbac", "allPermissions"] as const,
-    rolePermissions: (role: string) => [...base, "rbac", "rolePermissions", role] as const,
+  },
+
+  access: {
+    all: [...base, "access"] as const,
+    me: () => [...base, "access", "me"] as const,
   },
 
   roles: {
     all: [...base, "roles"] as const,
     list: () => [...base, "roles", "list"] as const,
     detail: (id: number) => [...base, "roles", "detail", id] as const,
+    permissions: (roleId: number) => [...base, "roles", "permissions", roleId] as const,
+    members: (roleId: number) => [...base, "roles", "members", roleId] as const,
   },
 
   branches: {

@@ -58,14 +58,15 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - BACKEND OWNS ALL APIs & DB SCHEMA: every REST API/route handler, business-logic service, and Drizzle DB schema + migration is written in the BACKEND repo (NestJS `streamlineos-api`) ONLY — never under this frontend repo. This frontend holds only UI, client state, and TanStack Query hooks (lib/api/) that call the backend API. Do NOT add new `app/api/**` route handlers, `lib/services/**` business logic, or `lib/db/schema/**` tables here; put them in the backend.
 - All client data fetching through TanStack Query hooks in lib/api/ — no raw fetch/axios inside components. Handle loading/error via query states.
 - Server components fetch on the server where possible; TanStack Query only for interactive client needs (mutations, polling, refetch, infinite scroll).
-- Route handlers (REST; GraphQL if the repo uses it): Zod validation on every body/param, consistent error shape, correct HTTP status codes. Business logic in lib/services/, handlers stay thin.
-- Build for scalability: stateless handlers (safe for clustering/multiple instances), no in-process state that breaks under horizontal scaling.
-- Drizzle + Neon: efficient queries — select only needed fields, no N+1 (proper joins), pagination on all lists, indexes where queries demand, transactions for multi-step writes, proper connection handling.
-- Caching: Redis if present (add it if needed) for read-heavy data; otherwise unstable_cache/revalidateTag. Explicit invalidation on every mutation. Sensible TanStack Query staleTime per data type. NEVER cache user/permission-specific data in shared caches.
+- API ownership: the NestJS backend (`streamlineos-api`) maintains ALL REST APIs/route handlers/controllers, business-logic services, and Drizzle DB schema + queries. The Next.js frontend maintains NO business APIs — it must NOT add `app/api/**` business endpoints or `lib/services/**` business logic (the ONLY `app/api/**` allowed in the frontend are NextAuth/auth-bridge routes; everything else lives in the backend).
+- Backend controllers (NestJS, REST): Zod validation on every body/param, consistent error shape, correct HTTP status codes. Business logic in the backend service layer; controllers stay thin.
+- Build for scalability: stateless backend handlers (safe for clustering/multiple instances), no in-process state that breaks under horizontal scaling.
+- Backend Drizzle + Neon: efficient queries — select only needed fields, no N+1 (proper joins), pagination on all lists, indexes where queries demand, transactions for multi-step writes, proper connection handling.
+- Caching: backend uses Redis for read-heavy data with explicit invalidation on every mutation; the frontend uses sensible TanStack Query staleTime per data type. NEVER cache user/permission-specific data in shared caches.
 - async/await everywhere; minimize globals.
 
 ## Security
-- Every protected route handler and server action verifies session + permission server-side (requirePermission()). Client-side checks are UX only — middleware.ts alone is never sufficient.
+- Every protected backend endpoint verifies session + permission server-side (requirePermission()); frontend server actions / auth-bridge routes do the same where they exist. Client-side checks are UX only — middleware.ts alone is never sufficient.
 - Sanitize/validate all inputs (Zod, Joi where suited; validator.js where needed). Parameterized queries via ORM only — no SQL/NoSQL injection vectors. XSS/CSRF protection, secure cookies (httpOnly, SameSite).
 - Avoid inline styles and inline scripts.
 - Integrate the repo's existing auth (sessions / JWT / OAuth) — never build a parallel auth path. bcrypt for passwords.
@@ -73,11 +74,11 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - No hard-coded secrets — env vars (dotenv) only. Validate file uploads. Log sensitive actions without exposing data. Audit dependencies (pnpm audit).
 
 ## Next.js best practices
-- Access/role REDIRECT gating (who may land on a route, role-based home redirects) lives in middleware ONLY — never duplicate role redirects in page or layout components. This is routing UX and does NOT replace data-layer security: route handlers and server actions still verify session + permission server-side (see Security).
+- Access/role REDIRECT gating (who may land on a route, role-based home redirects) lives in middleware ONLY — never duplicate role redirects in page or layout components. This is routing UX and does NOT replace data-layer security: the backend re-verifies session + permission server-side on every endpoint (see Security).
 - App Router conventions: server components by default; "use client" only when needed and as deep in the tree as possible.
 - next/image for all images, next/link for navigation.
-- Dynamic route segments and their params use DESCRIPTIVE resource names, never a bare `id` — e.g. `app/api/projects/[projectId]`, `[ticketId]`, `[goalId]`, `[whiteboardId]` — and the destructured variable matches (`const { projectId } = await ctx.params`). Never `[id]`.
-- Folder structure: route files thin; logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located. Move misplaced files into this structure when fixing a page and update imports.
+- Dynamic route segments and their params use DESCRIPTIVE resource names, never a bare `id` — backend route params (`:projectId`, `:ticketId`, `:goalId`) and frontend page segments (`app/(authenticated)/projects/[projectId]`) — and the destructured variable matches (`const { projectId } = await ctx.params`). Never `[id]`.
+- Folder structure (frontend): page/route files thin; client logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located — all business logic, APIs, and DB schema live in the backend repo. Move misplaced files into this structure when fixing a page and update imports.
 - Logging: use the repo's logger (or Winston-style structured logging server-side); global error handling, graceful 500s.
 - Code must be implicitly testable; add minimal tests if the repo has a test setup.
 

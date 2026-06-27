@@ -4,12 +4,40 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Loader2, AlertCircle, Globe, GlobeLock, Settings2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Loader2,
+  AlertCircle,
+  Globe,
+  GlobeLock,
+  Settings2,
+  Sparkles,
+  Wand2,
+  FileText,
+} from "lucide-react";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
@@ -19,6 +47,9 @@ import {
   useUpdateKbArticle,
   usePublishKbArticle,
   useUnpublishKbArticle,
+  useKbAiDraft,
+  useKbAiImprove,
+  useKbAiSummarize,
 } from "@/lib/api/hooks/kb";
 import type { KbArticle, KbArticleStatus } from "@/types/kb";
 import { ArticleSettingsSheet } from "./article-settings-sheet";
@@ -34,6 +65,7 @@ interface ArticleSnapshot {
 interface ArticleEditorProps {
   spaceId: number;
   article?: KbArticle;
+  initialTitle?: string;
 }
 
 const BLOCK_TYPES = new Set([
@@ -73,6 +105,25 @@ function serializeContent(json: unknown): string {
 
 function normalizePlainText(json: unknown): string {
   return extractPlainText(json).replace(/\s+/g, " ").trim();
+}
+
+function buildDocFromText(text: string): unknown {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const blocks = lines.map((line) =>
+    line.length > 0
+      ? { type: "paragraph", content: [{ type: "text", text: line }] }
+      : { type: "paragraph" },
+  );
+  return { type: "doc", content: blocks.length > 0 ? blocks : [{ type: "paragraph" }] };
+}
+
+function handleAiError(error: unknown): void {
+  const message = getErrorMessage(error);
+  if (message.toLowerCase().includes("credit")) {
+    toast.error("You're out of AI credits — top up to continue");
+    return;
+  }
+  toast.error(message);
 }
 
 function snapshotKey(snapshot: ArticleSnapshot): string {
@@ -153,20 +204,27 @@ export function ArticleEditorSkeleton() {
   );
 }
 
-export function ArticleEditor({ spaceId, article }: ArticleEditorProps) {
+export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorProps) {
   const router = useRouter();
   const qc = useQueryClient();
   const createArticle = useCreateKbArticle();
   const updateArticle = useUpdateKbArticle();
   const publishArticle = usePublishKbArticle();
   const unpublishArticle = useUnpublishKbArticle();
+  const aiDraft = useKbAiDraft();
+  const aiImprove = useKbAiImprove();
+  const aiSummarize = useKbAiSummarize();
 
   const [initialContent] = useState<unknown>(() => parseStoredContent(article?.content));
-  const [title, setTitle] = useState(article?.title ?? "");
+  const [title, setTitle] = useState(article?.title ?? initialTitle ?? "");
   const [contentJson, setContentJson] = useState<unknown>(initialContent);
+  const [editorContent, setEditorContent] = useState<unknown>(initialContent);
+  const [editorKey, setEditorKey] = useState(0);
   const [articleId, setArticleId] = useState<number | null>(article?.id ?? null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [draftOpen, setDraftOpen] = useState(false);
+  const [draftPrompt, setDraftPrompt] = useState("");
 
   const creatingRef = useRef(false);
   const lastSavedKeyRef = useRef<string>(
@@ -292,6 +350,93 @@ export function ArticleEditor({ spaceId, article }: ArticleEditorProps) {
     setContentJson(json);
   }, []);
 
+  const replaceBody = useCallback((text: string) => {
+    const doc = buildDocFromText(text);
+    setContentJson(doc);
+    setEditorContent(doc);
+    setEditorKey((key) => key + 1);
+  }, []);
+
+  const isAiBusy = aiDraft.isPending || aiImprove.isPending || aiSummarize.isPending;
+
+  const handleDraftPromptChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
+    setDraftPrompt(event.target.value);
+  }, []);
+
+  function handleOpenDraft() {
+    setDraftPrompt("");
+    setDraftOpen(true);
+  }
+
+  function handleCloseDraft() {
+    setDraftOpen(false);
+  }
+
+  function handleDraftSubmit() {
+    const prompt = draftPrompt.trim();
+    if (!prompt || aiDraft.isPending) return;
+    const draftTitle = title.trim();
+    aiDraft.mutate(
+      { prompt, title: draftTitle || undefined },
+      {
+        onSuccess: (data) => {
+          replaceBody(data.content);
+          setDraftOpen(false);
+          toast.success("Draft generated");
+        },
+        onError: handleAiError,
+      },
+    );
+  }
+
+  function handleImprove() {
+    const text = currentSnapshot.contentText;
+    if (!text) {
+      toast.error("Add some content before improving");
+      return;
+    }
+    if (aiImprove.isPending) return;
+    aiImprove.mutate(
+      { text },
+      {
+        onSuccess: (data) => {
+          replaceBody(data.content);
+          toast.success("Content improved");
+        },
+        onError: handleAiError,
+      },
+    );
+  }
+
+  function handleSummarize() {
+    const text = currentSnapshot.contentText;
+    if (!text) {
+      toast.error("Add some content before summarizing");
+      return;
+    }
+    if (articleId === null) {
+      toast.error("Save the article before generating an excerpt");
+      return;
+    }
+    if (aiSummarize.isPending) return;
+    const id = articleId;
+    aiSummarize.mutate(
+      { text },
+      {
+        onSuccess: (data) => {
+          updateArticle.mutate(
+            { id, excerpt: data.content.trim() },
+            {
+              onSuccess: () => toast.success("Excerpt updated from summary"),
+              onError: (error) => toast.error(getErrorMessage(error)),
+            },
+          );
+        },
+        onError: handleAiError,
+      },
+    );
+  }
+
   function handleBack() {
     router.push(`/knowledge-base/spaces/${spaceId}`);
   }
@@ -372,6 +517,34 @@ export function ArticleEditor({ spaceId, article }: ArticleEditorProps) {
         <div className="flex shrink-0 items-center gap-3">
           <StatusPill status={status} />
           <SaveIndicator state={displayState} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isAiBusy}>
+                {isAiBusy ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1 h-4 w-4" />
+                )}
+                AI
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>AI authoring</span>
+                <span className="text-[10px] font-normal text-muted-foreground">1 credit</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleOpenDraft} disabled={isAiBusy}>
+                <Sparkles className="h-4 w-4" /> Draft from prompt
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleImprove} disabled={isAiBusy}>
+                <Wand2 className="h-4 w-4" /> Improve
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleSummarize} disabled={isAiBusy}>
+                <FileText className="h-4 w-4" /> Summarize → excerpt
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             size="sm"
@@ -404,12 +577,45 @@ export function ArticleEditor({ spaceId, article }: ArticleEditorProps) {
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
         <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
           <TiptapEditor
-            content={initialContent}
+            key={editorKey}
+            content={editorContent}
             onChange={handleEditorChange}
             placeholder="Start writing your article…"
           />
         </div>
       </div>
+
+      <Dialog open={draftOpen} onOpenChange={setDraftOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Draft from prompt</DialogTitle>
+            <DialogDescription>
+              Describe what this article should cover. AI writes a first draft you can edit. Uses 1 credit.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={draftPrompt}
+            onChange={handleDraftPromptChange}
+            placeholder="e.g. How to reset your password in three steps"
+            aria-label="Draft prompt"
+            rows={4}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseDraft} disabled={aiDraft.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleDraftSubmit} disabled={!draftPrompt.trim() || aiDraft.isPending}>
+              {aiDraft.isPending ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-1.5 h-4 w-4" />
+              )}
+              Generate draft
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {article && (
         <ArticleSettingsSheet

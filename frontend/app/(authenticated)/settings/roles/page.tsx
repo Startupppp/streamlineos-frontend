@@ -1,18 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import {
-  useRoles,
-  useDeleteRole,
-} from "@/lib/api/hooks/roles";
+import { useState, useCallback } from "react";
+import { useRoles, useDeleteRole } from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-import {
-  Plus,
-  Loader2,
-  Trash2,
-  Shield,
-  Copy,
-} from "lucide-react";
+import { Plus, Loader2, Trash2, Shield, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,57 +18,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getApiError } from "@/lib/api-client";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import { PERMISSIONS } from "@/lib/rbac/permissions";
-import type { Permission } from "@/lib/rbac/permissions";
 import type { Role } from "@/types/organization";
-import { PermissionMatrix } from "@/features/settings/roles/permission-matrix";
-import { CreateRoleDialog, RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
-
-const RESOURCE_GROUPS: Record<string, string> = {
-  "hr:employees": "HR - Employees",
-  "hr:attendance": "HR - Attendance",
-  "hr:leaves": "HR - Leaves",
-  "hr:payroll": "HR - Payroll",
-  "hr:salary": "HR - Salary",
-  "hr:expenses": "HR - Expenses",
-  "hr:assets": "HR - Assets",
-  "hr:documents": "HR - Documents",
-  "hr:performance": "HR - Performance",
-  "hr:goals": "HR - Goals",
-  "projects": "Projects",
-  "projects:tickets": "Project Tickets",
-  "projects:sprints": "Project Sprints",
-  "projects:timesheets": "Timesheets",
-  "reports": "Reports",
-  "settings": "Settings",
-  "settings:rbac": "RBAC Management",
-  "crm:leads": "CRM - Leads",
-  "crm:targets": "CRM - Targets",
-  "crm:reports": "CRM - Reports",
-  "crm:clients": "CRM - Clients",
-  "crm:incentives": "CRM - Incentives",
-  "dashboard:sales": "Dashboard - Sales",
-  "dashboard:customer-executive": "Dashboard - Customer Executive",
-  "dashboard:support": "Dashboard - Support",
-  "accounting": "Accounting",
-  "branch": "Branches",
-  "dm:leads": "Marketing - Leads",
-  "dm:campaigns": "Marketing - Campaigns",
-  "dm:social": "Marketing - Social",
-  "chat": "Chat",
-  "self": "Self-Service",
-};
-
-function groupPermissions(permissions: Permission[]) {
-  const groups: Record<string, Permission[]> = {};
-  for (const perm of permissions) {
-    const group = RESOURCE_GROUPS[perm.resource] || perm.resource;
-    if (!groups[group]) groups[group] = [];
-    groups[group].push(perm);
-  }
-  return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-}
+import { PermissionMatrix } from "@/components/rbac/permission-matrix";
+import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
+import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
+import { RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
 
 export default function RolesPage() {
   return (
@@ -89,29 +36,33 @@ export default function RolesPage() {
 
 function RolesContent() {
   const { data: roles, isLoading } = useRoles();
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [templateOpen, setTemplateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const deleteRole = useDeleteRole();
 
-  const handleDeleteRole = () => {
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [assignmentsOpen, setAssignmentsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+
+  const selectedRole = roles?.find((role) => role.id === selectedRoleId) ?? null;
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenTemplate = useCallback(() => setTemplateOpen(true), []);
+  const handleOpenAssignments = useCallback(() => setAssignmentsOpen(true), []);
+  const handleSelectRole = useCallback((roleId: number) => setSelectedRoleId(roleId), []);
+  const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+
+  const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
     deleteRole.mutate(deleteTarget.id, {
       onSuccess: () => {
+        if (selectedRoleId === deleteTarget.id) setSelectedRoleId(null);
         setDeleteTarget(null);
-        if (selectedRole?.id === deleteTarget.id) setSelectedRole(null);
         toast.success("Role deleted");
       },
-      onError: (err) => toast.error(err.message),
+      onError: (error) => toast.error(getApiError(error)),
     });
-  };
-
-  const permissionGroups = useMemo(() => groupPermissions(PERMISSIONS), []);
-
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleUpdateRole = useCallback((updated: Role) => setSelectedRole(updated), []);
-  const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+  }, [deleteRole, deleteTarget, selectedRoleId]);
 
   return (
     <PageWrapper
@@ -120,11 +71,14 @@ function RolesContent() {
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setTemplateOpen(true)} className="gap-2">
-            <Copy className="h-4 w-4" /> Use Template
+          <Button variant="outline" onClick={handleOpenTemplate} className="gap-2">
+            <Copy className="h-4 w-4" /> Use template
           </Button>
-          <Button onClick={handleOpenCreate} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="h-4 w-4" /> New Role
+          <Button
+            onClick={handleOpenCreate}
+            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Plus className="h-4 w-4" /> New role
           </Button>
         </div>
       }
@@ -148,8 +102,8 @@ function RolesContent() {
                     <RoleListItem
                       key={role.id}
                       role={role}
-                      isSelected={selectedRole?.id === role.id}
-                      onSelect={setSelectedRole}
+                      isSelected={selectedRoleId === role.id}
+                      onSelect={handleSelectRole}
                       onDelete={setDeleteTarget}
                     />
                   ))}
@@ -160,17 +114,15 @@ function RolesContent() {
         </Card>
 
         {selectedRole ? (
-          <PermissionMatrix
-            role={selectedRole}
-            permissionGroups={permissionGroups}
-            onUpdate={handleUpdateRole}
-          />
+          <PermissionMatrix role={selectedRole} onOpenAssignments={handleOpenAssignments} />
         ) : (
           <Card className="flex items-center justify-center min-h-[260px] lg:min-h-0 lg:h-full">
             <div className="text-center px-6">
               <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
               <p className="text-sm font-medium text-foreground">Select a role</p>
-              <p className="text-xs text-muted-foreground mt-1">Choose a role from the list to view and edit permissions</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Choose a role from the list to view and edit permissions
+              </p>
             </div>
           </Card>
         )}
@@ -178,22 +130,27 @@ function RolesContent() {
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
       <RoleTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
+      <RoleAssignmentsSheet
+        role={selectedRole}
+        open={assignmentsOpen}
+        onOpenChange={setAssignmentsOpen}
+      />
 
       <Dialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Role</DialogTitle>
+            <DialogTitle>Delete role</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <span className="font-semibold">{deleteTarget?.name}</span>? Users with this role will lose their assigned permissions.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{deleteTarget?.name}</span>? Users with this role will
+              lose their assigned permissions.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={handleDeleteDialogClose}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteRole}
-              disabled={deleteRole.isPending}
-            >
+            <Button variant="outline" onClick={handleDeleteDialogClose}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteRole} disabled={deleteRole.isPending}>
               {deleteRole.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Delete
             </Button>
@@ -204,20 +161,31 @@ function RolesContent() {
   );
 }
 
-
 interface RoleListItemProps {
   role: Role;
   isSelected: boolean;
-  onSelect: (role: Role) => void;
+  onSelect: (roleId: number) => void;
   onDelete: (role: Role) => void;
 }
 
 function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProps) {
-  const handleSelect = useCallback(() => onSelect(role), [role, onSelect]);
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(role); }
-  }, [role, onSelect]);
-  const handleDelete = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onDelete(role); }, [role, onDelete]);
+  const handleSelect = useCallback(() => onSelect(role.id), [role.id, onSelect]);
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onSelect(role.id);
+      }
+    },
+    [role.id, onSelect],
+  );
+  const handleDelete = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onDelete(role);
+    },
+    [role, onDelete],
+  );
 
   return (
     <div
@@ -227,17 +195,27 @@ function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProp
       onKeyDown={handleKeyDown}
       className={cn(
         "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer",
-        isSelected && "bg-muted/50 border-l-2 border-primary"
+        isSelected && "bg-muted/50 border-l-2 border-primary",
       )}
     >
-      <div>
-        <p className="text-sm font-medium">{role.name}</p>
-        <p className="text-[11px] text-muted-foreground">{role.permissions?.length ?? 0} permissions</p>
+      <div className="min-w-0">
+        <p className="text-sm font-medium truncate">{role.name}</p>
+        <p className="text-[11px] text-muted-foreground">
+          {role.permissions?.length ?? 0} permissions
+        </p>
       </div>
-      <div className="flex items-center gap-2">
-        {role.isSystem && <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>}
+      <div className="flex items-center gap-2 shrink-0">
+        {role.isSystem && (
+          <Badge variant="outline" className="text-[9px] px-1.5">
+            System
+          </Badge>
+        )}
         {!role.isSystem && (
-          <button onClick={handleDelete} className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" aria-label="Delete">
+          <button
+            onClick={handleDelete}
+            className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            aria-label="Delete role"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         )}
@@ -245,4 +223,3 @@ function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProp
     </div>
   );
 }
-

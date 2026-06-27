@@ -5,6 +5,13 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Role } from "@/types/organization";
+import type {
+  AssignRoleMemberInput,
+  RoleMember,
+  RolePermissionGrant,
+  SetRolePermissionsInput,
+  UnassignRoleMemberInput,
+} from "@/types/access";
 
 export const useRoles = (
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
@@ -102,3 +109,81 @@ export function useCloneRoleTemplate() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
   });
 }
+
+export const useRolePermissionGrants = (
+  roleId: number,
+  options?: Omit<
+    UseQueryOptions<RolePermissionGrant[], Error>,
+    "queryKey" | "queryFn" | "enabled"
+  >
+) => {
+  return useQuery<RolePermissionGrant[], Error>({
+    queryKey: queryKeys.roles.permissions(roleId),
+    queryFn: () =>
+      apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`),
+    enabled: roleId > 0,
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+};
+
+export const useSetRolePermissions = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, SetRolePermissionsInput>({
+    mutationFn: ({ roleId, items }) =>
+      apiClient.put<{ success: boolean }>(`/roles/${roleId}/permissions`, { items }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.permissions(variables.roleId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+    },
+  });
+};
+
+export const useRoleMembers = (
+  roleId: number,
+  options?: Omit<
+    UseQueryOptions<RoleMember[], Error>,
+    "queryKey" | "queryFn" | "enabled"
+  >
+) => {
+  return useQuery<RoleMember[], Error>({
+    queryKey: queryKeys.roles.members(roleId),
+    queryFn: () => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`),
+    enabled: roleId > 0,
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+};
+
+export const useAssignRoleMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, AssignRoleMemberInput>({
+    mutationFn: ({ roleId, ...body }) =>
+      apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.members(variables.roleId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+    },
+  });
+};
+
+export const useUnassignRoleMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, UnassignRoleMemberInput>({
+    mutationFn: ({ roleId, ...body }) =>
+      apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.members(variables.roleId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+    },
+  });
+};

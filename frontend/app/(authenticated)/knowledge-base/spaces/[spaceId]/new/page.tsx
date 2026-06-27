@@ -1,12 +1,14 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArticleEditor } from "@/components/kb/article-editor";
 import { ErrorState } from "@/components/shared";
 
 export default function NewKbArticlePage() {
   const params = useParams<{ spaceId: string }>();
+  const searchParams = useSearchParams();
   const spaceId = Number(params.spaceId);
+  const initialTitle = searchParams.get("title") ?? undefined;
 
   if (!Number.isFinite(spaceId) || spaceId <= 0) {
     return (
@@ -19,5 +21,5 @@ export default function NewKbArticlePage() {
     );
   }
 
-  return <ArticleEditor spaceId={spaceId} />;
+  return <ArticleEditor spaceId={spaceId} initialTitle={initialTitle} />;
 }

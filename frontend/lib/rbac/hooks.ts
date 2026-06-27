@@ -1,14 +1,14 @@
 import { useSession } from "next-auth/react";
-import { useUserPermissions } from "../api/hooks/rbac";
+import { useAccess } from "../api/hooks/access";
 
 export function usePermissions() {
   const { data: session } = useSession();
-  const { data: userPermissions } = useUserPermissions({
+  const { data: access, isLoading } = useAccess({
     enabled: !!session?.user?.id,
   });
 
   return {
-    permissions: userPermissions ?? [],
-    isLoading: !userPermissions,
+    permissions: access?.permissions ?? session?.permissions ?? [],
+    isLoading,
   };
 }
