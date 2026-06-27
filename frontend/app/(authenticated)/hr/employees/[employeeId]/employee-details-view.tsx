@@ -44,6 +44,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
@@ -239,6 +241,19 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const { pct: completeness, missing: missingFields } = profileCompletenessScore(employee);
 
   const handleTerminateClick = useCallback(() => setTerminateOpen(true), []);
+  const handleDownloadProfile = useCallback(async () => {
+    try {
+      const blob = await apiClient.download(`/hr/employees/${employee.id}/profile-pdf`);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `employee-${employee.id}-profile.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [employee.id]);
   const handleTerminateConfirm = useCallback(() => {
     terminateMutation.mutate(employee.id, {
       onSuccess: () => {
@@ -276,11 +291,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <ArrowLeft className="mr-1 h-3.5 w-3.5" />Back
             </Button>
             {ability.can("manage", "hr:employees") && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/api/hr/employees/${employee.id}/profile-pdf`} download>
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  Download Profile
-                </a>
+              <Button variant="outline" size="sm" onClick={handleDownloadProfile}>
+                <Download className="h-3.5 w-3.5 mr-1" />
+                Download Profile
               </Button>
             )}
             {canTerminate && (
