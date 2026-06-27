@@ -23,13 +23,12 @@ function isPlatformAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   return PLATFORM_ADMIN_EMAILS.has(email.toLowerCase());
 }
-import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
 import { logger } from "./logger";
 import { redis } from "./redis";
 import { randomUUID } from "crypto";
-import { sendAccountLockedEmail, sendNewDeviceLoginEmail } from "./email";
+import { sendNewDeviceLoginEmail } from "./email";
 import { createAuditLog } from "./audit-log";
 import { getUserPermissions } from "@/server/queries/rbac";
 
@@ -66,89 +65,59 @@ export async function invalidateUserSession(userId: string): Promise<void> {
   }
 }
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
 const credentialsProvider = Credentials({
   credentials: {
     email: { label: "Email", type: "email" },
     password: { label: "Password", type: "password" },
   },
-    async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) {
-        return null;
-      }
+  async authorize(credentials) {
+    if (!credentials?.email || !credentials?.password) return null;
 
-      const normalizedEmail = (credentials.email as string).toLowerCase().trim();
-
-      const user = await db.query.users.findFirst({
-        where: sql`lower(${users.email}) = ${normalizedEmail}`,
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: credentials.email, password: credentials.password }),
       });
 
-      if (!user || !user.password) {
-        logger.warn("Auth: login attempt for non-existent account", { email: normalizedEmail });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+        const msg = (data.message as string) ?? "Invalid credentials";
+        if (msg.startsWith("ACCOUNT_LOCKED:")) throw new Error(msg);
         return null;
       }
 
-      if (user.isActive === false) {
-        logger.warn("Auth: login attempt on deactivated account", { userId: user.id, email: normalizedEmail });
-        return null;
-      }
+      const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean };
 
-      if (!user.emailVerified) {
-        logger.warn("Auth: login attempt on unverified email", { userId: user.id, email: normalizedEmail });
-        return null;
-      }
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, data.userId),
+        columns: { id: true, email: true, name: true, image: true, role: true, isActive: true, hasDashboardAccess: true, firstName: true, lastName: true, isPasswordChangeRequired: true },
+      });
 
-      if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-        const remainingSeconds = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 1000);
-        logger.warn("Auth: login attempt on locked account", { userId: user.id, email: normalizedEmail, lockedUntil: user.lockedUntil });
-        throw new Error(`ACCOUNT_LOCKED:${remainingSeconds}`);
-      }
+      if (!user) return null;
 
-      const isValid = await bcrypt.compare(
-        credentials.password as string,
-        user.password
-      );
+      const fullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name ?? user.email;
 
-      if (!isValid) {
-        const attempts = (user.loginAttempts ?? 0) + 1;
-        const lockUpdate: Record<string, unknown> = { loginAttempts: attempts };
-        if (attempts >= 5) {
-          lockUpdate.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
-          logger.warn("Auth: account locked after 5 failed attempts", { userId: user.id, email: normalizedEmail });
-          sendAccountLockedEmail(user.email, user.name ?? user.email).catch(() => {});
-        } else {
-          logger.warn("Auth: failed login attempt", { userId: user.id, email: normalizedEmail, attempt: attempts });
-        }
-        await db.update(users).set(lockUpdate).where(eq(users.id, user.id));
-        return null;
-      }
-
-      logger.info("Auth: successful login", { userId: user.id, email: normalizedEmail });
-
-      if (user.loginAttempts && user.loginAttempts > 0) {
-        await db.update(users).set({ loginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
-      }
-
-      const fullName =
-        user.firstName && user.lastName
-          ? `${user.firstName} ${user.lastName}`
-          : user.name || user.email;
-
-      const role = user.role;
-      const forceChangePassword = user.isPasswordChangeRequired || false;
-
+      logger.info("Auth: successful login via backend", { userId: user.id });
       return {
         id: user.id,
         email: user.email,
         name: fullName,
         image: user.image,
-        role: role,
-
-        forceChangePassword: forceChangePassword,
+        role: user.role,
+        forceChangePassword: data.forceChangePassword,
         isActive: user.isActive,
         hasDashboardAccess: user.hasDashboardAccess ?? true,
       };
-    },
-  });
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith("ACCOUNT_LOCKED:")) throw err;
+      logger.error("Auth: backend login error", { error: err });
+      return null;
+    }
+  },
+});
 
 const googleProvider =
   process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
