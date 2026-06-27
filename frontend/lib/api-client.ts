@@ -127,6 +127,7 @@ const MIGRATED_PREFIXES = [
   "/settings",
   "/tasks",
   "/webhooks",
+  "/feature-flags",
 ] as const;
 
 function isMigrated(path: string): boolean {

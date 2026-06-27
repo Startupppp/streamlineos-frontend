@@ -578,6 +578,12 @@ export const queryKeys = {
     auditAnalytics: () => [...base, "auth", "auditAnalytics"] as const,
   },
 
+  featureFlags: {
+    all: [...base, "featureFlags"] as const,
+    list: () => [...base, "featureFlags", "list"] as const,
+    detail: (key: string) => [...base, "featureFlags", key] as const,
+  },
+
   calendar: {
     all: [...base, "calendar"] as const,
     events: (start: string, end: string) => [...base, "calendar", "events", start, end] as const,
