@@ -1,0 +1,159 @@
+you should act as experienced CTO, PM and Product manager. 
+you should understand my problem and you should help me 
+
+i made a platform, it is combinations of 
+Based on the codebase I've seen this session (API routes, migration prefixes, and domain modules), StreamlineOS is an **all-in-one multi-tenant business operations platform**. The features span these areas:
+## CRM & Sales
+- **Leads** — capture (incl. a public `leads/ingest` webhook), scoring, status, assignment, analytics, duplicate detection
+- **Contacts** — directory, vCard export
+- **Deals** — pipeline, aging, forecast, win/loss, approval rules/workflows, stats
+- **Targets/quotas**, **CSAT**, **customer-executive** views
+- **Quotes** (+ CSV export) and **sales** reporting
+## HR (the largest area — full HRMS)
+- **Core:** employee directory, departments, teams, org chart, headcount, branches
+- **Attendance & leave:** attendance, WFH, leave (balance, analytics, blackout, comp-off, calendar), holidays, work-logs
+- **Payroll & finance:** payrolls, payslips, salary structures, bonuses, incentives, loans, FnF/full-and-final, tax calculator, payroll reports
+- **Recruitment (ATS):** jobs, candidates (bulk import), pipeline, interviews + SLAs, interviewers, scorecards, offers, referrals, hiring flows, booking links, internal jobs, BGV/compliance, diversity reports, recruiter/vendor management, email sequences
+- **Performance:** goals/OKRs, key results, one-on-ones, PIP, feedback, recognition, surveys, eNPS, assessments
+- **Lifecycle:** onboarding (docs), offboarding/exit (analytics, experience letters), alumni, celebrations/anniversaries, learning paths, certifications, skills matrix, career ladders, asset/device management, handbook
+## Finance & Accounting
+- **Invoices** (incl. recurring), **expenses**, **accounting** (journal posting, chart of accounts, customer ledger, GSTR-1 tax report, vendor payments), **billing** (Razorpay payments)
+## Inventory / ERP (the feature reconciled this session)
+- Products (+ variants, categories, units of measure), warehouses + locations, stock levels/adjustments/transfers/transactions, vendors, purchase orders (+ goods receipt), sales orders (confirm/ship/invoice/ATP), reports (dashboard, stock summary, reorder, movements)
+## Projects, Tasks & Goals
+- Projects, tasks (queues, overdue, sequences, analytics), goals/objectives
+## Client Success
+- Client onboarding, health scores, churn alerts, renewals, opportunities, CRM assignment
+## Collaboration & Comms
+- Chat (presence, unread, search), notifications + web-push, calendar (with Google Calendar sync/export), support/helpdesk tickets, knowledge base, blog, careers portal
+## AI features
+- Account summaries, attrition/churn risk, lead enrichment, email/JD/review generation, helpdesk reply, meeting prep, next-action suggestions, natural-language search, objection handling, and KB PDF Q&A (RAG)
+## Platform & Admin
+- RBAC (roles/permissions), org & org-profile settings, members/users, custom fields, feature flags, API keys, AI-usage tracking, audit log, dashboards & reports, global search, multi-branch, platform/super-admin
+- **Integrations:** Google Calendar, Razorpay, cloud storage (R2/S3), email (Resend), realtime (Ably), outbound webhooks, automation engine
+In short: a unified CRM + HRMS/ATS + Accounting + Inventory/ERP + Projects + Helpdesk + AI suite for running an entire company. Note this is inferred from code structure I observed — I didn't review marketing/product docs, so exact customer-facing packaging or which features are GA vs. in-progress may differ.
+
+now it has a two issues one is UI and UX and technical debt and so many technical issues 
+
+1. it has the worst UI and UX and unnecessary screens, unnecessary dialogs popup etc many more and so many clicks for the users
+2.  UI is not consistent there are so many unnecessary spacing, padding's, margins, colors inconsistence across the app like hovering colors is not correct, when some times hovering on a item text color and background color or same, icon colors are not changing many more UI issues 
+3. some screens are missing even they are needed they are not existed and some are they can be doable using the sheet but it is moved to the page 
+4. some are they should be in the sheet component but they are in the dialog box many many issues across the platform 
+5. Schemas are not perfect, keep on requirements changing they are not properly added 
+6. it is some are they can do it with single api but they used multiple api and vise versa as well 
+7. caching invalidating, caching is not correct, db query is not optimized, efficient, clean, maintainable, future extended any many more issues 
+8. scheduling are not happening using the code, notification, mails and notifications are not at all working 
+9. schema are not perfect and security issues and lot of vunerabilities 
+10. db calls are expensive 
+11. users needs are not satisfied and bad UI and UX and some are most important features are missing any many more 
+12. biggest fault is role based access here user's can only needed the inventory features or HR features or something else like chat only they needed one feature but in that multiple rules that is not even working and existed for so many restrictions are not there 
+13. some forms having not proper validations, some are not functioning well and some are missing both api level and ui level as well 
+14. if anything i forgot you should add them 
+Now i am thinking like i need to generated the Feature by Feature End to end everything full PRD 
+what are rules i need to follow example i have attached a files 
+i want feature by feature 
+page by page what are all i need 
+now you should remove the unnecessary comments, files, added what are all needed feature by feature everything explain in detailed pin to pin detailed MD files you needed to make and you should clearly mentioned what are all the rules i needed to follow what are all feature it should offer compare with the competitors 
+i should have the edge when i compare with the competitors 
+i needed to add the features like knowledgebase 
+where should i position the options 
+what is the schema and it should able to cover the future all the requirements efficiently and best efficient, clean, optimized, future extended and following the best coding practices etc
+role based access think about this across the features 
+onboarding screens 
+pricing will be features what are all they needed those will be there for that user in that multiple users will be there with multiple roles  
+list down all the points i forgot, feel free to ask the questions if you have and now start with one page if you don't have any questions 
+
+before writing the PRD you should consider all the competitors what they are offering
+
+# Project Rules — read fully before ANY change
+
+You are an experienced full-stack engineer specializing in Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, TanStack Query, Drizzle ORM (Neon DB), and Redis. Always analyze the existing repository — structure, color palette, components, hooks, APIs, patterns — before implementing anything. Explore the repo completely; never assume structure. Reuse existing code, folders, and libraries first; install (pnpm) or create new ones only when absent, and minimally.
+
+## Workflow (strict — page by page)
+- We work PAGE BY PAGE. Never modify pages I haven't named.
+- When I name a page: first AUDIT it and show me a plan (what you'll change, remove, add). Wait for my confirmation before editing.
+- After fixing: run build + lint, fix all type/lint errors, then update PAGES.md (mark page done, one-line summary of changes).
+- When I say "go", pick the next unchecked page in PAGES.md.
+- If a task is ambiguous, ask briefly before coding.
+- Check the rules in .claude/ before starting any task.
+- LIVING RULES: if during any fix I mention a new rule, preference, or correction, immediately add it to this CLAUDE.md under the correct section (concisely worded), confirm you added it, and follow it from that point on in every page.
+
+## Code quality
+- Readable, reusable, efficient, optimized, clean, extensible, scalable, maintainable, robust, secure code. SOLID principles.
+- Strict TypeScript: no `any`, no type forcing/casting hacks, no `@ts-ignore`/`@ts-expect-error`. Everything well-typed.
+- No anonymous functions for event handlers — create proper named handlers.
+- No comments in code. Remove existing unwanted comments, commented-out code, and console.logs.
+- Eliminate ALL dead code: unused imports, components, functions, hooks, types, APIs — and delete their files. Verify nothing else imports them afterward.
+- Mentally test edge cases before finishing: errors, loading, empty data, network failures, invalid input, auth, concurrency.
+
+## Component architecture
+- Break into multiple components/files only when logically necessary (separation of concerns), never by default.
+- Component priority: @custom/ or @shared/ if available → fallback to @ui/ (shadcn/ui). For error/loading/empty states use @pre-ui/ if it exists, else create minimal ones styled from the design tokens.
+- Always reuse existing components. Never create a new component if an existing one (or a variant) can serve.
+- Lazy-load heavy client components (dynamic import). Use React.memo/useMemo only for measured performance-critical parts.
+
+## State & effects
+- Minimize useState and useEffect. No useEffect data fetching.
+- Global/shared state: Zustand (or the repo's existing state management if different).
+- No prop drilling more than 2 levels — use composition or context.
+
+## Forms & validation
+- react-hook-form + Zod schemas for every form. Proper per-field validation with visible error messages.
+- Small forms → Dialog. Large forms (many fields or multi-section) → Sheet. Before building either, check how existing Sheets/Dialogs in the repo function (UI + UX) and follow the exact same format.
+
+## Design system (source of truth: landing, /signin, /signup pages)
+- Colors, typography, spacing, radius, shadows come ONLY from the tokens extracted from those pages (tailwind.config / globals.css). Never invent new colors or arbitrary values. Follow shadcn palette conventions mapped to the repo's detected palette.
+- Compact, clean layout: remove unnecessary spacing, tighten cards, no oversized padding/margins. Rearrange page sections properly.
+- Professional, modern, visually appealing, mobile-first responsive (verify 375 / 768 / 1280px), accessible (ARIA attributes, keyboard navigation).
+- Notifications: Sonner toasts for success/error/info.
+
+## Layout & states (every page must satisfy ALL)
+- Loading: skeletons matching the real layout, not lone spinners.
+- Empty state: must fill the proper available content height (flex-1 / h-full within the content area) with icon + message + primary action. Never a small floating text block.
+- Error state: friendly message + retry.
+- Long content scrolls INSIDE the main content area only. Sidebar and page shell must NEVER scroll with the page (sidebar h-screen sticky; main content overflow-y-auto).
+- No unintended overflow or unnecessary scrollbars: use min-w-0, truncate, flex-1, and proper overflow handling instead of fixed heights that burst.
+- If a feature depends on an unconnected integration (calendar, payment provider, etc.), the page must show a clear "Connect X" banner/prompt with a connect action — never fail silently or render broken data.
+
+## Feature completeness (per page)
+- For the feature/category the page belongs to, verify everything needed exists (list, create, edit, delete, filters, pagination, permissions, states). ADD what's missing; REMOVE what's not required.
+- Remove unnecessary components, cards, types, hooks, APIs — including their files — and rearrange remaining files into the proper folder structure, updating imports.
+- Onboarding/profile forms collect ONLY the fields a real HR platform asks a new joiner (personal: phone, DOB, gender, home address, emergency contact; bank/payroll; ID & document uploads). Exclude recruitment-only data (years of experience, skills).
+- The employee onboarding form is never shown to org owners or platform/super admins — gate server-side and redirect them away (owner → their setup/dashboard, platform admin → /owner).
+
+## API & data
+- All client data fetching through TanStack Query hooks in lib/api/ — no raw fetch/axios inside components. Handle loading/error via query states.
+- Server components fetch on the server where possible; TanStack Query only for interactive client needs (mutations, polling, refetch, infinite scroll).
+- Route handlers (REST; GraphQL if the repo uses it): Zod validation on every body/param, consistent error shape, correct HTTP status codes. Business logic in lib/services/, handlers stay thin.
+- Build for scalability: stateless handlers (safe for clustering/multiple instances), no in-process state that breaks under horizontal scaling.
+- Drizzle + Neon: efficient queries — select only needed fields, no N+1 (proper joins), pagination on all lists, indexes where queries demand, transactions for multi-step writes, proper connection handling.
+- Caching: Redis if present (add it if needed) for read-heavy data; otherwise unstable_cache/revalidateTag. Explicit invalidation on every mutation. Sensible TanStack Query staleTime per data type. NEVER cache user/permission-specific data in shared caches.
+- async/await everywhere; minimize globals.
+
+## Security
+- Every protected route handler and server action verifies session + permission server-side (requirePermission()). Client-side checks are UX only — middleware.ts alone is never sufficient.
+- Sanitize/validate all inputs (Zod, Joi where suited; validator.js where needed). Parameterized queries via ORM only — no SQL/NoSQL injection vectors. XSS/CSRF protection, secure cookies (httpOnly, SameSite).
+- Avoid inline styles and inline scripts.
+- Integrate the repo's existing auth (sessions / JWT / OAuth) — never build a parallel auth path. bcrypt for passwords.
+- Rate limiting on sensitive endpoints (auth, trades, payments). Helmet-style secure headers. Proper CORS. HTTPS-only assumptions (secure cookies, no mixed content).
+- No hard-coded secrets — env vars (dotenv) only. Validate file uploads. Log sensitive actions without exposing data. Audit dependencies (pnpm audit).
+
+## Next.js best practices
+- Access/role REDIRECT gating (who may land on a route, role-based home redirects) lives in middleware ONLY — never duplicate role redirects in page or layout components. This is routing UX and does NOT replace data-layer security: route handlers and server actions still verify session + permission server-side (see Security).
+- App Router conventions: server components by default; "use client" only when needed and as deep in the tree as possible.
+- next/image for all images, next/link for navigation.
+- Dynamic route segments and their params use DESCRIPTIVE resource names, never a bare `id` — e.g. `app/api/projects/[projectId]`, `[ticketId]`, `[goalId]`, `[whiteboardId]` — and the destructured variable matches (`const { projectId } = await ctx.params`). Never `[id]`.
+- Folder structure: route files thin; logic in lib/, shared UI in components/ui/, feature components in components/<feature>/, hooks in hooks/, types in types/ or co-located. Move misplaced files into this structure when fixing a page and update imports.
+- Logging: use the repo's logger (or Winston-style structured logging server-side); global error handling, graceful 500s.
+- Code must be implicitly testable; add minimal tests if the repo has a test setup.
+
+## Output format
+- During the audit step: a concise plan listing violations and intended changes.
+- During the fix step: only the modified/added/deleted file paths with changes. No long explanations unless clarifying a decision.
+
+1. mid and small range customers for now in future enterprise customer, geography across the world
+2. Knowledgebase
+3. pricing based on per module, + per user + multi tiered bundles + top up like for the AI features topup feel free to ask the questions if you have anything
+
+my expectations of the PRD is, if i paste it in the claude code then it can able to do it completely that feature if that is not existed it should following the existing folder structure and it should complete everything and if anything is not required it should deltete schema updating, api's zod validations and migrations etc everything 
+ so keep this in mind you should give me the PRD in detailed
