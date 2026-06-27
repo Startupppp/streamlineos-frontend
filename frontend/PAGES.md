@@ -264,6 +264,16 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
+## Knowledge Base Module (KB PRD — phased rebuild; schema authored in web repo + `sync:schema`, ALL APIs in NestJS backend)
+- [x] **Phase 0 — Foundations** — Promoted KB to a first-class top-level `kb` module. Schema (web, synced to backend): new `lib/db/schema/kb/` — `kb_spaces`, `kb_space_members`, `kb_article_restrictions`, `kb_article_versions`, `kb_article_translations`, `kb_tags`/`kb_article_tags`, `kb_events`, `tenant_ai_credits` + `tenant_ai_credit_transactions`; enums `kb_audience`/`kb_space_role`/`kb_translation_status`; extended `kb_articles` (spaceId, ownerId, contentText, seo*, reviewIntervalDays, lastVerifiedAt, archivedAt, `in_review` status) and `kb_categories` (spaceId, parentId). Raw SQL `migrations/0118_kb_foundations.sql` — pgvector, `in_review` enum value, FTS tsvector+GIN on articles & chunks, HNSW on chunk embeddings, default-"General"-space backfill. Entitlement/RBAC (web → JWT claims): `kb` added to `MODULES`+plan tiers; KB feature flags (`kb.public-portal`/`kb.ai`/`kb.multi-space`/`kb.analytics`/`kb.multilingual`); `lib/rbac/permissions/kb.ts` catalog wired into PERMISSIONS + role defaults (employees get `kb:*:view`, support gets full). Backend (`backend/src/modules/kb/`): `KbModule` + `KbCreditsService` (atomic consume/grant + ledger, `InsufficientCreditsException` 402), `KbAccessService` (accessible-space resolution + `assertArticleViewable` with restriction checks), `KbEventsService`; entitlement via existing `@RequireModule("kb")`/`ModuleGuard`, RBAC via `@CheckAbility`. Verified: backend `nest build` clean, `check:schema` in sync, web `tsc` 0 errors + lint clean. (Checkpoints for user: run `db:push`+`0118.sql` on a DB; backend has no eslint config; credit provisioning/UI = later phases.)
+- [ ] **Phase 1** — Spaces & Articles CRUD + reader + editor (internal): P1 `/knowledge`, P2 `/knowledge/[spaceId]`, P3 reader, P4 editor — backend controllers + web hooks/UI.
+- [ ] **Phase 2** — Permissions + audience + public help center (P10–P12).
+- [ ] **Phase 3** — Hybrid search (RRF) + Ask AI + credit metering (P5, P9).
+- [ ] **Phase 4** — Verification/freshness + analytics + caching (P6, P7).
+- [ ] **Phase 5** — AI authoring, gap analysis, multilingual, widget (P8).
+
+---
+
 ## Onboarding
 - [x] `/onboarding` — Employee onboarding wizard. Fixed ID-proof upload (sent `ID` vs DB enum `ID_PROOF`); added server-side Zod validation for doc type/mime/size and personal details; trimmed personal step to standard HR fields (removed experience/skills, added home address + emergency contact); compacted document cards. All access gating moved to middleware (owners/platform admins redirected away; completed users redirected to /dashboard via new `users.onboardingCompletedAt`, set on submit + surfaced in JWT) — no page-level role checks.
 

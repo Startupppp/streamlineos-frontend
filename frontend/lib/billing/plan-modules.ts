@@ -13,6 +13,7 @@ export const MODULES = [
   "chat",
   "billing",
   "support",
+  "kb",
   "accounting",
 ] as const;
 
@@ -31,6 +32,7 @@ const PLAN_MODULES: Record<Plan, ReadonlySet<Module>> = {
     "chat",
     "ai",
     "accounting",
+    "kb",
   ]),
   ENTERPRISE: new Set<Module>(MODULES),
 };

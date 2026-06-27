@@ -2,6 +2,7 @@ import { HR_PERMISSIONS } from "./hr";
 import { CRM_PERMISSIONS } from "./crm";
 import { SHARED_PERMISSIONS } from "./shared";
 import { SUPPORT_PERMISSIONS } from "./support";
+import { KB_PERMISSIONS } from "./kb";
 import { INVENTORY_PERMISSIONS } from "./inventory";
 import { ROLES } from "@/lib/constants/roles";
 
@@ -10,6 +11,7 @@ export const PERMISSIONS = [
   ...CRM_PERMISSIONS,
   ...SHARED_PERMISSIONS,
   ...SUPPORT_PERMISSIONS,
+  ...KB_PERMISSIONS,
   ...INVENTORY_PERMISSIONS,
 ];
 
@@ -20,6 +22,8 @@ const EMPLOYEE_SELF_SERVICE = [
   "self:payslips",
   "hr:leaves:create",
   "hr:expenses:create",
+  "kb:spaces:view",
+  "kb:articles:view",
 ];
 
 export const SYSTEM_ROLES = [
@@ -97,6 +101,16 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "support:kb:manage",
     "support:macros:view",
     "support:macros:manage",
+    "kb:spaces:view",
+    "kb:spaces:manage",
+    "kb:categories:manage",
+    "kb:articles:view",
+    "kb:articles:create",
+    "kb:articles:update",
+    "kb:articles:delete",
+    "kb:articles:manage",
+    "kb:analytics:view",
+    "kb:ai:generate",
     "projects:roadmap:view",
     "projects:view",
     "projects:tickets:view",

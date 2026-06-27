@@ -12,6 +12,7 @@ import {
   Sparkles, Brain, Copy, Search, ShieldAlert, Sliders,
   FormInput, FileSearch, LayoutTemplate, Grid3X3, Calculator,
   Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck,
+  Library,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -325,6 +326,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Knowledge Base", icon: BookOpen, href: "/support/kb", requiredPermission: "support:kb:view" },
       { label: "Canned Responses", icon: MailOpen, href: "/support/macros", requiredPermission: "support:macros:view" },
       { label: "Routing Rules", icon: Share2, href: "/support/routing", requiredPermission: "support:macros:view" },
+    ],
+  },
+  {
+    label: "Knowledge Base",
+    requiredPermission: "kb:articles:view",
+    routes: [
+      { label: "Knowledge Base", icon: Library, href: "/knowledge-base", requiredPermission: "kb:articles:view" },
     ],
   },
   {

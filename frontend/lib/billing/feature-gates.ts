@@ -27,6 +27,11 @@ export const FEATURES = [
   "branding.custom",
   "rbac.custom-roles",
   "audit-log.full",
+  "kb.public-portal",
+  "kb.ai",
+  "kb.multi-space",
+  "kb.analytics",
+  "kb.multilingual",
 ] as const;
 
 export type Feature = (typeof FEATURES)[number];
@@ -60,6 +65,10 @@ const PLAN_FEATURES: Record<Plan, ReadonlySet<Feature>> = {
     "projects.advanced",
     "integrations.google",
     "audit-log.full",
+    "kb.public-portal",
+    "kb.ai",
+    "kb.multi-space",
+    "kb.analytics",
   ]),
   ENTERPRISE: new Set<Feature>(FEATURES),
 };

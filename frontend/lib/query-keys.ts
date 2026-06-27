@@ -471,9 +471,13 @@ export const queryKeys = {
 
   kb: {
     all: [...base, "kb"] as const,
+    spaces: () => [...base, "kb", "spaces"] as const,
+    space: (id: number) => [...base, "kb", "space", id] as const,
+    spaceCategories: (spaceId: number) => [...base, "kb", "spaceCategories", spaceId] as const,
     categories: () => [...base, "kb", "categories"] as const,
     articles: (params?: Record<string, unknown>) => [...base, "kb", "articles", params] as const,
     article: (id: number) => [...base, "kb", "article", id] as const,
+    articleVersions: (id: number) => [...base, "kb", "articleVersions", id] as const,
     publicArticles: (params?: Record<string, unknown>) => [...base, "kb", "publicArticles", params] as const,
     publicArticle: (orgId: string, slug: string) => [...base, "kb", "publicArticle", orgId, slug] as const,
   },

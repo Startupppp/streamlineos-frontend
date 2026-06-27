@@ -55,6 +55,7 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - The employee onboarding form is never shown to org owners or platform/super admins — gate server-side and redirect them away (owner → their setup/dashboard, platform admin → /owner).
 
 ## API & data
+- BACKEND OWNS ALL APIs & DB SCHEMA: every REST API/route handler, business-logic service, and Drizzle DB schema + migration is written in the BACKEND repo (NestJS `streamlineos-api`) ONLY — never under this frontend repo. This frontend holds only UI, client state, and TanStack Query hooks (lib/api/) that call the backend API. Do NOT add new `app/api/**` route handlers, `lib/services/**` business logic, or `lib/db/schema/**` tables here; put them in the backend.
 - All client data fetching through TanStack Query hooks in lib/api/ — no raw fetch/axios inside components. Handle loading/error via query states.
 - Server components fetch on the server where possible; TanStack Query only for interactive client needs (mutations, polling, refetch, infinite scroll).
 - Route handlers (REST; GraphQL if the repo uses it): Zod validation on every body/param, consistent error shape, correct HTTP status codes. Business logic in lib/services/, handlers stay thin.
