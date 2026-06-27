@@ -2,29 +2,42 @@
 
 import { useFormContext } from "react-hook-form";
 import {
-  FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { Briefcase } from "lucide-react";
-import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
+import type { EmployeeFormValues } from "@/app/(authenticated)/hr/employees/[employeeId]/edit-employee-form";
 
 interface ProfessionalInfoSectionProps {
   assignableRoles: Array<{ slug: string; name: string }>;
 }
 
-export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSectionProps) {
+export function ProfessionalInfoSection({
+  assignableRoles,
+}: ProfessionalInfoSectionProps) {
   const { control } = useFormContext<EmployeeFormValues>();
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Briefcase className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold text-foreground">Professional Information</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          Professional Information
+        </h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
@@ -33,7 +46,9 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
           render={({ field }) => (
             <FormItem>
               <FormLabel>Designation</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -52,22 +67,30 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                 </FormControl>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {assignableRoles.map((role) => (
-                    <SelectItem key={role.slug} value={role.slug}>{role.name}</SelectItem>
+                    <SelectItem key={role.slug} value={role.slug}>
+                      {role.name}
+                    </SelectItem>
                   ))}
                   {assignableRoles.length === 0 && (
                     <>
                       <SelectItem value="ENGINEERING">Engineering</SelectItem>
                       <SelectItem value="HR">HR</SelectItem>
                       <SelectItem value="SALES">Sales</SelectItem>
-                      <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
+                      <SelectItem value="CUSTOMER_SUPPORT">
+                        Customer Support
+                      </SelectItem>
                       <SelectItem value="DESIGN">Design</SelectItem>
                       <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                      <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                      <SelectItem value="DIGITAL_MARKETING">
+                        Digital Marketing
+                      </SelectItem>
                     </>
                   )}
                 </SelectContent>
               </Select>
-              <FormDescription>Platform access level (e.g. HR Manager, Employee)</FormDescription>
+              <FormDescription>
+                Platform access level (e.g. HR Manager, Employee)
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -85,7 +108,9 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   placeholder="Select Department"
                 />
               </FormControl>
-              <FormDescription>Organizational unit (e.g. Engineering, Sales)</FormDescription>
+              <FormDescription>
+                Organizational unit (e.g. Engineering, Sales)
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -98,7 +123,11 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
               <FormLabel>Joining Date</FormLabel>
               <FormControl>
                 <DatePicker
-                  value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                  value={
+                    field.value
+                      ? new Date(field.value).toISOString().split("T")[0]
+                      : ""
+                  }
                   onChange={(v) => field.onChange(v ? new Date(v) : undefined)}
                 />
               </FormControl>
@@ -117,7 +146,11 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   type="number"
                   placeholder="0"
                   value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value ? parseFloat(e.target.value) : undefined,
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -138,11 +171,15 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
                   max={60}
                   value={field.value ?? ""}
                   onKeyDown={(e) => {
-                    if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+                    if (["-", "+", "e", "E"].includes(e.key))
+                      e.preventDefault();
                   }}
                   onChange={(e) => {
                     const raw = e.target.value;
-                    if (!raw) { field.onChange(undefined); return; }
+                    if (!raw) {
+                      field.onChange(undefined);
+                      return;
+                    }
                     const num = parseInt(raw, 10);
                     if (!isNaN(num) && num >= 0) field.onChange(num);
                   }}

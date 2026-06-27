@@ -16,11 +16,16 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
-import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
+import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
 
 interface PaginationProps {
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
   startItem: number;
   endItem: number;
   totalPages: number;
@@ -47,7 +52,9 @@ function ExpensePagination({
           to{" "}
           <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
           of{" "}
-          <strong className="font-semibold text-foreground">{pagination.total}</strong>{" "}
+          <strong className="font-semibold text-foreground">
+            {pagination.total}
+          </strong>{" "}
           results
         </span>
         <div className="flex items-center gap-1">
@@ -63,7 +70,10 @@ function ExpensePagination({
           </Button>
           {(() => {
             const maxVisible = 5;
-            let start = Math.max(1, pagination.page - Math.floor(maxVisible / 2));
+            let start = Math.max(
+              1,
+              pagination.page - Math.floor(maxVisible / 2),
+            );
             const end = Math.min(totalPages, start + maxVisible - 1);
             start = Math.max(1, end - maxVisible + 1);
             return Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -98,10 +108,11 @@ function ExpensePagination({
       <span className="text-xs text-muted-foreground">
         Showing{" "}
         <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
-        to{" "}
-        <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
+        to <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
         of{" "}
-        <strong className="font-semibold text-foreground">{pagination.total}</strong>{" "}
+        <strong className="font-semibold text-foreground">
+          {pagination.total}
+        </strong>{" "}
         claims
       </span>
       <div className="flex items-center gap-1.5">
@@ -136,7 +147,12 @@ function ExpensePagination({
 interface AdminExpenseListProps {
   expenses: ExpenseWithRelations[];
   currentUserId?: string;
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
   startItem: number;
   endItem: number;
   totalPages: number;
@@ -176,7 +192,9 @@ export function AdminExpenseList({
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-muted/20">
-          <h3 className="text-sm font-semibold text-foreground">Expense Claims</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            Expense Claims
+          </h3>
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {startItem}–{endItem} of {pagination.total}{" "}
             {statusFilter === "PENDING" ? "pending" : "total"}
@@ -189,13 +207,22 @@ export function AdminExpenseList({
               <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground">No expenses found</p>
+              <p className="text-sm font-medium text-foreground">
+                No expenses found
+              </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {statusFilter !== "ALL" ? "Try adjusting your filters" : "No expense claims to review"}
+                {statusFilter !== "ALL"
+                  ? "Try adjusting your filters"
+                  : "No expense claims to review"}
               </p>
             </div>
             {statusFilter !== "ALL" && (
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onShowAll}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 mt-1"
+                onClick={onShowAll}
+              >
                 Show All Claims
               </Button>
             )}
@@ -235,7 +262,12 @@ export function AdminExpenseList({
 
 interface MemberExpenseListProps {
   expenses: ExpenseWithRelations[];
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
   startItem: number;
   endItem: number;
   totalPages: number;
@@ -271,7 +303,9 @@ export function MemberExpenseList({
               <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground">No expenses found</p>
+              <p className="text-sm font-medium text-foreground">
+                No expenses found
+              </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {statusFilter !== "ALL" || activeFilterCount > 0
                   ? "Try adjusting your filters"
@@ -279,11 +313,20 @@ export function MemberExpenseList({
               </p>
             </div>
             {statusFilter !== "ALL" ? (
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onShowAll}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 mt-1"
+                onClick={onShowAll}
+              >
                 Show All Claims
               </Button>
             ) : (
-              <Button size="sm" className="h-8 text-xs gap-1.5 mt-1" onClick={onCreateNew}>
+              <Button
+                size="sm"
+                className="h-8 text-xs gap-1.5 mt-1"
+                onClick={onCreateNew}
+              >
                 <Plus className="h-3.5 w-3.5" />
                 Submit New Claim
               </Button>
@@ -291,19 +334,59 @@ export function MemberExpenseList({
           </div>
         ) : (
           <>
-            <ScrollArea className="w-full max-h-[60vh]" type="auto" role="region" aria-label="Expense claims table">
+            <ScrollArea
+              className="w-full max-h-[60vh]"
+              type="auto"
+              role="region"
+              aria-label="Expense claims table"
+            >
               <div className="min-w-[640px]">
                 <Table>
                   <caption className="sr-only">Expense claims</caption>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Claim ID</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Date</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Category</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Description</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Amount</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3">Status</TableHead>
-                      <TableHead scope="col" className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3 text-right">Action</TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Claim ID
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Date
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Category
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Description
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Amount
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3"
+                      >
+                        Status
+                      </TableHead>
+                      <TableHead
+                        scope="col"
+                        className="text-[10px] font-semibold text-foreground/80 uppercase tracking-wider px-6 py-3 text-right"
+                      >
+                        Action
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

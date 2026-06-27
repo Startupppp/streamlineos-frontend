@@ -2,11 +2,15 @@
 
 import { useFormContext } from "react-hook-form";
 import {
-  FormControl, FormField, FormItem, FormLabel, FormMessage,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreditCard } from "lucide-react";
-import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
+import type { EmployeeFormValues } from "@/app/(authenticated)/hr/employees/[employeeId]/edit-employee-form";
 
 export function BankDetailsSection() {
   const { control } = useFormContext<EmployeeFormValues>();
@@ -24,7 +28,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -35,7 +41,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Number</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -46,7 +54,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -57,7 +67,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>IFSC Code</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -68,7 +80,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Branch</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -79,7 +93,9 @@ export function BankDetailsSection() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tax ID (PAN)</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

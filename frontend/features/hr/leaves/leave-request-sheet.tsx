@@ -8,10 +8,19 @@ import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 
 import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -21,7 +30,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { useRequestLeave } from "@/lib/api/hooks/hr";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
-import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import type {
+  LeaveType,
+  Approver,
+  LeaveBalance,
+} from "@/app/(authenticated)/hr/leaves/leaves-shared";
 
 const isSunday = (d: Date) => d.getDay() === 0;
 
@@ -83,7 +96,12 @@ interface LeaveRequestSheetProps {
 }
 
 export function LeaveRequestSheet({
-  open, onOpenChange, leaveTypes, approvers, joiningDate, balances = [],
+  open,
+  onOpenChange,
+  leaveTypes,
+  approvers,
+  joiningDate,
+  balances = [],
 }: LeaveRequestSheetProps) {
   const requestLeaveMutation = useRequestLeave();
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
@@ -125,7 +143,9 @@ export function LeaveRequestSheet({
     const days = watchedHalfDay
       ? 0.5
       : countNonSundayDays(watchedStartDate, watchedEndDate);
-    const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
+    const selectedType = leaveTypes.find(
+      (t) => t.id.toString() === watchedLeaveTypeId,
+    );
     if (!selectedType) return { requestedDays: days, balancePreview: null };
 
     const matchedBal = balances.find((b) => b.leaveTypeId === selectedType.id);
@@ -140,11 +160,21 @@ export function LeaveRequestSheet({
         typeName: selectedType.name,
       },
     };
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes, balances]);
+  }, [
+    watchedLeaveTypeId,
+    watchedStartDate,
+    watchedEndDate,
+    watchedHalfDay,
+    leaveTypes,
+    balances,
+  ]);
 
   const leaveDayLimitError = useMemo(() => {
-    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) return null;
-    const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
+    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate)
+      return null;
+    const selectedType = leaveTypes.find(
+      (t) => t.id.toString() === watchedLeaveTypeId,
+    );
     if (!selectedType) return null;
     const maxDays = LEAVE_MAX_DAYS[selectedType.name];
     if (maxDays === undefined) return null;
@@ -152,38 +182,64 @@ export function LeaveRequestSheet({
       return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${requestedDays} day${requestedDays !== 1 ? "s" : ""}.`;
     }
     return null;
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, requestedDays, leaveTypes]);
+  }, [
+    watchedLeaveTypeId,
+    watchedStartDate,
+    watchedEndDate,
+    requestedDays,
+    leaveTypes,
+  ]);
 
-  const handleAttachmentUpload = useCallback((url: string) => setAttachmentUrl(url), []);
+  const handleAttachmentUpload = useCallback(
+    (url: string) => setAttachmentUrl(url),
+    [],
+  );
 
-  const onSubmit = useCallback((data: LeaveFormValues) => {
-    if (leaveDayLimitError) { toast.error(leaveDayLimitError); return; }
-    const approverId = data.approverId || approvers[0]?.id;
-    if (!approverId) { toast.error("No approver available"); return; }
+  const onSubmit = useCallback(
+    (data: LeaveFormValues) => {
+      if (leaveDayLimitError) {
+        toast.error(leaveDayLimitError);
+        return;
+      }
+      const approverId = data.approverId || approvers[0]?.id;
+      if (!approverId) {
+        toast.error("No approver available");
+        return;
+      }
 
-    requestLeaveMutation.mutate(
-      {
-        leaveTypeId: parseInt(data.leaveTypeId),
-        startDate: data.startDate,
-        endDate: data.endDate,
-        reason: data.reason,
-        priority: data.priority,
-        approverId,
-        attachmentUrl: attachmentUrl || undefined,
-        isHalfDay: data.halfDay,
-        halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Leave requested successfully!");
-          form.reset();
-          setAttachmentUrl(null);
-          onOpenChange(false);
+      requestLeaveMutation.mutate(
+        {
+          leaveTypeId: parseInt(data.leaveTypeId),
+          startDate: data.startDate,
+          endDate: data.endDate,
+          reason: data.reason,
+          priority: data.priority,
+          approverId,
+          attachmentUrl: attachmentUrl || undefined,
+          isHalfDay: data.halfDay,
+          halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
         },
-        onError: (err) => toast.error(err.message || "Failed to submit request"),
-      },
-    );
-  }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
+        {
+          onSuccess: () => {
+            toast.success("Leave requested successfully!");
+            form.reset();
+            setAttachmentUrl(null);
+            onOpenChange(false);
+          },
+          onError: (err) =>
+            toast.error(err.message || "Failed to submit request"),
+        },
+      );
+    },
+    [
+      leaveDayLimitError,
+      approvers,
+      attachmentUrl,
+      form,
+      onOpenChange,
+      requestLeaveMutation,
+    ],
+  );
 
   const { isValid, isDirty } = form.formState;
 
@@ -205,7 +261,9 @@ export function LeaveRequestSheet({
             name="leaveTypeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Leave Type</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Leave Type
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="text-sm h-9">
@@ -214,7 +272,9 @@ export function LeaveRequestSheet({
                   </FormControl>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     {leaveTypes.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -224,14 +284,18 @@ export function LeaveRequestSheet({
           />
 
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Date Range</p>
+            <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Date Range
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">From</FormLabel>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
+                      From
+                    </FormLabel>
                     <FormControl>
                       <DatePicker
                         value={field.value}
@@ -250,12 +314,20 @@ export function LeaveRequestSheet({
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">To</FormLabel>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
+                      To
+                    </FormLabel>
                     <FormControl>
                       <DatePicker
                         value={field.value}
                         onChange={field.onChange}
-                        fromDate={watchedStartDate ? new Date(watchedStartDate) : (minDate ? new Date(minDate) : undefined)}
+                        fromDate={
+                          watchedStartDate
+                            ? new Date(watchedStartDate)
+                            : minDate
+                              ? new Date(minDate)
+                              : undefined
+                        }
                         placeholder="End date"
                         disabledDays={isSunday}
                       />
@@ -274,7 +346,10 @@ export function LeaveRequestSheet({
               render={({ field }) => (
                 <FormItem className="flex items-center gap-2.5">
                   <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                   <FormLabel className="text-xs font-medium text-foreground !mt-0 cursor-pointer">
                     Half Day Request
@@ -289,7 +364,9 @@ export function LeaveRequestSheet({
                 name="halfDayPeriod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">Period</FormLabel>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
+                      Period
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="text-sm h-9">
@@ -297,8 +374,12 @@ export function LeaveRequestSheet({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                        <SelectItem value="AM">AM (Morning — first half)</SelectItem>
-                        <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
+                        <SelectItem value="AM">
+                          AM (Morning — first half)
+                        </SelectItem>
+                        <SelectItem value="PM">
+                          PM (Afternoon — second half)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -313,7 +394,9 @@ export function LeaveRequestSheet({
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Priority</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Priority
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="text-sm h-9">
@@ -323,17 +406,20 @@ export function LeaveRequestSheet({
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
                     <SelectItem value="LOW">
                       <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />Low
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        Low
                       </span>
                     </SelectItem>
                     <SelectItem value="MEDIUM">
                       <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500" />Medium
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        Medium
                       </span>
                     </SelectItem>
                     <SelectItem value="HIGH">
                       <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />High
+                        <span className="h-2 w-2 rounded-full bg-red-500" />
+                        High
                       </span>
                     </SelectItem>
                   </SelectContent>
@@ -349,7 +435,9 @@ export function LeaveRequestSheet({
               name="approverId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Approver</FormLabel>
+                  <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                    Approver
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="text-sm h-9">
@@ -359,7 +447,9 @@ export function LeaveRequestSheet({
                     <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {approvers.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
-                          {u.name || `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}
+                          {u.name ||
+                            `${u.firstName || ""} ${u.lastName || ""}`.trim() ||
+                            u.email}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -375,7 +465,9 @@ export function LeaveRequestSheet({
             name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Reason</FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Reason
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="E.g. Family function, Doctor appointment..."
@@ -392,7 +484,9 @@ export function LeaveRequestSheet({
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider block">
               Attach Document{" "}
-              <span className="normal-case font-normal text-muted-foreground tracking-normal">(Optional)</span>
+              <span className="normal-case font-normal text-muted-foreground tracking-normal">
+                (Optional)
+              </span>
             </label>
             <FileUpload
               folder="leave-attachments"
@@ -403,21 +497,43 @@ export function LeaveRequestSheet({
           </div>
 
           {balancePreview && requestedDays > 0 && (
-            <div className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs ${
-              balancePreview.after < 0
-                ? "bg-destructive/10 border-destructive/20 text-destructive"
-                : "bg-muted/50 border-border text-foreground"
-            }`}>
+            <div
+              className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs ${
+                balancePreview.after < 0
+                  ? "bg-destructive/10 border-destructive/20 text-destructive"
+                  : "bg-muted/50 border-border text-foreground"
+              }`}
+            >
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
                 This will consume{" "}
-                <strong>{requestedDays} day{requestedDays !== 1 ? "s" : ""}</strong>{" "}
+                <strong>
+                  {requestedDays} day{requestedDays !== 1 ? "s" : ""}
+                </strong>{" "}
                 of your{" "}
-                <strong>{balancePreview.available} remaining {balancePreview.typeName} days.</strong>
+                <strong>
+                  {balancePreview.available} remaining {balancePreview.typeName}{" "}
+                  days.
+                </strong>
                 {balancePreview.after >= 0 ? (
-                  <> You will have <strong>{balancePreview.after} day{balancePreview.after !== 1 ? "s" : ""}</strong> left.</>
+                  <>
+                    {" "}
+                    You will have{" "}
+                    <strong>
+                      {balancePreview.after} day
+                      {balancePreview.after !== 1 ? "s" : ""}
+                    </strong>{" "}
+                    left.
+                  </>
                 ) : (
-                  <> This exceeds your balance by <strong>{Math.abs(balancePreview.after)} day{Math.abs(balancePreview.after) !== 1 ? "s" : ""}.</strong></>
+                  <>
+                    {" "}
+                    This exceeds your balance by{" "}
+                    <strong>
+                      {Math.abs(balancePreview.after)} day
+                      {Math.abs(balancePreview.after) !== 1 ? "s" : ""}.
+                    </strong>
+                  </>
                 )}
               </span>
             </div>

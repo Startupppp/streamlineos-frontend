@@ -1,7 +1,15 @@
 "use client";
 
 import { format } from "date-fns";
-import { Receipt, Download, Eye, Pencil, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import {
+  Receipt,
+  Download,
+  Eye,
+  Pencil,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+} from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +21,7 @@ import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
 import { toast } from "sonner";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
-import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
+import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import {
   getCategoryConfig,
   ADMIN_CATEGORY_LABELS,
@@ -50,7 +58,8 @@ export function AdminExpenseItem({
   const catConfig = getCategoryConfig(expense.category || "Other");
   const CatIcon = catConfig.icon;
   const isRejecting = rejectingId === expense.id;
-  const adminCatLabel = ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
+  const adminCatLabel =
+    ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
 
   return (
     <div
@@ -66,7 +75,8 @@ export function AdminExpenseItem({
         <div
           className={cn(
             "relative w-[96px] h-[76px] rounded-xl bg-muted/60 flex items-center justify-center overflow-hidden border border-border",
-            expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all duration-200"
+            expense.receiptUrl &&
+              "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all duration-200",
           )}
           onClick={() => expense.receiptUrl && viewFile(expense.receiptUrl)}
         >
@@ -97,7 +107,12 @@ export function AdminExpenseItem({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => downloadFile(expense.receiptUrl!, expense.receiptFileName || "receipt")}
+              onClick={() =>
+                downloadFile(
+                  expense.receiptUrl!,
+                  expense.receiptFileName || "receipt",
+                )
+              }
               aria-label="Download receipt"
             >
               <Download className="h-3.5 w-3.5" />
@@ -111,16 +126,27 @@ export function AdminExpenseItem({
           <span
             className={cn(
               "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-              status === "PENDING" && "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-              status === "APPROVED" && "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-              status === "REJECTED" && "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
-              status === "PAID" && "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
+              status === "PENDING" &&
+                "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+              status === "APPROVED" &&
+                "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+              status === "REJECTED" &&
+                "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+              status === "PAID" &&
+                "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
             )}
           >
-            {status === "PENDING" ? "Pending Review" : status === "APPROVED" ? "Approved" : status === "PAID" ? "Paid" : "Rejected"}
+            {status === "PENDING"
+              ? "Pending Review"
+              : status === "APPROVED"
+                ? "Approved"
+                : status === "PAID"
+                  ? "Paid"
+                  : "Rejected"}
           </span>
           <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
-            #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
+            #EXP-{new Date(expense.expenseDate).getFullYear()}-
+            {expense.id.toString().padStart(3, "0")}
           </span>
         </div>
         <h4 className="font-semibold text-sm text-foreground mb-0.5 truncate">
@@ -133,13 +159,16 @@ export function AdminExpenseItem({
           <Avatar className="h-5 w-5">
             <AvatarImage src={resolveImageUrl(expense.user?.image)} />
             <AvatarFallback className="text-[9px] bg-muted">
-              {expense.user?.firstName?.[0]}{expense.user?.lastName?.[0]}
+              {expense.user?.firstName?.[0]}
+              {expense.user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <span className="font-medium text-foreground text-xs">
             {currentUserId && expense.userId === currentUserId
               ? "Created by Me"
-              : [expense.user?.firstName, expense.user?.lastName].filter(Boolean).join(" ") ||
+              : [expense.user?.firstName, expense.user?.lastName]
+                  .filter(Boolean)
+                  .join(" ") ||
                 expense.user?.email ||
                 "Employee"}
           </span>
@@ -151,21 +180,36 @@ export function AdminExpenseItem({
       </div>
 
       <div className="text-right min-w-[130px] flex-shrink-0 hidden lg:block">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Category</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+          Category
+        </p>
         <div className="flex items-center gap-1.5 justify-end">
-          <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center", catConfig.bg)}>
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center",
+              catConfig.bg,
+            )}
+          >
             <CatIcon className={cn("h-3.5 w-3.5", catConfig.text)} />
           </div>
-          <span className="text-xs font-medium text-foreground">{adminCatLabel}</span>
+          <span className="text-xs font-medium text-foreground">
+            {adminCatLabel}
+          </span>
         </div>
         {expense.description && (
-          <p className="text-[11px] text-muted-foreground mt-1 truncate max-w-[130px]">{expense.description}</p>
+          <p className="text-[11px] text-muted-foreground mt-1 truncate max-w-[130px]">
+            {expense.description}
+          </p>
         )}
       </div>
 
       <div className="text-right min-w-[160px] flex-shrink-0">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Amount</p>
-        <p className="text-2xl font-bold tabular-nums text-foreground">{formatINR(expense.amount)}</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
+          Amount
+        </p>
+        <p className="text-2xl font-bold tabular-nums text-foreground">
+          {formatINR(expense.amount)}
+        </p>
         <p className="text-[10px] text-muted-foreground mb-3">INR</p>
 
         {isRejecting ? (
@@ -177,7 +221,12 @@ export function AdminExpenseItem({
               className="text-xs h-8"
             />
             <div className="flex justify-end gap-1.5">
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={onRejectCancel}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={onRejectCancel}
+              >
                 Cancel
               </Button>
               <Button
@@ -222,7 +271,11 @@ interface MemberExpenseItemProps {
   onResubmit: (expense: ExpenseWithRelations) => void;
 }
 
-export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpenseItemProps) {
+export function MemberExpenseItem({
+  expense,
+  onEdit,
+  onResubmit,
+}: MemberExpenseItemProps) {
   const status = expense.status || "PENDING";
   const catConfig = getCategoryConfig(expense.category || "Other");
   const CatIcon = catConfig.icon;
@@ -253,13 +306,20 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
           status === "PAID" && "border-l-slate-400",
         )}
       >
-        #EXP-{new Date(expense.expenseDate).getFullYear()}-{expense.id.toString().padStart(3, "0")}
+        #EXP-{new Date(expense.expenseDate).getFullYear()}-
+        {expense.id.toString().padStart(3, "0")}
       </TableCell>
       <TableCell className="px-6 py-4 text-xs text-muted-foreground">
         {format(new Date(expense.expenseDate), "MMM dd, yyyy")}
       </TableCell>
       <TableCell className="px-6 py-4">
-        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", catConfig.bg, catConfig.text)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            catConfig.bg,
+            catConfig.text,
+          )}
+        >
           <CatIcon className="h-3 w-3" />
           {catConfig.label}
         </span>

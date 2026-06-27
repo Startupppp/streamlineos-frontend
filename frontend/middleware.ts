@@ -65,6 +65,7 @@ const PROTECTED_ROUTES = [
   "/notifications",
   "/ai",
   "/calendar",
+  "/knowledge-base",
 ];
 
 const AUTH_ROUTES = [
@@ -109,6 +110,7 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/support": ["projects:tickets:view"],
   "/support/inbox": ["projects:tickets:view"],
   "/support/kb": ["support:kb:view"],
+  "/knowledge-base": ["kb:articles:view"],
   "/support/macros": ["support:macros:view"],
   "/support/routing": ["support:macros:view"],
   "/settings/automations": ["settings:automations:view"],
