@@ -8,5 +8,6 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const token = await makeBackendToken(session);
   if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  return proxyToBackend(req, "/api/auth/audit/analytics", { method: "GET", auth: token });
+  const search = req.nextUrl.search;
+  return proxyToBackend(req, `/api/auth/login-history${search}`, { method: "GET", auth: token });
 }
