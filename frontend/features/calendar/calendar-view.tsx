@@ -49,8 +49,10 @@ const MONTHS = [
   "November",
   "December",
 ];
+import { toast } from "sonner";
 import { useCalendarEvents } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
+import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
@@ -220,7 +222,7 @@ export function CalendarView() {
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
   const handleExport = useCallback(
-    (range: "month" | "3months" | "year") => {
+    async (range: "month" | "3months" | "year") => {
       let from: Date;
       let to: Date;
       if (range === "month") {
@@ -235,23 +237,24 @@ export function CalendarView() {
       }
       const fromStr = format(from, "yyyy-MM-dd");
       const toStr = format(to, "yyyy-MM-dd");
-      window.open(`/api/calendar/export?from=${fromStr}&to=${toStr}`, "_blank");
+      try {
+        await downloadCalendarExport(fromStr, toStr);
+      } catch {
+        toast.error("Failed to export calendar");
+      }
     },
     [currentDate],
   );
 
-  const handleExportMonth = useCallback(
-    () => handleExport("month"),
-    [handleExport],
-  );
-  const handleExport3Months = useCallback(
-    () => handleExport("3months"),
-    [handleExport],
-  );
-  const handleExportYear = useCallback(
-    () => handleExport("year"),
-    [handleExport],
-  );
+  const handleExportMonth = useCallback(() => {
+    void handleExport("month");
+  }, [handleExport]);
+  const handleExport3Months = useCallback(() => {
+    void handleExport("3months");
+  }, [handleExport]);
+  const handleExportYear = useCallback(() => {
+    void handleExport("year");
+  }, [handleExport]);
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
 

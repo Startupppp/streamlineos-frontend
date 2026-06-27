@@ -21,6 +21,7 @@ import {
   extractEventNumericId,
 } from "@/lib/api/hooks/calendar";
 import type { CalendarListItem } from "@/lib/api/hooks/calendar";
+import { downloadCalendarExport } from "./calendar-export";
 import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -82,11 +83,15 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     [event, numericEventId, rsvpMutation]
   );
 
-  const handleExportIcs = useCallback(() => {
+  const handleExportIcs = useCallback(async () => {
     if (!event) return;
     const from = format(new Date(event.start), "yyyy-MM-dd");
     const to = format(new Date(event.end), "yyyy-MM-dd");
-    window.open(`/api/calendar/export?from=${from}&to=${to}`, "_blank");
+    try {
+      await downloadCalendarExport(from, to);
+    } catch {
+      toast.error("Failed to export event");
+    }
   }, [event]);
 
   const colorHex = event
