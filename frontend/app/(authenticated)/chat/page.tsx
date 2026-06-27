@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useChatHeartbeat, useChatChannels } from "@/lib/hooks/trpc-hooks";
+import { useChatHeartbeat, useChatChannels } from "@/lib/api/hooks";
 import { useChatGlobalNotifications } from "@/lib/api/hooks/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { MessagePanel } from "@/features/chat/message-panel";

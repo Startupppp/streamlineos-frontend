@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Ticket,
 } from "lucide-react";
-import { useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
+import { useCrmPeopleSlugs } from "@/lib/api/hooks";
 
 type ActivityType = "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
 

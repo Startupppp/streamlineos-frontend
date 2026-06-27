@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useLeadDetail, useLogLeadActivity } from "@/lib/hooks/trpc-hooks";
+import { useLeadDetail, useLogLeadActivity } from "@/lib/api/hooks";
 import { toast } from "sonner";
 import { STATUSES, STATUS_CONFIG, isActivityType, getInitials } from "./leads-constants";
 import type { LeadStatus } from "./leads-types";

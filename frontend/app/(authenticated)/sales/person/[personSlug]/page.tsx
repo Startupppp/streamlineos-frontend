@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
-import { useCrmPerson } from "@/lib/hooks/trpc-hooks";
+import { useCrmPerson } from "@/lib/api/hooks";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { EmptyPersonIllustration } from "@/components/illustrations";

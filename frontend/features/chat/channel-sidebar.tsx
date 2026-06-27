@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquareText, PanelLeftClose, Search, X } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { useChatChannels, useChatOnlineUsers } from "@/lib/hooks/trpc-hooks";
+import { useChatChannels, useChatOnlineUsers } from "@/lib/api/hooks";
 import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";

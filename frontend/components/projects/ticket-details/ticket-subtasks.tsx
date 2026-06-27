@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ListChecks, Plus } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
-import { useCreateTicket, useUpdateTicket } from "@/lib/hooks/trpc-hooks";
+import { useCreateTicket, useUpdateTicket } from "@/lib/api/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";

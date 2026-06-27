@@ -16,7 +16,7 @@ import {
   useAgingDeals,
   useSalesCycleLength,
   useLostDealAnalysis,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";

@@ -16,7 +16,7 @@ import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
-import { useSupportDashboard } from "@/lib/hooks/trpc-hooks";
+import { useSupportDashboard } from "@/lib/api/hooks";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";

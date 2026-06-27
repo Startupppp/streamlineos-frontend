@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUpdateTicketOrder } from "@/lib/hooks/trpc-hooks";
+import { useUpdateTicketOrder } from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import {
@@ -78,14 +77,8 @@ export function KanbanBoard({
       });
       return { previous: optimisticTickets };
     },
-    onError: (
-      _err: unknown,
-      _newOrder: unknown,
-      context: unknown
-    ) => {
-      const ctx = context as
-        | { previous: typeof optimisticTickets }
-        | undefined;
+    onError: (_err: unknown, _newOrder: unknown, context: unknown) => {
+      const ctx = context as { previous: typeof optimisticTickets } | undefined;
       if (ctx?.previous) setOptimisticTickets(ctx.previous);
       toast.error("Failed to update order");
     },
@@ -100,7 +93,7 @@ export function KanbanBoard({
     (id: number) => {
       onTicketSelect?.(id);
     },
-    [onTicketSelect]
+    [onTicketSelect],
   );
 
   const onDragStart = useCallback(() => {
@@ -178,14 +171,13 @@ export function KanbanBoard({
       setOptimisticTickets(newTickets);
       updateOrder.mutate({ projectId, items: updates });
     },
-    [optimisticTickets, updateOrder, projectId]
+    [optimisticTickets, updateOrder, projectId],
   );
 
   if (!isMounted) return null;
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 pb-1 px-1">
         {columns.map((col) => {
           const columnTickets = optimisticTickets
@@ -200,10 +192,9 @@ export function KanbanBoard({
               key={col.id}
               className={cn(
                 "rounded-lg border bg-muted/20 flex flex-col min-w-0",
-                overWip && "border-destructive/60"
+                overWip && "border-destructive/60",
               )}
             >
-
               <div className="flex items-center justify-between px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span
@@ -227,7 +218,7 @@ export function KanbanBoard({
                     {...provided.droppableProps}
                     className={cn(
                       "flex-1 overflow-y-auto min-h-[100px] px-2 pb-2 space-y-1.5 transition-colors",
-                      snapshot.isDraggingOver && "bg-primary/5"
+                      snapshot.isDraggingOver && "bg-primary/5",
                     )}
                   >
                     <AnimatePresence mode="popLayout">

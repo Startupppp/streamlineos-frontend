@@ -7,7 +7,7 @@ import {
   useCreateTicket,
   useAddAttachment,
   useProject,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {

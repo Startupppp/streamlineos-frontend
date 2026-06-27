@@ -17,7 +17,7 @@ import { MetricCard } from "@/components/charts/metric-card";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { MiniAreaChart } from "@/components/charts/mini-area-chart";
 import { ActivityFeed } from "@/components/charts/activity-feed";
-import { useCustomerExecutiveDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
+import { useCustomerExecutiveDashboard, useCrmPeopleSlugs } from "@/lib/api/hooks";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-constants";

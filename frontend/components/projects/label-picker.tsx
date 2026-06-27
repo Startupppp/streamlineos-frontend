@@ -15,7 +15,7 @@ import {
   useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

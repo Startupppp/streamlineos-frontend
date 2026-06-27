@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Check, ChevronRight, Hash, Loader2, Search, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/hooks/trpc-hooks";
+import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";

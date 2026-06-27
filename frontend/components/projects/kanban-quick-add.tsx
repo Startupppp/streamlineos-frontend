@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { useCreateTicket } from "@/lib/hooks/trpc-hooks";
+import { useCreateTicket } from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

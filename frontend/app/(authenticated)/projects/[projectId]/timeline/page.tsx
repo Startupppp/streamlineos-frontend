@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo } from "react";
-import { useProject } from "@/lib/hooks/trpc-hooks";
+import { useProject } from "@/lib/api/hooks";
 import { GanttView } from "@/components/projects/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";

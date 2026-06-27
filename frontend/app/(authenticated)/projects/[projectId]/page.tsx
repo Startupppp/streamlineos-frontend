@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useMemo, useCallback } from "react";
-import { useProject } from "@/lib/hooks/trpc-hooks";
+import { useProject } from "@/lib/api/hooks";
 import { KanbanBoard } from "@/components/projects/kanban-board";
 import { ListView } from "@/components/projects/list-view";
 import { TableView } from "@/components/projects/table-view";

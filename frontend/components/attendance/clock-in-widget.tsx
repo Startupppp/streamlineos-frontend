@@ -7,7 +7,7 @@ import {
   useHrAttendanceStatus,
   useHrCheckIn,
   useHrCheckOut,
-} from "../../lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { toast } from "sonner";
 import { Clock, Loader2, Timer } from "lucide-react";
 

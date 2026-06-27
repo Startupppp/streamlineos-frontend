@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINRCompact } from "@/lib/format-utils";
 import { toast } from "sonner";
-import { useSelfAssignLead } from "@/lib/hooks/trpc-hooks";
+import { useSelfAssignLead } from "@/lib/api/hooks";
 import { useLeadScoreExplanation } from "@/lib/api/hooks/leads";
 import { STATUSES, SOURCE_COLORS, PRIORITY_CONFIG, timeAgo, getInitials } from "./leads-constants";
 import type { BoardLead, LeadStatus } from "./leads-types";

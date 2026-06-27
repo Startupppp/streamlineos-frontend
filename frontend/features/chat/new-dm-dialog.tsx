@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useChatOrgUsers, useChatOnlineUsers, useCreateDMChannel } from "@/lib/hooks/trpc-hooks";
+import { useChatOrgUsers, useChatOnlineUsers, useCreateDMChannel } from "@/lib/api/hooks";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 

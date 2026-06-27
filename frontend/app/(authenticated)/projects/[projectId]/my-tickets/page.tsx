@@ -3,7 +3,7 @@
 import { use, useMemo, useCallback } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
-import { useProject } from "@/lib/hooks/trpc-hooks";
+import { useProject } from "@/lib/api/hooks";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
 import { TicketTypeIcon } from "@/components/projects/shared/ticket-type-icon";

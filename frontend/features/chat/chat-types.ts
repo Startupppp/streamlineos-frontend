@@ -1,4 +1,4 @@
-import type { useChatChannels } from "@/lib/hooks/trpc-hooks";
+import type { useChatChannels } from "@/lib/api/hooks";
 
 export type ChannelRaw = NonNullable<ReturnType<typeof useChatChannels>["data"]>[number];
 export type Channel = Omit<ChannelRaw, "lastMessage"> & {

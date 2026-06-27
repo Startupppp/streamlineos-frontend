@@ -9,7 +9,7 @@ import {
   useProject,
   useSprints,
   useSubtasks,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";

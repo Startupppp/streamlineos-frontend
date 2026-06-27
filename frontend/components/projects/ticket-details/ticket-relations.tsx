@@ -7,7 +7,7 @@ import {
   useRemoveTicketRelation,
 } from "@/lib/api/hooks/projects";
 import type { WorkItemRelationType } from "@/lib/api/hooks/projects";
-import { useProject } from "@/lib/hooks/trpc-hooks";
+import { useProject } from "@/lib/api/hooks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {

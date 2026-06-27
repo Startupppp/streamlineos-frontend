@@ -12,7 +12,7 @@ import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
-import { useChatChannel, useChatOnlineUsers, useUpdateChannel } from "@/lib/hooks/trpc-hooks";
+import { useChatChannel, useChatOnlineUsers, useUpdateChannel } from "@/lib/api/hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { getInitials } from "./chat-helpers";

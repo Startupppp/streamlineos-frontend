@@ -30,7 +30,7 @@ import {
   useChatOnlineUsers,
   useChatOrgUsers,
   useToggleReaction,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
