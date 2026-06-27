@@ -7,50 +7,86 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { useAbility } from "@/lib/abilities-context";
 import { useHrEmployees, useHrAssets } from "@/lib/api/hooks/hr";
+import { cn } from "@/lib/utils";
 import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
 
 interface AssetReturn {
-  id: number; userId: string; employeeName: string | null; assetName: string;
-  assetType: string | null; serialNumber: string | null; condition: string | null;
-  status: string | null; notes: string | null; returnedAt: string | null;
+  id: number;
+  userId: string;
+  employeeName: string | null;
+  assetName: string;
+  assetType: string | null;
+  serialNumber: string | null;
+  condition: string | null;
+  status: string | null;
+  notes: string | null;
+  returnedAt: string | null;
   createdAt: string | null;
 }
 
-const arKeys = { all: [...queryKeys.hr.all, "asset-returns"] as const, list: () => [...arKeys.all, "list"] as const };
+const arKeys = {
+  all: [...queryKeys.hr.all, "asset-returns"] as const,
+  list: () => [...arKeys.all, "list"] as const,
+};
 
+const STATUS_META: Record<string, { label: string; badge: string; accent: string }> = {
+  PENDING: {
+    label: "Pending",
+    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+    accent: "border-l-amber-500",
+  },
+  RETURNED: {
+    label: "Returned",
+    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+    accent: "border-l-emerald-500",
+  },
+  MISSING: {
+    label: "Missing",
+    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+    accent: "border-l-rose-500",
+  },
+};
 
-function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
-  if (s === "RETURNED") return "default";
-  if (s === "PENDING") return "outline";
-  if (s === "MISSING") return "destructive";
-  return "secondary";
-}
+const CONDITION_META: Record<string, { badge: string }> = {
+  Good: {
+    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+  },
+  Fair: {
+    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+  },
+  Poor: {
+    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+  },
+};
 
 export default function AssetReturnsPage() {
-  const { data: session } = useSession();
   const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:employees");
+
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {
     if (Array.isArray(employeesRaw)) return employeesRaw;
     return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
   }, [employeesRaw]);
+
   const employeeOptions = useMemo<ComboboxOption[]>(() =>
     employees
       .filter((e) => e.isActive)
@@ -59,25 +95,34 @@ export default function AssetReturnsPage() {
         label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
         sublabel: e.designation ?? e.email,
       })),
-    [employees]
+    [employees],
   );
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [returnId, setReturnId] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
+  const [selectedAssetId, setSelectedAssetId] = useState("");
+  const [assetName, setAssetName] = useState("");
+  const [notes, setNotes] = useState("");
 
   const { data: allAssets } = useHrAssets();
   const assignedAssets = useMemo<Asset[]>(() => {
     if (!allAssets || !userId) return [];
     return allAssets.filter((a) => a.assignedTo === userId && a.status === "ASSIGNED");
   }, [allAssets, userId]);
+
   const assetOptions = useMemo<ComboboxOption[]>(() =>
     assignedAssets.map((a) => ({
       value: String(a.id),
       label: a.name,
       sublabel: [a.type, a.serialNumber ? `S/N: ${a.serialNumber}` : null].filter(Boolean).join(" · "),
     })),
-    [assignedAssets]
+    [assignedAssets],
+  );
+
+  const selectedAsset = useMemo<Asset | undefined>(
+    () => assignedAssets.find((a) => String(a.id) === selectedAssetId),
+    [assignedAssets, selectedAssetId],
   );
 
   const { data: items, isLoading } = useQuery({
@@ -96,14 +141,6 @@ export default function AssetReturnsPage() {
       apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, { status: "RETURNED", condition }),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
-  const [selectedAssetId, setSelectedAssetId] = useState("");
-  const [assetName, setAssetName] = useState("");
-  const [notes, setNotes] = useState("");
-
-  const selectedAsset = useMemo<Asset | undefined>(
-    () => assignedAssets.find((a) => String(a.id) === selectedAssetId),
-    [assignedAssets, selectedAssetId]
-  );
 
   const handleEmployeeChange = useCallback((id: string) => {
     setUserId(id);
@@ -114,16 +151,19 @@ export default function AssetReturnsPage() {
   const handleAssetChange = useCallback((id: string) => {
     setSelectedAssetId(id);
     const asset = (allAssets ?? []).find((a) => String(a.id) === id);
-    if (asset) setAssetName(asset.name);
-    else setAssetName("");
+    setAssetName(asset ? asset.name : "");
   }, [allAssets]);
 
   const resetSheetState = useCallback(() => {
-    setUserId("");
-    setSelectedAssetId("");
-    setAssetName("");
-    setNotes("");
+    setUserId(""); setSelectedAssetId(""); setAssetName(""); setNotes("");
   }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) resetSheetState();
+    setSheetOpen(open);
+  }, [resetSheetState]);
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleCreate = useCallback(() => {
     if (!userId.trim()) { toast.error("Please select an employee"); return; }
@@ -154,10 +194,25 @@ export default function AssetReturnsPage() {
     });
   }, [returnId, markReturned]);
 
+  const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="space-y-0 divide-y divide-border">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="p-4 flex gap-4">
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-72" />
+                </div>
+                <Skeleton className="h-7 w-24 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
       </PageWrapper>
     );
   }
@@ -167,49 +222,120 @@ export default function AssetReturnsPage() {
       title="Asset Returns"
       subtitle="Track and manage company asset returns from employees"
       badge={`${items?.length ?? 0} items`}
-      actions={isAdmin ? <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Log Return</Button> : undefined}
+      actions={
+        isAdmin ? (
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+            <Plus className="h-3.5 w-3.5" />
+            Log Return
+          </Button>
+        ) : undefined
+      }
     >
       {!items?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyDevicesIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No asset returns tracked.</p>
-        </CardContent></Card>
+        <EmptyState
+          illustration={<Laptop className="h-8 w-8 text-muted-foreground" />}
+          title="No asset returns tracked"
+          description="Log an asset return when an employee returns company equipment."
+          action={isAdmin ? { label: "Log Return", onClick: handleOpenSheet } : undefined}
+        />
       ) : (
-        <div className="space-y-2">
-          {items.map((ar: AssetReturn) => (
-            <Card key={ar.id}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <Laptop className="h-5 w-5 text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">{ar.assetName}</p>
-                    {ar.assetType && <Badge variant="outline" className="text-[10px]">{ar.assetType}</Badge>}
-                    <Badge variant={statusBadge(ar.status)} className="text-[10px]">{ar.status ?? "PENDING"}</Badge>
-                  </div>
-                  <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    {ar.employeeName && <span>{ar.employeeName}</span>}
-                    {ar.serialNumber && <span>S/N: {ar.serialNumber}</span>}
-                    {ar.condition && <span>Condition: {ar.condition}</span>}
-                    {ar.createdAt && <span>{format(new Date(ar.createdAt), "MMM d, yyyy")}</span>}
-                  </div>
-                </div>
-                {isAdmin && ar.status !== "RETURNED" && (
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setReturnId(ar.id)}>
-                    <CheckCircle2 className="h-3 w-3 mr-1" />Received
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <ScrollArea className="w-full" type="auto">
+            <div className="min-w-[640px]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="font-semibold text-foreground/80">Asset</TableHead>
+                    <TableHead className="font-semibold text-foreground/80">Employee</TableHead>
+                    <TableHead className="font-semibold text-foreground/80">Status</TableHead>
+                    <TableHead className="font-semibold text-foreground/80">Condition</TableHead>
+                    <TableHead className="font-semibold text-foreground/80">Date</TableHead>
+                    {isAdmin && (
+                      <TableHead className="font-semibold text-foreground/80 text-right">Actions</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((ar: AssetReturn) => {
+                    const status = ar.status ?? "PENDING";
+                    const statusMeta = STATUS_META[status] ?? STATUS_META.PENDING;
+                    const conditionMeta = ar.condition ? CONDITION_META[ar.condition] : null;
+
+                    return (
+                      <TableRow key={ar.id} className={cn(
+                        "border-l-4 transition-colors duration-200",
+                        statusMeta.accent,
+                      )}>
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center shrink-0">
+                              <Laptop className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{ar.assetName}</p>
+                              {ar.assetType && (
+                                <p className="text-[10px] text-muted-foreground">{ar.assetType}</p>
+                              )}
+                              {ar.serialNumber && (
+                                <p className="text-[10px] font-mono text-muted-foreground">S/N: {ar.serialNumber}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-foreground">
+                          {ar.employeeName ?? <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell>
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                            statusMeta.badge,
+                          )}>
+                            {statusMeta.label}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {conditionMeta ? (
+                            <span className={cn(
+                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                              conditionMeta.badge,
+                            )}>
+                              {ar.condition}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {ar.createdAt ? format(new Date(ar.createdAt), "MMM d, yyyy") : "—"}
+                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            {ar.status !== "RETURNED" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1.5"
+                                onClick={() => setReturnId(ar.id)}
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                Received
+                              </Button>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </ScrollArea>
         </div>
       )}
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={(open) => {
-          if (!open) resetSheetState();
-          setSheetOpen(open);
-        }}
+        onOpenChange={handleSheetOpenChange}
         title="Log Asset Return"
         onSubmit={handleCreate}
         submitLabel="Log Return"
@@ -262,7 +388,7 @@ export default function AssetReturnsPage() {
         )}
 
         {selectedAsset && (
-          <div className="rounded-md bg-muted/50 border border-border p-3 text-xs space-y-1">
+          <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs space-y-1">
             <p><span className="font-medium">Type:</span> {selectedAsset.type}</p>
             {selectedAsset.serialNumber && (
               <p><span className="font-medium">Serial Number:</span> {selectedAsset.serialNumber}</p>
@@ -287,7 +413,7 @@ export default function AssetReturnsPage() {
 
       <ConfirmDialog
         open={returnId !== null}
-        onOpenChange={(open) => { if (!open) setReturnId(null); }}
+        onOpenChange={handleCloseConfirm}
         title="Confirm Return"
         description="Mark this asset as returned in good condition?"
         confirmLabel="Confirm"

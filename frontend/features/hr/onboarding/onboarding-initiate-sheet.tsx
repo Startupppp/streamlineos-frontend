@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { UserPlus, Info } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -69,11 +70,23 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
       title="Initiate Onboarding"
       description="Create an onboarding checklist for an employee using the active template."
       onSubmit={handleSubmit}
-      submitLabel="Start Onboarding"
+      submitLabel={
+        <span className="flex items-center gap-1.5">
+          <UserPlus className="h-3.5 w-3.5" />
+          Start Onboarding
+        </span>
+      }
       isPending={initiate.isPending}
     >
+      <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 px-3 py-2.5 flex items-start gap-2 text-[12px] text-blue-800 dark:text-blue-300">
+        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+        <span>
+          Tasks will be created from the active onboarding template and assigned to the selected employee.
+        </span>
+      </div>
+
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
+        <Label className="text-sm font-semibold text-foreground">
           Employee <span className="text-destructive">*</span>
         </Label>
         <Combobox
@@ -81,10 +94,10 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
           value={userId}
           onChange={setUserId}
           placeholder="Select an employee…"
-          searchPlaceholder="Search by name…"
+          searchPlaceholder="Search by name or designation…"
         />
         <p className="text-[11px] text-muted-foreground">
-          Select the employee to initiate onboarding for.
+          Only active employees without an existing onboarding workflow are shown.
         </p>
       </div>
     </HrSheet>

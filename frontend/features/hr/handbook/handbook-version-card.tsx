@@ -2,10 +2,9 @@
 
 import { useCallback } from "react";
 import { format } from "date-fns";
-import { FileText, Eye, Pencil, Trash2, ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { FileText, Pencil, Trash2, ExternalLink, Globe, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface HandbookVersion {
   id: number;
@@ -44,25 +43,60 @@ export function HandbookVersionCard({
   const handleDocLinkClick = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
 
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+    <div
+      className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4",
+        isPublished ? "border-l-emerald-500" : "border-l-amber-500"
+      )}
+    >
+      <div className="p-4 flex items-center gap-3">
+        <div
+          className={cn(
+            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+            isPublished
+              ? "bg-emerald-100 dark:bg-emerald-950/40"
+              : "bg-amber-100 dark:bg-amber-950/40"
+          )}
+        >
+          <FileText
+            className={cn(
+              "h-3.5 w-3.5",
+              isPublished
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-amber-600 dark:text-amber-400"
+            )}
+          />
+        </div>
+
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold">{v.title || `Version ${v.version}`}</p>
-            <span className="text-xs text-muted-foreground">v{v.version}</span>
-            <Badge variant={isPublished ? "default" : "secondary"} className="text-[10px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {v.title || `Version ${v.version}`}
+            </p>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800 shrink-0">
+              v{v.version}
+            </span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                isPublished
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800"
+              )}
+            >
               {isPublished ? "PUBLISHED" : "DRAFT"}
-            </Badge>
+            </span>
           </div>
-          <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
-            {v.changelog && <span className="line-clamp-1">{v.changelog}</span>}
+          <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap items-center">
+            {v.changelog && (
+              <span className="line-clamp-1 max-w-[280px]">{v.changelog}</span>
+            )}
             {v.documentUrl && (
               <a
                 href={v.documentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                className="inline-flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-200"
                 onClick={handleDocLinkClick}
               >
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -77,51 +111,54 @@ export function HandbookVersionCard({
             )}
           </div>
         </div>
-        <div className="flex gap-1.5 shrink-0">
+
+        <div className="flex items-center gap-1.5 shrink-0">
           {!isPublished && (
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0"
+              className="h-8 w-8 p-0 hover:bg-muted transition-colors duration-200"
               onClick={handleEdit}
               disabled={isUpdating}
+              aria-label="Edit version"
             >
-              <Pencil className="h-3 w-3" />
+              <Pencil className="h-3.5 w-3.5" />
             </Button>
           )}
-          {!isPublished && (
+          {!isPublished ? (
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs"
+              className="h-8 text-xs gap-1.5 transition-colors duration-200"
               onClick={handlePublish}
               disabled={isUpdating}
             >
+              <Globe className="h-3 w-3" />
               Publish
             </Button>
-          )}
-          {isPublished && (
+          ) : (
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs"
+              className="h-8 text-xs gap-1.5 transition-colors duration-200"
               onClick={handleUnpublish}
               disabled={isUpdating}
             >
-              <Eye className="h-3 w-3 mr-1" />
+              <EyeOff className="h-3 w-3" />
               Unpublish
             </Button>
           )}
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-destructive"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             onClick={handleDelete}
+            aria-label="Delete version"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import {
   FileText,
@@ -13,54 +13,61 @@ import {
   FileSignature,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/lib/api/hooks/hr/recruitment";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
-
+import { cn } from "@/lib/utils";
 
 type DocStatus = "GENERATED" | "SENT" | "VIEWED" | "SIGNED" | "DECLINED";
 
 const STATUS_CONFIG: Record<
   DocStatus,
-  { label: string; icon: React.ComponentType<{ className?: string }>; className: string }
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badgeClass: string;
+    accentClass: string;
+  }
 > = {
   GENERATED: {
     label: "Generated",
     icon: FileText,
-    className: "bg-muted text-muted-foreground border-border",
+    badgeClass: "bg-muted text-muted-foreground border-border",
+    accentClass: "border-l-slate-400",
   },
   SENT: {
     label: "Sent",
     icon: Send,
-    className: "bg-blue/10 text-blue border-blue/20",
+    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    accentClass: "border-l-blue-500",
   },
   VIEWED: {
     label: "Viewed",
     icon: Eye,
-    className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    accentClass: "border-l-amber-500",
   },
   SIGNED: {
     label: "Signed",
     icon: CheckCircle2,
-    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800",
+    accentClass: "border-l-emerald-500",
   },
   DECLINED: {
     label: "Declined",
     icon: XCircle,
-    className: "bg-destructive/10 text-destructive border-destructive/20",
+    badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800",
+    accentClass: "border-l-rose-500",
   },
 };
 
 function getStatusConfig(status: string) {
   return STATUS_CONFIG[status as DocStatus] ?? STATUS_CONFIG.GENERATED;
 }
-
 
 function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
   const steps: Array<{
@@ -75,7 +82,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
 
   if (doc.declinedAt) {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-destructive mt-1.5">
+      <div className="flex items-center gap-1.5 text-[11px] text-rose-600 dark:text-rose-400 mt-2">
         <XCircle className="h-3 w-3" />
         <span>Declined {format(new Date(doc.declinedAt), "PPp")}</span>
       </div>
@@ -85,7 +92,7 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
   const doneCount = steps.filter((s) => doc[s.key] !== null && doc[s.key] !== undefined).length;
 
   return (
-    <div className="flex items-center gap-1 mt-2">
+    <div className="flex items-center gap-1 mt-2.5">
       {steps.map((step, idx) => {
         const ts = doc[step.key] as string | null;
         const done = ts !== null && ts !== undefined;
@@ -93,11 +100,12 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
         return (
           <div key={step.key} className="flex items-center gap-1">
             <div
-              className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border transition-colors ${
+              className={cn(
+                "flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border transition-colors duration-200",
                 done
-                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800"
                   : "bg-muted text-muted-foreground border-border"
-              }`}
+              )}
               title={ts ? format(new Date(ts), "PPp") : step.label}
             >
               <Icon className="h-3 w-3" />
@@ -105,7 +113,10 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
             </div>
             {idx < steps.length - 1 && (
               <ChevronRight
-                className={`h-3 w-3 ${doneCount > idx ? "text-emerald-500" : "text-muted-foreground/30"}`}
+                className={cn(
+                  "h-3 w-3",
+                  doneCount > idx ? "text-emerald-500" : "text-muted-foreground/30"
+                )}
               />
             )}
           </div>
@@ -114,7 +125,6 @@ function EsignTimeline({ doc }: { doc: RolloutDocumentRecord }) {
     </div>
   );
 }
-
 
 interface DocumentsTabProps {
   candidateId: number;
@@ -137,11 +147,18 @@ export function DocumentsTab({
     candidateStatus === "HIRED" ||
     candidateStatus === "SELECTED";
 
+  const handleGenerateOffer = useCallback(() => setRolloutOpen(true), []);
+
+  const handleRolloutOpenChange = useCallback((open: boolean) => {
+    setRolloutOpen(open);
+    if (!open) void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
         {[1, 2].map((i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          <Skeleton key={i} className="h-24 w-full rounded-2xl" />
         ))}
       </div>
     );
@@ -151,15 +168,15 @@ export function DocumentsTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {list.length} document{list.length !== 1 ? "s" : ""} generated
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          {list.length} document{list.length !== 1 ? "s" : ""}
         </p>
         <Button
           size="sm"
           variant={isSelected ? "default" : "outline"}
-          className="gap-2 h-8 text-xs"
-          onClick={() => setRolloutOpen(true)}
+          className="h-8 gap-1.5 text-xs"
+          onClick={handleGenerateOffer}
         >
           <FileSignature className="h-3.5 w-3.5" />
           Generate Offer
@@ -167,9 +184,11 @@ export function DocumentsTab({
       </div>
 
       {!isSelected && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
-          <Clock className="h-3.5 w-3.5 shrink-0" />
-          Move this candidate to the <strong>Offer</strong> stage to trigger the automatic offer generation prompt.
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 dark:bg-amber-950/20 dark:border-amber-800 p-3 text-xs text-amber-700 dark:text-amber-400">
+          <Clock className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            Move this candidate to the <strong>Offer</strong> stage to trigger the automatic offer generation prompt.
+          </span>
         </div>
       )}
 
@@ -178,7 +197,7 @@ export function DocumentsTab({
           illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
           title="No documents yet"
           description="Generate and send offer documents to this candidate."
-          action={{ label: "Generate Offer", onClick: () => setRolloutOpen(true) }}
+          action={{ label: "Generate Offer", onClick: handleGenerateOffer }}
           compact
         />
       ) : (
@@ -187,31 +206,38 @@ export function DocumentsTab({
             const cfg = getStatusConfig(doc.status);
             const StatusIcon = cfg.icon;
             return (
-              <Card key={doc.id} className="overflow-hidden">
-                <CardContent className="p-4">
+              <div
+                key={doc.id}
+                className={cn(
+                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200 hover:border-border/80",
+                  cfg.accentClass
+                )}
+              >
+                <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm font-medium truncate">{doc.title}</span>
+                        <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-900/40 flex items-center justify-center shrink-0">
+                          <FileText className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                        </div>
+                        <span className="text-sm font-semibold text-foreground truncate">{doc.title}</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {doc.createdAt
-                          ? `Created ${format(new Date(doc.createdAt), "PPP")}`
-                          : ""}
-                      </p>
-                      <EsignTimeline doc={doc} />
+                      {doc.createdAt && (
+                        <p className="text-[11px] text-muted-foreground mt-1 ml-9">
+                          Created {format(new Date(doc.createdAt), "PPP")}
+                        </p>
+                      )}
+                      <div className="ml-9">
+                        <EsignTimeline doc={doc} />
+                      </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[11px] shrink-0 flex items-center gap-1 px-2 py-0.5 ${cfg.className}`}
-                    >
+                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0", cfg.badgeClass)}>
                       <StatusIcon className="h-3 w-3" />
                       {cfg.label}
-                    </Badge>
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -219,10 +245,7 @@ export function DocumentsTab({
 
       <RolloutDocumentsDialog
         open={rolloutOpen}
-        onOpenChange={(open) => {
-          setRolloutOpen(open);
-          if (!open) void refetch();
-        }}
+        onOpenChange={handleRolloutOpenChange}
         candidateId={candidateId}
         candidateName={candidateName}
         jobTitle={jobTitle}

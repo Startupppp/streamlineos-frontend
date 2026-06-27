@@ -345,6 +345,7 @@ export const NAV_GROUPS: NavGroup[] = [
         children: [
           { label: "Organization", icon: Building2, href: "/settings/organization", requiredPermission: "settings:manage" },
           { label: "Members", icon: UserCog, href: "/settings/members", requiredPermission: "settings:manage" },
+          { label: "Subscription", icon: CreditCard, href: "/settings/subscription", requiredPermission: "settings:manage" },
           { label: "Notifications", icon: Bell, href: "/settings/notifications", requiredPermission: "settings:manage" },
           { label: "Custom Fields", icon: Sliders, href: "/settings/custom-fields", requiredPermission: "settings:manage" },
           { label: "Recruitment Integrations", icon: Globe, href: "/settings/integrations/recruitment", requiredPermission: "settings:manage" },

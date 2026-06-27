@@ -139,7 +139,7 @@ export function CyclesTab() {
       </div>
 
       {!cycles?.length ? (
-        <EmptyState illustration={<Calendar className="h-8 w-8 text-muted-foreground" />} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
+        <EmptyState illustration={<Calendar className="h-10 w-10 text-muted-foreground/40" />} title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
       ) : (
         <div className="space-y-2">
           {cycles.map((cycle: ReviewCycle) => {

@@ -268,7 +268,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
   function handleSendPO(): void {
     sendMutation.mutate(undefined, {
-      onSuccess: (po) => toast.success(`PO ${po.poNumber} sent`),
+      onSuccess: (result) => toast.success(`PO ${result.poNumber} sent`),
       onError: (error) => toast.error(error.message),
     });
   }

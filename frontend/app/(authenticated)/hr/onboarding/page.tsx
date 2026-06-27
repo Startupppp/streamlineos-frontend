@@ -19,40 +19,40 @@ import { useAbility } from "@/lib/abilities-context";
 
 function HrDocumentsTab() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Manage onboarding document configuration and review employee submissions.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Settings className="h-5 w-5 text-primary" />
+            <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
+              <Settings className="h-3.5 w-3.5 text-violet-700 dark:text-violet-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">Configure Document Types</p>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+              <p className="text-sm font-semibold text-foreground">Configure Document Types</p>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                 Define which documents employees must submit during onboarding.
               </p>
-              <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
-                <Link href="/hr/document-types">Configure Document Types →</Link>
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+                <Link href="/hr/document-types">Configure Types</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <ClipboardCheck className="h-5 w-5 text-primary" />
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <ClipboardCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">Review Documents</p>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+              <p className="text-sm font-semibold text-foreground">Review Documents</p>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-3">
                 View and approve documents submitted by employees during onboarding.
               </p>
-              <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
-                <Link href="/hr/document-review">Review Documents →</Link>
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+                <Link href="/hr/document-review">Review Submissions</Link>
               </Button>
             </div>
           </CardContent>
@@ -77,9 +77,9 @@ export default function OnboardingPage() {
       noInternalScroll={!isHROrCEO}
       actions={
         isHROrCEO ? (
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild className="h-8 gap-1.5">
             <Link href="/hr">
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               Back to Employees
             </Link>
           </Button>
@@ -88,14 +88,23 @@ export default function OnboardingPage() {
     >
       {isHROrCEO ? (
         <Tabs defaultValue="wizard" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="workflow" className="text-xs h-7 px-3">
+          <TabsList className="rounded-lg border p-1 h-auto bg-muted/40">
+            <TabsTrigger
+              value="workflow"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               Workflow
             </TabsTrigger>
-            <TabsTrigger value="wizard" className="text-xs h-7 px-3">
+            <TabsTrigger
+              value="wizard"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               New Employee
             </TabsTrigger>
-            <TabsTrigger value="documents" className="text-xs h-7 px-3">
+            <TabsTrigger
+              value="documents"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               Documents
             </TabsTrigger>
           </TabsList>
@@ -114,13 +123,16 @@ export default function OnboardingPage() {
         </Tabs>
       ) : (
         <Tabs defaultValue="checklist" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="h-8 shrink-0">
-            <TabsTrigger value="checklist" className="text-xs h-7 px-3">
+          <TabsList className="h-8 shrink-0 rounded-lg border p-1 bg-muted/40">
+            <TabsTrigger
+              value="checklist"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               My Documents
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="checklist" className="flex-1 overflow-auto pb-6">
+          <TabsContent value="checklist" className="flex-1 overflow-auto pb-6 mt-4">
             <EmployeeDocumentsTab />
           </TabsContent>
         </Tabs>

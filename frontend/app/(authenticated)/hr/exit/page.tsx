@@ -13,7 +13,6 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import {
@@ -34,12 +34,12 @@ import {
   FileText,
   Download,
   CheckCircle2,
+  LogOut,
 } from "lucide-react";
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
-import { cn } from "@/lib/utils";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
@@ -77,7 +77,6 @@ export default function ExitManagementPage() {
   const [formKey, setFormKey] = useState(0);
 
   const [hrApproveId, setHrApproveId] = useState<number | null>(null);
-
   const [ceoApproveId, setCeoApproveId] = useState<number | null>(null);
 
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
@@ -115,6 +114,10 @@ export default function ExitManagementPage() {
 
   const handleUploadComplete = useCallback((url: string) => {
     setResignationLetterUrl(url);
+  }, []);
+
+  const handleRemoveLetterUrl = useCallback(() => {
+    setResignationLetterUrl(null);
   }, []);
 
   const handleViewLetter = useCallback(async (id: number) => {
@@ -284,12 +287,58 @@ export default function ExitManagementPage() {
     URL.revokeObjectURL(url);
   }, []);
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  const handleResignationSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) resetResignationForm();
+    setSheetOpen(open);
+  }, [resetResignationForm]);
+
+  const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReason(e.target.value);
+  }, []);
+
+  const handleOtherReasonCategoryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setOtherReasonCategory(e.target.value);
+  }, []);
+
+  const handleCompanyFeedbackChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCompanyFeedback(e.target.value);
+  }, []);
+
+  const handleRejectRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRejectRemarks(e.target.value);
+  }, []);
+
+  const handleHrApproveClose = useCallback((open: boolean) => {
+    if (!open) setHrApproveId(null);
+  }, []);
+
+  const handleCeoApproveClose = useCallback((open: boolean) => {
+    if (!open) setCeoApproveId(null);
+  }, []);
+
+  const handleRejectRemarksClose = useCallback((open: boolean) => {
+    if (!open) {
+      setRejectRemarksOpen(false);
+      setRejectDialog(null);
+      setRejectRemarks("");
+    }
+  }, []);
+
+  const handleWithdrawClose = useCallback((open: boolean) => {
+    if (!open) setWithdrawId(null);
+  }, []);
+
+  const handleHrReject = useCallback((id: number) => handleOpenRejectDialog(id, "hr"), [handleOpenRejectDialog]);
+  const handleCeoReject = useCallback((id: number) => handleOpenRejectDialog(id, "ceo"), [handleOpenRejectDialog]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
+            <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
       </PageWrapper>
@@ -303,22 +352,24 @@ export default function ExitManagementPage() {
       badge={`${resignations?.length ?? 0} records`}
       actions={
         !isCEO && !hasActiveResignation ? (
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
+          <Button size="sm" onClick={handleOpenSheet} className="h-8 gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
             Submit Resignation
           </Button>
         ) : hasActiveResignation ? (
-          <p className="text-xs text-muted-foreground">You have a pending resignation.</p>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800">
+            Resignation pending
+          </span>
         ) : null
       }
     >
       {!resignations?.length ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <EmptyPersonIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No resignations on record.</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<EmptyPersonIllustration className="h-24 w-24" />}
+          title="No resignations on record"
+          description={isCEO || isHR ? "Employee resignations will appear here once submitted." : "Submit a resignation to start the exit process."}
+          compact
+        />
       ) : (
         <div className="space-y-2">
           {resignations.map((r: Resignation) => (
@@ -332,9 +383,9 @@ export default function ExitManagementPage() {
               userId={userId}
               onToggleExpand={toggleExpand}
               onHrApprove={setHrApproveId}
-              onHrReject={(id) => handleOpenRejectDialog(id, "hr")}
+              onHrReject={handleHrReject}
               onCeoApprove={setCeoApproveId}
-              onCeoReject={(id) => handleOpenRejectDialog(id, "ceo")}
+              onCeoReject={handleCeoReject}
               onWithdraw={setWithdrawId}
               onViewLetter={handleViewLetter}
             />
@@ -344,18 +395,23 @@ export default function ExitManagementPage() {
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={(open) => { if (!open) resetResignationForm(); setSheetOpen(open); }}
+        onOpenChange={handleResignationSheetOpenChange}
         title="Submit Resignation"
         onSubmit={handleSubmitResignation}
-        submitLabel="Submit"
+        submitLabel={
+          <span className="flex items-center gap-1.5">
+            <LogOut className="h-3.5 w-3.5" />
+            Submit Resignation
+          </span>
+        }
         isPending={createResignation.isPending}
       >
-        <div className="rounded-md border border-border bg-muted/40 px-3 py-2.5 flex items-start gap-2.5 text-xs text-muted-foreground">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 px-3 py-2.5 flex items-start gap-2.5 text-xs text-blue-800 dark:text-blue-300">
           <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span>
-            Notice period is <strong className="text-foreground">60 days</strong> as per
+            Notice period is <strong className="text-blue-900 dark:text-blue-200">60 days</strong> as per
             company policy. Your last working date will be{" "}
-            <strong className="text-foreground">
+            <strong className="text-blue-900 dark:text-blue-200">
               {format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}
             </strong>
             .
@@ -363,7 +419,7 @@ export default function ExitManagementPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Reason Category</label>
+          <label className="text-sm font-semibold text-foreground">Reason Category</label>
           <Select value={reasonCategory} onValueChange={setReasonCategory}>
             <SelectTrigger>
               <SelectValue placeholder="Select a category..." />
@@ -380,26 +436,26 @@ export default function ExitManagementPage() {
 
         {reasonCategory === RESIGNATION_REASON_OTHER && (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-semibold text-foreground">
               Specify Reason <span className="text-destructive">*</span>
             </label>
             <Input
               placeholder="Briefly describe your reason..."
               value={otherReasonCategory}
-              onChange={(e) => setOtherReasonCategory(e.target.value)}
+              onChange={handleOtherReasonCategoryChange}
               maxLength={100}
             />
           </div>
         )}
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-semibold text-foreground">
             Detailed Explanation <span className="text-destructive">*</span>
           </label>
           <Textarea
             placeholder="Please describe your reason for leaving..."
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={handleReasonChange}
             rows={4}
             maxLength={2000}
             className="resize-none w-full"
@@ -409,10 +465,10 @@ export default function ExitManagementPage() {
           </p>
         </div>
 
-        <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
           <div>
-            <p className="text-sm font-medium">Willing for Exit Interview?</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm font-semibold text-foreground">Willing for Exit Interview?</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               We&apos;d love to hear your feedback in person.
             </p>
           </div>
@@ -424,14 +480,14 @@ export default function ExitManagementPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-semibold text-foreground">
             Company Feedback{" "}
             <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           <Textarea
             placeholder="Any feedback about your experience at the company..."
             value={companyFeedback}
-            onChange={(e) => setCompanyFeedback(e.target.value)}
+            onChange={handleCompanyFeedbackChange}
             rows={3}
             maxLength={1000}
             className="resize-none w-full"
@@ -439,18 +495,18 @@ export default function ExitManagementPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-semibold text-foreground">
             Resignation Letter{" "}
             <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           {resignationLetterUrl ? (
-            <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-800 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1 truncate">Letter uploaded successfully</span>
               <button
                 type="button"
-                onClick={() => setResignationLetterUrl(null)}
-                className="text-green-600 hover:text-green-800"
+                onClick={handleRemoveLetterUrl}
+                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors duration-200"
                 aria-label="Remove uploaded letter"
               >
                 ×
@@ -468,7 +524,7 @@ export default function ExitManagementPage() {
           <button
             type="button"
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
           >
             <Download className="h-3 w-3" />
             Download template
@@ -478,9 +534,7 @@ export default function ExitManagementPage() {
 
       <ConfirmDialog
         open={hrApproveId !== null}
-        onOpenChange={(open) => {
-          if (!open) setHrApproveId(null);
-        }}
+        onOpenChange={handleHrApproveClose}
         title="Approve Resignation (HR)"
         description="Are you sure you want to approve this resignation? It will be forwarded to the CEO for final approval."
         confirmLabel="Approve"
@@ -490,9 +544,7 @@ export default function ExitManagementPage() {
 
       <ConfirmDialog
         open={ceoApproveId !== null}
-        onOpenChange={(open) => {
-          if (!open) setCeoApproveId(null);
-        }}
+        onOpenChange={handleCeoApproveClose}
         title="Approve Resignation (CEO)"
         description="Are you sure you want to give final approval for this resignation?"
         confirmLabel="Approve"
@@ -502,13 +554,7 @@ export default function ExitManagementPage() {
 
       <HrSheet
         open={rejectRemarksOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRejectRemarksOpen(false);
-            setRejectDialog(null);
-            setRejectRemarks("");
-          }
-        }}
+        onOpenChange={handleRejectRemarksClose}
         title="Reject Resignation"
         onSubmit={handleRejectConfirm}
         submitLabel="Reject"
@@ -518,13 +564,13 @@ export default function ExitManagementPage() {
           Provide a reason for rejection. The employee will be notified.
         </p>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-semibold text-foreground">
             Remarks <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           <Textarea
             placeholder="Enter your rejection remarks..."
             value={rejectRemarks}
-            onChange={(e) => setRejectRemarks(e.target.value)}
+            onChange={handleRejectRemarksChange}
             rows={4}
             maxLength={1000}
             className="resize-none w-full"
@@ -534,9 +580,7 @@ export default function ExitManagementPage() {
 
       <ConfirmDialog
         open={withdrawId !== null}
-        onOpenChange={(open) => {
-          if (!open) setWithdrawId(null);
-        }}
+        onOpenChange={handleWithdrawClose}
         title="Withdraw Resignation"
         description="Are you sure you want to withdraw your resignation? This action cannot be undone."
         confirmLabel="Withdraw"

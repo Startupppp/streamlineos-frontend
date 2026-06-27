@@ -38,10 +38,19 @@ export function HrFilterBar({
   onClearFilters,
 }: HrFilterBarProps) {
   const hasActiveFilters =
-    !!searchTerm ||
-    deptFilter !== "All" ||
-    statusFilter !== "Active" ||
-    roleFilter !== "All";
+    !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  };
+
+  const handleStatusChange = (v: string) => {
+    onStatusChange(v as StatusFilter);
+  };
+
+  const handleRoleChange = (v: string) => {
+    onRoleChange(v as RoleFilter);
+  };
 
   return (
     <>
@@ -50,8 +59,8 @@ export function HrFilterBar({
         <Input
           placeholder="Search employees..."
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-8 h-8 w-[200px] text-sm"
+          onChange={handleSearchChange}
+          className="pl-8 h-8 w-[200px] text-xs"
           aria-label="Search employees"
         />
       </div>
@@ -70,10 +79,7 @@ export function HrFilterBar({
         </SelectContent>
       </Select>
 
-      <Select
-        value={statusFilter}
-        onValueChange={(v) => onStatusChange(v as StatusFilter)}
-      >
+      <Select value={statusFilter} onValueChange={handleStatusChange}>
         <SelectTrigger className="h-8 w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
@@ -84,10 +90,7 @@ export function HrFilterBar({
         </SelectContent>
       </Select>
 
-      <Select
-        value={roleFilter}
-        onValueChange={(v) => onRoleChange(v as RoleFilter)}
-      >
+      <Select value={roleFilter} onValueChange={handleRoleChange}>
         <SelectTrigger className="h-8 w-[120px] text-xs">
           <SelectValue />
         </SelectTrigger>
@@ -108,11 +111,11 @@ export function HrFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2 text-xs text-muted-foreground"
+          className="h-8 px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >
-          <X className="h-3.5 w-3.5 mr-1" />
+          <X className="h-3.5 w-3.5" />
           Clear
         </Button>
       )}

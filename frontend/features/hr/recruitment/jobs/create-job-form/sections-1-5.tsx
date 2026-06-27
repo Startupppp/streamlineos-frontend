@@ -12,6 +12,10 @@ import type { CreateJobFormValues } from "./schema";
 import type { Department } from "@/types/hr";
 import { useBranches } from "@/lib/api/hooks";
 import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import {
+  Briefcase, MapPin, Tag, Sparkles,
+} from "lucide-react";
 
 export interface SectionProps {
   form: UseFormReturn<CreateJobFormValues>;
@@ -20,14 +24,45 @@ export interface SectionProps {
 
 export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-destructive mt-1">{message}</p>;
+  return <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">{message}</p>;
 }
 
-export function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+export function SectionTitle({ title, subtitle, icon: Icon }: { title: string; subtitle: string; icon?: React.ComponentType<{ className?: string }> }) {
   return (
-    <div className="mb-6">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+    <div className="mb-5 pb-4 border-b border-border">
+      <div className="flex items-center gap-2 mb-1">
+        {Icon && (
+          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+            <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          </div>
+        )}
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      </div>
+      <p className={cn("text-xs text-muted-foreground", Icon && "ml-9")}>{subtitle}</p>
+    </div>
+  );
+}
+
+function FieldGroup({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("grid gap-4", className)}>{children}</div>;
+}
+
+function Field({ label, required, hint, error, children }: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-semibold text-foreground/80">
+        {label}
+        {required && <span className="text-rose-500 ml-0.5">*</span>}
+      </Label>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      {children}
+      {error && <FieldError message={error} />}
     </div>
   );
 }
@@ -36,19 +71,16 @@ export function Section1({ form, departments }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Basic Job Details" subtitle="Core information about the position" />
-      <div className="grid gap-4">
+      <SectionTitle title="Basic Job Details" subtitle="Core information about the position" icon={Briefcase} />
+      <FieldGroup>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-medium">Job Title <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" placeholder="e.g. Software Engineer, HR Manager" {...register("title")} />
-            <FieldError message={errors.title?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Department <span className="text-destructive">*</span></Label>
+          <Field label="Job Title" required error={errors.title?.message}>
+            <Input placeholder="e.g. Software Engineer, HR Manager" {...register("title")} />
+          </Field>
+          <Field label="Department" required error={errors.departmentId?.message}>
             <Controller name="departmentId" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {departments && departments.length > 0 ? (
                     departments.map((d) => (
@@ -67,20 +99,18 @@ export function Section1({ form, departments }: SectionProps) {
                 </SelectContent>
               </Select>
             )} />
-            <FieldError message={errors.departmentId?.message} />
-          </div>
+          </Field>
         </div>
-        <div>
-          <Label className="text-xs font-medium">Role <span className="text-destructive">*</span></Label>
-          <Input className="mt-1" placeholder="e.g. Frontend Developer, Recruiter, Accountant" {...register("role")} />
-          <FieldError message={errors.role?.message} />
-        </div>
+
+        <Field label="Role" required error={errors.role?.message}>
+          <Input placeholder="e.g. Frontend Developer, Recruiter, Accountant" {...register("role")} />
+        </Field>
+
         <div className="grid sm:grid-cols-3 gap-4">
-          <div>
-            <Label className="text-xs font-medium">Job Type <span className="text-destructive">*</span></Label>
+          <Field label="Job Type" required error={errors.jobType?.message}>
             <Controller name="jobType" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="FULL_TIME">Full-Time</SelectItem>
                   <SelectItem value="PART_TIME">Part-Time</SelectItem>
@@ -94,13 +124,12 @@ export function Section1({ form, departments }: SectionProps) {
                 </SelectContent>
               </Select>
             )} />
-            <FieldError message={errors.jobType?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Work Mode <span className="text-destructive">*</span></Label>
+          </Field>
+
+          <Field label="Work Mode" required error={errors.workMode?.message}>
             <Controller name="workMode" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select mode" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select mode" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="ONSITE">On-site</SelectItem>
                   <SelectItem value="REMOTE">Remote</SelectItem>
@@ -108,15 +137,13 @@ export function Section1({ form, departments }: SectionProps) {
                 </SelectContent>
               </Select>
             )} />
-            <FieldError message={errors.workMode?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Number of Openings <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" type="number" min={1} placeholder="e.g. 1, 2, 5" {...register("openings", { valueAsNumber: true })} />
-            <FieldError message={errors.openings?.message} />
-          </div>
+          </Field>
+
+          <Field label="Openings" required error={errors.openings?.message}>
+            <Input type="number" min={1} placeholder="e.g. 1" {...register("openings", { valueAsNumber: true })} />
+          </Field>
         </div>
-      </div>
+      </FieldGroup>
     </div>
   );
 }
@@ -146,28 +173,24 @@ export function Section2({ form }: SectionProps) {
 
   return (
     <div>
-      <SectionTitle title="Location Details" subtitle="Where this role is based" />
-      <div className="grid gap-4">
+      <SectionTitle title="Location Details" subtitle="Where this role is based" icon={MapPin} />
+      <FieldGroup>
         {branchOptions.length > 0 && (
-          <div>
-            <Label className="text-xs font-medium">Auto-fill from Branch <span className="text-muted-foreground font-normal">(optional)</span></Label>
-            <div className="mt-1">
-              <Combobox
-                options={branchOptions}
-                value=""
-                onChange={handleBranchSelect}
-                placeholder="Select a branch to auto-fill location…"
-                searchPlaceholder="Search branches…"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Selecting a branch pre-fills the fields below</p>
-          </div>
+          <Field label="Auto-fill from Branch" hint="Selecting a branch pre-fills the fields below">
+            <Combobox
+              options={branchOptions}
+              value=""
+              onChange={handleBranchSelect}
+              placeholder="Select a branch to auto-fill location…"
+              searchPlaceholder="Search branches…"
+            />
+          </Field>
         )}
-        <div>
-          <Label className="text-xs font-medium">Country <span className="text-destructive">*</span></Label>
+
+        <Field label="Country" required error={errors.country?.message}>
           <Controller name="country" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="e.g. India, USA, UK" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="e.g. India, USA, UK" /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="India">India</SelectItem>
                 <SelectItem value="United States">United States</SelectItem>
@@ -181,19 +204,16 @@ export function Section2({ form }: SectionProps) {
               </SelectContent>
             </Select>
           )} />
-          <FieldError message={errors.country?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">State / City <span className="text-destructive">*</span></Label>
-          <Input className="mt-1" placeholder="e.g. Karnataka, Bangalore / New York, USA" {...register("stateCity")} />
-          <FieldError message={errors.stateCity?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Office Location <span className="text-destructive">*</span></Label>
-          <Input className="mt-1" placeholder="e.g. Head Office – Bangalore, Branch – Mumbai" {...register("officeLocation")} />
-          <FieldError message={errors.officeLocation?.message} />
-        </div>
-      </div>
+        </Field>
+
+        <Field label="State / City" required error={errors.stateCity?.message}>
+          <Input placeholder="e.g. Karnataka, Bangalore / New York, USA" {...register("stateCity")} />
+        </Field>
+
+        <Field label="Office Location" required error={errors.officeLocation?.message}>
+          <Input placeholder="e.g. Head Office – Bangalore, Branch – Mumbai" {...register("officeLocation")} />
+        </Field>
+      </FieldGroup>
     </div>
   );
 }
@@ -202,26 +222,22 @@ export function Section3({ form }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Compensation Details" subtitle="Salary range and pay structure" />
-      <div className="grid gap-4">
+      <SectionTitle title="Compensation Details" subtitle="Salary range and pay structure" icon={Sparkles} />
+      <FieldGroup>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-medium">Minimum Salary <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" inputMode="numeric" placeholder="e.g. 500000" {...register("salaryMin", { valueAsNumber: true })} />
-            <FieldError message={errors.salaryMin?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Maximum Salary <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" inputMode="numeric" placeholder="e.g. 1200000" {...register("salaryMax", { valueAsNumber: true })} />
-            <FieldError message={errors.salaryMax?.message} />
-          </div>
+          <Field label="Minimum Salary" required error={errors.salaryMin?.message}>
+            <Input inputMode="numeric" placeholder="e.g. 500000" {...register("salaryMin", { valueAsNumber: true })} />
+          </Field>
+          <Field label="Maximum Salary" required error={errors.salaryMax?.message}>
+            <Input inputMode="numeric" placeholder="e.g. 1200000" {...register("salaryMax", { valueAsNumber: true })} />
+          </Field>
         </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-medium">Currency <span className="text-destructive">*</span></Label>
+          <Field label="Currency" required error={errors.currency?.message}>
             <Controller name="currency" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select currency" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="INR">INR</SelectItem>
                   <SelectItem value="USD">USD</SelectItem>
@@ -232,13 +248,11 @@ export function Section3({ form }: SectionProps) {
                 </SelectContent>
               </Select>
             )} />
-            <FieldError message={errors.currency?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Salary Type <span className="text-destructive">*</span></Label>
+          </Field>
+          <Field label="Salary Type" required error={errors.salaryType?.message}>
             <Controller name="salaryType" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
                   <SelectItem value="ANNUAL">Annual</SelectItem>
@@ -246,14 +260,13 @@ export function Section3({ form }: SectionProps) {
                 </SelectContent>
               </Select>
             )} />
-            <FieldError message={errors.salaryType?.message} />
-          </div>
+          </Field>
         </div>
-        <div>
-          <Label className="text-xs font-medium">Bonus / Incentive</Label>
-          <Input className="mt-1" placeholder="e.g. Performance Bonus, Quarterly Incentive" {...register("bonus")} />
-        </div>
-      </div>
+
+        <Field label="Bonus / Incentive">
+          <Input placeholder="e.g. Performance Bonus, Quarterly Incentive" {...register("bonus")} />
+        </Field>
+      </FieldGroup>
     </div>
   );
 }
@@ -262,18 +275,14 @@ export function Section4({ form }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Experience & Education" subtitle="Qualifications and experience required" />
-      <div className="grid gap-4">
+      <SectionTitle title="Experience & Education" subtitle="Qualifications and experience required" icon={Briefcase} />
+      <FieldGroup>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-medium">Minimum Experience (years) <span className="text-destructive">*</span></Label>
-            <Input className="mt-1" type="number" min={0} placeholder="e.g. 0, 1, 3, 5" {...register("minExperience", { valueAsNumber: true })} />
-            <FieldError message={errors.minExperience?.message} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Maximum Experience (years)</Label>
+          <Field label="Min. Experience (years)" required error={errors.minExperience?.message}>
+            <Input type="number" min={0} placeholder="e.g. 0, 1, 3, 5" {...register("minExperience", { valueAsNumber: true })} />
+          </Field>
+          <Field label="Max. Experience (years)" error={errors.maxExperience?.message}>
             <Input
-              className="mt-1"
               type="number"
               min={0}
               placeholder="e.g. 2, 5, 10"
@@ -282,14 +291,13 @@ export function Section4({ form }: SectionProps) {
                 setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)),
               })}
             />
-            <FieldError message={errors.maxExperience?.message} />
-          </div>
+          </Field>
         </div>
-        <div>
-          <Label className="text-xs font-medium">Education Level <span className="text-destructive">*</span></Label>
+
+        <Field label="Education Level" required error={errors.educationLevel?.message}>
           <Controller name="educationLevel" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select level" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="HIGH_SCHOOL">High School</SelectItem>
                 <SelectItem value="DIPLOMA">Diploma</SelectItem>
@@ -300,9 +308,8 @@ export function Section4({ form }: SectionProps) {
               </SelectContent>
             </Select>
           )} />
-          <FieldError message={errors.educationLevel?.message} />
-        </div>
-      </div>
+        </Field>
+      </FieldGroup>
     </div>
   );
 }
@@ -311,31 +318,31 @@ export function Section5({ form }: SectionProps) {
   const { control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Skills & Tags" subtitle="Required and preferred competencies" />
-      <div className="grid gap-4">
-        <div>
-          <Label className="text-xs font-medium">Required Skills <span className="text-destructive">*</span></Label>
-          <p className="text-[10px] text-muted-foreground mb-1">e.g. React, Node.js, Java, Excel — type and press Enter</p>
+      <SectionTitle title="Skills & Tags" subtitle="Required and preferred competencies" icon={Tag} />
+      <FieldGroup>
+        <Field
+          label="Required Skills"
+          required
+          hint="Type a skill and press Enter or comma to add"
+          error={errors.requiredSkills?.message}
+        >
           <Controller name="requiredSkills" control={control} render={({ field }) => (
-            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="Type a skill and press Enter..." />
+            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="e.g. React, Node.js, Java…" />
           )} />
-          <FieldError message={errors.requiredSkills?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Preferred Skills</Label>
-          <p className="text-[10px] text-muted-foreground mb-1">e.g. AWS, Docker, TypeScript</p>
+        </Field>
+
+        <Field label="Preferred Skills" hint="e.g. AWS, Docker, TypeScript">
           <Controller name="preferredSkills" control={control} render={({ field }) => (
-            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="Type a skill and press Enter..." />
+            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="e.g. AWS, Docker, TypeScript…" />
           )} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Tags</Label>
-          <p className="text-[10px] text-muted-foreground mb-1">e.g. Urgent, Remote, Senior, Leadership, Backend</p>
+        </Field>
+
+        <Field label="Tags" hint="e.g. Urgent, Remote, Senior, Leadership, Backend">
           <Controller name="tags" control={control} render={({ field }) => (
-            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="Type a tag and press Enter..." />
+            <ChipInput value={field.value ?? []} onChange={field.onChange} placeholder="e.g. Urgent, Senior…" />
           )} />
-        </div>
-      </div>
+        </Field>
+      </FieldGroup>
     </div>
   );
 }

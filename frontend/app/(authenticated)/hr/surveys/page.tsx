@@ -8,62 +8,122 @@ import {
 } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  Plus, ClipboardList, Calendar, Play, Archive, BarChart3,
-} from "lucide-react";
-import { EmptyActivityIllustration } from "@/components/illustrations";
+import { Plus, ClipboardList, Calendar, Play, Archive, BarChart3 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAbility } from "@/lib/abilities-context";
 
 type SurveyStatusFilter = "all" | "DRAFT" | "ACTIVE" | "CLOSED";
 
-function statusBadge(s: string | null): "default" | "secondary" | "outline" {
-  if (s === "ACTIVE") return "default";
-  if (s === "CLOSED") return "outline";
-  return "secondary";
-}
-
+const STATUS_META: Record<string, { label: string; accent: string; badge: string }> = {
+  DRAFT: {
+    label: "Draft",
+    accent: "border-l-slate-400",
+    badge: "bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300",
+  },
+  ACTIVE: {
+    label: "Active",
+    accent: "border-l-emerald-500",
+    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+  },
+  CLOSED: {
+    label: "Closed",
+    accent: "border-l-rose-500",
+    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+  },
+};
 
 interface SurveyCardProps {
   s: PulseSurvey;
   isAdmin: boolean;
+  maxResponses: number;
   onPublish: (id: number) => void;
   onClose: (id: number) => void;
 }
 
-const SurveyCard = memo(function SurveyCard({ s, isAdmin, onPublish, onClose }: SurveyCardProps) {
+const SurveyCard = memo(function SurveyCard({ s, isAdmin, maxResponses, onPublish, onClose }: SurveyCardProps) {
+  const status = s.status ?? "DRAFT";
+  const meta = STATUS_META[status] ?? STATUS_META.DRAFT;
+  const responseCount = s.responses?.length ?? 0;
+  const responsePct = maxResponses > 0 ? Math.round((responseCount / maxResponses) * 100) : 0;
+
   const handlePublish = useCallback(() => onPublish(s.id), [onPublish, s.id]);
   const handleClose = useCallback(() => onClose(s.id), [onClose, s.id]);
 
   return (
-    <Card className="hover:shadow-sm transition-shadow">
-      <CardContent className="p-4 space-y-2">
-        <div className="flex items-start justify-between">
-          <Badge variant={statusBadge(s.status)} className="text-[10px]">{s.status ?? "DRAFT"}</Badge>
-          {s.isAnonymous && <Badge variant="outline" className="text-[10px]">Anonymous</Badge>}
+    <Card className={cn(
+      "rounded-2xl border border-border bg-card shadow-sm overflow-hidden",
+      "border-l-4 transition-shadow duration-200 hover:shadow-md",
+      meta.accent,
+    )}>
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              meta.badge,
+            )}>
+              {meta.label}
+            </span>
+            {s.isAnonymous && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-400">
+                Anonymous
+              </span>
+            )}
+          </div>
+          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+            <ClipboardList className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          </div>
         </div>
-        <h3 className="text-sm font-semibold leading-tight">{s.title}</h3>
-        <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-0.5"><ClipboardList className="h-3 w-3" />{s.questions?.length ?? 0} questions</span>
-          <span className="flex items-center gap-0.5"><BarChart3 className="h-3 w-3" />{s.responses?.length ?? 0} responses</span>
-          {s.closesAt && <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />Closes {format(new Date(s.closesAt), "MMM d")}</span>}
+
+        <h3 className="text-sm font-semibold text-foreground leading-tight">{s.title}</h3>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <BarChart3 className="h-3 w-3" />
+              <span>{responseCount} responses</span>
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <ClipboardList className="h-3 w-3" />
+              <span>{s.questions?.length ?? 0} questions</span>
+            </div>
+          </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                status === "ACTIVE" ? "bg-emerald-500" : status === "CLOSED" ? "bg-rose-400" : "bg-slate-300",
+              )}
+              style={{ width: `${responsePct}%` }}
+            />
+          </div>
         </div>
-        {isAdmin && s.status === "DRAFT" && (
-          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={handlePublish}>
-            <Play className="h-3 w-3 mr-1" />Publish
+
+        {s.closesAt && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            <span>Closes {format(new Date(s.closesAt), "MMM d, yyyy")}</span>
+          </div>
+        )}
+
+        {isAdmin && status === "DRAFT" && (
+          <Button size="sm" variant="outline" className="w-full h-8 text-xs gap-1.5" onClick={handlePublish}>
+            <Play className="h-3 w-3" />
+            Publish Survey
           </Button>
         )}
-        {isAdmin && s.status === "ACTIVE" && (
-          <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={handleClose}>
-            <Archive className="h-3 w-3 mr-1" />Close Survey
+        {isAdmin && status === "ACTIVE" && (
+          <Button size="sm" variant="outline" className="w-full h-8 text-xs gap-1.5" onClick={handleClose}>
+            <Archive className="h-3 w-3" />
+            Close Survey
           </Button>
         )}
       </CardContent>
@@ -71,6 +131,12 @@ const SurveyCard = memo(function SurveyCard({ s, isAdmin, onPublish, onClose }: 
   );
 });
 
+const STATUS_FILTERS: { value: SurveyStatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "CLOSED", label: "Closed" },
+];
 
 export default function SurveysPage() {
   const { data: surveys, isLoading } = usePulseSurveys();
@@ -93,7 +159,16 @@ export default function SurveysPage() {
     return (surveys as PulseSurvey[]).filter((s) => (s.status ?? "DRAFT") === statusFilter);
   }, [surveys, statusFilter]);
 
+  const maxResponses = useMemo(() => {
+    return Math.max(1, ...(filteredSurveys.map((s) => s.responses?.length ?? 0)));
+  }, [filteredSurveys]);
+
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) resetForm();
+    setSheetOpen(open);
+  }, [resetForm]);
 
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
@@ -137,42 +212,57 @@ export default function SurveysPage() {
     if (!open) setCloseId(null);
   }, []);
 
+  const handleStatusFilterChange = useCallback((v: SurveyStatusFilter) => setStatusFilter(v), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Pulse Surveys" subtitle="Employee engagement surveys">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
         </div>
       </PageWrapper>
     );
   }
-
-  const handleStatusFilterChange = useCallback((v: string) => setStatusFilter(v as SurveyStatusFilter), []);
 
   return (
     <PageWrapper
       title="Pulse Surveys"
       subtitle="Create and manage employee engagement surveys"
       badge={`${surveys?.length ?? 0} surveys`}
-      actions={isAdmin ? <Button size="sm" onClick={handleOpenSheet}><Plus className="h-3.5 w-3.5 mr-1" />Create Survey</Button> : undefined}
+      actions={
+        isAdmin ? (
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+            <Plus className="h-3.5 w-3.5" />
+            Create Survey
+          </Button>
+        ) : undefined
+      }
       filters={
-        <Tabs value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <TabsList className="h-8">
-            <TabsTrigger value="all" className="text-xs px-3 h-7">All</TabsTrigger>
-            <TabsTrigger value="DRAFT" className="text-xs px-3 h-7">Draft</TabsTrigger>
-            <TabsTrigger value="ACTIVE" className="text-xs px-3 h-7">Active</TabsTrigger>
-            <TabsTrigger value="CLOSED" className="text-xs px-3 h-7">Closed</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-1 rounded-lg border p-1">
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => handleStatusFilterChange(f.value)}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+                statusFilter === f.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       }
     >
       {!filteredSurveys.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">
-              {statusFilter === "all" ? "No surveys created yet." : `No ${statusFilter.toLowerCase()} surveys.`}
-            </p>
-        </CardContent></Card>
+        <EmptyState
+          illustration={<ClipboardList className="h-8 w-8 text-muted-foreground" />}
+          title={statusFilter === "all" ? "No surveys yet" : `No ${statusFilter.toLowerCase()} surveys`}
+          description={statusFilter === "all" ? "Create your first pulse survey to gather employee feedback." : undefined}
+          action={isAdmin && statusFilter === "all" ? { label: "Create Survey", onClick: handleOpenSheet } : undefined}
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSurveys.map((s) => (
@@ -180,6 +270,7 @@ export default function SurveysPage() {
               key={s.id}
               s={s}
               isAdmin={isAdmin}
+              maxResponses={maxResponses}
               onPublish={handlePublish}
               onClose={handleCloseOpen}
             />
@@ -187,7 +278,14 @@ export default function SurveysPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }} title="Create Survey" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        title="Create Survey"
+        onSubmit={handleCreate}
+        submitLabel="Create"
+        isPending={create.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Survey Title <span className="text-destructive">*</span></label>
           <Input placeholder="e.g., Q1 Engagement Survey" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />

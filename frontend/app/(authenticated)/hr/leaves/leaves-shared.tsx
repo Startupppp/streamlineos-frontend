@@ -4,16 +4,15 @@ import React, { useState } from "react";
 import { format, differenceInCalendarDays } from "date-fns";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import {
   Clock,
   CheckCircle2,
@@ -21,18 +20,19 @@ import {
   CalendarDays,
   Heart,
   Palmtree,
-  Info,
   MoreVertical,
   Eye,
   Check,
   X,
   RotateCcw,
 } from "lucide-react";
-import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
@@ -111,24 +111,80 @@ export interface WfhRequest {
   } | null;
 }
 
-export const balanceCardConfig: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  "Casual Leave": { label: "CASUAL", color: "bg-blue-500", icon: CalendarDays },
-  "Sick Leave": { label: "SICK", color: "bg-red-400", icon: Heart },
-  "Unpaid Leave": { label: "UNPAID", color: "bg-slate-400", icon: Palmtree },
+export const balanceCardConfig: Record<
+  string,
+  {
+    label: string;
+    barColor: string;
+    valueColor: string;
+    iconBg: string;
+    iconColor: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  "Casual Leave": {
+    label: "CASUAL",
+    barColor: "bg-blue-500",
+    valueColor: "text-blue-700 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-950/40",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    icon: CalendarDays,
+  },
+  "Sick Leave": {
+    label: "SICK",
+    barColor: "bg-rose-500",
+    valueColor: "text-rose-700 dark:text-rose-400",
+    iconBg: "bg-rose-100 dark:bg-rose-950/40",
+    iconColor: "text-rose-600 dark:text-rose-400",
+    icon: Heart,
+  },
+  "Unpaid Leave": {
+    label: "UNPAID",
+    barColor: "bg-slate-400",
+    valueColor: "text-slate-600 dark:text-slate-400",
+    iconBg: "bg-slate-100 dark:bg-slate-800",
+    iconColor: "text-slate-500 dark:text-slate-400",
+    icon: Palmtree,
+  },
 };
 
-export const DEFAULT_CARD_CONFIG = { label: "LEAVE", color: "bg-slate-400", icon: CalendarDays };
+export const DEFAULT_CARD_CONFIG = {
+  label: "LEAVE",
+  barColor: "bg-slate-400",
+  valueColor: "text-slate-600 dark:text-slate-400",
+  iconBg: "bg-slate-100 dark:bg-slate-800",
+  iconColor: "text-slate-500",
+  icon: CalendarDays,
+};
 
-export const statusIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+export const statusIconMap: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   PENDING: Clock,
   APPROVED: CheckCircle2,
   REJECTED: XCircle,
 };
 
-export const priorityConfig: Record<string, { label: string; dotColor: string; textColor: string }> = {
-  HIGH: { label: "High", dotColor: "bg-red-500", textColor: "text-red-600 dark:text-red-400" },
-  MEDIUM: { label: "Medium", dotColor: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
-  LOW: { label: "Low", dotColor: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
+export const priorityConfig: Record<
+  string,
+  { label: string; dotColor: string; textColor: string }
+> = {
+  HIGH: {
+    label: "High",
+    dotColor: "bg-rose-500",
+    textColor: "text-rose-600 dark:text-rose-400",
+  },
+  MEDIUM: {
+    label: "Medium",
+    dotColor: "bg-amber-500",
+    textColor: "text-amber-600 dark:text-amber-400",
+  },
+  LOW: {
+    label: "Low",
+    dotColor: "bg-emerald-500",
+    textColor: "text-emerald-600 dark:text-emerald-400",
+  },
 };
 
 export const BalanceCard = React.memo(function BalanceCard({
@@ -146,26 +202,47 @@ export const BalanceCard = React.memo(function BalanceCard({
   const total = daysPerYear ?? 0;
   const pct = total > 0 ? Math.min((balanceNum / total) * 100, 100) : 0;
   const isUnpaid = name.toLowerCase().includes("unpaid");
+  const Icon = config.icon;
 
   return (
-    <Card className="border-border" role="listitem">
-      <CardContent className="pt-5 pb-5">
+    <Card
+      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+      role="listitem"
+    >
+      <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center",
+              config.iconBg,
+            )}
+          >
+            <Icon
+              className={cn("h-3.5 w-3.5", config.iconColor)}
+              aria-hidden="true"
+            />
+          </div>
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {config.label}
           </span>
-          <button className="text-muted-foreground hover:text-foreground" aria-label={`Info about ${name}`}>
-            <Info className="h-4 w-4" />
-          </button>
         </div>
 
-        <div className="mb-1">
-          <span className="text-3xl font-bold text-foreground">{Math.floor(balanceNum)}</span>
+        <div className="mb-0.5">
+          <span
+            className={cn(
+              "text-3xl font-bold tabular-nums leading-none",
+              config.valueColor,
+            )}
+          >
+            {Math.floor(balanceNum)}
+          </span>
           {total > 0 && (
-            <span className="text-lg text-muted-foreground ml-1">/ {total}</span>
+            <span className="text-sm text-muted-foreground ml-1.5">
+              / {total}
+            </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-1">
           {isUnpaid ? "Days Taken" : "Days Available"}
         </p>
 
@@ -179,7 +256,10 @@ export const BalanceCard = React.memo(function BalanceCard({
           aria-valuetext={`${Math.floor(balanceNum)} of ${total} days available`}
         >
           <div
-            className={`h-full rounded-full transition-all duration-500 ${config.color}`}
+            className={cn(
+              "h-full rounded-full transition-all duration-500",
+              config.barColor,
+            )}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -200,16 +280,26 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
   const status = request.status || "PENDING";
   const StatusIcon = statusIconMap[status] ?? Clock;
 
+  const borderAccent =
+    status === "APPROVED"
+      ? "border-l-emerald-500"
+      : status === "REJECTED"
+        ? "border-l-rose-500"
+        : "border-l-violet-500";
+
   return (
     <div
-      className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
+      className={cn(
+        "flex items-center justify-between p-4 rounded-xl bg-card border border-border border-l-4 hover:bg-muted/30 transition-colors duration-200",
+        borderAccent,
+      )}
       role="listitem"
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {showUser && request.user && (
-          <Avatar className="h-9 w-9 shrink-0">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            <AvatarFallback className="text-xs bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
             </AvatarFallback>
@@ -217,31 +307,35 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         )}
         <div className="min-w-0 flex-1">
           {showUser && request.user && (
-            <p className="text-sm font-medium text-foreground truncate">
+            <p className="text-sm font-semibold text-foreground truncate">
               {request.user.firstName} {request.user.lastName}
             </p>
           )}
-          <p className="text-sm text-foreground">
-            {format(new Date(request.date), "EEEE, MMM dd, yyyy")}
+          <p className="text-sm font-medium text-foreground">
+            {format(new Date(request.date), "EEE, MMM dd, yyyy")}
           </p>
           {request.reason && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{request.reason}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {request.reason}
+            </p>
           )}
           {status === "REJECTED" && request.rejectionReason && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 truncate">
-              Reason: {request.rejectionReason}
+            <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5 truncate">
+              {request.rejectionReason}
             </p>
           )}
         </div>
       </div>
-      <div className="flex items-center gap-3 shrink-0 ml-3">
-        <Badge
-          variant="outline"
-          className={`text-xs flex items-center gap-1 ${getColorSafe(wfhStatusColors, status)}`}
+      <div className="flex items-center gap-2 shrink-0 ml-3">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            getColorSafe(wfhStatusColors, status),
+          )}
         >
           <StatusIcon className="h-3 w-3" aria-hidden="true" />
-          {status}
-        </Badge>
+          {status.charAt(0) + status.slice(1).toLowerCase()}
+        </span>
         {actions}
       </div>
     </div>
@@ -262,18 +356,28 @@ export const StatsCard = React.memo(function StatsCard({
   accent: string;
 }) {
   return (
-    <Card className="border-border" role="listitem">
-      <CardContent className="pt-4 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+    <Card
+      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+      role="listitem"
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               {title}
             </p>
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+            <p className="text-3xl font-bold tabular-nums text-foreground leading-none">
+              {value}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1.5">{subtitle}</p>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${accent}`}>
-            <Icon className="h-5 w-5" aria-hidden="true" />
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+              accent,
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
           </div>
         </div>
       </CardContent>
@@ -292,7 +396,6 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
 }: {
   request: LeaveRequest;
   isAdmin?: boolean;
-  
   isSelf?: boolean;
   onApprove?: (id: number) => void;
   onReject?: (id: number, reason?: string) => void;
@@ -314,83 +417,135 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   const periodStr =
     days === 1
       ? format(start, "MMM d")
-      : `${format(start, "MMM d")} - ${format(end, "MMM d")}`;
+      : `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
 
-  const statusDotColor =
+  const statusBadgeClass =
     status === "PENDING"
-      ? "bg-amber-500"
+      ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
       : status === "APPROVED"
-      ? "bg-emerald-500"
-      : status === "CANCELLED"
-      ? "bg-slate-400"
-      : "bg-red-500";
+        ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+        : status === "CANCELLED"
+          ? "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+          : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
 
   const priority = request.priority || "MEDIUM";
-  const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
+  const pConfig =
+    priorityConfig[priority] ??
+    priorityConfig["MEDIUM"] ?? {
+      label: "Medium",
+      dotColor: "bg-amber-500",
+      textColor: "text-amber-600",
+    };
+
+  function handleOpenRejectDialog() {
+    setRejectReason("");
+    setRejectDialogOpen(true);
+  }
+
+  function handleCloseRejectDialog() {
+    setRejectDialogOpen(false);
+  }
+
+  function handleConfirmReject() {
+    setRejectDialogOpen(false);
+    onReject?.(request.id, rejectReason || undefined);
+  }
+
+  function handleRejectReasonChange(
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) {
+    setRejectReason(e.target.value);
+  }
+
+  function handleCancelRequest() {
+    onCancel?.(request.id);
+  }
+
+  function handleApproveRequest() {
+    onApprove?.(request.id);
+  }
+
+  function handleRevertRequest() {
+    onRevert?.(request.id);
+  }
 
   return (
-    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <td className="py-3.5 px-3">
+    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors duration-200">
+      <td className="py-3 px-3">
         <div className="flex items-center gap-2.5">
-          <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-            status === "PENDING" ? "bg-amber-500/10" : status === "APPROVED" ? "bg-emerald-500/10" : "bg-red-500/10"
-          }`}>
-            <Icon className={`h-4 w-4 ${
-              status === "PENDING" ? "text-amber-600" : status === "APPROVED" ? "text-emerald-600" : "text-red-600"
-            }`} aria-hidden="true" />
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center",
+              config.iconBg,
+            )}
+          >
+            <Icon
+              className={cn("h-3.5 w-3.5", config.iconColor)}
+              aria-hidden="true"
+            />
           </div>
-          <span className="text-sm font-medium text-foreground">{typeName.replace(" Leave", "")}<br /><span className="font-normal text-muted-foreground">Leave</span></span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground leading-tight truncate">
+              {typeName.replace(" Leave", "")}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Leave</p>
+          </div>
         </div>
       </td>
-      <td className="py-3.5 px-3 text-sm text-muted-foreground">
+      <td className="py-3 px-3 text-xs text-muted-foreground tabular-nums">
         {format(createdAt, "MMM d, yyyy")}
       </td>
-      <td className="py-3.5 px-3 text-sm text-muted-foreground">
+      <td className="py-3 px-3 text-xs text-foreground font-medium">
         {periodStr}
       </td>
-      <td className="py-3.5 px-3 text-sm text-foreground text-center">
+      <td className="py-3 px-3 text-xs text-center font-semibold tabular-nums text-foreground">
         {days}
       </td>
-      <td className="py-3.5 px-3">
+      <td className="py-3 px-3">
         <div className="flex items-center gap-1.5">
-          <span className={`h-2 w-2 rounded-full ${pConfig.dotColor}`} />
-          <span className={`text-xs font-medium ${pConfig.textColor}`}>
+          <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
+          <span className={cn("text-[10px] font-semibold", pConfig.textColor)}>
             {pConfig.label}
           </span>
         </div>
       </td>
-      <td className="py-3.5 px-3">
+      <td className="py-3 px-3">
         <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
-            <span className={`text-xs font-medium ${
-              status === "PENDING"
-                ? "text-amber-600 dark:text-amber-400"
-                : status === "APPROVED"
-                ? "text-emerald-600 dark:text-emerald-400"
-                : status === "CANCELLED"
-                ? "text-slate-500 dark:text-slate-400"
-                : "text-red-600 dark:text-red-400"
-            }`}>
-              {status.charAt(0) + status.slice(1).toLowerCase()}
-            </span>
-          </div>
+          <span
+            className={cn(
+              "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border w-fit",
+              statusBadgeClass,
+            )}
+          >
+            {status.charAt(0) + status.slice(1).toLowerCase()}
+          </span>
           {request.managerComment && (
-            <span className="text-xs text-muted-foreground truncate max-w-[140px]" title={request.managerComment}>
+            <span
+              className="text-[10px] text-muted-foreground truncate max-w-[120px]"
+              title={request.managerComment}
+            >
               &ldquo;{request.managerComment}&rdquo;
             </span>
           )}
           {status === "REJECTED" && request.rejectionReason && (
-            <span className="text-xs text-red-500 dark:text-red-400 truncate max-w-[140px]" title={request.rejectionReason}>
+            <span
+              className="text-[10px] text-rose-500 dark:text-rose-400 truncate max-w-[120px]"
+              title={request.rejectionReason}
+            >
               {request.rejectionReason}
             </span>
           )}
         </div>
       </td>
-      <td className="py-3.5 px-3 text-right">
+      <td className="py-3 px-3 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Actions">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Actions"
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -403,7 +558,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => onCancel(request.id)}
+                  onClick={handleCancelRequest}
                   className="text-slate-600"
                 >
                   <X className="mr-2 h-4 w-4" />
@@ -416,7 +571,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                 <DropdownMenuSeparator />
                 {status !== "APPROVED" && status !== "CANCELLED" && (
                   <DropdownMenuItem
-                    onClick={() => onApprove?.(request.id)}
+                    onClick={handleApproveRequest}
                     className="text-emerald-600"
                   >
                     <Check className="mr-2 h-4 w-4" />
@@ -425,17 +580,15 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                 )}
                 {status !== "REJECTED" && status !== "CANCELLED" && (
                   <DropdownMenuItem
-                    onClick={() => { setRejectReason(""); setRejectDialogOpen(true); }}
-                    className="text-red-600"
+                    onClick={handleOpenRejectDialog}
+                    className="text-rose-600"
                   >
                     <X className="mr-2 h-4 w-4" />
                     Reject
                   </DropdownMenuItem>
                 )}
                 {(status === "APPROVED" || status === "REJECTED") && (
-                  <DropdownMenuItem
-                    onClick={() => onRevert?.(request.id)}
-                  >
+                  <DropdownMenuItem onClick={handleRevertRequest}>
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Revert to Pending
                   </DropdownMenuItem>
@@ -453,15 +606,14 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           <Textarea
             placeholder="Reason (optional)"
             value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            className="min-h-[80px]"
+            onChange={handleRejectReasonChange}
+            className="min-h-[80px] resize-none"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={() => { setRejectDialogOpen(false); onReject?.(request.id, rejectReason || undefined); }}
-            >
+            <Button variant="outline" onClick={handleCloseRejectDialog}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmReject}>
               Reject
             </Button>
           </DialogFooter>

@@ -291,6 +291,8 @@ export default function TerminationPage() {
     }
   }, []);
 
+  const handleSetSubmitId = useCallback((id: number) => setSubmitId(id), []);
+  const handleSetCompleteId = useCallback((id: number) => setCompleteId(id), []);
   const handleRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setRemarks(e.target.value), []);
   const handleEffectiveDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEffectiveDate(e.target.value), []);
   const handleSeveranceAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSeveranceAmount(e.target.value), []);
@@ -308,7 +310,7 @@ export default function TerminationPage() {
       >
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20" />
+            <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
         </div>
       </PageWrapper>
@@ -322,8 +324,8 @@ export default function TerminationPage() {
       badge={`${(terminations ?? []).length} records`}
       actions={
         isHR || isCEO ? (
-          <Button size="sm" onClick={handleCreateOpen}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
+          <Button size="sm" onClick={handleCreateOpen} className="h-8 gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
             New Termination
           </Button>
         ) : undefined
@@ -336,11 +338,11 @@ export default function TerminationPage() {
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
         onView={handleViewRecord}
-        onSubmit={(id) => setSubmitId(id)}
+        onSubmit={handleSetSubmitId}
         onApprove={handleApprove}
         onReject={handleReject}
         onSendEmail={handleSendEmailOpen}
-        onComplete={(id) => setCompleteId(id)}
+        onComplete={handleSetCompleteId}
         isSubmitting={submitTermination.isPending}
         isCompleting={completeTermination.isPending}
       />

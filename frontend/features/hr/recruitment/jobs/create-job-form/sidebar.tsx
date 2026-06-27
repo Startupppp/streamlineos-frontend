@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Step {
@@ -18,48 +18,77 @@ interface FormSidebarProps {
 }
 
 export function FormSidebar({ steps, onStepClick }: FormSidebarProps) {
+  const completedCount = steps.filter((s) => s.completed && !s.hasError).length;
+  const progressPct = Math.round((completedCount / steps.length) * 100);
+
   return (
-    <aside className="w-60 shrink-0 border-r bg-muted/30 flex flex-col">
-      <div className="px-4 py-5 border-b">
-        <h2 className="text-sm font-semibold">Create Job Opening</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Complete all sections</p>
+    <aside className="w-56 shrink-0 border-r bg-muted/20 flex flex-col">
+      <div className="px-4 py-4 border-b">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          Job Opening
+        </p>
+        <h2 className="text-sm font-semibold text-foreground">Create Posting</h2>
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Progress
+            </span>
+            <span className="text-[10px] font-semibold text-muted-foreground">
+              {completedCount}/{steps.length}
+            </span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
       </div>
-      <nav className="flex-1 overflow-y-auto py-3">
+
+      <nav className="flex-1 overflow-y-auto py-2">
         {steps.map((step, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => onStepClick(idx)}
             className={cn(
-              "w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/60",
-              step.active && "bg-muted/80"
+              "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors duration-200 cursor-pointer",
+              "hover:bg-muted/50",
+              step.active && "bg-muted/60 border-r-2 border-primary"
             )}
           >
             <div
               className={cn(
-                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold mt-0.5 transition-colors",
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-200",
                 step.completed && !step.hasError
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-emerald-500 text-white"
                   : step.hasError
-                    ? "bg-destructive text-destructive-foreground"
+                    ? "bg-rose-500 text-white"
                     : step.active
-                      ? "bg-primary/20 text-primary ring-2 ring-primary"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground border border-border"
               )}
             >
-              {step.completed && !step.hasError ? <Check className="h-3 w-3" /> : step.number}
+              {step.completed && !step.hasError ? (
+                <Check className="h-2.5 w-2.5" />
+              ) : step.hasError ? (
+                <AlertCircle className="h-2.5 w-2.5" />
+              ) : (
+                step.number
+              )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p
                 className={cn(
                   "text-xs font-medium leading-tight truncate",
                   step.active ? "text-foreground" : "text-muted-foreground",
-                  step.hasError && "text-destructive"
+                  step.hasError && "text-rose-600 dark:text-rose-400"
                 )}
               >
                 {step.title}
               </p>
-              <p className="text-[10px] text-muted-foreground leading-tight truncate mt-0.5">
+              <p className="text-[10px] text-muted-foreground/70 leading-tight truncate mt-0.5">
                 {step.subtitle}
               </p>
             </div>

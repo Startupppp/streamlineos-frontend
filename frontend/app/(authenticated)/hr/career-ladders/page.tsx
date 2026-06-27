@@ -7,7 +7,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,20 +14,34 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, TrendingUp, ArrowUpRight, ChevronsUpDown, Check } from "lucide-react";
-import { EmptyTeamIllustration } from "@/components/illustrations";
+import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2 } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 
+interface CareerLadderLevel {
+  level: number;
+  title: string;
+  description: string;
+  minExperience: number;
+  skills: string[];
+}
+
 interface CareerLadder {
-  id: number; title: string; department: string | null; description: string | null;
-  levels: { level: number; title: string; description: string; minExperience: number; skills: string[] }[] | null;
+  id: number;
+  title: string;
+  department: string | null;
+  description: string | null;
+  levels: CareerLadderLevel[] | null;
   createdAt: string | null;
 }
 
-const clKeys = { all: [...queryKeys.hr.all, "career-ladders"] as const, list: () => [...clKeys.all, "list"] as const };
+const clKeys = {
+  all: [...queryKeys.hr.all, "career-ladders"] as const,
+  list: () => [...clKeys.all, "list"] as const,
+};
 
 export default function CareerLaddersPage() {
   const qc = useQueryClient();
@@ -110,7 +123,9 @@ export default function CareerLaddersPage() {
     return (
       <PageWrapper title="Career Ladders" subtitle="Growth paths and career progression">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 rounded-2xl" />
+          ))}
         </div>
       </PageWrapper>
     );
@@ -123,34 +138,89 @@ export default function CareerLaddersPage() {
       title="Career Ladders"
       subtitle="Define career progression paths for your organization"
       badge={`${ladders?.length ?? 0} paths`}
-      actions={isAdmin ? <Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Create Ladder</Button> : undefined}
+      actions={
+        isAdmin ? (
+          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5" />
+            Create Ladder
+          </Button>
+        ) : undefined
+      }
     >
       {!ladders?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyTeamIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No career ladders defined yet.</p>
-        </CardContent></Card>
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <EmptyState
+            illustration={<TrendingUp className="h-8 w-8 text-muted-foreground" />}
+            title="No career ladders yet"
+            description="Define growth paths to help employees understand progression opportunities."
+          />
+        </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ladders.map((cl: CareerLadder) => (
-            <Card key={cl.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  {cl.department && <Badge variant="outline" className="text-[10px]">{cl.department}</Badge>}
-                </div>
-                <h3 className="text-sm font-semibold leading-tight">{cl.title}</h3>
-                {cl.description && <p className="text-xs text-muted-foreground line-clamp-2">{cl.description}</p>}
-                {cl.levels && cl.levels.length > 0 && (
-                  <div className="space-y-1">
-                    {cl.levels.slice(0, 4).map((lvl, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <ArrowUpRight className="h-3 w-3 text-primary shrink-0" />
-                        <span className="truncate">{lvl.title}</span>
-                      </div>
-                    ))}
-                    {cl.levels.length > 4 && <p className="text-[10px] text-muted-foreground pl-4">+{cl.levels.length - 4} more levels</p>}
+            <Card
+              key={cl.id}
+              className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 border-l-4 border-l-violet-500"
+            >
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
+                      <TrendingUp className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
+                      {cl.title}
+                    </h3>
                   </div>
+                  {cl.department && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800 shrink-0">
+                      <Building2 className="h-2.5 w-2.5" />
+                      {cl.department}
+                    </span>
+                  )}
+                </div>
+
+                {cl.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">{cl.description}</p>
+                )}
+
+                {cl.levels && cl.levels.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {cl.levels.length} Level{cl.levels.length !== 1 ? "s" : ""}
+                    </p>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {cl.levels.map((lvl, i) => (
+                        <div key={i} className="flex items-center gap-1">
+                          <span
+                            className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200 dark:border-violet-800 whitespace-nowrap"
+                            title={lvl.title}
+                          >
+                            L{lvl.level}
+                          </span>
+                          {i < cl.levels!.length - 1 && (
+                            <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40 shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-0.5 pt-1 border-t border-border/50">
+                      {cl.levels.slice(0, 3).map((lvl, i) => (
+                        <p key={i} className="text-[11px] text-muted-foreground truncate">
+                          <span className="font-medium text-foreground/60">L{lvl.level}</span>
+                          {" — "}
+                          {lvl.title}
+                        </p>
+                      ))}
+                      {cl.levels.length > 3 && (
+                        <p className="text-[10px] text-muted-foreground/50">
+                          +{cl.levels.length - 3} more levels
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground/50 italic">No levels defined</p>
                 )}
               </CardContent>
             </Card>
@@ -158,16 +228,32 @@ export default function CareerLaddersPage() {
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} title="Create Career Ladder" onSubmit={handleCreate} submitLabel="Create" isPending={create.isPending}>
+      <HrSheet
+        open={sheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        title="Create Career Ladder"
+        onSubmit={handleCreate}
+        submitLabel="Create"
+        isPending={create.isPending}
+      >
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Title</label>
-          <Input placeholder="e.g., Engineering Career Path" value={title} onChange={handleTitleChange} />
+          <Input
+            placeholder="e.g., Engineering Career Path"
+            value={title}
+            onChange={handleTitleChange}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Department</label>
           <Popover open={deptPickerOpen} onOpenChange={setDeptPickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={deptPickerOpen} className="w-full justify-between font-normal">
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={deptPickerOpen}
+                className="w-full justify-between font-normal"
+              >
                 <span className="truncate text-left">{selectedDeptLabel}</span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -180,7 +266,9 @@ export default function CareerLaddersPage() {
                   <CommandGroup>
                     {(departments ?? []).map((d) => (
                       <CommandItem key={d.id} value={d.name} onSelect={handleDeptSelect}>
-                        <Check className={cn("mr-2 h-4 w-4", department === d.name ? "opacity-100" : "opacity-0")} />
+                        <Check
+                          className={cn("mr-2 h-4 w-4", department === d.name ? "opacity-100" : "opacity-0")}
+                        />
                         {d.name}
                       </CommandItem>
                     ))}
@@ -192,7 +280,12 @@ export default function CareerLaddersPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
-          <Textarea placeholder="Describe the career path..." value={description} onChange={handleDescriptionChange} rows={3} />
+          <Textarea
+            placeholder="Describe the career path..."
+            value={description}
+            onChange={handleDescriptionChange}
+            rows={3}
+          />
         </div>
       </HrSheet>
     </PageWrapper>

@@ -53,6 +53,7 @@ const productFormSchema = z.object({
   hasVariants: z.boolean(),
 });
 
+type ProductFormInput = z.input<typeof productFormSchema>;
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
 interface ProductFormProps {
@@ -66,9 +67,9 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
   const { data: categories = [] } = useCategories();
   const { data: uoms = [] } = useUom();
   const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct(product?.id ?? 0);
+  const updateProduct = useUpdateProduct();
 
-  const form = useForm<ProductFormValues>({
+  const form = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -116,7 +117,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     };
 
     if (isEdit) {
-      updateProduct.mutate(payload, {
+      updateProduct.mutate({ ...payload, productId: product!.id }, {
         onSuccess: (updated) => {
           toast.success("Product updated");
           onSuccess?.(updated);
@@ -251,7 +252,18 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Reorder Point</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="0.01" placeholder="0" {...field} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="0"
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={field.disabled}
+                    value={String(field.value ?? "")}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -285,7 +297,18 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Cost Price</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="0.01" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="0.00"
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={field.disabled}
+                    value={String(field.value ?? "")}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -298,7 +321,18 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Selling Price</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="0.01" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="0.00"
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={field.disabled}
+                    value={String(field.value ?? "")}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

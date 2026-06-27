@@ -21,7 +21,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -39,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 import {
   useDocumentTemplates,
@@ -56,31 +56,36 @@ import {
 
 const TYPE_CONFIG: Record<
   string,
-  { label: string; className: string; icon: React.ComponentType<{ className?: string }> }
+  { label: string; badgeClass: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   OFFER_LETTER: {
     label: "Offer Letter",
-    className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    badgeClass:
+      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700",
     icon: FileCheck,
   },
   NDA: {
     label: "NDA",
-    className: "bg-red-500/10 text-red-500 border-red-500/20",
+    badgeClass:
+      "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-700",
     icon: FileLock,
   },
   POLICY: {
     label: "Policy",
-    className: "bg-blue/10 text-blue border-blue/20",
+    badgeClass:
+      "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700",
     icon: FileKey,
   },
   WELCOME: {
     label: "Welcome",
-    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    badgeClass:
+      "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700",
     icon: Smile,
   },
   OTHER: {
     label: "Other",
-    className: "bg-muted text-muted-foreground border-border",
+    badgeClass:
+      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700",
     icon: FileText,
   },
 };
@@ -99,7 +104,7 @@ function TemplatesPageSkeleton() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card p-4 space-y-3">
+            <div key={i} className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-24" />
@@ -110,8 +115,8 @@ function TemplatesPageSkeleton() {
             </div>
           ))}
         </div>
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="flex items-center gap-4 px-4 py-3 bg-muted/30 border-b">
+        <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
+          <div className="flex items-center gap-4 px-4 py-3 bg-muted/40 border-b">
             {["Title", "Type", "Variables", "Version", "Status", "Created"].map((h) => (
               <Skeleton key={h} className="h-3" style={{ width: `${h.length * 9}px` }} />
             ))}
@@ -133,6 +138,15 @@ function TemplatesPageSkeleton() {
   );
 }
 
+interface TemplateTableRowProps {
+  template: DocumentTemplate;
+  currentDefault: DocumentTemplate | undefined;
+  onDelete: (id: number) => void;
+  onSetDefault: (id: number, isDefault: boolean) => void;
+  isDeletePending: boolean;
+  isSetDefaultPending: boolean;
+}
+
 function TemplateTableRow({
   template,
   currentDefault,
@@ -140,14 +154,7 @@ function TemplateTableRow({
   onSetDefault,
   isDeletePending,
   isSetDefaultPending,
-}: {
-  template: DocumentTemplate;
-  currentDefault: DocumentTemplate | undefined;
-  onDelete: (id: number) => void;
-  onSetDefault: (id: number, isDefault: boolean) => void;
-  isDeletePending: boolean;
-  isSetDefaultPending: boolean;
-}) {
+}: TemplateTableRowProps) {
   const router = useRouter();
   const cfg = getTypeConfig(template.type);
   const TypeIcon = cfg.icon;
@@ -158,8 +165,8 @@ function TemplateTableRow({
   );
 
   return (
-    <TableRow>
-      <TableCell>
+    <TableRow className="hover:bg-muted/30 transition-colors duration-200">
+      <TableCell className="py-3">
         <DefaultStarButton
           template={template}
           currentDefault={currentDefault}
@@ -167,56 +174,57 @@ function TemplateTableRow({
           isPending={isSetDefaultPending}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="py-3">
         <div className="flex items-center gap-2 min-w-0">
           <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="font-medium text-sm truncate">{template.title}</span>
           {template.isDefault && (
-            <Badge
-              variant="outline"
-              className="text-[10px] px-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0"
-            >
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
               Default
-            </Badge>
+            </span>
           )}
         </div>
       </TableCell>
-      <TableCell>
-        <Badge
-          variant="outline"
-          className={`text-[11px] px-2 py-0.5 ${cfg.className}`}
+      <TableCell className="py-3">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            cfg.badgeClass,
+          )}
         >
           {cfg.label}
-        </Badge>
+        </span>
       </TableCell>
-      <TableCell>
+      <TableCell className="py-3">
         <VariableChips variables={template.variables ?? []} />
       </TableCell>
-      <TableCell className="text-center text-sm text-muted-foreground">
-        v{template.version}
+      <TableCell className="py-3 text-center">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700">
+          v{template.version}
+        </span>
       </TableCell>
-      <TableCell>
-        <Badge
-          variant="outline"
-          className={
+      <TableCell className="py-3">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             template.isActive
-              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]"
-              : "bg-muted text-muted-foreground border-border text-[11px]"
-          }
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700"
+              : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+          )}
         >
           {template.isActive ? "Active" : "Inactive"}
-        </Badge>
+        </span>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="py-3 text-xs text-muted-foreground">
         {template.createdAt ? format(new Date(template.createdAt), "MMM d, yyyy") : "—"}
       </TableCell>
-      <TableCell>
+      <TableCell className="py-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-7 w-7 hover:bg-muted transition-colors duration-200"
               aria-label="Template actions"
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -284,9 +292,9 @@ export default function DocumentTemplatesPage() {
       title="Document Templates"
       subtitle="Manage reusable HTML templates for offer letters, NDAs, and policies."
       actions={
-        <Button size="sm" className="gap-2" asChild>
+        <Button size="sm" className="gap-1.5 h-8" asChild>
           <Link href="/hr/documents/templates/new">
-            <FilePlus2 className="h-4 w-4" />
+            <FilePlus2 className="h-3.5 w-3.5" />
             Add Template
           </Link>
         </Button>
@@ -308,19 +316,21 @@ export default function DocumentTemplatesPage() {
             action={{ label: "Create your first template", href: "/hr/documents/templates/new" }}
           />
         ) : (
-          <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[780px]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30">
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-[32px]" />
-                      <TableHead className="w-[220px]">Title</TableHead>
-                      <TableHead className="w-[120px]">Type</TableHead>
-                      <TableHead>Variables</TableHead>
-                      <TableHead className="w-[80px] text-center">Version</TableHead>
-                      <TableHead className="w-[90px]">Status</TableHead>
-                      <TableHead className="w-[120px]">Created</TableHead>
+                      <TableHead className="w-[220px] font-semibold text-foreground/80">Title</TableHead>
+                      <TableHead className="w-[120px] font-semibold text-foreground/80">Type</TableHead>
+                      <TableHead className="font-semibold text-foreground/80">Variables</TableHead>
+                      <TableHead className="w-[90px] text-center font-semibold text-foreground/80">
+                        Version
+                      </TableHead>
+                      <TableHead className="w-[90px] font-semibold text-foreground/80">Status</TableHead>
+                      <TableHead className="w-[120px] font-semibold text-foreground/80">Created</TableHead>
                       <TableHead className="w-[56px]" />
                     </TableRow>
                   </TableHeader>

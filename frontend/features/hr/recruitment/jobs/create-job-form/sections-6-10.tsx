@@ -16,32 +16,67 @@ import type { CreateJobFormValues } from "./schema";
 import type { SectionProps } from "./sections-1-5";
 import { cn } from "@/lib/utils";
 import { useHiringFlows } from "@/lib/api/hooks/hr/recruitment";
+import {
+  FileText, Users, Settings, Eye, Zap,
+} from "lucide-react";
+
+function Field({ label, required, hint, error, children }: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-semibold text-foreground/80">
+        {label}
+        {required && <span className="text-rose-500 ml-0.5">*</span>}
+      </Label>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      {children}
+      {error && <FieldError message={error} />}
+    </div>
+  );
+}
+
+function ToggleRow({ label, description, children }: {
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export function Section6({ form }: SectionProps) {
   const { register, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Job Description" subtitle="Detailed description of the role" />
+      <SectionTitle title="Job Description" subtitle="Detailed description of the role" icon={FileText} />
       <div className="grid gap-4">
-        <div>
-          <Label className="text-xs font-medium">Overview <span className="text-destructive">*</span></Label>
-          <Textarea className="mt-1" rows={4} placeholder="e.g. We are looking for a skilled developer..." {...register("overview")} />
-          <FieldError message={errors.overview?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Responsibilities <span className="text-destructive">*</span></Label>
-          <Textarea className="mt-1" rows={4} placeholder="e.g. Build UI components, API integration..." {...register("responsibilities")} />
-          <FieldError message={errors.responsibilities?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Requirements <span className="text-destructive">*</span></Label>
-          <Textarea className="mt-1" rows={4} placeholder="e.g. 3+ years experience in React..." {...register("jobRequirements")} />
-          <FieldError message={errors.jobRequirements?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Benefits</Label>
-          <Textarea className="mt-1" rows={3} placeholder="e.g. Health Insurance, Work From Home, Paid Leave..." {...register("benefits")} />
-        </div>
+        <Field label="Overview" required error={errors.overview?.message}>
+          <Textarea rows={4} placeholder="e.g. We are looking for a skilled developer to join our team and help build world-class products..." {...register("overview")} />
+        </Field>
+
+        <Field label="Responsibilities" required error={errors.responsibilities?.message}>
+          <Textarea rows={4} placeholder="e.g. Build and maintain UI components, integrate APIs, review code..." {...register("responsibilities")} />
+        </Field>
+
+        <Field label="Requirements" required error={errors.jobRequirements?.message}>
+          <Textarea rows={4} placeholder="e.g. 3+ years experience in React, proficiency in TypeScript..." {...register("jobRequirements")} />
+        </Field>
+
+        <Field label="Benefits">
+          <Textarea rows={3} placeholder="e.g. Health Insurance, Flexible Work Hours, Annual Leave, Stock Options..." {...register("benefits")} />
+        </Field>
       </div>
     </div>
   );
@@ -61,22 +96,19 @@ export function Section7({ form }: SectionProps) {
 
   return (
     <div>
-      <SectionTitle title="Hiring Workflow" subtitle="Define the hiring process for this role" />
+      <SectionTitle title="Hiring Workflow" subtitle="Define the hiring process for this role" icon={Users} />
       <div className="grid gap-4">
-        <div>
-          <Label className="text-xs font-medium">Hiring Manager <span className="text-destructive">*</span></Label>
-          <Input className="mt-1" placeholder="e.g. John Doe, HR Manager" {...register("hiringManager")} />
-          <FieldError message={errors.hiringManager?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Hiring Flow Template</Label>
-          <p className="text-[10px] text-muted-foreground mb-1">Optional — assign a reusable interview workflow</p>
+        <Field label="Hiring Manager" required error={errors.hiringManager?.message}>
+          <Input placeholder="e.g. John Doe, HR Manager" {...register("hiringManager")} />
+        </Field>
+
+        <Field label="Hiring Flow Template" hint="Optional — assign a reusable interview workflow">
           <Controller
             name="hiringFlowId"
             control={control}
             render={({ field }) => (
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger>
                   <SelectValue placeholder="Select a hiring flow (optional)" />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -90,31 +122,38 @@ export function Section7({ form }: SectionProps) {
               </Select>
             )}
           />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Interview Rounds <span className="text-destructive">*</span></Label>
-          <p className="text-[10px] text-muted-foreground mb-2">Select at least one round</p>
-          <div className="grid sm:grid-cols-2 gap-2">
+        </Field>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-foreground/80">
+            Interview Rounds<span className="text-rose-500 ml-0.5">*</span>
+          </Label>
+          <p className="text-[10px] text-muted-foreground">Select at least one round</p>
+          <div className="grid sm:grid-cols-2 gap-2 mt-1">
             {INTERVIEW_ROUND_OPTIONS.map(({ value, label }) => (
               <label
                 key={value}
-                className="flex items-center gap-2 rounded-md border px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors duration-200",
+                  selectedRounds.includes(value)
+                    ? "border-primary/40 bg-primary/5 dark:bg-primary/10"
+                    : "border-border hover:bg-muted/40"
+                )}
               >
                 <Checkbox
                   checked={selectedRounds.includes(value)}
                   onCheckedChange={(checked) => handleRoundToggle(value, !!checked)}
                 />
-                <span className="text-sm">{label}</span>
+                <span className="text-sm font-medium">{label}</span>
               </label>
             ))}
           </div>
           <FieldError message={errors.interviewRounds?.message} />
         </div>
-        <div>
-          <Label className="text-xs font-medium">Question Bank Mapping <span className="text-destructive">*</span></Label>
-          <Input className="mt-1" placeholder="e.g. React JS Questions, HR Screening Questions" {...register("questionBankMapping")} />
-          <FieldError message={errors.questionBankMapping?.message} />
-        </div>
+
+        <Field label="Question Bank Mapping" required error={errors.questionBankMapping?.message}>
+          <Input placeholder="e.g. React JS Questions, HR Screening Questions" {...register("questionBankMapping")} />
+        </Field>
       </div>
     </div>
   );
@@ -124,30 +163,29 @@ export function Section8({ form }: SectionProps) {
   const { register, control } = form;
   return (
     <div>
-      <SectionTitle title="Application Settings" subtitle="Configure what applicants need to submit" />
-      <div className="grid gap-4">
-        <div className="flex items-center justify-between rounded-md border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Resume Required</p>
-            <p className="text-xs text-muted-foreground">Applicants must upload a resume</p>
-          </div>
+      <SectionTitle title="Application Settings" subtitle="Configure what applicants need to submit" icon={Settings} />
+      <div className="grid gap-3">
+        <ToggleRow
+          label="Resume Required"
+          description="Applicants must upload a resume to apply"
+        >
           <Controller name="resumeRequired" control={control} render={({ field }) => (
             <Switch checked={field.value} onCheckedChange={field.onChange} />
           )} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Cover Letter Required</p>
-            <p className="text-xs text-muted-foreground">Applicants must submit a cover letter</p>
-          </div>
+        </ToggleRow>
+
+        <ToggleRow
+          label="Cover Letter Required"
+          description="Applicants must submit a cover letter"
+        >
           <Controller name="coverLetterRequired" control={control} render={({ field }) => (
             <Switch checked={field.value} onCheckedChange={field.onChange} />
           )} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Custom Fields</Label>
-          <Input className="mt-1" placeholder="e.g. Portfolio Link, LinkedIn URL, Notice Period" {...register("customFields")} />
-        </div>
+        </ToggleRow>
+
+        <Field label="Custom Fields">
+          <Input placeholder="e.g. Portfolio Link, LinkedIn URL, Notice Period" {...register("customFields")} />
+        </Field>
       </div>
     </div>
   );
@@ -157,13 +195,12 @@ export function Section9({ form }: SectionProps) {
   const { register, control, formState: { errors } } = form;
   return (
     <div>
-      <SectionTitle title="Job Status & Visibility" subtitle="Control the posting's reach and status" />
+      <SectionTitle title="Job Status & Visibility" subtitle="Control the posting's reach and status" icon={Eye} />
       <div className="grid gap-4">
-        <div>
-          <Label className="text-xs font-medium">Status <span className="text-destructive">*</span></Label>
+        <Field label="Status" required error={errors.status?.message}>
           <Controller name="status" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="DRAFT">Draft</SelectItem>
                 <SelectItem value="OPEN">Published</SelectItem>
@@ -171,25 +208,23 @@ export function Section9({ form }: SectionProps) {
               </SelectContent>
             </Select>
           )} />
-          <FieldError message={errors.status?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Visibility <span className="text-destructive">*</span></Label>
+        </Field>
+
+        <Field label="Visibility" required error={errors.visibility?.message}>
           <Controller name="visibility" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 <SelectItem value="PUBLIC">Public</SelectItem>
                 <SelectItem value="INTERNAL">Internal Only</SelectItem>
               </SelectContent>
             </Select>
           )} />
-          <FieldError message={errors.visibility?.message} />
-        </div>
-        <div>
-          <Label className="text-xs font-medium">Application Deadline</Label>
-          <Input className="mt-1" type="date" placeholder="e.g. 30 Dec 2026" {...register("applicationDeadline")} />
-        </div>
+        </Field>
+
+        <Field label="Application Deadline">
+          <Input type="date" {...register("applicationDeadline")} />
+        </Field>
       </div>
     </div>
   );
@@ -197,30 +232,33 @@ export function Section9({ form }: SectionProps) {
 
 export function Section10({ form }: SectionProps) {
   const { control, formState: { errors } } = form;
+
   const priorityOptions = [
-    { value: "LOW", label: "Low" },
-    { value: "MEDIUM", label: "Medium" },
-    { value: "HIGH", label: "High" },
-    { value: "URGENT", label: "Urgent" },
+    { value: "LOW", label: "Low", activeClass: "bg-slate-600 hover:bg-slate-700 text-white border-slate-600" },
+    { value: "MEDIUM", label: "Medium", activeClass: "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" },
+    { value: "HIGH", label: "High", activeClass: "bg-amber-500 hover:bg-amber-600 text-white border-amber-500" },
+    { value: "URGENT", label: "Urgent", activeClass: "bg-rose-600 hover:bg-rose-700 text-white border-rose-600" },
   ] as const;
 
   return (
     <div>
-      <SectionTitle title="Additional Settings" subtitle="Priority and workflow preferences" />
+      <SectionTitle title="Additional Settings" subtitle="Priority and workflow preferences" icon={Zap} />
       <div className="grid gap-5">
-        <div>
-          <Label className="text-xs font-medium mb-2 block">Priority <span className="text-destructive">*</span></Label>
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-foreground/80">
+            Priority<span className="text-rose-500 ml-0.5">*</span>
+          </Label>
           <Controller name="priority" control={control} render={({ field }) => (
             <div className="flex gap-2">
-              {priorityOptions.map(({ value, label }) => (
+              {priorityOptions.map(({ value, label, activeClass }) => (
                 <Button
                   key={value}
                   type="button"
                   variant={field.value === value ? "default" : "outline"}
                   size="sm"
                   className={cn(
-                    "flex-1",
-                    value === "URGENT" && field.value === value && "bg-destructive hover:bg-destructive/90 border-destructive"
+                    "flex-1 h-9 text-xs font-semibold transition-colors duration-200",
+                    field.value === value && activeClass
                   )}
                   onClick={() => field.onChange(value)}
                 >
@@ -231,24 +269,24 @@ export function Section10({ form }: SectionProps) {
           )} />
           <FieldError message={errors.priority?.message} />
         </div>
-        <div className="flex items-center justify-between rounded-md border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Referral Enabled</p>
-            <p className="text-xs text-muted-foreground">Allow employees to refer candidates</p>
-          </div>
+
+        <ToggleRow
+          label="Referral Enabled"
+          description="Allow employees to refer candidates for this role"
+        >
           <Controller name="referralEnabled" control={control} render={({ field }) => (
             <Switch checked={field.value} onCheckedChange={field.onChange} />
           )} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Approval Required</p>
-            <p className="text-xs text-muted-foreground">Require manager approval before publishing</p>
-          </div>
+        </ToggleRow>
+
+        <ToggleRow
+          label="Approval Required"
+          description="Require manager approval before the job is published"
+        >
           <Controller name="approvalRequired" control={control} render={({ field }) => (
             <Switch checked={field.value} onCheckedChange={field.onChange} />
           )} />
-        </div>
+        </ToggleRow>
       </div>
     </div>
   );

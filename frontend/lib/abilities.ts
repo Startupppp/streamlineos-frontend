@@ -36,11 +36,19 @@ export function defineAbilityFor({
     if (parts.length === 3) {
       const [domain, resource, action] = parts;
       if (!domain || !resource || !action) continue;
-      can(action, `${domain}:${resource}`);
+      const subject = `${domain}:${resource}`;
+      can(action, subject);
+      if (action === "view") can("read", subject);
+      if (action === "manage") {
+        can("create", subject);
+        can("update", subject);
+        can("delete", subject);
+      }
     } else if (parts.length === 2) {
       const [domain, action] = parts;
       if (!domain || !action) continue;
       can(action, domain);
+      if (action === "view") can("read", domain);
     }
   }
 

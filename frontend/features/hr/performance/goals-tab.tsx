@@ -166,7 +166,7 @@ export function GoalsTab() {
       </div>
 
       {goalsList.length === 0 ? (
-        <EmptyState illustration={<Target className="h-8 w-8 text-muted-foreground" />} title="No goals set yet" compact />
+        <EmptyState illustration={<Target className="h-10 w-10 text-muted-foreground/40" />} title="No goals set yet" compact />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {goalsList.map((goal: Goal) => {
