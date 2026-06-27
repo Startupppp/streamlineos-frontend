@@ -13,6 +13,7 @@ import { BookOpen, Search, FileText, FolderTree, ArrowRight } from "lucide-react
 import { usePublicKb } from "@/lib/api/hooks/support/kb";
 import { KbAskPanel } from "@/components/support/kb-ask-panel";
 import { getApiError } from "@/lib/api-client";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 
 const CATEGORY_ALL = "all";
 
@@ -23,13 +24,14 @@ interface HelpCenterClientProps {
 export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORY_ALL);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
   const queryParams = useMemo(
     () => ({
       categoryId: activeCategory === CATEGORY_ALL ? undefined : Number(activeCategory),
-      search: search.trim() || undefined,
+      search: debouncedSearch || undefined,
     }),
-    [activeCategory, search],
+    [activeCategory, debouncedSearch],
   );
 
   const { data, isLoading, error, refetch } = usePublicKb(orgId, queryParams);

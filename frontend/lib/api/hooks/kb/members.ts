@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { KbSpaceMember, AddKbSpaceMemberInput } from "@/types/kb";
+import type { KbSpaceMember, KbSpaceMemberRow, AddKbSpaceMemberInput } from "@/types/kb";
 
 export function useKbSpaceMembers(spaceId: number) {
   return useQuery({
@@ -18,7 +18,7 @@ export function useAddKbSpaceMember(spaceId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: AddKbSpaceMemberInput) =>
-      apiClient.post<KbSpaceMember>(`/kb/spaces/${spaceId}/members`, input),
+      apiClient.post<KbSpaceMemberRow>(`/kb/spaces/${spaceId}/members`, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.kb.spaceMembers(spaceId) });
     },

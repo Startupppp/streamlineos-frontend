@@ -29,6 +29,7 @@ export function SearchResultCard({ result, spaceName }: SearchResultCardProps) {
     result.spaceId !== null
       ? `/knowledge-base/spaces/${result.spaceId}/articles/${result.id}`
       : null;
+  const summary = result.snippet ?? result.excerpt;
 
   return (
     <Card className="transition-colors hover:border-primary/40">
@@ -50,9 +51,9 @@ export function SearchResultCard({ result, spaceName }: SearchResultCardProps) {
           ) : (
             <span className="block truncate text-sm font-medium">{result.title}</span>
           )}
-          {result.excerpt && (
+          {summary && (
             <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-              {result.excerpt}
+              {summary}
             </p>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">

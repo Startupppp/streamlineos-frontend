@@ -56,16 +56,6 @@ export interface KbArticle extends KbArticleListItem {
   category?: { id: number; name: string; slug: string } | null;
 }
 
-export interface KbArticleVersion {
-  id: number;
-  versionNumber: number;
-  title: string;
-  excerpt: string | null;
-  changeSummary: string | null;
-  authorId: string | null;
-  createdAt: string;
-}
-
 export interface PaginatedArticles {
   items: KbArticleListItem[];
   total: number;
@@ -76,7 +66,6 @@ export interface PaginatedArticles {
 
 export interface CreateSpaceInput {
   name: string;
-  slug?: string;
   description?: string | null;
   audience?: KbAudience;
   icon?: string | null;
@@ -86,7 +75,6 @@ export interface CreateSpaceInput {
 export interface UpdateSpaceInput {
   spaceId: number;
   name?: string;
-  slug?: string;
   description?: string | null;
   audience?: KbAudience;
   icon?: string | null;
@@ -95,7 +83,6 @@ export interface UpdateSpaceInput {
 
 export interface CreateCategoryInput {
   name: string;
-  slug?: string;
   description?: string | null;
   icon?: string | null;
   sortOrder?: number;
@@ -106,7 +93,6 @@ export interface UpdateCategoryInput {
   categoryId: number;
   spaceId: number;
   name?: string;
-  slug?: string;
   description?: string | null;
   icon?: string | null;
   sortOrder?: number;
@@ -115,16 +101,14 @@ export interface UpdateCategoryInput {
 
 export interface CreateArticleInput {
   title: string;
-  spaceId?: number | null;
+  spaceId: number;
   categoryId?: number | null;
-  slug?: string;
   excerpt?: string | null;
   content?: string;
   contentText?: string;
   status?: KbArticleStatus;
   visibility?: KbVisibility;
   tags?: string[] | null;
-  ownerId?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
   reviewIntervalDays?: number | null;
@@ -135,14 +119,12 @@ export interface UpdateArticleInput {
   title?: string;
   spaceId?: number | null;
   categoryId?: number | null;
-  slug?: string;
   excerpt?: string | null;
   content?: string;
   contentText?: string;
   status?: KbArticleStatus;
   visibility?: KbVisibility;
   tags?: string[] | null;
-  ownerId?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
   reviewIntervalDays?: number | null;
@@ -150,27 +132,22 @@ export interface UpdateArticleInput {
 
 export interface VerifyArticleInput {
   articleId: number;
-  note?: string;
   reviewIntervalDays?: number | null;
 }
 
 export interface VoteArticleInput {
   articleId: number;
   helpful: boolean;
+  comment?: string;
 }
 
 export interface ListArticlesParams {
   spaceId?: number;
   categoryId?: number;
   status?: KbArticleStatus;
-  visibility?: KbVisibility;
   search?: string;
-  tags?: string[];
-  ownerId?: string;
   page?: number;
   pageSize?: number;
-  sortBy?: "title" | "updatedAt" | "helpfulCount" | "status";
-  sortOrder?: "asc" | "desc";
 }
 
 export interface KbSearchResult {
@@ -180,6 +157,7 @@ export interface KbSearchResult {
   title: string;
   slug: string;
   excerpt: string | null;
+  snippet?: string;
   status: KbArticleStatus;
   updatedAt: string;
 }
@@ -279,6 +257,8 @@ export interface KbSpaceMember {
   userImage: string | null;
 }
 
+export type KbSpaceMemberRow = Omit<KbSpaceMember, "userName" | "userEmail" | "userImage">;
+
 export interface AddKbSpaceMemberInput {
   userId?: string;
   role?: string;
@@ -297,11 +277,6 @@ export interface KbAiImproveInput {
 
 export interface KbAiSummarizeInput {
   text: string;
-}
-
-export interface KbAiTranslateInput {
-  text: string;
-  locale: string;
 }
 
 export interface KbAiContent {

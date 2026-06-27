@@ -482,15 +482,29 @@ export const queryKeys = {
     spaceCategories: (spaceId: number) => [...base, "kb", "spaceCategories", spaceId] as const,
     spaceMembers: (spaceId: number) => [...base, "kb", "spaceMembers", spaceId] as const,
     categories: () => [...base, "kb", "categories"] as const,
-    articles: (params?: Record<string, unknown>) => [...base, "kb", "articles", params] as const,
+    articles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "kb", "articles"] as const)
+        : ([...base, "kb", "articles", params] as const),
     article: (articleId: number) => [...base, "kb", "article", articleId] as const,
-    articleVersions: (articleId: number) => [...base, "kb", "articleVersions", articleId] as const,
-    publicArticles: (params?: Record<string, unknown>) => [...base, "kb", "publicArticles", params] as const,
+    publicArticles: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "kb", "publicArticles"] as const)
+        : ([...base, "kb", "publicArticles", params] as const),
     publicArticle: (orgId: string, slug: string) => [...base, "kb", "publicArticle", orgId, slug] as const,
-    search: (params?: Record<string, unknown>) => [...base, "kb", "search", params] as const,
+    search: (params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "kb", "search"] as const)
+        : ([...base, "kb", "search", params] as const),
     ask: () => [...base, "kb", "ask"] as const,
-    analyticsOverview: (range?: Record<string, unknown>) => [...base, "kb", "analyticsOverview", range] as const,
-    noResults: (range?: Record<string, unknown>) => [...base, "kb", "noResults", range] as const,
+    analyticsOverview: (range?: Record<string, unknown>) =>
+      range === undefined
+        ? ([...base, "kb", "analyticsOverview"] as const)
+        : ([...base, "kb", "analyticsOverview", range] as const),
+    noResults: (range?: Record<string, unknown>) =>
+      range === undefined
+        ? ([...base, "kb", "noResults"] as const)
+        : ([...base, "kb", "noResults", range] as const),
     verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
   },
 

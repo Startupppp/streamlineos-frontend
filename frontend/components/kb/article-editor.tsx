@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -40,7 +39,6 @@ import {
 } from "@/components/ui/dialog";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import {
   useCreateKbArticle,
@@ -130,11 +128,6 @@ function snapshotKey(snapshot: ArticleSnapshot): string {
   return JSON.stringify(snapshot);
 }
 
-function isConflictError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return error.message.startsWith("409") || /conflict/i.test(error.message);
-}
-
 const STATUS_LABELS: Record<KbArticleStatus, string> = {
   draft: "Draft",
   in_review: "In review",
@@ -206,7 +199,6 @@ export function ArticleEditorSkeleton() {
 
 export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorProps) {
   const router = useRouter();
-  const qc = useQueryClient();
   const createArticle = useCreateKbArticle();
   const updateArticle = useUpdateKbArticle();
   const publishArticle = usePublishKbArticle();
@@ -322,17 +314,12 @@ export function ArticleEditor({ spaceId, article, initialTitle }: ArticleEditorP
           },
           onError: (error) => {
             setSaveState("error");
-            if (isConflictError(error)) {
-              toast.warning("This article changed elsewhere. Showing the latest version.");
-              qc.invalidateQueries({ queryKey: queryKeys.kb.article(articleId) });
-            } else {
-              toast.error(getErrorMessage(error));
-            }
+            toast.error(getErrorMessage(error));
           },
         },
       );
     },
-    [articleId, spaceId, createArticle, updateArticle, router, qc],
+    [articleId, spaceId, createArticle, updateArticle, router],
   );
 
   useEffect(() => {

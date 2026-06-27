@@ -7,7 +7,6 @@ import type {
   KbAiDraftInput,
   KbAiImproveInput,
   KbAiSummarizeInput,
-  KbAiTranslateInput,
 } from "@/types/kb";
 
 export function useKbAiDraft() {
@@ -25,11 +24,5 @@ export function useKbAiImprove() {
 export function useKbAiSummarize() {
   return useMutation({
     mutationFn: (input: KbAiSummarizeInput) => apiClient.post<KbAiContent>("/kb/ai/summarize", input),
-  });
-}
-
-export function useKbAiTranslate() {
-  return useMutation({
-    mutationFn: (input: KbAiTranslateInput) => apiClient.post<KbAiContent>("/kb/ai/translate", input),
   });
 }

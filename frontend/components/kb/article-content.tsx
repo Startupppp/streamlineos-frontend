@@ -72,7 +72,7 @@ function toHtml(content: string): string {
       Underline,
     ]);
   } catch {
-    return trimmed;
+    return "<p>Unable to render this content.</p>";
   }
 }
 
