@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
+import {
+  FolderPlus,
+  Upload,
+  FilePlus2,
+  FileText,
+  Pencil,
+  Trash2,
+  Globe,
+  FolderOpen,
+  HardDrive,
+  Star,
+  LayoutTemplate,
+  LayoutGrid,
+  List,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -9,11 +23,17 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useHrDocuments, useDeleteDocument, useHrDocumentStats, useRichDocuments, useDeleteRichDocument } from "@/lib/api/hooks/hr";
+import {
+  useHrDocuments,
+  useDeleteDocument,
+  useHrDocumentStats,
+  useRichDocuments,
+  useDeleteRichDocument,
+} from "@/lib/api/hooks/hr";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Document } from "@/types/hr";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
@@ -52,6 +72,7 @@ export default function DocumentsPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
@@ -65,14 +86,14 @@ export default function DocumentsPage() {
     try {
       const stored = localStorage.getItem(foldersKey);
       if (stored) setCustomFolders(JSON.parse(stored) as string[]);
-    } catch { /* ignore */ }
+    } catch { }
   }, [foldersKey]);
 
   const typeFilter = selectedType !== "all" ? (selectedType as Document["type"]) : undefined;
 
   const { data: rawDocuments = [], isLoading, refetch } = useHrDocuments(undefined, typeFilter);
   const { data: rawPolicies = [] } = useHrDocuments(undefined, "POLICY");
-  const { data: statsData } = useHrDocumentStats();
+  const { data: _statsData } = useHrDocumentStats();
   const deleteMutation = useDeleteDocument();
 
   const documents = rawDocuments as Document[];
@@ -122,7 +143,7 @@ export default function DocumentsPage() {
     { name: "Archives", count: documents.filter((d) => d.type === "OTHER").length, colorIdx: 3 },
   ];
 
-  const totalStorageBytes = documents.reduce((acc, doc) => acc + (doc.fileSize || 0), 0);
+  const totalStorageBytes = documents.reduce((acc, doc) => acc + (doc.fileSize ?? 0), 0);
   const maxStorageGB = 20;
   const usedGB = totalStorageBytes / (1024 * 1024 * 1024);
   const storagePercent = Math.min(100, Math.round((usedGB / maxStorageGB) * 100));
@@ -134,19 +155,23 @@ export default function DocumentsPage() {
         loading: "Deleting document...",
         success: "Document deleted",
         error: "Failed to delete document",
-      }
+      },
     );
   }, [deleteMutation]);
 
-  const handleSearchChange = (value: string) => { setSearchTerm(value); setPage(1); };
-  const handleTypeChange = (value: string) => { setSelectedType(value); setPage(1); };
-  const handleCategoryChange = (value: string) => { setSelectedCategory(value); setPage(1); };
+  const handleSearchChange = useCallback((value: string) => { setSearchTerm(value); setPage(1); }, []);
+  const handleTypeChange = useCallback((value: string) => { setSelectedType(value); setPage(1); }, []);
+  const handleCategoryChange = useCallback((value: string) => { setSelectedCategory(value); setPage(1); }, []);
+  const handleOpenUpload = useCallback(() => setIsUploadOpen(true), []);
+  const handleOpenNewFolder = useCallback(() => setIsNewFolderOpen(true), []);
+  const handleViewList = useCallback(() => setViewMode("list"), []);
+  const handleViewGrid = useCallback(() => setViewMode("grid"), []);
 
-  const handleNewFolder = (name: string) => {
+  const handleNewFolder = useCallback((name: string) => {
     setCustomFolders((prev) => {
       const updated = [...prev, name];
       if (foldersKey) {
-        try { localStorage.setItem(foldersKey, JSON.stringify(updated)); } catch { /* ignore */ }
+        try { localStorage.setItem(foldersKey, JSON.stringify(updated)); } catch { }
       }
       return updated;
     });
@@ -154,53 +179,78 @@ export default function DocumentsPage() {
     setNewFolderName("");
     setIsNewFolderOpen(false);
     toast.success(`Folder "${name}" created`);
-  };
+  }, [foldersKey]);
 
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
+  const handleUploadSuccess = useCallback(() => { void refetch(); setIsUploadOpen(false); }, [refetch]);
+  const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
 
   if (isLoading) {
     return (
-      <div className="flex-1 space-y-6">
-        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1">
-            <Skeleton className="h-8 w-52" />
-            <Skeleton className="h-4 w-96" />
+      <PageWrapper
+        title="Document Library"
+        subtitle="Centralized repository for all HR documents, contracts, and policy files."
+      >
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-[72px] rounded-xl" />
+            ))}
           </div>
-          <div className="flex items-center gap-3 mt-4 md:mt-0">
-            <Skeleton className="h-10 w-[120px] rounded-md" />
-            <Skeleton className="h-10 w-[160px] rounded-md" />
-          </div>
+          <Skeleton className="h-[400px] rounded-2xl" />
         </div>
-        <Card className="shadow-sm border">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <Skeleton className="h-10 flex-1 min-w-[200px] max-w-md rounded-md" />
-              {DEFAULT_CATEGORY_TABS.map((tab) => (
-                <Skeleton key={tab} className="h-8 rounded-full" style={{ width: `${tab.length * 9 + 24}px` }} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   const pageActions = (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" className="gap-2" asChild>
-        <Link href="/hr/documents/templates"><LayoutTemplate className="h-4 w-4" /><span className="hidden sm:inline">Templates</span></Link>
+      <div className="rounded-lg border border-border p-1 flex items-center gap-0.5">
+        <button
+          onClick={handleViewList}
+          className={cn(
+            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
+            viewMode === "list"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="List view"
+        >
+          <List className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={handleViewGrid}
+          className={cn(
+            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200",
+            viewMode === "grid"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Grid view"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <Button variant="outline" size="sm" className="gap-1.5 h-8" asChild>
+        <Link href="/hr/documents/templates">
+          <LayoutTemplate className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Templates</span>
+        </Link>
       </Button>
-      <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsNewFolderOpen(true)}>
-        <FolderPlus className="h-4 w-4" /><span className="hidden sm:inline">New Folder</span>
+      <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenNewFolder}>
+        <FolderPlus className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">New Folder</span>
       </Button>
-      <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsUploadOpen(true)}>
-        <Upload className="h-4 w-4" /><span className="hidden sm:inline">Upload</span>
+      <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenUpload}>
+        <Upload className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Upload</span>
       </Button>
-      <Button size="sm" className="gap-2" asChild>
-        <Link href="/hr/documents/editor/new"><FilePlus2 className="h-4 w-4" /><span className="hidden sm:inline">Create Document</span></Link>
+      <Button size="sm" className="gap-1.5 h-8" asChild>
+        <Link href="/hr/documents/editor/new">
+          <FilePlus2 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Create Document</span>
+        </Link>
       </Button>
     </div>
   );
@@ -209,6 +259,7 @@ export default function DocumentsPage() {
     <PageWrapper
       title="Document Library"
       subtitle="Centralized repository for all company-wide HR documents, contracts, and policy files."
+      badge={documents.length}
       actions={pageActions}
       filters={
         <DocumentFilters
@@ -223,7 +274,7 @@ export default function DocumentsPage() {
       }
     >
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Documents" value={documents.length} icon={FileText} color="blue" />
           <StatCard label="Folders" value={folders.length + customFolders.length} icon={FolderOpen} color="amber" />
           <StatCard
@@ -248,7 +299,7 @@ export default function DocumentsPage() {
           onPageChange={setPage}
           onDelete={handleDelete}
           onEdit={handleEdit}
-          onOpenUpload={() => setIsUploadOpen(true)}
+          onOpenUpload={handleOpenUpload}
         />
 
         <RichDocumentsSection />
@@ -256,7 +307,7 @@ export default function DocumentsPage() {
         <UploadDocumentDialog
           open={isUploadOpen}
           onOpenChange={setIsUploadOpen}
-          onSuccess={() => { void refetch(); setIsUploadOpen(false); }}
+          onSuccess={handleUploadSuccess}
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           isAdmin={isAdmin}
@@ -271,7 +322,7 @@ export default function DocumentsPage() {
         />
         <EditDocumentSheet
           open={!!editingDocument}
-          onOpenChange={(open) => { if (!open) setEditingDocument(null); }}
+          onOpenChange={handleEditSheetChange}
           document={editingDocument}
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
@@ -295,14 +346,16 @@ function RichDocumentsSection() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-20" />
+      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-16" />
           </div>
           <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full rounded-xl" />
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -312,27 +365,42 @@ function RichDocumentsSection() {
   if (!richDocs?.length) return null;
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm">Created Documents</h3>
-          <span className="text-xs text-muted-foreground">{richDocs.length} documents</span>
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+              <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700">
+            {richDocs.length}
+          </span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {richDocs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
+            <div
+              key={doc.id}
+              className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background hover:bg-muted/30 transition-colors duration-200"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     {doc.templateType && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{doc.templateType}</Badge>
+                      <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700">
+                        {doc.templateType}
+                      </span>
                     )}
                     {doc.isPublished && (
-                      <Badge variant="default" className="text-[10px] px-1.5 py-0 gap-0.5">
-                        <Globe className="h-2.5 w-2.5" />Published
-                      </Badge>
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+                        <Globe className="h-2.5 w-2.5" />
+                        Published
+                      </span>
                     )}
                     {doc.updatedAt && (
                       <span className="text-[10px] text-muted-foreground">
@@ -343,13 +411,23 @@ function RichDocumentsSection() {
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                  <Link href={`/hr/documents/editor/${doc.id}`}><Pencil className="h-3.5 w-3.5" /></Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  asChild
+                >
+                  <Link href={`/hr/documents/editor/${doc.id}`} aria-label="Edit document">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
                 </Button>
                 <Button
-                  variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-rose-600"
                   onClick={() => handleDelete(doc.id)}
                   disabled={deleteMutation.isPending}
+                  aria-label="Delete document"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

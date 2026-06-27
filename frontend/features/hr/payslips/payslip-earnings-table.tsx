@@ -2,7 +2,8 @@
 
 import { numberToWords } from "@/lib/format-utils";
 
-const CELL = "1px solid #9ca3af";
+const BORDER = "1px solid #e5e7eb";
+const BORDER_STRONG = "1px solid #d1d5db";
 
 interface PayslipEarningsTableProps {
   basicSalary: number;
@@ -33,9 +34,22 @@ export function PayslipEarningsTable({
   overtimeDays,
   overtimeHoursVal,
 }: PayslipEarningsTableProps) {
-  const td = (extra?: React.CSSProperties): React.CSSProperties => ({
-    border: CELL,
-    padding: "8px 16px",
+  const cell = (extra?: React.CSSProperties): React.CSSProperties => ({
+    border: BORDER,
+    padding: "9px 14px",
+    fontSize: "13px",
+    ...extra,
+  });
+
+  const headerCell = (extra?: React.CSSProperties): React.CSSProperties => ({
+    border: BORDER_STRONG,
+    padding: "10px 14px",
+    fontSize: "12px",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase" as const,
+    color: "#374151",
+    backgroundColor: "#f3f4f6",
     ...extra,
   });
 
@@ -48,153 +62,129 @@ export function PayslipEarningsTable({
 
   return (
     <>
-      <table
-        style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px", fontSize: "14px" }}
-      >
-        <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+        <caption style={{ display: "none" }}>Payslip earnings and deductions breakdown</caption>
         <thead>
-          <tr style={{ backgroundColor: "#f3f4f6" }}>
-            <th scope="col" style={td({ textAlign: "left", fontWeight: 600, color: "#111827" })}>
-              Earnings
-            </th>
-            <th scope="col" style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              Amount
-            </th>
-            <th scope="col" style={td({ textAlign: "left", fontWeight: 600, color: "#111827" })}>
-              Deductions
-            </th>
-            <th scope="col" style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              Amount
-            </th>
+          <tr>
+            <th scope="col" style={headerCell({ textAlign: "left" })}>Earnings</th>
+            <th scope="col" style={headerCell({ textAlign: "right", width: "22%" })}>Amount</th>
+            <th scope="col" style={headerCell({ textAlign: "left" })}>Deductions</th>
+            <th scope="col" style={headerCell({ textAlign: "right", width: "22%" })}>Amount</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={td({ color: "#374151" })}>Basic Pay</td>
-            <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{fmt(basicSalary)}/-
+            <td style={cell({ color: "#374151" })}>Basic Pay</td>
+            <td style={cell({ textAlign: "right", color: "#111827", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(basicSalary)}
             </td>
-            <td style={td({ color: "#374151" })}>Professional Tax</td>
-            <td style={td({ textAlign: "center", color: "#111827" })}>₹200/-</td>
+            <td style={cell({ color: "#374151" })}>Professional Tax</td>
+            <td style={cell({ textAlign: "right", color: "#b91c1c", fontVariantNumeric: "tabular-nums" })}>
+              ₹200.00
+            </td>
+          </tr>
+          <tr style={{ backgroundColor: "#fafafa" }}>
+            <td style={cell({ color: "#374151" })}>House Rent Allowance</td>
+            <td style={cell({ textAlign: "right", color: "#111827", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(hra)}
+            </td>
+            <td style={cell()}></td>
+            <td style={cell()}></td>
           </tr>
           <tr>
-            <td style={td({ color: "#374151" })}>House Rent Allowance</td>
-            <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{fmt(hra)}/-
+            <td style={cell({ color: "#374151" })}>Special Allowance</td>
+            <td style={cell({ textAlign: "right", color: "#111827", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(allowances)}
             </td>
-            <td style={td()}></td>
-            <td style={td()}></td>
-          </tr>
-          <tr>
-            <td style={td({ color: "#374151" })}>Special Allowance</td>
-            <td style={td({ textAlign: "center", color: "#111827" })}>
-              ₹{fmt(allowances)}/-
-            </td>
-            <td style={td()}></td>
-            <td style={td()}></td>
+            <td style={cell()}></td>
+            <td style={cell()}></td>
           </tr>
           {overtimeAmount > 0 && (
-            <tr>
-              <td style={td({ color: "#374151" })}>{overtimeLabel}</td>
-              <td style={td({ textAlign: "center", color: "#111827" })}>
-                ₹{fmt(overtimeAmount)}/-
+            <tr style={{ backgroundColor: "#fafafa" }}>
+              <td style={cell({ color: "#374151" })}>{overtimeLabel}</td>
+              <td style={cell({ textAlign: "right", color: "#059669", fontVariantNumeric: "tabular-nums" })}>
+                ₹{fmt(overtimeAmount)}
               </td>
-              <td style={td()}></td>
-              <td style={td()}></td>
+              <td style={cell()}></td>
+              <td style={cell()}></td>
             </tr>
           )}
-          <tr style={{ backgroundColor: "#f9fafb" }}>
-            <td style={td({ fontWeight: 600, color: "#111827" })}>Total Earnings</td>
-            <td style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              ₹{fmt(grossSalary)}/-
+          <tr style={{ backgroundColor: "#f0fdf4" }}>
+            <td style={cell({ fontWeight: 700, color: "#111827" })}>Total Earnings</td>
+            <td style={cell({ textAlign: "right", fontWeight: 700, color: "#111827", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(grossSalary)}
             </td>
-            <td style={td({ fontWeight: 600, color: "#111827" })}>Total Deductions</td>
-            <td style={td({ textAlign: "center", fontWeight: 600, color: "#111827" })}>
-              ₹{fmt(deductions)}/-
+            <td style={cell({ fontWeight: 700, color: "#111827" })}>Total Deductions</td>
+            <td style={cell({ textAlign: "right", fontWeight: 700, color: "#b91c1c", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(deductions)}
             </td>
           </tr>
-          <tr style={{ backgroundColor: "#f3f4f6" }}>
-            <td style={td()}></td>
-            <td style={td()}></td>
-            <td style={td({ fontWeight: "bold", color: "#111827" })}>Net Salary</td>
-            <td style={td({ textAlign: "center", fontWeight: "bold", color: "#111827" })}>
-              ₹{fmt(netSalary)}/-
+          <tr style={{ backgroundColor: "#eff6ff" }}>
+            <td style={cell()}></td>
+            <td style={cell()}></td>
+            <td style={cell({ fontWeight: 800, color: "#1e3a8a", fontSize: "14px" })}>Net Salary</td>
+            <td style={cell({ textAlign: "right", fontWeight: 800, color: "#1e3a8a", fontSize: "14px", fontVariantNumeric: "tabular-nums" })}>
+              ₹{fmt(netSalary)}
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p style={{ marginBottom: "24px", fontSize: "14px", color: "#111827" }}>
-        <span style={{ fontWeight: "bold" }}>In Words:</span>{" "}
+      <div style={{ marginBottom: "20px", padding: "12px 16px", backgroundColor: "#f8fafc", border: BORDER, borderRadius: "6px", fontSize: "13px", color: "#111827" }}>
+        <span style={{ fontWeight: 700 }}>Amount in Words: </span>
         {numberToWords(Math.round(netSalary))} Rupees Only
-      </p>
-
-      <div style={{ marginBottom: "32px" }}>
-        <p
-          style={{
-            fontWeight: "bold",
-            textDecoration: "underline",
-            color: "#111827",
-            marginBottom: "8px",
-          }}
-        >
-          Declarations and Notes:
-        </p>
-        <p style={{ fontSize: "14px", color: "#374151" }}>
-          This is a system-generated Pay slip and does not require a physical signature unless
-          specified by the requester.
-        </p>
       </div>
 
-      <div style={{ marginBottom: "32px" }}>
-        <p style={{ fontSize: "14px", color: "#111827" }}>
-          For <span style={{ fontWeight: "bold" }}>StreamlineOS Advisors LLP</span>
-        </p>
-        <p style={{ fontSize: "14px", color: "#374151" }}>(Company Stamp/Seal)</p>
-        <p style={{ fontSize: "14px", color: "#111827", marginTop: "16px" }}>
-          Employee Signature:
-        </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginBottom: "28px" }}>
+        <div>
+          <p style={{ fontSize: "12px", fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+            Declarations
+          </p>
+          <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: "1.6" }}>
+            This is a computer-generated payslip and does not require a physical signature unless specified by the requester.
+          </p>
+        </div>
+        <div>
+          <p style={{ fontSize: "12px", fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+            Authorized Signatory
+          </p>
+          <p style={{ fontSize: "12px", color: "#111827", marginBottom: "2px" }}>
+            For StreamlineOS Advisors LLP
+          </p>
+          <p style={{ fontSize: "12px", color: "#6b7280" }}>(Authorized Signature / Stamp)</p>
+        </div>
+      </div>
+
+      <div style={{ borderTop: BORDER_STRONG, marginBottom: "20px", paddingTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <p style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+            Employee Acknowledgement
+          </p>
+          <p style={{ fontSize: "12px", color: "#374151" }}>Signature: ___________________________</p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>Date</p>
+          <p style={{ fontSize: "12px", color: "#374151" }}>____________________</p>
+        </div>
       </div>
 
       <div
         style={{
           backgroundColor: "#0f2b7f",
           color: "#ffffff",
-          padding: "16px",
+          padding: "14px 24px",
+          margin: "0 -32px -32px -32px",
           borderRadius: "0 0 8px 8px",
-          margin: "-32px -32px -32px -32px",
-          marginTop: "32px",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "12px",
-          }}
-        >
-          <div>
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}
-            >
-              <span>🌐</span>
-              <span>www.streamlineos.app</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>✉</span>
-              <span>support@streamlineos.app</span>
-            </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: "11px", lineHeight: "1.8" }}>
+            <div style={{ fontWeight: 600, marginBottom: "1px" }}>www.streamlineos.app</div>
+            <div style={{ color: "#93c5fd" }}>support@streamlineos.app</div>
           </div>
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "8px", textAlign: "right" }}
-          >
-            <span>📍</span>
-            <span>
-              Vijay Tech Park, 3rd floor, Plot No 25, Madhapur,
-              <br />
-              HITEC City, Hyderabad, Telangana 500033
-            </span>
+          <div style={{ fontSize: "11px", textAlign: "right", lineHeight: "1.8" }}>
+            <div style={{ fontWeight: 600, marginBottom: "1px" }}>Vijay Tech Park, 3rd Floor, Plot No 25</div>
+            <div style={{ color: "#93c5fd" }}>Madhapur, HITEC City, Hyderabad 500033</div>
           </div>
         </div>
       </div>

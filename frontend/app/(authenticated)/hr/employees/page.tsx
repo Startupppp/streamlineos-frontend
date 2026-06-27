@@ -142,7 +142,7 @@ export default function EmployeesPage() {
     >
       {filtered.length === 0 ? (
         <EmptyState
-          illustration={<Users className="h-8 w-8 text-muted-foreground" />}
+          illustration={<Users className="h-12 w-12 text-muted-foreground/40" />}
           title="No employees match your filters"
           description={
             hasFilters

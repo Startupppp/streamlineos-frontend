@@ -73,13 +73,13 @@ export interface CreateProductInput {
   hasVariants?: boolean;
 }
 
-export interface UpdateProductInput
-  extends Partial<Omit<CreateProductInput, "barcode" | "categoryId" | "uomId" | "description">> {
+export type UpdateProductInput = Omit<Partial<CreateProductInput>, "categoryId" | "uomId" | "barcode" | "description"> & {
+  productId?: number;
   categoryId?: number | null;
   uomId?: number | null;
   barcode?: string | null;
   description?: string | null;
-}
+};
 
 export interface CreateProductVariantInput {
   name: string;

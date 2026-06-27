@@ -11,8 +11,12 @@ import {
   ShieldX,
   Clock,
   AlertTriangle,
+  CreditCard,
+  FileCheck,
+  Fingerprint,
+  FileSignature,
+  FileBadge,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -21,6 +25,7 @@ import {
   useDeleteVaultDocument,
 } from "@/lib/api/hooks/hr/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 const DOCUMENT_TYPES = [
   { value: "AADHAR", label: "Aadhar Card" },
@@ -31,34 +36,72 @@ const DOCUMENT_TYPES = [
   { value: "OTHER", label: "Other" },
 ] as const;
 
-function AvScanBadge({ result }: { result: "PENDING" | "CLEAN" | "INFECTED" | null }) {
+function getDocTypeIcon(
+  documentType: string | null | undefined,
+): React.ComponentType<{ className?: string }> {
+  switch (documentType) {
+    case "AADHAR":
+      return Fingerprint;
+    case "PAN":
+      return CreditCard;
+    case "PASSPORT":
+      return FileBadge;
+    case "CERTIFICATE":
+      return FileCheck;
+    case "OFFER_LETTER":
+      return FileSignature;
+    default:
+      return FileText;
+  }
+}
+
+function getDocTypeBadgeClass(documentType: string | null | undefined): string {
+  switch (documentType) {
+    case "AADHAR":
+      return "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800";
+    case "PAN":
+      return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800";
+    case "PASSPORT":
+      return "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800";
+    case "CERTIFICATE":
+      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800";
+    case "OFFER_LETTER":
+      return "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800";
+    default:
+      return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+  }
+}
+
+function AvScanBadge({
+  result,
+}: {
+  result: "PENDING" | "CLEAN" | "INFECTED" | null;
+}) {
   if (result === "CLEAN") {
     return (
-      <Badge
-        variant="outline"
-        className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1"
-      >
-        <ShieldCheck className="h-2.5 w-2.5" />
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+        <ShieldCheck className="h-2.5 w-2.5" aria-hidden="true" />
         Clean
-      </Badge>
+      </span>
     );
   }
   if (result === "INFECTED") {
     return (
-      <Badge
-        variant="outline"
-        className="text-[10px] bg-destructive/10 text-destructive border-destructive/20 gap-1"
-      >
-        <ShieldX className="h-2.5 w-2.5" />
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
+        <ShieldX className="h-2.5 w-2.5" aria-hidden="true" />
         Infected
-      </Badge>
+      </span>
     );
   }
   return (
-    <Badge variant="outline" className="text-[10px] gap-1">
-      <Clock className="h-2.5 w-2.5 animate-spin" style={{ animationDuration: "2s" }} />
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+      <Clock
+        className="h-2.5 w-2.5"
+        style={{ animation: "spin 2s linear infinite" }}
+        aria-hidden="true"
+      />
       Scanning
-    </Badge>
+    </span>
   );
 }
 
@@ -71,7 +114,10 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
   const deleteDoc = useDeleteVaultDocument(candidateId);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
-  const handleRequestDelete = useCallback((id: number) => setPendingDelete(id), []);
+  const handleRequestDelete = useCallback(
+    (id: number) => setPendingDelete(id),
+    [],
+  );
   const handleCancelDelete = useCallback((open: boolean) => {
     if (!open) setPendingDelete(null);
   }, []);
@@ -93,7 +139,7 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
     return (
       <div className="space-y-2">
         {[1, 2].map((i) => (
-          <Skeleton key={i} className="h-14 w-full" />
+          <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
     );
@@ -101,9 +147,17 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
 
   if (!docs?.length) {
     return (
-      <div className="py-6 text-center">
-        <FileText className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-        <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+      <div className="py-8 text-center">
+        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+          <FileText
+            className="h-5 w-5 text-muted-foreground/50"
+            aria-hidden="true"
+          />
+        </div>
+        <p className="text-sm font-medium text-foreground">No documents yet</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Upload verification documents using the button above.
+        </p>
       </div>
     );
   }
@@ -116,19 +170,49 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
             DOCUMENT_TYPES.find((t) => t.value === doc.documentType)?.label ??
             doc.documentType ??
             "Document";
+          const DocIcon = getDocTypeIcon(doc.documentType);
+          const docTypeBadge = getDocTypeBadgeClass(doc.documentType);
+
           return (
             <div
               key={doc.id}
-              className="flex items-center justify-between gap-3 rounded-lg border bg-card px-3 py-2.5"
+              className={cn(
+                "flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors duration-200 hover:bg-muted/30",
+                doc.avResult === "INFECTED" && "border-rose-200 dark:border-rose-800",
+              )}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs font-medium truncate">{doc.filename}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <Badge variant="outline" className="text-[9px] px-1 py-0">
+                <div
+                  className={cn(
+                    "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                    doc.avResult === "INFECTED"
+                      ? "bg-rose-100 dark:bg-rose-950/40"
+                      : "bg-muted",
+                  )}
+                >
+                  <DocIcon
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      doc.avResult === "INFECTED"
+                        ? "text-rose-600 dark:text-rose-400"
+                        : "text-muted-foreground",
+                    )}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {doc.filename}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                    <span
+                      className={cn(
+                        "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                        docTypeBadge,
+                      )}
+                    >
                       {docTypeLabel}
-                    </Badge>
+                    </span>
                     <AvScanBadge result={doc.avResult} />
                     {doc.expiresAt &&
                       (() => {
@@ -138,30 +222,24 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
                         );
                         if (daysLeft < 0) {
                           return (
-                            <Badge
-                              variant="destructive"
-                              className="text-[9px] px-1 py-0 gap-0.5"
-                            >
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
                               <AlertTriangle className="h-2.5 w-2.5" />
                               Expired
-                            </Badge>
+                            </span>
                           );
                         }
                         if (daysLeft <= 30) {
                           return (
-                            <Badge
-                              variant="outline"
-                              className="text-[9px] px-1 py-0 text-amber-600 border-amber-400 gap-0.5"
-                            >
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
                               <AlertTriangle className="h-2.5 w-2.5" />
-                              Expires in {daysLeft}d
-                            </Badge>
+                              {daysLeft}d left
+                            </span>
                           );
                         }
                         return null;
                       })()}
                     {doc.createdAt && (
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
                         {format(new Date(doc.createdAt), "d MMM yy")}
                       </span>
                     )}
@@ -170,27 +248,26 @@ export function VaultDocumentList({ candidateId }: VaultDocumentListProps) {
               </div>
 
               <div className="flex items-center gap-1 shrink-0">
-                {doc.avResult !== "INFECTED" && (
+                {doc.avResult === "INFECTED" ? (
+                  <span className="text-[10px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-semibold">
+                    <AlertTriangle className="h-3 w-3" />
+                    Blocked
+                  </span>
+                ) : (
                   <a
                     href={doc.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-lg hover:bg-muted transition-colors duration-200"
                     aria-label={`Download ${doc.filename}`}
                   >
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                   </a>
                 )}
-                {doc.avResult === "INFECTED" && (
-                  <span className="text-[10px] text-destructive flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Blocked
-                  </span>
-                )}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors duration-200"
                   aria-label={`Delete ${doc.filename}`}
                   onClick={() => handleRequestDelete(doc.id)}
                 >

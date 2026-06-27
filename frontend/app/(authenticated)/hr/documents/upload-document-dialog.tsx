@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, FileImage, X, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
@@ -15,6 +15,7 @@ import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -23,6 +24,27 @@ interface UploadDocumentDialogProps {
   documentTypes: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
   categories: string[];
   isAdmin: boolean;
+}
+
+function getFileTypeConfig(file: File): { icon: React.ComponentType<{ className?: string }>; bg: string; text: string; badge: string } {
+  if (file.type === "application/pdf") {
+    return { icon: FileText, bg: "bg-rose-100 dark:bg-rose-950/40", text: "text-rose-600 dark:text-rose-400", badge: "PDF" };
+  }
+  if (file.type.includes("word") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
+    return { icon: FileText, bg: "bg-blue-100 dark:bg-blue-950/40", text: "text-blue-600 dark:text-blue-400", badge: "DOC" };
+  }
+  if (file.type.includes("excel") || file.type.includes("spreadsheet") || file.name.endsWith(".xls") || file.name.endsWith(".xlsx") || file.name.endsWith(".csv")) {
+    return { icon: FileSpreadsheet, bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400", badge: "XLS" };
+  }
+  if (file.type.startsWith("image/")) {
+    return { icon: FileImage, bg: "bg-amber-100 dark:bg-amber-950/40", text: "text-amber-600 dark:text-amber-400", badge: "IMG" };
+  }
+  return { icon: File, bg: "bg-slate-100 dark:bg-slate-800/40", text: "text-slate-500 dark:text-slate-400", badge: "FILE" };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function UploadDocumentDialog({
@@ -39,6 +61,7 @@ export function UploadDocumentDialog({
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const titleAutoPopulated = useRef(false);
 
   const { data: employees } = useHrEmployees(undefined);
@@ -51,7 +74,9 @@ export function UploadDocumentDialog({
   );
 
   const filteredDocumentTypes = useMemo(
-    () => documentTypes.filter((type) => type.value && type.value.trim() !== "").map(({ value, label }) => ({ value, label })),
+    () => documentTypes
+      .filter((type) => type.value && type.value.trim() !== "")
+      .map(({ value, label }) => ({ value, label })),
     [documentTypes],
   );
 
@@ -95,18 +120,36 @@ export function UploadDocumentDialog({
     }
   }, [files, form]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    const validFiles: File[] = [];
-    for (const f of selectedFiles) {
+  const addValidFiles = useCallback((incoming: File[]) => {
+    const valid: File[] = [];
+    for (const f of incoming) {
       if (f.size > 10 * 1024 * 1024) {
         toast.error(`"${f.name}" exceeds 10MB limit`);
         continue;
       }
-      validFiles.push(f);
+      valid.push(f);
     }
-    if (validFiles.length > 0) setFiles((prev) => [...prev, ...validFiles]);
+    if (valid.length > 0) setFiles((prev) => [...prev, ...valid]);
   }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    addValidFiles(Array.from(e.target.files ?? []));
+  }, [addValidFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    addValidFiles(Array.from(e.dataTransfer.files));
+  }, [addValidFiles]);
 
   const handleRemoveFileAtIndex = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const index = parseInt(e.currentTarget.dataset.index ?? "-1");
@@ -136,11 +179,7 @@ export function UploadDocumentDialog({
   const handleAddTag = useCallback(() => {
     const trimmed = tagInput.trim().toLowerCase();
     if (!trimmed) return;
-    if (tags.includes(trimmed)) {
-      toast.error("Tag already exists");
-      setTagInput("");
-      return;
-    }
+    if (tags.includes(trimmed)) { toast.error("Tag already exists"); setTagInput(""); return; }
     const newTags = [...tags, trimmed];
     setTags(newTags);
     form.setValue("tags", newTags);
@@ -158,10 +197,7 @@ export function UploadDocumentDialog({
   }, [form]);
 
   const handleTagKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
+    if (e.key === "Enter") { e.preventDefault(); handleAddTag(); }
   }, [handleAddTag]);
 
   const handleNameManualChange = useCallback(() => {
@@ -222,7 +258,7 @@ export function UploadDocumentDialog({
         toast.success(
           files.length === 1
             ? "Document uploaded successfully"
-            : `${successCount} document${successCount > 1 ? "s" : ""} uploaded successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
+            : `${successCount} document${successCount > 1 ? "s" : ""} uploaded${failCount > 0 ? `, ${failCount} failed` : ""}`,
         );
         form.reset();
         setFiles([]);
@@ -238,15 +274,7 @@ export function UploadDocumentDialog({
       setIsLoading(false);
       setUploadProgress("");
     }
-  }, [files, uploadFileFn, form, onSuccess]);
-
-  const getFileIcon = (f: File) => {
-    if (f.type.startsWith("image/")) return <FileText className="h-5 w-5 text-amber-500" />;
-    if (f.type === "application/pdf") return <FileText className="h-5 w-5 text-red-500" />;
-    if (f.type.includes("word")) return <FileText className="h-5 w-5 text-blue-500" />;
-    if (f.type.includes("excel") || f.type.includes("spreadsheet")) return <FileText className="h-5 w-5 text-emerald-500" />;
-    return <FileText className="h-5 w-5 text-slate-400" />;
-  };
+  }, [files, uploadFileFn, form, onSuccess, createDocumentMutation]);
 
   return (
     <HrSheet
@@ -266,13 +294,25 @@ export function UploadDocumentDialog({
     >
       <Form {...form}>
         <div className="space-y-4">
-          <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
-            <Upload className="h-7 w-7 text-muted-foreground mb-1.5" />
-            <span className="text-sm font-medium text-foreground">
-              {files.length > 0 ? "Add more files" : "Click or drag to upload"}
+          <label
+            className={cn(
+              "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors duration-200",
+              isDragOver
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/40 hover:bg-muted/30",
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <span className="text-sm font-semibold text-foreground">
+              {files.length > 0 ? "Add more files" : "Drop files here or click to browse"}
             </span>
-            <span className="text-[11px] text-muted-foreground mt-0.5">
-              PDF, DOC, XLS, PNG, JPG up to 10MB {files.length === 0 && "• Multiple files supported"}
+            <span className="text-[11px] text-muted-foreground mt-1">
+              PDF, DOC, XLS, PNG, JPG — up to 10MB each
             </span>
             <input
               type="file"
@@ -286,54 +326,79 @@ export function UploadDocumentDialog({
           {files.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {files.length} file{files.length > 1 ? "s" : ""} selected
                 </span>
-                <Button type="button" variant="ghost" size="sm" className="h-6 text-[11px] text-muted-foreground" onClick={handleClearAllFiles}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={handleClearAllFiles}
+                >
                   Clear all
                 </Button>
               </div>
-              <div className="max-h-[140px] overflow-y-auto space-y-1.5">
-                {files.map((f, i) => (
-                  <div key={`${f.name}-${i}`} className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border">
-                    {getFileIcon(f)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      data-index={i}
-                      onClick={handleRemoveFileAtIndex}
-                      aria-label="Remove file"
+              <div className="max-h-[150px] overflow-y-auto space-y-1.5 pr-0.5">
+                {files.map((f, i) => {
+                  const config = getFileTypeConfig(f);
+                  const IconComp = config.icon;
+                  return (
+                    <div
+                      key={`${f.name}-${i}`}
+                      className="flex items-center gap-2.5 p-2 rounded-lg border border-border/60 bg-background"
                     >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                      <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0", config.bg)}>
+                        <IconComp className={cn("h-3.5 w-3.5", config.text)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={cn(
+                            "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                            config.bg,
+                            config.text,
+                            "border-current/20",
+                          )}>
+                            {config.badge}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">{formatBytes(f.size)}</span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                        data-index={i}
+                        onClick={handleRemoveFileAtIndex}
+                        aria-label="Remove file"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          <DocumentFormFields
-            filteredDocumentTypes={filteredDocumentTypes}
-            filteredCategories={filteredCategories}
-            filteredEmployees={filteredEmployees}
-            isAdmin={isAdmin}
-            filesCount={files.length}
-            tags={tags}
-            tagInput={tagInput}
-            onTagInputChange={handleTagInputChange}
-            onAddTag={handleAddTag}
-            onRemoveTag={handleRemoveTag}
-            onTagKeyDown={handleTagKeyDown}
-            onNameChange={handleNameManualChange}
-          />
+          <div className="border-t border-border/50 pt-4">
+            <DocumentFormFields
+              filteredDocumentTypes={filteredDocumentTypes}
+              filteredCategories={filteredCategories}
+              filteredEmployees={filteredEmployees}
+              isAdmin={isAdmin}
+              filesCount={files.length}
+              tags={tags}
+              tagInput={tagInput}
+              onTagInputChange={handleTagInputChange}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              onTagKeyDown={handleTagKeyDown}
+              onNameChange={handleNameManualChange}
+            />
+          </div>
         </div>
       </Form>
     </HrSheet>

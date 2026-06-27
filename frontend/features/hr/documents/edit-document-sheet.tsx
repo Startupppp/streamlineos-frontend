@@ -41,7 +41,9 @@ export function EditDocumentSheet({
   );
 
   const filteredDocumentTypes = useMemo(
-    () => documentTypes.filter((type) => type.value && type.value.trim() !== "").map(({ value, label }) => ({ value, label })),
+    () => documentTypes
+      .filter((type) => type.value && type.value.trim() !== "")
+      .map(({ value, label }) => ({ value, label })),
     [documentTypes],
   );
 
@@ -113,10 +115,10 @@ export function EditDocumentSheet({
       {
         id: document.id,
         name: data.name,
-        description: data.description || null,
+        description: data.description ?? null,
         type: data.type,
-        category: data.category || null,
-        userId: data.userId || null,
+        category: data.category ?? null,
+        userId: data.userId ?? null,
         isPublic: data.isPublic,
         tags: data.tags,
         expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : null,
@@ -124,7 +126,7 @@ export function EditDocumentSheet({
       {
         onSuccess: () => { toast.success("Document updated"); onOpenChange(false); },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [document, updateDocument, onOpenChange]);
 

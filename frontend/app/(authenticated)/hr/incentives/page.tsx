@@ -1,29 +1,51 @@
 "use client";
-import { getErrorMessage } from "@/lib/get-error-message";
 
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
-  IndianRupee, CheckCircle2, XCircle, Clock, Settings,
-  TrendingUp, Users, Percent, History,
+  IndianRupee,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Settings,
+  TrendingUp,
+  Users,
+  Percent,
+  History,
+  Banknote,
 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -39,18 +61,40 @@ import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-amber-500/10 text-amber-400",
-  APPROVED: "bg-emerald-500/10 text-emerald-400",
-  REJECTED: "bg-red-500/10 text-red-400",
-  ADDED_TO_PAYROLL: "bg-blue-500/10 text-blue-400",
-};
+function getStatusConfig(status: string) {
+  if (status === "APPROVED") {
+    return {
+      badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+      icon: <CheckCircle2 className="h-2.5 w-2.5" />,
+    };
+  }
+  if (status === "REJECTED") {
+    return {
+      badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+      icon: <XCircle className="h-2.5 w-2.5" />,
+    };
+  }
+  if (status === "ADDED_TO_PAYROLL") {
+    return {
+      badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+      icon: <Banknote className="h-2.5 w-2.5" />,
+    };
+  }
+  return {
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    icon: <Clock className="h-2.5 w-2.5" />,
+  };
+}
 
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
   const num = typeof val === "string" ? parseFloat(val) : val;
   if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(num);
 }
 
 export default function IncentivesPage() {
@@ -87,7 +131,10 @@ export default function IncentivesPage() {
 
   const { data: stats } = useHrIncentiveStats();
   const { data, isLoading } = useHrIncentives({
-    status: statusFilter !== "all" ? statusFilter as "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL" : undefined,
+    status:
+      statusFilter !== "all"
+        ? (statusFilter as "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL")
+        : undefined,
     page,
     limit: 25,
   });
@@ -100,33 +147,33 @@ export default function IncentivesPage() {
   const incentivesList = data?.incentives ?? [];
   const currentConfig = configs?.[0];
 
-  function handleStatusFilterChange(v: string) {
+  const handleStatusFilterChange = useCallback((v: string) => {
     updateParams({ status: v === "all" ? null : v, page: null });
-  }
+  }, [updateParams]);
 
-  function handleApproveOpen(id: number, calculated: string) {
+  const handleApproveOpen = useCallback((id: number, calculated: string) => {
     setApproveModal({ id, calculated });
     setApproveAmount(calculated);
     setApproveNotes("");
-  }
+  }, []);
 
-  function handleApproveClose() {
+  const handleApproveClose = useCallback(() => {
     setApproveModal(null);
-  }
+  }, []);
 
-  function handleApproveDialogOpenChange(open: boolean) {
+  const handleApproveDialogOpenChange = useCallback((open: boolean) => {
     if (!open) handleApproveClose();
-  }
+  }, [handleApproveClose]);
 
-  function handleApproveAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleApproveAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setApproveAmount(e.target.value);
-  }
+  }, []);
 
-  function handleApproveNotesChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleApproveNotesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setApproveNotes(e.target.value);
-  }
+  }, []);
 
-  function handleApproveConfirm() {
+  const handleApproveConfirm = useCallback(() => {
     if (!approveModal) return;
     approveMutation.mutate(
       { id: approveModal.id, approvedAmount: approveAmount, notes: approveNotes || undefined },
@@ -137,11 +184,11 @@ export default function IncentivesPage() {
           setApproveModal(null);
         },
         onError: (err) => toast.error(getErrorMessage(err)),
-      }
+      },
     );
-  }
+  }, [approveModal, approveAmount, approveNotes, approveMutation, qc]);
 
-  function handleReject(id: number) {
+  const handleReject = useCallback((id: number) => {
     rejectMutation.mutate(
       { id },
       {
@@ -150,30 +197,22 @@ export default function IncentivesPage() {
           toast.success("Incentive rejected");
         },
         onError: (err) => toast.error(getErrorMessage(err)),
-      }
+      },
     );
-  }
+  }, [rejectMutation, qc]);
 
-  function handleRateInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleRateInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    if (raw === "") {
-      setNewRate("");
-      return;
-    }
+    if (raw === "") { setNewRate(""); return; }
     const dotIndex = raw.indexOf(".");
     if (dotIndex !== -1) {
       const decimals = raw.slice(dotIndex + 1);
-      if (decimals.length > 4) {
-        setNewRate(raw.slice(0, dotIndex + 5));
-        return;
-      }
+      if (decimals.length > 4) { setNewRate(raw.slice(0, dotIndex + 5)); return; }
     }
-    if (/^\d{0,5}(\.\d{0,4})?$/.test(raw)) {
-      setNewRate(raw);
-    }
-  }
+    if (/^\d{0,5}(\.\d{0,4})?$/.test(raw)) setNewRate(raw);
+  }, []);
 
-  function handleSetRate() {
+  const handleSetRate = useCallback(() => {
     const parsed = parseFloat(newRate);
     if (!newRate || isNaN(parsed) || parsed < 0 || parsed > 100) {
       toast.error("Incentive rate must be between 0 and 100");
@@ -192,33 +231,22 @@ export default function IncentivesPage() {
           setNewRate("");
         },
         onError: (err) => toast.error(getErrorMessage(err)),
-      }
+      },
     );
-  }
+  }, [newRate, setConfigMutation]);
 
-  function handleOpenConfigDialog() {
-    setShowConfigDialog(true);
-  }
+  const handleOpenConfigDialog = useCallback(() => setShowConfigDialog(true), []);
+  const handleCloseConfigDialog = useCallback(() => setShowConfigDialog(false), []);
+  const handleOpenHistory = useCallback(() => setShowHistoryDialog(true), []);
+  const handleCloseHistory = useCallback(() => setShowHistoryDialog(false), []);
 
-  function handleCloseConfigDialog() {
-    setShowConfigDialog(false);
-  }
-
-  function handleOpenHistory() {
-    setShowHistoryDialog(true);
-  }
-
-  function handleCloseHistory() {
-    setShowHistoryDialog(false);
-  }
-
-  function handlePrevPage() {
+  const handlePrevPage = useCallback(() => {
     updateParams({ page: page <= 2 ? null : String(page - 1) });
-  }
+  }, [page, updateParams]);
 
-  function handleNextPage() {
+  const handleNextPage = useCallback(() => {
     updateParams({ page: String(page + 1) });
-  }
+  }, [page, updateParams]);
 
   return (
     <PageWrapper
@@ -226,17 +254,21 @@ export default function IncentivesPage() {
       subtitle="Manage sales incentives, approvals, and rate configuration"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleOpenHistory}>
-            <History className="h-4 w-4 mr-1" /> Rate History
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenHistory}>
+            <History className="h-3.5 w-3.5" />
+            Rate History
           </Button>
-          <Button variant="outline" size="sm" onClick={handleOpenConfigDialog}>
-            <Settings className="h-4 w-4 mr-1" /> Configure Rate
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleOpenConfigDialog}>
+            <Settings className="h-3.5 w-3.5" />
+            Configure Rate
           </Button>
         </div>
       }
       filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all" className="text-xs">All Status</SelectItem>
             <SelectItem value="PENDING" className="text-xs">Pending</SelectItem>
@@ -247,8 +279,7 @@ export default function IncentivesPage() {
         </Select>
       }
     >
-      <div className="space-y-6">
-
+      <div className="space-y-5">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
           <StatCard label="This Month" value={formatINR(stats?.thisMonth)} icon={IndianRupee} color="green" index={0} />
           <StatCard label="Total Revenue" value={formatINR(stats?.totalRevenue)} icon={TrendingUp} color="blue" index={1} />
@@ -258,101 +289,162 @@ export default function IncentivesPage() {
         </div>
 
         {currentConfig && (
-          <Card className="bg-blue-500/5 border-blue-500/20">
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-500">
             <CardContent className="p-4 flex items-center gap-3">
-              <Percent className="h-5 w-5 text-blue-600" />
+              <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                <Percent className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
-                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-blue-600 font-bold">{currentConfig.incentiveRate}%</span></p>
-                <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Current Incentive Rate:{" "}
+                  <span className="text-blue-600 dark:text-blue-400">{currentConfig.incentiveRate}%</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Effective from{" "}
+                  {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}
+                </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Card>
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-max">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Sales Rep</TableHead>
-                  <TableHead className="text-xs">Client</TableHead>
-                  <TableHead className="text-xs">Investment</TableHead>
-                  <TableHead className="text-xs">Rate</TableHead>
-                  <TableHead className="text-xs">Calculated</TableHead>
-                  <TableHead className="text-xs">Approved</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={8} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
-                  ))
-                ) : incentivesList.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                      No incentives found
-                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Sales Rep</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Client</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Investment</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Rate</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Target vs Payout</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Status</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  incentivesList.map((inc) => (
-                    <TableRow key={inc.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={inc.salesRep?.image || ""} />
-                            <AvatarFallback className="text-[9px]">{inc.salesRep?.name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{inc.salesRep?.name || "—"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{inc.clientAccount?.clientName || "—"}</TableCell>
-                      <TableCell className="text-xs font-mono">{formatINR(inc.investmentAmount)}</TableCell>
-                      <TableCell className="text-xs">{inc.incentiveRate}%</TableCell>
-                      <TableCell className="text-xs font-mono font-medium">{formatINR(inc.calculatedAmount)}</TableCell>
-                      <TableCell className="text-xs font-mono text-emerald-400">{inc.approvedAmount ? formatINR(inc.approvedAmount) : "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("text-[10px] border-0", STATUS_COLORS[inc.status])}>
-                          {inc.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {inc.status === "PENDING" && (
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-xs text-emerald-400 hover:text-emerald-300"
-                              onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-xs text-red-400 hover:text-red-300"
-                              onClick={() => handleReject(inc.id)}
-                            >
-                              <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
-                            </Button>
-                          </div>
-                        )}
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell colSpan={7} className="h-12">
+                          <Skeleton className="h-4 w-full" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : incentivesList.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="py-0">
+                        <EmptyState
+                          compact
+                          illustration={<IndianRupee className="h-8 w-8 text-muted-foreground" />}
+                          title="No incentives found"
+                        />
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    incentivesList.map((inc) => {
+                      const statusCfg = getStatusConfig(inc.status);
+                      const calculated = parseFloat(inc.calculatedAmount ?? "0");
+                      const approved = inc.approvedAmount ? parseFloat(inc.approvedAmount) : null;
+                      const payoutPct =
+                        calculated > 0 && approved !== null
+                          ? Math.min(Math.round((approved / calculated) * 100), 100)
+                          : null;
+
+                      return (
+                        <TableRow key={inc.id} className="hover:bg-muted/20 transition-colors duration-200">
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={inc.salesRep?.image || ""} />
+                                <AvatarFallback className="text-[9px]">
+                                  {inc.salesRep?.name?.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs font-medium">{inc.salesRep?.name || "—"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs">{inc.clientAccount?.clientName || "—"}</TableCell>
+                          <TableCell className="text-xs font-mono tabular-nums">
+                            {formatINR(inc.investmentAmount)}
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+                              {inc.incentiveRate}%
+                            </span>
+                          </TableCell>
+                          <TableCell className="min-w-[160px]">
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[10px]">
+                                <span className="text-muted-foreground">
+                                  Target: <span className="font-medium text-foreground">{formatINR(inc.calculatedAmount)}</span>
+                                </span>
+                                {approved !== null && (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                    {formatINR(inc.approvedAmount)}
+                                  </span>
+                                )}
+                              </div>
+                              {payoutPct !== null && (
+                                <Progress value={payoutPct} className="h-1.5 bg-muted" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+                              {statusCfg.icon}
+                              {inc.status}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {inc.status === "PENDING" && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs"
+                                  onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 gap-1 text-xs"
+                                  onClick={() => handleReject(inc.id)}
+                                >
+                                  <XCircle className="h-3 w-3" />
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </ScrollArea>
           {(data?.totalPages ?? 0) > 1 && (
-            <div className="flex items-center justify-between p-4 border-t">
-              <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
+            <div className="flex items-center justify-between p-4 border-t border-border">
+              <span className="text-xs text-muted-foreground">
+                Page {data?.page} of {data?.totalPages}
+              </span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={handleNextPage}>Next</Button>
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= (data?.totalPages ?? 1)}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </Button>
               </div>
             </div>
           )}
@@ -380,10 +472,7 @@ export default function IncentivesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleApproveClose}>Cancel</Button>
-            <Button
-              onClick={handleApproveConfirm}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
+            <Button onClick={handleApproveConfirm} disabled={approveMutation.isPending}>
               Approve
             </Button>
           </DialogFooter>
@@ -417,10 +506,7 @@ export default function IncentivesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseConfigDialog}>Cancel</Button>
-            <Button
-              disabled={!newRate || setConfigMutation.isPending}
-              onClick={handleSetRate}
-            >
+            <Button disabled={!newRate || setConfigMutation.isPending} onClick={handleSetRate}>
               Set Rate
             </Button>
           </DialogFooter>
@@ -441,11 +527,11 @@ export default function IncentivesPage() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Rate</TableHead>
-                    <TableHead className="text-xs">Effective From</TableHead>
-                    <TableHead className="text-xs">Set By</TableHead>
-                    <TableHead className="text-xs">Set On</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Rate</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Effective From</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Set By</TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-xs">Set On</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -457,16 +543,28 @@ export default function IncentivesPage() {
                             {cfg.incentiveRate}%
                           </span>
                           {idx === 0 && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 bg-blue-500/10 text-blue-600 border-blue-500/20">Current</Badge>
+                            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                              Current
+                            </span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {new Date(cfg.effectiveFrom).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {new Date(cfg.effectiveFrom).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </TableCell>
                       <TableCell className="text-xs">{cfg.createdByName ?? "—"}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {cfg.createdAt ? new Date(cfg.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                        {cfg.createdAt
+                          ? new Date(cfg.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "—"}
                       </TableCell>
                     </TableRow>
                   ))}

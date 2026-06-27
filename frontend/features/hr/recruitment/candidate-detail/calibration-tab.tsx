@@ -8,9 +8,7 @@ import {
 } from "@/lib/api/hooks/hr/recruitment";
 import { useCalendarOrgMembers } from "@/lib/api/hooks/calendar";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,8 +18,9 @@ import {
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, Users, Calendar, FileText, CheckCircle } from "lucide-react";
+import { Plus, Users, Calendar, CheckCircle, Pencil, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -30,24 +29,38 @@ interface CalibrationTabProps {
 }
 
 const DECISIONS = [
-  { value: "STRONG_HIRE", label: "Strong Hire", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
-  { value: "HIRE", label: "Hire", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
-  { value: "HOLD", label: "Hold", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
-  { value: "NO_HIRE", label: "No Hire", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
+  { value: "STRONG_HIRE", label: "Strong Hire", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800" },
+  { value: "HIRE", label: "Hire", badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800" },
+  { value: "HOLD", label: "Hold", badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800" },
+  { value: "NO_HIRE", label: "No Hire", badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800" },
 ] as const;
 
-function decisionBadge(d: string | null) {
-  if (!d) return null;
-  const found = DECISIONS.find((x) => x.value === d);
-  if (!found) return <Badge variant="outline">{d}</Badge>;
-  return <Badge className={cn("border-0", found.color)}>{found.label}</Badge>;
+const STATUS_CONFIG = {
+  completed: { label: "Completed", accentClass: "border-l-emerald-500", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800" },
+  scheduled: { label: "Scheduled", accentClass: "border-l-blue-500", badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800" },
+  cancelled: { label: "Cancelled", accentClass: "border-l-rose-500", badgeClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800" },
+  pending: { label: "Pending", accentClass: "border-l-amber-500", badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800" },
+} as const;
+
+type SessionStatus = keyof typeof STATUS_CONFIG;
+
+function getStatusConfig(s: string) {
+  return STATUS_CONFIG[s as SessionStatus] ?? STATUS_CONFIG.pending;
 }
 
-function statusColor(s: string): "default" | "secondary" | "outline" | "destructive" {
-  if (s === "completed") return "default";
-  if (s === "scheduled") return "secondary";
-  if (s === "cancelled") return "destructive";
-  return "outline";
+function DecisionBadge({ decision }: { decision: string | null }) {
+  if (!decision) return null;
+  const found = DECISIONS.find((x) => x.value === decision);
+  if (!found) return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+      {decision}
+    </span>
+  );
+  return (
+    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", found.badgeClass)}>
+      {found.label}
+    </span>
+  );
 }
 
 export function CalibrationTab({ candidateId }: CalibrationTabProps) {
@@ -121,126 +134,168 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
     []
   );
 
+  const handleOpenNew = useCallback(() => {
+    resetForm();
+    setSheetOpen(true);
+  }, [resetForm]);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    setSheetOpen(open);
+    if (!open) resetForm();
+  }, [resetForm]);
+
+  const handleMarkComplete = useCallback((sessionId: number) => {
+    updateCalibration.mutate(
+      { id: sessionId, status: "completed" },
+      { onSuccess: () => toast.success("Marked as completed") }
+    );
+  }, [updateCalibration]);
+
+  const handleCancelSheet = useCallback(() => {
+    setSheetOpen(false);
+    resetForm();
+  }, [resetForm]);
+
+  const handleScheduledAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setScheduledAt(e.target.value);
+  }, []);
+
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotes(e.target.value);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-8 w-full rounded-lg" />
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <Skeleton className="h-28 w-full rounded-2xl" />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Calibration sessions are held after scorecards are submitted to align on a hiring decision.
+      <div className="flex items-start justify-between gap-4">
+        <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
+          Calibration sessions align the hiring team on a final decision after scorecards are submitted.
         </p>
-        <Button
-          size="sm"
-          onClick={() => {
-            resetForm();
-            setSheetOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+        <Button size="sm" onClick={handleOpenNew} className="h-8 gap-1.5 shrink-0">
+          <Plus className="h-3.5 w-3.5" />
           New Session
         </Button>
       </div>
 
       {!sessions?.length ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            <Users className="mx-auto h-8 w-8 mb-2 opacity-50" />
-            <p>No calibration sessions yet.</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<Users className="h-8 w-8 text-muted-foreground" />}
+          title="No calibration sessions yet"
+          description="Schedule a calibration session to align your hiring team on a decision."
+          action={{ label: "New Session", onClick: handleOpenNew }}
+          compact
+        />
       ) : (
-        sessions.map((session) => (
-          <Card key={session.id} className="hover:border-primary/30 transition-colors">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  Calibration #{session.id}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  {decisionBadge(session.decision)}
-                  <Badge variant={statusColor(session.status)}>{session.status}</Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {session.scheduledAt && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3" />
-                  {format(new Date(session.scheduledAt), "PPp")}
-                </p>
-              )}
-              {session.participantIds.length > 0 && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Users className="h-3 w-3" />
-                  {session.participantIds.length} participant{session.participantIds.length !== 1 ? "s" : ""}
-                </p>
-              )}
-              {session.notes && (
-                <div className="text-sm bg-muted/40 rounded-md p-3 mt-2 whitespace-pre-wrap">
-                  {session.notes}
-                </div>
-              )}
-              <div className="flex gap-2 pt-1">
-                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => openEdit(session)}>
-                  Edit
-                </Button>
-                {session.status !== "completed" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs h-7 text-emerald-600"
-                    onClick={() =>
-                      updateCalibration.mutate(
-                        { id: session.id, status: "completed" },
-                        { onSuccess: () => toast.success("Marked as completed") }
-                      )
-                    }
-                  >
-                    <CheckCircle className="mr-1 h-3 w-3" />
-                    Complete
-                  </Button>
+        <div className="space-y-3">
+          {sessions.map((session) => {
+            const cfg = getStatusConfig(session.status);
+            return (
+              <div
+                key={session.id}
+                className={cn(
+                  "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+                  cfg.accentClass
                 )}
+              >
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
+                        <TrendingUp className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          Calibration #{session.id}
+                        </p>
+                        {session.scheduledAt && (
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(session.scheduledAt), "PPp")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {session.decision && <DecisionBadge decision={session.decision} />}
+                      <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {session.participantIds.length > 0 && (
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-2">
+                      <Users className="h-3 w-3" />
+                      {session.participantIds.length} participant{session.participantIds.length !== 1 ? "s" : ""}
+                    </p>
+                  )}
+
+                  {session.notes && (
+                    <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                      {session.notes}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 text-xs"
+                      onClick={() => openEdit(session)}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
+                    {session.status !== "completed" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                        onClick={() => handleMarkComplete(session.id)}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        Mark Complete
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))
+            );
+          })}
+        </div>
       )}
 
-      <Sheet
-        open={sheetOpen}
-        onOpenChange={(open) => {
-          setSheetOpen(open);
-          if (!open) resetForm();
-        }}
-      >
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="flex flex-col p-0 gap-0">
           <SheetHeader className="px-4 pt-4 pb-3 border-b">
-            <SheetTitle className="text-base">
+            <SheetTitle className="text-base font-semibold">
               {editingId ? "Edit Calibration Session" : "New Calibration Session"}
             </SheetTitle>
           </SheetHeader>
+
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Scheduled Date & Time</label>
+              <label className="text-xs font-semibold text-foreground/80">Scheduled Date &amp; Time</label>
               <Input
                 type="datetime-local"
                 value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
+                onChange={handleScheduledAtChange}
               />
             </div>
 
             {editingId && (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Status</label>
+                  <label className="text-xs font-semibold text-foreground/80">Status</label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -253,7 +308,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Decision</label>
+                  <label className="text-xs font-semibold text-foreground/80">Decision</label>
                   <Select value={decision} onValueChange={setDecision}>
                     <SelectTrigger><SelectValue placeholder="No decision yet" /></SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -267,32 +322,26 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Notes</label>
+              <label className="text-xs font-semibold text-foreground/80">Notes</label>
               <Textarea
                 placeholder="Discussion points, consensus, action items..."
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={handleNotesChange}
                 rows={6}
               />
             </div>
           </div>
+
           <SheetFooter className="px-4 py-3 border-t flex-row gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => {
-                setSheetOpen(false);
-                resetForm();
-              }}
-            >
+            <Button variant="outline" className="flex-1 h-9" onClick={handleCancelSheet}>
               Cancel
             </Button>
             <Button
-              className="flex-1"
+              className="flex-1 h-9"
               onClick={editingId ? handleUpdate : handleCreate}
               disabled={createCalibration.isPending || updateCalibration.isPending}
             >
-              {editingId ? "Save" : "Create"}
+              {editingId ? "Save Changes" : "Create Session"}
             </Button>
           </SheetFooter>
         </SheetContent>

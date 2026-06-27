@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { useReceiveGoods, useWarehouses } from "@/lib/api/hooks/inventory";
+import { useReceiveGoods, useLocations } from "@/lib/api/hooks/inventory";
 import type { PurchaseOrder, PurchaseOrderLine } from "@/types/inventory";
 
 type QualityStatus = "ACCEPTED" | "REJECTED";
@@ -55,7 +55,8 @@ function todayIso(): string {
 
 export function ReceiveGoodsDialog({ po, open, onOpenChange }: ReceiveGoodsDialogProps) {
   const mutation = useReceiveGoods(po.id);
-  const { data: warehouses = [] } = useWarehouses();
+  const { data: locationsRaw = [] } = useLocations(po.warehouseId ?? 0);
+  const locations = locationsRaw as { id: number; name: string; code: string }[];
 
   const [lineStates, setLineStates] = useState<LineState[]>(() =>
     buildInitialLineState(po.lines)
@@ -130,10 +131,6 @@ export function ReceiveGoodsDialog({ po, open, onOpenChange }: ReceiveGoodsDialo
     },
     [po.lines, onOpenChange]
   );
-
-  const selectedWarehouse = warehouses.find((w) => w.id === po.warehouseId);
-
-  const locations = selectedWarehouse?.locations ?? [];
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>

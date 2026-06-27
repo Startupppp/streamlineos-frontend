@@ -1,8 +1,7 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -19,45 +18,81 @@ import {
   FileText,
   Download,
   StickyNote,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { AtsPipelineCandidate } from "@/types/hr";
-import { getInitials, formatDate, SLA_CONFIG } from "./types";
+import type { AtsPipelineCandidate, CandidateStatus } from "@/types/hr";
+import { getInitials, formatDate, SLA_CONFIG, COLUMNS } from "./types";
+import { SlaBadge } from "./sla-badge";
 
 interface CandidateSheetProps {
   candidate: AtsPipelineCandidate | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentStage?: CandidateStatus;
 }
+
+type ActiveTab = "overview" | "resume";
 
 export const CandidateSheet = memo(function CandidateSheet({
   candidate,
   open,
   onOpenChange,
+  currentStage,
 }: CandidateSheetProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
+
   if (!candidate) return null;
+
+  const stageConfig = currentStage ? COLUMNS.find((col) => col.id === currentStage) : undefined;
+
+  function handleTabOverview() {
+    setActiveTab("overview");
+  }
+
+  function handleTabResume() {
+    setActiveTab("resume");
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 gap-0 w-full sm:max-w-[900px]">
-        {/* Header */}
-        <SheetHeader className="shrink-0 px-5 pt-4 pb-3 border-b">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 shrink-0">
-              <AvatarFallback className="text-sm bg-primary/10 text-primary font-semibold">
+      <SheetContent className="flex flex-col p-0 gap-0 w-full sm:max-w-[520px]">
+        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border/60">
+          <div className="flex items-start gap-3">
+            <Avatar className="h-12 w-12 shrink-0 rounded-xl">
+              <AvatarFallback className="text-sm font-bold bg-primary/10 text-primary rounded-xl">
                 {getInitials(candidate.name)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <SheetTitle className="text-base leading-tight">{candidate.name}</SheetTitle>
+              <SheetTitle className="text-base font-semibold leading-tight">{candidate.name}</SheetTitle>
               {candidate.jobTitle && (
-                <p className="text-sm text-muted-foreground truncate">{candidate.jobTitle}</p>
+                <p className="text-sm text-muted-foreground truncate mt-0.5">{candidate.jobTitle}</p>
               )}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {stageConfig && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                      stageConfig.badge
+                    )}
+                  >
+                    <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", stageConfig.dot)} />
+                    {stageConfig.label}
+                  </span>
+                )}
+                {candidate.source && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                    {candidate.source}
+                  </span>
+                )}
+                {candidate.slaStatus && <SlaBadge status={candidate.slaStatus} />}
+              </div>
             </div>
             <Link
               href={`/hr/recruitment/candidates/${candidate.id}`}
-              className="shrink-0 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors duration-200 mt-0.5"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Full Profile
@@ -65,12 +100,159 @@ export const CandidateSheet = memo(function CandidateSheet({
           </div>
         </SheetHeader>
 
-        {/* Split body */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* Left — Resume PDF viewer */}
-          <div className="flex-1 border-r bg-muted/20 flex flex-col min-w-0">
-            <div className="flex items-center justify-between px-4 py-2 border-b bg-background shrink-0">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+        <div className="shrink-0 px-5 pt-3 pb-3 border-b border-border/60">
+          <div className="rounded-lg border border-border p-1 inline-flex gap-1">
+            <button
+              type="button"
+              onClick={handleTabOverview}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200",
+                activeTab === "overview"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={handleTabResume}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-200",
+                activeTab === "resume"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              Resume
+            </button>
+          </div>
+        </div>
+
+        {activeTab === "overview" && (
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-3">
+            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400">
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <User className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Contact</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <MailIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate">{candidate.email}</span>
+                  </div>
+                  {candidate.phone && (
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm">{candidate.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-violet-400">
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-7 w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
+                    <Briefcase className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Application</span>
+                </div>
+                <div className="space-y-2">
+                  {candidate.jobTitle && (
+                    <div className="flex items-center gap-2.5">
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm">{candidate.jobTitle}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2.5">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-muted-foreground">Applied {formatDate(candidate.appliedAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {candidate.rating !== null && candidate.rating !== undefined && (
+              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-amber-400">
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-7 w-7 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center shrink-0">
+                      <Star className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">Rating</span>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-4 w-4",
+                          i < (candidate.rating ?? 0)
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-muted-foreground/30"
+                        )}
+                      />
+                    ))}
+                    <span className="text-sm font-bold tabular-nums ml-2 text-amber-600 dark:text-amber-400">
+                      {candidate.rating}/5
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {candidate.slaStatus && (
+              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-slate-400">
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    SLA Compliance
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "h-2.5 w-2.5 rounded-full shrink-0",
+                        SLA_CONFIG[candidate.slaStatus].dot
+                      )}
+                    />
+                    <span className={cn("text-sm font-semibold", SLA_CONFIG[candidate.slaStatus].label)}>
+                      {candidate.slaStatus === "ON_TRACK"
+                        ? "On Track"
+                        : candidate.slaStatus === "AT_RISK"
+                        ? "At Risk"
+                        : "Breached"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {candidate.notes && (
+              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-slate-300">
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
+                      <StickyNote className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">Notes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                    {candidate.notes}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "resume" && (
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/60 bg-muted/20 shrink-0">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5" />
                 Resume
               </p>
@@ -79,7 +261,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   href={candidate.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors duration-200"
                 >
                   <Download className="h-3 w-3" />
                   Download
@@ -90,13 +272,15 @@ export const CandidateSheet = memo(function CandidateSheet({
               <iframe
                 src={candidate.resumeUrl}
                 title="Candidate Resume"
-                className="flex-1 w-full h-full border-0"
+                className="flex-1 w-full border-0"
               />
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
-                <FileText className="h-12 w-12 text-muted-foreground/30" />
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-muted-foreground/50" />
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">No resume uploaded</p>
+                  <p className="text-sm font-semibold text-muted-foreground">No resume uploaded</p>
                   <p className="text-xs text-muted-foreground/60 mt-0.5">
                     The candidate hasn&apos;t uploaded a resume yet.
                   </p>
@@ -104,112 +288,7 @@ export const CandidateSheet = memo(function CandidateSheet({
               </div>
             )}
           </div>
-
-          {/* Right — Actions & info panel */}
-          <div className="w-[280px] shrink-0 overflow-y-auto p-4 space-y-4">
-            {/* Contact */}
-            <div className="rounded-lg border p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Contact
-              </p>
-              <div className="flex items-center gap-2 text-sm">
-                <MailIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{candidate.email}</span>
-              </div>
-              {candidate.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span>{candidate.phone}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Application */}
-            <div className="rounded-lg border p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Application
-              </p>
-              {candidate.jobTitle && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span>{candidate.jobTitle}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span>Applied {formatDate(candidate.appliedAt)}</span>
-              </div>
-              {candidate.source && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Source:</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {candidate.source}
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Rating */}
-            {candidate.rating !== null && (
-              <div className="rounded-lg border p-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Rating
-                </p>
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "h-4 w-4",
-                        i < (candidate.rating ?? 0)
-                          ? "text-amber-500 fill-amber-500"
-                          : "text-muted-foreground/30"
-                      )}
-                    />
-                  ))}
-                  <span className="text-sm font-medium ml-1">{candidate.rating}/5</span>
-                </div>
-              </div>
-            )}
-
-            {/* SLA status */}
-            {candidate.slaStatus && (
-              <div className="rounded-lg border p-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  SLA Compliance
-                </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "h-2.5 w-2.5 rounded-full shrink-0",
-                      SLA_CONFIG[candidate.slaStatus].dot
-                    )}
-                  />
-                  <span className={cn("text-sm font-medium", SLA_CONFIG[candidate.slaStatus].label)}>
-                    {candidate.slaStatus === "ON_TRACK"
-                      ? "On Track"
-                      : candidate.slaStatus === "AT_RISK"
-                      ? "At Risk"
-                      : "Breached"}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Notes */}
-            {candidate.notes && (
-              <div className="rounded-lg border p-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <StickyNote className="h-3.5 w-3.5" />
-                  Notes
-                </p>
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                  {candidate.notes}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </SheetContent>
     </Sheet>
   );

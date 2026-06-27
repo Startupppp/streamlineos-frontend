@@ -24,56 +24,147 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { DS } from "@/lib/design-system";
-import {
-  useInventoryDashboard,
-  useReorderReport,
-  type InventoryDashboardMovement,
-  type MovementType,
-  type ReorderReportRow,
-  type ReorderUrgency,
-} from "@/lib/api/hooks/inventory/reports";
+import { useInventoryDashboard, useStockSummary, useReorderReport } from "@/lib/api/hooks/inventory/reports";
+import { useProducts } from "@/lib/api/hooks/inventory/products";
+import { useStockTransactions } from "@/lib/api/hooks/inventory/stock";
 
-const MOVEMENT_TYPE_CONFIG: Record<MovementType, { label: string; className: string }> = {
-  PURCHASE: {
-    label: "Purchase",
+interface DashboardData {
+  salesOrders: {
+    byStatus: Record<string, { count: number; value: string }>;
+    totalOpen: number;
+    totalShipped: number;
+  };
+  inventory: {
+    totalStockValue: string;
+    lowStockItemCount: number;
+    pendingPurchaseOrders: number;
+  };
+}
+
+interface StockSummaryRow {
+  productId: number;
+  onHandQty: number;
+}
+
+function extractItems<T>(raw: T[] | { items?: T[] } | null | undefined): T[] {
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : (raw.items ?? []);
+}
+
+interface ReorderReportRow {
+  productId: number;
+  productName: string;
+  sku: string;
+  availableQty: number;
+  reorderPoint: number;
+}
+
+interface ReorderItem {
+  productId: number;
+  productName: string;
+  sku: string;
+  variantSku: string;
+  onHand: number;
+  reorderPoint: number;
+  deficit: number;
+  urgency: "critical" | "high" | "medium";
+}
+
+function mapReorderRow(row: ReorderReportRow): ReorderItem {
+  const deficit = Math.max(0, row.reorderPoint - row.availableQty);
+  const urgency: ReorderItem["urgency"] =
+    row.availableQty <= 0
+      ? "critical"
+      : row.reorderPoint > 0 && row.availableQty / row.reorderPoint <= 0.25
+        ? "high"
+        : "medium";
+
+  return {
+    productId: row.productId,
+    productName: row.productName,
+    sku: row.sku,
+    variantSku: row.sku,
+    onHand: row.availableQty,
+    reorderPoint: row.reorderPoint,
+    deficit,
+    urgency,
+  };
+}
+
+interface TransactionVariant {
+  id: number;
+  name: string;
+  sku: string;
+  product?: { id: number; name: string };
+}
+
+interface TransactionLocation {
+  id: number;
+  name: string;
+  code: string;
+}
+
+interface TransactionCreator {
+  id: string;
+  name: string;
+}
+
+interface StockTransaction {
+  id: number;
+  transactionType: string;
+  quantityChange: number | string;
+  createdAt: string;
+  notes: string | null;
+  productVariant: TransactionVariant;
+  location: TransactionLocation;
+  creator: TransactionCreator | null;
+}
+
+interface TransactionsData {
+  items: StockTransaction[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+const MOVEMENT_TYPE_CONFIG: Record<
+  string,
+  { label: string; className: string; sign: "+" | "-" }
+> = {
+  PURCHASE_IN: {
+    label: "Purchase In",
     className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    sign: "+",
   },
-  SALE: {
-    label: "Sale",
+  SALE_OUT: {
+    label: "Sale Out",
     className: "bg-red-100 text-red-700 border-red-200",
-  },
-  GRN: {
-    label: "Goods Receipt",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    sign: "-",
   },
   ADJUSTMENT_IN: {
     label: "Adj In",
     className: "bg-blue-100 text-blue-700 border-blue-200",
+    sign: "+",
   },
   ADJUSTMENT_OUT: {
     label: "Adj Out",
     className: "bg-amber-100 text-amber-700 border-amber-200",
+    sign: "-",
   },
   TRANSFER_IN: {
     label: "Transfer In",
     className: "bg-cyan-100 text-cyan-700 border-cyan-200",
+    sign: "+",
   },
   TRANSFER_OUT: {
     label: "Transfer Out",
     className: "bg-violet-100 text-violet-700 border-violet-200",
-  },
-  RETURN_IN: {
-    label: "Return In",
-    className: "bg-teal-100 text-teal-700 border-teal-200",
-  },
-  RETURN_OUT: {
-    label: "Return Out",
-    className: "bg-orange-100 text-orange-700 border-orange-200",
+    sign: "-",
   },
 };
 
 const URGENCY_CONFIG: Record<
-  ReorderUrgency,
+  ReorderItem["urgency"],
   { label: string; className: string; dotClass: string }
 > = {
   critical: {
@@ -159,13 +250,11 @@ function LowStockSkeleton() {
   );
 }
 
-function RecentMovementsTable({
-  movements,
-  isLoading,
-}: {
-  movements: InventoryDashboardMovement[];
-  isLoading: boolean;
-}) {
+function RecentMovementsTable() {
+  const { data: rawData, isLoading } = useStockTransactions({ limit: 10 });
+  const transactionsData = rawData as TransactionsData | undefined;
+  const movements = transactionsData?.items ?? [];
+
   if (isLoading) return <MovementsTableSkeleton />;
 
   if (movements.length === 0) {
@@ -195,9 +284,11 @@ function RecentMovementsTable({
           const config = MOVEMENT_TYPE_CONFIG[row.transactionType] ?? {
             label: row.transactionType,
             className: "bg-secondary text-secondary-foreground border-border",
+            sign: "+" as const,
           };
-          const absQty = Math.abs(row.quantityChange);
-          const isPositive = row.quantityChange >= 0;
+          const qtyChange = Number(row.quantityChange);
+          const absQty = Math.abs(qtyChange);
+          const isPositive = qtyChange >= 0;
 
           return (
             <TableRow key={row.id}>
@@ -207,9 +298,9 @@ function RecentMovementsTable({
               <TableCell className="min-w-0">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-foreground truncate max-w-[160px]">
-                    {row.productName}
+                    {row.productVariant.product?.name ?? row.productVariant.name}
                   </p>
-                  <p className="text-[11px] text-muted-foreground truncate">{row.sku}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{row.productVariant.sku}</p>
                 </div>
               </TableCell>
               <TableCell>
@@ -225,20 +316,19 @@ function RecentMovementsTable({
                     isPositive ? "text-emerald-600" : "text-red-600"
                   }`}
                 >
-                  {isPositive ? "+" : "-"}
+                  {isPositive ? "+" : ""}
+                  {qtyChange < 0 ? "-" : ""}
                   {absQty}
                 </span>
               </TableCell>
               <TableCell>
                 <div className="min-w-0">
-                  <p className="text-xs text-foreground truncate max-w-[120px]">
-                    {row.locationName ?? "—"}
-                  </p>
+                  <p className="text-xs text-foreground truncate max-w-[120px]">{row.location.name}</p>
                 </div>
               </TableCell>
               <TableCell>
                 <span className="text-xs text-muted-foreground truncate max-w-[100px] block">
-                  {row.performedBy ?? "System"}
+                  {row.creator?.name ?? "System"}
                 </span>
               </TableCell>
             </TableRow>
@@ -250,8 +340,10 @@ function RecentMovementsTable({
 }
 
 function LowStockAlertSection() {
-  const { data, isLoading } = useReorderReport();
-  const items: ReorderReportRow[] = data ?? [];
+  const { data: rawItems, isLoading } = useReorderReport();
+  const items = extractItems(rawItems as ReorderReportRow[] | { items?: ReorderReportRow[] }).map(
+    mapReorderRow,
+  );
 
   if (isLoading) return <LowStockSkeleton />;
 
@@ -274,7 +366,9 @@ function LowStockAlertSection() {
             key={`${item.productId}-${item.variantSku}`}
             className={`flex items-center gap-3 rounded-lg border p-3 ${urgency.className}`}
           >
-            <div className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`} />
+            <div
+              className={`h-2 w-2 rounded-full shrink-0 ${urgency.dotClass}`}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-foreground truncate">{item.productName}</p>
               <p className="text-[11px] text-muted-foreground">{item.variantSku}</p>
@@ -298,17 +392,25 @@ function LowStockAlertSection() {
 }
 
 export function InventoryDashboardClient() {
-  const { data: dashboard, isLoading: dashLoading } = useInventoryDashboard();
+  const { data: rawDashboard, isLoading: dashLoading } = useInventoryDashboard();
+  const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 1 });
+  const { data: rawStockSummary, isLoading: stockSummaryLoading } = useStockSummary();
 
-  const totalSkus = dashboard?.totalSkus ?? 0;
-  const totalOnHand = dashboard?.totalOnHand ?? 0;
-  const lowStockCount = dashboard?.lowStockCount ?? 0;
-  const openSalesOrders = dashboard?.openSoCount ?? 0;
-  const recentMovements = dashboard?.recentMovements ?? [];
+  const dashboard = rawDashboard as DashboardData | undefined;
+  const stockSummaryRows = extractItems(
+    rawStockSummary as StockSummaryRow[] | { items?: StockSummaryRow[] },
+  );
 
-  const hasAnyData = !dashLoading && (totalSkus > 0 || totalOnHand > 0);
+  const isKpiLoading = dashLoading || productsLoading || stockSummaryLoading;
 
-  if (!dashLoading && !hasAnyData) {
+  const totalSkus = productsData?.total ?? 0;
+  const totalOnHand = stockSummaryRows.reduce((acc, item) => acc + item.onHandQty, 0);
+  const lowStockCount = dashboard?.inventory.lowStockItemCount ?? 0;
+  const openSalesOrders = dashboard?.salesOrders.totalOpen ?? 0;
+
+  const hasAnyData = !isKpiLoading && (totalSkus > 0 || totalOnHand > 0);
+
+  if (!isKpiLoading && !hasAnyData) {
     return (
       <PageWrapper
         eyebrow="Operations · Inventory"
@@ -349,7 +451,7 @@ export function InventoryDashboardClient() {
       }
     >
       <div className="space-y-6">
-        {dashLoading ? (
+        {isKpiLoading ? (
           <KpiSkeletons />
         ) : (
           <div className={DS.gridResponsive4}>
@@ -404,7 +506,7 @@ export function InventoryDashboardClient() {
               </CardAction>
             </CardHeader>
             <CardContent className="pt-2 px-2 pb-2">
-              <RecentMovementsTable movements={recentMovements} isLoading={dashLoading} />
+              <RecentMovementsTable />
             </CardContent>
           </Card>
 

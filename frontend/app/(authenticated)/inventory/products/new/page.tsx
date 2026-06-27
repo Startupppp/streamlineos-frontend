@@ -1,5 +1,6 @@
 "use client";
 
+import { type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +35,17 @@ import {
   useCreateProduct,
 } from "@/lib/api/hooks/inventory";
 
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface UomOption {
+  id: number;
+  name: string;
+  abbreviation: string;
+}
+
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
   sku: z.string().min(1, "SKU is required"),
@@ -61,6 +73,7 @@ const productSchema = z.object({
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
       "Must be a non-negative number"
     ),
+  isActive: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -82,11 +95,12 @@ export default function NewProductPage() {
       costPrice: "",
       sellingPrice: "",
       reorderPoint: "",
+      isActive: "true",
     },
   });
 
-  const categories = categoriesQuery.data ?? [];
-  const uomOptions = uomQuery.data ?? [];
+  const categories = (categoriesQuery.data ?? []) as Category[];
+  const uomOptions = (uomQuery.data ?? []) as UomOption[];
 
   async function onSubmit(values: ProductFormValues): Promise<void> {
     try {
@@ -103,6 +117,7 @@ export default function NewProductPage() {
         reorderPoint: values.reorderPoint
           ? Number(values.reorderPoint)
           : undefined,
+        status: values.isActive !== "false" ? "ACTIVE" : "INACTIVE",
       });
       toast.success("Product created successfully");
       router.push("/inventory/products");
@@ -254,6 +269,30 @@ export default function NewProductPage() {
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="true">Active</SelectItem>
+                        <SelectItem value="false">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </Card>
 

@@ -1,18 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useHrOrgChart } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Users, Network, Building2 } from "lucide-react";
+import { Users, Network, Building2, Search, Download } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
-import { EmptyTeamIllustration } from "@/components/illustrations";
+import { toast } from "sonner";
 
 interface TreeNode {
   employee: OrgChartNode;
@@ -21,26 +22,27 @@ interface TreeNode {
 
 const ROLE_DOT: Record<string, string> = {
   Ceo: "bg-amber-500",
-  Hr: "bg-purple-500",
+  Hr: "bg-violet-500",
   Admin: "bg-blue-500",
+};
+
+const ROLE_ACCENT: Record<string, string> = {
+  Ceo: "border-l-amber-500",
+  Hr: "border-l-violet-500",
+  Admin: "border-l-blue-500",
 };
 
 function buildTree(nodes: OrgChartNode[]): TreeNode[] {
   const seen = new Set<string>();
   const unique: OrgChartNode[] = [];
   for (const n of nodes) {
-    if (!seen.has(n.id)) {
-      seen.add(n.id);
-      unique.push(n);
-    }
+    if (!seen.has(n.id)) { seen.add(n.id); unique.push(n); }
   }
 
   const map = new Map<string, TreeNode>();
   const roots: TreeNode[] = [];
 
-  for (const emp of unique) {
-    map.set(emp.id, { employee: emp, children: [] });
-  }
+  for (const emp of unique) map.set(emp.id, { employee: emp, children: [] });
 
   for (const emp of unique) {
     const node = map.get(emp.id)!;
@@ -63,10 +65,7 @@ function buildTree(nodes: OrgChartNode[]): TreeNode[] {
     if (node) {
       node.children = node.children.filter((child) => {
         const isCycle = detectAndBreakCycles(child.employee.id);
-        if (isCycle) {
-          roots.push(child);
-          return false;
-        }
+        if (isCycle) { roots.push(child); return false; }
         return true;
       });
     }
@@ -74,9 +73,7 @@ function buildTree(nodes: OrgChartNode[]): TreeNode[] {
     return false;
   }
 
-  for (const root of [...roots]) {
-    detectAndBreakCycles(root.employee.id);
-  }
+  for (const root of [...roots]) detectAndBreakCycles(root.employee.id);
 
   const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
 
@@ -93,34 +90,32 @@ function buildTree(nodes: OrgChartNode[]): TreeNode[] {
   return roots;
 }
 
+const MAX_TREE_DEPTH = 20;
+
 function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md" }) {
   const isSm = size === "sm";
+  const accent = ROLE_ACCENT[emp.role] ?? "border-l-slate-300";
   return (
     <div className={cn(
-      "flex items-center gap-2.5 rounded-lg border bg-card p-2.5 hover:shadow-sm transition-shadow",
-      isSm ? "min-w-[160px]" : "min-w-[200px]"
+      "flex items-center gap-2.5 rounded-xl border border-border bg-card shadow-sm overflow-hidden",
+      "border-l-4 transition-shadow duration-200 hover:shadow-md",
+      isSm ? "min-w-[152px] p-2" : "min-w-[192px] p-2.5",
+      accent,
     )}>
-      <Avatar className={isSm ? "h-8 w-8" : "h-9 w-9"}>
+      <Avatar className={isSm ? "h-7 w-7" : "h-8 w-8"}>
         <AvatarImage src={resolveImageUrl(emp.image)} />
         <AvatarFallback className="bg-primary/10 text-primary text-xs">
           {emp.name?.[0] ?? "?"}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className={cn("font-medium truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
+        <p className={cn("font-semibold truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
         <p className="text-[10px] text-muted-foreground truncate">{emp.designation ?? emp.role}</p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Badge variant="outline" className="text-[10px] h-5 px-1.5">
-          {emp.role}
-        </Badge>
-        <span className={cn("h-2 w-2 rounded-full", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
-      </div>
+      <span className={cn("h-2 w-2 rounded-full shrink-0", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
     </div>
   );
 }
-
-const MAX_TREE_DEPTH = 20;
 
 function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth?: number; isLast?: boolean }) {
   const hasChildren = node.children.length > 0 && depth < MAX_TREE_DEPTH;
@@ -129,26 +124,22 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
     <div className="relative">
       {depth > 0 && (
         <>
-          <span
-            className={cn(
-              "absolute left-0 border-l border-border/60",
-              isLast ? "top-0 h-5" : "top-0 h-full"
-            )}
-          />
+          <span className={cn(
+            "absolute left-0 border-l border-border/60",
+            isLast ? "top-0 h-5" : "top-0 h-full",
+          )} />
           <span className="absolute left-0 top-5 w-4 border-t border-border/60" />
         </>
       )}
-
       <div className={cn(depth > 0 ? "pl-4" : "")}>
         <div className="flex items-center gap-2">
           <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
           {hasChildren && (
-            <Badge variant="secondary" className="h-5 text-[10px]">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-400">
               {node.children.length} report{node.children.length > 1 ? "s" : ""}
-            </Badge>
+            </span>
           )}
         </div>
-
         {hasChildren && (
           <div className="mt-2 ml-4 space-y-2">
             {node.children.map((child, idx) => (
@@ -166,75 +157,37 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
   );
 }
 
-function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNode[]; dotCls?: string }) {
-  const withChildren = roots.filter((r) => r.children.length > 0);
-  const standalone = roots.filter((r) => r.children.length === 0);
+const LEGEND_ITEMS = [
+  { label: "CEO", cls: ROLE_DOT.Ceo },
+  { label: "Admin", cls: ROLE_DOT.Admin },
+  { label: "HR", cls: ROLE_DOT.Hr },
+  { label: "Other", cls: "bg-muted-foreground/40" },
+];
 
-  return (
-    <div className="rounded-xl border bg-muted/20 p-3">
-      <div className="mb-2 flex items-center gap-2">
-        {dotCls && <span className={cn("h-2 w-2 rounded-full", dotCls)} />}
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </span>
-        <Badge variant="secondary" className="h-4 text-[9px] px-1.5">
-          {roots.length}
-        </Badge>
-      </div>
-
-      {standalone.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {standalone.map((node) => (
-            <PersonCard key={node.employee.id} emp={node.employee} />
-          ))}
-        </div>
-      )}
-
-      {withChildren.length > 0 && (
-        <div className="space-y-2">
-          {withChildren.map((node) => (
-            <TreeBranch key={node.employee.id} node={node} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TreeLegend() {
-  const items = [
-    { label: "CEO", cls: ROLE_DOT.Ceo },
-    { label: "Admin", cls: ROLE_DOT.Admin },
-    { label: "HR", cls: ROLE_DOT.Hr },
-    { label: "Other", cls: "bg-muted-foreground/40" },
-  ];
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {items.map((item) => (
-        <Badge key={item.label} variant="outline" className="text-[10px] h-6 gap-1.5">
-          <span className={cn("h-2 w-2 rounded-full", item.cls)} />
-          {item.label}
-        </Badge>
-      ))}
-    </div>
-  );
-}
+type OrgView = "tree" | "departments";
 
 export default function OrgChartPage() {
   const { data: rawNodes, isLoading } = useHrOrgChart();
+  const [view, setView] = useState<OrgView>("tree");
+  const [search, setSearch] = useState("");
 
   const employees = useMemo<OrgChartNode[]>(() => {
     if (!Array.isArray(rawNodes)) return [];
     const seen = new Set<string>();
-    return rawNodes.filter((n) => {
-      if (seen.has(n.id)) return false;
-      seen.add(n.id);
-      return true;
-    });
+    return rawNodes.filter((n) => { if (seen.has(n.id)) return false; seen.add(n.id); return true; });
   }, [rawNodes]);
 
-  const tree = useMemo(() => buildTree(employees), [employees]);
+  const filteredEmployees = useMemo(() => {
+    if (!search.trim()) return employees;
+    const q = search.toLowerCase();
+    return employees.filter((e) =>
+      (e.name ?? "").toLowerCase().includes(q) ||
+      (e.designation ?? "").toLowerCase().includes(q) ||
+      (e.departmentName ?? "").toLowerCase().includes(q),
+    );
+  }, [employees, search]);
+
+  const tree = useMemo(() => buildTree(filteredEmployees), [filteredEmployees]);
 
   const rootGroups = useMemo(() => {
     const groups = new Map<string, TreeNode[]>();
@@ -243,7 +196,6 @@ export default function OrgChartPage() {
       if (!groups.has(role)) groups.set(role, []);
       groups.get(role)!.push(root);
     }
-
     const priority: Record<string, number> = { Ceo: 0, Admin: 1, Hr: 2 };
     return Array.from(groups.entries()).sort((a, b) => {
       const pa = priority[a[0]] ?? 99;
@@ -254,21 +206,48 @@ export default function OrgChartPage() {
 
   const deptGroups = useMemo(() => {
     const groups = new Map<string, OrgChartNode[]>();
-    for (const emp of employees) {
+    for (const emp of filteredEmployees) {
       const name = emp.departmentName ?? (emp.departmentId ? "Other" : "Unassigned");
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name)!.push(emp);
     }
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filteredEmployees]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+
+  const handleViewTree = useCallback(() => setView("tree"), []);
+  const handleViewDepartments = useCallback(() => setView("departments"), []);
+
+  const handleExport = useCallback(async () => {
+    try {
+      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      await downloadXlsx("org-chart.xlsx", [{
+        name: "Organization",
+        columns: [
+          { header: "Name", key: "name", width: 24 },
+          { header: "Role", key: "role", width: 12 },
+          { header: "Designation", key: "designation", width: 20 },
+          { header: "Department", key: "department", width: 20 },
+        ],
+        rows: employees.map((e) => ({
+          name: e.name ?? "",
+          role: e.role,
+          designation: e.designation ?? "",
+          department: e.departmentName ?? "",
+        })),
+      }]);
+      toast.success("Org chart exported");
+    } catch {
+      toast.error("Export failed");
+    }
   }, [employees]);
 
   if (isLoading) {
     return (
       <PageWrapper title="Organization" subtitle="Team structure and departments">
         <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))}
+          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
         </div>
       </PageWrapper>
     );
@@ -278,63 +257,116 @@ export default function OrgChartPage() {
     <PageWrapper
       title="Organization"
       subtitle={`${employees.length} members across ${deptGroups.length} departments`}
+      actions={
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport} disabled={!employees.length}>
+          <Download className="h-3.5 w-3.5" />
+          Export
+        </Button>
+      }
+      filters={
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              className="h-8 pl-8 text-xs w-48"
+              placeholder="Search members…"
+              value={search}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border p-1">
+            <button
+              onClick={handleViewTree}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+                view === "tree" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Network className="h-3 w-3" />
+              Hierarchy
+            </button>
+            <button
+              onClick={handleViewDepartments}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+                view === "departments" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Building2 className="h-3 w-3" />
+              Departments
+            </button>
+          </div>
+        </div>
+      }
     >
-      <Tabs defaultValue="tree">
-        <TabsList className="h-9 mb-4">
-          <TabsTrigger value="tree" className="text-xs gap-1.5 px-3">
-            <Network className="h-3.5 w-3.5" />
-            Hierarchy
-          </TabsTrigger>
-          <TabsTrigger value="departments" className="text-xs gap-1.5 px-3">
-            <Building2 className="h-3.5 w-3.5" />
-            Departments
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="tree">
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">
-                  Clear reporting tree with parent-child links and direct reports.
-                </p>
-                <TreeLegend />
+      {view === "tree" && (
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-muted-foreground">Reporting hierarchy with direct reports.</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {LEGEND_ITEMS.map((item) => (
+                  <span key={item.label} className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted/40 text-muted-foreground">
+                    <span className={cn("h-2 w-2 rounded-full", item.cls)} />
+                    {item.label}
+                  </span>
+                ))}
               </div>
-              <ScrollArea className="w-full" type="auto">
-                <div className="space-y-3 min-w-[720px]">
-                  {rootGroups.map(([role, roots]) => (
-                    <TreeRootGroup
-                      key={role}
-                      label={role}
-                      roots={roots}
-                      dotCls={ROLE_DOT[role] ?? "bg-muted-foreground/40"}
-                    />
-                  ))}
-                  {tree.length === 0 && (
-                    <div className="py-8">
-                      <EmptyTeamIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-                      <p className="text-sm text-muted-foreground text-center">No reporting structure found.</p>
+            </div>
+            <ScrollArea className="w-full" type="auto">
+              <div className="space-y-3 min-w-[720px]">
+                {rootGroups.length > 0 ? rootGroups.map(([role, roots]) => (
+                  <div key={role} className="rounded-xl border bg-muted/20 p-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className={cn("h-2 w-2 rounded-full", ROLE_DOT[role] ?? "bg-muted-foreground/40")} />
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{role}</span>
+                      <span className="inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {roots.length}
+                      </span>
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    <div className="space-y-2">
+                      {roots.map((node) => <TreeBranch key={node.employee.id} node={node} />)}
+                    </div>
+                  </div>
+                )) : (
+                  <EmptyState
+                    illustration={<Network className="h-8 w-8 text-muted-foreground" />}
+                    title="No results"
+                    description={search ? "Try a different search term." : "No reporting structure found."}
+                    compact
+                  />
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
 
-        <TabsContent value="departments">
+      {view === "departments" && (
+        deptGroups.length === 0 ? (
+          <EmptyState
+            illustration={<Building2 className="h-8 w-8 text-muted-foreground" />}
+            title="No departments found"
+            description={search ? "Try a different search term." : undefined}
+          />
+        ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {deptGroups.map(([name, members]) => (
-              <Card key={name}>
+              <Card key={name} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-500">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">{name}</h3>
-                    <Badge variant="secondary" className="text-[10px] gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+                        <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground">{name}</h3>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300">
                       <Users className="h-3 w-3" />
                       {members.length}
-                    </Badge>
+                    </span>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {members.slice(0, 6).map((emp) => (
                       <div key={emp.id} className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -346,19 +378,21 @@ export default function OrgChartPage() {
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium truncate">{emp.name}</p>
                         </div>
-                        <span className="text-[10px] text-muted-foreground">{emp.designation ?? emp.role}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{emp.designation ?? emp.role}</span>
                       </div>
                     ))}
                     {members.length > 6 && (
-                      <p className="text-[10px] text-muted-foreground text-center">+{members.length - 6} more</p>
+                      <p className="text-[10px] text-muted-foreground text-center pt-1">
+                        +{members.length - 6} more
+                      </p>
                     )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </TabsContent>
-      </Tabs>
+        )
+      )}
     </PageWrapper>
   );
 }

@@ -41,6 +41,7 @@ const variantFormSchema = z.object({
   attributes: z.array(attributeEntrySchema),
 });
 
+type VariantFormInput = z.input<typeof variantFormSchema>;
 type VariantFormValues = z.infer<typeof variantFormSchema>;
 
 interface VariantManagerProps {
@@ -130,7 +131,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const createVariant = useCreateProductVariant(productId);
 
-  const form = useForm<VariantFormValues>({
+  const form = useForm<VariantFormInput, unknown, VariantFormValues>({
     resolver: zodResolver(variantFormSchema),
     defaultValues: {
       name: "",
@@ -144,18 +145,18 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
   const attributes = form.watch("attributes");
 
   function handleAddAttribute() {
-    form.setValue("attributes", [...attributes, { key: "", value: "" }]);
+    form.setValue("attributes", [...(attributes ?? []), { key: "", value: "" }]);
   }
 
   function handleRemoveAttribute(idx: number) {
     form.setValue(
       "attributes",
-      attributes.filter((_, i) => i !== idx),
+      (attributes ?? []).filter((_, i) => i !== idx),
     );
   }
 
   function handleAttributeChange(idx: number, field: "key" | "value", value: string) {
-    const updated = attributes.map((a, i) =>
+    const updated = (attributes ?? []).map((a, i) =>
       i === idx ? { ...a, [field]: value } : a,
     );
     form.setValue("attributes", updated);
@@ -298,7 +299,18 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                   <FormItem>
                     <FormLabel>Cost Price</FormLabel>
                     <FormControl>
-                      <Input type="number" min={0} step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        name={field.name}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={String(field.value ?? "")}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={field.onBlur}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -311,7 +323,18 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                   <FormItem>
                     <FormLabel>Selling Price</FormLabel>
                     <FormControl>
-                      <Input type="number" min={0} step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        name={field.name}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={String(field.value ?? "")}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={field.onBlur}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,7 +343,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
             </div>
 
             <AttributeFields
-              attributes={attributes}
+              attributes={attributes ?? []}
               onAdd={handleAddAttribute}
               onRemove={handleRemoveAttribute}
               onChange={handleAttributeChange}

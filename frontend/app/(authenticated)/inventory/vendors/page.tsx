@@ -173,7 +173,7 @@ function VendorFormSheet({
 export default function VendorsListPage() {
   const [search, setSearch] = useState<string>("");
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
-  const query = useVendors({ page: 1, pageSize: 100, q: search || undefined });
+  const query = useVendors({ page: 1, limit: 100, search: search || undefined });
   const items = query.data?.items ?? [];
 
   function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {

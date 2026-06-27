@@ -61,11 +61,7 @@ function MultiSelectField({
   const [open, setOpen] = useState(false);
 
   const available = useMemo(
-    () =>
-      options.filter(
-        (o) =>
-          !excludedEmails.includes(o.email) && !selected.includes(o.email)
-      ),
+    () => options.filter((o) => !excludedEmails.includes(o.email) && !selected.includes(o.email)),
     [options, excludedEmails, selected]
   );
 
@@ -74,41 +70,42 @@ function MultiSelectField({
     [options, selected]
   );
 
-  function handleSelect(email: string) {
+  const handleSelect = (email: string) => {
     onAdd(email);
     setOpen(false);
-  }
+  };
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-medium">{label}</Label>
+      <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">{label}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="w-full flex items-center justify-between h-9 rounded-md border border-input bg-background px-3 text-sm text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="w-full flex items-center justify-between h-9 rounded-md border border-input bg-background px-3 text-sm text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors duration-200"
             aria-expanded={open}
           >
-            <span className="text-muted-foreground truncate">{placeholder}</span>
+            <span className="text-muted-foreground truncate text-xs">{placeholder}</span>
             <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-2" />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search by name or email..." className="h-8" />
+            <CommandInput placeholder="Search by name or email..." className="h-8 text-xs" />
             <CommandList className="max-h-48 overflow-y-auto">
-              <CommandEmpty>No users available</CommandEmpty>
+              <CommandEmpty className="text-xs py-4">No users available</CommandEmpty>
               <CommandGroup>
                 {available.map((opt) => (
                   <CommandItem
                     key={opt.email}
                     value={`${opt.name} ${opt.email}`}
                     onSelect={() => handleSelect(opt.email)}
+                    className="text-xs"
                   >
                     <Check className="h-3.5 w-3.5 mr-2 opacity-0" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-medium truncate">{opt.name}</span>
-                      <span className="text-xs text-muted-foreground truncate">{opt.email}</span>
+                      <span className="font-medium truncate">{opt.name}</span>
+                      <span className="text-muted-foreground truncate">{opt.email}</span>
                     </div>
                   </CommandItem>
                 ))}
@@ -124,7 +121,7 @@ function MultiSelectField({
             <Badge
               key={opt.email}
               variant="secondary"
-              className="gap-1 pr-1 text-xs"
+              className="gap-1 pr-1 text-[10px] font-semibold"
             >
               {opt.name}
               <button
@@ -187,16 +184,21 @@ export function AttendanceEmailDialog() {
     return null;
   }, [startDate, endDate]);
 
-  function handleClose() {
+  const handleClose = () => {
     setOpen(false);
     setToEmails([]);
     setCcEmails([]);
     setBccEmails([]);
     setStartDate("");
     setEndDate("");
-  }
+  };
 
-  async function handleSend() {
+  const handleOpenChange = (v: boolean) => {
+    if (!v) handleClose();
+    else setOpen(true);
+  };
+
+  const handleSend = async () => {
     if (toEmails.length === 0) {
       toast.error("At least one To recipient is required");
       return;
@@ -226,13 +228,15 @@ export function AttendanceEmailDialog() {
     } finally {
       setIsSending(false);
     }
-  }
+  };
+
+  const totalCount = [...toEmails, ...ccEmails, ...bccEmails].length;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button
-          className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1.5 transition-colors"
+          className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors duration-200"
           type="button"
         >
           <Mail className="h-3.5 w-3.5" />
@@ -241,93 +245,106 @@ export function AttendanceEmailDialog() {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-primary" />
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
             Email Attendance Report
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs text-muted-foreground">
             Select recipients and an optional date range for the report.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">From Date</Label>
-              <DatePicker
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="Start date"
-                toDate={new Date()}
-              />
+        <div className="space-y-4 py-1">
+          <div>
+            <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-2 block">
+              Date Range
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-medium text-muted-foreground">From</Label>
+                <DatePicker
+                  value={startDate}
+                  onChange={setStartDate}
+                  placeholder="Start date"
+                  toDate={new Date()}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-medium text-muted-foreground">To</Label>
+                <DatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  placeholder="End date"
+                  toDate={new Date()}
+                />
+              </div>
             </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">To Date</Label>
-              <DatePicker
-                value={endDate}
-                onChange={setEndDate}
-                placeholder="End date"
-                toDate={new Date()}
-              />
-            </div>
+            {dateError && (
+              <p className="text-[11px] text-destructive mt-1.5">{dateError}</p>
+            )}
           </div>
-          {dateError && (
-            <p className="text-xs text-destructive">{dateError}</p>
-          )}
 
-          <MultiSelectField
-            label="To *"
-            placeholder="Select recipients..."
-            selected={toEmails}
-            onAdd={addTo}
-            onRemove={removeTo}
-            options={allUsers}
-            excludedEmails={[...ccEmails, ...bccEmails]}
-          />
+          <div className="border-t border-border pt-4 space-y-3">
+            <MultiSelectField
+              label="To *"
+              placeholder="Select recipients..."
+              selected={toEmails}
+              onAdd={addTo}
+              onRemove={removeTo}
+              options={allUsers}
+              excludedEmails={[...ccEmails, ...bccEmails]}
+            />
 
-          <MultiSelectField
-            label="CC"
-            placeholder="Add CC recipients..."
-            selected={ccEmails}
-            onAdd={addCc}
-            onRemove={removeCc}
-            options={allUsers}
-            excludedEmails={[...toExcludedForCc, ...bccEmails]}
-          />
+            <MultiSelectField
+              label="CC"
+              placeholder="Add CC recipients..."
+              selected={ccEmails}
+              onAdd={addCc}
+              onRemove={removeCc}
+              options={allUsers}
+              excludedEmails={[...toExcludedForCc, ...bccEmails]}
+            />
 
-          <MultiSelectField
-            label="BCC"
-            placeholder="Add BCC recipients..."
-            selected={bccEmails}
-            onAdd={addBcc}
-            onRemove={removeBcc}
-            options={allUsers}
-            excludedEmails={[...new Set([...toEmails, ...ccEmails])]}
-          />
+            <MultiSelectField
+              label="BCC"
+              placeholder="Add BCC recipients..."
+              selected={bccEmails}
+              onAdd={addBcc}
+              onRemove={removeBcc}
+              options={allUsers}
+              excludedEmails={[...new Set([...toEmails, ...ccEmails])]}
+            />
+          </div>
 
-          {[...toEmails, ...ccEmails, ...bccEmails].length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Sending to {toEmails.length} recipient(s)
-              {ccEmails.length > 0 && `, ${ccEmails.length} CC`}
-              {bccEmails.length > 0 && `, ${bccEmails.length} BCC`}
+          {totalCount > 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              Sending to <span className="font-semibold text-foreground">{toEmails.length}</span> recipient(s)
+              {ccEmails.length > 0 && <>, <span className="font-semibold text-foreground">{ccEmails.length}</span> CC</>}
+              {bccEmails.length > 0 && <>, <span className="font-semibold text-foreground">{bccEmails.length}</span> BCC</>}
             </p>
           )}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClose} disabled={isSending}>
+        <DialogFooter className="gap-2 pt-1">
+          <Button variant="outline" size="sm" onClick={handleClose} disabled={isSending} className="h-9">
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={isSending || toEmails.length === 0 || !!dateError} className="gap-2">
+          <Button
+            onClick={handleSend}
+            disabled={isSending || toEmails.length === 0 || !!dateError}
+            className="h-9 gap-1.5 flex-1"
+          >
             {isSending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Sending...
               </>
             ) : (
               <>
-                <Mail className="h-4 w-4" />
+                <Mail className="h-3.5 w-3.5" />
                 Send Report
               </>
             )}

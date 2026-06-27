@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -23,15 +24,11 @@ import {
 import { ListToolbar, LoadingState, ErrorState, DataTablePagination } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { ProductStatusBadge } from "@/features/inventory/products/ProductStatusBadge";
 import { useProducts, useCategories } from "@/lib/api/hooks/inventory";
-import type { ProductStatus } from "@/types/inventory";
 
-function toStatusFilter(value: string): ProductStatus | "all" {
-  if (value === "ACTIVE" || value === "INACTIVE" || value === "DISCONTINUED") {
-    return value;
-  }
-  return "all";
+interface Category {
+  id: number;
+  name: string;
 }
 
 function formatPrice(value: string | number | null | undefined): string {
@@ -48,16 +45,23 @@ const PAGE_LIMIT = 20;
 
 export default function ProductsPage() {
   const [search, setSearch] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<ProductStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [page, setPage] = useState<number>(1);
 
   const categoriesQuery = useCategories();
-  const categories = categoriesQuery.data ?? [];
+  const categories = (categoriesQuery.data ?? []) as Category[];
+
+  const isActive =
+    statusFilter === "active"
+      ? true
+      : statusFilter === "inactive"
+        ? false
+        : undefined;
 
   const productsQuery = useProducts({
     search: search || undefined,
-    status: statusFilter === "all" ? undefined : statusFilter,
+    isActive,
     categoryId: categoryFilter !== "all" ? Number(categoryFilter) : undefined,
     page,
     limit: PAGE_LIMIT,
@@ -73,7 +77,7 @@ export default function ProductsPage() {
   }
 
   function handleStatusChange(value: string): void {
-    setStatusFilter(toStatusFilter(value));
+    setStatusFilter(value);
     setPage(1);
   }
 
@@ -114,9 +118,8 @@ export default function ProductsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -142,7 +145,11 @@ export default function ProductsPage() {
         ) : productsQuery.error ? (
           <ErrorState
             title="Failed to load products"
-            description={productsQuery.error.message}
+            description={
+              productsQuery.error.message === "Failed to load products"
+                ? "We couldn't reach the products service. Check your connection and try again."
+                : productsQuery.error.message
+            }
             onRetry={() => productsQuery.refetch()}
           />
         ) : items.length === 0 ? (
@@ -171,7 +178,8 @@ export default function ProductsPage() {
                     <TableHead className="w-[80px]">UOM</TableHead>
                     <TableHead className="w-[120px] text-right">Cost Price</TableHead>
                     <TableHead className="w-[120px] text-right">Selling Price</TableHead>
-                    <TableHead className="w-[110px]">Status</TableHead>
+                    <TableHead className="w-[100px] text-right">Stock</TableHead>
+                    <TableHead className="w-[90px]">Status</TableHead>
                     <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -190,10 +198,10 @@ export default function ProductsPage() {
                         {product.sku}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {product.category?.name ?? "—"}
+                        {product.categoryName ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {product.uom?.name ?? "—"}
+                        {product.uomName ?? "—"}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                         {formatPrice(product.costPrice)}
@@ -201,8 +209,15 @@ export default function ProductsPage() {
                       <TableCell className="text-right text-sm tabular-nums font-medium text-foreground">
                         {formatPrice(product.sellingPrice)}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <StockBadge qty={product.totalStock ?? 0} />
+                      </TableCell>
                       <TableCell>
-                        <ProductStatusBadge status={product.status} />
+                        <Badge
+                          variant={product.isActive ? "default" : "secondary"}
+                        >
+                          {product.isActive ? "Active" : "Inactive"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm" asChild>
@@ -228,5 +243,33 @@ export default function ProductsPage() {
         )}
       </div>
     </PageWrapper>
+  );
+}
+
+function StockBadge({ qty }: { qty: number }) {
+  if (qty <= 0) {
+    return (
+      <Badge variant="destructive" className="tabular-nums text-xs">
+        Out of stock
+      </Badge>
+    );
+  }
+  if (qty < 10) {
+    return (
+      <Badge
+        variant="outline"
+        className="tabular-nums text-xs border-amber-500/40 text-amber-700 bg-amber-50"
+      >
+        {qty} low
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="tabular-nums text-xs border-emerald-500/40 text-emerald-700 bg-emerald-50"
+    >
+      {qty}
+    </Badge>
   );
 }

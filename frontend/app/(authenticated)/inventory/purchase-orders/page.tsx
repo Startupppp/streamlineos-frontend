@@ -65,10 +65,10 @@ export default function PurchaseOrdersListPage() {
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [vendorId, setVendorId] = useState<string>("ALL");
 
-  const vendorsQuery = useVendors({ isActive: true, pageSize: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
   const query = usePurchaseOrders({
     page: 1,
-    pageSize: 100,
+    limit: 100,
     status: status === "ALL" ? undefined : status,
     vendorId: vendorId !== "ALL" ? Number(vendorId) : undefined,
   });

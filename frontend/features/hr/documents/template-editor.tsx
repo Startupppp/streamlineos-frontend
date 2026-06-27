@@ -6,14 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Eye, EyeOff, Wand2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff, Wand2, FileCode } from "lucide-react";
 import Link from "next/link";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+import { cn } from "@/lib/utils";
 import {
   useCreateDocumentTemplate,
   useUpdateDocumentTemplate,
@@ -226,35 +227,47 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleCancel}>
-              Cancel
+              Reset
             </Button>
-            <Button variant="outline" size="sm" onClick={handleTogglePreview} className="gap-2">
-              {showPreview ? (
-                <>
-                  <EyeOff className="h-4 w-4" />
-                  Hide Preview
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4" />
-                  Preview
-                </>
-              )}
-            </Button>
+            <div className="rounded-lg border p-1 flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTogglePreview}
+                className={cn(
+                  "h-7 gap-1.5 text-xs",
+                  showPreview
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "hover:bg-muted",
+                )}
+              >
+                {showPreview ? (
+                  <>
+                    <EyeOff className="h-3.5 w-3.5" />
+                    Hide Preview
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3.5 w-3.5" />
+                    Preview
+                  </>
+                )}
+              </Button>
+            </div>
             <Button
               size="sm"
               onClick={form.handleSubmit(handleSave)}
               disabled={isSaving}
-              className="gap-2"
+              className="gap-1.5 h-8"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Wand2 className="h-4 w-4" />
+                  <Wand2 className="h-3.5 w-3.5" />
                   {isEdit ? "Save Changes" : "Create Template"}
                 </>
               )}
@@ -268,21 +281,34 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
           }`}
         >
           <div className="space-y-5">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Template Details</CardTitle>
-                <CardDescription>Basic metadata for this template.</CardDescription>
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+              <CardHeader className="pb-3 border-b px-5 pt-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                    <FileCode className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-foreground">
+                      Template Details
+                    </CardTitle>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Basic metadata for this template.
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="px-5 py-4 space-y-4">
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type</FormLabel>
+                      <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                        Type
+                      </FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-9">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -303,11 +329,14 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                        Title
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="e.g. Software Engineer Offer Letter"
                           autoFocus
+                          className="h-9"
                           {...field}
                         />
                       </FormControl>
@@ -323,16 +352,25 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
               onInsertToken={insertToken}
             />
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">HTML Content</CardTitle>
-                <CardDescription>
-                  Write raw HTML. Use{" "}
-                  <code className="text-[11px]">{"{{Variable_Name}}"}</code> tokens as
-                  placeholders.
-                </CardDescription>
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+              <CardHeader className="pb-3 border-b px-5 pt-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center shrink-0">
+                    <FileCode className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-foreground">
+                      HTML Content
+                    </CardTitle>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Write raw HTML. Use{" "}
+                      <code className="text-[10px] px-1 rounded bg-muted">{"{{Variable_Name}}"}</code>{" "}
+                      tokens as placeholders.
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-5 py-4">
                 <FormField
                   control={form.control}
                   name="htmlContent"
@@ -348,7 +386,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                                 fieldRef as React.MutableRefObject<HTMLTextAreaElement | null>
                               ).current = el;
                           }}
-                          className="font-mono text-xs min-h-[420px] resize-y"
+                          className="font-mono text-xs min-h-[420px] resize-y rounded-xl bg-muted/30 border-border/60 focus:border-primary"
                           placeholder="<h1>Hello {{Candidate_Name}}</h1>..."
                           spellCheck={false}
                           {...fieldRest}

@@ -7,33 +7,37 @@ import { useRecognitions, useCreateRecognition, type Recognition } from "@/lib/a
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "sonner";
 import { formatDistanceToNow, startOfMonth } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
-import { Heart, Plus, Award, Users, Lightbulb, Zap, Check, ChevronsUpDown, Trophy, TrendingUp } from "lucide-react";
-import { StatCard } from "@/components/ui/stat-card";
-
+import {
+  Heart, Plus, Award, Users, Lightbulb, Zap, Check, ChevronsUpDown, Trophy, TrendingUp, ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
-import { EmptyTeamIllustration } from "@/components/illustrations";
 
 const CATEGORIES = [
-  { value: "KUDOS", label: "Kudos", icon: Heart, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-950/30" },
-  { value: "TEAMWORK", label: "Teamwork", icon: Users, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
-  { value: "INNOVATION", label: "Innovation", icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
-  { value: "LEADERSHIP", label: "Leadership", icon: Award, color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-950/30" },
-  { value: "ABOVE_AND_BEYOND", label: "Above & Beyond", icon: Zap, color: "text-green-500", bg: "bg-green-50 dark:bg-green-950/30" },
+  { value: "KUDOS", label: "Kudos", icon: Heart, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-950/30", accent: "border-l-pink-500" },
+  { value: "TEAMWORK", label: "Teamwork", icon: Users, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30", accent: "border-l-blue-500" },
+  { value: "INNOVATION", label: "Innovation", icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30", accent: "border-l-amber-500" },
+  { value: "LEADERSHIP", label: "Leadership", icon: Award, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-950/30", accent: "border-l-violet-500" },
+  { value: "ABOVE_AND_BEYOND", label: "Above & Beyond", icon: Zap, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", accent: "border-l-emerald-500" },
 ];
 
 function getCategoryMeta(category: string | null) {
@@ -55,7 +59,7 @@ export default function RecognitionPage() {
 
   const employees = useMemo(
     () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw]
+    [employeesRaw],
   );
 
   const list = useMemo(() => (recognitions ?? []) as Recognition[], [recognitions]);
@@ -79,21 +83,23 @@ export default function RecognitionPage() {
     for (const r of list) {
       if (!r.toUserId) continue;
       const existing = counts.get(r.toUserId);
-      if (existing) {
-        existing.count++;
-      } else {
-        counts.set(r.toUserId, { name: r.toUser?.name ?? null, image: r.toUser?.image ?? null, count: 1 });
-      }
+      if (existing) { existing.count++; }
+      else { counts.set(r.toUserId, { name: r.toUser?.name ?? null, image: r.toUser?.image ?? null, count: 1 }); }
     }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 5);
+    return Array.from(counts.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
   }, [list]);
 
   const filteredList = useMemo(
     () => (activeCategory ? list.filter((r) => r.category === activeCategory) : list),
-    [list, activeCategory]
+    [list, activeCategory],
   );
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) { setToUserId(""); setMessage(""); setCategory("KUDOS"); }
+    setSheetOpen(open);
+  }, []);
 
   const handleSend = useCallback(() => {
     if (!toUserId) { toast.error("Please select a recipient"); return; }
@@ -108,7 +114,7 @@ export default function RecognitionPage() {
       r.toUserId === toUserId &&
       r.fromUserId === currentUserId &&
       r.createdAt &&
-      (Date.now() - new Date(r.createdAt).getTime()) < ONE_DAY
+      (Date.now() - new Date(r.createdAt).getTime()) < ONE_DAY,
     );
     if (recentDuplicate) {
       toast.error("You already recognized this employee in the last 24 hours");
@@ -121,28 +127,31 @@ export default function RecognitionPage() {
         onSuccess: () => {
           toast.success("Recognition sent!");
           setSheetOpen(false);
-          setToUserId("");
-          setMessage("");
-          setCategory("KUDOS");
-          setEmployeePickerOpen(false);
+          setToUserId(""); setMessage(""); setCategory("KUDOS"); setEmployeePickerOpen(false);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
-      }
+      },
     );
   }, [toUserId, message, category, createRecognition, list, session]);
+
+  const handleToggleCategory = useCallback((val: string) => {
+    setActiveCategory((prev) => (prev === val ? null : val));
+  }, []);
+
+  const handleClearCategory = useCallback(() => setActiveCategory(null), []);
 
   if (isLoading) {
     return (
       <PageWrapper title="Recognition" subtitle="Celebrate your team">
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
             </div>
-            <Skeleton className="h-64" />
+            <Skeleton className="h-64 rounded-2xl" />
           </div>
         </div>
       </PageWrapper>
@@ -155,8 +164,9 @@ export default function RecognitionPage() {
       subtitle="Celebrate achievements and recognize great work"
       badge={`${stats.total} recognitions`}
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5 mr-1" />Give Kudos
+        <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
+          <Plus className="h-3.5 w-3.5" />
+          Give Kudos
         </Button>
       }
     >
@@ -171,12 +181,12 @@ export default function RecognitionPage() {
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => setActiveCategory(null)}
+                onClick={handleClearCategory}
                 className={cn(
-                  "text-xs px-3 py-1 rounded-full border transition-colors",
+                  "text-xs px-3 py-1 rounded-full border transition-colors duration-200",
                   !activeCategory
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:bg-muted"
+                    : "border-border hover:bg-muted text-muted-foreground hover:text-foreground",
                 )}
               >
                 All
@@ -186,12 +196,12 @@ export default function RecognitionPage() {
                 return (
                   <button
                     key={c.value}
-                    onClick={() => setActiveCategory(activeCategory === c.value ? null : c.value)}
+                    onClick={() => handleToggleCategory(c.value)}
                     className={cn(
-                      "text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1",
+                      "text-xs px-3 py-1 rounded-full border transition-colors duration-200 flex items-center gap-1",
                       activeCategory === c.value
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:bg-muted"
+                        : "border-border hover:bg-muted text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="h-3 w-3" />
@@ -202,38 +212,64 @@ export default function RecognitionPage() {
             </div>
 
             {!filteredList.length ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <EmptyTeamIllustration className="mx-auto mb-4 h-32 w-32 opacity-95" />
-                  <p className="text-sm text-muted-foreground">
-                    {activeCategory ? "No recognitions for this category yet." : "No recognition yet. Be the first to celebrate a teammate!"}
-                  </p>
-                </CardContent>
-              </Card>
+              <EmptyState
+                illustration={<Trophy className="h-8 w-8 text-muted-foreground" />}
+                title={activeCategory ? "No recognitions for this category" : "No recognition yet"}
+                description={activeCategory ? undefined : "Be the first to celebrate a teammate!"}
+                action={!activeCategory ? { label: "Give Kudos", onClick: handleOpenSheet } : undefined}
+              />
             ) : (
               <div className="space-y-3">
                 {filteredList.map((r: Recognition) => {
                   const catMeta = getCategoryMeta(r.category);
                   const Icon = catMeta.icon;
                   return (
-                    <Card key={r.id}>
+                    <Card
+                      key={r.id}
+                      className={cn(
+                        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden",
+                        "border-l-4 transition-shadow duration-200 hover:shadow-md",
+                        catMeta.accent,
+                      )}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <Avatar className="h-9 w-9 shrink-0">
-                            <AvatarImage src={resolveImageUrl(r.fromUser?.image ?? null)} />
-                            <AvatarFallback className="text-xs bg-primary/10 text-primary">{r.fromUser?.name?.[0]}</AvatarFallback>
-                          </Avatar>
+                          <div className={cn(
+                            "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                            catMeta.bg,
+                          )}>
+                            <Icon className={cn("h-3.5 w-3.5", catMeta.color)} />
+                          </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold">{r.fromUser?.name}</span>
-                              <span className="text-xs text-muted-foreground">recognized</span>
-                              <span className="text-sm font-semibold">{r.toUser?.name}</span>
-                              <Badge variant="outline" className={`text-[10px] gap-1 ${catMeta.color}`}>
-                                <Icon className="h-3 w-3" />
+                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={resolveImageUrl(r.fromUser?.image ?? null)} />
+                                  <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                                    {r.fromUser?.name?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-semibold">{r.fromUser?.name}</span>
+                              </div>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                              <div className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={resolveImageUrl(r.toUser?.image ?? null)} />
+                                  <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                                    {r.toUser?.name?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-semibold">{r.toUser?.name}</span>
+                              </div>
+                              <span className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                                "bg-muted/60 border-border text-muted-foreground",
+                              )}>
+                                <Icon className={cn("h-2.5 w-2.5", catMeta.color)} />
                                 {catMeta.label}
-                              </Badge>
+                              </span>
                             </div>
-                            <p className="text-sm mt-1.5 text-foreground/90">{r.message}</p>
+                            <p className="text-sm text-foreground/90 leading-relaxed">{r.message}</p>
                             <p className="text-[10px] text-muted-foreground mt-1.5">
                               {r.createdAt ? formatDistanceToNow(new Date(r.createdAt), { addSuffix: true }) : ""}
                             </p>
@@ -248,11 +284,13 @@ export default function RecognitionPage() {
           </div>
 
           <div className="space-y-3">
-            <Card>
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-500" />
-                  Top Recognized
+                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                    <Trophy className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Top Recognized</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4">
@@ -260,11 +298,11 @@ export default function RecognitionPage() {
                   <p className="text-xs text-muted-foreground text-center py-4">No data yet</p>
                 ) : (
                   <div className="space-y-2.5">
-                    {topRecognized.map(([userId, data], index) => (
-                      <div key={userId} className="flex items-center gap-2.5">
+                    {topRecognized.map(([topUserId, data], index) => (
+                      <div key={topUserId} className="flex items-center gap-2.5">
                         <span className={cn(
                           "text-xs font-bold w-5 text-center shrink-0",
-                          index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-amber-700" : "text-muted-foreground"
+                          index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-amber-700" : "text-muted-foreground",
                         )}>
                           {index + 1}
                         </span>
@@ -273,7 +311,9 @@ export default function RecognitionPage() {
                           <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{data.name?.[0]}</AvatarFallback>
                         </Avatar>
                         <span className="text-xs font-medium flex-1 truncate">{data.name ?? "Unknown"}</span>
-                        <Badge variant="secondary" className="text-[10px] shrink-0">{data.count}</Badge>
+                        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+                          {data.count}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -281,26 +321,26 @@ export default function RecognitionPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <CardHeader className="pb-2 pt-4 px-4">
-                <CardTitle className="text-sm">By Category</CardTitle>
+                <CardTitle className="text-sm font-semibold text-foreground">By Category</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-2">
+              <CardContent className="px-4 pb-4 space-y-3">
                 {stats.categoryBreakdown.map((c) => {
                   const Icon = c.icon;
                   const pct = stats.total > 0 ? Math.round((c.count / stats.total) * 100) : 0;
                   return (
-                    <div key={c.value} className="space-y-1">
+                    <div key={c.value} className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className={cn("flex items-center gap-1.5 text-xs", c.color)}>
+                        <span className={cn("flex items-center gap-1.5 text-xs font-medium", c.color)}>
                           <Icon className="h-3 w-3" />
                           {c.label}
                         </span>
-                        <span className="text-xs text-muted-foreground">{c.count}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{c.count}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
-                          className={cn("h-full rounded-full transition-all", c.bg)}
+                          className={cn("h-full rounded-full transition-all duration-300", c.bg)}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -315,10 +355,7 @@ export default function RecognitionPage() {
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={(open) => {
-          if (!open) { setToUserId(""); setMessage(""); setCategory("KUDOS"); }
-          setSheetOpen(open);
-        }}
+        onOpenChange={handleSheetOpenChange}
         title="Give Recognition"
         onSubmit={handleSend}
         submitLabel="Send Kudos"
@@ -328,8 +365,15 @@ export default function RecognitionPage() {
           <label className="text-sm font-medium">Who deserves recognition? <span className="text-destructive">*</span></label>
           <Popover open={employeePickerOpen} onOpenChange={setEmployeePickerOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" aria-expanded={employeePickerOpen} className="w-full justify-between font-normal">
-                {toUserId ? (employees.find((e) => e.id === toUserId)?.name ?? employees.find((e) => e.id === toUserId)?.email ?? "Select teammate") : "Select teammate"}
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={employeePickerOpen}
+                className="w-full justify-between font-normal"
+              >
+                {toUserId
+                  ? (employees.find((e) => e.id === toUserId)?.name ?? employees.find((e) => e.id === toUserId)?.email ?? "Select teammate")
+                  : "Select teammate"}
                 <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -340,7 +384,11 @@ export default function RecognitionPage() {
                   <CommandEmpty>No employees found.</CommandEmpty>
                   <CommandGroup>
                     {employees.filter((e) => !!e.id && e.id !== session?.user?.id).map((e) => (
-                      <CommandItem key={e.id} value={e.name ?? e.email ?? e.id} onSelect={() => { setToUserId(e.id); setEmployeePickerOpen(false); }}>
+                      <CommandItem
+                        key={e.id}
+                        value={e.name ?? e.email ?? e.id}
+                        onSelect={() => { setToUserId(e.id); setEmployeePickerOpen(false); }}
+                      >
                         <Check className={cn("mr-2 h-4 w-4", toUserId === e.id ? "opacity-100" : "opacity-0")} />
                         {e.name ?? e.email}
                       </CommandItem>
@@ -356,9 +404,7 @@ export default function RecognitionPage() {
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              {CATEGORIES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-              ))}
+              {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

@@ -113,7 +113,9 @@ export function DeviceFormContent({
             const selected = employees.find((e) => e.id === field.value);
             return (
               <FormItem>
-                <FormLabel>Assign to Employee <span className="text-destructive">*</span></FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Assign to Employee <span className="text-destructive normal-case">*</span>
+                </FormLabel>
                 <Popover open={empSearchOpen} onOpenChange={handleEmpPopoverChange}>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -121,12 +123,14 @@ export function DeviceFormContent({
                         variant="outline"
                         role="combobox"
                         aria-expanded={empSearchOpen}
-                        className="w-full justify-between font-normal"
+                        className="w-full h-9 justify-between font-normal text-sm border-border"
                       >
                         <span className="truncate">
-                          {selected ? `${selected.firstName ?? ""} ${selected.lastName ?? ""}`.trim() : "Select employee"}
+                          {selected
+                            ? `${selected.firstName ?? ""} ${selected.lastName ?? ""}`.trim()
+                            : <span className="text-muted-foreground">Select employee</span>}
                         </span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
@@ -136,17 +140,19 @@ export function DeviceFormContent({
                         placeholder="Search employee..."
                         value={empSearch}
                         onValueChange={setEmpSearch}
+                        className="h-8 text-xs"
                       />
                       <CommandList className="max-h-48 overflow-y-auto">
-                        <CommandEmpty>No employees found</CommandEmpty>
+                        <CommandEmpty className="text-xs py-3">No employees found</CommandEmpty>
                         <CommandGroup>
                           {filteredEmployees.map((emp) => (
                             <CommandItem
                               key={emp.id}
                               value={emp.id}
                               onSelect={() => handleSelectEmployee(emp.id, field.onChange)}
+                              className="text-xs"
                             >
-                              <Check className={cn("mr-2 h-4 w-4", field.value === emp.id ? "opacity-100" : "opacity-0")} />
+                              <Check className={cn("mr-2 h-3.5 w-3.5", field.value === emp.id ? "opacity-100" : "opacity-0")} />
                               {emp.firstName ?? ""} {emp.lastName ?? ""}
                             </CommandItem>
                           ))}
@@ -155,22 +161,24 @@ export function DeviceFormContent({
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             );
           }}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
             name="deviceType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Device Type <span className="text-destructive">*</span></FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Device Type <span className="text-destructive normal-case">*</span>
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-sm border-border">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
@@ -184,7 +192,7 @@ export function DeviceFormContent({
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -193,27 +201,31 @@ export function DeviceFormContent({
             name="deviceName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Device Name <span className="text-destructive">*</span></FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Device Name <span className="text-destructive normal-case">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="MacBook Pro 14" {...field} />
+                  <Input className="h-9 text-sm border-border" placeholder="MacBook Pro 14" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
             name="brand"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Brand <span className="text-destructive">*</span></FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Brand <span className="text-destructive normal-case">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Apple" {...field} />
+                  <Input className="h-9 text-sm border-border" placeholder="Apple" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -222,11 +234,13 @@ export function DeviceFormContent({
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model <span className="text-destructive">*</span></FormLabel>
+                <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                  Model <span className="text-destructive normal-case">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="M3 Pro" {...field} />
+                  <Input className="h-9 text-sm border-border" placeholder="M3 Pro" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -237,11 +251,13 @@ export function DeviceFormContent({
           name="serialNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Serial Number <span className="text-destructive">*</span></FormLabel>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Serial Number <span className="text-destructive normal-case">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="SN123456789" {...field} />
+                <Input className="h-9 text-sm font-mono border-border" placeholder="SN123456789" {...field} />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -251,17 +267,23 @@ export function DeviceFormContent({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Notes
+              </FormLabel>
               <FormControl>
-                <Textarea placeholder="Any additional notes..." {...field} />
+                <Textarea
+                  className="text-sm border-border resize-none min-h-[80px]"
+                  placeholder="Any additional notes..."
+                  {...field}
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full mt-2" disabled={isPending}>
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" className="w-full h-9 gap-1.5 mt-1" disabled={isPending}>
+          {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {submitLabel}
         </Button>
       </form>

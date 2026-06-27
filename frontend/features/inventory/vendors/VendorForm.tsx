@@ -44,6 +44,7 @@ const vendorFormSchema = z.object({
   notes: z.string().optional().or(z.literal("")),
 });
 
+type VendorFormInput = z.input<typeof vendorFormSchema>;
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
 
 interface VendorFormProps {
@@ -58,7 +59,7 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
   const createVendor = useCreateVendor();
   const updateVendor = useUpdateVendor(vendor?.id ?? 0);
 
-  const form = useForm<VendorFormValues>({
+  const form = useForm<VendorFormInput, unknown, VendorFormValues>({
     resolver: zodResolver(vendorFormSchema),
     defaultValues: {
       name: "",
@@ -288,7 +289,17 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
                 <FormItem>
                   <FormLabel>Lead Time (days)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} placeholder="7" {...field} />
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="7"
+                      name={field.name}
+                      ref={field.ref}
+                      disabled={field.disabled}
+                      value={String(field.value ?? "")}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -301,7 +312,17 @@ export function VendorForm({ open, onOpenChange, vendor, onSuccess }: VendorForm
                 <FormItem>
                   <FormLabel>Payment Terms (days)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} placeholder="30" {...field} />
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="30"
+                      name={field.name}
+                      ref={field.ref}
+                      disabled={field.disabled}
+                      value={String(field.value ?? "")}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -50,17 +50,55 @@ import {
   useCategories,
   useUom,
   useStockLevels,
-  type StockLevelRow,
 } from "@/lib/api/hooks/inventory";
-import { ProductStatusBadge } from "@/features/inventory/products/ProductStatusBadge";
-import type {
-  InventoryProduct,
-  InventoryCategory,
-  InventoryUom,
-} from "@/types/inventory";
 
 interface ProductDetailPageProps {
   params: Promise<{ productId: string }>;
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface UomOption {
+  id: number;
+  name: string;
+  abbreviation: string;
+}
+
+interface ProductVariant {
+  id: number;
+  name: string;
+  sku: string;
+  costPrice?: string | number | null;
+  sellingPrice?: string | number | null;
+  isActive: boolean;
+}
+
+interface StockLevel {
+  id: number;
+  warehouseName: string;
+  locationName?: string;
+  quantity: number;
+}
+
+interface ProductDetail {
+  id: number;
+  name: string;
+  sku: string;
+  description?: string | null;
+  categoryId?: number | null;
+  categoryName?: string | null;
+  uomId?: number | null;
+  uomName?: string | null;
+  costPrice?: string | number | null;
+  sellingPrice?: string | number | null;
+  reorderPoint?: number | string | null;
+  status?: "ACTIVE" | "INACTIVE" | "DISCONTINUED";
+  isActive?: boolean;
+  variants?: ProductVariant[];
+  stockLevels?: StockLevel[];
 }
 
 const editSchema = z.object({
@@ -90,6 +128,7 @@ const editSchema = z.object({
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
       "Must be a non-negative number"
     ),
+  isActive: z.string(),
 });
 
 type EditFormValues = z.infer<typeof editSchema>;
@@ -128,9 +167,9 @@ function EditForm({
   productId,
   onDone,
 }: {
-  product: InventoryProduct;
-  categories: InventoryCategory[];
-  uomOptions: InventoryUom[];
+  product: ProductDetail;
+  categories: Category[];
+  uomOptions: UomOption[];
   productId: number;
   onDone: () => void;
 }) {
@@ -144,9 +183,12 @@ function EditForm({
       description: product.description ?? "",
       categoryId: product.categoryId ? String(product.categoryId) : "",
       uomId: product.uomId ? String(product.uomId) : "",
-      costPrice: String(Number(product.costPrice)),
-      sellingPrice: String(Number(product.sellingPrice)),
-      reorderPoint: String(Number(product.reorderPoint)),
+      costPrice: product.costPrice != null ? String(product.costPrice) : "",
+      sellingPrice:
+        product.sellingPrice != null ? String(product.sellingPrice) : "",
+      reorderPoint:
+        product.reorderPoint != null ? String(product.reorderPoint) : "",
+      isActive: (product.isActive ?? product.status === "ACTIVE") ? "true" : "false",
     },
   });
 
@@ -166,6 +208,7 @@ function EditForm({
         reorderPoint: values.reorderPoint
           ? Number(values.reorderPoint)
           : undefined,
+        status: values.isActive !== "false" ? "ACTIVE" : "INACTIVE",
       });
       toast.success("Product updated");
       onDone();
@@ -326,6 +369,27 @@ function EditForm({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="true">Active</SelectItem>
+                    <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex justify-end gap-2">
@@ -359,11 +423,17 @@ export default function ProductDetailPage({
   const uomQuery = useUom();
   const stockQuery = useStockLevels({ productId });
 
-  const product = productQuery.data;
-  const categories = categoriesQuery.data ?? [];
-  const uomOptions = uomQuery.data ?? [];
+  const product = productQuery.data as ProductDetail | undefined;
+  const categories = (categoriesQuery.data ?? []) as Category[];
+  const uomOptions = (uomQuery.data ?? []) as UomOption[];
 
-  const stockItems: StockLevelRow[] = stockQuery.data?.items ?? [];
+  const stockItems = (() => {
+    const data = stockQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data as StockLevel[];
+    const typed = data as { items?: StockLevel[] };
+    return typed.items ?? [];
+  })();
 
   function handleEditClick(): void {
     setEditing(true);
@@ -444,11 +514,11 @@ export default function ProductDetailPage({
                   />
                   <InfoRow
                     label="Category"
-                    value={product.category?.name ?? "—"}
+                    value={product.categoryName ?? "—"}
                   />
                   <InfoRow
                     label="Unit of Measure"
-                    value={product.uom?.name ?? "—"}
+                    value={product.uomName ?? "—"}
                   />
                   <InfoRow
                     label="Cost Price"
@@ -468,11 +538,21 @@ export default function ProductDetailPage({
                   />
                   <InfoRow
                     label="Reorder Point"
-                    value={formatPrice(product.reorderPoint)}
+                    value={
+                      product.reorderPoint != null
+                        ? String(product.reorderPoint)
+                        : "—"
+                    }
                   />
                   <InfoRow
                     label="Status"
-                    value={<ProductStatusBadge status={product.status} />}
+                    value={
+                      <Badge
+                        variant={(product.isActive ?? product.status === "ACTIVE") ? "default" : "secondary"}
+                      >
+                        {(product.isActive ?? product.status === "ACTIVE") ? "Active" : "Inactive"}
+                      </Badge>
+                    }
                   />
                   {product.description && (
                     <div className="sm:col-span-2 lg:col-span-3">
@@ -606,13 +686,13 @@ export default function ProductDetailPage({
                       {stockItems.map((row) => (
                         <TableRow key={row.id}>
                           <TableCell className="text-sm font-medium text-foreground">
-                            {row.warehouseName ?? "—"}
+                            {row.warehouseName}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {row.locationCode ?? "—"}
+                            {row.locationName ?? "—"}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums font-medium">
-                            {row.onHand}
+                            {row.quantity}
                           </TableCell>
                         </TableRow>
                       ))}

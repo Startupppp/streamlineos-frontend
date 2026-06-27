@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -33,6 +34,32 @@ interface FormState {
   isActive: boolean;
   sortOrder: string;
   applicableRoles: string[];
+}
+
+interface RoleCheckboxProps {
+  role: string;
+  checked: boolean;
+  onToggle: (role: string) => void;
+}
+
+function RoleCheckbox({ role, checked, onToggle }: RoleCheckboxProps) {
+  const handleChange = useCallback(() => onToggle(role), [role, onToggle]);
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-2 hover:bg-muted/40 transition-colors duration-200">
+      <Checkbox
+        id={`role-${role}`}
+        checked={checked}
+        onCheckedChange={handleChange}
+        aria-label={role}
+      />
+      <Label
+        htmlFor={`role-${role}`}
+        className="text-xs font-normal cursor-pointer"
+      >
+        {role}
+      </Label>
+    </div>
+  );
 }
 
 interface DocumentTypeFormDialogProps {
@@ -91,72 +118,83 @@ export function DocumentTypeFormDialog({
       isPending={isPending}
     >
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
+        <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
           Name <span className="text-destructive">*</span>
         </Label>
         <Input
           placeholder="e.g. National ID / Aadhaar Card"
           value={form.name}
           onChange={handleNameChange}
+          className="h-9"
           aria-label="Document type name"
         />
         {form.name && (
           <p className="text-[11px] text-muted-foreground">
-            Slug: {slugify(form.name)}
+            Slug:{" "}
+            <code className="font-mono bg-muted px-1 rounded text-[10px]">
+              {slugify(form.name)}
+            </code>
           </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
+        <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
           Description{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
+          <span className="text-muted-foreground font-normal normal-case">(optional)</span>
         </Label>
         <Textarea
           placeholder="Brief description of what this document is..."
           value={form.description}
           onChange={handleDescriptionChange}
           rows={2}
+          className="resize-none"
           aria-label="Description"
         />
       </div>
 
       <Separator />
 
-      <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
-        <div>
-          <p className="text-sm font-medium">Mandatory Document</p>
-          <p className="text-xs text-muted-foreground">
-            Employees must submit this before onboarding is complete.
-          </p>
-        </div>
-        <Switch
-          checked={form.isMandatory}
-          onCheckedChange={handleMandatoryChange}
-          aria-label="Mandatory"
-        />
-      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+          Settings
+        </p>
 
-      {isEditing && (
-        <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
-          <div>
-            <p className="text-sm font-medium">Active</p>
-            <p className="text-xs text-muted-foreground">
-              Inactive types won&apos;t appear in new onboarding checklists.
+        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">Mandatory Document</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Employees must submit this before onboarding is complete.
             </p>
           </div>
           <Switch
-            checked={form.isActive}
-            onCheckedChange={handleActiveChange}
-            aria-label="Active"
+            checked={form.isMandatory}
+            onCheckedChange={handleMandatoryChange}
+            aria-label="Mandatory"
           />
         </div>
-      )}
+
+        {isEditing && (
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">Active</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Inactive types won&apos;t appear in new onboarding checklists.
+              </p>
+            </div>
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={handleActiveChange}
+              aria-label="Active"
+            />
+          </div>
+        )}
+      </div>
 
       <div className="space-y-1.5">
-        <Label className="text-sm font-medium">
+        <Label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
           Sort Order{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
+          <span className="text-muted-foreground font-normal normal-case">(optional)</span>
         </Label>
         <Input
           type="number"
@@ -165,6 +203,7 @@ export function DocumentTypeFormDialog({
           placeholder="e.g. 1"
           value={form.sortOrder}
           onChange={handleSortOrderChange}
+          className="h-9"
           aria-label="Sort order"
         />
         <p className="text-[11px] text-muted-foreground">
@@ -174,29 +213,23 @@ export function DocumentTypeFormDialog({
 
       <Separator />
 
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">
-          Applicable Roles{" "}
-          <span className="text-muted-foreground font-normal">
-            (leave empty = all roles)
-          </span>
-        </Label>
+      <div className="space-y-2.5">
+        <div>
+          <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+            Applicable Roles
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Leave empty to apply to all roles.
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {ALL_ROLES.map((r) => (
-            <div key={r} className="flex items-center gap-2">
-              <Checkbox
-                id={`role-${r}`}
-                checked={form.applicableRoles.includes(r)}
-                onCheckedChange={() => onToggleRole(r)}
-                aria-label={r}
-              />
-              <Label
-                htmlFor={`role-${r}`}
-                className="text-xs font-normal cursor-pointer"
-              >
-                {r}
-              </Label>
-            </div>
+            <RoleCheckbox
+              key={r}
+              role={r}
+              checked={form.applicableRoles.includes(r)}
+              onToggle={onToggleRole}
+            />
           ))}
         </div>
       </div>

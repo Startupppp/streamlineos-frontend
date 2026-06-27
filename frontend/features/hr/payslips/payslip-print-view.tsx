@@ -59,104 +59,149 @@ export function PayslipPrintView({ payslip, containerRef }: PayslipPrintViewProp
   const overtimeDays = parseFloat(payslip.overtimeDays || "0");
   const overtimeHoursVal = parseFloat(payslip.overtimeHours || "0");
 
+  const employeeName = `${payslip.user?.firstName ?? ""} ${payslip.user?.lastName ?? ""}`.trim() || "-";
+  const joiningDate = payslip.user?.joiningDate
+    ? format(new Date(payslip.user.joiningDate), "dd MMM yyyy")
+    : "-";
+
+  const detailRows: [string, string][] = [
+    ["Employee Name", employeeName],
+    ["Employee ID", `VC${payslip.user?.employeeId || "25001"}`],
+    ["Designation", payslip.user?.designation || "-"],
+    ["Date of Joining", joiningDate],
+    ["PAN Number", payslip.user?.taxId || "-"],
+    ["Bank Name", getBankDetail(payslip, "bankName")],
+    ["Bank Account No.", getBankDetail(payslip, "accountNumber")],
+  ];
+
   return (
     <div
       ref={containerRef}
       data-payslip-content
-      className="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto relative overflow-hidden"
-      style={{ fontFamily: "Arial, sans-serif" }}
+      style={{
+        backgroundColor: "#ffffff",
+        padding: "32px",
+        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        position: "relative",
+        overflow: "hidden",
+        minHeight: "900px",
+      }}
     >
       <div
         data-watermark
-        className="absolute pointer-events-none"
         style={{
+          position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -50%)",
+          transform: "translate(-50%, -50%) rotate(-30deg)",
           zIndex: 0,
-          opacity: 0.06,
-          fontSize: "120px",
-          fontWeight: "bold",
+          opacity: 0.04,
+          fontSize: "100px",
+          fontWeight: 900,
           color: "#0f2b7f",
-          letterSpacing: "20px",
+          letterSpacing: "16px",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          userSelect: "none",
         }}
       >
         {orgName.toUpperCase()}
       </div>
 
-      <div className="relative" style={{ zIndex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "8px" }}>
-          <div
-            style={{
-              width: "64px",
-              height: "64px",
-              backgroundColor: "#0f2b7f",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            {orgLogoUrl ? (
-              <img src={orgLogoUrl} alt={orgName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <span style={{ color: "#ffffff", fontSize: "24px", fontWeight: "bold" }}>{orgInitial}</span>
-            )}
-          </div>
-          <div>
-            <h1
-              style={{
-                fontSize: "28px",
-                fontWeight: "bold",
-                color: "#0f2b7f",
-                letterSpacing: "2px",
-                margin: 0,
-              }}
-            >
-              {orgName.toUpperCase()}
-            </h1>
-          </div>
-        </div>
-
-        <h2
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div
           style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "18px",
-            marginTop: "32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             marginBottom: "24px",
-            textDecoration: "underline",
-            color: "#111827",
+            paddingBottom: "20px",
+            borderBottom: "2px solid #0f2b7f",
           }}
         >
-          PAYSLIP FOR THE MONTH OF{" "}
-          {format(parseISO(payslip.month + "-01"), "MMMM yyyy").toUpperCase()}
-        </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                backgroundColor: "#0f2b7f",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              {orgLogoUrl ? (
+                <img
+                  src={orgLogoUrl}
+                  alt={orgName}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ color: "#ffffff", fontSize: "22px", fontWeight: 800 }}>
+                  {orgInitial}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 800,
+                  color: "#0f2b7f",
+                  letterSpacing: "3px",
+                  margin: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {orgName.toUpperCase()}
+              </h1>
+              <p style={{ fontSize: "11px", color: "#6b7280", margin: "4px 0 0", letterSpacing: "0.05em" }}>
+                PAYROLL MANAGEMENT
+              </p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                display: "inline-block",
+                backgroundColor: "#0f2b7f",
+                color: "#ffffff",
+                padding: "6px 16px",
+                borderRadius: "6px",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                marginBottom: "6px",
+              }}
+            >
+              PAYSLIP
+            </div>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "#111827", margin: 0 }}>
+              {format(parseISO(payslip.month + "-01"), "MMMM yyyy").toUpperCase()}
+            </p>
+          </div>
+        </div>
 
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: "8px 48px",
-            marginBottom: "32px",
-            fontSize: "14px",
+            gap: "6px 40px",
+            marginBottom: "24px",
+            padding: "16px",
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            fontSize: "12px",
           }}
         >
-          {[
-            ["Employee Name:", `${payslip.user?.firstName ?? ""} ${payslip.user?.lastName ?? ""}`.trim() || "-"],
-            ["Date of Joining:", payslip.user?.joiningDate ? format(new Date(payslip.user.joiningDate), "dd-MM-yyyy") : "-"],
-            ["Designation:", payslip.user?.designation || "-"],
-            ["No of Days:", "31 Days"],
-            ["EMP ID:", `VC${payslip.user?.employeeId || "25001"}`],
-            ["PAN Number:", payslip.user?.taxId || "-"],
-            ["Bank Name:", getBankDetail(payslip, "bankName")],
-            ["LOP:", "00 Day"],
-            ["Bank Acc Number:", getBankDetail(payslip, "accountNumber")],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: "flex" }}>
-              <span style={{ color: "#374151", width: "160px" }}>{label}</span>
-              <span style={{ fontWeight: 500, color: "#111827" }}>{value}</span>
+          {detailRows.map(([label, value]) => (
+            <div key={label} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+              <span style={{ color: "#6b7280", minWidth: "130px", fontWeight: 500 }}>{label}:</span>
+              <span style={{ fontWeight: 600, color: "#111827" }}>{value}</span>
             </div>
           ))}
         </div>

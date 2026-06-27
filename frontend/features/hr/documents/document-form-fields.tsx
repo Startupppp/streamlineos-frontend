@@ -3,7 +3,7 @@
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, X, Tags, Shield, Globe } from "lucide-react";
+import { CalendarIcon, X, Plus, Shield, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
@@ -16,7 +16,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const formSchema = z.object({
@@ -73,14 +72,16 @@ export function DocumentFormFields({
   const form = useFormContext<DocumentFormData>();
 
   return (
-    <div className="grid grid-cols-2 gap-5">
+    <div className="space-y-4">
       {filesCount <= 1 && (
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem className="col-span-2">
-              <FormLabel>Document Name *</FormLabel>
+            <FormItem>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Document Name <span className="text-rose-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder="e.g., Employment Contract 2024"
@@ -97,66 +98,74 @@ export function DocumentFormFields({
         />
       )}
 
-      <FormField
-        control={form.control}
-        name="type"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Document Type *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {filteredDocumentTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Type <span className="text-rose-500">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {filteredDocumentTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <FormField
-        control={form.control}
-        name="category"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Category</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {filteredCategories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Category
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  {filteredCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       {isAdmin && filteredEmployees.length > 0 && (
         <FormField
           control={form.control}
           name="userId"
           render={({ field }) => (
-            <FormItem className="col-span-2">
-              <FormLabel>Associate with Employee</FormLabel>
+            <FormItem>
+              <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+                Associate with Employee
+              </FormLabel>
               <Select
                 onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
-                value={field.value || "none"}
+                value={field.value ?? "none"}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -172,7 +181,7 @@ export function DocumentFormFields({
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>Leave empty for company-wide documents</FormDescription>
+              <FormDescription className="text-[11px]">Leave empty for company-wide documents</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -183,8 +192,10 @@ export function DocumentFormFields({
         control={form.control}
         name="description"
         render={({ field }) => (
-          <FormItem className="col-span-2">
-            <FormLabel>Description</FormLabel>
+          <FormItem>
+            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Description
+            </FormLabel>
             <FormControl>
               <Textarea placeholder="Brief description of the document..." rows={2} {...field} />
             </FormControl>
@@ -197,17 +208,19 @@ export function DocumentFormFields({
         control={form.control}
         name="expiryDate"
         render={({ field }) => (
-          <FormItem className="flex flex-col col-span-2">
-            <FormLabel>Expiry Date</FormLabel>
+          <FormItem className="flex flex-col">
+            <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+              Expiry Date
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
                     variant="outline"
-                    className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                    className={cn("justify-start text-left font-normal", !field.value && "text-muted-foreground")}
                   >
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                     {field.value ? format(field.value, "PPP") : <span>No expiry date</span>}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </FormControl>
               </PopoverTrigger>
@@ -221,48 +234,56 @@ export function DocumentFormFields({
                 />
               </PopoverContent>
             </Popover>
-            <FormDescription>Set an expiry date for documents like contracts or certificates</FormDescription>
+            <FormDescription className="text-[11px]">
+              Set an expiry date for contracts or certificates
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      <div className="col-span-2 space-y-2">
-        <label className="text-sm font-medium">Tags</label>
-        <div className="flex gap-3">
+      <div className="space-y-2">
+        <label className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
+          Tags
+        </label>
+        <div className="flex gap-2">
           <Input
-            placeholder="Add tag..."
+            placeholder="Add a tag..."
             value={tagInput}
             onChange={onTagInputChange}
             onKeyDown={onTagKeyDown}
-            className="flex-1"
+            className="flex-1 h-9"
           />
           <Button
             type="button"
             variant="outline"
             size="icon"
+            className="h-9 w-9 shrink-0"
             onClick={onAddTag}
             disabled={!tagInput.trim()}
             aria-label="Add tag"
           >
-            <Tags className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="pl-2.5 pr-1.5 py-1 flex items-center gap-1">
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground border border-border"
+              >
                 {tag}
                 <button
                   type="button"
                   data-tag={tag}
                   onClick={onRemoveTag}
                   aria-label={`Remove tag ${tag}`}
-                  className="hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
-              </Badge>
+              </span>
             ))}
           </div>
         )}
@@ -272,17 +293,21 @@ export function DocumentFormFields({
         control={form.control}
         name="isPublic"
         render={({ field }) => (
-          <FormItem className="col-span-2 flex items-center justify-between rounded-lg border p-4 bg-muted/30">
+          <FormItem className="flex items-center justify-between rounded-xl border border-border p-3 bg-muted/20">
             <div className="space-y-0.5">
-              <FormLabel className="flex items-center gap-2 text-sm font-medium">
+              <FormLabel className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 {field.value ? (
-                  <Globe className="h-4 w-4 text-emerald-600" />
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+                    <Globe className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
                 ) : (
-                  <Shield className="h-4 w-4 text-amber-600" />
+                  <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                    <Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
                 )}
                 {field.value ? "Public Document" : "Private Document"}
               </FormLabel>
-              <FormDescription className="text-xs">
+              <FormDescription className="text-[11px] pl-9">
                 {field.value
                   ? "All employees can view this document"
                   : "Only admins and the owner can view this"}

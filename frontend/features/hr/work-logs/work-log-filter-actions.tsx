@@ -14,7 +14,7 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Users, Check, ChevronDown, Filter, CalendarDays, Download } from "lucide-react";
+import { Users, Check, ChevronDown, SlidersHorizontal, CalendarDays, Download } from "lucide-react";
 
 export interface WorkLogFilters {
   year: number;
@@ -75,6 +75,7 @@ export function WorkLogFilterActions({
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [sheetPickerOpen, setSheetPickerOpen] = useState(false);
   const [sheetPickerSearch, setSheetPickerSearch] = useState("");
+
   const handleYearChange = useCallback((v: string) => {
     const y = parseInt(v);
     setFilters((p) => ({ ...p, year: y }));
@@ -110,7 +111,7 @@ export function WorkLogFilterActions({
   }, [setDraftFilters]);
 
   const handleDraftMonthChange = useCallback((v: string) => {
-    setDraftFilters((p) => ({ ...p, month: v ==="all" ? undefined : parseInt(v) }));
+    setDraftFilters((p) => ({ ...p, month: v === "all" ? undefined : parseInt(v) }));
   }, [setDraftFilters]);
 
   const handleDraftDateFromChange = useCallback((val: string) => {
@@ -152,6 +153,13 @@ export function WorkLogFilterActions({
     setDraftFilters({ year: currentYear, quarter: currentQuarter });
   }, [setDraftFilters, currentYear, currentQuarter]);
 
+  const handleMyLogsSelect = useCallback(() => {
+    setFilters((p) => ({ ...p, selectedUserId: undefined }));
+    setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
+    setEmployeeSearchOpen(false);
+    setEmployeeSearch("");
+  }, [setFilters, setDraftFilters]);
+
   const filteredEmployees = draftFilters.departmentId
     ? (employees ?? []).filter((e) => e.departmentId?.toString() === draftFilters.departmentId)
     : (employees ?? []);
@@ -169,7 +177,7 @@ export function WorkLogFilterActions({
       const monthIdx = startMonthIdx + offset;
       return {
         idx: monthIdx,
-        name: format(new Date(draftFilters.year, monthIdx, 1),"MMMM"),
+        name: format(new Date(draftFilters.year, monthIdx, 1), "MMMM"),
       };
     });
   })();
@@ -177,25 +185,25 @@ export function WorkLogFilterActions({
   return (
     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
       <Select value={filters.year.toString()} onValueChange={handleYearChange}>
-        <SelectTrigger className="w-[90px] sm:w-[100px] h-9" aria-label="Select year">
+        <SelectTrigger className="w-[84px] h-8 text-xs border-border" aria-label="Select year">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
           {availableYears.map((y) => (
-            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+            <SelectItem key={y} value={y.toString()} className="text-xs">{y}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={filters.quarter.toString()} onValueChange={handleQuarterChange}>
-        <SelectTrigger className="w-[130px] sm:w-[150px] h-9" aria-label="Select quarter">
+        <SelectTrigger className="w-[130px] h-8 text-xs border-border" aria-label="Select quarter">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
-          <SelectItem value="1">Q1 (Jan - Mar)</SelectItem>
-          <SelectItem value="2">Q2 (Apr - Jun)</SelectItem>
-          <SelectItem value="3">Q3 (Jul - Sep)</SelectItem>
-          <SelectItem value="4">Q4 (Oct - Dec)</SelectItem>
+          <SelectItem value="1" className="text-xs">Q1 (Jan – Mar)</SelectItem>
+          <SelectItem value="2" className="text-xs">Q2 (Apr – Jun)</SelectItem>
+          <SelectItem value="3" className="text-xs">Q3 (Jul – Sep)</SelectItem>
+          <SelectItem value="4" className="text-xs">Q4 (Oct – Dec)</SelectItem>
         </SelectContent>
       </Select>
 
@@ -206,10 +214,10 @@ export function WorkLogFilterActions({
               variant="outline"
               role="combobox"
               aria-expanded={employeeSearchOpen}
-              className="h-9 w-[180px] sm:w-[220px] justify-between font-normal"
+              className="h-8 w-[170px] justify-between font-normal text-xs border-border"
             >
               <span className="flex items-center gap-1.5 truncate">
-                <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <Users className="h-3 w-3 text-muted-foreground shrink-0" />
                 {filters.selectedUserId
                   ? (() => {
                       const emp = (employees ?? []).find((e) => e.id === filters.selectedUserId);
@@ -217,49 +225,43 @@ export function WorkLogFilterActions({
                     })()
                   : "My Logs"}
               </span>
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronDown className="ml-1.5 h-3 w-3 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[260px] p-0" align="start">
+          <PopoverContent className="w-[240px] p-0" align="start">
             <Command>
               <CommandInput
                 placeholder="Search employee..."
                 value={employeeSearch}
                 onValueChange={setEmployeeSearch}
+                className="h-8 text-xs"
               />
               <CommandList>
-                <CommandEmpty>No employee found.</CommandEmpty>
+                <CommandEmpty className="text-xs py-3">No employee found.</CommandEmpty>
                 <CommandGroup>
                   <CommandItem
                     value="My Logs"
-                    onSelect={() => {
-                      setFilters((p) => ({ ...p, selectedUserId: undefined }));
-                      setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
-                      setEmployeeSearchOpen(false);
-                      setEmployeeSearch("");
-                    }}
+                    onSelect={handleMyLogsSelect}
+                    className="text-xs"
                   >
-                    <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                    <Check className={cn("mr-2 h-3.5 w-3.5", !filters.selectedUserId ? "opacity-100" : "opacity-0")} />
                     My Logs
                   </CommandItem>
                   {(employees ?? []).map((emp) => {
-                      const empName = [emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown";
-                      return (
-                      <CommandItem
+                    const empName = [emp.firstName, emp.lastName].filter(Boolean).join(" ") || "Unknown";
+                    return (
+                      <EmployeeDropdownItem
                         key={emp.id}
-                        value={empName}
-                        onSelect={() => {
-                          setFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                          setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
-                          setEmployeeSearchOpen(false);
-                          setEmployeeSearch("");
-                        }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ?"opacity-100" :"opacity-0")} />
-                        {empName}
-                      </CommandItem>
-                      );
-                    })}
+                        employee={emp}
+                        empName={empName}
+                        isSelected={filters.selectedUserId === emp.id}
+                        setFilters={setFilters}
+                        setDraftFilters={setDraftFilters}
+                        setOpen={setEmployeeSearchOpen}
+                        setSearch={setEmployeeSearch}
+                      />
+                    );
+                  })}
                 </CommandGroup>
               </CommandList>
             </Command>
@@ -269,27 +271,27 @@ export function WorkLogFilterActions({
 
       <Sheet onOpenChange={handleSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 relative">
-            <Filter className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border relative">
+            <SlidersHorizontal className="h-3 w-3" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-blue-500 text-white border-0">
+              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-blue-500 text-white border-0 font-bold">
                 {activeFilterCount}
               </Badge>
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-sm overflow-y-auto p-5">
-          <SheetHeader className="pb-4">
-            <SheetTitle>Advanced Filters</SheetTitle>
-            <SheetDescription>Refine your work logs view</SheetDescription>
+        <SheetContent className="w-full sm:max-w-sm overflow-y-auto p-0">
+          <SheetHeader className="p-5 pb-4 border-b border-border">
+            <SheetTitle className="text-sm font-semibold">Advanced Filters</SheetTitle>
+            <SheetDescription className="text-xs">Refine your work logs view</SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4">
+          <div className="p-5 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Year</Label>
+              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
               <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select year" /></SelectTrigger>
+                <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
@@ -299,25 +301,25 @@ export function WorkLogFilterActions({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Quarter</Label>
+              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
               <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select quarter" /></SelectTrigger>
+                <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="1">Q1 (Jan - Mar)</SelectItem>
-                  <SelectItem value="2">Q2 (Apr - Jun)</SelectItem>
-                  <SelectItem value="3">Q3 (Jul - Sep)</SelectItem>
-                  <SelectItem value="4">Q4 (Oct - Dec)</SelectItem>
+                  <SelectItem value="1">Q1 (Jan – Mar)</SelectItem>
+                  <SelectItem value="2">Q2 (Apr – Jun)</SelectItem>
+                  <SelectItem value="3">Q3 (Jul – Sep)</SelectItem>
+                  <SelectItem value="4">Q4 (Oct – Dec)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Month</Label>
+              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Month</Label>
               <Select
-                value={draftFilters.month !== undefined ? draftFilters.month.toString() :"all"}
+                value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
                 onValueChange={handleDraftMonthChange}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-9 text-sm">
                   <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue placeholder="All months" />
                 </SelectTrigger>
@@ -331,21 +333,21 @@ export function WorkLogFilterActions({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Date Range</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">From</Label>
+              <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Date Range</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground font-medium">From</Label>
                   <DatePicker
-                    value={draftFilters.dateFrom ||""}
+                    value={draftFilters.dateFrom || ""}
                     onChange={handleDraftDateFromChange}
                     placeholder="From date"
                     toDate={draftFilters.dateTo ? new Date(draftFilters.dateTo) : undefined}
                   />
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">To</Label>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground font-medium">To</Label>
                   <DatePicker
-                    value={draftFilters.dateTo ||""}
+                    value={draftFilters.dateTo || ""}
                     onChange={handleDraftDateToChange}
                     placeholder="To date"
                     fromDate={draftFilters.dateFrom ? new Date(draftFilters.dateFrom) : undefined}
@@ -356,10 +358,10 @@ export function WorkLogFilterActions({
 
             {isAdminOrCeo && departments && departments.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Department</Label>
-                <Select value={draftFilters.departmentId ||"all"} onValueChange={handleDraftDepartmentChange}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="All departments" /></SelectTrigger>
-                  <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin">
+                <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
+                <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
+                  <SelectTrigger className="w-full h-9 text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
                     <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
@@ -371,14 +373,14 @@ export function WorkLogFilterActions({
 
             {isAdminOrCeo && employees && employees.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Employee</Label>
+                <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Employee</Label>
                 <Popover open={sheetPickerOpen} onOpenChange={setSheetPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
                       aria-expanded={sheetPickerOpen}
-                      className="w-full justify-between font-normal"
+                      className="w-full h-9 justify-between font-normal text-sm"
                     >
                       <span className="flex items-center gap-1.5 truncate">
                         <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -393,16 +395,17 @@ export function WorkLogFilterActions({
                         placeholder="Search employee..."
                         value={sheetPickerSearch}
                         onValueChange={setSheetPickerSearch}
+                        className="h-8 text-xs"
                       />
                       <CommandList>
-                        <CommandEmpty>No employee found.</CommandEmpty>
+                        <CommandEmpty className="text-xs py-3">No employee found.</CommandEmpty>
                         <CommandGroup>
-                          <CommandItem value="My Logs" onSelect={handleSelectMyLogs}>
-                            <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ?"opacity-100" :"opacity-0")} />
+                          <CommandItem value="My Logs" onSelect={handleSelectMyLogs} className="text-xs">
+                            <Check className={cn("mr-2 h-3.5 w-3.5", !draftFilters.selectedUserId ? "opacity-100" : "opacity-0")} />
                             My Logs
                           </CommandItem>
                           {filteredEmployees.map((emp) => (
-                                <EmployeeCommandItem
+                            <EmployeeCommandItem
                               key={emp.id}
                               employee={emp}
                               isSelected={draftFilters.selectedUserId === emp.id}
@@ -420,12 +423,12 @@ export function WorkLogFilterActions({
             )}
           </div>
 
-          <SheetFooter className="flex flex-row gap-2 sm:flex-row pt-4">
-            <Button variant="outline" className="flex-1" onClick={handleResetDraft}>
+          <SheetFooter className="flex flex-row gap-2 p-5 pt-0 border-t border-border">
+            <Button variant="outline" className="flex-1 h-9" onClick={handleResetDraft}>
               Reset
             </Button>
             <SheetClose asChild>
-              <Button className="flex-1" onClick={handleApplyFilters}>
+              <Button className="flex-1 h-9" onClick={handleApplyFilters}>
                 Apply Filters
               </Button>
             </SheetClose>
@@ -434,12 +437,44 @@ export function WorkLogFilterActions({
       </Sheet>
 
       {isAdminOrCeo && (
-        <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={onExport}>
-          <Download className="h-3.5 w-3.5" />
+        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border" onClick={onExport}>
+          <Download className="h-3 w-3" />
           <span className="hidden sm:inline">Export</span>
         </Button>
       )}
     </div>
+  );
+}
+
+function EmployeeDropdownItem({
+  employee,
+  empName,
+  isSelected,
+  setFilters,
+  setDraftFilters,
+  setOpen,
+  setSearch,
+}: {
+  employee: WorkLogFilterEmployee;
+  empName: string;
+  isSelected: boolean;
+  setFilters: React.Dispatch<React.SetStateAction<WorkLogFilters>>;
+  setDraftFilters: React.Dispatch<React.SetStateAction<WorkLogFilters>>;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const handleSelect = useCallback(() => {
+    setFilters((p) => ({ ...p, selectedUserId: employee.id }));
+    setDraftFilters((p) => ({ ...p, selectedUserId: employee.id }));
+    setOpen(false);
+    setSearch("");
+  }, [employee.id, setFilters, setDraftFilters, setOpen, setSearch]);
+
+  return (
+    <CommandItem value={empName} onSelect={handleSelect} className="text-xs">
+      <Check className={cn("mr-2 h-3.5 w-3.5", isSelected ? "opacity-100" : "opacity-0")} />
+      {empName}
+    </CommandItem>
   );
 }
 
@@ -462,10 +497,12 @@ function EmployeeCommandItem({
     onClearSearch("");
   }, [employee.id, onSelect, onClose, onClearSearch]);
 
+  const empName = [employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown";
+
   return (
-    <CommandItem value={[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"} onSelect={handleSelect}>
-      <Check className={cn("mr-2 h-4 w-4", isSelected ?"opacity-100" :"opacity-0")} />
-      {[employee.firstName, employee.lastName].filter(Boolean).join(" ") || "Unknown"}
+    <CommandItem value={empName} onSelect={handleSelect} className="text-xs">
+      <Check className={cn("mr-2 h-3.5 w-3.5", isSelected ? "opacity-100" : "opacity-0")} />
+      {empName}
     </CommandItem>
   );
 }

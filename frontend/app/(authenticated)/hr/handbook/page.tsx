@@ -1,19 +1,19 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
 import {
@@ -22,6 +22,7 @@ import {
   ACCEPTED_FILE_EXTENSIONS,
   MAX_FILE_SIZE,
 } from "@/features/hr/handbook/handbook-create-form";
+import { cn } from "@/lib/utils";
 
 interface HandbookVersion {
   id: number;
@@ -51,6 +52,13 @@ const CONSECUTIVE_SPECIAL_CHARS_REGEX = /[^a-zA-Z0-9 ]{2,}/;
 const URL_HTTPS_REGEX = /^https:\/\/.+/;
 
 type DocumentInputMode = "url" | "file";
+type StatusFilter = "ALL" | "PUBLISHED" | "DRAFT";
+
+const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "DRAFT", label: "Drafts" },
+];
 
 function HandbookContent() {
   const qc = useQueryClient();
@@ -102,7 +110,23 @@ function HandbookContent() {
   const [documentUrl, setDocumentUrl] = useState("");
   const [documentInputMode, setDocumentInputMode] = useState<DocumentInputMode>("url");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredVersions = useMemo(() => {
+    if (!versions) return [];
+    return versions.filter((v) => {
+      const matchesSearch =
+        !searchQuery ||
+        v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.version.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "PUBLISHED" ? !!v.publishedAt : !v.publishedAt);
+      return matchesSearch && matchesStatus;
+    });
+  }, [versions, searchQuery, statusFilter]);
 
   const resetForm = useCallback(() => {
     setVersion("");
@@ -330,15 +354,38 @@ function HandbookContent() {
 
   const handleNewVersionClick = useCallback(() => setSheetOpen(true), []);
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleStatusFilterAll = useCallback(() => setStatusFilter("ALL"), []);
+  const handleStatusFilterPublished = useCallback(() => setStatusFilter("PUBLISHED"), []);
+  const handleStatusFilterDraft = useCallback(() => setStatusFilter("DRAFT"), []);
+
+  const statusFilterHandlers: Record<StatusFilter, () => void> = {
+    ALL: handleStatusFilterAll,
+    PUBLISHED: handleStatusFilterPublished,
+    DRAFT: handleStatusFilterDraft,
+  };
+
   const isSubmitting = create.isPending || update.isPending || uploadDoc.isPending;
+  const isFiltered = !!searchQuery || statusFilter !== "ALL";
 
   if (isLoading) {
     return (
-      <PageWrapper title="Handbook" subtitle="Employee handbook versions">
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20" />
-          ))}
+      <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-[72px] rounded-2xl" />
+            ))}
+          </div>
         </div>
       </PageWrapper>
     );
@@ -350,41 +397,92 @@ function HandbookContent() {
       subtitle="Manage and publish handbook versions"
       badge={`${versions?.length ?? 0} versions`}
       actions={
-        <Button size="sm" onClick={handleNewVersionClick}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
+        <Button size="sm" className="h-8 gap-1.5" onClick={handleNewVersionClick}>
+          <Plus className="h-3.5 w-3.5" />
           New Version
         </Button>
       }
     >
-      {!versions?.length ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <EmptyDocumentsIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-            <p className="text-sm text-muted-foreground">No handbook versions yet.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {versions.map((v) => (
-            <HandbookVersionCard
-              key={v.id}
-              version={v}
-              onPublish={handlePublish}
-              onUnpublish={handleUnpublish}
-              onEdit={handleOpenEdit}
-              onDelete={handleOpenDeleteDialog}
-              isUpdating={update.isPending}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search versions..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-8 h-8 text-xs w-48"
             />
-          ))}
+          </div>
+          <div className="flex items-center gap-1">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onClick={statusFilterHandlers[f.value]}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200",
+                  statusFilter === f.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+
+        {!filteredVersions.length ? (
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="py-14 flex flex-col items-center justify-center gap-3">
+              <EmptyDocumentsIllustration className="h-36 w-36 opacity-95" />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  {isFiltered ? "No versions match your filters" : "No handbook versions yet"}
+                </p>
+                {!isFiltered && (
+                  <p className="text-xs text-muted-foreground">
+                    Create your first handbook version to get started.
+                  </p>
+                )}
+              </div>
+              {!isFiltered && (
+                <Button size="sm" className="h-8 gap-1.5 mt-1" onClick={handleNewVersionClick}>
+                  <Plus className="h-3.5 w-3.5" />
+                  New Version
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredVersions.map((v) => (
+              <HandbookVersionCard
+                key={v.id}
+                version={v}
+                onPublish={handlePublish}
+                onUnpublish={handleUnpublish}
+                onEdit={handleOpenEdit}
+                onDelete={handleOpenDeleteDialog}
+                isUpdating={update.isPending}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <HrSheet
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         title={editVersion ? "Edit Handbook Version" : "New Handbook Version"}
+        description={
+          editVersion
+            ? "Update the details for this handbook version."
+            : "Add a new version of the employee handbook."
+        }
         onSubmit={handleSave}
-        submitLabel={editVersion ? "Save Changes" : "Create"}
+        submitLabel={editVersion ? "Save Changes" : "Create Version"}
         isPending={isSubmitting}
       >
         <HandbookCreateForm

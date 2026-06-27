@@ -3,22 +3,19 @@
 import { useState, useMemo, memo } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isWeekend, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/lib/api/hooks/hr";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
+import { cn } from "@/lib/utils";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+const LEGEND_STATUSES = ["present", "wfh", "leave", "absent", "holiday", "weekend"] as const;
 
 export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: { userId: string }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -63,10 +60,8 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
       const holidayName = holidayMap.get(dateStr);
 
       if (holidayName) return { date, status: "holiday", holidayName };
-
       if (date > today) return { date, status: "future" };
       if (isWeekend(date)) return { date, status: "weekend" };
-
       if (wfhMap.has(dateStr)) return { date, status: "wfh" };
 
       const attendanceStatus = attendanceMap.get(dateStr);
@@ -75,7 +70,6 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
       }
 
       if (isToday(date)) return { date, status: "none" };
-
       return { date, status: "absent" };
     });
   }, [currentMonth, monthlyLogs, wfhRequests, holidaysList]);
@@ -83,50 +77,49 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
   const startDayOfWeek = getDay(startOfMonth(currentMonth));
   const paddingDays = Array.from({ length: startDayOfWeek }, (_, i) => i);
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+  const handlePrevMonth = () =>
+    setCurrentMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+
+  const handleNextMonth = () =>
+    setCurrentMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
 
   return (
-    <Card className="overflow-hidden border-border shadow-sm">
-      <CardHeader className="pb-3 pt-5">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
-              <CalendarDays className="h-4 w-4 text-blue-600" />
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <CardHeader className="pb-3 pt-5 px-5">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+              <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             Attendance Calendar
           </CardTitle>
-          <div className="flex items-center gap-1">
-            <Select
-              value={String(month)}
-              onValueChange={(v) => setCurrentMonth(new Date(year, parseInt(v), 1))}
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-md"
+              onClick={handlePrevMonth}
+              aria-label="Previous month"
             >
-              <SelectTrigger className="h-8 w-[110px] text-xs border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {MONTH_NAMES.map((m, i) => (
-                  <SelectItem key={m} value={String(i)} className="text-xs">{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={String(year)}
-              onValueChange={(v) => setCurrentMonth(new Date(parseInt(v), month, 1))}
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+            <span className="text-xs font-semibold text-foreground min-w-[112px] text-center tabular-nums select-none">
+              {MONTH_NAMES[month]} {year}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-md"
+              onClick={handleNextMonth}
+              aria-label="Next month"
             >
-              <SelectTrigger className="h-8 w-[72px] text-xs border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                {yearOptions.map((y) => (
-                  <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
+
+      <CardContent className="pb-5 px-5">
         <div className="max-w-[340px] mx-auto">
           {isLoading ? (
             <div className="grid grid-cols-7 gap-1.5">
@@ -138,7 +131,10 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
             <>
               <div className="grid grid-cols-7 gap-1.5">
                 {WEEKDAY_LABELS.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-muted-foreground uppercase tracking-wider py-1">
+                  <div
+                    key={day}
+                    className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-1"
+                  >
                     {day}
                   </div>
                 ))}
@@ -153,14 +149,17 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
                   const title = day.holidayName
                     ? `${format(day.date, "MMM dd")} – ${day.holidayName}`
                     : `${format(day.date, "MMM dd")}${config.label ? ` – ${config.label}` : ""}`;
+
                   return (
                     <div
                       key={`${format(day.date, "yyyy-MM-dd")}-${dayNum}`}
-                      className={`relative aspect-square flex min-w-0 items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                      className={cn(
+                        "relative aspect-square flex min-w-0 items-center justify-center rounded-md text-xs font-medium transition-colors duration-200",
                         isFutureOrNone
-                          ? "text-muted-foreground/40"
-                          : `${config.bg} ${config.text}`
-                      } ${isTodayDate ? "ring-2 ring-blue-500 ring-offset-1 ring-offset-background" : ""}`}
+                          ? "text-muted-foreground/40 hover:bg-muted/40"
+                          : cn(config.bg, config.text, "hover:opacity-90 cursor-default"),
+                        isTodayDate && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background"
+                      )}
                       title={title}
                     >
                       {dayNum}
@@ -169,11 +168,19 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
                 })}
               </div>
 
-              <div className="flex flex-wrap gap-4 pt-3 mt-1 border-t border-border" role="list" aria-label="Calendar legend">
-                {(["present", "wfh", "leave", "absent", "holiday", "weekend"] as const).map((status) => (
-                  <div key={status} className="flex items-center gap-2 text-xs text-muted-foreground" role="listitem">
-                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${statusConfig[status].dot}`} />
-                    <span>{statusConfig[status].label}</span>
+              <div
+                className="flex flex-wrap gap-x-3 gap-y-2 pt-3 mt-3 border-t border-border"
+                role="list"
+                aria-label="Calendar legend"
+              >
+                {LEGEND_STATUSES.map((status) => (
+                  <div
+                    key={status}
+                    className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+                    role="listitem"
+                  >
+                    <div className={cn("h-2 w-2 rounded-full shrink-0", statusConfig[status].dot)} />
+                    {statusConfig[status].label}
                   </div>
                 ))}
               </div>

@@ -1,6 +1,6 @@
 "use client";
-import { getErrorMessage } from "@/lib/get-error-message";
 
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyTicketIllustration } from "@/components/illustrations";
@@ -28,7 +28,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ScrollArea as SheetScrollArea } from "@/components/ui/scroll-area";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -43,6 +42,7 @@ import { toast } from "sonner";
 import { Plus, Search, Ticket, Clock, CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { formatDistanceToNow, format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { TicketPriority, TicketStatus, HelpdeskTicket } from "@/types/hr";
 
 const STATUS_OPTIONS: { value: TicketStatus | "ALL"; label: string }[] = [
@@ -70,6 +70,130 @@ const CATEGORY_OPTIONS = [
   "Other",
 ];
 
+function getTicketInitials(title: string): string {
+  const words = title.trim().split(/\s+/);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function getPriorityBadgeClass(priority: string): string {
+  switch (priority) {
+    case "URGENT":
+    case "HIGH":
+      return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800";
+    case "MEDIUM":
+      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800";
+    default:
+      return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800";
+  }
+}
+
+function getStatusBadgeClass(status: string): string {
+  switch (status) {
+    case "DONE":
+      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800";
+    case "IN_PROGRESS":
+    case "IN_REVIEW":
+      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800";
+    default:
+      return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800";
+  }
+}
+
+function getPriorityLabel(priority: string): string {
+  switch (priority) {
+    case "URGENT": return "Urgent";
+    case "HIGH": return "High";
+    case "MEDIUM": return "Medium";
+    default: return "Low";
+  }
+}
+
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case "DONE": return "Done";
+    case "IN_PROGRESS": return "In Progress";
+    case "IN_REVIEW": return "In Review";
+    default: return "To Do";
+  }
+}
+
+interface TicketTableRowProps {
+  ticket: HelpdeskTicket;
+  onView: (ticket: HelpdeskTicket) => void;
+}
+
+function TicketTableRow({ ticket, onView }: TicketTableRowProps) {
+  const handleView = useCallback(() => onView(ticket), [ticket, onView]);
+
+  return (
+    <TableRow className="group hover:bg-muted/30 transition-colors duration-200">
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-bold text-muted-foreground">
+              {getTicketInitials(ticket.title)}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground truncate max-w-[200px]">
+              {ticket.title}
+            </p>
+            {ticket.description && (
+              <p className="text-[11px] text-muted-foreground line-clamp-1 max-w-[200px]">
+                {ticket.description}
+              </p>
+            )}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="text-xs text-muted-foreground">{ticket.category ?? "—"}</span>
+      </TableCell>
+      <TableCell>
+        <span
+          className={cn(
+            "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            getPriorityBadgeClass(ticket.priority ?? "MEDIUM")
+          )}
+        >
+          {getPriorityLabel(ticket.priority ?? "MEDIUM")}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span
+          className={cn(
+            "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            getStatusBadgeClass(ticket.status ?? "TODO")
+          )}
+        >
+          {getStatusLabel(ticket.status ?? "TODO")}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="text-[11px] text-muted-foreground">
+          {ticket.createdAt
+            ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
+            : "—"}
+        </span>
+      </TableCell>
+      <TableCell>
+        <AISuggestReplyButton ticketId={ticket.id} compact />
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          onClick={handleView}
+          aria-label="View ticket details"
+        >
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 function TicketDetailSheet({
   ticket,
@@ -78,64 +202,118 @@ function TicketDetailSheet({
   ticket: HelpdeskTicket | null;
   onClose: () => void;
 }) {
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => { if (!open) onClose(); },
+    [onClose]
+  );
+
   if (!ticket) return null;
+
   return (
-    <Sheet open={!!ticket} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Sheet open={!!ticket} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
-          <SheetTitle className="text-base leading-snug pr-6">{ticket.title}</SheetTitle>
-          <SheetDescription className="text-xs">Ticket #{ticket.id} · Created {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : "—"}</SheetDescription>
+          <SheetTitle className="text-base font-semibold leading-snug pr-6">
+            {ticket.title}
+          </SheetTitle>
+          <SheetDescription className="text-xs">
+            Ticket #{ticket.id} · Created{" "}
+            {ticket.createdAt
+              ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
+              : "—"}
+          </SheetDescription>
         </SheetHeader>
-        <SheetScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 py-5 space-y-5">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Status</p>
-                <StatusBadge status={ticket.status ?? "TODO"} />
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    getStatusBadgeClass(ticket.status ?? "TODO")
+                  )}
+                >
+                  {getStatusLabel(ticket.status ?? "TODO")}
+                </span>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Priority</p>
-                <StatusBadge status={ticket.priority ?? "MEDIUM"} type="priority" />
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Priority
+                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    getPriorityBadgeClass(ticket.priority ?? "MEDIUM")
+                  )}
+                >
+                  {getPriorityLabel(ticket.priority ?? "MEDIUM")}
+                </span>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Category</p>
-                <p className="text-sm">{ticket.category ?? "—"}</p>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Category
+                </p>
+                <p className="text-sm text-foreground">{ticket.category ?? "—"}</p>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Assigned To</p>
-                <p className="text-sm">{ticket.assigneeId ? `ID: ${ticket.assigneeId}` : "Unassigned"}</p>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Assigned To
+                </p>
+                <p className="text-sm text-foreground">
+                  {ticket.assigneeId ? `ID: ${ticket.assigneeId}` : "Unassigned"}
+                </p>
               </div>
               {ticket.createdAt && (
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Created</p>
-                  <p className="text-sm">{format(new Date(ticket.createdAt), "MMM d, yyyy 'at' HH:mm")}</p>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {format(new Date(ticket.createdAt), "MMM d, yyyy 'at' HH:mm")}
+                  </p>
                 </div>
               )}
               {ticket.resolvedAt && (
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Resolved</p>
-                  <p className="text-sm">{format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' HH:mm")}</p>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Resolved
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' HH:mm")}
+                  </p>
                 </div>
               )}
             </div>
+
             {ticket.description && (
               <div className="space-y-1.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Description</p>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-lg bg-muted/50 p-3 border">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Description
+                </p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-muted/50 p-3 border border-border">
                   {ticket.description}
                 </p>
               </div>
             )}
+
             {ticket.resolution && (
               <div className="space-y-1.5">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Resolution</p>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-lg bg-emerald-500/5 border-emerald-500/20 border p-3">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Resolution
+                </p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3">
                   {ticket.resolution}
                 </p>
               </div>
             )}
-            <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Ticket Routing</p>
+
+            <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Ticket Routing
+              </p>
               <p className="text-xs text-muted-foreground">
                 {ticket.assigneeId
                   ? "This ticket has been assigned to a support agent."
@@ -143,9 +321,15 @@ function TicketDetailSheet({
               </p>
             </div>
           </div>
-        </SheetScrollArea>
+        </ScrollArea>
         <SheetFooter className="shrink-0 px-5 py-4 border-t">
-          <Button variant="outline" className="w-full" onClick={onClose}>Close</Button>
+          <Button
+            variant="outline"
+            className="w-full h-9 transition-colors duration-200"
+            onClick={onClose}
+          >
+            Close
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -204,6 +388,13 @@ export default function HelpdeskPage() {
     };
   }, [tickets]);
 
+  const resetCreateForm = useCallback(() => {
+    setTitle("");
+    setDescription("");
+    setCategory("");
+    setPriority("MEDIUM");
+  }, []);
+
   const handleCreateTicket = useCallback(() => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) { toast.error("Ticket title is required"); return; }
@@ -224,37 +415,79 @@ export default function HelpdeskPage() {
         onSuccess: () => {
           toast.success("Ticket created successfully");
           setSheetOpen(false);
-          setTitle("");
-          setDescription("");
-          setCategory("");
-          setPriority("MEDIUM");
+          resetCreateForm();
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
-  }, [title, description, category, priority, createTicket]);
+  }, [title, description, category, priority, createTicket, resetCreateForm]);
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleCategoryChange = useCallback((value: string) => {
+    setCategory(value);
+  }, []);
+
+  const handlePriorityChange = useCallback((value: string) => {
+    setPriority(value as TicketPriority);
+  }, []);
+
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) resetCreateForm();
+      setSheetOpen(open);
+    },
+    [resetCreateForm]
+  );
+
+  const handleCancelSheet = useCallback(() => {
+    resetCreateForm();
+    setSheetOpen(false);
+  }, [resetCreateForm]);
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setFilter("q", e.target.value || null),
+    [setFilter]
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (v: string) => setFilter("status", v),
+    [setFilter]
+  );
+
+  const handleViewTicket = useCallback((ticket: HelpdeskTicket) => {
+    setSelectedTicket(ticket);
+  }, []);
+
+  const handleCloseTicketDetail = useCallback(() => {
+    setSelectedTicket(null);
+  }, []);
 
   if (isLoading) {
     return (
       <PageWrapper title="Helpdesk" subtitle="Submit and track your support tickets">
         <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="pt-6">
-                  <Skeleton className="h-4 w-20 mb-2" />
-                  <Skeleton className="h-8 w-12" />
-                </CardContent>
-              </Card>
+              <div key={i} className="rounded-2xl border border-border bg-card shadow-sm p-4">
+                <Skeleton className="h-3 w-20 mb-3" />
+                <Skeleton className="h-8 w-12" />
+              </div>
             ))}
           </div>
-          <Card>
-            <CardContent className="pt-6 space-y-3">
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="p-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </PageWrapper>
     );
@@ -262,202 +495,194 @@ export default function HelpdeskPage() {
 
   return (
     <>
-    <PageWrapper
-      title="Helpdesk"
-      subtitle="Submit and track your support tickets"
-      badge={`${stats.total} tickets`}
-      actions={
-        <Sheet open={sheetOpen} onOpenChange={(open) => { if (!open) { setTitle(""); setDescription(""); setCategory(""); setPriority("MEDIUM"); } setSheetOpen(open); }}>
-          <SheetTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Ticket
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="flex flex-col p-0 gap-0">
-            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
-              <SheetTitle className="text-base">Create Support Ticket</SheetTitle>
-              <SheetDescription className="text-xs">Describe your issue and we&apos;ll get back to you.</SheetDescription>
-            </SheetHeader>
-            <SheetScrollArea className="flex-1 min-h-0">
-              <div className="px-4 py-4 space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    placeholder="Brief description of the issue"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Description <span className="text-destructive">*</span></label>
-                  <Textarea
-                    placeholder="Provide more details..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    maxLength={1000}
-                    className="resize-none w-full"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+      <PageWrapper
+        title="Helpdesk"
+        subtitle="Submit and track your support tickets"
+        badge={`${stats.total} tickets`}
+        actions={
+          <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
+            <SheetTrigger asChild>
+              <Button size="sm" className="h-8 gap-1.5">
+                <Plus className="h-3.5 w-3.5" />
+                New Ticket
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-md">
+              <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
+                <SheetTitle className="text-base font-semibold">Create Support Ticket</SheetTitle>
+                <SheetDescription className="text-xs">
+                  Describe your issue and we&apos;ll get back to you.
+                </SheetDescription>
+              </SheetHeader>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="px-5 py-5 space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Category <span className="text-destructive">*</span></label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                        {CATEGORY_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium text-foreground">
+                      Title <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      placeholder="Brief description of the issue"
+                      value={title}
+                      onChange={handleTitleChange}
+                      className="h-9"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Priority</label>
-                    <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                        {PRIORITY_OPTIONS.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium text-foreground">
+                      Description <span className="text-destructive">*</span>
+                    </label>
+                    <Textarea
+                      placeholder="Provide more details..."
+                      value={description}
+                      onChange={handleDescriptionChange}
+                      rows={4}
+                      maxLength={1000}
+                      className="resize-none"
+                    />
+                    <p className="text-[11px] text-muted-foreground text-right">
+                      {description.length}/1000
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground">
+                        Category <span className="text-destructive">*</span>
+                      </label>
+                      <Select value={category} onValueChange={handleCategoryChange}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                          {CATEGORY_OPTIONS.map((c) => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-foreground">Priority</label>
+                      <Select value={priority} onValueChange={handlePriorityChange}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                          {PRIORITY_OPTIONS.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SheetScrollArea>
-            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => {
-                setTitle(""); setDescription(""); setCategory(""); setPriority("MEDIUM"); setSheetOpen(false);
-              }}>
-                Cancel
-              </Button>
-              <Button className="flex-1" onClick={handleCreateTicket} disabled={createTicket.isPending}>
-                {createTicket.isPending ? "Creating..." : "Create Ticket"}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      }
-      filters={
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search tickets..."
-              value={searchQuery}
-              onChange={(e) => setFilter("q", e.target.value || null)}
-              className="pl-9 w-[200px]"
-            />
+              </ScrollArea>
+              <SheetFooter className="shrink-0 px-5 py-4 border-t flex-col gap-2">
+                <Button
+                  className="w-full h-9 transition-colors duration-200"
+                  onClick={handleCreateTicket}
+                  disabled={createTicket.isPending}
+                >
+                  {createTicket.isPending ? "Creating..." : "Create Ticket"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-9 transition-colors duration-200"
+                  onClick={handleCancelSheet}
+                >
+                  Cancel
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        }
+        filters={
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search tickets..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-8 h-8 text-xs w-48"
+              />
+            </div>
+            <Select
+              value={statusFilter ?? "ALL"}
+              onValueChange={handleStatusFilterChange}
+            >
+              <SelectTrigger className="h-8 text-xs w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select
-            value={statusFilter ?? "ALL"}
-            onValueChange={(v) => setFilter("status", v)}
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      }
-    >
-      <div className="space-y-6">
+        }
+      >
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard label="Total" value={stats.total} icon={Ticket} color="blue" index={0} />
+            <StatCard label="Open" value={stats.open} icon={AlertCircle} color="amber" index={1} />
+            <StatCard label="In Progress" value={stats.inProgress} icon={Clock} color="cyan" index={2} />
+            <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle2} color="green" index={3} />
+          </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Total" value={stats.total} icon={Ticket} color="blue" index={0} />
-          <StatCard label="Open" value={stats.open} icon={AlertCircle} color="amber" index={1} />
-          <StatCard label="In Progress" value={stats.inProgress} icon={Clock} color="cyan" index={2} />
-          <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle2} color="green" index={3} />
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[700px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>AI</TableHead>
-                      <TableHead className="w-[60px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTickets.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <EmptyTicketIllustration className="h-36 w-36 opacity-95" />
-                            <p>{searchQuery ? "No tickets match your search." : "No tickets yet. Create your first one!"}</p>
-                          </div>
-                        </TableCell>
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <ScrollArea className="w-full" type="auto">
+                <div className="min-w-[700px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableHead className="font-semibold text-foreground/80">Subject</TableHead>
+                        <TableHead className="font-semibold text-foreground/80">Category</TableHead>
+                        <TableHead className="font-semibold text-foreground/80">Priority</TableHead>
+                        <TableHead className="font-semibold text-foreground/80">Status</TableHead>
+                        <TableHead className="font-semibold text-foreground/80">Created</TableHead>
+                        <TableHead className="font-semibold text-foreground/80">AI</TableHead>
+                        <TableHead className="w-[60px]" />
                       </TableRow>
-                    ) : (
-                      filteredTickets.map((ticket) => (
-                        <TableRow key={ticket.id} className="group">
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{ticket.title}</p>
-                              {ticket.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                  {ticket.description}
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTickets.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-12">
+                            <div className="flex flex-col items-center justify-center gap-3">
+                              <EmptyTicketIllustration className="h-36 w-36 opacity-95" />
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-foreground">
+                                  {searchQuery ? "No tickets match your search" : "No tickets yet"}
                                 </p>
-                              )}
+                                <p className="text-xs text-muted-foreground">
+                                  {searchQuery
+                                    ? "Try adjusting your search or filters."
+                                    : "Create your first support ticket to get started."}
+                                </p>
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <span className="text-sm">{ticket.category ?? "—"}</span>
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={ticket.priority ?? "MEDIUM"} type="priority" />
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={ticket.status ?? "TODO"} />
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {ticket.createdAt
-                              ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <AISuggestReplyButton ticketId={ticket.id} compact />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => setSelectedTicket(ticket)}
-                              aria-label="View ticket details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
-    </PageWrapper>
-    <TicketDetailSheet ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+                      ) : (
+                        filteredTickets.map((ticket) => (
+                          <TicketTableRow
+                            key={ticket.id}
+                            ticket={ticket}
+                            onView={handleViewTicket}
+                          />
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      </PageWrapper>
+
+      <TicketDetailSheet ticket={selectedTicket} onClose={handleCloseTicketDetail} />
     </>
   );
 }

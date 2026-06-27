@@ -20,6 +20,8 @@ import {
 import { createJobFormSchema, SECTION_KEYS, type CreateJobFormValues } from "./schema";
 import { parseJobToFormValues } from "./parse-job";
 import type { JobPosting } from "@/types/hr/recruitment";
+import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, Save, Send } from "lucide-react";
 
 const STEPS = [
   { title: "Basic Job Details", subtitle: "Title, dept, type" },
@@ -174,6 +176,8 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
 
   const handleSaveDraft = useCallback(() => handleSubmit("DRAFT"), [handleSubmit]);
   const handlePublish = useCallback(() => handleSubmit("OPEN"), [handleSubmit]);
+  const handlePrev = useCallback(() => setActiveStep((p) => p - 1), []);
+  const handleNext = useCallback(() => setActiveStep((p) => p + 1), []);
 
   const isPending = createJob.isPending || updateJob.isPending;
 
@@ -186,28 +190,58 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
   }));
 
   const ActiveSection = SECTIONS[activeStep];
+  const isLastStep = activeStep === STEPS.length - 1;
 
   return (
     <div className="flex h-full min-h-0">
       <FormSidebar steps={steps} onStepClick={setActiveStep} />
+
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-6 py-3 border-b shrink-0 gap-3">
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Step {activeStep + 1} of {STEPS.length} — {STEPS[activeStep].title}
-            </p>
+        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-b bg-card gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-1.5">
+              {STEPS.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveStep(i)}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all duration-200 cursor-pointer",
+                    i === activeStep
+                      ? "w-6 bg-primary"
+                      : steps[i].completed && !steps[i].hasError
+                        ? "w-1.5 bg-emerald-500"
+                        : steps[i].hasError
+                          ? "w-1.5 bg-rose-500"
+                          : "w-1.5 bg-muted-foreground/20 hover:bg-muted-foreground/40"
+                  )}
+                  aria-label={`Go to step ${i + 1}: ${STEPS[i].title}`}
+                />
+              ))}
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Step {activeStep + 1} of {STEPS.length}
+              </span>
+              <span className="text-[11px] text-muted-foreground mx-1.5">—</span>
+              <span className="text-[11px] font-medium text-foreground">{STEPS[activeStep].title}</span>
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2 shrink-0">
             {isEdit ? (
-              <Button size="sm" onClick={handleSaveDraft} disabled={isPending}>
+              <Button size="sm" onClick={handleSaveDraft} disabled={isPending} className="h-8 gap-1.5">
+                <Save className="h-3.5 w-3.5" />
                 Save Changes
               </Button>
             ) : (
               <>
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending}>
-                  Save as Draft
+                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isPending} className="h-8 gap-1.5">
+                  <Save className="h-3.5 w-3.5" />
+                  Save Draft
                 </Button>
-                <Button size="sm" onClick={handlePublish} disabled={isPending}>
+                <Button size="sm" onClick={handlePublish} disabled={isPending} className="h-8 gap-1.5">
+                  <Send className="h-3.5 w-3.5" />
                   Publish Job
                 </Button>
               </>
@@ -221,25 +255,31 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
           </div>
         </ScrollArea>
 
-        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t gap-3">
+        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-t bg-card gap-3">
           <Button
             variant="outline"
             size="sm"
             disabled={activeStep === 0}
-            onClick={() => setActiveStep((p) => p - 1)}
+            onClick={handlePrev}
+            className="h-8 gap-1.5"
           >
+            <ChevronLeft className="h-3.5 w-3.5" />
             Previous
           </Button>
-          <span className="text-xs text-muted-foreground">
+
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {activeStep + 1} / {STEPS.length}
           </span>
-          {activeStep < STEPS.length - 1 ? (
-            <Button size="sm" onClick={() => setActiveStep((p) => p + 1)}>
-              Next
+
+          {isLastStep ? (
+            <Button size="sm" onClick={handlePublish} disabled={isPending} className="h-8 gap-1.5">
+              <Send className="h-3.5 w-3.5" />
+              {isEdit ? "Save Changes" : "Publish Job"}
             </Button>
           ) : (
-            <Button size="sm" onClick={handlePublish} disabled={isPending}>
-              {isEdit ? "Save Changes" : "Publish Job"}
+            <Button size="sm" onClick={handleNext} className="h-8 gap-1.5">
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>

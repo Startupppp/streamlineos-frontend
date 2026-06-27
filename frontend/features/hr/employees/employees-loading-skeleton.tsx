@@ -15,9 +15,9 @@ export function EmployeesLoadingSkeleton() {
       }
       filters={
         <div className="flex items-center gap-2 w-full flex-wrap">
-          <Skeleton className="h-8 w-[220px] rounded-md" />
+          <Skeleton className="h-8 w-[200px] rounded-md" />
           <Skeleton className="h-8 w-[130px] rounded-md" />
-          <Skeleton className="h-8 w-[110px] rounded-md" />
+          <Skeleton className="h-8 w-[120px] rounded-md" />
           <Skeleton className="h-8 w-[120px] rounded-md" />
         </div>
       }
@@ -25,13 +25,17 @@ export function EmployeesLoadingSkeleton() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={`stat-${i}`} className="rounded-xl border border-border bg-card p-4">
+            <div
+              key={`stat-${i}`}
+              className="rounded-2xl border border-border bg-card shadow-sm p-4"
+            >
               <div className="flex items-start justify-between gap-2">
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-7 w-12" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-8 w-10" />
+                  <Skeleton className="h-2.5 w-20" />
                 </div>
-                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
               </div>
             </div>
           ))}
@@ -39,14 +43,17 @@ export function EmployeesLoadingSkeleton() {
 
         <div className="grid sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={`widget-a-${i}`}>
-              <CardContent className="p-4 space-y-2">
+            <Card key={`widget-a-${i}`} className="rounded-2xl border border-border shadow-sm">
+              <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-3 w-10" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-7 w-7 rounded-lg" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-3 w-8" />
                 </div>
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-3 w-36" />
               </CardContent>
             </Card>
           ))}
@@ -54,9 +61,12 @@ export function EmployeesLoadingSkeleton() {
 
         <div className="grid sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={`widget-b-${i}`}>
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-4 w-28" />
+            <Card key={`widget-b-${i}`} className="rounded-2xl border border-border shadow-sm">
+              <CardContent className="p-4 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-7 w-7 rounded-lg" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-[85%]" />
                 <Skeleton className="h-3 w-[70%]" />
@@ -67,11 +77,14 @@ export function EmployeesLoadingSkeleton() {
 
         <div className="grid sm:grid-cols-2 gap-3">
           {Array.from({ length: 2 }).map((_, i) => (
-            <Card key={`widget-c-${i}`}>
-              <CardContent className="p-4 space-y-2">
+            <Card key={`widget-c-${i}`} className="rounded-2xl border border-border shadow-sm">
+              <CardContent className="p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-12" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-7 w-7 rounded-lg" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <Skeleton className="h-3 w-10" />
                 </div>
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-[90%]" />
@@ -82,9 +95,9 @@ export function EmployeesLoadingSkeleton() {
         </div>
       </div>
 
-      <Card className="overflow-hidden mt-4">
+      <Card className="rounded-2xl border border-border shadow-sm overflow-hidden mt-4">
         <CardContent className="p-0">
-          <div className="border-b px-4 py-3 flex items-center gap-8 bg-muted/30">
+          <div className="border-b px-4 py-3 flex items-center gap-8 bg-muted/40">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-4 w-40 hidden md:block" />
             <Skeleton className="h-4 w-20 hidden lg:block" />
@@ -95,10 +108,16 @@ export function EmployeesLoadingSkeleton() {
             <Skeleton className="h-4 w-16 ml-auto" />
           </div>
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-8 px-4 py-3 border-b last:border-0">
+            <div
+              key={i}
+              className="flex items-center gap-8 px-4 py-3.5 border-b last:border-0"
+            >
               <div className="flex items-center gap-3 min-w-[220px]">
                 <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                <Skeleton className="h-4 w-40" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
               </div>
               <Skeleton className="h-4 w-44 hidden md:block" />
               <Skeleton className="h-4 w-28 hidden lg:block" />

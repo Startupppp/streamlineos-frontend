@@ -44,7 +44,7 @@ export default function NewPurchaseOrderPage() {
   const searchParams = useSearchParams();
   const preselectedVendorId = searchParams.get("vendorId") ?? "";
 
-  const vendorsQuery = useVendors({ isActive: true, pageSize: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
   const variantsQuery = useProductVariants({ activeOnly: true });
   const createMutation = useCreatePurchaseOrder();
 

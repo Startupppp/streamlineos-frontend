@@ -8,7 +8,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,10 +16,12 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { cn } from "@/lib/utils";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface FnfSettlement {
@@ -38,13 +39,30 @@ interface FnfSettlement {
   user?: { name: string | null; email: string } | null;
 }
 
-const fnfKeys = { all: [...queryKeys.hr.all, "fnf"] as const, list: () => [...fnfKeys.all, "list"] as const };
+const fnfKeys = {
+  all: [...queryKeys.hr.all, "fnf"] as const,
+  list: () => [...fnfKeys.all, "list"] as const,
+};
 
-function statusBadge(s: string | null): "default" | "secondary" | "outline" {
-  if (s === "PAID") return "default";
-  if (s === "APPROVED") return "secondary";
-  if (s === "PENDING_APPROVAL") return "outline";
-  return "outline";
+function fnfStatusBadgeClass(status: string | null): string {
+  if (status === "PAID") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+  if (status === "APPROVED") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
+  if (status === "PENDING_APPROVAL") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+  return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
+}
+
+function fnfStatusLabel(status: string | null): string {
+  if (status === "PAID") return "Paid";
+  if (status === "APPROVED") return "Processing";
+  if (status === "PENDING_APPROVAL") return "Pending";
+  return "Draft";
+}
+
+function fnfBorderClass(status: string | null): string {
+  if (status === "PAID") return "border-l-emerald-500";
+  if (status === "APPROVED") return "border-l-blue-400";
+  if (status === "PENDING_APPROVAL") return "border-l-amber-400";
+  return "border-l-slate-300 dark:border-l-slate-600";
 }
 
 function FnfContent() {
@@ -77,6 +95,7 @@ function FnfContent() {
     if (Array.isArray(employeesRaw)) return employeesRaw;
     return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
   }, [employeesRaw]);
+
   const employeeOptions = useMemo<ComboboxOption[]>(() =>
     employees
       .filter((e) => e.isActive)
@@ -99,8 +118,13 @@ function FnfContent() {
   const [notes, setNotes] = useState("");
 
   const resetForm = useCallback(() => {
-    setUserId(""); setBasicDues(""); setLeaveEncashment("");
-    setBonusDue(""); setDeductions(""); setLoanRecovery(""); setNotes("");
+    setUserId("");
+    setBasicDues("");
+    setLeaveEncashment("");
+    setBonusDue("");
+    setDeductions("");
+    setLoanRecovery("");
+    setNotes("");
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -117,7 +141,9 @@ function FnfContent() {
       },
       {
         onSuccess: () => {
-          toast.success("FnF settlement created"); setSheetOpen(false); resetForm();
+          toast.success("FnF settlement created");
+          setSheetOpen(false);
+          resetForm();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
@@ -127,15 +153,40 @@ function FnfContent() {
   const handleComplete = useCallback(() => {
     if (!completeId) return;
     complete.mutate(completeId, {
-      onSuccess: () => { toast.success("Settlement marked as completed"); setCompleteId(null); },
+      onSuccess: () => {
+        toast.success("Settlement marked as completed");
+        setCompleteId(null);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [completeId, complete]);
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) resetForm();
+    setSheetOpen(open);
+  }, [resetForm]);
+
+  const handleCompleteIdClose = useCallback((open: boolean) => {
+    if (!open) setCompleteId(null);
+  }, []);
+
+  const handleBasicDuesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBasicDues(e.target.value), []);
+  const handleLeaveEncashmentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLeaveEncashment(e.target.value), []);
+  const handleBonusDueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setBonusDue(e.target.value), []);
+  const handleDeductionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeductions(e.target.value), []);
+  const handleLoanRecoveryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoanRecovery(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-2xl" />
+          ))}
+        </div>
       </PageWrapper>
     );
   }
@@ -145,46 +196,115 @@ function FnfContent() {
       title="Full & Final Settlement"
       subtitle="Manage full and final settlements for separated employees"
       badge={`${items?.length ?? 0} settlements`}
-      actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />New Settlement</Button>}
+      actions={
+        <Button size="sm" onClick={handleOpenSheet} className="h-8 gap-1.5">
+          <Plus className="h-3.5 w-3.5" />
+          New Settlement
+        </Button>
+      }
     >
       {!items?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <EmptyExpensesIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
-          <p className="text-sm text-muted-foreground">No FnF settlements on record.</p>
-        </CardContent></Card>
+        <EmptyState
+          illustration={<EmptyExpensesIllustration className="h-24 w-24" />}
+          title="No FnF settlements on record"
+          description="Full and final settlements for separated employees will appear here."
+          compact
+        />
       ) : (
         <div className="space-y-2">
           {items.map((item: FnfSettlement) => (
-            <Card key={item.id}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <FileSpreadsheet className="h-5 w-5 text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    {item.user?.name && <p className="text-sm font-semibold">{item.user.name}</p>}
-                    <Badge variant={statusBadge(item.status)} className="text-[10px]">{item.status ?? "DRAFT"}</Badge>
+            <Card
+              key={item.id}
+              className={cn(
+                "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+                fnfBorderClass(item.status)
+              )}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                      item.status === "PAID"
+                        ? "bg-emerald-100 dark:bg-emerald-950/40"
+                        : item.status === "APPROVED"
+                          ? "bg-blue-100 dark:bg-blue-950/40"
+                          : item.status === "PENDING_APPROVAL"
+                            ? "bg-amber-100 dark:bg-amber-950/40"
+                            : "bg-slate-100 dark:bg-slate-800/40"
+                    )}
+                  >
+                    <FileSpreadsheet
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        item.status === "PAID"
+                          ? "text-emerald-700 dark:text-emerald-400"
+                          : item.status === "APPROVED"
+                            ? "text-blue-700 dark:text-blue-400"
+                            : item.status === "PENDING_APPROVAL"
+                              ? "text-amber-700 dark:text-amber-400"
+                              : "text-slate-600 dark:text-slate-400"
+                      )}
+                    />
                   </div>
-                  <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
-                    {item.netPayable && (
-                      <span className="flex items-center gap-0.5 font-medium text-foreground">
-                        <IndianRupee className="h-3 w-3" />
-                        {Number(item.netPayable).toLocaleString("en-IN")} net
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {item.user?.name && (
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {item.user.name}
+                        </p>
+                      )}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                          fnfStatusBadgeClass(item.status)
+                        )}
+                      >
+                        {fnfStatusLabel(item.status)}
                       </span>
+                    </div>
+
+                    <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap">
+                      {item.netPayable && (
+                        <span className="flex items-center gap-0.5 font-semibold text-foreground">
+                          <IndianRupee className="h-3 w-3" />
+                          {Number(item.netPayable).toLocaleString("en-IN")} net payable
+                        </span>
+                      )}
+                      {item.deductions && Number(item.deductions) > 0 && (
+                        <span className="text-rose-600 dark:text-rose-400">
+                          −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
+                        </span>
+                      )}
+                      {item.loanRecovery && Number(item.loanRecovery) > 0 && (
+                        <span>
+                          Loan: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}
+                        </span>
+                      )}
+                      {item.createdAt && (
+                        <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>
+                      )}
+                    </div>
+
+                    {item.notes && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>
                     )}
-                    {item.deductions && Number(item.deductions) > 0 && (
-                      <span>Deductions: ₹{Number(item.deductions).toLocaleString("en-IN")}</span>
-                    )}
-                    {item.loanRecovery && Number(item.loanRecovery) > 0 && (
-                      <span>Loan Recovery: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}</span>
-                    )}
-                    {item.createdAt && <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>}
                   </div>
-                  {item.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>}
+
+                  {item.status !== "PAID" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs shrink-0 gap-1.5 duration-200"
+                      onClick={() => setCompleteId(item.id)}
+                      disabled={complete.isPending}
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      Mark Paid
+                    </Button>
+                  )}
                 </div>
-                {item.status !== "PAID" && (
-                  <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" onClick={() => setCompleteId(item.id)} disabled={complete.isPending}>
-                    <CheckCircle2 className="h-3 w-3 mr-1" />Complete
-                  </Button>
-                )}
               </CardContent>
             </Card>
           ))}
@@ -193,14 +313,16 @@ function FnfContent() {
 
       <HrSheet
         open={sheetOpen}
-        onOpenChange={(open) => { if (!open) resetForm(); setSheetOpen(open); }}
+        onOpenChange={handleSheetOpenChange}
         title="New FnF Settlement"
         onSubmit={handleCreate}
         submitLabel="Create Settlement"
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <label className="text-sm font-semibold text-foreground">
+            Employee <span className="text-destructive">*</span>
+          </label>
           <Combobox
             options={employeeOptions}
             value={userId}
@@ -210,35 +332,75 @@ function FnfContent() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Basic Dues (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={basicDues} onChange={(e) => setBasicDues(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Leave Encashment (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={leaveEncashment} onChange={(e) => setLeaveEncashment(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Bonus Due (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={bonusDue} onChange={(e) => setBonusDue(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Deductions (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={deductions} onChange={(e) => setDeductions(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Loan Recovery (₹)</label>
-            <Input type="number" min="0" step="0.01" placeholder="0.00" value={loanRecovery} onChange={(e) => setLoanRecovery(e.target.value)} />
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Settlement Components (₹)
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Basic Dues</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={basicDues}
+                onChange={handleBasicDuesChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Leave Encashment</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={leaveEncashment}
+                onChange={handleLeaveEncashmentChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Bonus Due</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={bonusDue}
+                onChange={handleBonusDueChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Deductions</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={deductions}
+                onChange={handleDeductionsChange}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Loan Recovery</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={loanRecovery}
+                onChange={handleLoanRecoveryChange}
+              />
+            </div>
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Notes</label>
+          <label className="text-sm font-medium text-foreground">Notes</label>
           <Textarea
             placeholder="Additional settlement notes…"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={handleNotesChange}
             rows={3}
             maxLength={500}
             className="resize-none w-full"
@@ -248,10 +410,10 @@ function FnfContent() {
 
       <ConfirmDialog
         open={completeId !== null}
-        onOpenChange={(open) => { if (!open) setCompleteId(null); }}
-        title="Complete Settlement"
-        description="Are you sure you want to mark this FnF settlement as completed?"
-        confirmLabel="Complete"
+        onOpenChange={handleCompleteIdClose}
+        title="Mark Settlement as Paid"
+        description="Are you sure you want to mark this FnF settlement as paid? This confirms that the full and final amount has been disbursed to the employee."
+        confirmLabel="Mark as Paid"
         onConfirm={handleComplete}
         isPending={complete.isPending}
       />

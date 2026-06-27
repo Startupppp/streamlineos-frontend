@@ -11,16 +11,18 @@ import {
   FileText,
   ExternalLink,
   Upload,
+  Circle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { cn } from "@/lib/utils";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -77,40 +79,30 @@ function useSubmitOnboardingDoc() {
 }
 
 function docStatusIcon(status: OnboardingDoc["status"]) {
-  const icons: Record<string, React.ReactNode> = {
-    APPROVED: <CheckCircle2 className="h-4 w-4 text-green-600" />,
-    SUBMITTED: <Clock className="h-4 w-4 text-amber-500" />,
-    REJECTED: <AlertCircle className="h-4 w-4 text-destructive" />,
-    RE_UPLOAD_REQUESTED: <RefreshCw className="h-4 w-4 text-orange-500" />,
-    default: <FileText className="h-4 w-4 text-muted-foreground" />,
-  };
-  return icons[status] ?? icons.default;
+  if (status === "APPROVED") return <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+  if (status === "SUBMITTED") return <Clock className="h-4 w-4 text-amber-500" />;
+  if (status === "REJECTED") return <AlertCircle className="h-4 w-4 text-rose-500" />;
+  if (status === "RE_UPLOAD_REQUESTED") return <RefreshCw className="h-4 w-4 text-amber-500" />;
+  return <Circle className="h-4 w-4 text-muted-foreground/40" />;
 }
 
-function docStatusVariant(
-  status: OnboardingDoc["status"]
-): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "APPROVED":
-      return "default";
-    case "SUBMITTED":
-      return "secondary";
-    case "REJECTED":
-      return "destructive";
-    default:
-      return "outline";
-  }
+function docStatusBadgeClass(status: OnboardingDoc["status"]): string {
+  if (status === "APPROVED") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+  if (status === "SUBMITTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+  if (status === "REJECTED") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800";
+  if (status === "RE_UPLOAD_REQUESTED") return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+  return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700";
 }
 
 function docStatusLabel(status: OnboardingDoc["status"]): string {
-  const labels: Record<string, string> = {
+  const labels: Record<OnboardingDoc["status"], string> = {
     APPROVED: "Approved",
     SUBMITTED: "Under Review",
     REJECTED: "Rejected",
     RE_UPLOAD_REQUESTED: "Re-upload Required",
     PENDING: "Pending",
   };
-  return labels[status] ?? "Pending";
+  return labels[status];
 }
 
 function canUpload(status: OnboardingDoc["status"] | undefined): boolean {
@@ -219,9 +211,9 @@ function UploadSheet({
       isPending={isPending || isUploading}
     >
       {existingDoc?.status === "RE_UPLOAD_REQUESTED" && existingDoc.remarks && (
-        <div className="rounded-md border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 px-3 py-2.5 text-[12px] text-orange-800 dark:text-orange-300">
-          <p className="font-medium mb-0.5">Reviewer remarks</p>
-          <p>{existingDoc.remarks}</p>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 px-3 py-2.5 text-[12px] text-amber-800 dark:text-amber-300">
+          <p className="font-semibold mb-0.5">Reviewer remarks</p>
+          <p className="text-amber-700 dark:text-amber-400">{existingDoc.remarks}</p>
         </div>
       )}
 
@@ -230,13 +222,23 @@ function UploadSheet({
           Document File <span className="text-destructive">*</span>
         </Label>
         <div
-          className={`rounded-lg border border-dashed p-4 space-y-2 ${fileError ? "border-destructive bg-destructive/5" : "border-border"}`}
+          className={cn(
+            "rounded-lg border border-dashed p-6 transition-colors duration-200",
+            fileError ? "border-rose-400 bg-rose-50 dark:bg-rose-950/10" : "border-border hover:border-muted-foreground/40"
+          )}
         >
-          <label className="flex flex-col items-center gap-2 cursor-pointer">
-            <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-            <span className="text-sm text-muted-foreground text-center">
-              {selectedFile ? selectedFile.name : "Click to select a file"}
-            </span>
+          <label className="flex flex-col items-center gap-2.5 cursor-pointer">
+            <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+              <Upload className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-foreground">
+                {selectedFile ? selectedFile.name : "Click to select a file"}
+              </p>
+              {!selectedFile && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">PDF, DOC, DOCX, JPG, PNG — max 10 MB</p>
+              )}
+            </div>
             <input
               type="file"
               accept={ACCEPTED_EXTENSIONS}
@@ -248,20 +250,16 @@ function UploadSheet({
           {selectedFile && (
             <button
               type="button"
-              className="text-[11px] text-muted-foreground hover:text-destructive underline block mx-auto"
+              className="text-[11px] text-muted-foreground hover:text-rose-500 underline block mx-auto mt-2 transition-colors duration-200"
               onClick={handleRemoveFile}
             >
-              Remove
+              Remove file
             </button>
           )}
         </div>
-        {fileError ? (
-          <p className="text-[11px] text-destructive" role="alert">
+        {fileError && (
+          <p className="text-[11px] text-rose-600 dark:text-rose-400" role="alert">
             {fileError}
-          </p>
-        ) : (
-          <p className="text-[11px] text-muted-foreground">
-            Accepted: PDF, DOC, DOCX, JPG, JPEG, PNG — max 10 MB
           </p>
         )}
       </div>
@@ -290,6 +288,7 @@ export function EmployeeDocumentsTab() {
   })();
 
   const approvedCount = checklist.filter((c) => c.submission?.status === "APPROVED").length;
+  const progressPct = checklist.length > 0 ? Math.round((approvedCount / checklist.length) * 100) : 0;
 
   const handleOpenUpload = useCallback((dt: DocumentType, existing: OnboardingDoc | null) => {
     setUploadTarget(dt);
@@ -318,9 +317,10 @@ export function EmployeeDocumentsTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-2">
+      <div className="space-y-3 pt-2">
+        <Skeleton className="h-12 rounded-2xl" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-16" />
+          <Skeleton key={i} className="h-16 rounded-2xl" />
         ))}
       </div>
     );
@@ -339,83 +339,133 @@ export function EmployeeDocumentsTab() {
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 mb-3">
-        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-        <p className="text-sm">
-          <span className="font-semibold">{approvedCount}</span> of{" "}
-          <span className="font-semibold">{checklist.length}</span> documents approved
-        </p>
-      </div>
+      <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center">
+                <FileText className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Document Checklist</p>
+            </div>
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {approvedCount} / {checklist.length} approved
+            </span>
+          </div>
+          <Progress
+            value={progressPct}
+            className="h-1.5 [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-500"
+          />
+          {progressPct === 100 && (
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1.5 flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              All documents approved
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="space-y-2">
-        {checklist.map(({ docType, submission }) => (
-          <Card key={docType.id}>
-            <CardContent className="p-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">
-                  {docStatusIcon(submission?.status ?? "PENDING")}
-                </div>
+        {checklist.map(({ docType, submission }) => {
+          const isApproved = submission?.status === "APPROVED";
+          const status = submission?.status ?? "PENDING";
+          return (
+            <Card
+              key={docType.id}
+              className={cn(
+                "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+                isApproved
+                  ? "border-l-emerald-500"
+                  : status === "SUBMITTED"
+                    ? "border-l-amber-400"
+                    : status === "REJECTED" || status === "RE_UPLOAD_REQUESTED"
+                      ? "border-l-rose-400"
+                      : "border-l-slate-300 dark:border-l-slate-600"
+              )}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 shrink-0">
+                    {docStatusIcon(status)}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="text-sm font-medium">{docType.name}</p>
-                    {docType.isMandatory && (
-                      <Badge variant="default" className="text-[9px] py-0 h-4 shrink-0">
-                        Required
-                      </Badge>
-                    )}
-                    {submission && (
-                      <Badge
-                        variant={docStatusVariant(submission.status)}
-                        className="text-[10px] shrink-0"
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          isApproved && "line-through text-muted-foreground"
+                        )}
                       >
-                        {docStatusLabel(submission.status)}
-                      </Badge>
+                        {docType.name}
+                      </p>
+                      {docType.isMandatory && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700 shrink-0">
+                          Required
+                        </span>
+                      )}
+                      {submission && (
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                            docStatusBadgeClass(submission.status)
+                          )}
+                        >
+                          {docStatusLabel(submission.status)}
+                        </span>
+                      )}
+                    </div>
+
+                    {docType.description && !isApproved && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {docType.description}
+                      </p>
+                    )}
+
+                    {submission?.fileUrl && (
+                      <a
+                        href={submission.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline mt-0.5 transition-colors duration-200"
+                        aria-label={`View ${submission.fileName}`}
+                      >
+                        {submission.fileName}
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    )}
+
+                    {submission?.reviewedAt && isApproved && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Approved {new Date(submission.reviewedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {submission.reviewerName && ` by ${submission.reviewerName}`}
+                      </p>
+                    )}
+
+                    {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks && (
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+                        Remarks: {submission.remarks}
+                      </p>
                     )}
                   </div>
 
-                  {docType.description && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {docType.description}
-                    </p>
-                  )}
-
-                  {submission?.fileUrl && (
-                    <a
-                      href={submission.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline mt-0.5"
-                      aria-label={`View ${submission.fileName}`}
+                  {canUpload(submission?.status) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs shrink-0 gap-1.5 duration-200"
+                      onClick={() => handleOpenUpload(docType, submission)}
+                      aria-label={`Upload ${docType.name}`}
                     >
-                      {submission.fileName}
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                  )}
-
-                  {submission?.status === "RE_UPLOAD_REQUESTED" && submission.remarks && (
-                    <p className="text-[11px] text-orange-600 dark:text-orange-400 mt-0.5">
-                      Remarks: {submission.remarks}
-                    </p>
+                      <Upload className="h-3.5 w-3.5" />
+                      {submission ? "Re-upload" : "Upload"}
+                    </Button>
                   )}
                 </div>
-
-                {canUpload(submission?.status) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs shrink-0"
-                    onClick={() => handleOpenUpload(docType, submission)}
-                    aria-label={`Upload ${docType.name}`}
-                  >
-                    <Upload className="h-3.5 w-3.5 mr-1" />
-                    {submission ? "Re-upload" : "Upload"}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <UploadSheet
