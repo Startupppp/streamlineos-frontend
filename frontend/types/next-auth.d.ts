@@ -10,6 +10,7 @@ declare module "next-auth" {
     plan?: Plan | null;
     permissions?: string[];
     enabledModules?: string[];
+    daysUntilExpiry?: number;
     user: {
       id: string;
       role: string;
@@ -27,6 +28,7 @@ declare module "next-auth" {
     id?: string;
     isActive?: boolean;
     hasDashboardAccess?: boolean;
+    daysUntilExpiry?: number;
   }
 }
 
@@ -48,5 +50,6 @@ declare module "next-auth/jwt" {
     isPlatformAdmin?: boolean;
     isOrgOwner?: boolean;
     enabledModules?: string[];
+    daysUntilExpiry?: number;
   }
 }
