@@ -130,6 +130,7 @@ export const verificationTokens = pgTable("verification_tokens", {
   expires: timestamp("expires").notNull(),
 }, (table) => [
   primaryKey({ columns: [table.identifier, table.token] }),
+  index("idx_verification_tokens_expires").on(table.expires),
 ]);
 
 export const invitations = pgTable("invitations", {
@@ -156,6 +157,7 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 }, (table) => [
   index("idx_password_reset_email").on(table.email),
   index("idx_password_reset_expires").on(table.expiresAt),
+  index("idx_password_reset_email_expires").on(table.email, table.expiresAt),
 ]);
 
 export const userSessions = pgTable("user_sessions", {
