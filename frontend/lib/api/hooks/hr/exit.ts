@@ -145,7 +145,7 @@ export function useHrReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { action, remarks }),
+      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }
@@ -154,7 +154,7 @@ export function useCeoReviewResignation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/ceo-review`, { action, remarks }),
+      apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/ceo-review`, { decision: action, remarks }),
     onSuccess: () => qc.invalidateQueries({ queryKey: exitKeys.list() }),
   });
 }

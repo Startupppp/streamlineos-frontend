@@ -480,6 +480,11 @@ export const queryKeys = {
     articleVersions: (id: number) => [...base, "kb", "articleVersions", id] as const,
     publicArticles: (params?: Record<string, unknown>) => [...base, "kb", "publicArticles", params] as const,
     publicArticle: (orgId: string, slug: string) => [...base, "kb", "publicArticle", orgId, slug] as const,
+    search: (params?: Record<string, unknown>) => [...base, "kb", "search", params] as const,
+    ask: () => [...base, "kb", "ask"] as const,
+    analyticsOverview: (range?: Record<string, unknown>) => [...base, "kb", "analyticsOverview", range] as const,
+    noResults: (range?: Record<string, unknown>) => [...base, "kb", "noResults", range] as const,
+    verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
   },
 
   roadmap: {

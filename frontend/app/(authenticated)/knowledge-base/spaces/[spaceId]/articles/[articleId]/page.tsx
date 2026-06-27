@@ -24,7 +24,12 @@ import { NotFoundIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
-import { useKbArticle, useKbSpace, useVerifyKbArticle } from "@/lib/api/hooks/kb";
+import {
+  useKbArticle,
+  useKbSpace,
+  useLogKbArticleView,
+  useVerifyKbArticle,
+} from "@/lib/api/hooks/kb";
 import { useOrgMembers } from "@/lib/api/hooks/organization";
 import {
   ArticleContent,
@@ -195,8 +200,17 @@ export default function KbArticleReaderPage() {
   const spaceQuery = useKbSpace(spaceId);
   const membersQuery = useOrgMembers(1, 100);
   const verify = useVerifyKbArticle();
+  const { mutate: logView } = useLogKbArticleView();
+  const loggedViewIdRef = useRef<number | null>(null);
 
   const article = articleQuery.data;
+
+  useEffect(() => {
+    if (!Number.isFinite(articleId) || articleId <= 0) return;
+    if (loggedViewIdRef.current === articleId) return;
+    loggedViewIdRef.current = articleId;
+    logView(articleId);
+  }, [articleId, logView]);
 
   const headings = useMemo<ArticleHeading[]>(
     () => prepareArticle(article?.content ?? "").headings,

@@ -172,3 +172,95 @@ export interface ListArticlesParams {
   sortBy?: "title" | "updatedAt" | "helpfulCount" | "status";
   sortOrder?: "asc" | "desc";
 }
+
+export interface KbSearchResult {
+  id: number;
+  spaceId: number | null;
+  categoryId: number | null;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  status: KbArticleStatus;
+  updatedAt: string;
+}
+
+export interface KbSearchResponse {
+  items: KbSearchResult[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface KbAskCitation {
+  articleId: number;
+  title: string;
+  slug: string;
+  spaceId: number | null;
+}
+
+export interface KbAskResponse {
+  answer: string;
+  citations: KbAskCitation[];
+  hasContext: boolean;
+}
+
+export interface KbSearchParams {
+  q: string;
+  spaceId?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface KbAskInput {
+  question: string;
+  spaceId?: number;
+}
+
+export interface KbAnalyticsTopArticle {
+  id: number;
+  title: string;
+  slug: string;
+  spaceId: number | null;
+  viewCount: number;
+  helpfulCount: number;
+  notHelpfulCount: number;
+}
+
+export interface KbAnalyticsOverview {
+  totalCount: number;
+  publishedCount: number;
+  archivedCount: number;
+  totalViews: number;
+  helpfulUp: number;
+  helpfulDown: number;
+  helpfulRatio: number;
+  searches: number;
+  noResults: number;
+  searchSuccessRate: number;
+  aiAnswers: number;
+  views: number;
+  verifiedPublished: number;
+  trustScore: number;
+  topArticles: KbAnalyticsTopArticle[];
+}
+
+export interface KbNoResultRow {
+  query: string | null;
+  count: number;
+}
+
+export interface KbVerificationItem {
+  id: number;
+  title: string;
+  slug: string;
+  spaceId: number | null;
+  ownerId: string | null;
+  lastVerifiedAt: string | null;
+  reviewIntervalDays: number | null;
+}
+
+export interface KbAnalyticsRange {
+  from?: string;
+  to?: string;
+}
