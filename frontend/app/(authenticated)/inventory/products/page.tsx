@@ -52,16 +52,16 @@ export default function ProductsPage() {
   const categoriesQuery = useCategories();
   const categories = (categoriesQuery.data ?? []) as Category[];
 
-  const isActive =
+  const status =
     statusFilter === "active"
-      ? true
+      ? ("ACTIVE" as const)
       : statusFilter === "inactive"
-        ? false
+        ? ("INACTIVE" as const)
         : undefined;
 
   const productsQuery = useProducts({
     search: search || undefined,
-    isActive,
+    status,
     categoryId: categoryFilter !== "all" ? Number(categoryFilter) : undefined,
     page,
     limit: PAGE_LIMIT,
@@ -198,10 +198,10 @@ export default function ProductsPage() {
                         {product.sku}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {product.categoryName ?? "—"}
+                        {product.category?.name ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {product.uomName ?? "—"}
+                        {product.uom?.abbreviation ?? "—"}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                         {formatPrice(product.costPrice)}
@@ -214,9 +214,9 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={product.isActive ? "default" : "secondary"}
+                          variant={product.status === "ACTIVE" ? "default" : "secondary"}
                         >
-                          {product.isActive ? "Active" : "Inactive"}
+                          {product.status === "ACTIVE" ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>

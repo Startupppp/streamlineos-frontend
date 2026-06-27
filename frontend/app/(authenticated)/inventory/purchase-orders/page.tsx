@@ -68,7 +68,7 @@ export default function PurchaseOrdersListPage() {
   const vendorsQuery = useVendors({ isActive: true, limit: 200 });
   const query = usePurchaseOrders({
     page: 1,
-    limit: 100,
+    pageSize: 100,
     status: status === "ALL" ? undefined : status,
     vendorId: vendorId !== "ALL" ? Number(vendorId) : undefined,
   });

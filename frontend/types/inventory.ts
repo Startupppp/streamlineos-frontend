@@ -57,6 +57,7 @@ export interface InventoryProduct {
   category?: InventoryCategory | null;
   uom?: InventoryUom | null;
   variants?: InventoryProductVariant[];
+  totalStock?: number;
 }
 
 export interface CreateProductInput {

@@ -83,6 +83,18 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - Logging: use the repo's logger (or Winston-style structured logging server-side); global error handling, graceful 500s.
 - Code must be implicitly testable; add minimal tests if the repo has a test setup.
 
+## Best practices (enforced — from OWASP/NestJS/Next.js/Drizzle/TanStack + KB review)
+- AUTHORIZATION (OWASP API A01/BOLA): every endpoint that takes a resource id must re-assert the caller's access to THAT resource (org + space/record), on reads AND writes — module/role ability alone is insufficient. Centralize in an access service and call it in every mutating method, not just reads.
+- AI METERING: reserve/consume credits atomically BEFORE the paid model/embedding call; refund (grant back) only on provider failure. Never check-then-spend (the LLM must not run between hasCredits and consume).
+- PUBLIC/UNAUTHENTICATED endpoints: rate-limit per IP (+org), entitlement-gate, and meter any AI/LLM work against the tenant's credits; anonymous traffic must never spend the platform's shared LLM budget (denial-of-wallet). Short-circuit before embedding when the org has no eligible content.
+- HTTP semantics: GET/HEAD are safe + idempotent — no writes inside a GET. Counters/state changes go through POST/PATCH/DELETE (or an async side channel).
+- DB/Drizzle: free-text search uses a tsvector+GIN column (or pg_trgm), never leading-wildcard ILIKE; composite indexes ordered most-selective-first to cover filter+sort+FK; select only needed columns (project access-check queries); multi-step writes run in a transaction; user-action counters (votes/reactions) need a unique (org,resource,actor) index + upsert (increment only on net-new).
+- Pagination: every list endpoint (including public) is paginated with a hard cap.
+- Caching: public read-only GETs set Cache-Control (s-maxage + stale-while-revalidate per volatility); never cache user/permission-scoped data in a shared cache.
+- TanStack Query: invalidate with a true key PREFIX (no trailing `undefined` slot) so list caches actually match; per-data-type staleTime; client request/response types must match the backend Zod contract (no hand-maintained drift — extra fields are silently stripped and become silent no-ops).
+- Testing: a new module ships controller e2e specs (auth + RBAC + scope allow/deny, credit exhaustion) and unit tests for access/credit/permission logic before it is considered done.
+- Sources: OWASP API Security Top 10 (2023); NestJS docs (validation/controllers); Next.js App Router data-fetching; Drizzle perf-queries; TanStack Query invalidation.
+
 ## Output format
 - During the audit step: a concise plan listing violations and intended changes.
 - During the fix step: only the modified/added/deleted file paths with changes. No long explanations unless clarifying a decision.

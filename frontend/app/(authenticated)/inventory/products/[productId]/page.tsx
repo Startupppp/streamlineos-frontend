@@ -427,13 +427,7 @@ export default function ProductDetailPage({
   const categories = (categoriesQuery.data ?? []) as Category[];
   const uomOptions = (uomQuery.data ?? []) as UomOption[];
 
-  const stockItems = (() => {
-    const data = stockQuery.data;
-    if (!data) return [];
-    if (Array.isArray(data)) return data as StockLevel[];
-    const typed = data as { items?: StockLevel[] };
-    return typed.items ?? [];
-  })();
+  const stockItems = stockQuery.data?.items ?? [];
 
   function handleEditClick(): void {
     setEditing(true);
@@ -689,10 +683,10 @@ export default function ProductDetailPage({
                             {row.warehouseName}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {row.locationName ?? "—"}
+                            {row.locationCode ?? "—"}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums font-medium">
-                            {row.quantity}
+                            {row.onHand}
                           </TableCell>
                         </TableRow>
                       ))}
