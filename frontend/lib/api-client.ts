@@ -110,6 +110,7 @@ const MIGRATED_PREFIXES = [
   "/invoices",
   "/kb",
   "/leads",
+  "/me",
   "/notifications",
   "/onboarding/templates",
   "/org",
