@@ -476,3 +476,22 @@ export const loginHistoryRelations = relations(loginHistory, ({ one }) => ({
   user: one(users, { fields: [loginHistory.userId], references: [users.id] }),
   organization: one(organizations, { fields: [loginHistory.orgId], references: [organizations.id] }),
 }));
+
+export const userApiTokens = pgTable("user_api_tokens", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull(),
+  prefix: text("prefix").notNull(),
+  scopes: text("scopes").array().default([]).notNull(),
+  expiresAt: timestamp("expires_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uniq_user_api_tokens_hash").on(table.tokenHash),
+  index("idx_user_api_tokens_user").on(table.userId),
+]);
+
+export const userApiTokensRelations = relations(userApiTokens, ({ one }) => ({
+  user: one(users, { fields: [userApiTokens.userId], references: [users.id] }),
+}));

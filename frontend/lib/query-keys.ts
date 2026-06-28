@@ -279,6 +279,7 @@ export const queryKeys = {
     permissions: (roleId: number) => [...base, "roles", "permissions", roleId] as const,
     permissionsMatrix: () => [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
+    analytics: () => [...base, "roles", "analytics"] as const,
   },
 
   branches: {
@@ -668,6 +669,11 @@ export const queryKeys = {
   apiTokens: {
     all: [...base, "apiTokens"] as const,
     list: (params?: Record<string, unknown>) => [...base, "apiTokens", "list", params] as const,
+  },
+
+  userApiTokens: {
+    all: [...base, "userApiTokens"] as const,
+    list: () => [...base, "userApiTokens", "list"] as const,
   },
 
 } as const;

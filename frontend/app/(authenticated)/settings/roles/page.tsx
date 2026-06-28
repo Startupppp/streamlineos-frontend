@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRoles, useDeleteRole } from "@/lib/api/hooks/roles";
+import { useRoles, useDeleteRole, useRolesAnalytics } from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Plus, Loader2, Trash2, Shield, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ export default function RolesPage() {
 
 function RolesContent() {
   const { data: roles, isLoading } = useRoles();
+  const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
   const deleteRole = useDeleteRole();
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -65,10 +66,13 @@ function RolesContent() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
-  const totalRoles = roles?.length ?? 0;
-  const customRoles = roles?.filter((r) => !r.isSystem).length ?? 0;
-  const systemRoles = totalRoles - customRoles;
-  const totalPermissions = roles?.reduce((sum, r) => sum + (r.permissions?.length ?? 0), 0) ?? 0;
+  const metricsLoading = isLoading || analyticsLoading;
+  const metrics = [
+    { label: "Total Roles", value: analytics?.totalRoles ?? 0 },
+    { label: "Custom Roles", value: analytics?.customRoles ?? 0 },
+    { label: "Users Assigned", value: analytics?.usersAssigned ?? 0 },
+    { label: "Total Permissions", value: analytics?.totalPermissions ?? 0 },
+  ];
 
   return (
     <PageWrapper
@@ -90,16 +94,11 @@ function RolesContent() {
       }
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        {isLoading ? (
+        {metricsLoading ? (
           [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
         ) : (
           <>
-            {[
-              { label: "Total Roles", value: totalRoles },
-              { label: "Custom Roles", value: customRoles },
-              { label: "System Roles", value: systemRoles },
-              { label: "Total Permissions", value: totalPermissions },
-            ].map(({ label, value }) => (
+            {metrics.map(({ label, value }) => (
               <Card key={label} className="p-3">
                 <p className="text-xs text-muted-foreground">{label}</p>
                 <p className="text-xl font-bold tabular-nums">{value}</p>
