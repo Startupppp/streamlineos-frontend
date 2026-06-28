@@ -25,7 +25,7 @@ const changePasswordSchema = z
     currentPassword: z.string().min(1, "Current password is required"),
     newPassword: z
       .string()
-      .min(8, "Minimum 8 characters")
+      .min(12, "Minimum 12 characters")
       .regex(/[A-Z]/, "Must include an uppercase letter")
       .regex(/[a-z]/, "Must include a lowercase letter")
       .regex(/[0-9]/, "Must include a number")
@@ -70,7 +70,7 @@ export default function SecurityPage() {
               <CardTitle className="text-base">Change Password</CardTitle>
             </div>
             <CardDescription>
-              Choose a strong password with at least 8 characters including uppercase, lowercase,
+              Choose a strong password with at least 12 characters including uppercase, lowercase,
               number, and special character.
             </CardDescription>
           </CardHeader>
