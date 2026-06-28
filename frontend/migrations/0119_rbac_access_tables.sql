@@ -55,3 +55,21 @@ CREATE TABLE IF NOT EXISTS access_versions (
   permissions_version INTEGER NOT NULL DEFAULT 1,
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- 6. Generic resource-scoped grants: a principal (user or role) holds a named permission on a
+--    specific resource instance (e.g., "user X may manage KB space Z"). Keyed by UUID so the
+--    revoke path receives an opaque grant id with no sequential enumeration risk.
+CREATE TABLE IF NOT EXISTS resource_grants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id VARCHAR(36) NOT NULL,
+  resource_type VARCHAR(64) NOT NULL,
+  resource_id VARCHAR(36) NOT NULL,
+  principal_type VARCHAR(16) NOT NULL DEFAULT 'user' CHECK (principal_type IN ('user', 'role')),
+  principal_id VARCHAR(36) NOT NULL,
+  permission_key VARCHAR(128) NOT NULL,
+  granted_by VARCHAR(36),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS resource_grants_unique_idx ON resource_grants(org_id, resource_type, resource_id, principal_type, principal_id, permission_key);
+CREATE INDEX IF NOT EXISTS resource_grants_org_resource_idx ON resource_grants(org_id, resource_type, resource_id);
+CREATE INDEX IF NOT EXISTS resource_grants_principal_idx ON resource_grants(org_id, principal_type, principal_id);

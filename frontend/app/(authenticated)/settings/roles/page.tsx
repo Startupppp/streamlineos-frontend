@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { useRoles, useDeleteRole, useRolesAnalytics } from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
-import { Plus, Loader2, Trash2, Shield, Copy } from "lucide-react";
+import { Plus, Loader2, Trash2, Shield, Copy, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +82,11 @@ function RolesContent() {
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild className="gap-2">
+            <Link href="/settings/roles/audit">
+              <ClipboardList className="h-4 w-4" /> Audit log
+            </Link>
+          </Button>
           <Button variant="outline" onClick={handleOpenTemplate} className="gap-2">
             <Copy className="h-4 w-4" /> Use template
           </Button>

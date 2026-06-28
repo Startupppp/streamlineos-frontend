@@ -1,5 +1,7 @@
 export type DataScope = "all" | "team" | "own" | "none";
 
+export type Tier = "free" | "starter" | "pro" | "enterprise";
+
 export type RolePrincipalType = "user" | "department";
 
 export interface AccessResponse {
@@ -8,6 +10,7 @@ export interface AccessResponse {
   modules: Record<string, boolean>;
   isOrgOwner: boolean;
   version: number;
+  tier?: Tier;
 }
 
 export interface RolePermissionGrant {

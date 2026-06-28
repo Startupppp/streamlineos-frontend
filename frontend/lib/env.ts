@@ -38,6 +38,9 @@ const serverSchema = z.object({
       "In production, NEXTAUTH_SECRET must be at least 44 characters (256-bit base64)",
     ),
 
+  BLOGS_DB: z.string().optional(),
+  BACKEND_JWT_SECRET: z.string().min(32, "BACKEND_JWT_SECRET must be at least 32 characters").optional(),
+
   ENCRYPTION_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   LOAD_TEST_SECRET: z.string().optional(),
@@ -59,6 +62,9 @@ const serverSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_SITE_VERIFICATION: z.string().optional(),
 
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
+
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
@@ -78,9 +84,6 @@ const serverSchema = z.object({
 
   ABLY_API_KEY: z.string().optional(),
 
-  INNGEST_EVENT_KEY: z.string().optional(),
-  INNGEST_SIGNING_KEY: z.string().optional(),
-
   TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
@@ -88,9 +91,11 @@ const serverSchema = z.object({
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_R2_PUBLIC_URL: z.string().optional(),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   NEXT_PUBLIC_GOOGLE_ENABLED: z.string().optional(),
+  NEXT_PUBLIC_MICROSOFT_ENABLED: z.string().optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   NEXT_PUBLIC_GTM_ID: z.string().optional(),
   NEXT_PUBLIC_GA4_ID: z.string().optional(),
@@ -119,9 +124,11 @@ function validateEnv() {
 function validateClientEnv() {
   const result = clientSchema.safeParse({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     NEXT_PUBLIC_GOOGLE_ENABLED: process.env.NEXT_PUBLIC_GOOGLE_ENABLED,
+    NEXT_PUBLIC_MICROSOFT_ENABLED: process.env.NEXT_PUBLIC_MICROSOFT_ENABLED,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
     NEXT_PUBLIC_GA4_ID: process.env.NEXT_PUBLIC_GA4_ID,
