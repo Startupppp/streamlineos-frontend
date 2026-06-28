@@ -8,6 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Table,
   TableBody,
@@ -31,10 +32,34 @@ function LoginHistorySkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+    <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
       <History className="h-10 w-10 opacity-30" />
       <p className="text-sm">No login history found</p>
     </div>
+  );
+}
+
+function FilterButton({
+  value,
+  current,
+  onSelect,
+}: {
+  value: SuccessFilter;
+  current: SuccessFilter;
+  onSelect: (value: SuccessFilter) => void;
+}) {
+  function handleClick() {
+    onSelect(value);
+  }
+  return (
+    <Button
+      variant={current === value ? "secondary" : "ghost"}
+      size="sm"
+      className="capitalize h-7 px-2.5 text-xs"
+      onClick={handleClick}
+    >
+      {value}
+    </Button>
   );
 }
 
@@ -45,9 +70,26 @@ export default function LoginHistoryPage() {
   const successParam =
     filter === "success" ? true : filter === "failure" ? false : undefined;
 
-  const { data, isLoading } = useLoginHistory({ page, success: successParam });
+  const { data, isLoading, isError, refetch } = useLoginHistory({ page, success: successParam });
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
+
+  function handleSelectFilter(f: SuccessFilter) {
+    setFilter(f);
+    setPage(1);
+  }
+
+  function handlePrevPage() {
+    setPage((p) => Math.max(1, p - 1));
+  }
+
+  function handleNextPage() {
+    setPage((p) => Math.min(totalPages, p + 1));
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <PageWrapper
@@ -56,24 +98,25 @@ export default function LoginHistoryPage() {
       filters={
         <div className="flex items-center gap-1">
           {(["all", "success", "failure"] as SuccessFilter[]).map((f) => (
-            <Button
+            <FilterButton
               key={f}
-              variant={filter === f ? "secondary" : "ghost"}
-              size="sm"
-              className="capitalize h-7 px-2.5 text-xs"
-              onClick={() => {
-                setFilter(f);
-                setPage(1);
-              }}
-            >
-              {f}
-            </Button>
+              value={f}
+              current={filter}
+              onSelect={handleSelectFilter}
+            />
           ))}
         </div>
       }
     >
       {isLoading ? (
         <LoginHistorySkeleton />
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load login history"
+          description="Something went wrong while fetching your login history."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       ) : !data || data.data.length === 0 ? (
         <EmptyState />
       ) : (
@@ -120,7 +163,7 @@ export default function LoginHistoryPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={handlePrevPage}
                 disabled={page === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -131,7 +174,7 @@ export default function LoginHistoryPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={handleNextPage}
                 disabled={page === totalPages}
               >
                 <ChevronRight className="h-4 w-4" />

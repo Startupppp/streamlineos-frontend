@@ -113,7 +113,7 @@ export default function KnowledgeBaseVerificationPage() {
   }
 
   function handleRetry() {
-    queueQuery.refetch();
+    void queueQuery.refetch();
   }
 
   return (

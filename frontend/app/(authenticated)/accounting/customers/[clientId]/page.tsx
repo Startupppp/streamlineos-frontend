@@ -77,6 +77,10 @@ export default function CustomerLedgerDetailPage({
     [],
   );
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const summary = query.data?.summary;
   const lines = query.data?.lines ?? [];
 
@@ -169,9 +173,11 @@ export default function CustomerLedgerDetailPage({
           <ErrorState
             title="Failed to load ledger"
             description={query.error.message}
+            onRetry={handleRetry}
           />
         ) : lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+            <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
             <h3 className="text-sm font-semibold text-foreground">
               No ledger entries
             </h3>

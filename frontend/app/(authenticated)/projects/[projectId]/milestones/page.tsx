@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
+import { use, useState, useCallback, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +68,24 @@ function MilestoneDialog({
   const update = useUpdateMilestone(projectId);
   const isPending = create.isPending || update.isPending;
 
+  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleTargetDateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setTargetDate(e.target.value);
+  }, []);
+
+  const handleStatusChange = useCallback((v: string) => {
+    if (v === "PENDING" || v === "ACHIEVED" || v === "MISSED") {
+      setStatus(v);
+    }
+  }, []);
+
   const handleSave = useCallback(() => {
     if (!name.trim() || !targetDate) return;
     if (isEdit) {
@@ -92,20 +110,20 @@ function MilestoneDialog({
         <div className="space-y-4 py-2">
           <div className="space-y-1">
             <Label>Name *</Label>
-            <Input placeholder="e.g. MVP Launch" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="e.g. MVP Launch" value={name} onChange={handleNameChange} />
           </div>
           <div className="space-y-1">
             <Label>Description</Label>
-            <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea rows={2} value={description} onChange={handleDescriptionChange} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Target Date *</Label>
-              <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
+              <Input type="date" value={targetDate} onChange={handleTargetDateChange} />
             </div>
             <div className="space-y-1">
               <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as ProjectMilestone["status"])}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PENDING">Pending</SelectItem>
@@ -212,6 +230,10 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
   const handleEditTarget = useCallback((m: ProjectMilestone) => setEditTarget(m), []);
   const handleDeleteTarget = useCallback((m: ProjectMilestone) => setDeleteTarget(m), []);
 
+  const handleAlertDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteMilestone.mutate(deleteTarget.id, {
@@ -267,7 +289,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete milestone?</AlertDialogTitle>

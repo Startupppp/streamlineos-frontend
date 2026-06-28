@@ -76,13 +76,6 @@ interface ProductVariant {
   isActive: boolean;
 }
 
-interface StockLevel {
-  id: number;
-  warehouseName: string;
-  locationName?: string;
-  quantity: number;
-}
-
 interface ProductDetail {
   id: number;
   name: string;
@@ -98,7 +91,6 @@ interface ProductDetail {
   status?: "ACTIVE" | "INACTIVE" | "DISCONTINUED";
   isActive?: boolean;
   variants?: ProductVariant[];
-  stockLevels?: StockLevel[];
 }
 
 const editSchema = z.object({
@@ -437,6 +429,10 @@ export default function ProductDetailPage({
     setEditing(false);
   }
 
+  function handleRetryStock(): void {
+    void stockQuery.refetch();
+  }
+
   if (productQuery.isLoading) {
     return <LoadingState variant="page" />;
   }
@@ -582,7 +578,6 @@ export default function ProductDetailPage({
                     compact
                     title="No variants"
                     description="Add variants like size or colour to this product."
-                    action={{ label: "Add Variant", onClick: () => {} }}
                   />
                 </div>
               ) : (
@@ -653,7 +648,7 @@ export default function ProductDetailPage({
                     compact
                     title="Failed to load stock"
                     description={stockQuery.error.message}
-                    onRetry={() => stockQuery.refetch()}
+                    onRetry={handleRetryStock}
                   />
                 </div>
               ) : stockItems.length === 0 ? (

@@ -63,8 +63,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { InvoiceStatus } from "@/types/invoice";
-import type { Invoice } from "@/types/invoice";
+import type { InvoiceStatus, Invoice } from "@/types/invoice";
 
 const STATUS_CONFIG: Record<
   string,

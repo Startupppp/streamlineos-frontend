@@ -56,6 +56,7 @@ interface RejectDialogState {
 export default function ExitManagementPage() {
   const { data: session } = useSession();
   const { data: resignations, isLoading, isError, refetch } = useResignations();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const createResignation = useCreateResignation();
   const hrReview = useHrReviewResignation();
   const ceoReview = useCeoReviewResignation();
@@ -353,7 +354,7 @@ export default function ExitManagementPage() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load resignations"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

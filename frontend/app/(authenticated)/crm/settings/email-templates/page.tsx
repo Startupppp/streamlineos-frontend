@@ -270,7 +270,7 @@ export default function EmailTemplatesPage() {
           illustration={<Mail className="h-10 w-10 text-muted-foreground" />}
           title="Failed to load email templates"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: () => refetch() }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </div>
     );
@@ -278,7 +278,7 @@ export default function EmailTemplatesPage() {
 
   return (
     <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Email Template</AlertDialogTitle>

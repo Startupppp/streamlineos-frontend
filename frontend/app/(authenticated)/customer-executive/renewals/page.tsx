@@ -124,7 +124,7 @@ function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
 
         <Select
           value={account.renewalStage}
-          onValueChange={(v) => onStageChange(account.id, v as RenewalStage)}
+          onValueChange={handleStageChange}
           disabled={isPending}
         >
           <SelectTrigger className="h-7 text-xs">
@@ -184,6 +184,8 @@ export default function RenewalPipelinePage() {
   const { data: accounts, isLoading, isError, refetch } = useRenewalAccounts();
   const { mutate: updateRenewal, variables } = useUpdateRenewal();
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const handleStageChange = useCallback(
     (accountId: number, stage: RenewalStage) => {
       updateRenewal({ accountId, renewalStage: stage });
@@ -199,7 +201,7 @@ export default function RenewalPipelinePage() {
         <ErrorState
           title="Failed to load renewals"
           description="An error occurred while loading renewal accounts. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

@@ -134,7 +134,7 @@ export default function AssetReturnsPage() {
     [assignedAssets, selectedAssetId],
   );
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
   });
@@ -207,6 +207,7 @@ export default function AssetReturnsPage() {
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleSetReturnId = useCallback((id: number) => setReturnId(id), []);
   const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -224,6 +225,21 @@ export default function AssetReturnsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Asset Returns" subtitle="Track company asset returns">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load asset returns</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

@@ -53,6 +53,7 @@ export default function AlumniPage() {
     queryKey: alumniKeys.list(),
     queryFn: () => apiClient.get<AlumniRecord[]>("/hr/alumni"),
   });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {
@@ -150,7 +151,7 @@ export default function AlumniPage() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load alumni"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

@@ -12,9 +12,16 @@ interface BurndownChartProps {
   projectId: number;
 }
 
+interface HoveredPoint {
+  x: number;
+  y: number;
+  date: string;
+  points: number;
+}
+
 export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
   const { data, isLoading } = useSprintBurndown(projectId, sprintId);
-  const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; date: string; points: number } | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<HoveredPoint | null>(null);
 
   if (isLoading) {
     return (
@@ -45,6 +52,20 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
   const paddingBottom = 30;
   const plotHeight = chartHeight - paddingTop - paddingBottom;
   const yTicks = [...new Set([0, Math.round(maxPoints / 4), Math.round(maxPoints / 2), Math.round(3 * maxPoints / 4), maxPoints])];
+
+  const handlePointMouseEnter =
+    (point: { date: Date | string; points: number | string }) =>
+    (e: React.MouseEvent<SVGCircleElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setHoveredPoint({
+        x: rect.left,
+        y: rect.top,
+        date: format(new Date(point.date), "MMM dd"),
+        points: Number(point.points),
+      });
+    };
+
+  const handlePointMouseLeave = () => setHoveredPoint(null);
 
   return (
     <Card>
@@ -161,16 +182,8 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    onMouseEnter={(e) => {
-                      const rect = (e.target as SVGElement).getBoundingClientRect();
-                      setHoveredPoint({
-                        x: rect.left,
-                        y: rect.top,
-                        date: format(new Date(point.date), "MMM dd"),
-                        points: Number(point.points),
-                      });
-                    }}
-                    onMouseLeave={() => setHoveredPoint(null)}
+                    onMouseEnter={handlePointMouseEnter(point)}
+                    onMouseLeave={handlePointMouseLeave}
                   />
                 </g>
               );

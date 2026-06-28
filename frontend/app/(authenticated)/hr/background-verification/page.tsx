@@ -413,7 +413,7 @@ function BGVContent() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load verifications"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

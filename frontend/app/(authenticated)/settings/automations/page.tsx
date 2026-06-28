@@ -121,6 +121,49 @@ function AutomationCard({
   );
 }
 
+function AutomationCardItem({
+  rule,
+  togglingId,
+  onToggle,
+  onEdit,
+  onDelete,
+  onViewRuns,
+}: {
+  rule: AutomationRule;
+  togglingId: number | null;
+  onToggle: (rule: AutomationRule, next: boolean) => void;
+  onEdit: (rule: AutomationRule) => void;
+  onDelete: (rule: AutomationRule) => void;
+  onViewRuns: (rule: AutomationRule) => void;
+}) {
+  function handleToggle(next: boolean) {
+    onToggle(rule, next);
+  }
+
+  function handleEdit() {
+    onEdit(rule);
+  }
+
+  function handleDelete() {
+    onDelete(rule);
+  }
+
+  function handleViewRuns() {
+    onViewRuns(rule);
+  }
+
+  return (
+    <AutomationCard
+      rule={rule}
+      isToggling={togglingId === rule.id}
+      onToggle={handleToggle}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onViewRuns={handleViewRuns}
+    />
+  );
+}
+
 export default function AutomationsPage() {
   const { data: rules, isLoading, isError, refetch } = useAutomations();
   const toggle = useToggleAutomation();
@@ -155,12 +198,48 @@ export default function AutomationsPage() {
     });
   }
 
+  function handleOpenCreate() {
+    setCreateOpen(true);
+  }
+
+  function handleCloseCreate() {
+    setCreateOpen(false);
+  }
+
+  function handleCloseEdit() {
+    setEditTarget(null);
+  }
+
+  function handleCloseRuns() {
+    setRunsTarget(null);
+  }
+
+  function handleSetEditTarget(rule: AutomationRule) {
+    setEditTarget(rule);
+  }
+
+  function handleSetDeleteTarget(rule: AutomationRule) {
+    setDeleteTarget(rule);
+  }
+
+  function handleSetRunsTarget(rule: AutomationRule) {
+    setRunsTarget(rule);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
   return (
     <PageWrapper
       title="Automations"
       subtitle="Trigger notifications, emails, tasks and webhooks automatically on CRM events"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New Automation
         </Button>
       }
@@ -171,7 +250,7 @@ export default function AutomationsPage() {
         <ErrorState
           title="Couldn't load automations"
           description="Something went wrong while fetching your automation rules."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
           className="flex-1"
         />
       ) : !rules || rules.length === 0 ? (
@@ -180,41 +259,41 @@ export default function AutomationsPage() {
             illustration={<EmptyActivityIllustration />}
             title="No automations yet"
             description="Create your first rule to react to leads, deals, tickets and invoices automatically."
-            action={{ label: "New Automation", onClick: () => setCreateOpen(true) }}
+            action={{ label: "New Automation", onClick: handleOpenCreate }}
             className="w-full"
           />
         </div>
       ) : (
         <div className="space-y-3">
           {rules.map((rule) => (
-            <AutomationCard
+            <AutomationCardItem
               key={rule.id}
               rule={rule}
-              isToggling={togglingId === rule.id}
-              onToggle={(next) => handleToggle(rule, next)}
-              onEdit={() => setEditTarget(rule)}
-              onDelete={() => setDeleteTarget(rule)}
-              onViewRuns={() => setRunsTarget(rule)}
+              togglingId={togglingId}
+              onToggle={handleToggle}
+              onEdit={handleSetEditTarget}
+              onDelete={handleSetDeleteTarget}
+              onViewRuns={handleSetRunsTarget}
             />
           ))}
         </div>
       )}
 
-      {createOpen && <AutomationBuilderSheet onClose={() => setCreateOpen(false)} />}
+      {createOpen && <AutomationBuilderSheet onClose={handleCloseCreate} />}
       {editTarget && (
-        <AutomationBuilderSheet rule={editTarget} onClose={() => setEditTarget(null)} />
+        <AutomationBuilderSheet rule={editTarget} onClose={handleCloseEdit} />
       )}
       {runsTarget && (
         <AutomationRunsDialog
           ruleId={runsTarget.id}
           ruleName={runsTarget.name}
-          onClose={() => setRunsTarget(null)}
+          onClose={handleCloseRuns}
         />
       )}
 
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={handleDeleteDialogChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

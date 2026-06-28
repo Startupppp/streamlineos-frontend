@@ -1,10 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
-import { platformMessages } from "@/lib/db/schema";
+import { serverApiClient } from "@/lib/api/server-client";
 import { requirePlatformOwner } from "@/lib/platform/session";
 import { sendEmail } from "@/lib/email/sender";
 import { logger } from "@/lib/logger";
@@ -54,9 +52,9 @@ export async function replyToMessage(raw: unknown): Promise<ReplyResult> {
   const session = await requirePlatformOwner();
   const ownerId = session.user!.id as string;
 
-  const message = await db.query.platformMessages.findFirst({
-    where: eq(platformMessages.publicCode, parsed.data.publicCode),
-  });
+  const message = await serverApiClient.get<{ email: string; name: string } | null>(
+    `/platform/messages/${parsed.data.publicCode}`,
+  );
   if (!message) return { ok: false, error: "Message not found" };
 
   try {
@@ -75,15 +73,10 @@ export async function replyToMessage(raw: unknown): Promise<ReplyResult> {
     };
   }
 
-  await db
-    .update(platformMessages)
-    .set({
-      status: "REPLIED",
-      repliedAt: new Date(),
-      repliedById: ownerId,
-      replyBody: parsed.data.body,
-    })
-    .where(eq(platformMessages.id, message.id));
+  await serverApiClient.patch(`/platform/messages/${parsed.data.publicCode}/replied`, {
+    repliedById: ownerId,
+    replyBody: parsed.data.body,
+  });
 
   revalidatePath("/owner/inbox");
   revalidatePath(`/owner/inbox/${parsed.data.publicCode}`);
@@ -96,10 +89,7 @@ export async function markMessageStatus(
   status: "READ" | "ARCHIVED" | "NEW",
 ): Promise<ReplyResult> {
   await requirePlatformOwner();
-  await db
-    .update(platformMessages)
-    .set({ status })
-    .where(eq(platformMessages.publicCode, publicCode));
+  await serverApiClient.patch(`/platform/messages/${publicCode}/status`, { status });
   revalidatePath("/owner/inbox");
   revalidateTag("owner-metrics", "default");
   return { ok: true };

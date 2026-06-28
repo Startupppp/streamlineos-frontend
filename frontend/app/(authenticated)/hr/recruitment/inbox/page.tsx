@@ -30,15 +30,17 @@ function candidateName(thread: MessageThread | CandidateMessage): string {
 function ThreadItem({
   thread,
   isActive,
-  onClick,
+  onSelect,
 }: {
   thread: MessageThread;
   isActive: boolean;
-  onClick: () => void;
+  onSelect: (thread: MessageThread) => void;
 }) {
+  function handleClick() { onSelect(thread); }
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:bg-muted/60",
         isActive && "bg-muted"
@@ -116,12 +118,19 @@ function ComposeBar({
     );
   }, [body, subject, channel, candidateId, send]);
 
+  function handleBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setBody(e.target.value); }
+  function handleSubjectChange(e: React.ChangeEvent<HTMLInputElement>) { setSubject(e.target.value); }
+  function handleChannelChange(v: string) { setChannel(v as MessageChannel); }
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
+  }
+
   return (
     <div className="border-t p-3 space-y-2 bg-background">
       <div className="flex items-center gap-2">
         <div className="flex-1 space-y-1">
           <Label className="text-xs text-muted-foreground">Channel</Label>
-          <Select value={channel} onValueChange={(v) => setChannel(v as MessageChannel)}>
+          <Select value={channel} onValueChange={handleChannelChange}>
             <SelectTrigger className="h-7 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -138,7 +147,7 @@ function ComposeBar({
               className="h-7 text-xs"
               placeholder="Subject"
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={handleSubjectChange}
             />
           </div>
         )}
@@ -149,10 +158,8 @@ function ComposeBar({
           className="text-sm resize-none"
           placeholder="Type a message..."
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
-          }}
+          onChange={handleBodyChange}
+          onKeyDown={handleKeyDown}
         />
         <Button
           size="sm"
@@ -238,7 +245,7 @@ export default function InboxPage() {
                   key={t.candidateId}
                   thread={t}
                   isActive={activeThread?.candidateId === t.candidateId}
-                  onClick={() => handleSelectThread(t)}
+                  onSelect={handleSelectThread}
                 />
               ))}
             </div>

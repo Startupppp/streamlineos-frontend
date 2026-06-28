@@ -55,6 +55,10 @@ export default function ReferPage() {
     formState: { errors },
   } = useForm<ReferFormValues>({ resolver: zodResolver(referSchema) });
 
+  function handleJobPostingChange(v: string) {
+    setValue("jobPostingId", v === "none" ? undefined : v);
+  }
+
   const onSubmit = async (values: ReferFormValues) => {
     try {
       await createMutation.mutateAsync({
@@ -111,7 +115,7 @@ export default function ReferPage() {
 
               <div className="space-y-1.5">
                 <Label>Job Opening (optional)</Label>
-                <Select onValueChange={(v) => setValue("jobPostingId", v === "none" ? undefined : v)}>
+                <Select onValueChange={handleJobPostingChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a job..." />
                   </SelectTrigger>

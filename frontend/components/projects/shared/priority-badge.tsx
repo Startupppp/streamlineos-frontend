@@ -49,8 +49,9 @@ export function PriorityBadge({
   size = "sm",
   className,
 }: PriorityBadgeProps) {
-  const key = (priority ?? "MEDIUM") as keyof typeof config;
-  const c = config[key] ?? config.MEDIUM;
+  const rawKey = (priority ?? "MEDIUM").toUpperCase();
+  const isConfigKey = (k: string): k is keyof typeof config => k in config;
+  const c = isConfigKey(rawKey) ? config[rawKey] : config.MEDIUM;
   const Icon = c.icon;
   const iconSize = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
 

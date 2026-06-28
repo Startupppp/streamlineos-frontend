@@ -55,16 +55,16 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
   const [htmlContent, setHtmlContent] = useState(template?.htmlContent ?? DEFAULT_TEMPLATE);
   const [isDefault, setIsDefault] = useState(template?.isDefault ?? false);
 
-  const handleOpen = (v: boolean) => {
+  const handleOpen = useCallback((v: boolean) => {
     if (!v) {
       setName(template?.name ?? "");
       setHtmlContent(template?.htmlContent ?? DEFAULT_TEMPLATE);
       setIsDefault(template?.isDefault ?? false);
     }
     onOpenChange(v);
-  };
+  }, [template, onOpenChange]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!name.trim()) { toast.error("Template name is required"); return; }
     if (!htmlContent.trim()) { toast.error("Template content is required"); return; }
 
@@ -80,9 +80,13 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
-  };
+  }, [name, htmlContent, isDefault, isEdit, updateMutation, createMutation, handleOpen]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setHtmlContent(e.target.value); }
+  function handleCancelSheet() { handleOpen(false); }
 
   return (
     <Sheet open={open} onOpenChange={handleOpen}>
@@ -97,14 +101,14 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="tpl-name">Template Name</Label>
-            <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Standard Offer Letter" />
+            <Input id="tpl-name" value={name} onChange={handleNameChange} placeholder="e.g. Standard Offer Letter" />
           </div>
 
           <div className="space-y-1.5">
             <Label>Content (HTML)</Label>
             <Textarea
               value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
+              onChange={handleContentChange}
               rows={18}
               className="font-mono text-xs"
               placeholder="Enter HTML content with placeholders..."
@@ -118,7 +122,7 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
         </div>
 
         <SheetFooter>
-          <Button variant="outline" onClick={() => handleOpen(false)} disabled={isPending}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancelSheet} disabled={isPending}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Template"}
           </Button>

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useAgedPayables } from "@/lib/api/hooks/accounting";
 
 function todayIso(): string {
@@ -27,6 +29,10 @@ export default function AgedPayablesPage() {
     setAsOf(event.target.value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Reports"
@@ -35,21 +41,22 @@ export default function AgedPayablesPage() {
     >
       <div className="flex flex-col sm:flex-row gap-3 mb-4 items-end">
         <div>
-          <label className="text-sm text-muted-foreground block mb-1">As of</label>
-          <Input type="date" value={asOf} onChange={handleAsOfChange} />
+          <label htmlFor="aged-payables-asof" className="text-sm text-muted-foreground block mb-1">As of</label>
+          <Input id="aged-payables-asof" type="date" value={asOf} onChange={handleAsOfChange} />
         </div>
       </div>
 
-      {query.isLoading && <LoadingState variant="table" />}
-      {query.error && <ErrorState description={query.error.message} />}
-
-      {report && report.rows.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
-          No outstanding payables as of {asOf}.
-        </div>
-      )}
-
-      {report && report.rows.length > 0 && (
+      {query.isLoading ? (
+        <LoadingState variant="table" />
+      ) : query.error ? (
+        <ErrorState description={query.error.message} onRetry={handleRetry} />
+      ) : !report || report.rows.length === 0 ? (
+        <EmptyState
+          illustration={<EmptyExpensesIllustration />}
+          title="No outstanding payables"
+          description={`No vendor balances are overdue as of ${asOf}.`}
+        />
+      ) : (
         <Card className="overflow-hidden">
           <Table>
             <TableHeader>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Zap, Users, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,10 @@ export function AssignCrmDialog() {
   const { data: stats, isLoading: statsLoading } = useCrmAssignmentStats(open);
   const mutation = useAssignCrmReps();
 
-  const handleAssign = async () => {
+  const handleOpen = useCallback(() => setOpen(true), []);
+  const handleClose = useCallback(() => setOpen(false), []);
+
+  const handleAssign = useCallback(async () => {
     try {
       await mutation.mutateAsync();
       toast.success("CRM representatives assigned successfully via round-robin");
@@ -30,7 +33,7 @@ export function AssignCrmDialog() {
     } catch {
       toast.error("Failed to assign CRM representatives. Please try again.");
     }
-  };
+  }, [mutation]);
 
   const members = stats?.members ?? [];
   const unassignedCount = stats?.unassignedCount ?? 0;
@@ -42,7 +45,7 @@ export function AssignCrmDialog() {
         variant="outline"
         size="sm"
         className="h-9 gap-2"
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         disabled={mutation.isPending}
       >
         <Zap className="h-4 w-4" />
@@ -156,7 +159,7 @@ export function AssignCrmDialog() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={handleClose}>
               Close
             </Button>
             <Button

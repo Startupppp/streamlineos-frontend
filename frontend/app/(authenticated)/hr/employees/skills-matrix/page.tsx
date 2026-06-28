@@ -30,10 +30,11 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 export default function SkillsMatrixPage() {
-  const { data, isLoading } = useSkillsMatrix();
+  const { data, isLoading, isError, refetch } = useSkillsMatrix();
   const [compact, setCompact] = useState(false);
 
   const toggleCompact = useCallback(() => setCompact((c) => !c), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -56,6 +57,21 @@ export default function SkillsMatrixPage() {
               ))}
             </div>
           ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Skills Matrix" subtitle="Cross-reference of employees and their skill levels across the org">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load skills matrix</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

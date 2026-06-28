@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -41,6 +43,7 @@ export default function AIHubPage() {
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) setActiveFeature(null);
   }, []);
+  const handleClearFilter = useCallback(() => setSelectedCategory("all"), []);
 
   return (
     <PageWrapper
@@ -61,15 +64,24 @@ export default function AIHubPage() {
         </TabsList>
 
         <TabsContent value={selectedCategory} className="mt-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((feature) => (
-              <FeatureCardWrapper
-                key={feature.id}
-                feature={feature}
-                onSelect={handleSelectFeature}
-              />
-            ))}
-          </div>
+          {filtered.length === 0 ? (
+            <EmptyState
+              illustration={<Sparkles className="text-muted-foreground/40" />}
+              title="No features in this category"
+              description="No AI tools are available for the selected category yet."
+              action={{ label: "Browse All", onClick: handleClearFilter }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((feature) => (
+                <FeatureCardWrapper
+                  key={feature.id}
+                  feature={feature}
+                  onSelect={handleSelectFeature}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

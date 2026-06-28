@@ -27,6 +27,10 @@ export default function VendorsListPage() {
     setOnlyOutstanding(checked === true);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Vendors"
@@ -47,7 +51,13 @@ export default function VendorsListPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && (
+        <ErrorState
+          title="Failed to load vendors"
+          description={query.error.message}
+          onRetry={handleRetry}
+        />
+      )}
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState

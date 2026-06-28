@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, Mail, Smartphone, Monitor, Moon, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +41,8 @@ export default function NotificationPreferencesPage() {
   const [categories, setCategories] = useState<Record<string, boolean>>({});
   const [dirty, setDirty] = useState(false);
 
-  if (!initialized && prefs) {
+  useEffect(() => {
+    if (!prefs || initialized) return;
     setEmailEnabled(prefs.emailEnabled ?? true);
     setPushEnabled(prefs.pushEnabled ?? true);
     setInAppEnabled(prefs.inAppEnabled ?? true);
@@ -54,7 +55,7 @@ export default function NotificationPreferencesPage() {
     });
     setCategories(cats);
     setInitialized(true);
-  }
+  }, [prefs, initialized]);
 
   const handleInAppToggle = useCallback((val: boolean) => { setInAppEnabled(val); setDirty(true); }, []);
   const handleEmailToggle = useCallback((val: boolean) => { setEmailEnabled(val); setDirty(true); }, []);

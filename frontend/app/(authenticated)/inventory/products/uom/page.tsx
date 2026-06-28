@@ -122,6 +122,10 @@ export default function UomPage() {
     setFormKey((k) => k + 1);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
@@ -147,7 +151,7 @@ export default function UomPage() {
           <ErrorState
             title="Failed to load units"
             description={query.error.message}
-            onRetry={() => query.refetch()}
+            onRetry={handleRetry}
           />
         ) : uomList.length === 0 ? (
           <EmptyState

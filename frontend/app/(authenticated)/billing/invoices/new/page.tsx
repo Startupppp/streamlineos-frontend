@@ -312,17 +312,11 @@ export default function NewInvoicePage() {
                     <span className="text-sm font-medium">{fmt(lineAmount)}</span>
                   </div>
                   <div className="flex justify-end md:col-span-12 md:-mt-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={handleRemoveLineFactory(idx, handleRemoveLine)}
+                    <LineItemRemoveButton
+                      idx={idx}
                       disabled={itemsArray.fields.length === 1}
-                      aria-label={`Remove item ${idx + 1}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                      onRemove={handleRemoveLine}
+                    />
                   </div>
                 </div>
               );
@@ -524,8 +518,27 @@ export default function NewInvoicePage() {
   );
 }
 
-function handleRemoveLineFactory(index: number, remove: (index: number) => void) {
-  return function onRemoveLineClick() {
-    remove(index);
-  };
+interface LineItemRemoveButtonProps {
+  idx: number;
+  disabled: boolean;
+  onRemove: (idx: number) => void;
+}
+
+function LineItemRemoveButton({ idx, disabled, onRemove }: LineItemRemoveButtonProps) {
+  function handleClick() {
+    onRemove(idx);
+  }
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={`Remove item ${idx + 1}`}
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
 }

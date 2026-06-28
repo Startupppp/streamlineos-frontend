@@ -83,6 +83,10 @@ export function RecordPaymentDialog({
     setForm((p) => ({ ...p, notes: e.target.value }));
   }
 
+  function handleCancel() {
+    onOpenChange(false);
+  }
+
   function handleSubmit() {
     const amount = Number(form.amount);
     if (!amount || amount <= 0) {
@@ -189,7 +193,7 @@ export function RecordPaymentDialog({
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
           <Button size="sm" onClick={handleSubmit} disabled={recordPayment.isPending}>

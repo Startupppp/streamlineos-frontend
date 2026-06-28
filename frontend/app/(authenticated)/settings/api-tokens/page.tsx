@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,10 @@ function TokenCreatedDialog({
 }) {
   const [copied, setCopied] = useState(false);
 
+  function handleOpenChange(isOpen: boolean) {
+    if (!isOpen) onClose();
+  }
+
   const handleCopy = useCallback(() => {
     if (!result?.token) return;
     navigator.clipboard.writeText(result.token).then(() => {
@@ -96,7 +101,7 @@ function TokenCreatedDialog({
   }, [result?.token]);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Token Created</DialogTitle>
@@ -121,6 +126,40 @@ function TokenCreatedDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ScopeToggleButton({
+  scope,
+  currentScopes,
+  onChange,
+}: {
+  scope: string;
+  currentScopes: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const selected = currentScopes.includes(scope);
+
+  function handleClick() {
+    if (selected) {
+      onChange(currentScopes.filter((s) => s !== scope));
+    } else {
+      onChange([...currentScopes, scope]);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+        selected
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-muted text-muted-foreground hover:bg-muted/80"
+      }`}
+    >
+      {scope}
+    </button>
   );
 }
 
@@ -157,17 +196,6 @@ function CreateTokenSheet({
       });
     },
     [create, form, onCreated],
-  );
-
-  const toggleScope = useCallback(
-    (scope: string, current: string[], onChange: (v: string[]) => void) => {
-      if (current.includes(scope)) {
-        onChange(current.filter((s) => s !== scope));
-      } else {
-        onChange([...current, scope]);
-      }
-    },
-    [],
   );
 
   return (
@@ -225,23 +253,14 @@ function CreateTokenSheet({
                 <FormItem>
                   <FormLabel>Scopes</FormLabel>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {AVAILABLE_SCOPES.map((scope) => {
-                      const selected = field.value.includes(scope);
-                      return (
-                        <button
-                          key={scope}
-                          type="button"
-                          onClick={() => toggleScope(scope, field.value, field.onChange)}
-                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >
-                          {scope}
-                        </button>
-                      );
-                    })}
+                    {AVAILABLE_SCOPES.map((scope) => (
+                      <ScopeToggleButton
+                        key={scope}
+                        scope={scope}
+                        currentScopes={field.value}
+                        onChange={field.onChange}
+                      />
+                    ))}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -269,8 +288,95 @@ function isExpired(expiresAt: string | null) {
   return new Date(expiresAt) < new Date();
 }
 
+function TokenRow({
+  token,
+  onRevoke,
+  onDelete,
+}: {
+  token: ApiToken;
+  onRevoke: (t: ApiToken) => void;
+  onDelete: (t: ApiToken) => void;
+}) {
+  const expired = isExpired(token.expiresAt);
+
+  function handleRevoke() {
+    onRevoke(token);
+  }
+
+  function handleDelete() {
+    onDelete(token);
+  }
+
+  return (
+    <TableRow className={token.isRevoked ? "opacity-60" : ""}>
+      <TableCell className="font-medium">
+        <div className="flex flex-col">
+          <span>{token.name}</span>
+          {token.description && (
+            <span className="text-xs text-muted-foreground truncate max-w-[180px]">
+              {token.description}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{token.keyPrefix}…</code>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
+          {token.scopes.slice(0, 3).map((s) => (
+            <Badge key={s} variant="outline" className="text-xs px-1.5 py-0">
+              {s}
+            </Badge>
+          ))}
+          {token.scopes.length > 3 && (
+            <Badge variant="outline" className="text-xs px-1.5 py-0">
+              +{token.scopes.length - 3}
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        <div className="flex items-center gap-1">
+          {expired && <Clock className="h-3.5 w-3.5 text-destructive" />}
+          <span className={expired ? "text-destructive" : ""}>{formatDate(token.expiresAt)}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground">{formatDate(token.lastUsedAt)}</TableCell>
+      <TableCell>
+        {token.isRevoked ? (
+          <Badge variant="secondary" className="text-destructive border-destructive/20 bg-destructive/10">
+            Revoked
+          </Badge>
+        ) : expired ? (
+          <Badge variant="secondary" className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
+            Expired
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
+            <Shield className="h-3 w-3 mr-1" />
+            Active
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-1">
+          {!token.isRevoked && (
+            <Button variant="ghost" size="sm" onClick={handleRevoke} title="Revoke">
+              <ShieldOff className="h-4 w-4 text-amber-600" />
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleDelete} title="Delete">
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function ApiTokensPage() {
-  const { data, isLoading } = useApiTokens();
+  const { data, isLoading, isError, refetch } = useApiTokens();
   const revoke = useRevokeApiToken();
   const del = useDeleteApiToken();
 
@@ -311,6 +417,26 @@ export default function ApiTokensPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleCloseCreated = useCallback(() => setCreatedResult(null), []);
 
+  function handleSetRevoking(t: ApiToken) {
+    setRevoking(t);
+  }
+
+  function handleSetDeleting(t: ApiToken) {
+    setDeleting(t);
+  }
+
+  function handleRevokeDialogChange(open: boolean) {
+    if (!open) setRevoking(null);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleting(null);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <PageWrapper
       title="API Tokens"
@@ -328,8 +454,15 @@ export default function ApiTokensPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load API tokens"
+          description="Something went wrong while fetching your tokens."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       ) : tokens.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] gap-3 text-muted-foreground">
           <Key className="h-10 w-10 opacity-30" />
           <p className="text-sm">No API tokens yet</p>
           <Button size="sm" onClick={handleOpenCreate}>
@@ -351,87 +484,14 @@ export default function ApiTokensPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tokens.map((t) => {
-              const expired = isExpired(t.expiresAt);
-              return (
-                <TableRow key={t.id} className={t.isRevoked ? "opacity-60" : ""}>
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span>{t.name}</span>
-                      {t.description && (
-                        <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                          {t.description}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.keyPrefix}…</code>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {t.scopes.slice(0, 3).map((s) => (
-                        <Badge key={s} variant="outline" className="text-xs px-1.5 py-0">
-                          {s}
-                        </Badge>
-                      ))}
-                      {t.scopes.length > 3 && (
-                        <Badge variant="outline" className="text-xs px-1.5 py-0">
-                          +{t.scopes.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      {expired && <Clock className="h-3.5 w-3.5 text-destructive" />}
-                      <span className={expired ? "text-destructive" : ""}>
-                        {formatDate(t.expiresAt)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(t.lastUsedAt)}</TableCell>
-                  <TableCell>
-                    {t.isRevoked ? (
-                      <Badge variant="secondary" className="text-destructive border-destructive/20 bg-destructive/10">
-                        Revoked
-                      </Badge>
-                    ) : expired ? (
-                      <Badge variant="secondary" className="text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
-                        Expired
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Active
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {!t.isRevoked && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setRevoking(t)}
-                          title="Revoke"
-                        >
-                          <ShieldOff className="h-4 w-4 text-amber-600" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleting(t)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {tokens.map((t) => (
+              <TokenRow
+                key={t.id}
+                token={t}
+                onRevoke={handleSetRevoking}
+                onDelete={handleSetDeleting}
+              />
+            ))}
           </TableBody>
         </Table>
       )}
@@ -450,7 +510,7 @@ export default function ApiTokensPage() {
 
       <ConfirmDialog
         open={!!revoking}
-        onOpenChange={(o) => !o && setRevoking(null)}
+        onOpenChange={handleRevokeDialogChange}
         title="Revoke Token"
         description={`Revoke "${revoking?.name}"? API calls using this token will immediately fail.`}
         onConfirm={handleRevoke}
@@ -460,7 +520,7 @@ export default function ApiTokensPage() {
 
       <ConfirmDialog
         open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={handleDeleteDialogChange}
         title="Delete Token"
         description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}

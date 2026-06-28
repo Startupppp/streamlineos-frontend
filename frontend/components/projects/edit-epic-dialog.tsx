@@ -53,15 +53,11 @@ interface EditEpicDialogProps {
 }
 
 function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
-  return PRIORITIES.includes(value as EditEpicInput["priority"])
-    ? (value as EditEpicInput["priority"])
-    : "MEDIUM";
+  return PRIORITIES.find((p) => p === value) ?? "MEDIUM";
 }
 
 function toStatus(value: string | null | undefined): EditEpicInput["status"] {
-  return STATUSES.includes(value as EditEpicInput["status"])
-    ? (value as EditEpicInput["status"])
-    : "TODO";
+  return STATUSES.find((s) => s === value) ?? "TODO";
 }
 
 const STATUS_LABEL: Record<EditEpicInput["status"], string> = {

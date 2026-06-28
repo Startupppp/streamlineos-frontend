@@ -54,8 +54,16 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   const vendorQuery = useVendor(id);
   const posQuery = useVendorPurchaseOrders(id);
 
+  function handleVendorRetry(): void {
+    void vendorQuery.refetch();
+  }
+
+  function handlePosRetry(): void {
+    void posQuery.refetch();
+  }
+
   if (vendorQuery.isLoading) return <LoadingState variant="form" />;
-  if (vendorQuery.error) return <ErrorState description={vendorQuery.error.message} />;
+  if (vendorQuery.error) return <ErrorState description={vendorQuery.error.message} onRetry={handleVendorRetry} />;
   if (!vendorQuery.data) return <ErrorState title="Not found" description={`Vendor #${vendorId}`} />;
 
   const vendor = vendorQuery.data;
@@ -124,7 +132,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
           </div>
 
           {posQuery.isLoading && <LoadingState variant="table" rows={4} />}
-          {posQuery.error && <ErrorState description={posQuery.error.message} />}
+          {posQuery.error && <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} />}
 
           {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
             <EmptyState

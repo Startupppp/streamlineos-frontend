@@ -74,7 +74,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           setRunning(false);
           startTimeRef.current = null;
         },
-        onError: (e) => toast.error((e as Error).message || "Failed to log time"),
+        onError: (e: Error) => toast.error(e.message || "Failed to log time"),
       }
     );
   }, [elapsed, projectId, ticketId, description, logTime]);
@@ -100,7 +100,7 @@ export function TicketTimeTracker({ ticketId, projectId, timeSpent }: TicketTime
           setDescription("");
           setShowManual(false);
         },
-        onError: (e) => toast.error((e as Error).message || "Failed to log time"),
+        onError: (e: Error) => toast.error(e.message || "Failed to log time"),
       }
     );
   }, [manualHours, projectId, ticketId, description, logTime]);

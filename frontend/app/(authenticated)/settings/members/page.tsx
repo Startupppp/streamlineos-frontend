@@ -291,7 +291,7 @@ export default function MembersSettingsPage() {
                         <TableRow>
                           <TableCell colSpan={5} className="py-10 text-center">
                             <p className="text-sm text-muted-foreground mb-2">Failed to load members.</p>
-                            <Button variant="outline" size="sm" onClick={refetchMembers}>Retry</Button>
+                            <Button variant="outline" size="sm" onClick={handleRetryMembers}>Retry</Button>
                           </TableCell>
                         </TableRow>
                       ) : !membersData?.data.length ? (

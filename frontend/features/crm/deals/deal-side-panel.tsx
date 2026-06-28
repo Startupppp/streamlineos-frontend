@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -41,7 +41,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
 
   const stage = deal ? DEAL_STAGES.find((s) => s.key === deal.stage) : null;
 
-  function handleSave(values: EditFormValues) {
+  const handleSave = useCallback((values: EditFormValues) => {
     if (!dealId) return;
     updateDeal.mutate(
       {
@@ -59,11 +59,12 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         onError: () => toast.error("Failed to update deal"),
       },
     );
-  }
+  }, [dealId, updateDeal]);
+
+  const handleOpenChange = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
 
   return (
-    <>
-      <Sheet open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
         <SheetContent
           side="right"
           className="w-full sm:max-w-3xl p-0 flex flex-col"
@@ -147,7 +148,5 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
           )}
         </SheetContent>
       </Sheet>
-
-    </>
   );
 }

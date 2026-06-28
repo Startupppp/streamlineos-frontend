@@ -228,6 +228,7 @@ export default function DealDetailPage({
   );
 
   const handleOpenMeetingDialog = useCallback(() => setMeetingDialogOpen(true), []);
+  const handleOpenCreateProject = useCallback(() => setCreateProjectOpen(true), []);
 
   if (isLoading) {
     return (
@@ -321,7 +322,7 @@ export default function DealDetailPage({
             <Button
               size="sm"
               className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => setCreateProjectOpen(true)}
+              onClick={handleOpenCreateProject}
             >
               <FolderKanban className="h-4 w-4 mr-1" />
               Create Project

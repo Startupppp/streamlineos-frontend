@@ -177,6 +177,7 @@ function FnfContent() {
     queryKey: fnfKeys.list(),
     queryFn: () => apiClient.get<FnfSettlement[]>("/hr/fnf"),
   });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const create = useMutation({
     mutationFn: (data: {
@@ -305,7 +306,7 @@ function FnfContent() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load settlements"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

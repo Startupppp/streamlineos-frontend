@@ -18,6 +18,8 @@ import { QuickAddInput } from "./kanban-quick-add";
 import type { KanbanTicket, KanbanColumn } from "./shared/types";
 import { AnimatePresence, motion } from "framer-motion";
 
+type UpdateOrderContext = { previous: KanbanTicket[] };
+
 const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: "TODO", name: "To Do", color: "#94a3b8", order: 0 },
   { id: "IN_PROGRESS", name: "In Progress", color: "#3b82f6", order: 1 },
@@ -35,7 +37,6 @@ interface KanbanBoardProps {
     color: string | null;
     order: number;
   }>;
-  epics?: Array<{ id: number; title: string }>;
   onTicketSelect?: (ticketId: number) => void;
   wipLimits?: Record<string, number>;
 }
@@ -71,15 +72,14 @@ export function KanbanBoard({
   }, []);
 
   const updateOrder = useUpdateTicketOrder({
-    onMutate: async () => {
+    onMutate: async (): Promise<UpdateOrderContext> => {
       await queryClient.cancelQueries({
         queryKey: queryKeys.projects.detail(projectId),
       });
       return { previous: optimisticTickets };
     },
-    onError: (_err: unknown, _newOrder: unknown, context: unknown) => {
-      const ctx = context as { previous: typeof optimisticTickets } | undefined;
-      if (ctx?.previous) setOptimisticTickets(ctx.previous);
+    onError: (_, __, context) => {
+      if (context?.previous) setOptimisticTickets(context.previous);
       toast.error("Failed to update order");
     },
     onSettled: () => {

@@ -166,7 +166,7 @@ export default function WorkLogsPage() {
     return dateSet;
   }, [myLeaveData]);
 
-  const { data: logs, isLoading } = useGetWorkLogs({
+  const { data: logs, isLoading, isError, refetch } = useGetWorkLogs({
     year,
     quarter,
     ...(selectedUserId ? { userId: selectedUserId } : {}),
@@ -348,6 +348,15 @@ export default function WorkLogsPage() {
     isAdminOrCeo,
   };
 
+  const handleSaveLog = useCallback(
+    (date: string, content: string, workLink: string) => {
+      upsertLog.mutate({ date, description: content, workLink });
+    },
+    [upsertLog],
+  );
+
+  function handleRetryWorkLogs() { void refetch(); }
+
   const handleClearSearch = () => setSearchTerm("");
 
   return (
@@ -394,6 +403,18 @@ export default function WorkLogsPage() {
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Loading work logs
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : isError ? (
+          <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center text-center gap-3">
+                <p className="text-sm font-semibold text-foreground">Failed to load work logs</p>
+                <p className="text-sm text-muted-foreground">Something went wrong. Please try again.</p>
+                <Button variant="outline" size="sm" className="h-8 mt-1" onClick={handleRetryWorkLogs}>
+                  Try Again
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -459,9 +480,7 @@ export default function WorkLogsPage() {
                   currentUserId={session?.user?.id}
                   readOnly={!!selectedUserId && selectedUserId !== session?.user?.id}
                   approvedLeaveDates={approvedLeaveDates}
-                  onSave={(date, content, workLink) =>
-                    upsertLog.mutate({ date, description: content, workLink })
-                  }
+                  onSave={handleSaveLog}
                   isSaving={upsertLog.isPending}
                 />
               );

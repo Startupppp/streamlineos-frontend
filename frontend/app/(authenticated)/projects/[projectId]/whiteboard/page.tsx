@@ -2,6 +2,7 @@
 
 import {
   use,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -73,6 +74,43 @@ const TOOL_DEFS: { type: ElementType; label: string; icon: typeof StickyNote }[]
   { type: "ellipse", label: "Ellipse", icon: Circle },
   { type: "text", label: "Text", icon: Type },
 ];
+
+interface ToolButtonProps {
+  tool: (typeof TOOL_DEFS)[number];
+  onAdd: (type: ElementType) => void;
+}
+
+const ToolButton = memo(function ToolButton({ tool, onAdd }: ToolButtonProps) {
+  const handleClick = useCallback(() => onAdd(tool.type), [onAdd, tool.type]);
+  return (
+    <Button size="sm" variant="outline" className="h-8" onClick={handleClick}>
+      <tool.icon className="h-3.5 w-3.5 mr-1" />
+      {tool.label}
+    </Button>
+  );
+});
+
+interface PaletteButtonProps {
+  color: string;
+  isActive: boolean;
+  onSelect: (color: string) => void;
+}
+
+const PaletteButton = memo(function PaletteButton({ color, isActive, onSelect }: PaletteButtonProps) {
+  const handleClick = useCallback(() => onSelect(color), [onSelect, color]);
+  return (
+    <button
+      type="button"
+      aria-label={`Color ${color}`}
+      onClick={handleClick}
+      className={cn(
+        "h-6 w-6 rounded-md border transition",
+        isActive ? "border-primary ring-2 ring-primary/30" : "border-border",
+      )}
+      style={{ backgroundColor: color }}
+    />
+  );
+});
 
 function nextElementId(elements: WhiteboardElement[]): string {
   let max = 0;
@@ -213,6 +251,9 @@ function CreateBoardDialog({
     if (!name.trim()) return;
     onCreate(name.trim());
   }
+  function handleCancel() {
+    onOpenChange(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -230,7 +271,7 @@ function CreateBoardDialog({
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
@@ -435,30 +476,16 @@ function BoardCanvas({
       <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2 mb-2">
         <div className="flex items-center gap-1">
           {TOOL_DEFS.map((tool) => (
-            <Button
-              key={tool.type}
-              size="sm"
-              variant="outline"
-              className="h-8"
-              onClick={() => handleAdd(tool.type)}
-            >
-              <tool.icon className="h-3.5 w-3.5 mr-1" />
-              {tool.label}
-            </Button>
+            <ToolButton key={tool.type} tool={tool} onAdd={handleAdd} />
           ))}
         </div>
         <div className="flex items-center gap-1 pl-2 border-l border-border">
           {PALETTE.map((color) => (
-            <button
+            <PaletteButton
               key={color}
-              type="button"
-              aria-label={`Color ${color}`}
-              onClick={() => handleColorSelect(color)}
-              className={cn(
-                "h-6 w-6 rounded-md border transition",
-                activeColor === color ? "border-primary ring-2 ring-primary/30" : "border-border",
-              )}
-              style={{ backgroundColor: color }}
+              color={color}
+              isActive={activeColor === color}
+              onSelect={handleColorSelect}
             />
           ))}
         </div>

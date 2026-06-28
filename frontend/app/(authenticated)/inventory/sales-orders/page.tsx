@@ -78,6 +78,8 @@ export default function SalesOrdersListPage() {
 
   const items = query.data?.items ?? [];
 
+  function handleRetry() { void query.refetch(); }
+
   return (
     <PageWrapper
       eyebrow="Inventory"
@@ -122,7 +124,7 @@ export default function SalesOrdersListPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState

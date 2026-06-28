@@ -14,6 +14,7 @@ import {
   type SubscriptionPlan,
 } from "@/lib/api/hooks/subscription";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 
 declare global {
   interface Window {
@@ -92,9 +93,91 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
   EXPIRED: { label: "Expired", variant: "outline" },
 };
 
+function PlanCard({
+  plan,
+  config,
+  currentPlan,
+  currentStatus,
+  upgradingPlan,
+  isBusy,
+  isConfigured,
+  onUpgrade,
+}: {
+  plan: SubscriptionPlan;
+  config: { price: number; label: string; features: string[] };
+  currentPlan: SubscriptionPlan | null;
+  currentStatus: string | null;
+  upgradingPlan: SubscriptionPlan | null;
+  isBusy: boolean;
+  isConfigured: boolean | undefined;
+  onUpgrade: (plan: SubscriptionPlan) => void;
+}) {
+  const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
+  const isUpgrading = upgradingPlan === plan && isBusy;
+
+  function handleUpgrade() {
+    onUpgrade(plan);
+  }
+
+  return (
+    <div
+      className={`relative flex flex-col rounded-lg border bg-card p-5 transition-shadow ${
+        isCurrentPlan
+          ? "border-primary ring-1 ring-primary/20"
+          : "border-border hover:shadow-sm"
+      }`}
+    >
+      {isCurrentPlan && (
+        <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+          Current
+        </span>
+      )}
+
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
+        </div>
+        <p className="text-2xl font-bold text-foreground">
+          ₹{config.price.toLocaleString("en-IN")}
+          <span className="text-sm font-normal text-muted-foreground">/mo</span>
+        </p>
+      </div>
+
+      <ul className="flex-1 space-y-2 mb-5">
+        {config.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        size="sm"
+        variant={isCurrentPlan ? "secondary" : "default"}
+        disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
+        onClick={handleUpgrade}
+        className="w-full"
+      >
+        {isUpgrading ? (
+          <>
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+            Processing…
+          </>
+        ) : isCurrentPlan ? (
+          "Current Plan"
+        ) : (
+          "Upgrade"
+        )}
+      </Button>
+    </div>
+  );
+}
+
 export default function SubscriptionPage() {
   const { data: session } = useSession();
-  const { data, isLoading } = useSubscription();
+  const { data, isLoading, isError, refetch } = useSubscription();
   const { mutateAsync: createOrder, isPending: isCreatingOrder } = useCreateSubscriptionOrder();
   const { mutateAsync: verifySubscription, isPending: isVerifying } = useVerifySubscription();
   const [upgradingPlan, setUpgradingPlan] = useState<SubscriptionPlan | null>(null);
@@ -108,6 +191,10 @@ export default function SubscriptionPage() {
       document.body.removeChild(script);
     };
   }, []);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   const handleUpgrade = useCallback(
     async (plan: SubscriptionPlan) => {
@@ -155,7 +242,6 @@ export default function SubscriptionPage() {
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
-
   const isBusy = isCreatingOrder || isVerifying;
 
   if (isLoading) {
@@ -169,6 +255,19 @@ export default function SubscriptionPage() {
             <Skeleton className="h-64 rounded-lg" />
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Subscription" subtitle="Manage your plan and billing.">
+        <ErrorState
+          title="Couldn't load subscription"
+          description="Something went wrong while fetching your subscription details."
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       </PageWrapper>
     );
   }
@@ -209,67 +308,19 @@ export default function SubscriptionPage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(Object.keys(PLAN_CONFIG) as SubscriptionPlan[]).map((plan) => {
-            const config = PLAN_CONFIG[plan];
-            const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
-            const isUpgrading = upgradingPlan === plan && isBusy;
-
-            return (
-              <div
-                key={plan}
-                className={`relative flex flex-col rounded-lg border bg-card p-5 transition-shadow ${
-                  isCurrentPlan
-                    ? "border-primary ring-1 ring-primary/20"
-                    : "border-border hover:shadow-sm"
-                }`}
-              >
-                {isCurrentPlan && (
-                  <span className="absolute -top-px left-4 inline-flex items-center rounded-b-md bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-                    Current
-                  </span>
-                )}
-
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Zap className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">
-                    ₹{config.price.toLocaleString("en-IN")}
-                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                  </p>
-                </div>
-
-                <ul className="flex-1 space-y-2 mb-5">
-                  {config.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <Check className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  size="sm"
-                  variant={isCurrentPlan ? "secondary" : "default"}
-                  disabled={isCurrentPlan || !data?.isConfigured || (isBusy && upgradingPlan !== plan)}
-                  onClick={() => handleUpgrade(plan)}
-                  className="w-full"
-                >
-                  {isUpgrading ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Processing…
-                    </>
-                  ) : isCurrentPlan ? (
-                    "Current Plan"
-                  ) : (
-                    "Upgrade"
-                  )}
-                </Button>
-              </div>
-            );
-          })}
+          {(Object.keys(PLAN_CONFIG) as SubscriptionPlan[]).map((plan) => (
+            <PlanCard
+              key={plan}
+              plan={plan}
+              config={PLAN_CONFIG[plan]}
+              currentPlan={currentPlan}
+              currentStatus={currentStatus}
+              upgradingPlan={upgradingPlan}
+              isBusy={isBusy}
+              isConfigured={data?.isConfigured}
+              onUpgrade={handleUpgrade}
+            />
+          ))}
         </div>
 
         {data?.subscription?.payments && data.subscription.payments.length > 0 && (

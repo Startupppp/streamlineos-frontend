@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { ShieldAlert, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ function SlaLoadingSkeleton() {
 export default function SlaCompliancePage() {
   const { data, isLoading, isError, refetch } = useSlaCompliance();
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   if (isLoading) return <SlaLoadingSkeleton />;
 
   if (isError) {
@@ -58,7 +61,7 @@ export default function SlaCompliancePage() {
         <ErrorState
           title="Failed to load SLA data"
           description="An error occurred while loading SLA compliance data. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

@@ -114,7 +114,7 @@ export default function DocumentTypesPage() {
   const ability = useAbility();
   const isHROrCEO = ability.can("manage", "hr:employees");
 
-  const { data, isLoading } = useDocumentTypes();
+  const { data, isLoading, isError, refetch } = useDocumentTypes();
   const createMutation = useCreateDocumentType();
   const updateMutation = useUpdateDocumentType();
   const deleteMutation = useDeleteDocumentType();
@@ -260,6 +260,8 @@ export default function DocumentTypesPage() {
     if (!open) setReactivateTarget(null);
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const list = data ?? [];
 
   if (isLoading) {
@@ -272,6 +274,21 @@ export default function DocumentTypesPage() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-10" />
           ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load document types</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

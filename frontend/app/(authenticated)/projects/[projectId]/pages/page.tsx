@@ -29,6 +29,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const createPageSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -212,7 +213,7 @@ export default function PagesPage({
           form.reset();
           toast.success("Page created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   };
@@ -244,7 +245,7 @@ export default function PagesPage({
   const handleTogglePin = useCallback((pageId: number, pinned: boolean) => {
     togglePinMutation.mutate(
       { id: pageId, projectId, isPinned: pinned },
-      { onError: (err) => toast.error((err as Error).message) }
+      { onError: (err) => toast.error(getErrorMessage(err)) }
     );
   }, [togglePinMutation, projectId]);
 
@@ -254,7 +255,7 @@ export default function PagesPage({
       { id: activePage, projectId, content: editContent },
       {
         onSuccess: () => toast.success("Page saved"),
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [activePage, projectId, editContent, updateMutation]);

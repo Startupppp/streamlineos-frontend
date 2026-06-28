@@ -42,7 +42,7 @@ export default function TerminationPage() {
   const isHR = role === "HR";
   const isCEO = role === "CEO" || ability.can("manage", "all");
 
-  const { data: terminations, isLoading } = useTerminations();
+  const { data: terminations, isLoading, isError, refetch } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });
   const createTermination = useCreateTermination();
   const submitTermination = useSubmitTermination();
@@ -90,6 +90,8 @@ export default function TerminationPage() {
     setSeveranceAmount("");
     setInternalNotes("");
   }, []);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const isOtherReason = selectedReason === TERMINATION_REASON_OTHER;
 
@@ -312,6 +314,21 @@ export default function TerminationPage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
           ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Termination Management" subtitle="Manage employee terminations">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load terminations</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

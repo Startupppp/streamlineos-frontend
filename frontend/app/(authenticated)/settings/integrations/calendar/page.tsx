@@ -104,7 +104,7 @@ export default function CalendarIntegrationsPage() {
   const qc = useQueryClient();
   const searchParams = useSearchParams();
 
-  const { data: connections = [], isLoading } = useQuery({
+  const { data: connections = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["calendarConnections"],
     queryFn: () => apiClient.get<CalendarConnection[]>("/auth/calendar/status"),
     staleTime: 60_000,
@@ -139,6 +139,8 @@ export default function CalendarIntegrationsPage() {
     [setPrimary]
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   useEffect(() => {
     const success = searchParams.get("success");
     const error = searchParams.get("error");
@@ -158,6 +160,21 @@ export default function CalendarIntegrationsPage() {
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-40 w-full" />
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Calendar Integration" subtitle="Connect your calendars for interview scheduling">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+          <CalendarCheck2 className="h-10 w-10 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">Failed to load calendars</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Unable to fetch your calendar connections.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

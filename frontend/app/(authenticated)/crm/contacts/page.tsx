@@ -51,6 +51,70 @@ function useEnrichContact() {
   });
 }
 
+interface ContactActionItem {
+  id: number;
+  name: string;
+  email: string | null;
+  company: string | null;
+}
+
+interface ContactActionsMenuProps {
+  contact: ContactActionItem;
+  isEnrichPending: boolean;
+  onDelete: (id: number) => void;
+  onEnrich: (contact: ContactActionItem) => void;
+  triggerClassName?: string;
+}
+
+function ContactActionsMenu({
+  contact,
+  isEnrichPending,
+  onDelete,
+  onEnrich,
+  triggerClassName,
+}: ContactActionsMenuProps) {
+  const router = useRouter();
+
+  const handleView = useCallback(() => {
+    router.push(`/crm/contacts/${contact.id}`);
+  }, [contact.id, router]);
+
+  const handleEnrich = useCallback(() => {
+    onEnrich(contact);
+  }, [contact, onEnrich]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(contact.id);
+  }, [contact.id, onDelete]);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("h-7 w-7", triggerClassName)}
+          aria-label="More options"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleView}>
+          <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
+          <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
+          <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function ContactsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -61,18 +125,18 @@ export default function ContactsPage() {
   const deleteContact = useDeleteContact();
   const enrichContact = useEnrichContact();
 
-  const view = (searchParams.get("view") ||"table") as"table" |"card";
-  const searchInput = searchParams.get("q") ||"";
+  const view = (searchParams.get("view") || "table") as "table" | "card";
+  const searchInput = searchParams.get("q") || "";
   const page = Number(searchParams.get("page")) || 1;
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const apiSearch = debouncedSearch.length >= 3 || debouncedSearch.length === 0 ? debouncedSearch :"";
+  const apiSearch = debouncedSearch.length >= 3 || debouncedSearch.length === 0 ? debouncedSearch : "";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value ==="") params.delete(key);
+        if (value === null || value === "") params.delete(key);
         else params.set(key, value);
       }
       startTransition(() => {
@@ -95,11 +159,18 @@ export default function ContactsPage() {
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
   const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
-  const handleViewCard = useCallback(() => updateParams({ view:"card" }), [updateParams]);
+  const handleViewCard = useCallback(() => updateParams({ view: "card" }), [updateParams]);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateParams({ q: e.target.value || null, page: null });
+    },
+    [updateParams],
+  );
+
   const handleEnrich = useCallback(
-    (contact: { id: number; name: string; email: string | null; company: string | null }) => {
+    (contact: ContactActionItem) => {
       enrichContact.mutate(
         { name: contact.name, email: contact.email, company: contact.company },
         {
@@ -115,6 +186,10 @@ export default function ContactsPage() {
     },
     [enrichContact],
   );
+
+  const handleRequestDelete = useCallback((id: number) => {
+    setDeleteId(id);
+  }, []);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteId === null) return;
@@ -172,14 +247,20 @@ export default function ContactsPage() {
         actions={
           <>
             <div className="flex items-center border border-border rounded-md">
-              <Button variant={view ==="table" ?"default" :"ghost"} size="sm"
-                className={cn("rounded-r-none", view ==="table" &&"")}
-                onClick={handleViewTable}>
+              <Button
+                variant={view === "table" ? "default" : "ghost"}
+                size="sm"
+                className={cn("rounded-r-none", view === "table" && "")}
+                onClick={handleViewTable}
+              >
                 <TableIcon className="h-4 w-4" />
               </Button>
-              <Button variant={view ==="card" ?"default" :"ghost"} size="sm"
-                className={cn("rounded-l-none", view ==="card" &&"")}
-                onClick={handleViewCard}>
+              <Button
+                variant={view === "card" ? "default" : "ghost"}
+                size="sm"
+                className={cn("rounded-l-none", view === "card" && "")}
+                onClick={handleViewCard}
+              >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
@@ -195,7 +276,7 @@ export default function ContactsPage() {
             <Input
               placeholder="Search contacts (min 3 chars)..."
               value={searchInput}
-              onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
+              onChange={handleSearchChange}
               className="pl-8 h-8 text-xs"
             />
           </div>
@@ -203,7 +284,7 @@ export default function ContactsPage() {
       >
         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
 
-          {view ==="table" && (
+          {view === "table" && (
             <motion.div variants={fadeUp}>
               <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
                 <div className="flex-1 min-h-0 overflow-auto">
@@ -240,15 +321,15 @@ export default function ContactsPage() {
                             <TableCell className="px-2 py-1">
                               <div className="flex items-center gap-2">
                                 <div className="h-6 w-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[9px] font-bold text-blue-600 shrink-0">
-                                  {contact.name[0]?.toUpperCase() ??"?"}
+                                  {contact.name[0]?.toUpperCase() ?? "?"}
                                 </div>
                                 <span className="text-[12px] font-medium truncate max-w-[120px]">{contact.name}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">{contact.email ||"—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">{contact.phone ||"—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company ||"—"}</TableCell>
-                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title ||"—"}</TableCell>
+                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">{contact.email || "—"}</TableCell>
+                            <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">{contact.phone || "—"}</TableCell>
+                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company || "—"}</TableCell>
+                            <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title || "—"}</TableCell>
                             <TableCell className="px-2 py-1">
                               {contact.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-0.5">
@@ -299,31 +380,12 @@ export default function ContactsPage() {
                               </div>
                             </TableCell>
                             <TableCell className="px-2 py-1">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
-                                    <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    disabled={enrichContact.isPending}
-                                    onClick={() => handleEnrich(contact)}
-                                  >
-                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => setDeleteId(contact.id)}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <ContactActionsMenu
+                                contact={contact}
+                                isEnrichPending={enrichContact.isPending}
+                                onDelete={handleRequestDelete}
+                                onEnrich={handleEnrich}
+                              />
                             </TableCell>
                           </TableRow>
                         ))}
@@ -348,7 +410,7 @@ export default function ContactsPage() {
             </motion.div>
           )}
 
-          {view ==="card" && (
+          {view === "card" && (
             <>
               <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {data?.items.map(contact => (
@@ -356,37 +418,19 @@ export default function ContactsPage() {
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600 shrink-0">
-                          {contact.name[0]?.toUpperCase() ??"?"}
+                          {contact.name[0]?.toUpperCase() ?? "?"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate group-hover:text-blue-600 transition-colors">{contact.name}</p>
                           {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" aria-label="More options">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
-                              <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={enrichContact.isPending}
-                              onClick={() => handleEnrich(contact)}
-                            >
-                              <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />Enrich with AI
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => setDeleteId(contact.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ContactActionsMenu
+                          contact={contact}
+                          isEnrichPending={enrichContact.isPending}
+                          onDelete={handleRequestDelete}
+                          onEnrich={handleEnrich}
+                          triggerClassName="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
                       </div>
                       <div className="mt-3 space-y-1.5">
                         {contact.email && (

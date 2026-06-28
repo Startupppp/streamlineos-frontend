@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingDown, CheckCircle2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, TrendingDown, CheckCircle2, Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -151,7 +150,7 @@ export default function StockLevelsPage() {
   const [warehouseId, setWarehouseId] = useState<number | undefined>(undefined);
   const [lowStockOnly, setLowStockOnly] = useState(false);
 
-  const { data: stockData, isLoading: stockLoading } = useStockLevels(
+  const { data: stockData, isLoading: stockLoading, isError: stockError, refetch } = useStockLevels(
     warehouseId ? { warehouseId } : undefined,
   );
   const { data: warehousesData } = useWarehouses();
@@ -172,6 +171,9 @@ export default function StockLevelsPage() {
   const handleLowStockToggle = useCallback((checked: boolean) => {
     setLowStockOnly(checked);
   }, []);
+
+  function handleRetry() { void refetch(); }
+  function handleClearFilter() { setLowStockOnly(false); }
 
   return (
     <PageWrapper
@@ -229,14 +231,33 @@ export default function StockLevelsPage() {
     >
       {stockLoading ? (
         <StockTableSkeleton />
+      ) : stockError ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <EmptyState
+            illustration={<AlertTriangle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            title="Failed to load stock levels"
+            description="An error occurred while fetching stock data. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+          />
+        </motion.div>
       ) : rows.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
+            illustration={
+              lowStockOnly
+                ? <CheckCircle2 className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+                : <Package className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />
+            }
             title={lowStockOnly ? "No low-stock items" : "No stock records"}
             description={
               lowStockOnly
                 ? "All items are stocked above their minimum levels."
                 : "Stock levels will appear here once products are received."
+            }
+            action={
+              lowStockOnly
+                ? { label: "Show All Items", onClick: handleClearFilter }
+                : { label: "Record Adjustment", href: "/inventory/stock/adjustments" }
             }
           />
         </motion.div>

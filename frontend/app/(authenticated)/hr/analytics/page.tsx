@@ -226,6 +226,7 @@ function AnalyticsContent() {
   }, [dateRange]);
 
   const { data, isLoading: isAnalyticsLoading, isError, refetch } = useHrAnalytics();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { data: recruitmentStats, isLoading: isRecruitmentLoading } =
     useRecruitmentStats();
   const { data: attritionData, isLoading: isAttritionLoading } =
@@ -253,7 +254,7 @@ function AnalyticsContent() {
           illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
           title="Failed to load analytics"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: refetch }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </PageWrapper>
     );

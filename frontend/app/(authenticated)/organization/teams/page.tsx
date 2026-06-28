@@ -285,6 +285,13 @@ export default function OrgTeamsPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
+  function makeRestoreHandler(team: OrgTeam) { return () => handleRestore(team); }
+  function makeArchiveHandler(team: OrgTeam) { return () => handleArchive(team); }
+  function makeSetEditingHandler(team: OrgTeam) { return () => setEditing(team); }
+  function makeSetDeletingHandler(team: OrgTeam) { return () => setDeleting(team); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
   return (
     <PageWrapper
       title="Teams"
@@ -369,19 +376,19 @@ export default function OrgTeamsPage() {
                   <div className="flex items-center gap-1">
                     {t.status === "ARCHIVED" ? (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => handleRestore(t)} title="Restore">
+                        <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
                           <RotateCcw className="h-4 w-4 text-blue-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setDeleting(t)} title="Delete permanently">
+                        <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(t)} title="Delete permanently">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(t)} title="Edit">
+                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(t)} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleArchive(t)} title="Archive">
+                        <Button variant="ghost" size="sm" onClick={makeArchiveHandler(t)} title="Archive">
                           <Archive className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </>
@@ -403,7 +410,7 @@ export default function OrgTeamsPage() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Edit Team</SheetTitle>
@@ -427,7 +434,7 @@ export default function OrgTeamsPage() {
 
       <ConfirmDialog
         open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Team"
         description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}

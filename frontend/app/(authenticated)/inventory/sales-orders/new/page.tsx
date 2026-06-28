@@ -147,6 +147,18 @@ export default function NewSalesOrderPage() {
     setNotes(event.target.value);
   }
 
+  function handleCancel(): void {
+    router.push("/inventory/sales-orders");
+  }
+
+  function makeProductChangeHandler(key: number) {
+    return (value: string) => handleProductChange(key, value);
+  }
+
+  function makeRemoveLineHandler(key: number) {
+    return () => handleRemoveLine(key);
+  }
+
   async function handleSubmit(): Promise<void> {
     if (!warehouseId) {
       toast.error("Select a warehouse");
@@ -263,7 +275,7 @@ export default function NewSalesOrderPage() {
                   return (
                     <TableRow key={ln.key}>
                       <TableCell>
-                        <Select value={ln.productId} onValueChange={(v) => handleProductChange(ln.key, v)}>
+                        <Select value={ln.productId} onValueChange={makeProductChangeHandler(ln.key)}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
@@ -326,7 +338,7 @@ export default function NewSalesOrderPage() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveLine(ln.key)}
+                          onClick={makeRemoveLineHandler(ln.key)}
                           disabled={lines.length <= 1}
                         >
                           <Trash2 className="size-4" />
@@ -384,7 +396,7 @@ export default function NewSalesOrderPage() {
             type="button"
             variant="outline"
             className="w-full sm:w-auto"
-            onClick={() => router.push("/inventory/sales-orders")}
+            onClick={handleCancel}
           >
             Cancel
           </Button>

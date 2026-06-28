@@ -134,8 +134,8 @@ function SimulateContent() {
   }, []);
 
   const handleRetry = useCallback(() => {
-    simulateQuery.refetch();
-  }, [simulateQuery]);
+    void simulateQuery.refetch();
+  }, [simulateQuery.refetch]);
 
   return (
     <PageWrapper

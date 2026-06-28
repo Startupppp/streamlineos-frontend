@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getApiError } from "@/lib/api-client";
 import {
   useKbTranslations,
@@ -199,7 +201,7 @@ export default function KbTranslationsPage() {
   }
 
   function handleRetryTranslations() {
-    translationsQuery.refetch();
+    void translationsQuery.refetch();
   }
 
   const translations = translationsQuery.data ?? [];
@@ -228,24 +230,17 @@ export default function KbTranslationsPage() {
           {translationsQuery.isLoading ? (
             <TranslationListSkeleton />
           ) : translationsQuery.error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              Failed to load translations.{" "}
-              <button
-                type="button"
-                className="underline"
-                onClick={handleRetryTranslations}
-              >
-                Retry
-              </button>
-            </div>
+            <ErrorState
+              title="Couldn't load translations"
+              description={getApiError(translationsQuery.error)}
+              onRetry={handleRetryTranslations}
+            />
           ) : translations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12 text-center">
-              <Globe className="mb-2 h-8 w-8 text-muted-foreground/50" />
-              <p className="text-sm font-medium text-muted-foreground">No translations yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Add a translation below to localise this article.
-              </p>
-            </div>
+            <EmptyState
+              illustration={<Globe className="h-10 w-10 text-muted-foreground/40" />}
+              title="No translations yet"
+              description="Add a translation below to localise this article."
+            />
           ) : (
             <div className="space-y-2">
               {translations.map((t) => (

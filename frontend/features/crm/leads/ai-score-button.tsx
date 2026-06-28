@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Sparkles, Loader2, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAIScoreLead } from "@/lib/api/hooks/ai";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -24,7 +23,7 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
   const result = scoreMutation.data;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.lead-scoring");
 
-  const handleScore = () => {
+  const handleScore = useCallback(() => {
     if (!featureEnabled) {
       toast.error(`AI lead scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`);
       return;
@@ -32,7 +31,12 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
     scoreMutation.mutate(leadId, {
       onError: (err) => toast.error(err.message || "AI scoring failed"),
     });
-  };
+  }, [featureEnabled, requiredPlan, scoreMutation, leadId]);
+
+  const handleCompactClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!result) handleScore();
+  }, [result, handleScore]);
 
   const scoreColor = (score: number) => {
     if (score >= 80) return "text-emerald-500";
@@ -49,10 +53,7 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!result) handleScore();
-            }}
+            onClick={handleCompactClick}
             disabled={scoreMutation.isPending || !featureEnabled}
             title={!featureEnabled ? `Requires ${requiredPlan ?? "PROFESSIONAL"} plan` : undefined}
           >

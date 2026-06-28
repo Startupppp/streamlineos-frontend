@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition, Fragment } from "react";
+import { useCallback, useTransition, Fragment, type ChangeEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ interface TicketFilterBarProps {
   showTypeFilter?: boolean;
   showSprintFilter?: boolean;
   showAssigneeFilter?: boolean;
-  className?: string;
 }
 
 export function TicketFilterBar({
@@ -71,7 +70,6 @@ export function TicketFilterBar({
 
   const clearAll = useCallback(() => {
     startTransition(() => {
-
       const params = new URLSearchParams(searchParams.toString());
       ["q", "status", "priority", "type", "sprintId", "assigneeId", "page"].forEach((k) =>
         params.delete(k)
@@ -81,23 +79,43 @@ export function TicketFilterBar({
     });
   }, [router, pathname, searchParams]);
 
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
+    setParam("q", e.target.value);
+  }
+
+  function handleStatusChange(v: string) {
+    setParam("status", v === "ALL" ? "" : v);
+  }
+
+  function handlePriorityChange(v: string) {
+    setParam("priority", v === "ALL" ? "" : v);
+  }
+
+  function handleTypeChange(v: string) {
+    setParam("type", v === "ALL" ? "" : v);
+  }
+
+  function handleSprintChange(v: string) {
+    setParam("sprintId", v === "ALL" ? "" : v);
+  }
+
+  function handleAssigneeChange(v: string) {
+    setParam("assigneeId", v === "ALL" ? "" : v);
+  }
+
   return (
     <Fragment>
-
       <div className="relative min-w-[140px] max-w-[200px] flex-1">
         <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search..."
           value={q}
-          onChange={(e) => setParam("q", e.target.value)}
+          onChange={handleSearchChange}
           className="h-8 pl-7 text-sm"
         />
       </div>
 
-      <Select
-        value={status || "ALL"}
-        onValueChange={(v) => setParam("status", v === "ALL" ? "" : v)}
-      >
+      <Select value={status || "ALL"} onValueChange={handleStatusChange}>
         <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs shrink-0">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -111,10 +129,7 @@ export function TicketFilterBar({
         </SelectContent>
       </Select>
 
-      <Select
-        value={priority || "ALL"}
-        onValueChange={(v) => setParam("priority", v === "ALL" ? "" : v)}
-      >
+      <Select value={priority || "ALL"} onValueChange={handlePriorityChange}>
         <SelectTrigger className="h-8 w-auto min-w-[90px] text-xs shrink-0">
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
@@ -129,10 +144,7 @@ export function TicketFilterBar({
       </Select>
 
       {showTypeFilter && (
-        <Select
-          value={type || "ALL"}
-          onValueChange={(v) => setParam("type", v === "ALL" ? "" : v)}
-        >
+        <Select value={type || "ALL"} onValueChange={handleTypeChange}>
           <SelectTrigger className="h-8 w-auto min-w-[80px] text-xs shrink-0">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
@@ -148,10 +160,7 @@ export function TicketFilterBar({
       )}
 
       {showSprintFilter && sprints && sprints.length > 0 && (
-        <Select
-          value={sprintId || "ALL"}
-          onValueChange={(v) => setParam("sprintId", v === "ALL" ? "" : v)}
-        >
+        <Select value={sprintId || "ALL"} onValueChange={handleSprintChange}>
           <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs shrink-0">
             <SelectValue placeholder="Sprint" />
           </SelectTrigger>
@@ -167,10 +176,7 @@ export function TicketFilterBar({
       )}
 
       {showAssigneeFilter && members && members.length > 0 && (
-        <Select
-          value={assigneeId || "ALL"}
-          onValueChange={(v) => setParam("assigneeId", v === "ALL" ? "" : v)}
-        >
+        <Select value={assigneeId || "ALL"} onValueChange={handleAssigneeChange}>
           <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs shrink-0">
             <SelectValue placeholder="Assignee" />
           </SelectTrigger>

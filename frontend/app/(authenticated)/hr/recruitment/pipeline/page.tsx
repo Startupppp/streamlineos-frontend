@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAtsKanban, useUpdateCandidateStage } from "@/lib/api/hooks/hr";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { PipelineKanban } from "@/components/hr/recruitment/pipeline-kanban";

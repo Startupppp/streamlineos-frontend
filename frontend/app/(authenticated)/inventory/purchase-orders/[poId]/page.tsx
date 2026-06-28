@@ -4,12 +4,17 @@ import { use, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { ChevronLeft, Send, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { usePurchaseOrder, useSendPurchaseOrder, useReceiveGoods } from "@/lib/api/hooks/inventory";
@@ -53,6 +58,13 @@ function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   );
 }
 
+const receiveSchema = z.object({
+  receivedDate: z.string().min(1, "Received date is required"),
+  notes: z.string(),
+});
+
+type ReceiveFormValues = z.infer<typeof receiveSchema>;
+
 interface ReceiveGoodsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -70,8 +82,15 @@ interface DraftReceiveLine {
 
 function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
   const receiveMutation = useReceiveGoods(po.id);
-  const [receivedDate, setReceivedDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [notes, setNotes] = useState<string>("");
+
+  const form = useForm<ReceiveFormValues>({
+    resolver: zodResolver(receiveSchema),
+    defaultValues: {
+      receivedDate: new Date().toISOString().slice(0, 10),
+      notes: "",
+    },
+  });
+
   const [receiveLines, setReceiveLines] = useState<DraftReceiveLine[]>(() =>
     po.lines
       .filter((l) => Number(l.quantity) > Number(l.quantityReceived))
@@ -87,32 +106,29 @@ function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
       })),
   );
 
-  function handleReceivedDateChange(e: ChangeEvent<HTMLInputElement>): void {
-    setReceivedDate(e.target.value);
-  }
-
-  function handleNotesChange(e: ChangeEvent<HTMLTextAreaElement>): void {
-    setNotes(e.target.value);
-  }
-
   function handleQtyChange(poLineId: number, value: string): void {
     setReceiveLines((prev) =>
       prev.map((l) => (l.poLineId === poLineId ? { ...l, quantityReceived: value } : l)),
     );
   }
 
+  function makeQtyChangeHandler(poLineId: number) {
+    return function handleQtyInput(e: ChangeEvent<HTMLInputElement>): void {
+      handleQtyChange(poLineId, e.target.value);
+    };
+  }
+
+  function handleClose(): void {
+    form.reset();
+    onOpenChange(false);
+  }
+
   function handleOpenChange(nextOpen: boolean): void {
-    if (!nextOpen) {
-      setNotes("");
-    }
+    if (!nextOpen) form.reset();
     onOpenChange(nextOpen);
   }
 
-  async function handleSubmit(): Promise<void> {
-    if (!receivedDate) {
-      toast.error("Received date is required");
-      return;
-    }
+  async function onSubmit(values: ReceiveFormValues): Promise<void> {
     const activeLines = receiveLines.filter((l) => Number(l.quantityReceived) > 0);
     if (activeLines.length === 0) {
       toast.error("Enter quantity for at least one line");
@@ -120,8 +136,8 @@ function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
     }
 
     const payload: ReceiveGoodsInput = {
-      receivedDate,
-      notes: notes.trim() || undefined,
+      receivedDate: values.receivedDate,
+      notes: values.notes.trim() || undefined,
       lines: activeLines.map<ReceiveGoodsLineInput>((l) => ({
         poLineId: l.poLineId,
         quantityReceived: Number(l.quantityReceived),
@@ -132,7 +148,7 @@ function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
     try {
       const grn = await receiveMutation.mutateAsync(payload);
       toast.success(`GRN ${grn.grnNumber} recorded`);
-      handleOpenChange(false);
+      handleClose();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to receive goods");
     }
@@ -146,62 +162,86 @@ function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
       description="Record quantities received for this purchase order."
       footer={
         <>
-          <Button variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={receiveMutation.isPending}>
+          <Button
+            type="submit"
+            form="receive-goods-form"
+            size="sm"
+            disabled={receiveMutation.isPending}
+          >
             {receiveMutation.isPending ? "Recording…" : "Record receipt"}
           </Button>
         </>
       }
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">Received date *</label>
-            <Input type="date" value={receivedDate} onChange={handleReceivedDateChange} />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {receiveLines.map((line) => (
-            <div key={line.poLineId} className="rounded-md border border-border/60 p-3 space-y-1">
-              <div className="text-sm font-medium">{line.productName}</div>
-              {line.sku && (
-                <div className="text-xs text-muted-foreground font-mono">{line.sku}</div>
+      <Form {...form}>
+        <form id="receive-goods-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="receivedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Received date *</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <div className="flex items-center gap-3 mt-2">
-                <div className="text-xs text-muted-foreground">
-                  Ordered: {line.ordered.toFixed(2)} · Received: {line.alreadyReceived.toFixed(2)}
-                </div>
-                <div className="flex items-center gap-1.5 ml-auto">
-                  <label className="text-xs text-muted-foreground">Qty received</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max={line.ordered - line.alreadyReceived}
-                    step="0.0001"
-                    value={line.quantityReceived}
-                    onChange={(e) => handleQtyChange(line.poLineId, e.target.value)}
-                    className="w-28 text-right tabular-nums"
-                  />
+            />
+          </div>
+
+          <div className="space-y-2">
+            {receiveLines.map((line) => (
+              <div key={line.poLineId} className="rounded-md border border-border/60 p-3 space-y-1">
+                <div className="text-sm font-medium">{line.productName}</div>
+                {line.sku && (
+                  <div className="text-xs text-muted-foreground font-mono">{line.sku}</div>
+                )}
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="text-xs text-muted-foreground">
+                    Ordered: {line.ordered.toFixed(2)} · Received: {line.alreadyReceived.toFixed(2)}
+                  </div>
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <label className="text-xs text-muted-foreground">Qty received</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max={line.ordered - line.alreadyReceived}
+                      step="0.0001"
+                      value={line.quantityReceived}
+                      onChange={makeQtyChangeHandler(line.poLineId)}
+                      className="w-28 text-right tabular-nums"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Notes</label>
-          <textarea
-            value={notes}
-            onChange={handleNotesChange}
-            rows={2}
-            placeholder="Any notes about this receipt"
-            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    rows={2}
+                    placeholder="Any notes about this receipt"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
+        </form>
+      </Form>
     </AppSheet>
   );
 }
@@ -266,6 +306,10 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const sendMutation = useSendPurchaseOrder(id);
   const [receiveSheetOpen, setReceiveSheetOpen] = useState<boolean>(false);
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   function handleSendPO(): void {
     sendMutation.mutate(undefined, {
       onSuccess: (result) => toast.success(`PO ${result.poNumber} sent`),
@@ -278,7 +322,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   }
 
   if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} />;
+  if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
   if (!query.data) return <ErrorState title="Not found" description={`PO #${poId}`} />;
 
   const po = query.data;

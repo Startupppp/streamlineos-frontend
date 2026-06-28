@@ -287,7 +287,7 @@ export default function AssignmentRulesPage() {
           illustration={<Settings className="h-10 w-10 text-muted-foreground" />}
           title="Failed to load assignment rules"
           description="Something went wrong. Please try again."
-          action={{ label: "Retry", onClick: () => refetch() }}
+          action={{ label: "Retry", onClick: handleRetry }}
         />
       </div>
     );
@@ -295,7 +295,7 @@ export default function AssignmentRulesPage() {
 
   return (
     <>
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Assignment Rule</AlertDialogTitle>

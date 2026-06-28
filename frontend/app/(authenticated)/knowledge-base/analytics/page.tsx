@@ -73,12 +73,12 @@ export default function KnowledgeBaseAnalyticsPage() {
   }
 
   function handleRetry() {
-    overviewQuery.refetch();
-    noResultsQuery.refetch();
+    void overviewQuery.refetch();
+    void noResultsQuery.refetch();
   }
 
   function handleRetryNoResults() {
-    noResultsQuery.refetch();
+    void noResultsQuery.refetch();
   }
 
   const filters = (

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, subMonths, getYear } from "date-fns";
 import { toast } from "sonner";
-import { Users, Loader2, Plus } from "lucide-react";
+import { Users, Loader2, Plus, AlertCircle } from "lucide-react";
 import {
   useHrAllPayrolls,
   useHrEmployees,
@@ -72,7 +72,11 @@ export default function PayrollPage() {
     [searchParams, router],
   );
 
-  const { data: allPayrolls, isLoading } = useHrAllPayrolls({
+  const handleViewChange = useCallback((v: string) => setFilter({ view: v }), [setFilter]);
+  const handleMonthChange = useCallback((m: string) => setFilter({ month: m, view: "month" }), [setFilter]);
+  const handleYearChange = useCallback((y: string) => setFilter({ year: y, view: "year" }), [setFilter]);
+
+  const { data: allPayrolls, isLoading, isError, refetch } = useHrAllPayrolls({
     month: effectiveMonth,
     year: effectiveYear,
   });
@@ -98,6 +102,8 @@ export default function PayrollPage() {
     qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() });
   }, [qc]);
 
+  function handleRetry() { void refetch(); }
+
   const handleGenerateAll = useCallback(() => {
     const month = effectiveMonth ?? format(new Date(), "yyyy-MM");
     generatePayrollMutation.mutate(
@@ -110,7 +116,7 @@ export default function PayrollPage() {
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [generatePayrollMutation, selectedMonth, invalidate]);
+  }, [generatePayrollMutation, effectiveMonth, invalidate]);
 
   const handleShowPreview = useCallback(() => {
     if (!form.selectedEmployee) {
@@ -147,7 +153,7 @@ export default function PayrollPage() {
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [form, generateEmployeePayslipMutation, selectedMonth, invalidate]);
+  }, [form, generateEmployeePayslipMutation, invalidate]);
 
   const handleApprovePayroll = useCallback(
     (payrollId: number) => {
@@ -196,6 +202,19 @@ export default function PayrollPage() {
     setPreviewPayroll(payroll);
   }, []);
 
+  const handleOpenIndividualSheet = useCallback(() => { form.setOpen(true); }, [form]);
+
+  const handleIndividualSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) form.reset();
+    else form.setOpen(true);
+  }, [form]);
+
+  const handleBackToEdit = useCallback(() => { form.setShowPreview(false); }, [form]);
+
+  const handlePreviewSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setPreviewPayroll(null);
+  }, []);
+
   const totalGross =
     allPayrolls?.reduce(
       (sum, p) => sum + parseFloat(p.grossSalary || "0"),
@@ -211,6 +230,21 @@ export default function PayrollPage() {
     return <PayrollPageSkeleton />;
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Payroll Management" subtitle="Generate and manage employee payrolls">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <AlertCircle className="h-10 w-10 text-destructive/60" />
+          <div className="text-center">
+            <p className="text-sm font-semibold text-foreground">Failed to load payroll data</p>
+            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Payroll Management"
@@ -218,10 +252,7 @@ export default function PayrollPage() {
       actions={
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 p-1">
-            <Select
-              value={activeView}
-              onValueChange={(v) => setFilter({ view: v })}
-            >
+            <Select value={activeView} onValueChange={handleViewChange}>
               <SelectTrigger className="h-7 w-[100px] border-0 bg-transparent shadow-none text-xs font-medium focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
@@ -231,10 +262,7 @@ export default function PayrollPage() {
               </SelectContent>
             </Select>
             {activeView === "month" ? (
-              <Select
-                value={effectiveMonth}
-                onValueChange={(m) => setFilter({ month: m, view: "month" })}
-              >
+              <Select value={effectiveMonth} onValueChange={handleMonthChange}>
                 <SelectTrigger className="h-7 w-[150px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
@@ -247,10 +275,7 @@ export default function PayrollPage() {
                 </SelectContent>
               </Select>
             ) : (
-              <Select
-                value={effectiveYear}
-                onValueChange={(y) => setFilter({ year: y, view: "year" })}
-              >
+              <Select value={effectiveYear} onValueChange={handleYearChange}>
                 <SelectTrigger className="h-7 w-[80px] border-0 bg-background shadow-sm rounded-lg text-xs font-medium focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
@@ -269,7 +294,7 @@ export default function PayrollPage() {
             variant="outline"
             size="sm"
             className="h-9 gap-1.5"
-            onClick={() => form.setOpen(true)}
+            onClick={handleOpenIndividualSheet}
           >
             <Plus className="h-3.5 w-3.5" />
             Individual
@@ -277,16 +302,13 @@ export default function PayrollPage() {
 
           <GeneratePayrollSheet
             open={form.open}
-            onOpenChange={(open) => {
-              if (!open) form.reset();
-              else form.setOpen(true);
-            }}
+            onOpenChange={handleIndividualSheetOpenChange}
             employees={employees}
             selectedEmployee={form.selectedEmployee}
             onSelectedEmployeeChange={form.setSelectedEmployee}
             showPreview={form.showPreview}
             onShowPreview={handleShowPreview}
-            onBackToEdit={() => form.setShowPreview(false)}
+            onBackToEdit={handleBackToEdit}
             lopDays={form.lopDays}
             onLopDaysChange={form.setLopDays}
             halfDays={form.halfDays}
@@ -365,7 +387,7 @@ export default function PayrollPage() {
         )}
       </div>
 
-      <Sheet open={!!previewPayroll} onOpenChange={(v) => { if (!v) setPreviewPayroll(null); }}>
+      <Sheet open={!!previewPayroll} onOpenChange={handlePreviewSheetOpenChange}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Payslip Preview</SheetTitle>

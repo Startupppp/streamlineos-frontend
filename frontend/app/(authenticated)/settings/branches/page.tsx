@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -42,22 +42,21 @@ export default function BranchManagementPage() {
 
   const branches = branchList ?? [];
 
-  useEffect(() => {
-    if (editingBranch) {
-      setEditFormData({
-        name: editingBranch.name ?? "",
-        code: editingBranch.code ?? "",
-        city: editingBranch.city ?? "",
-        state: editingBranch.state ?? "",
-        country: editingBranch.country ?? "India",
-        pincode: editingBranch.pincode ?? "",
-        address: editingBranch.address ?? "",
-        phone: editingBranch.phone ?? "",
-        email: editingBranch.email ?? "",
-      });
-      setEditFormErrors({});
-    }
-  }, [editingBranch]);
+  const handleEdit = useCallback((branch: Branch) => {
+    setEditingBranch(branch);
+    setEditFormData({
+      name: branch.name ?? "",
+      code: branch.code ?? "",
+      city: branch.city ?? "",
+      state: branch.state ?? "",
+      country: branch.country ?? "India",
+      pincode: branch.pincode ?? "",
+      address: branch.address ?? "",
+      phone: branch.phone ?? "",
+      email: branch.email ?? "",
+    });
+    setEditFormErrors({});
+  }, []);
 
   const makeFieldHandler =
     (
@@ -180,7 +179,7 @@ export default function BranchManagementPage() {
         <BranchList
           branches={branches}
           isLoading={isLoading}
-          onEdit={setEditingBranch}
+          onEdit={handleEdit}
           onDelete={setDeletingBranch}
           onCreate={handleOpenCreate}
         />

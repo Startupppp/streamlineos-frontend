@@ -192,8 +192,24 @@ export default function MyPayslipsPage() {
     setSelectedYear(value);
   }, []);
 
+  function handleRetry() { void refetch(); }
+
   if (isLoading) {
     return <PayslipPageSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="My Payslips" subtitle="View and download your salary slips">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-foreground">Failed to load payslips</p>
+            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
+        </div>
+      </PageWrapper>
+    );
   }
 
   return (

@@ -30,6 +30,13 @@ import { useEpics, useModules } from "@/lib/api/hooks/projects";
 import { LabelPicker } from "../label-picker";
 import type { ProjectMember } from "./types";
 
+interface DisplayedAssignee {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  image?: string | null;
+}
+
 interface TicketSidebarProps {
   ticket: {
     id: number;
@@ -79,14 +86,12 @@ interface TicketSidebarProps {
   onAutoSave: (field: Record<string, unknown>) => void;
 }
 
-function PropertyRow({
-  label,
-  children,
-}: {
+interface PropertyRowProps {
   label: string;
-  icon?: React.ReactNode;
   children: React.ReactNode;
-}) {
+}
+
+function PropertyRow({ label, children }: PropertyRowProps) {
   return (
     <div className="grid grid-cols-[100px_1fr] items-center gap-2 min-h-[36px]">
       <span className="text-xs text-muted-foreground font-medium truncate">
@@ -117,6 +122,21 @@ export function TicketSidebar({
   const handleClearStartDate = () => onAutoSave({ startDate: null });
   const handleClearDueDate = () => onAutoSave({ dueDate: null });
 
+  const handleStatusChange = (v: string) => onAutoSave({ status: v });
+  const handlePriorityChange = (v: string) => onAutoSave({ priority: v });
+  const handleTypeChange = (v: string) => onAutoSave({ type: v });
+  const handleSprintChange = (v: string) =>
+    onAutoSave({ sprintId: v === "none" ? undefined : parseInt(v) });
+  const handleEpicChange = (v: string) =>
+    onAutoSave({ epicId: v === "none" ? null : parseInt(v) });
+  const handleModuleChange = (v: string) =>
+    onAutoSave({ moduleId: v === "none" ? null : parseInt(v) });
+
+  const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value === "" ? undefined : parseInt(e.target.value);
+    onAutoSave({ points: val });
+  };
+
   const timeSpent = ticket.timeSpent ? parseFloat(ticket.timeSpent) : 0;
   const originalEstimate = ticket.originalEstimate
     ? parseFloat(ticket.originalEstimate)
@@ -132,7 +152,19 @@ export function TicketSidebar({
       ? [ticket.assignee.id]
       : [];
 
-  const displayedAssignees =
+  const handleRemoveAssignee = (personId: string) => {
+    const newIds = currentAssigneeIds.filter((id) => id !== personId);
+    onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
+  };
+
+  const handleAddAssignee = (v: string) => {
+    if (!v || v === "unassigned") return;
+    if (currentAssigneeIds.includes(v)) return;
+    const newIds = [...currentAssigneeIds, v];
+    onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
+  };
+
+  const displayedAssignees: DisplayedAssignee[] =
     ticket.assignees && ticket.assignees.length > 0
       ? ticket.assignees
           .filter((a) => !!a.user)
@@ -156,7 +188,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.status || "TODO"}
-            onValueChange={(v) => onAutoSave({ status: v })}
+            onValueChange={handleStatusChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue />
@@ -199,7 +231,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.priority || "MEDIUM"}
-            onValueChange={(v) => onAutoSave({ priority: v })}
+            onValueChange={handlePriorityChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue />
@@ -221,7 +253,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.type || "TASK"}
-            onValueChange={(v) => onAutoSave({ type: v })}
+            onValueChange={handleTypeChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue />
@@ -243,10 +275,7 @@ export function TicketSidebar({
             type="number"
             min={0}
             value={ticket.points ?? ""}
-            onChange={(e) => {
-              const val = e.target.value === "" ? undefined : parseInt(e.target.value);
-              onAutoSave({ points: val });
-            }}
+            onChange={handlePointsChange}
             className="h-8 text-xs bg-background w-full"
             placeholder="0"
           />
@@ -261,9 +290,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.sprintId?.toString() || "none"}
-            onValueChange={(v) =>
-              onAutoSave({ sprintId: v === "none" ? undefined : parseInt(v) })
-            }
+            onValueChange={handleSprintChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue placeholder="None" />
@@ -286,9 +313,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.epicId?.toString() || "none"}
-            onValueChange={(v) =>
-              onAutoSave({ epicId: v === "none" ? null : parseInt(v) })
-            }
+            onValueChange={handleEpicChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue placeholder="None" />
@@ -313,9 +338,7 @@ export function TicketSidebar({
           </span>
           <Select
             value={ticket.moduleId?.toString() || "none"}
-            onValueChange={(v) =>
-              onAutoSave({ moduleId: v === "none" ? null : parseInt(v) })
-            }
+            onValueChange={handleModuleChange}
           >
             <SelectTrigger className="h-8 text-xs bg-background w-full">
               <SelectValue placeholder="None" />
@@ -391,51 +414,33 @@ export function TicketSidebar({
         </span>
         {displayedAssignees.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-1.5">
-            {displayedAssignees.map(
-              (person: {
-                id: string;
-                firstName?: string | null;
-                lastName?: string | null;
-                image?: string | null;
-              }) => (
-                <div
-                  key={person.id}
-                  className="flex items-center gap-1 bg-muted rounded-full pl-0.5 pr-1.5 py-0.5"
+            {displayedAssignees.map((person) => (
+              <div
+                key={person.id}
+                className="flex items-center gap-1 bg-muted rounded-full pl-0.5 pr-1.5 py-0.5"
+              >
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={resolveImageUrl(person.image)} />
+                  <AvatarFallback className="text-[7px]">
+                    {person.firstName?.[0]}
+                    {person.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[11px]">
+                  {person.firstName}
+                </span>
+                <button
+                  className="text-muted-foreground hover:text-destructive transition-colors leading-none"
+                  onClick={() => handleRemoveAssignee(person.id)}
+                  aria-label={`Remove ${person.firstName}`}
                 >
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage src={resolveImageUrl(person.image)} />
-                    <AvatarFallback className="text-[7px]">
-                      {person.firstName?.[0]}
-                      {person.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-[11px]">
-                    {person.firstName}
-                  </span>
-                  <button
-                    className="text-muted-foreground hover:text-destructive transition-colors leading-none"
-                    onClick={() => {
-                      const newIds = currentAssigneeIds.filter((id) => id !== person.id);
-                      onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
-                    }}
-                    aria-label={`Remove ${person.firstName}`}
-                  >
-                    <span className="text-xs font-bold">&times;</span>
-                  </button>
-                </div>
-              )
-            )}
+                  <span className="text-xs font-bold">&times;</span>
+                </button>
+              </div>
+            ))}
           </div>
         )}
-        <Select
-          value=""
-          onValueChange={(v) => {
-            if (!v || v === "unassigned") return;
-            if (currentAssigneeIds.includes(v)) return;
-            const newIds = [...currentAssigneeIds, v];
-            onAutoSave({ assigneeId: newIds[0] || "", assigneeIds: newIds });
-          }}
-        >
+        <Select value="" onValueChange={handleAddAssignee}>
           <SelectTrigger className="h-8 text-xs bg-background w-full">
             <SelectValue placeholder="+ Add assignee" />
           </SelectTrigger>

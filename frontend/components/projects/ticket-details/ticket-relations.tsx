@@ -20,6 +20,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2, X, Plus, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,10 +77,21 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           setSelectedTicketId(null);
           setPickerOpen(false);
         },
-        onError: (e) => toast.error((e as Error).message || "Failed to add relation"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [selectedTicketId, selectedType, addRelation]);
+
+  const handleRemoveRelation = useCallback(
+    (relatedTicketId: number) => {
+      removeRelation.mutate(relatedTicketId, {
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [removeRelation]
+  );
+
+  const handleTypeChange = (v: string) => setSelectedType(v as WorkItemRelationType);
 
   if (isLoading) return null;
 
@@ -105,7 +117,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3 space-y-3" align="end">
             <p className="text-xs font-medium">Add Relation</p>
-            <Select value={selectedType} onValueChange={(v) => setSelectedType(v as WorkItemRelationType)}>
+            <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(RELATION_LABELS) as WorkItemRelationType[]).map((t) => (
@@ -179,9 +191,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeRelation.mutate(t.id, {
-                          onError: (e) => toast.error((e as Error).message || "Failed to remove"),
-                        })}
+                        onClick={() => handleRemoveRelation(t.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive shrink-0"
                         aria-label="Remove relation"
                       >

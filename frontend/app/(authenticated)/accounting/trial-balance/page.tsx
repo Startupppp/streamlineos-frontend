@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useTrialBalance } from "@/lib/api/hooks/accounting";
 
 function todayIso(): string {
@@ -85,11 +87,11 @@ export default function TrialBalancePage() {
             onRetry={handleRetry}
           />
         ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-12 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">
-              No posted entries yet for this date.
-            </h3>
-          </div>
+          <EmptyState
+            illustration={<EmptyTimeIllustration />}
+            title="No posted entries for this date"
+            description="Post journal entries with a date on or before the selected date to populate this report."
+          />
         ) : (
           <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
             <Table className="min-w-[640px]">

@@ -107,7 +107,7 @@ export function LeadDetailSheet({
     [leadId, logActivity],
   );
 
-  const handleSheetClose = () => onClose();
+  const handleSheetClose = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
 
   return (
     <Sheet open={open} onOpenChange={handleSheetClose}>

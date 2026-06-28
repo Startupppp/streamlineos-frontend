@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,7 +40,7 @@ export default function QuestionBankPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [form, setForm] = useState<QuestionFormState>(EMPTY_FORM);
 
-  const { data: questions, isLoading } = useInterviewQuestions({
+  const { data: questions, isLoading, isError, refetch } = useInterviewQuestions({
     category: category !== "ALL" ? category : undefined,
     difficulty: difficulty !== "ALL" ? difficulty : undefined,
     q: search || undefined,
@@ -154,12 +155,16 @@ export default function QuestionBankPage() {
         </div>
       }
     >
-      <QuestionList
-        questions={questions}
-        isLoading={isLoading}
-        roleOptions={roleOptions}
-        onDeleteRequest={handleDeleteRequest}
-      />
+      {isError ? (
+        <ErrorState message="Failed to load questions" onRetry={refetch} />
+      ) : (
+        <QuestionList
+          questions={questions}
+          isLoading={isLoading}
+          roleOptions={roleOptions}
+          onDeleteRequest={handleDeleteRequest}
+        />
+      )}
 
       <ConfirmDialog
         open={deleteTargetId !== null}

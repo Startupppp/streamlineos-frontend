@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ChangeEvent, type MouseEvent } from "react";
 import {
   BarChart,
   Bar,
@@ -140,6 +140,21 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
     onClose();
   }, [onClose]);
 
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) handleClose();
+    },
+    [handleClose],
+  );
+
+  const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
+
+  const handleQuestionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setQuestion(e.target.value);
+  }, []);
+
   const handleSave = useCallback(() => {
     if (!title.trim() || !question.trim()) return;
     create.mutate(
@@ -160,7 +175,7 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
   }, [title, question, clientId, scaleMax, create, handleClose]);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>New CSAT Survey</DialogTitle>
@@ -171,12 +186,12 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
             <Input
               placeholder="e.g. Post-onboarding satisfaction"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1">
             <Label>Question *</Label>
-            <Textarea rows={3} value={question} onChange={(e) => setQuestion(e.target.value)} />
+            <Textarea rows={3} value={question} onChange={handleQuestionChange} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -282,8 +297,19 @@ function SurveyDetailSheet({
 
   const normAvg = normalizeTo5(stats.avg, scaleMax);
 
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) onClose();
+    },
+    [onClose],
+  );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
+    <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto flex flex-col">
         <SheetHeader className="px-0">
           <div className="flex items-center gap-2">
@@ -298,7 +324,7 @@ function SurveyDetailSheet({
         {isLoading ? (
           <LoadingState variant="list" rows={5} />
         ) : isError ? (
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={handleRetry} />
         ) : (
           <div className="space-y-5 py-2 flex-1">
             <div className="grid grid-cols-3 gap-3">
@@ -392,6 +418,112 @@ function SurveyDetailSheet({
   );
 }
 
+interface SurveyTableRowProps {
+  survey: CsatSurvey;
+  isUpdating: boolean;
+  onView: (survey: CsatSurvey) => void;
+  onActivate: (survey: CsatSurvey) => void;
+  onCloseSurvey: (survey: CsatSurvey) => void;
+  onDelete: (survey: CsatSurvey) => void;
+}
+
+function SurveyTableRow({
+  survey,
+  isUpdating,
+  onView,
+  onActivate,
+  onCloseSurvey,
+  onDelete,
+}: SurveyTableRowProps) {
+  const norm = normalizeTo5(survey.avgRating, survey.scaleMax);
+
+  const handleRowClick = useCallback(() => onView(survey), [onView, survey]);
+  const handleCellClick = useCallback(
+    (e: MouseEvent<HTMLTableCellElement>) => e.stopPropagation(),
+    [],
+  );
+  const handleActivate = useCallback(() => onActivate(survey), [onActivate, survey]);
+  const handleCloseSurveyClick = useCallback(() => onCloseSurvey(survey), [onCloseSurvey, survey]);
+  const handleDelete = useCallback(() => onDelete(survey), [onDelete, survey]);
+
+  return (
+    <TableRow className="cursor-pointer" onClick={handleRowClick}>
+      <TableCell className="max-w-[260px]">
+        <p className="font-medium text-sm truncate">{survey.title}</p>
+        <p className="text-xs text-muted-foreground truncate">{survey.question}</p>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {survey.client?.name ?? "—"}
+      </TableCell>
+      <TableCell>
+        <Badge variant={STATUS_CONFIG[survey.status].variant} className="text-[10px]">
+          {STATUS_CONFIG[survey.status].label}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">
+        {survey.responseCount ?? 0}
+      </TableCell>
+      <TableCell className="text-right">
+        <span className={cn("text-sm font-semibold tabular-nums", scoreColor(norm))}>
+          {survey.avgRating !== null && survey.avgRating !== undefined
+            ? `${survey.avgRating.toFixed(1)}/${survey.scaleMax}`
+            : "—"}
+        </span>
+      </TableCell>
+      <TableCell className="text-right" onClick={handleCellClick}>
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            onClick={handleRowClick}
+            aria-label="View responses"
+            title="View responses"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+          {survey.status === "draft" && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
+              onClick={handleActivate}
+              disabled={isUpdating}
+              aria-label="Activate survey"
+              title="Activate"
+            >
+              <Play className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {survey.status === "sent" && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={handleCloseSurveyClick}
+              disabled={isUpdating}
+              aria-label="Close survey"
+              title="Close"
+            >
+              <Square className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            onClick={handleDelete}
+            aria-label="Delete survey"
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function CsatPage() {
   const { data: surveys, isLoading, isError, refetch } = useCsatSurveys();
   const updateSurvey = useUpdateCsatSurvey();
@@ -456,12 +588,45 @@ export default function CsatPage() {
     });
   }, [deleteTarget, deleteSurvey]);
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleViewSurvey = useCallback(
+    (survey: CsatSurvey) => setDetailTarget(survey),
+    [],
+  );
+  const handleActivateSurvey = useCallback(
+    (survey: CsatSurvey) => handleToggleStatus(survey, "sent"),
+    [handleToggleStatus],
+  );
+  const handleCloseSurveyTable = useCallback(
+    (survey: CsatSurvey) => handleToggleStatus(survey, "closed"),
+    [handleToggleStatus],
+  );
+  const handleDeleteSurvey = useCallback(
+    (survey: CsatSurvey) => setDeleteTarget(survey),
+    [],
+  );
+
+  const handleDetailActivate = useCallback(() => {
+    if (detailTarget) handleToggleStatus(detailTarget, "sent");
+  }, [detailTarget, handleToggleStatus]);
+
+  const handleDetailCloseSurvey = useCallback(() => {
+    if (detailTarget) handleToggleStatus(detailTarget, "closed");
+  }, [detailTarget, handleToggleStatus]);
+
   return (
     <PageWrapper
       title="CSAT Surveys"
       subtitle="Collect and track customer satisfaction across your accounts"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+        <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
           <Plus className="size-4" />
           New Survey
         </Button>
@@ -473,7 +638,7 @@ export default function CsatPage() {
         <ErrorState
           title="Couldn't load CSAT surveys"
           description="An error occurred while loading surveys. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : (
         <div className="space-y-4">
@@ -538,89 +703,17 @@ export default function CsatPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {surveys.map((survey) => {
-                      const norm = normalizeTo5(survey.avgRating, survey.scaleMax);
-                      return (
-                        <TableRow
-                          key={survey.id}
-                          className="cursor-pointer"
-                          onClick={() => setDetailTarget(survey)}
-                        >
-                          <TableCell className="max-w-[260px]">
-                            <p className="font-medium text-sm truncate">{survey.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{survey.question}</p>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {survey.client?.name ?? "—"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={STATUS_CONFIG[survey.status].variant} className="text-[10px]">
-                              {STATUS_CONFIG[survey.status].label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums text-sm">
-                            {survey.responseCount ?? 0}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span className={cn("text-sm font-semibold tabular-nums", scoreColor(norm))}>
-                              {survey.avgRating !== null && survey.avgRating !== undefined
-                                ? `${survey.avgRating.toFixed(1)}/${survey.scaleMax}`
-                                : "—"}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                onClick={() => setDetailTarget(survey)}
-                                aria-label="View responses"
-                                title="View responses"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </Button>
-                              {survey.status === "draft" && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
-                                  onClick={() => handleToggleStatus(survey, "sent")}
-                                  disabled={updateSurvey.isPending}
-                                  aria-label="Activate survey"
-                                  title="Activate"
-                                >
-                                  <Play className="h-3.5 w-3.5" />
-                                </Button>
-                              )}
-                              {survey.status === "sent" && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7"
-                                  onClick={() => handleToggleStatus(survey, "closed")}
-                                  disabled={updateSurvey.isPending}
-                                  aria-label="Close survey"
-                                  title="Close"
-                                >
-                                  <Square className="h-3.5 w-3.5" />
-                                </Button>
-                              )}
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 text-destructive hover:text-destructive"
-                                onClick={() => setDeleteTarget(survey)}
-                                aria-label="Delete survey"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {surveys.map((survey) => (
+                      <SurveyTableRow
+                        key={survey.id}
+                        survey={survey}
+                        isUpdating={updateSurvey.isPending}
+                        onView={handleViewSurvey}
+                        onActivate={handleActivateSurvey}
+                        onCloseSurvey={handleCloseSurveyTable}
+                        onDelete={handleDeleteSurvey}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -631,26 +724,26 @@ export default function CsatPage() {
                 illustration={<EmptyLeaderboardIllustration />}
                 title="No CSAT surveys yet"
                 description="Create a survey, activate it, and start measuring customer satisfaction."
-                action={{ label: "New Survey", onClick: () => setCreateOpen(true) }}
+                action={{ label: "New Survey", onClick: handleOpenCreate }}
               />
             </div>
           )}
         </div>
       )}
 
-      <CreateSurveyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateSurveyDialog open={createOpen} onClose={handleCloseCreate} />
 
       {detailTarget && (
         <SurveyDetailSheet
           survey={detailTarget}
           isUpdating={updateSurvey.isPending}
-          onActivate={() => handleToggleStatus(detailTarget, "sent")}
-          onCloseSurvey={() => handleToggleStatus(detailTarget, "closed")}
-          onClose={() => setDetailTarget(null)}
+          onActivate={handleDetailActivate}
+          onCloseSurvey={handleDetailCloseSurvey}
+          onClose={handleCloseDetail}
         />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete survey?</AlertDialogTitle>

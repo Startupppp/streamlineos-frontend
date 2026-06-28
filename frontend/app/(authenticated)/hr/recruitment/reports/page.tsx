@@ -48,6 +48,16 @@ const ENTITY_OPTIONS: { value: ReportEntity; label: string }[] = [
   { value: "offers", label: "Offers" },
 ];
 
+function RecipientBadge({ email, onRemove }: { email: string; onRemove: (email: string) => void }) {
+  function handleRemove() { onRemove(email); }
+  return (
+    <Badge variant="secondary" className="gap-1 text-xs">
+      {email}
+      <button onClick={handleRemove} className="ml-0.5 hover:text-destructive">×</button>
+    </Badge>
+  );
+}
+
 function ScheduleReportSheet({
   entity,
   fields,
@@ -90,8 +100,16 @@ function ScheduleReportSheet({
     );
   }, [name, recipients, fields, entity, schedule, create, onClose]);
 
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) { setName(e.target.value); }
+  function handleScheduleChange(v: string) { setSchedule(v as ReportSchedule); }
+  function handleRecipientInputChange(e: React.ChangeEvent<HTMLInputElement>) { setRecipientInput(e.target.value); }
+  function handleRecipientKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") { e.preventDefault(); handleAddRecipient(); }
+  }
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Schedule Report</SheetTitle>
@@ -100,11 +118,11 @@ function ScheduleReportSheet({
         <div className="py-4 space-y-3">
           <div className="space-y-1.5">
             <Label>Report Name <span className="text-destructive">*</span></Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Weekly Candidates Report" />
+            <Input value={name} onChange={handleNameChange} placeholder="e.g. Weekly Candidates Report" />
           </div>
           <div className="space-y-1.5">
             <Label>Frequency</Label>
-            <Select value={schedule} onValueChange={(v) => setSchedule(v as ReportSchedule)}>
+            <Select value={schedule} onValueChange={handleScheduleChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="WEEKLY">Weekly (every Monday)</SelectItem>
@@ -117,8 +135,8 @@ function ScheduleReportSheet({
             <div className="flex gap-2">
               <Input
                 value={recipientInput}
-                onChange={(e) => setRecipientInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddRecipient(); } }}
+                onChange={handleRecipientInputChange}
+                onKeyDown={handleRecipientKeyDown}
                 placeholder="email@company.com"
                 className="flex-1"
               />
@@ -126,10 +144,7 @@ function ScheduleReportSheet({
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {recipients.map((r) => (
-                <Badge key={r} variant="secondary" className="gap-1 text-xs">
-                  {r}
-                  <button onClick={() => handleRemoveRecipient(r)} className="ml-0.5 hover:text-destructive">×</button>
-                </Badge>
+                <RecipientBadge key={r} email={r} onRemove={handleRemoveRecipient} />
               ))}
             </div>
           </div>
@@ -142,6 +157,30 @@ function ScheduleReportSheet({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ScheduledReportItem({ report, onDelete }: { report: ScheduledReport; onDelete: (id: number) => void }) {
+  function handleDelete() { onDelete(report.id); }
+  return (
+    <div className="border rounded-lg px-3 py-2.5 flex items-center justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium">{report.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {report.schedule === "WEEKLY" ? "Weekly" : "Monthly"} · {report.reportConfig.entity} ·{" "}
+          {report.recipients.slice(0, 2).join(", ")}
+          {report.recipients.length > 2 && ` +${report.recipients.length - 2} more`}
+        </p>
+      </div>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+        onClick={handleDelete}
+      >
+        Delete
+      </Button>
+    </div>
   );
 }
 
@@ -158,6 +197,8 @@ function ScheduledReportsList() {
     });
   }, [deletingId, deleteReport]);
 
+  function handleDeleteDialogChange(v: boolean) { if (!v) setDeletingId(null); }
+
   if (isLoading) return <Skeleton className="h-24 rounded-lg" />;
   if (reports.length === 0) return null;
 
@@ -166,28 +207,11 @@ function ScheduledReportsList() {
       <h3 className="text-sm font-semibold mb-3">Scheduled Reports</h3>
       <div className="space-y-2">
         {reports.map((r) => (
-          <div key={r.id} className="border rounded-lg px-3 py-2.5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium">{r.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {r.schedule === "WEEKLY" ? "Weekly" : "Monthly"} · {r.reportConfig.entity} ·{" "}
-                {r.recipients.slice(0, 2).join(", ")}
-                {r.recipients.length > 2 && ` +${r.recipients.length - 2} more`}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-              onClick={() => setDeletingId(r.id)}
-            >
-              Delete
-            </Button>
-          </div>
+          <ScheduledReportItem key={r.id} report={r} onDelete={setDeletingId} />
         ))}
       </div>
       {deletingId !== null && (
-        <AlertDialog open onOpenChange={(v) => { if (!v) setDeletingId(null); }}>
+        <AlertDialog open onOpenChange={handleDeleteDialogChange}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Scheduled Report</AlertDialogTitle>
@@ -302,6 +326,12 @@ export default function ReportsPage() {
     XLSX.writeFile(wb, `${entity}-report.xlsx`);
   }, [result, entity]);
 
+  function handleEntitySelectChange(v: string) { handleEntityChange(v as ReportEntity); }
+  function handleDateFromChange(e: React.ChangeEvent<HTMLInputElement>) { setDateFrom(e.target.value); }
+  function handleDateToChange(e: React.ChangeEvent<HTMLInputElement>) { setDateTo(e.target.value); }
+  function handleOpenScheduleSheet() { setScheduleSheetOpen(true); }
+  function handleCloseScheduleSheet() { setScheduleSheetOpen(false); }
+
   return (
     <PageWrapper
       title="Reports & Exports"
@@ -316,7 +346,7 @@ export default function ReportsPage() {
             <CardContent className="px-4 pb-4 space-y-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Entity</Label>
-                <Select value={entity} onValueChange={(v) => handleEntityChange(v as ReportEntity)}>
+                <Select value={entity} onValueChange={handleEntitySelectChange}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ENTITY_OPTIONS.map((o) => (
@@ -345,7 +375,7 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Date From</Label>
-                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-8 text-xs" />
+                  <Input type="date" value={dateFrom} onChange={handleDateFromChange} className="h-8 text-xs" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Date To</Label>

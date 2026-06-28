@@ -96,7 +96,7 @@ export default function OrganizationsPage() {
           <Input
             placeholder="Search organizations..."
             value={search}
-            onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
+            onChange={handleSearchChange}
             className="pl-9"
           />
         </div>

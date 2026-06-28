@@ -52,6 +52,10 @@ const ACTION_COLORS: Record<string, string> = {
 const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
+function isValidPageSize(n: number): n is PageSize {
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n);
+}
+
 function actionBadgeClass(action: string) {
   for (const [key, cls] of Object.entries(ACTION_COLORS)) {
     if (action.startsWith(key)) return cls;
@@ -180,9 +184,8 @@ export default function AuditLogPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
 
   const page = Number(searchParams.get("page")) || 1;
-  const pageSize = (PAGE_SIZE_OPTIONS.includes(Number(searchParams.get("size")) as PageSize)
-    ? Number(searchParams.get("size"))
-    : 10) as PageSize;
+  const pageSizeParam = Number(searchParams.get("size"));
+  const pageSize: PageSize = isValidPageSize(pageSizeParam) ? pageSizeParam : 15;
   const actionFilter = searchParams.get("action") || "all";
   const targetTypeFilter = searchParams.get("target") || "all";
   const dateFrom = searchParams.get("from") || "";
@@ -329,9 +332,19 @@ export default function AuditLogPage() {
                 <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
             ) : logs.length === 0 ? (
-              <div className="py-14 flex flex-col items-center gap-2 text-muted-foreground">
+              <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
-                <p className="text-sm">No audit events found.</p>
+                <div className="space-y-1 text-muted-foreground">
+                  <p className="text-sm font-medium text-foreground">No audit events found</p>
+                  {hasActiveFilters && (
+                    <p className="text-xs">Try adjusting your filters to see results.</p>
+                  )}
+                </div>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Clear filters
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="flex flex-col flex-1 min-h-0">

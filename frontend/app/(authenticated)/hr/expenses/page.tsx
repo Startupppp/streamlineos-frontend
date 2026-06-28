@@ -301,7 +301,7 @@ export default function ExpensesPage() {
               variant="outline"
               size="sm"
               className="h-9 gap-1.5 text-sm"
-              onClick={() => setIsImportOpen(true)}
+              onClick={handleOpenImport}
             >
               <Upload className="h-4 w-4" />
               Import
@@ -316,7 +316,7 @@ export default function ExpensesPage() {
                 </Button>
               }
             />
-            <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={() => setIsCreateOpen(true)}>
+            <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenAdminCreate}>
               <Plus className="h-4 w-4" />
               Add Expense
             </Button>
@@ -339,7 +339,7 @@ export default function ExpensesPage() {
               onStatusChange={setStatusFilter}
               employees={employees}
               selectedUserId={filters.userId}
-              onUserChange={(userId) => setFilter("userId", userId || undefined)}
+              onUserChange={handleUserFilterChange}
             />
           </motion.div>
           <motion.div variants={fadeUp}>
@@ -355,33 +355,20 @@ export default function ExpensesPage() {
               rejectionReason={rejectionReason}
               isPending={updateStatusMutation.isPending}
               onApprove={handleApprove}
-              onRejectStart={(id) => {
-                setRejectingId(id);
-                setRejectionReason("");
-              }}
+              onRejectStart={handleRejectStart}
               onRejectConfirm={handleReject}
-              onRejectCancel={() => {
-                setRejectingId(null);
-                setRejectionReason("");
-              }}
+              onRejectCancel={handleRejectCancel}
               onRejectionReasonChange={setRejectionReason}
-              onPageChange={(page) => setFilter("page", page)}
-              onShowAll={() => setStatusFilter("ALL")}
+              onPageChange={handlePageChange}
+              onShowAll={handleShowAll}
             />
           </motion.div>
         </motion.div>
 
         <CreateExpenseDialog
           open={isCreateOpen}
-          onOpenChange={(v) => {
-            setIsCreateOpen(v);
-            if (!v) setEditingExpense(null);
-          }}
-          onSuccess={() => {
-            void refetch();
-            setIsCreateOpen(false);
-            setEditingExpense(null);
-          }}
+          onOpenChange={handleCreateDialogOpenChange}
+          onSuccess={handleCreateSuccess}
           categories={EXPENSE_CATEGORIES}
           paymentMethods={PAYMENT_METHODS}
           editExpense={editingExpense}
@@ -389,7 +376,7 @@ export default function ExpensesPage() {
         <ImportExpenseSheet
           open={isImportOpen}
           onOpenChange={setIsImportOpen}
-          onSuccess={() => void refetch()}
+          onSuccess={handleImportSuccess}
         />
       </PageWrapper>
     );
@@ -400,7 +387,7 @@ export default function ExpensesPage() {
       title="My Expenses"
       subtitle="Track, manage, and submit your expense claims for reimbursement."
       actions={
-        <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={() => setIsCreateOpen(true)}>
+        <Button size="sm" className="h-9 gap-1.5 text-sm" onClick={handleOpenMemberCreate}>
           <Plus className="h-4 w-4" />
           Submit New Claim
         </Button>
@@ -436,9 +423,9 @@ export default function ExpensesPage() {
             activeFilterCount={activeFilterCount}
             onEdit={handleEdit}
             onResubmit={handleResubmit}
-            onShowAll={() => setStatusFilter("ALL")}
-            onCreateNew={() => setIsCreateOpen(true)}
-            onPageChange={(page) => setFilter("page", page)}
+            onShowAll={handleShowAll}
+            onCreateNew={handleOpenMemberCreate}
+            onPageChange={handlePageChange}
           />
         </motion.div>
       </motion.div>
@@ -446,10 +433,7 @@ export default function ExpensesPage() {
       <CreateExpenseDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        onSuccess={() => {
-          void refetch();
-          setIsCreateOpen(false);
-        }}
+        onSuccess={handleMemberCreateSuccess}
         categories={EXPENSE_CATEGORIES}
         paymentMethods={PAYMENT_METHODS}
       />

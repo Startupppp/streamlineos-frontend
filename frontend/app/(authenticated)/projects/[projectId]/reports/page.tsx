@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useMemo, useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,6 +87,8 @@ function ChartCard({
 function VelocitySection({ projectId }: { projectId: number }) {
   const { data, isLoading, isError, refetch } = useVelocityReport(projectId);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chartData = useMemo(
     () =>
       (data ?? []).map((s) => ({
@@ -105,7 +107,7 @@ function VelocitySection({ projectId }: { projectId: number }) {
         <ErrorState
           title="Could not load velocity"
           description="Something went wrong while computing sprint velocity."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
           compact
         />
       ) : chartData.length === 0 ? (
@@ -147,6 +149,8 @@ function BurnupSection({ projectId }: { projectId: number }) {
 
   const { data, isLoading, isError, refetch } = useBurnupReport(projectId, selectedSprintId);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chartData = useMemo(
     () =>
       (data ?? []).map((p) => ({
@@ -185,7 +189,7 @@ function BurnupSection({ projectId }: { projectId: number }) {
         <ErrorState
           title="Could not load burnup"
           description="Something went wrong while computing the burnup chart."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
           compact
         />
       ) : sprints.length === 0 || chartData.length === 0 ? (
@@ -241,6 +245,8 @@ function CfdSection({ projectId }: { projectId: number }) {
   const { data, isLoading, isError, refetch } = useCfdReport(projectId, days);
   const capture = useCaptureSnapshot(projectId);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   function handleDaysChange(value: string) {
     setDays(Number(value));
   }
@@ -293,7 +299,7 @@ function CfdSection({ projectId }: { projectId: number }) {
         <ErrorState
           title="Could not load cumulative flow"
           description="Something went wrong while loading flow history."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
           compact
         />
       ) : chartData.length === 0 ? (
@@ -339,6 +345,8 @@ function CfdSection({ projectId }: { projectId: number }) {
 function CriticalPathSection({ projectId }: { projectId: number }) {
   const { data, isLoading, isError, refetch } = useCriticalPath(projectId);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chain = data?.criticalPath ?? [];
 
   return (
@@ -349,7 +357,7 @@ function CriticalPathSection({ projectId }: { projectId: number }) {
         <ErrorState
           title="Could not load critical path"
           description="Something went wrong while computing the project's critical path."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
           compact
         />
       ) : chain.length === 0 ? (

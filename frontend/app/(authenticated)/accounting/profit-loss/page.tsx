@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useProfitLoss } from "@/lib/api/hooks/accounting";
 import type { ProfitLossRow } from "@/types/accounting";
 
@@ -166,14 +168,11 @@ export default function ProfitLossPage() {
             onRetry={handleRetry}
           />
         ) : !pnl || !hasAnyRows ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">
-              No income or expense activity for this range.
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              Pick a different date range or post entries to see this report populate.
-            </p>
-          </div>
+          <EmptyState
+            illustration={<EmptyTimeIllustration />}
+            title="No income or expense activity for this range"
+            description="Pick a different date range or post entries to see this report populate."
+          />
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

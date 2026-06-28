@@ -269,6 +269,13 @@ export default function OrgDepartmentsPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
+  function makeRestoreHandler(dept: OrgDepartment) { return () => handleRestore(dept); }
+  function makeArchiveHandler(dept: OrgDepartment) { return () => handleArchive(dept); }
+  function makeSetEditingHandler(dept: OrgDepartment) { return () => setEditing(dept); }
+  function makeSetDeletingHandler(dept: OrgDepartment) { return () => setDeleting(dept); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
   return (
     <PageWrapper
       title="Departments"
@@ -349,19 +356,19 @@ export default function OrgDepartmentsPage() {
                   <div className="flex items-center gap-1">
                     {d.status === "ARCHIVED" ? (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => handleRestore(d)} title="Restore">
+                        <Button variant="ghost" size="sm" onClick={makeRestoreHandler(d)} title="Restore">
                           <RotateCcw className="h-4 w-4 text-blue-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setDeleting(d)} title="Delete permanently">
+                        <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(d)} title="Delete permanently">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(d)} title="Edit">
+                        <Button variant="ghost" size="sm" onClick={makeSetEditingHandler(d)} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleArchive(d)} title="Archive">
+                        <Button variant="ghost" size="sm" onClick={makeArchiveHandler(d)} title="Archive">
                           <Archive className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </>
@@ -383,7 +390,7 @@ export default function OrgDepartmentsPage() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+      <Sheet open={!!editing} onOpenChange={handleEditSheetOpenChange}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Edit Department</SheetTitle>
@@ -406,7 +413,7 @@ export default function OrgDepartmentsPage() {
 
       <ConfirmDialog
         open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
+        onOpenChange={handleDeleteDialogOpenChange}
         title="Delete Department"
         description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}

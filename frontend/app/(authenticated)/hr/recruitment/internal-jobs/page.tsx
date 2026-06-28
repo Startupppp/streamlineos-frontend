@@ -61,8 +61,12 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
+  function handleCoverLetterChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setCoverLetter(e.target.value); }
+  function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+  function handleSubmitApplication() { mutation.mutate({ coverLetter: coverLetter.trim() || undefined }); }
+
   return (
-    <Sheet open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Apply Internally — {job.title}</SheetTitle>
@@ -74,7 +78,7 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
             <Textarea
               id="cover-letter"
               value={coverLetter}
-              onChange={(e) => setCoverLetter(e.target.value)}
+              onChange={handleCoverLetterChange}
               rows={6}
               placeholder="Why are you interested in this role?"
             />
@@ -82,12 +86,65 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
-          <Button onClick={() => mutation.mutate({ coverLetter: coverLetter.trim() || undefined })} disabled={mutation.isPending}>
+          <Button onClick={handleSubmitApplication} disabled={mutation.isPending}>
             {mutation.isPending ? "Submitting..." : "Submit Application"}
           </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+interface JobCardItemProps {
+  job: InternalJob;
+  onApply: (job: InternalJob) => void;
+}
+
+function JobCardItem({ job, onApply }: JobCardItemProps) {
+  const isExpired = job.applicationDeadline
+    ? !isAfter(new Date(job.applicationDeadline), new Date())
+    : false;
+
+  function handleApply() { onApply(job); }
+
+  return (
+    <Card className="shadow-sm hover:shadow-md transition-shadow flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-sm font-semibold leading-tight">{job.title}</CardTitle>
+          <Badge variant="secondary" className="text-[10px] shrink-0">Internal</Badge>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          <Badge variant="outline" className="text-[10px]">{TYPE_LABELS[job.type] ?? job.type}</Badge>
+          {job.department && <Badge variant="outline" className="text-[10px]">{job.department.name}</Badge>}
+          {job.location && <Badge variant="outline" className="text-[10px]">{job.location}</Badge>}
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col justify-between pt-0 gap-3">
+        <div className="space-y-2 text-xs text-muted-foreground">
+          {job.experience && <p>{job.experience} experience required</p>}
+          {job.description && (
+            <p className="line-clamp-3">{job.description.replace(/<[^>]+>/g, "")}</p>
+          )}
+          <div className="flex items-center justify-between">
+            <span>{job.openings} opening{job.openings !== 1 ? "s" : ""}</span>
+            {job.applicationDeadline && (
+              <span className={isExpired ? "text-destructive" : ""}>
+                {isExpired ? "Deadline passed" : `Apply by ${format(new Date(job.applicationDeadline), "MMM d")}`}
+              </span>
+            )}
+          </div>
+        </div>
+        <Button
+          size="sm"
+          className="w-full"
+          disabled={isExpired}
+          onClick={handleApply}
+        >
+          {isExpired ? "Deadline Passed" : "Apply Internally"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -104,6 +161,8 @@ export default function InternalJobsPage() {
   const handleApplySuccess = useCallback(() => {
     void qc.invalidateQueries({ queryKey: ["internalJobs"] });
   }, [qc]);
+
+  const handleCloseApplySheet = useCallback(() => { setApplyingJob(null); }, []);
 
   if (isLoading) {
     return (
@@ -128,56 +187,14 @@ export default function InternalJobsPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => {
-            const isExpired = job.applicationDeadline
-              ? !isAfter(new Date(job.applicationDeadline), new Date())
-              : false;
-
-            return (
-              <Card key={job.id} className="shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-sm font-semibold leading-tight">{job.title}</CardTitle>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">Internal</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    <Badge variant="outline" className="text-[10px]">{TYPE_LABELS[job.type] ?? job.type}</Badge>
-                    {job.department && <Badge variant="outline" className="text-[10px]">{job.department.name}</Badge>}
-                    {job.location && <Badge variant="outline" className="text-[10px]">{job.location}</Badge>}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between pt-0 gap-3">
-                  <div className="space-y-2 text-xs text-muted-foreground">
-                    {job.experience && <p>{job.experience} experience required</p>}
-                    {job.description && (
-                      <p className="line-clamp-3">{job.description.replace(/<[^>]+>/g, "")}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span>{job.openings} opening{job.openings !== 1 ? "s" : ""}</span>
-                      {job.applicationDeadline && (
-                        <span className={isExpired ? "text-destructive" : ""}>
-                          {isExpired ? "Deadline passed" : `Apply by ${format(new Date(job.applicationDeadline), "MMM d")}`}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={isExpired}
-                    onClick={() => setApplyingJob(job)}
-                  >
-                    {isExpired ? "Deadline Passed" : "Apply Internally"}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {jobs.map((job) => (
+            <JobCardItem key={job.id} job={job} onApply={setApplyingJob} />
+          ))}
         </div>
       )}
 
       {applyingJob && (
-        <ApplySheet job={applyingJob} onClose={() => setApplyingJob(null)} onSuccess={handleApplySuccess} />
+        <ApplySheet job={applyingJob} onClose={handleCloseApplySheet} onSuccess={handleApplySuccess} />
       )}
     </PageWrapper>
   );

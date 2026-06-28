@@ -13,11 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 
-/**
- * Shared name + start/end date + goal fields used by both
- * create-sprint-dialog and edit-sprint-dialog. The `goal` placeholder
- * differs slightly between the two contexts.
- */
 interface SprintFormFieldsProps<T extends FieldValues> {
   form: UseFormReturn<T>;
   goalPlaceholder?: string;

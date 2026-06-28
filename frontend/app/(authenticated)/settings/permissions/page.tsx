@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,7 @@ export default function PermissionsPage() {
 function PermissionsContent() {
   const { data: session } = useSession();
   const matrixQuery = useRolePermissionsMatrix();
+  const handleRetry = useCallback(() => { void matrixQuery.refetch(); }, [matrixQuery.refetch]);
 
   const permissionGroups = useMemo(() => groupByResource(PERMISSIONS), []);
 
@@ -60,7 +61,7 @@ function PermissionsContent() {
   }, [matrixQuery.data]);
 
   const roles = matrixQuery.data ?? [];
-  const currentUserRoleId = (session?.user as { roleId?: number } | undefined)?.roleId;
+  const currentUserRoleId = roles.find((r) => r.roleName === session?.user?.role)?.roleId;
 
   if (matrixQuery.isLoading) {
     return (
@@ -87,7 +88,7 @@ function PermissionsContent() {
               {matrixQuery.error.message}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => matrixQuery.refetch()}>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
             Try again
           </Button>
         </div>

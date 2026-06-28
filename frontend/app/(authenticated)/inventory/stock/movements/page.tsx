@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
+import { ArrowUpDown, AlertCircle } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,6 +65,14 @@ function getDateRange(preset: DatePreset): { fromDate?: string; toDate?: string 
     fromDate: format(startOfDay(subDays(now, days)), "yyyy-MM-dd"),
     toDate: format(endOfDay(now), "yyyy-MM-dd"),
   };
+}
+
+function isDatePreset(val: string): val is DatePreset {
+  return val === "7d" || val === "30d" || val === "90d" || val === "all";
+}
+
+function isTransactionTypeOrAll(val: string): val is TransactionType | "all" {
+  return val === "all" || val in TXN_TYPE_LABELS;
 }
 
 const ALL_TXN_TYPES: TransactionType[] = [
@@ -130,16 +139,23 @@ export default function MovementsPage() {
     [dateRange, txnTypeFilter],
   );
 
-  const { data: txnData, isLoading } = useStockTransactions(filters);
+  const { data: txnData, isLoading, isError, refetch } = useStockTransactions(filters);
 
   const transactions: StockTransaction[] = txnData?.items ?? [];
 
+  function handleRetry() { void refetch(); }
+
+  function handleResetFilters() {
+    setDatePreset("30d");
+    setTxnTypeFilter("all");
+  }
+
   const handleDatePresetChange = useCallback((val: string) => {
-    setDatePreset(val as DatePreset);
+    if (isDatePreset(val)) setDatePreset(val);
   }, []);
 
   const handleTypeChange = useCallback((val: string) => {
-    setTxnTypeFilter(val as TransactionType | "all");
+    if (isTransactionTypeOrAll(val)) setTxnTypeFilter(val);
   }, []);
 
   return (
@@ -178,11 +194,22 @@ export default function MovementsPage() {
     >
       {isLoading ? (
         <MovementsTableSkeleton />
+      ) : isError ? (
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <EmptyState
+            illustration={<AlertCircle className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
+            title="Failed to load movements"
+            description="An error occurred while fetching stock transactions. Please try again."
+            action={{ label: "Retry", onClick: handleRetry }}
+          />
+        </motion.div>
       ) : transactions.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <EmptyState
+            illustration={<ArrowUpDown className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" />}
             title="No transactions found"
             description="No stock movements match the selected filters."
+            action={{ label: "Clear Filters", onClick: handleResetFilters }}
           />
         </motion.div>
       ) : (

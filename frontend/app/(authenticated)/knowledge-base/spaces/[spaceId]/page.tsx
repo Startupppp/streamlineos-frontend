@@ -65,29 +65,34 @@ export default function KnowledgeBaseSpaceDetailPage() {
   const newArticleHref = `/knowledge-base/spaces/${spaceId}/new`;
   const membersHref = `/knowledge-base/spaces/${spaceId}/members`;
 
-  const handleSelectCategory = (id: number | null) => {
+  function handleSelectCategory(id: number | null) {
     setSelectedCategoryId(id);
     setPage(1);
-  };
+  }
 
-  const handleOpenCreateCollection = () => setCreateCollectionOpen(true);
+  function handleOpenCreateCollection() {
+    setCreateCollectionOpen(true);
+  }
 
-  const handleRetrySpace = () => {
-    spaceQuery.refetch();
-  };
+  function handleRetrySpace() {
+    void spaceQuery.refetch();
+  }
 
-  const handleRetryCategories = () => {
-    categoriesQuery.refetch();
-  };
+  function handleRetryCategories() {
+    void categoriesQuery.refetch();
+  }
 
-  const handleRetryArticles = () => {
-    articlesQuery.refetch();
-  };
+  function handleRetryArticles() {
+    void articlesQuery.refetch();
+  }
 
-  const handlePrevPage = () => setPage((current) => Math.max(1, current - 1));
+  function handlePrevPage() {
+    setPage((current) => Math.max(1, current - 1));
+  }
 
-  const handleNextPage = () =>
+  function handleNextPage() {
     setPage((current) => Math.min(articlesQuery.data?.totalPages ?? 1, current + 1));
+  }
 
   if (spaceQuery.isLoading) {
     return (

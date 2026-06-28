@@ -165,6 +165,10 @@ export default function CategoriesPage() {
     setFormKey((k) => k + 1);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
@@ -194,7 +198,7 @@ export default function CategoriesPage() {
           <ErrorState
             title="Failed to load categories"
             description={query.error.message}
-            onRetry={() => query.refetch()}
+            onRetry={handleRetry}
           />
         ) : categories.length === 0 ? (
           <EmptyState

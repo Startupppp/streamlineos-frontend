@@ -1,5 +1,6 @@
 "use client";
 
+import { type MouseEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,6 +44,11 @@ function isOverdue(ticket: Ticket): boolean {
 }
 
 export function TableView({ tickets, onTicketClick }: TableViewProps) {
+  function handleRowClick(e: MouseEvent<HTMLTableRowElement>) {
+    const id = Number(e.currentTarget.dataset.ticketId);
+    if (id) onTicketClick(id);
+  }
+
   return (
     <div className="p-3 sm:p-4">
       <ScrollArea className="w-full border rounded-lg overflow-hidden" type="auto">
@@ -66,7 +72,8 @@ export function TableView({ tickets, onTicketClick }: TableViewProps) {
               return (
                 <TableRow
                   key={ticket.id}
-                  onClick={() => onTicketClick(ticket.id)}
+                  data-ticket-id={ticket.id}
+                  onClick={handleRowClick}
                   className="cursor-pointer hover:bg-muted/50"
                 >
                   <TableCell className="font-mono text-xs text-muted-foreground">

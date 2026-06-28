@@ -89,6 +89,8 @@ export default function MovementsReportPage() {
 
   const rows = query.data ?? [];
 
+  function handleRetry() { void query.refetch(); }
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
@@ -136,7 +138,7 @@ export default function MovementsReportPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={10} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && rows.length === 0 && (
         <EmptyState

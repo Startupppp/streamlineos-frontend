@@ -63,6 +63,44 @@ function getStatusConfig(s: string | null) {
   };
 }
 
+function ReimbursementActions({
+  reimbursementId,
+  reimbursementUserId,
+  currentUserId,
+  isAdmin,
+  isPending,
+  onApprove,
+  onStartReject,
+}: {
+  reimbursementId: number;
+  reimbursementUserId: string;
+  currentUserId: string | undefined;
+  isAdmin: boolean;
+  isPending: boolean;
+  onApprove: (id: number) => void;
+  onStartReject: (id: number) => void;
+}) {
+  function handleApproveClick() { onApprove(reimbursementId); }
+  function handleRejectClick() { onStartReject(reimbursementId); }
+
+  if (!isAdmin) return null;
+  if (reimbursementUserId === currentUserId) {
+    return <span className="text-[10px] text-muted-foreground italic">Cannot approve own</span>;
+  }
+  return (
+    <div className="flex gap-1 justify-end">
+      <Button size="sm" className="h-7 gap-1 text-xs" onClick={handleApproveClick} disabled={isPending}>
+        <CheckCircle2 className="h-3 w-3" />
+        Approve
+      </Button>
+      <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={handleRejectClick}>
+        <XCircle className="h-3 w-3" />
+        Reject
+      </Button>
+    </div>
+  );
+}
+
 export default function ReimbursementsPage() {
   const { data: session } = useSession();
   const { data: items, isLoading, isError, refetch } = useReimbursements();
@@ -248,30 +286,16 @@ export default function ReimbursementsPage() {
                           ₹{Number(r.amount).toLocaleString("en-IN")}
                         </TableCell>
                         <TableCell className="text-right">
-                          {isAdmin && r.status === "PENDING" && r.userId !== session?.user?.id && (
-                            <div className="flex gap-1 justify-end">
-                              <Button
-                                size="sm"
-                                className="h-7 gap-1 text-xs"
-                                onClick={() => handleApprove(r.id)}
-                                disabled={process.isPending}
-                              >
-                                <CheckCircle2 className="h-3 w-3" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 gap-1 text-xs"
-                                onClick={() => setRejectId(r.id)}
-                              >
-                                <XCircle className="h-3 w-3" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                          {isAdmin && r.status === "PENDING" && r.userId === session?.user?.id && (
-                            <span className="text-[10px] text-muted-foreground italic">Cannot approve own</span>
+                          {r.status === "PENDING" && (
+                            <ReimbursementActions
+                              reimbursementId={r.id}
+                              reimbursementUserId={r.userId}
+                              currentUserId={session?.user?.id}
+                              isAdmin={isAdmin}
+                              isPending={process.isPending}
+                              onApprove={handleApprove}
+                              onStartReject={setRejectId}
+                            />
                           )}
                         </TableCell>
                       </TableRow>

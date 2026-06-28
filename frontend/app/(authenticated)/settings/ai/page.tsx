@@ -7,13 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   useOrgFeatureFlags,
   useUpdateFeatureFlag,
   useAiUsage,
   type OrgFeatureFlags,
 } from "@/lib/api/hooks/ai";
-import { Bot, Zap, TrendingUp, BarChart3, BrainCircuit } from "lucide-react";
+import { AlertCircle, BarChart3, Bot, BrainCircuit, TrendingUp, Zap } from "lucide-react";
 
 const FLAG_META: {
   key: keyof OrgFeatureFlags;
@@ -67,9 +68,17 @@ function formatTokens(n: number): string {
 }
 
 export default function AiSettingsPage() {
-  const { data: flags, isLoading: flagsLoading } = useOrgFeatureFlags();
-  const { data: usage, isLoading: usageLoading } = useAiUsage();
+  const { data: flags, isLoading: flagsLoading, isError: flagsError, refetch: refetchFlags } = useOrgFeatureFlags();
+  const { data: usage, isLoading: usageLoading, isError: usageError, refetch: refetchUsage } = useAiUsage();
   const updateFlag = useUpdateFeatureFlag();
+
+  function handleRetryFlags() {
+    refetchFlags();
+  }
+
+  function handleRetryUsage() {
+    refetchUsage();
+  }
 
   const handleToggle = useCallback(
     (flag: keyof OrgFeatureFlags, enabled: boolean) => {
@@ -105,6 +114,12 @@ export default function AiSettingsPage() {
                   <Skeleton className="h-6 w-11 rounded-full" />
                 </div>
               ))
+            ) : flagsError ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+                <AlertCircle className="h-8 w-8 text-destructive/40" />
+                <p className="text-sm text-muted-foreground">Failed to load AI feature flags.</p>
+                <Button variant="outline" size="sm" onClick={handleRetryFlags}>Retry</Button>
+              </div>
             ) : (
               FLAG_META.map(({ key, label, description, icon }) => (
                 <FlagRow
@@ -137,6 +152,12 @@ export default function AiSettingsPage() {
               <div className="space-y-3">
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-32 w-full" />
+              </div>
+            ) : usageError ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+                <AlertCircle className="h-8 w-8 text-destructive/40" />
+                <p className="text-sm text-muted-foreground">Failed to load usage data.</p>
+                <Button variant="outline" size="sm" onClick={handleRetryUsage}>Retry</Button>
               </div>
             ) : (
               <div className="space-y-6">

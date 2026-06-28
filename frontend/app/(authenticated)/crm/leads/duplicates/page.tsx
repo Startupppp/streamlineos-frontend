@@ -69,6 +69,10 @@ function DuplicateGroupCard({
   const leadA = group.leads[0]!;
   const leadB = group.leads[1]!;
 
+  const handleMergeClick = useCallback(() => {
+    onMerge({ keepLeadId: leadA.id, mergeLeadId: leadB.id, mergeName: leadB.name });
+  }, [onMerge, leadA.id, leadB.id, leadB.name]);
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -146,13 +150,7 @@ function DuplicateGroupCard({
                         size="sm"
                         variant="destructive"
                         className="h-7 text-xs"
-                        onClick={() =>
-                          onMerge({
-                            keepLeadId: leadA.id,
-                            mergeLeadId: leadB.id,
-                            mergeName: leadB.name,
-                          })
-                        }
+                        onClick={handleMergeClick}
                       >
                         Remove Duplicate
                       </Button>
@@ -192,6 +190,12 @@ export default function DuplicateLeadsPage() {
 
   const [pendingMerge, setPendingMerge] = useState<MergeTarget | null>(null);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleMergeDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setPendingMerge(null);
+  }, []);
+
   const handleMerge = useCallback((target: MergeTarget) => {
     setPendingMerge(target);
   }, []);
@@ -214,7 +218,7 @@ export default function DuplicateLeadsPage() {
     <Button
       variant="outline"
       size="sm"
-      onClick={() => refetch()}
+      onClick={handleRetry}
       disabled={isFetching}
       aria-label="Refresh duplicate scan"
     >
@@ -235,7 +239,7 @@ export default function DuplicateLeadsPage() {
         <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
           <AlertTriangle className="h-10 w-10 text-destructive" />
           <p className="text-sm text-muted-foreground">Failed to scan for duplicates</p>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
             Try Again
           </Button>
         </div>
@@ -279,7 +283,7 @@ export default function DuplicateLeadsPage() {
 
       <ConfirmDialog
         open={!!pendingMerge}
-        onOpenChange={(open) => !open && setPendingMerge(null)}
+        onOpenChange={handleMergeDialogOpenChange}
         title="Remove Duplicate Lead"
         description={`This will merge "${pendingMerge?.mergeName}" into the primary lead and soft-delete it. All activities and notes will be preserved. This action cannot be undone.`}
         confirmLabel={isMerging ? "Merging…" : "Merge & Remove"}

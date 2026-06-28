@@ -13,6 +13,13 @@ import { OrgProfileSection } from "@/features/settings/organization/org-profile-
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
+const CURRENCY_CODES = ["USD", "EUR", "INR", "GBP", "AED"] as const;
+type CurrencyCode = (typeof CURRENCY_CODES)[number];
+
+function isCurrencyCode(value: string): value is CurrencyCode {
+  return (CURRENCY_CODES as readonly string[]).includes(value);
+}
+
 function isValidOctet(part: string): boolean {
   if (!/^\d{1,3}$/.test(part)) return false;
   const n = Number(part);
@@ -46,7 +53,7 @@ export default function OrganizationSettingsPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [timezone, setTimezone] = useState<string>("");
-  const [currency, setCurrency] = useState<string>("");
+  const [currency, setCurrency] = useState<CurrencyCode | "">("");
   const [fiscalYearStart, setFiscalYearStart] = useState<string>("");
   const [directoryPublic, setDirectoryPublic] = useState<boolean>(false);
   const [primaryColor, setPrimaryColor] = useState<string>("");
@@ -86,7 +93,8 @@ export default function OrganizationSettingsPage() {
     if (!configInitialized && org) {
       setLogoUrl(org.logo ?? "");
       setTimezone(org.timezone ?? "Asia/Kolkata");
-      setCurrency(org.currency ?? "INR");
+      const orgCurrency = org.currency ?? "INR";
+      setCurrency(isCurrencyCode(orgCurrency) ? orgCurrency : "INR");
       setFiscalYearStart(String(org.fiscalYearStart ?? 4));
       setDirectoryPublic(org.directoryPublic ?? false);
       setPrimaryColor(org.primaryColor ?? "");
@@ -136,7 +144,8 @@ export default function OrganizationSettingsPage() {
     if (!org) return;
     setLogoUrl(org.logo ?? "");
     setTimezone(org.timezone ?? "Asia/Kolkata");
-    setCurrency(org.currency ?? "INR");
+    const editCurrency = org.currency ?? "INR";
+    setCurrency(isCurrencyCode(editCurrency) ? editCurrency : "INR");
     setFiscalYearStart(String(org.fiscalYearStart ?? 4));
     setDirectoryPublic(org.directoryPublic ?? false);
     setPrimaryColor(org.primaryColor ?? "");
@@ -157,7 +166,7 @@ export default function OrganizationSettingsPage() {
       {
         logo: logoUrl.trim() || null,
         timezone: timezone || undefined,
-        currency: (currency as "USD" | "EUR" | "INR" | "GBP" | "AED") || undefined,
+        currency: currency || undefined,
         fiscalYearStart: fiscalNum,
         directoryPublic,
         primaryColor: colorVal || null,
@@ -224,7 +233,9 @@ export default function OrganizationSettingsPage() {
 
   const handleLogoUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLogoUrl(e.target.value), []);
   const handleTimezoneChange = useCallback((value: string) => setTimezone(value), []);
-  const handleCurrencyChange = useCallback((value: string) => setCurrency(value), []);
+  const handleCurrencyChange = useCallback((value: string) => {
+    if (isCurrencyCode(value)) setCurrency(value);
+  }, []);
   const handleFiscalYearStartChange = useCallback((value: string) => setFiscalYearStart(value), []);
   const handleDirectoryPublicChange = useCallback((checked: boolean) => setDirectoryPublic(checked), []);
   const handlePrimaryColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value), []);
@@ -272,10 +283,14 @@ export default function OrganizationSettingsPage() {
       }
       expiryDaysNum = parsed;
     }
-    const maxSessionsNum = maxConcurrentSessions ? parseInt(maxConcurrentSessions, 10) : null;
-    if (maxConcurrentSessions && (isNaN(maxSessionsNum!) || maxSessionsNum! < 1 || maxSessionsNum! > 100)) {
-      toast.error("Max concurrent sessions must be between 1 and 100");
-      return;
+    let maxSessionsNum: number | null = null;
+    if (maxConcurrentSessions) {
+      const parsedSessions = parseInt(maxConcurrentSessions, 10);
+      if (isNaN(parsedSessions) || parsedSessions < 1 || parsedSessions > 100) {
+        toast.error("Max concurrent sessions must be between 1 and 100");
+        return;
+      }
+      maxSessionsNum = parsedSessions;
     }
     updateSecurity(
       { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },

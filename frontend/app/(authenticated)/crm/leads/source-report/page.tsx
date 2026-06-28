@@ -65,13 +65,7 @@ export default function LeadSourceReportPage() {
     [data]
   );
 
-  function handleRetry() {
-    refetch();
-  }
-
-  function handleEmptyAction() {
-    return;
-  }
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isError) {
     return (
@@ -150,7 +144,7 @@ export default function LeadSourceReportPage() {
                   illustration={<EmptySearchIllustration className="h-40 w-40" />}
                   title="No source data"
                   description="No lead source data is available yet."
-                  action={{ label: "Refresh", onClick: handleEmptyAction }}
+
                   className="min-h-[300px]"
                 />
               ) : (

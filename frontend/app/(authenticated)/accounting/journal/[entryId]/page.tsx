@@ -108,6 +108,10 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   const isReverseEntry = entry?.sourceEvent === "reverse";
   const canReverse = Boolean(entry) && isPosted && !isReverseEntry;
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
   const handlePostClick = useCallback(() => {
     setPostDialogOpen(true);
   }, []);
@@ -181,6 +185,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
           <ErrorState
             title="Failed to load journal entry"
             description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
           />
         ) : !entry || !Number.isInteger(entryId) ? (
           <ErrorState

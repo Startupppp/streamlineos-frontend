@@ -116,7 +116,7 @@ export default function NotificationsPage() {
         <ErrorState
           title="Failed to load notifications"
           description="We couldn't load your notifications. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       ) : filtered.length === 0 ? (
         <EmptyState

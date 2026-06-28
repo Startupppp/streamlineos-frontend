@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ExternalLink, Copy, ArrowRight } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,7 +80,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           createForm.reset();
           toast.success("Intake item created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [createMutation, projectId, createForm]);
@@ -94,7 +95,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           acceptForm.reset();
           toast.success("Item accepted and work item created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [selectedItemId, updateMutation, projectId, acceptForm]);
@@ -109,7 +110,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           declineForm.reset();
           toast.success("Item declined");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [selectedItemId, updateMutation, projectId, declineForm]);
@@ -131,7 +132,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       { id: itemId, projectId, status: "duplicate" },
       {
         onSuccess: () => toast.success("Item marked as duplicate"),
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [updateMutation, projectId]);

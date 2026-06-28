@@ -129,7 +129,7 @@ export default function CashFlowPage() {
   }
 
   function handleRetry(): void {
-    query.refetch();
+    void query.refetch();
   }
 
   const hasActivity =

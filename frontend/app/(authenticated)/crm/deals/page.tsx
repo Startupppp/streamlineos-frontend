@@ -330,7 +330,7 @@ export default function DealsPage() {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={handleOpenCreate}>
               <Plus className="h-4 w-4 mr-2" />
               New Deal
             </Button>

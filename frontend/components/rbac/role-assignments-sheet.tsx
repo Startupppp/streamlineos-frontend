@@ -59,6 +59,13 @@ interface AssignmentsBodyProps {
   onClose: () => void;
 }
 
+interface EffectiveUser {
+  name: string | null;
+  email: string | null;
+  image: string | null;
+  vias: string[];
+}
+
 function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const roleId = role.id;
   const membersQuery = useRoleMembers(roleId);
@@ -80,10 +87,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
     (department) => !assignedDepartmentIds.has(String(department.id)),
   );
 
-  const effectiveUsers = new Map<
-    string,
-    { name: string | null; email: string | null; image: string | null; vias: string[] }
-  >();
+  const effectiveUsers = new Map<string, EffectiveUser>();
   for (const member of members) {
     if (member.principalType !== "user") continue;
     const existing =

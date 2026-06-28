@@ -18,13 +18,23 @@ interface GitTicketLinksProps {
   projectId: number;
 }
 
-function ProviderIcon({ provider, className }: { provider: GitProvider; className?: string }) {
+interface ProviderIconProps {
+  provider: GitProvider;
+  className?: string;
+}
+
+function ProviderIcon({ provider, className }: ProviderIconProps) {
   if (provider === "github") return <Github className={className} />;
   if (provider === "gitlab") return <Gitlab className={className} />;
   return <GitBranch className={className} />;
 }
 
-function RefIcon({ refType, className }: { refType: GitRefType; className?: string }) {
+interface RefIconProps {
+  refType: GitRefType;
+  className?: string;
+}
+
+function RefIcon({ refType, className }: RefIconProps) {
   if (refType === "pull_request") return <GitPullRequest className={className} />;
   if (refType === "branch") return <GitBranch className={className} />;
   return <GitCommit className={className} />;
@@ -35,7 +45,11 @@ function shortId(link: TicketGitLink): string {
   return link.externalId.slice(0, 7);
 }
 
-function LinkItem({ link }: { link: TicketGitLink }) {
+interface LinkItemProps {
+  link: TicketGitLink;
+}
+
+function LinkItem({ link }: LinkItemProps) {
   const label = link.title || shortId(link);
   const content = (
     <div className="flex items-center gap-2.5 min-w-0">

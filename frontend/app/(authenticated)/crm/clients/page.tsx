@@ -276,7 +276,7 @@ export default function ClientAccountsPage() {
             <Input
               placeholder="Search clients..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-9"
             />
           </div>
@@ -424,7 +424,7 @@ export default function ClientAccountsPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {account.convertedAt ? new Date(account.convertedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
                           </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell onClick={handleStopPropagation}>
                             <AIChurnRiskButton clientId={account.id} compact />
                           </TableCell>
                           <TableCell>

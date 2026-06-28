@@ -72,6 +72,10 @@ function InboxContent() {
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <>
       <PageWrapper

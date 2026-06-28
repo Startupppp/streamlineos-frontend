@@ -76,6 +76,14 @@ import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
+function isKbArticleStatus(v: string): v is KbArticleStatus {
+  return v === "draft" || v === "published" || v === "archived";
+}
+
+function isKbArticleVisibility(v: string): v is KbArticleVisibility {
+  return v === "public" || v === "internal";
+}
+
 const STATUS_VARIANT: Record<KbArticleStatus, "secondary" | "default" | "outline"> = {
   draft: "secondary",
   published: "default",
@@ -138,6 +146,18 @@ function CategoryDialog({
   const update = useUpdateKbCategory();
   const isPending = create.isPending || update.isPending;
 
+  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
+    setName(event.target.value);
+  }
+
+  function handleDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setDescription(event.target.value);
+  }
+
+  function handleIconChange(event: ChangeEvent<HTMLInputElement>) {
+    setIcon(event.target.value);
+  }
+
   function handleSave() {
     if (!name.trim()) return;
     const payload = {
@@ -180,7 +200,7 @@ function CategoryDialog({
             <Input
               placeholder="e.g. Getting Started"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
             />
           </div>
           <div className="space-y-1">
@@ -188,7 +208,7 @@ function CategoryDialog({
             <Textarea
               rows={2}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
             />
           </div>
           <div className="space-y-1">
@@ -196,7 +216,7 @@ function CategoryDialog({
             <Input
               placeholder="Optional lucide icon name"
               value={icon}
-              onChange={(e) => setIcon(e.target.value)}
+              onChange={handleIconChange}
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
@@ -233,6 +253,14 @@ function NewArticleDialog({
   const [visibility, setVisibility] = useState<KbArticleVisibility>("internal");
   const create = useCreateKbArticle();
 
+  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
+    setTitle(event.target.value);
+  }
+
+  function handleVisibilityChange(v: string) {
+    if (isKbArticleVisibility(v)) setVisibility(v);
+  }
+
   function handleCreate() {
     if (!title.trim()) return;
     create.mutate(
@@ -264,7 +292,7 @@ function NewArticleDialog({
             <Input
               placeholder="e.g. How to reset your password"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -288,7 +316,7 @@ function NewArticleDialog({
               <Label>Visibility</Label>
               <Select
                 value={visibility}
-                onValueChange={(v) => setVisibility(v as KbArticleVisibility)}
+                onValueChange={handleVisibilityChange}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -314,6 +342,142 @@ function NewArticleDialog({
   );
 }
 
+interface ArticleCardProps {
+  article: KbArticleListItem;
+  categoryName: string | undefined;
+  onNavigate: (id: number) => void;
+  onDelete: (article: KbArticleListItem) => void;
+}
+
+function ArticleCard({ article, categoryName, onNavigate, onDelete }: ArticleCardProps) {
+  function handleNavigate() {
+    onNavigate(article.id);
+  }
+  function handleDelete() {
+    onDelete(article);
+  }
+  return (
+    <Card className="hover:border-primary/40 transition-colors">
+      <CardContent className="py-3">
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={handleNavigate}
+              className="text-left font-medium text-sm hover:underline truncate block w-full"
+            >
+              {article.title}
+            </button>
+            {article.excerpt && (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                {article.excerpt}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <Badge variant={STATUS_VARIANT[article.status]} className="text-[10px]">
+                {STATUS_LABEL[article.status]}
+              </Badge>
+              <Badge variant="outline" className="text-[10px]">
+                {VISIBILITY_LABEL[article.visibility]}
+              </Badge>
+              {categoryName && (
+                <span className="text-[11px] text-muted-foreground">{categoryName}</span>
+              )}
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Eye className="h-3 w-3" /> {article.views}
+              </span>
+              {article.updatedAt && (
+                <span className="text-[11px] text-muted-foreground">
+                  {format(new Date(article.updatedAt), "MMM d, yyyy")}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={handleNavigate}
+              aria-label="Edit article"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              onClick={handleDelete}
+              aria-label="Delete article"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface CategoryListItemProps {
+  category: KbCategory;
+  onEdit: (category: KbCategory) => void;
+  onDelete: (category: KbCategory) => void;
+}
+
+function CategoryListItem({ category, onEdit, onDelete }: CategoryListItemProps) {
+  function handleEdit() {
+    onEdit(category);
+  }
+  function handleDelete() {
+    onDelete(category);
+  }
+  return (
+    <Card>
+      <CardContent className="py-3 flex items-start gap-3">
+        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <FolderTree className="h-4.5 w-4.5 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm truncate">{category.name}</p>
+            {category.isPublished ? (
+              <Badge variant="default" className="text-[10px]">Published</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[10px]">Hidden</Badge>
+            )}
+          </div>
+          {category.description && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+              {category.description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            onClick={handleEdit}
+            aria-label="Edit category"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            onClick={handleDelete}
+            aria-label="Delete category"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function KnowledgeBasePage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>(STATUS_ALL);
@@ -332,9 +496,8 @@ export default function KnowledgeBasePage() {
 
   const articleParams = useMemo(
     () => ({
-      status: statusFilter === STATUS_ALL ? undefined : (statusFilter as KbArticleStatus),
-      visibility:
-        visibilityFilter === VISIBILITY_ALL ? undefined : (visibilityFilter as KbArticleVisibility),
+      status: isKbArticleStatus(statusFilter) ? statusFilter : undefined,
+      visibility: isKbArticleVisibility(visibilityFilter) ? visibilityFilter : undefined,
       categoryId: categoryFilter === CATEGORY_ALL ? undefined : Number(categoryFilter),
       search: search.trim() || undefined,
     }),
@@ -401,6 +564,66 @@ export default function KnowledgeBasePage() {
     });
   }
 
+  function handleOpenCategoryDialog() {
+    setCategoryDialogOpen(true);
+  }
+
+  function handleOpenNewArticle() {
+    setNewArticleOpen(true);
+  }
+
+  function handleArticlesRetry() {
+    void articlesQuery.refetch();
+  }
+
+  function handleNewArticleAction() {
+    setNewArticleOpen(true);
+  }
+
+  function handleCategoriesRetry() {
+    void categoriesQuery.refetch();
+  }
+
+  function handleNewCategoryAction() {
+    setCategoryDialogOpen(true);
+  }
+
+  function handleNavigateToArticle(id: number) {
+    router.push(`/support/kb/${id}`);
+  }
+
+  function handleDeleteArticle(article: KbArticleListItem) {
+    setDeleteArticle(article);
+  }
+
+  function handleEditCategoryItem(category: KbCategory) {
+    setEditCategory(category);
+  }
+
+  function handleDeleteCategoryItem(category: KbCategory) {
+    setDeleteCategory(category);
+  }
+
+  function handleCloseCategoryDialog() {
+    setCategoryDialogOpen(false);
+  }
+
+  function handleCloseEditCategory() {
+    setEditCategory(null);
+  }
+
+  function handleCloseNewArticle() {
+    setNewArticleOpen(false);
+  }
+
+  function handleDeleteCategoryOpenChange(open: boolean) {
+    if (!open) setDeleteCategory(null);
+  }
+
+  function handleDeleteArticleOpenChange(open: boolean) {
+    if (!open) setDeleteArticle(null);
+  }
+
   return (
     <PageWrapper
       eyebrow="Support"
@@ -421,10 +644,10 @@ export default function KnowledgeBasePage() {
             )}
             {reindexAll.isPending ? "Indexing…" : "Index all for AI"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setCategoryDialogOpen(true)}>
+          <Button variant="outline" size="sm" onClick={handleOpenCategoryDialog}>
             <FolderTree className="h-4 w-4 mr-1" /> New Category
           </Button>
-          <Button size="sm" onClick={() => setNewArticleOpen(true)}>
+          <Button size="sm" onClick={handleOpenNewArticle}>
             <Plus className="h-4 w-4 mr-1" /> New Article
           </Button>
         </>
@@ -499,80 +722,30 @@ export default function KnowledgeBasePage() {
           ) : articlesQuery.error ? (
             <ErrorState
               description={getApiError(articlesQuery.error)}
-              onRetry={() => articlesQuery.refetch()}
+              onRetry={handleArticlesRetry}
             />
           ) : articles.length === 0 ? (
             <EmptyState
               illustration={<EmptyPublicDocsIllustration />}
               title="No articles found"
               description="Create your first help center article to get started."
-              action={{ label: "New Article", onClick: () => setNewArticleOpen(true) }}
+              action={{ label: "New Article", onClick: handleNewArticleAction }}
               className="min-h-[40vh]"
             />
           ) : (
             <div className="space-y-2">
               {articles.map((article) => (
-                <Card key={article.id} className="hover:border-primary/40 transition-colors">
-                  <CardContent className="py-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/support/kb/${article.id}`)}
-                          className="text-left font-medium text-sm hover:underline truncate block w-full"
-                        >
-                          {article.title}
-                        </button>
-                        {article.excerpt && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                            {article.excerpt}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <Badge variant={STATUS_VARIANT[article.status]} className="text-[10px]">
-                            {STATUS_LABEL[article.status]}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px]">
-                            {VISIBILITY_LABEL[article.visibility]}
-                          </Badge>
-                          {article.categoryId && categoryNameById.has(article.categoryId) && (
-                            <span className="text-[11px] text-muted-foreground">
-                              {categoryNameById.get(article.categoryId)}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Eye className="h-3 w-3" /> {article.views}
-                          </span>
-                          {article.updatedAt && (
-                            <span className="text-[11px] text-muted-foreground">
-                              {format(new Date(article.updatedAt), "MMM d, yyyy")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => router.push(`/support/kb/${article.id}`)}
-                          aria-label="Edit article"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteArticle(article)}
-                          aria-label="Delete article"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  categoryName={
+                    article.categoryId
+                      ? categoryNameById.get(article.categoryId)
+                      : undefined
+                  }
+                  onNavigate={handleNavigateToArticle}
+                  onDelete={handleDeleteArticle}
+                />
               ))}
             </div>
           )}
@@ -584,65 +757,25 @@ export default function KnowledgeBasePage() {
           ) : categoriesQuery.error ? (
             <ErrorState
               description={getApiError(categoriesQuery.error)}
-              onRetry={() => categoriesQuery.refetch()}
+              onRetry={handleCategoriesRetry}
             />
           ) : categories.length === 0 ? (
             <EmptyState
               illustration={<EmptyDocumentsIllustration />}
               title="No categories yet"
               description="Group your articles into categories for the help center."
-              action={{ label: "New Category", onClick: () => setCategoryDialogOpen(true) }}
+              action={{ label: "New Category", onClick: handleNewCategoryAction }}
               className="min-h-[40vh]"
             />
           ) : (
             <div className="space-y-2">
               {categories.map((category) => (
-                <Card key={category.id}>
-                  <CardContent className="py-3 flex items-start gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <FolderTree className="h-4.5 w-4.5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">{category.name}</p>
-                        {category.isPublished ? (
-                          <Badge variant="default" className="text-[10px]">
-                            Published
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-[10px]">
-                            Hidden
-                          </Badge>
-                        )}
-                      </div>
-                      {category.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => setEditCategory(category)}
-                        aria-label="Edit category"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteCategory(category)}
-                        aria-label="Delete category"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CategoryListItem
+                  key={category.id}
+                  category={category}
+                  onEdit={handleEditCategoryItem}
+                  onDelete={handleDeleteCategoryItem}
+                />
               ))}
             </div>
           )}
@@ -650,18 +783,18 @@ export default function KnowledgeBasePage() {
       </Tabs>
 
       {categoryDialogOpen && (
-        <CategoryDialog onClose={() => setCategoryDialogOpen(false)} />
+        <CategoryDialog onClose={handleCloseCategoryDialog} />
       )}
       {editCategory && (
-        <CategoryDialog category={editCategory} onClose={() => setEditCategory(null)} />
+        <CategoryDialog category={editCategory} onClose={handleCloseEditCategory} />
       )}
       {newArticleOpen && (
-        <NewArticleDialog categories={categories} onClose={() => setNewArticleOpen(false)} />
+        <NewArticleDialog categories={categories} onClose={handleCloseNewArticle} />
       )}
 
       <AlertDialog
         open={!!deleteCategory}
-        onOpenChange={(open) => !open && setDeleteCategory(null)}
+        onOpenChange={handleDeleteCategoryOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -685,7 +818,7 @@ export default function KnowledgeBasePage() {
 
       <AlertDialog
         open={!!deleteArticle}
-        onOpenChange={(open) => !open && setDeleteArticle(null)}
+        onOpenChange={handleDeleteArticleOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

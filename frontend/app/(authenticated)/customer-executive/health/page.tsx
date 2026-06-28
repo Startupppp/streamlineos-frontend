@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   HeartPulse,
@@ -85,6 +85,36 @@ function scoreColor(score: number): string {
   return "text-red-600";
 }
 
+interface WeightSliderRowProps {
+  field: { key: keyof HealthScoreWeights; label: string };
+  value: number;
+  onChange: (key: keyof HealthScoreWeights, value: number) => void;
+}
+
+function WeightSliderRow({ field, value, onChange }: WeightSliderRowProps) {
+  const handleChange = useCallback(
+    (v: number[]) => onChange(field.key, v[0] ?? 0),
+    [field.key, onChange],
+  );
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">{field.label}</Label>
+        <span className="text-xs font-medium tabular-nums text-muted-foreground">{value}</span>
+      </div>
+      <Slider
+        value={[value]}
+        min={0}
+        max={100}
+        step={1}
+        onValueChange={handleChange}
+        aria-label={`${field.label} weight`}
+      />
+    </div>
+  );
+}
+
 function ConfigSheet({
   open,
   onOpenChange,
@@ -127,6 +157,18 @@ function ConfigSheet({
     );
   }
 
+  function handleCancel() {
+    onOpenChange(false);
+  }
+
+  function handleHealthyThresholdChange(e: React.ChangeEvent<HTMLInputElement>) {
+    handleThresholdChange("healthy", e.target.value);
+  }
+
+  function handleAtRiskThresholdChange(e: React.ChangeEvent<HTMLInputElement>) {
+    handleThresholdChange("atRisk", e.target.value);
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
@@ -146,22 +188,12 @@ function ConfigSheet({
               </Badge>
             </div>
             {WEIGHT_FIELDS.map((field) => (
-              <div key={field.key} className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">{field.label}</Label>
-                  <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                    {weights[field.key]}
-                  </span>
-                </div>
-                <Slider
-                  value={[weights[field.key]]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={(v) => handleWeightChange(field.key, v[0] ?? 0)}
-                  aria-label={`${field.label} weight`}
-                />
-              </div>
+              <WeightSliderRow
+                key={field.key}
+                field={field}
+                value={weights[field.key]}
+                onChange={handleWeightChange}
+              />
             ))}
             {totalWeight === 0 && (
               <p className="text-xs text-destructive">At least one weight must be greater than zero.</p>
@@ -213,7 +245,7 @@ function ConfigSheet({
                   min={0}
                   max={100}
                   value={thresholds.healthy}
-                  onChange={(e) => handleThresholdChange("healthy", e.target.value)}
+                  onChange={handleHealthyThresholdChange}
                 />
               </div>
               <div className="space-y-1.5">
@@ -223,7 +255,7 @@ function ConfigSheet({
                   min={0}
                   max={100}
                   value={thresholds.atRisk}
-                  onChange={(e) => handleThresholdChange("atRisk", e.target.value)}
+                  onChange={handleAtRiskThresholdChange}
                 />
               </div>
             </div>
@@ -239,7 +271,7 @@ function ConfigSheet({
         </div>
 
         <SheetFooter className="px-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+          <Button variant="outline" onClick={handleCancel} className="flex-1">
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!canSave} className="flex-1">
@@ -336,6 +368,12 @@ export default function AccountHealthPage() {
     });
   }
 
+  function handleOpenConfig() {
+    setConfigOpen(true);
+  }
+
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const recomputeButton = (
     <Button size="sm" onClick={handleRecompute} disabled={recompute.isPending}>
       <RefreshCw className={cn("h-4 w-4 mr-1.5", recompute.isPending && "animate-spin")} />
@@ -352,7 +390,7 @@ export default function AccountHealthPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setConfigOpen(true)}
+            onClick={handleOpenConfig}
             disabled={config.isLoading}
           >
             <SlidersHorizontal className="h-4 w-4 mr-1.5" />
@@ -368,7 +406,7 @@ export default function AccountHealthPage() {
         <ErrorState
           title="Couldn't load health scores"
           description="An error occurred while loading account health. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : items.length === 0 ? (
         <div className="flex flex-1 min-h-[60vh] items-center justify-center">

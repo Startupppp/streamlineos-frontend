@@ -43,7 +43,7 @@ export function VelocityChart({ sprints }: VelocityChartProps) {
   }
 
   const data = completedSprints.map(sprint => {
-    const tickets = sprint.tickets || [];
+    const tickets = sprint.tickets ?? [];
     const committed = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
     const completed = tickets
       .filter(t => t.status === "DONE")
@@ -52,9 +52,7 @@ export function VelocityChart({ sprints }: VelocityChartProps) {
   });
 
   const maxPoints = Math.max(...data.map(d => Math.max(d.committed, d.completed)), 1);
-  const avgVelocity = data.length > 0
-    ? Math.round(data.reduce((sum, d) => sum + d.completed, 0) / data.length)
-    : 0;
+  const avgVelocity = Math.round(data.reduce((sum, d) => sum + d.completed, 0) / data.length);
 
   return (
     <Card>

@@ -288,9 +288,13 @@ function BonusContent() {
   if (isError) {
     return (
       <PageWrapper title="Bonus Processing" subtitle="Manage and disburse employee bonuses">
-        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
-          <p className="text-sm text-muted-foreground">Failed to load bonuses.</p>
-          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load bonuses</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

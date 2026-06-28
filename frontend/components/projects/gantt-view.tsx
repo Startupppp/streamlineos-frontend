@@ -99,13 +99,17 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
   const displayMonth = displayDate.getMonth();
   const displayYear = displayDate.getFullYear();
 
+  const handleMonthChange = (v: string) => jumpToMonth(displayYear, parseInt(v, 10));
+  const handleYearChange = (v: string) => jumpToMonth(parseInt(v, 10), displayMonth);
+  const handleTicketClick = (id: number) => () => onTicketClick(id);
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-1.5">
           <Select
             value={String(displayMonth)}
-            onValueChange={(v) => jumpToMonth(displayYear, parseInt(v))}
+            onValueChange={handleMonthChange}
           >
             <SelectTrigger className="h-8 w-[120px] text-xs">
               <SelectValue />
@@ -118,7 +122,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
           </Select>
           <Select
             value={String(displayYear)}
-            onValueChange={(v) => jumpToMonth(parseInt(v), displayMonth)}
+            onValueChange={handleYearChange}
           >
             <SelectTrigger className="h-8 w-[80px] text-xs">
               <SelectValue />
@@ -203,7 +207,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
             const barWidth = Math.max(dayWidth - 4, (endDay - startDay + 1) * dayWidth - 4);
 
             return (
-              <g key={ticket.id} onClick={() => onTicketClick(ticket.id)} className="cursor-pointer">
+              <g key={ticket.id} onClick={handleTicketClick(ticket.id)} className="cursor-pointer">
                 <line x1={0} y1={y} x2={labelWidth + days.length * dayWidth} y2={y} className="stroke-border" strokeWidth={0.5} />
                 <text x={8} y={y + rowHeight / 2 + 4} className="fill-foreground" fontSize={labelWidth < 180 ? 9 : 11}>
                   {(ticket.sequenceId ?? `#${ticket.ticketNumber}`)} {ticket.title.slice(0, labelWidth < 180 ? 12 : 25)}{ticket.title.length > (labelWidth < 180 ? 12 : 25) ? "…" : ""}

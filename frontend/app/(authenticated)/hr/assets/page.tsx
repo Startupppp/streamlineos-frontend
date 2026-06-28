@@ -646,6 +646,12 @@ export default function HrAssetsPage() {
     }
   }, [items, employees]);
 
+  const handleStatusFilterChange = useCallback((v: string) => {
+    setStatusFilter(v === "all" ? undefined : v);
+  }, []);
+
+  function handleRetry() { void refetch(); }
+
   return (
     <PageWrapper
       title="Assets & Devices"
@@ -672,7 +678,7 @@ export default function HrAssetsPage() {
       filters={
         <Tabs
           value={statusFilter ?? "all"}
-          onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}
+          onValueChange={handleStatusFilterChange}
         >
           <TabsList className="h-8">
             <TabsTrigger value="all" className="text-xs px-3 h-7">
@@ -722,7 +728,14 @@ export default function HrAssetsPage() {
           />
         </div>
 
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        {isError ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card shadow-sm py-16 gap-4">
+            <p className="text-sm font-semibold text-foreground">Failed to load assets</p>
+            <p className="text-xs text-muted-foreground">Something went wrong.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <ScrollArea className="w-full" type="auto">
             <div className="min-w-[900px]">
               <Table>
@@ -918,7 +931,8 @@ export default function HrAssetsPage() {
               </Table>
             </div>
           </ScrollArea>
-        </div>
+          </div>
+        )}
       </div>
 
       <HrSheet

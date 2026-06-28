@@ -105,6 +105,189 @@ function getStageConfig(status: CandidateStatus | null) {
   return STAGE_CONFIG.find((s) => s.value === status) ?? STAGE_CONFIG[0];
 }
 
+function StagePillButton({
+  stage,
+  count,
+  isActive,
+  onFilter,
+}: {
+  stage: (typeof STAGE_CONFIG)[number];
+  count: number;
+  isActive: boolean;
+  onFilter: (key: string, value: string) => void;
+}) {
+  function handleClick() { onFilter("status", stage.value); }
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5",
+        isActive ? stage.activePill + " shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80",
+      )}
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", isActive ? "bg-current opacity-70" : stage.dot)} />
+      {stage.label} · {count}
+    </button>
+  );
+}
+
+interface CandidateCardProps {
+  candidate: Candidate;
+  isSelected: boolean;
+  onEdit: (candidate: Candidate) => void;
+  onDelete: (candidate: Candidate) => void;
+  onToggleSelect: (id: number, checked: boolean) => void;
+  onStatusChange: (id: number, status: CandidateStatus) => void;
+}
+
+function CandidateCard({
+  candidate,
+  isSelected,
+  onEdit,
+  onDelete,
+  onToggleSelect,
+  onStatusChange,
+}: CandidateCardProps) {
+  const cfg = getStageConfig(candidate.status);
+
+  function handleStopPropagation(e: React.MouseEvent) { e.stopPropagation(); }
+  function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onToggleSelect(candidate.id, e.target.checked);
+  }
+  function handleEditClick() { onEdit(candidate); }
+  function handleDeleteClick() { onDelete(candidate); }
+  function handleStatusChange(v: string) { onStatusChange(candidate.id, v as CandidateStatus); }
+
+  return (
+    <div
+      className={cn(
+        "relative group rounded-2xl border bg-card border-l-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
+        cfg.accent,
+        isSelected
+          ? "border-primary/30 ring-2 ring-primary/20 shadow-sm"
+          : "border-border/70",
+      )}
+    >
+      <div className="absolute top-3 right-3 flex items-center gap-1 z-10" onClick={handleStopPropagation}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={handleCheckboxChange}
+          aria-label={`Select ${candidate.firstName} ${candidate.lastName}`}
+          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <MoreVertical className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={handleEditClick}>
+              <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={handleDeleteClick}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-5 pr-16">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
+            {getInitials(candidate.firstName, candidate.lastName)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm text-foreground truncate leading-tight">
+              {candidate.firstName} {candidate.lastName}
+            </h3>
+            {candidate.currentRole && (
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {candidate.currentRole}
+                {candidate.currentCompany && ` · ${candidate.currentCompany}`}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-1.5 mb-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Mail className="h-3 w-3 shrink-0" />
+            <span className="truncate">{candidate.email}</span>
+          </div>
+          {candidate.phone && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Phone className="h-3 w-3 shrink-0" />
+              <span>{candidate.phone}</span>
+            </div>
+          )}
+          {candidate.source && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Building2 className="h-3 w-3 shrink-0" />
+              <span className="font-medium text-foreground/80">{SOURCE_LABELS[candidate.source] ?? candidate.source}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", cfg.pill)}>
+            {cfg.label}
+          </span>
+          {candidate.rating !== null && candidate.rating !== undefined && (
+            <div className="flex items-center gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={cn(
+                    "h-3 w-3",
+                    i < candidate.rating!
+                      ? "text-amber-500 fill-amber-500"
+                      : "text-border fill-transparent",
+                  )}
+                />
+              ))}
+            </div>
+          )}
+          {candidate.createdAt && (
+            <div className="flex items-center gap-0.5 ml-auto text-[10px] text-muted-foreground">
+              <Clock className="h-2.5 w-2.5" />
+              {formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true })}
+            </div>
+          )}
+        </div>
+      </Link>
+
+      <div className="px-5 pb-4 flex items-center gap-2" onClick={handleStopPropagation}>
+        <AIScoreCandidateButton candidateId={candidate.id} compact />
+        <Select value={candidate.status ?? "NEW"} onValueChange={handleStatusChange}>
+          <SelectTrigger className="h-7 flex-1 text-xs bg-muted/40 border-border/50">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="w-[var(--radix-select-trigger-width)]">
+            {STAGE_CONFIG.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                <span className="flex items-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
+                  {s.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 function CandidateCardSkeleton() {
   return (
     <div className="rounded-2xl border border-border bg-card border-l-4 border-l-muted p-5 space-y-3">
@@ -250,6 +433,14 @@ export default function CandidatesPage() {
     if (!open) setDeletingCandidate(null);
   }, []);
 
+  function handleOpenBulkReject() { setBulkRejectOpen(true); }
+  function handleOpenCompare() { setCompareOpen(true); }
+  function handleClearSelection() { setSelectedIds(new Set()); }
+  function handleOpenAddSheet() { setSheetOpen(true); }
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) { setFilter("q", e.target.value || null); }
+  function handleClearStatusFilter() { setFilter("status", null); }
+  function handleCloseCompare() { setCompareOpen(false); }
+
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6 pb-10">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -273,15 +464,15 @@ export default function CandidatesPage() {
                 </div>
                 selected
               </div>
-              <Button size="sm" variant="destructive" className="h-8 gap-1.5 text-xs" onClick={() => setBulkRejectOpen(true)}>
+              <Button size="sm" variant="destructive" className="h-8 gap-1.5 text-xs" onClick={handleOpenBulkReject}>
                 <XCircle className="h-3.5 w-3.5" /> Reject
               </Button>
               {selectedIds.size >= 2 && selectedIds.size <= 4 && (
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => setCompareOpen(true)}>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={handleOpenCompare}>
                   <GitCompare className="h-3.5 w-3.5" /> Compare
                 </Button>
               )}
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedIds(new Set())}>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearSelection}>
                 Clear
               </Button>
             </>
@@ -300,7 +491,7 @@ export default function CandidatesPage() {
               <Upload className="h-3.5 w-3.5" /> Import
             </Link>
           </Button>
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenAddSheet}>
             <Plus className="h-3.5 w-3.5" /> Add Candidate
           </Button>
         </div>
@@ -312,39 +503,31 @@ export default function CandidatesPage() {
           <Input
             placeholder="Search candidates…"
             value={searchQuery}
-            onChange={(e) => setFilter("q", e.target.value || null)}
+            onChange={handleSearchChange}
             className="pl-9 h-9"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
-            onClick={() => setFilter("status", null)}
+            onClick={handleClearStatusFilter}
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer",
               !statusFilter
                 ? "bg-foreground text-background shadow-sm"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                : "bg-muted text-muted-foreground hover:bg-muted/80",
             )}
           >
             All · {candidates?.length ?? 0}
           </button>
-          {STAGE_CONFIG.map((s) => {
-            const cnt = stageCounts[s.value] ?? 0;
-            const active = statusFilter === s.value;
-            return (
-              <button
-                key={s.value}
-                onClick={() => setFilter("status", s.value)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5",
-                  active ? s.activePill + " shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", active ? "bg-current opacity-70" : s.dot)} />
-                {s.label} · {cnt}
-              </button>
-            );
-          })}
+          {STAGE_CONFIG.map((s) => (
+            <StagePillButton
+              key={s.value}
+              stage={s}
+              count={stageCounts[s.value] ?? 0}
+              isActive={statusFilter === s.value}
+              onFilter={setFilter}
+            />
+          ))}
         </div>
       </div>
 
@@ -368,155 +551,24 @@ export default function CandidatesPage() {
             </p>
           </div>
           {!searchQuery && (
-            <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+            <Button size="sm" className="gap-1.5" onClick={handleOpenAddSheet}>
               <Plus className="h-4 w-4" /> Add Candidate
             </Button>
           )}
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCandidates.map((candidate) => {
-            const cfg = getStageConfig(candidate.status);
-            const isSelected = selectedIds.has(candidate.id);
-            return (
-              <div
-                key={candidate.id}
-                className={cn(
-                  "relative group rounded-2xl border bg-card border-l-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5",
-                  cfg.accent,
-                  isSelected
-                    ? "border-primary/30 ring-2 ring-primary/20 shadow-sm"
-                    : "border-border/70"
-                )}
-              >
-                <div
-                  className="absolute top-3 right-3 flex items-center gap-1 z-10"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={(e) => handleToggleSelect(candidate.id, e.target.checked)}
-                    aria-label={`Select ${candidate.firstName} ${candidate.lastName}`}
-                    className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreVertical className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => openEditSheet(candidate)}>
-                        <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => openDeleteDialog(candidate)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-5 pr-16">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
-                      {getInitials(candidate.firstName, candidate.lastName)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground truncate leading-tight">
-                        {candidate.firstName} {candidate.lastName}
-                      </h3>
-                      {candidate.currentRole && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {candidate.currentRole}
-                          {candidate.currentCompany && ` · ${candidate.currentCompany}`}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 mb-3">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{candidate.email}</span>
-                    </div>
-                    {candidate.phone && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3 shrink-0" />
-                        <span>{candidate.phone}</span>
-                      </div>
-                    )}
-                    {candidate.source && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="font-medium text-foreground/80">{SOURCE_LABELS[candidate.source] ?? candidate.source}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", cfg.pill)}>
-                      {cfg.label}
-                    </span>
-                    {candidate.rating !== null && candidate.rating !== undefined && (
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              "h-3 w-3",
-                              i < candidate.rating!
-                                ? "text-amber-500 fill-amber-500"
-                                : "text-border fill-transparent"
-                            )}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    {candidate.createdAt && (
-                      <div className="flex items-center gap-0.5 ml-auto text-[10px] text-muted-foreground">
-                        <Clock className="h-2.5 w-2.5" />
-                        {formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true })}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-
-                <div
-                  className="px-5 pb-4 flex items-center gap-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <AIScoreCandidateButton candidateId={candidate.id} compact />
-                  <Select
-                    value={candidate.status ?? "NEW"}
-                    onValueChange={(v) => handleStatusChange(candidate.id, v as CandidateStatus)}
-                  >
-                    <SelectTrigger className="h-7 flex-1 text-xs bg-muted/40 border-border/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                      {STAGE_CONFIG.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>
-                          <span className="flex items-center gap-1.5">
-                            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
-                            {s.label}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            );
-          })}
+          {filteredCandidates.map((candidate) => (
+            <CandidateCard
+              key={candidate.id}
+              candidate={candidate}
+              isSelected={selectedIds.has(candidate.id)}
+              onEdit={openEditSheet}
+              onDelete={openDeleteDialog}
+              onToggleSelect={handleToggleSelect}
+              onStatusChange={handleStatusChange}
+            />
+          ))}
         </div>
       )}
 
@@ -532,7 +584,7 @@ export default function CandidatesPage() {
       {compareOpen && (
         <CandidateComparisonDialog
           candidates={filteredCandidates.filter((c) => selectedIds.has(c.id))}
-          onClose={() => setCompareOpen(false)}
+          onClose={handleCloseCompare}
         />
       )}
       <AddCandidateSheet open={sheetOpen} onOpenChange={setSheetOpen} />

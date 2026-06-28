@@ -123,11 +123,13 @@ export default function KnowledgeBaseSpaceMembersPage() {
   const members = membersQuery.data ?? [];
   const spaceHref = `/knowledge-base/spaces/${spaceId}`;
 
-  const handleOpenAdd = () => setAddOpen(true);
+  function handleOpenAdd() {
+    setAddOpen(true);
+  }
 
-  const handleRetry = () => {
-    membersQuery.refetch();
-  };
+  function handleRetry() {
+    void membersQuery.refetch();
+  }
 
   const handleRemove = (memberId: number) => {
     removeMember.mutate(memberId, {

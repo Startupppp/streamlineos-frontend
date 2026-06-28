@@ -104,6 +104,17 @@ function RolesContent() {
                   </div>
                 ))}
               </div>
+            ) : (roles ?? []).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
+                <Shield className="h-10 w-10 text-muted-foreground/40" />
+                <div>
+                  <p className="text-sm font-medium">No roles yet</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Create a role to manage permissions</p>
+                </div>
+                <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> New role
+                </Button>
+              </div>
             ) : (
               <ScrollArea className="max-h-[45vh] lg:max-h-none lg:h-full" type="auto">
                 <div className="divide-y divide-border/30">

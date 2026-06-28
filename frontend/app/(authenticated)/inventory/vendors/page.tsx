@@ -4,18 +4,41 @@ import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { useVendors, useCreateVendor } from "@/lib/api/hooks/inventory";
 import type { CreateVendorInput } from "@/types/inventory";
+
+const vendorSchema = z.object({
+  name: z.string().min(1, "Vendor name is required"),
+  code: z.string(),
+  email: z.string().refine(
+    (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
+    { message: "Invalid email address" },
+  ),
+  phone: z.string(),
+  address: z.string(),
+  gstin: z.string().max(15, "GSTIN must be at most 15 characters"),
+  leadTimeDays: z.string(),
+  paymentTermsDays: z.string(),
+  currency: z.string().min(1, "Currency is required").max(3),
+  notes: z.string(),
+});
+
+type VendorFormValues = z.infer<typeof vendorSchema>;
 
 function VendorFormSheet({
   open,
@@ -25,67 +48,50 @@ function VendorFormSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const createMutation = useCreateVendor();
-  const [name, setName] = useState<string>("");
-  const [code, setCode] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
-  const [gstin, setGstin] = useState<string>("");
-  const [leadTimeDays, setLeadTimeDays] = useState<string>("7");
-  const [paymentTermsDays, setPaymentTermsDays] = useState<string>("30");
-  const [currency, setCurrency] = useState<string>("INR");
-  const [notes, setNotes] = useState<string>("");
 
-  function resetForm(): void {
-    setName("");
-    setCode("");
-    setEmail("");
-    setPhone("");
-    setAddress("");
-    setGstin("");
-    setLeadTimeDays("7");
-    setPaymentTermsDays("30");
-    setCurrency("INR");
-    setNotes("");
+  const form = useForm<VendorFormValues>({
+    resolver: zodResolver(vendorSchema),
+    defaultValues: {
+      name: "",
+      code: "",
+      email: "",
+      phone: "",
+      address: "",
+      gstin: "",
+      leadTimeDays: "7",
+      paymentTermsDays: "30",
+      currency: "INR",
+      notes: "",
+    },
+  });
+
+  function handleClose(): void {
+    form.reset();
+    onOpenChange(false);
   }
 
   function handleOpenChange(nextOpen: boolean): void {
-    if (!nextOpen) resetForm();
+    if (!nextOpen) form.reset();
     onOpenChange(nextOpen);
   }
 
-  function handleNameChange(e: ChangeEvent<HTMLInputElement>): void { setName(e.target.value); }
-  function handleCodeChange(e: ChangeEvent<HTMLInputElement>): void { setCode(e.target.value); }
-  function handleEmailChange(e: ChangeEvent<HTMLInputElement>): void { setEmail(e.target.value); }
-  function handlePhoneChange(e: ChangeEvent<HTMLInputElement>): void { setPhone(e.target.value); }
-  function handleAddressChange(e: ChangeEvent<HTMLTextAreaElement>): void { setAddress(e.target.value); }
-  function handleGstinChange(e: ChangeEvent<HTMLInputElement>): void { setGstin(e.target.value.toUpperCase()); }
-  function handleLeadTimeDaysChange(e: ChangeEvent<HTMLInputElement>): void { setLeadTimeDays(e.target.value); }
-  function handlePaymentTermsDaysChange(e: ChangeEvent<HTMLInputElement>): void { setPaymentTermsDays(e.target.value); }
-  function handleCurrencyChange(e: ChangeEvent<HTMLInputElement>): void { setCurrency(e.target.value.toUpperCase()); }
-  function handleNotesChange(e: ChangeEvent<HTMLTextAreaElement>): void { setNotes(e.target.value); }
-
-  async function handleSubmit(): Promise<void> {
-    if (!name.trim()) {
-      toast.error("Vendor name is required");
-      return;
-    }
+  async function onSubmit(values: VendorFormValues): Promise<void> {
     const payload: CreateVendorInput = {
-      name: name.trim(),
-      code: code.trim() || undefined,
-      email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
-      address: address.trim() || undefined,
-      gstin: gstin.trim() || undefined,
-      leadTimeDays: Number(leadTimeDays) || 7,
-      paymentTermsDays: Number(paymentTermsDays) || 30,
-      currency: currency.trim() || "INR",
-      notes: notes.trim() || undefined,
+      name: values.name.trim(),
+      code: values.code.trim() || undefined,
+      email: values.email.trim() || undefined,
+      phone: values.phone.trim() || undefined,
+      address: values.address.trim() || undefined,
+      gstin: values.gstin.trim().toUpperCase() || undefined,
+      leadTimeDays: Number(values.leadTimeDays) || 7,
+      paymentTermsDays: Number(values.paymentTermsDays) || 30,
+      currency: values.currency.trim().toUpperCase() || "INR",
+      notes: values.notes.trim() || undefined,
     };
     try {
       await createMutation.mutateAsync(payload);
       toast.success(`Vendor "${payload.name}" created`);
-      handleOpenChange(false);
+      handleClose();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create vendor");
     }
@@ -99,73 +105,158 @@ function VendorFormSheet({
       description="Add a supplier for inventory purchase orders."
       footer={
         <>
-          <Button variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={handleClose}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={createMutation.isPending}>
+          <Button
+            type="submit"
+            form="create-vendor-form"
+            size="sm"
+            disabled={createMutation.isPending}
+          >
             {createMutation.isPending ? "Creating…" : "Create vendor"}
           </Button>
         </>
       }
     >
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Name *</label>
-          <Input value={name} onChange={handleNameChange} placeholder="Acme Supplies" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">Code</label>
-            <Input value={code} onChange={handleCodeChange} placeholder="Auto-generated" />
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">Currency</label>
-            <Input value={currency} onChange={handleCurrencyChange} maxLength={3} placeholder="INR" />
-          </div>
-        </div>
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Email</label>
-          <Input type="email" value={email} onChange={handleEmailChange} placeholder="orders@supplier.com" />
-        </div>
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Phone</label>
-          <Input value={phone} onChange={handlePhoneChange} placeholder="+91 98765 43210" />
-        </div>
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">GSTIN</label>
-          <Input value={gstin} onChange={handleGstinChange} placeholder="15-char GSTIN" maxLength={15} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">Lead time (days)</label>
-            <Input type="number" min="0" value={leadTimeDays} onChange={handleLeadTimeDaysChange} />
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">Payment terms (days)</label>
-            <Input type="number" min="0" value={paymentTermsDays} onChange={handlePaymentTermsDaysChange} />
-          </div>
-        </div>
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Address</label>
-          <textarea
-            value={address}
-            onChange={handleAddressChange}
-            rows={3}
-            placeholder="Street, city, state, PIN"
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+      <Form {...form}>
+        <form id="create-vendor-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Acme Supplies" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-        <div>
-          <label className="text-sm text-muted-foreground block mb-1">Notes</label>
-          <textarea
-            value={notes}
-            onChange={handleNotesChange}
-            rows={2}
-            placeholder="Any internal notes"
-            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Auto-generated" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <FormControl>
+                    <Input placeholder="INR" maxLength={3} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="orders@supplier.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="+91 98765 43210" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="gstin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>GSTIN</FormLabel>
+                <FormControl>
+                  <Input placeholder="15-char GSTIN" maxLength={15} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="leadTimeDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lead time (days)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="paymentTermsDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment terms (days)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} placeholder="Street, city, state, PIN" className="resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea rows={2} placeholder="Any internal notes" className="resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
     </AppSheet>
   );
 }
@@ -182,6 +273,10 @@ export default function VendorsListPage() {
 
   function handleNewVendor(): void {
     setSheetOpen(true);
+  }
+
+  function handleRetry(): void {
+    void query.refetch();
   }
 
   return (
@@ -206,7 +301,7 @@ export default function VendorsListPage() {
       </div>
 
       {query.isLoading && <LoadingState variant="table" rows={6} />}
-      {query.error && <ErrorState description={query.error.message} />}
+      {query.error && <ErrorState description={query.error.message} onRetry={handleRetry} />}
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState

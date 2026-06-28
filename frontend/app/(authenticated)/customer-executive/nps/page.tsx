@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Plus,
-  Gauge,
   Trash2,
   Link2,
   Check,
@@ -116,8 +115,10 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
     );
   }, [title, question, create, handleClose]);
 
+  const handleDialogOpenChange = useCallback((o: boolean) => { if (!o) handleClose(); }, [handleClose]);
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>New NPS Survey</DialogTitle>
@@ -152,6 +153,9 @@ function CreateSurveyDialog({ open, onClose }: { open: boolean; onClose: () => v
 function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: () => void }) {
   const { data, isLoading, isError, refetch } = useNpsSurvey(surveyId);
 
+  const handleSheetOpenChange = useCallback((o: boolean) => { if (!o) onClose(); }, [onClose]);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chartData = useMemo(() => {
     if (!data) return [];
     return (
@@ -164,7 +168,7 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
   }, [data]);
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
+    <Sheet open onOpenChange={handleSheetOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader className="px-0">
           <SheetTitle>{data?.survey.title ?? "Survey"}</SheetTitle>
@@ -174,7 +178,7 @@ function SurveyDetailSheet({ surveyId, onClose }: { surveyId: number; onClose: (
         {isLoading ? (
           <LoadingState variant="list" rows={5} />
         ) : isError || !data ? (
-          <ErrorState onRetry={() => refetch()} />
+          <ErrorState onRetry={handleRetry} />
         ) : (
           <div className="space-y-5 py-2">
             <div className="flex items-center gap-4">
@@ -269,11 +273,18 @@ function SurveyRow({
   isUpdating: boolean;
 }) {
   const cfg = STATUS_CONFIG[survey.status];
+
+  const handleView = useCallback(() => onView(survey), [onView, survey]);
+  const handleCopyLinkSurvey = useCallback(() => onCopyLink(survey), [onCopyLink, survey]);
+  const handleActivate = useCallback(() => onToggleStatus(survey, "active"), [onToggleStatus, survey]);
+  const handleCloseSurvey = useCallback(() => onToggleStatus(survey, "closed"), [onToggleStatus, survey]);
+  const handleDeleteSurvey = useCallback(() => onDelete(survey), [onDelete, survey]);
+
   return (
     <Card>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-3">
-          <button type="button" onClick={() => onView(survey)} className="min-w-0 flex-1 text-left">
+          <button type="button" onClick={handleView} className="min-w-0 flex-1 text-left">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm truncate">{survey.title}</p>
               <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
@@ -305,7 +316,7 @@ function SurveyRow({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7"
-                onClick={() => onCopyLink(survey)}
+                onClick={handleCopyLinkSurvey}
                 aria-label="Copy public link"
                 title="Copy public link"
               >

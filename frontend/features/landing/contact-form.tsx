@@ -48,6 +48,22 @@ const initialState: FormState = {
   message: "",
 };
 
+type ContactResult =
+  | { ok: true }
+  | { ok: false; error: string; fieldErrors?: Partial<Record<keyof FormState, string>> };
+
+async function submitContactForm(input: ContactInput): Promise<ContactResult> {
+  try {
+    await apiClient.post("/contact", input);
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Something went wrong. Please try again.",
+    };
+  }
+}
+
 export function ContactForm() {
   const [values, setValues] = useState<FormState>(initialState);
   const [fieldErrors, setFieldErrors] = useState<

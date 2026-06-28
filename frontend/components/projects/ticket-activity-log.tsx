@@ -40,7 +40,11 @@ const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
   label_changed: Tag,
 };
 
-function ActivityItem({ entry }: { entry: TicketActivityEntry }) {
+interface ActivityItemProps {
+  entry: TicketActivityEntry;
+}
+
+function ActivityItem({ entry }: ActivityItemProps) {
   const Icon = ACTION_ICONS[entry.action] ?? History;
   const actorName = entry.user?.name ?? "Someone";
   const timeAgo = entry.createdAt

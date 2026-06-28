@@ -136,6 +136,9 @@ function ChecklistTab() {
     if (e.key === "Enter") handleAdd();
   }, [handleAdd]);
 
+  const handleClientChange = useCallback((v: string) => setSelectedClientId(Number(v)), []);
+  const handleNewTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNewTitle(e.target.value), []);
+
   return (
     <div className="space-y-4">
       <Card>
@@ -143,7 +146,7 @@ function ChecklistTab() {
           <Label className="mb-2 block text-sm font-medium">Select Client</Label>
           <Select
             value={selectedClientId > 0 ? String(selectedClientId) : ""}
-            onValueChange={(v) => setSelectedClientId(Number(v))}
+            onValueChange={handleClientChange}
           >
             <SelectTrigger className="w-full max-w-sm">
               <SelectValue placeholder="Choose a client…" />
@@ -213,7 +216,7 @@ function ChecklistTab() {
                 <Input
                   placeholder="Add a checklist item…"
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
+                  onChange={handleNewTitleChange}
                   onKeyDown={handleKeyDown}
                   className="flex-1"
                 />
@@ -260,10 +263,17 @@ function TemplatesTab() {
     );
   }, [name, description, isDefault, createTemplate]);
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleCloseSheet = useCallback(() => setSheetOpen(false), []);
+  const handleSheetOpenChange = useCallback((v: boolean) => setSheetOpen(v), []);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+  const handleIsDefaultChange = useCallback((v: boolean) => setIsDefault(v), []);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-4 w-4 mr-1" />
           New Template
         </Button>
@@ -303,7 +313,7 @@ function TemplatesTab() {
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent>
           <SheetHeader>
             <SheetTitle>New Onboarding Template</SheetTitle>
@@ -315,7 +325,7 @@ function TemplatesTab() {
                 id="tpl-name"
                 placeholder="Template name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
               />
             </div>
             <div className="space-y-1.5">
@@ -324,7 +334,7 @@ function TemplatesTab() {
                 id="tpl-desc"
                 placeholder="Optional description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescChange}
                 rows={3}
               />
             </div>
@@ -332,13 +342,13 @@ function TemplatesTab() {
               <Switch
                 id="tpl-default"
                 checked={isDefault}
-                onCheckedChange={setIsDefault}
+                onCheckedChange={handleIsDefaultChange}
               />
               <Label htmlFor="tpl-default">Set as default template</Label>
             </div>
           </div>
           <SheetFooter>
-            <Button variant="outline" onClick={() => setSheetOpen(false)} className="flex-1">
+            <Button variant="outline" onClick={handleCloseSheet} className="flex-1">
               Cancel
             </Button>
             <Button

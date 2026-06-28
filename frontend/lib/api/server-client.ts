@@ -6,11 +6,11 @@ const BACKEND = process.env.NEXT_PUBLIC_API_URL;
 
 async function mintBackendToken(): Promise<string | null> {
   const session = await auth();
-  if (!session?.user?.id || !session.orgId) return null;
+  if (!session?.user?.id || (!session.orgId && !session.user.isPlatformAdmin)) return null;
   const secret = process.env.BACKEND_JWT_SECRET;
   if (!secret) return null;
   return new SignJWT({
-    orgId: session.orgId,
+    orgId: session.orgId ?? "",
     branchId: session.branchId ?? null,
     role: session.user.role,
     permissions: session.permissions ?? [],

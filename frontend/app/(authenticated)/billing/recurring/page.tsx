@@ -70,6 +70,10 @@ export default function RecurringInvoicesPage() {
     [recurring],
   );
 
+  function handleRetry() {
+    void query.refetch();
+  }
+
   const handleGenerate = useCallback(() => {
     runMutation.mutate(undefined, {
       onSuccess: (result) => {
@@ -106,7 +110,7 @@ export default function RecurringInvoicesPage() {
       {query.isLoading ? (
         <LoadingState variant="page" />
       ) : query.error ? (
-        <ErrorState description={query.error.message} onRetry={query.refetch} />
+        <ErrorState description={query.error.message} onRetry={handleRetry} />
       ) : recurring.length === 0 ? (
         <div className="flex-1 min-h-[60vh] flex">
           <EmptyState
