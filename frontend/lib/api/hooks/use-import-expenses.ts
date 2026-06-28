@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 interface ImportVariables {
   file: File;
   autoApprove: boolean;
-  categoryMapping?: Record<string, string>;
 }
 
 export interface ImportExpensesResult {
@@ -20,16 +19,13 @@ export interface ImportExpensesResult {
 async function importExpensesRequest({
   file,
   autoApprove,
-  categoryMapping,
 }: ImportVariables): Promise<ImportExpensesResult> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("autoApprove", String(autoApprove));
-  if (categoryMapping && Object.keys(categoryMapping).length > 0) {
-    formData.append("categoryMapping", JSON.stringify(categoryMapping));
-  }
-
-  const result = await apiClient.upload<ImportExpensesResult>("/expenses/import", formData);
+  const content = await file.text();
+  const result = await apiClient.post<ImportExpensesResult>("/hr/expenses/import", {
+    fileName: file.name,
+    content,
+    autoApprove,
+  });
   if (!result.success) {
     throw new Error(result.error ?? "Failed to import expenses");
   }

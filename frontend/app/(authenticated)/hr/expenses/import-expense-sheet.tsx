@@ -150,18 +150,11 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    const validTypes = [
-      "text/csv",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    const validExtension =
-      selectedFile.name.endsWith(".csv") ||
-      selectedFile.name.endsWith(".xlsx") ||
-      selectedFile.name.endsWith(".xls");
+    const validTypes = ["text/csv", "application/vnd.ms-excel"];
+    const validExtension = selectedFile.name.endsWith(".csv");
 
     if (!validTypes.includes(selectedFile.type) && !validExtension) {
-      toast.error("Please select a CSV or Excel (.xlsx) file");
+      toast.error("Please select a CSV file");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -173,11 +166,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
 
     setFile(selectedFile);
     setImportResult(null);
-    if (selectedFile.name.endsWith(".csv")) {
-      parseFile(selectedFile);
-    } else {
-      setParsedRows([]);
-    }
+    parseFile(selectedFile);
   }, [parseFile]);
 
   const handleDownloadTemplate = useCallback(async () => {
@@ -207,7 +196,6 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       const result = await importMutation.mutateAsync({
         file,
         autoApprove,
-        categoryMapping,
       });
       setImportResult({
         success: true,
@@ -232,7 +220,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       open={open}
       onOpenChange={handleSheetOpenChange}
       title="Import Expenses"
-      description="Upload a CSV file to bulk-import expenses."
+      description="Upload a CSV file to bulk-import expenses. Download the template below to get the correct column format."
       onSubmit={importResult ? handleCancel : handleImport}
       submitLabel={
         importResult
@@ -285,7 +273,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-blue-500/50 hover:bg-blue-500/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
-                  <p className="text-xs text-muted-foreground mt-1">CSV or Excel (.xlsx, .xls) — Max 5MB</p>
+                  <p className="text-xs text-muted-foreground mt-1">CSV — Max 5MB</p>
                 </div>
               </div>
             ) : (
@@ -307,7 +295,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".csv,.xlsx,.xls"
+              accept=".csv"
               onChange={handleFileChange}
               aria-label="Upload expense file"
             />

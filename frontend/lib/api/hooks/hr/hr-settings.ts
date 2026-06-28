@@ -382,7 +382,7 @@ export function useUpdateNotificationPreferences() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: ChangePasswordInput) =>
-      apiClient.patch<{ success: boolean }>("/hr/change-password", data),
+      apiClient.patch<{ success: boolean }>("/me/change-password", data),
   });
 }
 

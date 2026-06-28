@@ -60,6 +60,28 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   return res.json() as Promise<T>;
 }
 
+async function uploadRequest<T>(path: string, body: FormData): Promise<T> {
+  const token = await mintBackendToken();
+  if (!token) throw new Error("Unauthorized: no backend session");
+  const res = await fetch(buildUrl(path), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.error === "string") message = data.error;
+    } catch {
+    }
+    throw new Error(message);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
 async function publicRequest<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
   const res = await fetch(buildUrl(path, params), {
     method,
@@ -86,6 +108,7 @@ export const serverApiClient = {
   patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   delete: <T>(path: string, body?: unknown) => request<T>("DELETE", path, body),
+  upload: <T>(path: string, body: FormData) => uploadRequest<T>(path, body),
 };
 
 export const serverPublicFetch = {
