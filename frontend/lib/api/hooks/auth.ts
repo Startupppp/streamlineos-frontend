@@ -56,7 +56,7 @@ export interface LoginHistoryPage {
 export function useAuthAnalytics() {
   return useQuery({
     queryKey: queryKeys.auth.auditAnalytics(),
-    queryFn: () => apiClient.get<AuthAnalytics>("/auth/audit/analytics"),
+    queryFn: () => apiClient.get<AuthAnalytics>("/me/auth-analytics"),
     staleTime: 60_000,
   });
 }
@@ -64,7 +64,7 @@ export function useAuthAnalytics() {
 export function useSessions() {
   return useQuery({
     queryKey: queryKeys.auth.sessions(),
-    queryFn: () => apiClient.get<SessionData[]>("/auth/sessions"),
+    queryFn: () => apiClient.get<SessionData[]>("/hr/sessions"),
     staleTime: 30_000,
   });
 }
@@ -73,7 +73,7 @@ export function useRevokeSession() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (sessionId: string) =>
-      apiClient.delete<{ message: string }>(`/auth/sessions/${sessionId}`),
+      apiClient.delete<{ message: string }>(`/hr/sessions/${sessionId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.sessions() }),
   });
 }
@@ -81,7 +81,7 @@ export function useRevokeSession() {
 export function useRevokeAllSessions() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => apiClient.delete<{ message: string }>("/auth/sessions"),
+    mutationFn: () => apiClient.delete<{ message: string }>("/hr/sessions"),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.sessions() }),
   });
 }
@@ -89,7 +89,7 @@ export function useRevokeAllSessions() {
 export function useDevices() {
   return useQuery({
     queryKey: queryKeys.auth.devices(),
-    queryFn: () => apiClient.get<DeviceData[]>("/auth/devices"),
+    queryFn: () => apiClient.get<DeviceData[]>("/me/devices"),
     staleTime: 60_000,
   });
 }
@@ -98,7 +98,7 @@ export function useTrustDevice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (deviceId: string) =>
-      apiClient.post<{ message: string }>(`/auth/devices/${deviceId}/trust`, {}),
+      apiClient.post<{ message: string }>(`/me/devices/${deviceId}/trust`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),
   });
 }
@@ -107,7 +107,7 @@ export function useRemoveDevice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (deviceId: string) =>
-      apiClient.delete<{ message: string }>(`/auth/devices/${deviceId}`),
+      apiClient.delete<{ message: string }>(`/me/devices/${deviceId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.auth.devices() }),
   });
 }
@@ -116,7 +116,7 @@ export function useLoginHistory(params?: { page?: number; success?: boolean }) {
   return useQuery({
     queryKey: queryKeys.auth.loginHistory(params as Record<string, unknown>),
     queryFn: () =>
-      apiClient.get<LoginHistoryPage>("/auth/login-history", {
+      apiClient.get<LoginHistoryPage>("/me/login-history", {
         page: params?.page ?? 1,
         limit: 20,
         ...(params?.success !== undefined && { success: String(params.success) }),
@@ -128,6 +128,6 @@ export function useLoginHistory(params?: { page?: number; success?: boolean }) {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>
-      apiClient.post<{ message: string }>("/auth/change-password", data),
+      apiClient.patch<{ message: string }>("/me/change-password", data),
   });
 }

@@ -27,7 +27,7 @@ export type ContactResult =
       fieldErrors?: Partial<Record<keyof ContactInput, string>>;
     };
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:1500";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
 
 export async function submitContactForm(raw: unknown): Promise<ContactResult> {
   const parsed = contactSchema.safeParse(raw);

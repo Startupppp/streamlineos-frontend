@@ -73,7 +73,7 @@ export default function SignupPage() {
   const handleSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/auth/signup", { ...data, plan: TIER_TO_API_PLAN[selectedTier] });
+      await apiClient.post("/auth/register", { ...data, plan: TIER_TO_API_PLAN[selectedTier] });
       toast.success("Account created! Signing you in…");
 
       const result = await signIn("credentials", {

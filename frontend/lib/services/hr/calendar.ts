@@ -23,19 +23,6 @@ interface CalendarEventPayload {
   conferenceLink?: string;
 }
 
-export async function getConnectedCalendars(_userId: string) {
-  return serverApiClient.get<
-    {
-      id: number;
-      provider: CalendarProvider;
-      providerEmail: string | null;
-      isPrimary: boolean;
-      expiresAt: string | null;
-      updatedAt: string;
-    }[]
-  >("/calendar/connections");
-}
-
 export async function upsertCalendarConnection(params: {
   userId: string;
   provider: CalendarProvider;
@@ -49,30 +36,6 @@ export async function upsertCalendarConnection(params: {
     expiresIn: params.tokens.expires_in,
     providerEmail: params.email,
   });
-}
-
-export async function disconnectCalendarConnection(
-  _userId: string,
-  connectionId: number,
-): Promise<boolean> {
-  try {
-    await serverApiClient.delete(`/calendar/connections/${connectionId}`);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function setPrimaryCalendar(
-  _userId: string,
-  connectionId: number,
-): Promise<boolean> {
-  try {
-    await serverApiClient.patch(`/calendar/connections/${connectionId}/primary`, {});
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export async function getFreeBusy(

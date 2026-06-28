@@ -1,6 +1,8 @@
+"use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { invalidateCurrentUserSession } from "@/server/actions/invalidate-session";
 
 export function useMfaStatus() {
   return useQuery({
@@ -27,7 +29,10 @@ export function useMfaVerify() {
   return useMutation({
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.mfa.all }),
+    onSuccess: async () => {
+      await invalidateCurrentUserSession();
+      qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+    },
   });
 }
 
@@ -36,7 +41,10 @@ export function useMfaDisable() {
   return useMutation({
     mutationFn: (token: string) =>
       apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.mfa.all }),
+    onSuccess: async () => {
+      await invalidateCurrentUserSession();
+      qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
+    },
   });
 }
 

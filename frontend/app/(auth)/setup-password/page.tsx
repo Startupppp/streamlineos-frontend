@@ -53,7 +53,7 @@ function SetupPasswordContent() {
 
   const { data: tokenInfo, isLoading: isValidating, error: tokenError } = useQuery({
     queryKey: ["setup-password", token],
-    queryFn: () => apiClient.get<{ email: string; name: string }>("/auth/validate-setup-token", { token }),
+    queryFn: () => apiClient.get<{ email: string; name: string }>("/organization/setup-token/validate", { token }),
     enabled: !!token,
     retry: false,
   });

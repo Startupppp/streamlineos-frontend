@@ -139,6 +139,8 @@ const MIGRATED_PREFIXES = [
   "/api-tokens",
   "/support",
   "/public",
+  "/access",
+  "/auth",
 ] as const;
 
 function isMigrated(path: string): boolean {

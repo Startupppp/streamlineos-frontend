@@ -35,7 +35,7 @@ export function useAcceptInvitation() {
       firstName?: string;
       lastName?: string;
     }) =>
-      apiClient.post<{ success: boolean }>("/auth/accept-invitation", variables),
+      apiClient.post<{ success: boolean }>("/organization/invitations/accept", variables),
   });
 }
 

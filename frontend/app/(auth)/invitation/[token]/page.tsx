@@ -52,7 +52,7 @@ export default function InvitationPage() {
 
   const { data: invitation, error: invitationError } = useQuery({
     queryKey: ["invitation", token],
-    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string }>("/auth/invitation", { token }),
+    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string }>("/organization/invitations/validate", { token }),
     enabled: !!token,
     retry: false,
   });

@@ -25,8 +25,3 @@ export function useCan(permissionKey: PermissionKey): boolean {
   return data.permissions.includes(permissionKey);
 }
 
-export function useModuleEnabled(moduleKey: string): boolean {
-  const { data } = useAccess();
-  if (!data) return false;
-  return data.modules[moduleKey] === true;
-}
