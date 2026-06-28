@@ -109,10 +109,10 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
 
 export default function TargetsPage() {
   const { data: session } = useSession();
-  const { data: myTargets, isLoading: targetsLoading } = useMyTargets();
-  const { data: leaderboard, isLoading: leaderboardLoading } = useTargetLeaderboard();
+  const { data: myTargets, isLoading: targetsLoading, isError: targetsError, refetch: refetchTargets } = useMyTargets();
+  const { data: leaderboard, isLoading: leaderboardLoading, isError: leaderboardError, refetch: refetchLeaderboard } = useTargetLeaderboard();
   const { data: rawEmployees } = useHrEmployees();
-  const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
+  const employees: Employee[] = Array.isArray(rawEmployees) ? rawEmployees : (rawEmployees as { data: Employee[] } | undefined)?.data ?? [];
   const createTarget = useCreateTarget();
 
   const userRole = session?.user?.role ?? "";
@@ -120,7 +120,7 @@ export default function TargetsPage() {
 
   const directReports = useMemo(() => {
     if (!employees || !session?.user?.id) return [];
-    return employees.filter((e: { reportingTo?: string | null }) => e.reportingTo === session.user.id);
+    return employees.filter((e) => e.reportingTo === session.user.id);
   }, [employees, session?.user?.id]);
 
   const canSetTargets = isAdmin || directReports.length > 0;
@@ -151,41 +151,62 @@ export default function TargetsPage() {
     }
   }, [createTarget]);
 
+  const handleRetry = useCallback(() => {
+    void refetchTargets();
+    void refetchLeaderboard();
+  }, [refetchTargets, refetchLeaderboard]);
+
   if (targetsLoading || leaderboardLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <Skeleton className="h-8 w-52" />
-            <Skeleton className="h-4 w-72" />
-          </div>
-          <Skeleton className="h-10 w-28" />
-        </div>
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-28" />
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4 space-y-3">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-7 w-1/2" />
-                  <Skeleton className="h-2 w-full rounded-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-36" />
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+      <PageWrapper
+        title="Targets & Leaderboard"
+        subtitle="Track daily targets and team performance rankings"
+      >
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-28" />
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4 space-y-3">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-7 w-1/2" />
+                    <Skeleton className="h-2 w-full rounded-full" />
+                  </CardContent>
+                </Card>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-36" />
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </PageWrapper>
+    );
+  }
+
+  if (targetsError || leaderboardError) {
+    return (
+      <PageWrapper
+        title="Targets & Leaderboard"
+        subtitle="Track daily targets and team performance rankings"
+      >
+        <div className="flex flex-1 flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive/60" />
+          <div>
+            <p className="font-medium text-foreground">Failed to load targets</p>
+            <p className="text-sm text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" onClick={handleRetry}>Retry</Button>
+        </div>
+      </PageWrapper>
     );
   }
 

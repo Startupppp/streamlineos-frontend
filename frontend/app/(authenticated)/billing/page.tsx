@@ -123,7 +123,14 @@ export default function BillingPage() {
               ) : (
                 (["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
                   const badge = STATUS_BADGE[s];
-                  const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
+                  const statusCountMap: Record<InvoiceStatus, number> = {
+                    DRAFT: stats?.draft ?? 0,
+                    SENT: stats?.sent ?? 0,
+                    PAID: stats?.paid ?? 0,
+                    OVERDUE: stats?.overdue ?? 0,
+                    CANCELLED: stats?.cancelled ?? 0,
+                  };
+                  const count = statusCountMap[s];
                   return (
                     <Link key={s} href={`/billing/invoices?status=${s}`}>
                       <div className="rounded-lg border border-border bg-card px-3.5 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer">
