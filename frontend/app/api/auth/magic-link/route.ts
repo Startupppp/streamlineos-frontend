@@ -3,7 +3,7 @@ import { z } from "zod";
 
 const schema = z.object({ email: z.string().email() });
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:1500";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
-  const res = await fetch(`${BACKEND_URL}/api/auth/magic-link`, {
+  const res = await fetch(`${BACKEND_URL}/auth/magic-link`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: parsed.data.email }),

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { signIn } from "next-auth/react";
+import { apiClient } from "@/lib/api-client";
 
 type ConnectedAccount = {
   provider: string;
@@ -46,28 +47,15 @@ const SUPPORTED_PROVIDERS = [
 function useConnectedAccounts() {
   return useQuery<ConnectedAccount[]>({
     queryKey: ["connected-accounts"],
-    queryFn: async () => {
-      const res = await fetch("/api/auth/connected-accounts");
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json();
-    },
+    queryFn: () => apiClient.get<ConnectedAccount[]>("/me/connected-accounts"),
   });
 }
 
 function useUnlinkAccount() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (provider: string) => {
-      const res = await fetch("/api/auth/connected-accounts", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(data.error ?? "Failed to unlink");
-      }
-    },
+    mutationFn: (provider: string) =>
+      apiClient.delete<{ success: boolean }>("/me/connected-accounts", { provider }),
     onSuccess: () => {
       toast.success("Account unlinked");
       queryClient.invalidateQueries({ queryKey: ["connected-accounts"] });

@@ -26,7 +26,6 @@ import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RolesPage() {
   return (
