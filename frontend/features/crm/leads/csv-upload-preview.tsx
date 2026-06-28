@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { FileText, AlertCircle, CheckCircle2, ChevronLeft } from "lucide-react";
 import {
   Table,
@@ -65,6 +66,11 @@ export function CsvUploadPreview({
   onImport,
   onClose,
 }: CsvUploadPreviewProps) {
+  const handleAutoDistributeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => onAutoDistributeChange(e.target.checked),
+    [onAutoDistributeChange],
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -202,7 +208,7 @@ export function CsvUploadPreview({
             <input
               type="checkbox"
               checked={autoDistribute}
-              onChange={(e) => onAutoDistributeChange(e.target.checked)}
+              onChange={handleAutoDistributeChange}
               className="h-4 w-4 rounded border-input accent-gold"
             />
             <div>

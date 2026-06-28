@@ -15,24 +15,6 @@ import { toast } from "sonner";
 import { CsvFieldMapper } from "./csv-field-mapper";
 import { CsvUploadPreview } from "./csv-upload-preview";
 
-interface ParsedLead {
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  source?: string;
-  notes?: string;
-  city?: string;
-  designation?: string;
-  referredBy?: string;
-  potentialValue?: string;
-  investmentInterest?: string;
-  whatsappNumber?: string;
-  website?: string;
-  priority?: string;
-  tags?: string;
-}
-
 const VALID_SOURCES = [
   "referral",
   "campaign",
@@ -41,9 +23,39 @@ const VALID_SOURCES = [
   "social_media",
   "walk_in",
   "other",
-];
-const VALID_PRIORITIES = ["HOT", "WARM", "COLD"];
+] as const;
+type ValidSource = typeof VALID_SOURCES[number];
+
+const VALID_PRIORITIES = ["HOT", "WARM", "COLD"] as const;
+type ValidPriority = typeof VALID_PRIORITIES[number];
+
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
+
+function isValidSource(s: string): s is ValidSource {
+  return (VALID_SOURCES as readonly string[]).includes(s);
+}
+
+function isValidPriority(s: string): s is ValidPriority {
+  return (VALID_PRIORITIES as readonly string[]).includes(s);
+}
+
+interface ParsedLead {
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  source?: ValidSource;
+  notes?: string;
+  city?: string;
+  designation?: string;
+  referredBy?: string;
+  potentialValue?: string;
+  investmentInterest?: string;
+  whatsappNumber?: string;
+  website?: string;
+  priority?: ValidPriority;
+  tags?: string;
+}
 
 const HEADER_ALIASES: Record<string, string[]> = {
   name: ["name", "lead name", "full name", "contact name", "lead"],
@@ -150,16 +162,15 @@ function applyMapping(
       return;
     }
 
-    const source = get(row, "source")?.toLowerCase();
-    const priority = get(row, "priority")?.toUpperCase();
+    const rawSource = get(row, "source")?.toLowerCase();
+    const rawPriority = get(row, "priority")?.toUpperCase();
 
     leads.push({
       name,
       email: get(row, "email"),
       phone: get(row, "phone"),
       company: get(row, "company"),
-      source:
-        source && VALID_SOURCES.includes(source) ? source : undefined,
+      source: rawSource && isValidSource(rawSource) ? rawSource : undefined,
       notes: get(row, "notes"),
       city: get(row, "city"),
       designation: get(row, "designation"),
@@ -168,8 +179,7 @@ function applyMapping(
       investmentInterest: get(row, "investmentInterest"),
       whatsappNumber: get(row, "whatsappNumber"),
       website: get(row, "website"),
-      priority:
-        priority && VALID_PRIORITIES.includes(priority) ? priority : undefined,
+      priority: rawPriority && isValidPriority(rawPriority) ? rawPriority : undefined,
       tags: get(row, "tags"),
     });
   });
@@ -253,7 +263,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       const file = e.dataTransfer.files[0];
       if (file) {
         const ext = getFileExtension(file.name);
-        if (ACCEPTED_EXTENSIONS.includes(ext)) handleFile(file);
+        if (ACCEPTED_EXTENSIONS.includes(ext)) void handleFile(file);
         else toast.error("Please drop a .csv, .xlsx, or .xls file");
       }
     },
@@ -281,15 +291,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           email: l.email || "",
           phone: l.phone,
           company: l.company,
-          source: l.source as
-            | "referral"
-            | "campaign"
-            | "cold_call"
-            | "website"
-            | "social_media"
-            | "walk_in"
-            | "other"
-            | undefined,
+          source: l.source,
           notes: l.notes,
           city: l.city,
           designation: l.designation,
@@ -298,7 +300,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           investmentInterest: l.investmentInterest,
           whatsappNumber: l.whatsappNumber,
           website: l.website,
-          priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
+          priority: l.priority,
           tags: l.tags ? l.tags.split(",").map((t) => t.trim()) : undefined,
         })),
         autoDistribute,
@@ -348,24 +350,26 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setAutoDistribute(true);
   }, []);
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  };
+    if (file) void handleFile(file);
+  }, [handleFile]);
 
-  const handleBrowseClick = () => {
+  const handleBrowseClick = useCallback(() => {
     document.getElementById("lead-file-upload")?.click();
-  };
+  }, []);
 
-  const handleDialogClose = (v: boolean) => {
+  const handleDialogClose = useCallback((v: boolean) => {
     setOpen(v);
     if (!v) reset();
-  };
+  }, [reset]);
 
-  const handleCloseAfterImport = () => {
+  const handleCloseAfterImport = useCallback(() => {
     setOpen(false);
     reset();
-  };
+  }, [reset]);
+
+  const handleEditMapping = useCallback(() => setStep("mapping"), []);
 
   const stepLabel =
     step === "upload"
@@ -477,7 +481,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             autoDistribute={autoDistribute}
             isImporting={bulkImport.isPending}
             onAutoDistributeChange={setAutoDistribute}
-            onEditMapping={() => setStep("mapping")}
+            onEditMapping={handleEditMapping}
             onImport={handleImport}
             onClose={handleCloseAfterImport}
           />

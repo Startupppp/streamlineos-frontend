@@ -106,7 +106,7 @@ export default function DealDetailPage({
           name: data.name,
           value: data.value || "0",
           stage: data.stage,
-          probability: data.probability,
+          probability: data.probability ? Number(data.probability) : undefined,
           contactPerson: data.contactPerson || undefined,
           contactEmail: data.contactEmail || undefined,
           contactPhone: data.contactPhone || undefined,
