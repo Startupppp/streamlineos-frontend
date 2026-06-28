@@ -174,7 +174,7 @@ export const useUpdateOrgSecuritySettings = () => {
   return useMutation<
     { success: boolean },
     Error,
-    { mfaEnforced?: boolean; passwordExpiryDays?: number | null; allowedEmailDomains?: string[] }
+    { mfaEnforced?: boolean; passwordExpiryDays?: number | null; allowedEmailDomains?: string[]; maxConcurrentSessions?: number | null }
   >({
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/security", data),

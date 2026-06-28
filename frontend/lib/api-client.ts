@@ -136,6 +136,7 @@ const MIGRATED_PREFIXES = [
   "/webhooks",
   "/feature-flags",
   "/org-hierarchy",
+  "/api-tokens",
   "/support",
   "/public",
 ] as const;

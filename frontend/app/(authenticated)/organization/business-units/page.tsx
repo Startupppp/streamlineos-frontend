@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useBusinessUnits,
@@ -160,35 +160,73 @@ export default function BusinessUnitsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBusinessUnit | null>(null);
   const [deleting, setDeleting] = useState<OrgBusinessUnit | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      { ...values, code: values.code.toUpperCase() },
-      {
-        onSuccess: () => {
-          toast.success("Business unit created");
-          setShowCreate(false);
+  const allUnits = units ?? [];
+  const active = allUnits.filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
+  const archived = allUnits.filter((u) => u.status === "ARCHIVED" && !u.deletedAt);
+  const displayed = showArchived ? archived : active;
+
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        { ...values, code: values.code.toUpperCase() },
+        {
+          onSuccess: () => {
+            toast.success("Business unit created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      { id: editing.id, ...values, code: values.code.toUpperCase() },
-      {
-        onSuccess: () => {
-          toast.success("Business unit updated");
-          setEditing(null);
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        { id: editing.id, ...values, code: values.code.toUpperCase() },
+        {
+          onSuccess: () => {
+            toast.success("Business unit updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [editing, update],
+  );
 
-  function handleDelete() {
+  const handleArchive = useCallback(
+    (u: OrgBusinessUnit) => {
+      update.mutate(
+        { id: u.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Business unit archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (u: OrgBusinessUnit) => {
+      update.mutate(
+        { id: u.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Business unit restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -197,25 +235,41 @@ export default function BusinessUnitsPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
 
-  const active = (units ?? []).filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Business Units"
       subtitle="Top-level organizational divisions within your company."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Business Unit
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Business Unit
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
         <TableSkeleton />
-      ) : active.length === 0 ? (
-        <EmptyState onAdd={() => setShowCreate(true)} />
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived business units</p>
+          </div>
+        ) : (
+          <EmptyState onAdd={handleOpenCreate} />
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -224,12 +278,12 @@ export default function BusinessUnitsPage() {
               <TableHead>Code</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((u) => (
-              <TableRow key={u.id}>
+            {displayed.map((u) => (
+              <TableRow key={u.id} className={u.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{u.name}</TableCell>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{u.code}</code>
@@ -240,7 +294,9 @@ export default function BusinessUnitsPage() {
                     className={
                       u.status === "ACTIVE"
                         ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : ""
+                        : u.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
                     }
                   >
                     {u.status}
@@ -251,20 +307,40 @@ export default function BusinessUnitsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditing(u)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleting(u)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {u.status === "ARCHIVED" ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRestore(u)}
+                          title="Restore"
+                        >
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleting(u)}
+                          title="Delete permanently"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(u)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleArchive(u)}
+                          title="Archive"
+                        >
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -305,7 +381,7 @@ export default function BusinessUnitsPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Business Unit"
-        description={`Are you sure you want to delete "${deleting?.name}"? This action cannot be undone.`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive

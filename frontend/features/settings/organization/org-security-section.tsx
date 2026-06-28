@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Shield, Clock, Globe, Network, X, Plus } from "lucide-react";
+import { Loader2, Shield, Clock, Globe, Network, X, Plus, Users } from "lucide-react";
 
 interface OrgSecuritySectionProps {
   mfaEnforced: boolean;
   passwordExpiryDays: string;
+  maxConcurrentSessions: string;
   allowedEmailDomains: string[];
   domainInput: string;
   domainInputRef: React.RefObject<HTMLInputElement | null>;
@@ -21,6 +22,7 @@ interface OrgSecuritySectionProps {
   isUpdatingOrg: boolean;
   onMfaChange: (checked: boolean) => void;
   onPasswordExpiryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onMaxConcurrentSessionsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDomainInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDomainInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onAddDomain: () => void;
@@ -36,6 +38,7 @@ interface OrgSecuritySectionProps {
 export function OrgSecuritySection({
   mfaEnforced,
   passwordExpiryDays,
+  maxConcurrentSessions,
   allowedEmailDomains,
   domainInput,
   domainInputRef,
@@ -45,6 +48,7 @@ export function OrgSecuritySection({
   isUpdatingOrg,
   onMfaChange,
   onPasswordExpiryChange,
+  onMaxConcurrentSessionsChange,
   onDomainInputChange,
   onDomainInputKeyDown,
   onAddDomain,
@@ -105,6 +109,31 @@ export function OrgSecuritySection({
               onChange={onPasswordExpiryChange}
               className="w-40"
               aria-label="Password expiry days"
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="max-sessions" className="text-sm font-medium">
+                Maximum concurrent sessions per user
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Leave empty to allow unlimited sessions. Older sessions are revoked when the limit is exceeded.
+            </p>
+            <Input
+              id="max-sessions"
+              type="number"
+              min={1}
+              max={100}
+              placeholder="e.g. 3"
+              value={maxConcurrentSessions}
+              onChange={onMaxConcurrentSessionsChange}
+              className="w-40"
+              aria-label="Maximum concurrent sessions"
             />
           </div>
 

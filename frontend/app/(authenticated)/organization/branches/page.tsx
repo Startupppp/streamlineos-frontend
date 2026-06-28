@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GitBranch, Plus, Pencil, Trash2 } from "lucide-react";
+import { GitBranch, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgBranches,
@@ -246,61 +246,97 @@ export default function OrgBranchesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgBranch | null>(null);
   const [deleting, setDeleting] = useState<OrgBranch | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const businessUnits = (busData ?? []).map((b) => ({ id: b.id, name: b.name }));
-  const active = (branches ?? []).filter((b) => b.status !== "ARCHIVED" && !b.deletedAt);
+  const allBranches = branches ?? [];
+  const active = allBranches.filter((b) => b.status !== "ARCHIVED" && !b.deletedAt);
+  const archived = allBranches.filter((b) => b.status === "ARCHIVED" && !b.deletedAt);
+  const displayed = showArchived ? archived : active;
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      {
-        name: values.name,
-        code: values.code.toUpperCase(),
-        businessUnitId: values.businessUnitId || undefined,
-        city: values.city || undefined,
-        state: values.state || undefined,
-        country: values.country || undefined,
-        address: values.address || undefined,
-        phone: values.phone || undefined,
-        email: values.email || undefined,
-        managerUserId: undefined,
-        postalCode: undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Branch created");
-          setShowCreate(false);
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        {
+          name: values.name,
+          code: values.code.toUpperCase(),
+          businessUnitId: values.businessUnitId || undefined,
+          city: values.city || undefined,
+          state: values.state || undefined,
+          country: values.country || undefined,
+          address: values.address || undefined,
+          phone: values.phone || undefined,
+          email: values.email || undefined,
+          managerUserId: undefined,
+          postalCode: undefined,
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
-
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      {
-        id: editing.id,
-        name: values.name,
-        code: values.code.toUpperCase(),
-        businessUnitId: values.businessUnitId || undefined,
-        city: values.city || undefined,
-        state: values.state || undefined,
-        country: values.country || undefined,
-        address: values.address || undefined,
-        phone: values.phone || undefined,
-        email: values.email || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Branch updated");
-          setEditing(null);
+        {
+          onSuccess: () => {
+            toast.success("Branch created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleDelete() {
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        {
+          id: editing.id,
+          name: values.name,
+          code: values.code.toUpperCase(),
+          businessUnitId: values.businessUnitId || undefined,
+          city: values.city || undefined,
+          state: values.state || undefined,
+          country: values.country || undefined,
+          address: values.address || undefined,
+          phone: values.phone || undefined,
+          email: values.email || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Branch updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [editing, update],
+  );
+
+  const handleArchive = useCallback(
+    (b: OrgBranch) => {
+      update.mutate(
+        { id: b.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Branch archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (b: OrgBranch) => {
+      update.mutate(
+        { id: b.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Branch restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -309,17 +345,28 @@ export default function OrgBranchesPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
+
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Branches"
       subtitle="Physical or regional office branches within your organization."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Branch
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Branch
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
@@ -328,15 +375,22 @@ export default function OrgBranchesPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : active.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <GitBranch className="h-10 w-10 opacity-30" />
-          <p className="text-sm">No branches yet</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Branch
-          </Button>
-        </div>
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived branches</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <GitBranch className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No branches yet</p>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Branch
+            </Button>
+          </div>
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -345,12 +399,12 @@ export default function OrgBranchesPage() {
               <TableHead>Code</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((b) => (
-              <TableRow key={b.id}>
+            {displayed.map((b) => (
+              <TableRow key={b.id} className={b.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{b.name}</TableCell>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{b.code}</code>
@@ -364,7 +418,9 @@ export default function OrgBranchesPage() {
                     className={
                       b.status === "ACTIVE"
                         ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : ""
+                        : b.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
                     }
                   >
                     {b.status}
@@ -372,12 +428,25 @@ export default function OrgBranchesPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(b)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(b)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {b.status === "ARCHIVED" ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleRestore(b)} title="Restore">
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleting(b)} title="Delete permanently">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(b)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleArchive(b)} title="Archive">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -425,7 +494,7 @@ export default function OrgBranchesPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Branch"
-        description={`Are you sure you want to delete "${deleting?.name}"?`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive
