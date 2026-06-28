@@ -1,13 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { useResourceAllocation } from "@/lib/api/hooks/projects";
+import { ErrorState } from "@/components/shared/error-state";
 
 const PROJECT_COLORS = [
   "bg-blue-500",
@@ -25,7 +28,11 @@ function getInitials(name: string | null, email: string) {
 }
 
 export default function ResourceAllocationPage() {
-  const { data: entries, isLoading } = useResourceAllocation();
+  const { data: entries, isLoading, isError, refetch } = useResourceAllocation();
+
+  function handleRetry() {
+    refetch();
+  }
 
   const maxTickets = entries ? Math.max(...entries.map((e) => e.totalOpen), 1) : 1;
 
@@ -40,10 +47,15 @@ export default function ResourceAllocationPage() {
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState onRetry={handleRetry} />
       ) : !entries || entries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] text-center space-y-3">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] text-center space-y-4">
           <Users className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No open tickets assigned yet.</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/projects">View Projects</Link>
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">

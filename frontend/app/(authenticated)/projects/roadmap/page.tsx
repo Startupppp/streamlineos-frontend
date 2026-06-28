@@ -142,6 +142,22 @@ function RoadmapItemSheet({
   const update = useUpdateRoadmapItem();
   const isPending = create.isPending || update.isPending;
 
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value);
+  }
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setDescription(e.target.value);
+  }
+  function handleStatusChange(v: string) {
+    setStatus(v as RoadmapStatus);
+  }
+  function handleTargetQuarterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTargetQuarter(e.target.value);
+  }
+  function handleCategoryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCategory(e.target.value);
+  }
+
   function handleSave() {
     if (!title.trim()) return;
     const payload = {
@@ -194,7 +210,7 @@ function RoadmapItemSheet({
             <Input
               placeholder="e.g. Dark mode support"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1">
@@ -202,13 +218,13 @@ function RoadmapItemSheet({
             <Textarea
               rows={4}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as RoadmapStatus)}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -226,7 +242,7 @@ function RoadmapItemSheet({
               <Input
                 placeholder="e.g. Q3 2026"
                 value={targetQuarter}
-                onChange={(e) => setTargetQuarter(e.target.value)}
+                onChange={handleTargetQuarterChange}
               />
             </div>
           </div>
@@ -235,7 +251,7 @@ function RoadmapItemSheet({
             <Input
               placeholder="e.g. Integrations"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={handleCategoryChange}
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
@@ -265,23 +281,26 @@ function RoadmapItemCard({
   onDelete,
 }: {
   item: RoadmapItem;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (item: RoadmapItem) => void;
+  onDelete: (item: RoadmapItem) => void;
 }) {
+  function handleEdit() { onEdit(item); }
+  function handleDelete() { onDelete(item); }
+
   return (
     <Card>
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium leading-snug min-w-0">{item.title}</p>
           <div className="flex items-center gap-1 shrink-0">
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEdit}>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleEdit}>
               <Pencil className="h-3 w-3" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               className="h-6 w-6 text-destructive hover:text-destructive"
-              onClick={onDelete}
+              onClick={handleDelete}
             >
               <Trash2 className="h-3 w-3" />
             </Button>
@@ -330,19 +349,28 @@ function RoadmapTab({ search }: { search: string }) {
     return map;
   }, [data]);
 
+  function handleRetry() { refetch(); }
+  function handleOpenSheet() { setSheetOpen(true); }
+  function handleCloseSheet() { setSheetOpen(false); }
+  function handleCloseEdit() { setEditTarget(null); }
+  function handleClearDeleteTarget() { setDeleteTarget(null); }
+  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
+  function handleEditItem(item: RoadmapItem) { setEditTarget(item); }
+  function handleDeleteItem(item: RoadmapItem) { setDeleteTarget(item); }
+
   function handleDelete() {
     if (!deleteTarget) return;
     deleteItem.mutate(deleteTarget.id, {
       onSuccess: () => {
         toast.success("Roadmap item deleted");
-        setDeleteTarget(null);
+        handleClearDeleteTarget();
       },
       onError: () => toast.error("Failed to delete item"),
     });
   }
 
   if (isLoading) return <LoadingState variant="cards" rows={6} />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (isError) return <ErrorState onRetry={handleRetry} />;
 
   const total = data?.length ?? 0;
 
@@ -350,7 +378,7 @@ function RoadmapTab({ search }: { search: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{total} items</p>
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-4 w-4 mr-1" /> New Item
         </Button>
       </div>
@@ -360,7 +388,7 @@ function RoadmapTab({ search }: { search: string }) {
           illustration={<EmptyProjectsIllustration />}
           title="No roadmap items yet"
           description="Plan what's coming and share it publicly with your users."
-          action={{ label: "Add roadmap item", onClick: () => setSheetOpen(true) }}
+          action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
           className="flex-1"
         />
       ) : (
@@ -385,8 +413,8 @@ function RoadmapTab({ search }: { search: string }) {
                     <RoadmapItemCard
                       key={item.id}
                       item={item}
-                      onEdit={() => setEditTarget(item)}
-                      onDelete={() => setDeleteTarget(item)}
+                      onEdit={handleEditItem}
+                      onDelete={handleDeleteItem}
                     />
                   ))
                 )}
@@ -396,12 +424,12 @@ function RoadmapTab({ search }: { search: string }) {
         </div>
       )}
 
-      {sheetOpen && <RoadmapItemSheet onClose={() => setSheetOpen(false)} />}
+      {sheetOpen && <RoadmapItemSheet onClose={handleCloseSheet} />}
       {editTarget && (
-        <RoadmapItemSheet item={editTarget} onClose={() => setEditTarget(null)} />
+        <RoadmapItemSheet item={editTarget} onClose={handleCloseEdit} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete roadmap item?</AlertDialogTitle>
@@ -431,7 +459,7 @@ function FeedbackRow({
 }: {
   post: FeedbackPost;
   roadmapItems: RoadmapItem[];
-  onDelete: () => void;
+  onDelete: (post: FeedbackPost) => void;
 }) {
   const update = useUpdateFeedbackPost();
 
@@ -454,6 +482,8 @@ function FeedbackRow({
       },
     );
   }
+
+  function handleDeleteClick() { onDelete(post); }
 
   return (
     <Card>
@@ -482,7 +512,7 @@ function FeedbackRow({
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6 text-destructive hover:text-destructive shrink-0"
-                onClick={onDelete}
+                onClick={handleDeleteClick}
               >
                 <Trash2 className="h-3 w-3" />
               </Button>
@@ -535,6 +565,10 @@ function FeedbackTab({ search }: { search: string }) {
   const deletePost = useDeleteFeedbackPost();
   const [deleteTarget, setDeleteTarget] = useState<FeedbackPost | null>(null);
 
+  function handleRetry() { refetch(); }
+  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
+  function handleSetDeleteTarget(post: FeedbackPost) { setDeleteTarget(post); }
+
   function handleDelete() {
     if (!deleteTarget) return;
     deletePost.mutate(deleteTarget.id, {
@@ -547,7 +581,7 @@ function FeedbackTab({ search }: { search: string }) {
   }
 
   if (isLoading) return <LoadingState variant="list" rows={6} />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (isError) return <ErrorState onRetry={handleRetry} />;
 
   if (!data || data.length === 0) {
     return (
@@ -567,11 +601,11 @@ function FeedbackTab({ search }: { search: string }) {
           key={post.id}
           post={post}
           roadmapItems={roadmapData ?? []}
-          onDelete={() => setDeleteTarget(post)}
+          onDelete={handleSetDeleteTarget}
         />
       ))}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete feedback?</AlertDialogTitle>
@@ -611,6 +645,19 @@ function ChangelogSheet({
   const create = useCreateChangelogEntry();
   const update = useUpdateChangelogEntry();
   const isPending = create.isPending || update.isPending;
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value);
+  }
+  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setContent(e.target.value);
+  }
+  function handleTypeChange(v: string) {
+    setType(v as ChangelogType);
+  }
+  function handleVersionChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setVersion(e.target.value);
+  }
 
   function handleSave() {
     if (!title.trim()) return;
@@ -664,7 +711,7 @@ function ChangelogSheet({
             <Input
               placeholder="e.g. Introducing the public roadmap"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1">
@@ -672,13 +719,13 @@ function ChangelogSheet({
             <Textarea
               rows={6}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as ChangelogType)}>
+              <Select value={type} onValueChange={handleTypeChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -696,7 +743,7 @@ function ChangelogSheet({
               <Input
                 placeholder="e.g. v1.4.0"
                 value={version}
-                onChange={(e) => setVersion(e.target.value)}
+                onChange={handleVersionChange}
               />
             </div>
           </div>
@@ -721,6 +768,89 @@ function ChangelogSheet({
   );
 }
 
+interface ChangelogEntryCardProps {
+  entry: ChangelogEntry;
+  isUpdating: boolean;
+  onTogglePublish: (entry: ChangelogEntry) => void;
+  onEdit: (entry: ChangelogEntry) => void;
+  onDelete: (entry: ChangelogEntry) => void;
+}
+
+function ChangelogEntryCard({
+  entry,
+  isUpdating,
+  onTogglePublish,
+  onEdit,
+  onDelete,
+}: ChangelogEntryCardProps) {
+  function handleTogglePublish() { onTogglePublish(entry); }
+  function handleEdit() { onEdit(entry); }
+  function handleDelete() { onDelete(entry); }
+
+  return (
+    <Card>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-medium">{entry.title}</p>
+              <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-[10px]">
+                {CHANGELOG_TYPE_OPTIONS.find((o) => o.value === entry.type)?.label}
+              </Badge>
+              {entry.version && (
+                <Badge variant="outline" className="text-[10px]">{entry.version}</Badge>
+              )}
+              <Badge
+                variant={entry.isPublished ? "default" : "outline"}
+                className="text-[10px]"
+              >
+                {entry.isPublished ? "Published" : "Draft"}
+              </Badge>
+            </div>
+            {entry.content && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 whitespace-pre-wrap">
+                {entry.content}
+              </p>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {entry.publishedAt
+                ? `Published ${format(new Date(entry.publishedAt), "MMM d, yyyy")}`
+                : `Created ${format(new Date(entry.createdAt), "MMM d, yyyy")}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={handleTogglePublish}
+              disabled={isUpdating}
+            >
+              {entry.isPublished ? "Unpublish" : "Publish"}
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={handleEdit}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ChangelogTab() {
   const { data, isLoading, isError, refetch } = useChangelog();
   const update = useUpdateChangelogEntry();
@@ -728,6 +858,14 @@ function ChangelogTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ChangelogEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChangelogEntry | null>(null);
+
+  function handleRetry() { refetch(); }
+  function handleOpenSheet() { setSheetOpen(true); }
+  function handleCloseSheet() { setSheetOpen(false); }
+  function handleCloseEdit() { setEditTarget(null); }
+  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
+  function handleEditEntry(entry: ChangelogEntry) { setEditTarget(entry); }
+  function handleDeleteEntry(entry: ChangelogEntry) { setDeleteTarget(entry); }
 
   function handleTogglePublish(entry: ChangelogEntry) {
     update.mutate(
@@ -752,13 +890,13 @@ function ChangelogTab() {
   }
 
   if (isLoading) return <LoadingState variant="list" rows={5} />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (isError) return <ErrorState onRetry={handleRetry} />;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{data?.length ?? 0} entries</p>
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-4 w-4 mr-1" /> New Entry
         </Button>
       </div>
@@ -768,80 +906,28 @@ function ChangelogTab() {
           illustration={<EmptyTicketIllustration />}
           title="No changelog entries yet"
           description="Announce shipped features, improvements and fixes to your users."
-          action={{ label: "Add entry", onClick: () => setSheetOpen(true) }}
+          action={{ label: "Add entry", onClick: handleOpenSheet }}
           className="flex-1"
         />
       ) : (
         <div className="space-y-3">
           {data.map((entry) => (
-            <Card key={entry.id}>
-              <CardContent className="p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium">{entry.title}</p>
-                      <Badge variant={CHANGELOG_TYPE_VARIANT[entry.type]} className="text-[10px]">
-                        {CHANGELOG_TYPE_OPTIONS.find((o) => o.value === entry.type)?.label}
-                      </Badge>
-                      {entry.version && (
-                        <Badge variant="outline" className="text-[10px]">{entry.version}</Badge>
-                      )}
-                      <Badge
-                        variant={entry.isPublished ? "default" : "outline"}
-                        className="text-[10px]"
-                      >
-                        {entry.isPublished ? "Published" : "Draft"}
-                      </Badge>
-                    </div>
-                    {entry.content && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2 whitespace-pre-wrap">
-                        {entry.content}
-                      </p>
-                    )}
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      {entry.publishedAt
-                        ? `Published ${format(new Date(entry.publishedAt), "MMM d, yyyy")}`
-                        : `Created ${format(new Date(entry.createdAt), "MMM d, yyyy")}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={() => handleTogglePublish(entry)}
-                      disabled={update.isPending}
-                    >
-                      {entry.isPublished ? "Unpublish" : "Publish"}
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      onClick={() => setEditTarget(entry)}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteTarget(entry)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ChangelogEntryCard
+              key={entry.id}
+              entry={entry}
+              isUpdating={update.isPending}
+              onTogglePublish={handleTogglePublish}
+              onEdit={handleEditEntry}
+              onDelete={handleDeleteEntry}
+            />
           ))}
         </div>
       )}
 
-      {sheetOpen && <ChangelogSheet onClose={() => setSheetOpen(false)} />}
-      {editTarget && <ChangelogSheet entry={editTarget} onClose={() => setEditTarget(null)} />}
+      {sheetOpen && <ChangelogSheet onClose={handleCloseSheet} />}
+      {editTarget && <ChangelogSheet entry={editTarget} onClose={handleCloseEdit} />}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete changelog entry?</AlertDialogTitle>
@@ -868,6 +954,10 @@ export default function RoadmapPage() {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? null;
   const [search, setSearch] = useState("");
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
 
   return (
     <PageWrapper
@@ -899,7 +989,7 @@ export default function RoadmapPage() {
           <Input
             placeholder="Search…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="sm:max-w-xs"
           />
         </div>

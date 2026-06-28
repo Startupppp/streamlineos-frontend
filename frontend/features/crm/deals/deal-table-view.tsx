@@ -39,6 +39,8 @@ interface DealTableViewProps {
 
 const STAGES = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
+const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   CONTACTED: "bg-sky-500/10 text-sky-400 border-sky-500/20",
@@ -75,11 +77,98 @@ function timeAgo(date: string | Date | null | undefined): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
+interface SortableHeadProps {
+  col: { key: string; label: string; sortable: boolean };
+  sortColumn: string;
+  sortDirection: "asc" | "desc";
+  onSort: (key: string) => void;
+}
+
+function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadProps) {
+  const handleClick = useCallback(() => { if (col.sortable) onSort(col.key); }, [col.key, col.sortable, onSort]);
+  function SortIcon({ column }: { column: string }) {
+    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+    return sortDirection === "asc"
+      ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+      : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
+  }
+  return (
+    <TableHead
+      className={cn(
+        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
+        col.sortable && "cursor-pointer select-none hover:text-foreground",
+      )}
+      onClick={handleClick}
+    >
+      <span className="flex items-center">
+        {col.label}
+        {col.sortable && <SortIcon column={col.key} />}
+      </span>
+    </TableHead>
+  );
+}
+
+interface DealNameButtonProps {
+  dealId: number;
+  name: string;
+  onNavigate: (id: number) => void;
+}
+
+function DealNameButton({ dealId, name, onNavigate }: DealNameButtonProps) {
+  const handleClick = useCallback(() => onNavigate(dealId), [dealId, onNavigate]);
+  return (
+    <button
+      className="font-medium text-[12px] hover:text-blue-600 hover:underline text-left truncate max-w-[160px] block"
+      onClick={handleClick}
+    >
+      {name}
+    </button>
+  );
+}
+
+interface StageCellProps {
+  deal: Pick<Deal, "id" | "stage">;
+  isEditing: boolean;
+  onStageChange: (dealId: number, stage: string) => void;
+  onStartEdit: (dealId: number) => void;
+}
+
+function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellProps) {
+  const handleValueChange = useCallback((v: string) => onStageChange(deal.id, v), [deal.id, onStageChange]);
+  const handleDoubleClick = useCallback(() => onStartEdit(deal.id), [deal.id, onStartEdit]);
+  if (isEditing) {
+    return (
+      <Select defaultValue={deal.stage} onValueChange={handleValueChange}>
+        <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {STAGES.map(s => <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
+      onDoubleClick={handleDoubleClick}
+    >
+      {deal.stage}
+    </Badge>
+  );
+}
+
 export function DealTableView({
   deals, sortColumn, sortDirection, onSort, onStageChange, isLoading,
 }: DealTableViewProps) {
   const router = useRouter();
   const [editingCell, setEditingCell] = useState<{ dealId: number; column: string } | null>(null);
+
+  const handleNavigate = useCallback((id: number) => router.push(`/crm/deals/${id}`), [router]);
+  const handleStageChange = useCallback((dealId: number, newStage: string) => {
+    onStageChange(dealId, newStage);
+    setEditingCell(null);
+  }, [onStageChange]);
+  const handleStartStageEdit = useCallback((dealId: number) => setEditingCell({ dealId, column: "stage" }), []);
 
   const columns = [
     { key: "dealId", label: "Deal ID", sortable: false },
@@ -94,13 +183,6 @@ export function DealTableView({
     { key: "createdAt", label: "Created", sortable: true },
   ];
 
-  function SortIcon({ column }: { column: string }) {
-    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-    return sortDirection === "asc"
-      ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
-      : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
-  }
-
   return (
     <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
       <div className="shrink-0 flex items-center px-1 pb-1.5">
@@ -113,19 +195,13 @@ export function DealTableView({
             <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
               <TableRow className="hover:bg-muted/80 border-b-2 border-border">
                 {columns.map(col => (
-                  <TableHead
+                  <SortableHead
                     key={col.key}
-                    className={cn(
-                      "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
-                      col.sortable && "cursor-pointer select-none hover:text-foreground",
-                    )}
-                    onClick={() => col.sortable && onSort(col.key)}
-                  >
-                    <span className="flex items-center">
-                      {col.label}
-                      {col.sortable && <SortIcon column={col.key} />}
-                    </span>
-                  </TableHead>
+                    col={col}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    onSort={onSort}
+                  />
                 ))}
               </TableRow>
             </TableHeader>
@@ -158,38 +234,23 @@ export function DealTableView({
                         </span>
                       </TableCell>
                       <TableCell className="px-2 py-1">
-                        <button
-                          className="font-medium text-[12px] hover:text-blue-600 hover:underline text-left truncate max-w-[160px] block"
-                          onClick={() => router.push(`/crm/deals/${deal.id}`)}
-                        >
-                          {deal.name}
-                        </button>
+                        <DealNameButton dealId={deal.id} name={deal.name} onNavigate={handleNavigate} />
                       </TableCell>
                       <TableCell className="px-2 py-1 font-mono tabular-nums text-blue-600 font-medium">
                         {formatINR(deal.value)}
                       </TableCell>
                       <TableCell className="px-2 py-1">
-                        {isEditingStage ? (
-                          <Select defaultValue={deal.stage} onValueChange={(v) => { onStageChange(deal.id, v); setEditingCell(null); }}>
-                            <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {STAGES.map(s => <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
-                            onDoubleClick={() => setEditingCell({ dealId: deal.id, column: "stage" })}
-                          >
-                            {deal.stage}
-                          </Badge>
-                        )}
+                        <StageCell
+                          deal={deal}
+                          isEditing={isEditingStage}
+                          onStageChange={handleStageChange}
+                          onStartEdit={handleStartStageEdit}
+                        />
                       </TableCell>
                       <TableCell className="px-2 py-1 tabular-nums">
                         {deal.probability != null ? `${deal.probability}%` : "—"}
                       </TableCell>
-                      <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="px-2 py-1" onClick={stopPropagation}>
                         <AIPredictDealButton dealId={deal.id} compact />
                       </TableCell>
                       <TableCell className="px-2 py-1 truncate max-w-[100px]">

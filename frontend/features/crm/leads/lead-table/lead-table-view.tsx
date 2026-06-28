@@ -20,6 +20,59 @@ import {
 import { SortIcon, useLeadCellRenderer } from "./lead-columns";
 import { BulkActionsBar, ConversionModal, LostModal } from "./lead-actions";
 
+interface SortableHeadProps {
+  col: { key: string; label: string; sortable: boolean };
+  sortColumn: string;
+  sortDirection: "asc" | "desc";
+  onSort: (key: string) => void;
+}
+
+function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadProps) {
+  const handleClick = useCallback(() => { if (col.sortable) onSort(col.key); }, [col.key, col.sortable, onSort]);
+  return (
+    <TableHead
+      className={cn(
+        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
+        col.sortable && "cursor-pointer select-none hover:text-foreground",
+      )}
+      onClick={handleClick}
+    >
+      <span className="flex items-center">
+        {col.label}
+        {col.sortable && (
+          <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />
+        )}
+      </span>
+    </TableHead>
+  );
+}
+
+interface ColumnToggleItemProps {
+  col: { key: string; label: string };
+  checked: boolean;
+  onToggle: (key: string) => void;
+}
+
+function ColumnToggleItem({ col, checked, onToggle }: ColumnToggleItemProps) {
+  const handleChange = useCallback(() => onToggle(col.key), [col.key, onToggle]);
+  return (
+    <DropdownMenuCheckboxItem checked={checked} onCheckedChange={handleChange} className="text-[11px]">
+      {col.label}
+    </DropdownMenuCheckboxItem>
+  );
+}
+
+interface LeadSelectCheckboxProps {
+  leadId: number;
+  checked: boolean;
+  onToggle: (id: number) => void;
+}
+
+function LeadSelectCheckbox({ leadId, checked, onToggle }: LeadSelectCheckboxProps) {
+  const handleChange = useCallback(() => onToggle(leadId), [leadId, onToggle]);
+  return <Checkbox checked={checked} onCheckedChange={handleChange} className="h-3.5 w-3.5" />;
+}
+
 export function LeadTableView({
   leads, totalCount, page, totalPages, pageSize,
   sortColumn, sortDirection, onSort, onPageChange, onPageSizeChange,
@@ -79,6 +132,32 @@ export function LeadTableView({
     [onStatusChange],
   );
 
+  const handlePageSizeChange = useCallback((v: string) => onPageSizeChange(Number(v)), [onPageSizeChange]);
+  const handlePrevPage = useCallback(() => onPageChange(page - 1), [onPageChange, page]);
+  const handleNextPage = useCallback(() => onPageChange(page + 1), [onPageChange, page]);
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleConversionClose = useCallback(() => setConversionModal(null), []);
+  const handleLostClose = useCallback(() => setLostModal(null), []);
+
+  const handleConversionSubmit = useCallback(({ conversionNotes, investmentInterest, estimatedAmount }: {
+    conversionNotes: string;
+    investmentInterest: string;
+    estimatedAmount: string;
+    createDeal: boolean;
+    dealName: string;
+  }) => {
+    if (!conversionModal) return;
+    onStatusChange(conversionModal.leadId, "CONVERTED", { conversionNotes, investmentInterest, estimatedAmount });
+    setConversionModal(null);
+  }, [conversionModal, onStatusChange]);
+
+  const handleLostSubmit = useCallback(({ lostReason, lostNotes }: { lostReason: string; lostNotes: string }) => {
+    if (!lostModal) return;
+    onStatusChange(lostModal.leadId, "LOST", { lostReason, lostNotes });
+    setLostModal(null);
+  }, [lostModal, onStatusChange]);
+
   const renderCell = useLeadCellRenderer({
     editingCell,
     setEditingCell,
@@ -98,7 +177,7 @@ export function LeadTableView({
           {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
         </span>
         <div className="flex items-center gap-1.5">
-          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+          <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
             <SelectTrigger className="h-6 w-[70px] text-[10px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {PAGE_SIZES.map((s) => (
@@ -114,14 +193,12 @@ export function LeadTableView({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44 max-h-80 overflow-y-auto">
               {ALL_COLUMNS.map((col) => (
-                <DropdownMenuCheckboxItem
+                <ColumnToggleItem
                   key={col.key}
+                  col={col}
                   checked={visibleColumns.has(col.key)}
-                  onCheckedChange={() => toggleColumn(col.key)}
-                  className="text-[11px]"
-                >
-                  {col.label}
-                </DropdownMenuCheckboxItem>
+                  onToggle={toggleColumn}
+                />
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -140,21 +217,13 @@ export function LeadTableView({
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
                 </TableHead>
                 {cols.map((col) => (
-                  <TableHead
+                  <SortableHead
                     key={col.key}
-                    className={cn(
-                      "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
-                      col.sortable && "cursor-pointer select-none hover:text-foreground",
-                    )}
-                    onClick={() => col.sortable && onSort(col.key)}
-                  >
-                    <span className="flex items-center">
-                      {col.label}
-                      {col.sortable && (
-                        <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />
-                      )}
-                    </span>
-                  </TableHead>
+                    col={col}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    onSort={onSort}
+                  />
                 ))}
               </TableRow>
             </TableHeader>
@@ -185,10 +254,10 @@ export function LeadTableView({
                     )}
                   >
                     <TableCell className="px-2 py-1">
-                      <Checkbox
+                      <LeadSelectCheckbox
+                        leadId={lead.id}
                         checked={selectedIds.has(lead.id)}
-                        onCheckedChange={() => toggleSelect(lead.id)}
-                        className="h-3.5 w-3.5"
+                        onToggle={toggleSelect}
                       />
                     </TableCell>
                     {cols.map((col) => (
@@ -210,10 +279,10 @@ export function LeadTableView({
             Page {page}/{totalPages}
           </span>
           <div className="flex items-center gap-0.5">
-            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page <= 1} onClick={handlePrevPage}>
               <ChevronLeft className="h-3 w-3" />
             </Button>
-            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page >= totalPages} onClick={handleNextPage}>
               <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
@@ -228,29 +297,21 @@ export function LeadTableView({
         isAdmin={isAdmin}
         onBulkUpdate={onBulkUpdate}
         onBulkDelete={onBulkDelete}
-        onClearSelection={() => setSelectedIds(new Set())}
+        onClearSelection={handleClearSelection}
       />
 
       <ConversionModal
         open={!!conversionModal}
         leadName={conversionModal?.leadName}
-        onClose={() => setConversionModal(null)}
-        onSubmit={({ conversionNotes, investmentInterest, estimatedAmount }) => {
-          if (!conversionModal) return;
-          onStatusChange(conversionModal.leadId, "CONVERTED", { conversionNotes, investmentInterest, estimatedAmount });
-          setConversionModal(null);
-        }}
+        onClose={handleConversionClose}
+        onSubmit={handleConversionSubmit}
       />
 
       <LostModal
         open={!!lostModal}
         leadName={lostModal?.leadName}
-        onClose={() => setLostModal(null)}
-        onSubmit={({ lostReason, lostNotes }) => {
-          if (!lostModal) return;
-          onStatusChange(lostModal.leadId, "LOST", { lostReason, lostNotes });
-          setLostModal(null);
-        }}
+        onClose={handleLostClose}
+        onSubmit={handleLostSubmit}
       />
     </div>
   );

@@ -56,6 +56,16 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
     onOpenChange(open);
   }, [onOpenChange]);
 
+  const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleScheduledAtChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScheduledAt(e.target.value), []);
+  const handleDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDuration(Number(e.target.value)), []);
+  const handleAttendeesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAttendees(e.target.value), []);
+  const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setAgenda(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleActionItemsChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setActionItems(e.target.value), []);
+  const handleRecordingLinkChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRecordingLink(e.target.value), []);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
@@ -67,41 +77,41 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
         <div className="space-y-3 mt-2 max-h-[60vh] overflow-y-auto pr-1">
           <div className="space-y-1.5">
             <Label>Title *</Label>
-            <Input placeholder="Meeting title..." value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input placeholder="Meeting title..." value={title} onChange={handleTitleChange} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Date & Time *</Label>
-              <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+              <Input type="datetime-local" value={scheduledAt} onChange={handleScheduledAtChange} />
             </div>
             <div className="space-y-1.5">
               <Label>Duration (min)</Label>
-              <Input type="number" min={5} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
+              <Input type="number" min={5} value={duration} onChange={handleDurationChange} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Attendees (comma-separated)</Label>
-            <Input placeholder="John, Sarah, Mike..." value={attendees} onChange={(e) => setAttendees(e.target.value)} />
+            <Input placeholder="John, Sarah, Mike..." value={attendees} onChange={handleAttendeesChange} />
           </div>
           <div className="space-y-1.5">
             <Label>Agenda</Label>
-            <Textarea rows={2} placeholder="Meeting agenda..." value={agenda} onChange={(e) => setAgenda(e.target.value)} />
+            <Textarea rows={2} placeholder="Meeting agenda..." value={agenda} onChange={handleAgendaChange} />
           </div>
           <div className="space-y-1.5">
             <Label>Notes</Label>
-            <Textarea rows={2} placeholder="Meeting notes..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Textarea rows={2} placeholder="Meeting notes..." value={notes} onChange={handleNotesChange} />
           </div>
           <div className="space-y-1.5">
             <Label>Action Items</Label>
-            <Textarea rows={2} placeholder="Follow-ups..." value={actionItems} onChange={(e) => setActionItems(e.target.value)} />
+            <Textarea rows={2} placeholder="Follow-ups..." value={actionItems} onChange={handleActionItemsChange} />
           </div>
           <div className="space-y-1.5">
             <Label>Recording Link (optional)</Label>
-            <Input type="url" placeholder="https://..." value={recordingLink} onChange={(e) => setRecordingLink(e.target.value)} />
+            <Input type="url" placeholder="https://..." value={recordingLink} onChange={handleRecordingLinkChange} />
           </div>
         </div>
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending ? "Saving..." : "Save Meeting"}
           </Button>
@@ -138,6 +148,11 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
     onOpenChange(open);
   }, [onOpenChange, defaultName]);
 
+  const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
+  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), []);
+  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
@@ -149,21 +164,21 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
         <div className="space-y-4 mt-2">
           <div className="space-y-1.5">
             <Label>Project Name *</Label>
-            <Input placeholder="e.g. Website Redesign" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder="e.g. Website Redesign" value={name} onChange={handleNameChange} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Start Date</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Input type="date" value={startDate} onChange={handleStartDateChange} />
             </div>
             <div className="space-y-1.5">
               <Label>End Date</Label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Input type="date" value={endDate} onChange={handleEndDateChange} />
             </div>
           </div>
         </div>
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending ? "Creating..." : "Create Project"}
           </Button>

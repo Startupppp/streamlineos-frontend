@@ -56,6 +56,90 @@ const EMPTY_KR: DraftKeyResult = {
   unit: "",
 };
 
+interface KeyResultRowProps {
+  kr: DraftKeyResult;
+  index: number;
+  onUpdate: (index: number, patch: Partial<DraftKeyResult>) => void;
+  onRemove: (index: number) => void;
+}
+
+function KeyResultRow({ kr, index, onUpdate, onRemove }: KeyResultRowProps) {
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, { title: e.target.value });
+  }
+  function handleMetricTypeChange(v: string) {
+    onUpdate(index, { metricType: v as KeyResultMetric });
+  }
+  function handleUnitChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, { unit: e.target.value });
+  }
+  function handleStartValueChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, { startValue: e.target.value });
+  }
+  function handleTargetValueChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, { targetValue: e.target.value });
+  }
+  function handleRemove() {
+    onRemove(index);
+  }
+
+  return (
+    <div className="rounded-lg border border-border/60 p-3 space-y-2.5">
+      <div className="flex items-start gap-2">
+        <Input
+          placeholder="Key result title"
+          className="h-8 flex-1"
+          value={kr.title}
+          onChange={handleTitleChange}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+          onClick={handleRemove}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Select value={kr.metricType} onValueChange={handleMetricTypeChange}>
+          <SelectTrigger className="h-8 w-full text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {METRIC_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          placeholder="Unit (optional)"
+          className="h-8 text-xs"
+          value={kr.unit}
+          onChange={handleUnitChange}
+        />
+        <Input
+          type="number"
+          placeholder="Start"
+          className="h-8 text-xs"
+          value={kr.startValue}
+          onChange={handleStartValueChange}
+        />
+        <Input
+          type="number"
+          placeholder="Target"
+          className="h-8 text-xs"
+          value={kr.targetValue}
+          onChange={handleTargetValueChange}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) {
   const isEdit = !!goal;
   const [title, setTitle] = useState(goal?.title ?? "");
@@ -71,6 +155,28 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const isPending = createGoal.isPending || updateGoal.isPending;
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value);
+  }
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setDescription(e.target.value);
+  }
+  function handleLevelChange(v: string) {
+    setLevel(v as GoalLevel);
+  }
+  function handleGoalStatusChange(v: string) {
+    setStatus(v as GoalStatus);
+  }
+  function handleStartDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setStartDate(e.target.value);
+  }
+  function handleDueDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDueDate(e.target.value);
+  }
+  function handleClose() {
+    onOpenChange(false);
+  }
 
   function handleAddKeyResult() {
     setKeyResults((prev) => [...prev, { ...EMPTY_KR }]);
@@ -180,7 +286,7 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                   placeholder="e.g. Grow monthly active users"
                   className="h-9"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={handleTitleChange}
                 />
               </div>
               <div className="space-y-1.5">
@@ -192,13 +298,13 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                   rows={2}
                   className="resize-none"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={handleDescriptionChange}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Level</Label>
-                  <Select value={level} onValueChange={(v) => setLevel(v as GoalLevel)}>
+                  <Select value={level} onValueChange={handleLevelChange}>
                     <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -213,7 +319,7 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Status</Label>
-                  <Select value={status} onValueChange={(v) => setStatus(v as GoalStatus)}>
+                  <Select value={status} onValueChange={handleGoalStatusChange}>
                     <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -260,7 +366,7 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                     type="date"
                     className="h-9"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={handleStartDateChange}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -272,7 +378,7 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                     type="date"
                     className="h-9"
                     value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    onChange={handleDueDateChange}
                   />
                 </div>
               </div>
@@ -297,62 +403,13 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
                 ) : (
                   <div className="space-y-3">
                     {keyResults.map((kr, index) => (
-                      <div key={index} className="rounded-lg border border-border/60 p-3 space-y-2.5">
-                        <div className="flex items-start gap-2">
-                          <Input
-                            placeholder="Key result title"
-                            className="h-8 flex-1"
-                            value={kr.title}
-                            onChange={(e) => updateKeyResult(index, { title: e.target.value })}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-                            onClick={() => handleRemoveKeyResult(index)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Select
-                            value={kr.metricType}
-                            onValueChange={(v) => updateKeyResult(index, { metricType: v as KeyResultMetric })}
-                          >
-                            <SelectTrigger className="h-8 w-full text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {METRIC_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            placeholder="Unit (optional)"
-                            className="h-8 text-xs"
-                            value={kr.unit}
-                            onChange={(e) => updateKeyResult(index, { unit: e.target.value })}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Start"
-                            className="h-8 text-xs"
-                            value={kr.startValue}
-                            onChange={(e) => updateKeyResult(index, { startValue: e.target.value })}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Target"
-                            className="h-8 text-xs"
-                            value={kr.targetValue}
-                            onChange={(e) => updateKeyResult(index, { targetValue: e.target.value })}
-                          />
-                        </div>
-                      </div>
+                      <KeyResultRow
+                        key={index}
+                        kr={kr}
+                        index={index}
+                        onUpdate={updateKeyResult}
+                        onRemove={handleRemoveKeyResult}
+                      />
                     ))}
                   </div>
                 )}
@@ -362,7 +419,7 @@ export function GoalFormSheet({ open, onOpenChange, goal }: GoalFormSheetProps) 
         </ScrollArea>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
-          <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="flex-1 h-9" onClick={handleClose}>
             Cancel
           </Button>
           <Button

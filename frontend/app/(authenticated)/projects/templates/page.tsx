@@ -41,6 +41,7 @@ import {
   PlayCircle,
   LayoutTemplate,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useProjectTemplates,
   useCreateProjectTemplate,
@@ -165,6 +166,95 @@ function ApplyDialog({
 }
 
 
+interface TicketRowProps {
+  ticket: TicketDraft;
+  index: number;
+  isOnlyTicket: boolean;
+  onUpdate: <K extends keyof TicketDraft>(idx: number, field: K, value: TicketDraft[K]) => void;
+  onRemove: (idx: number) => void;
+}
+
+function TicketRow({ ticket, index, isOnlyTicket, onUpdate, onRemove }: TicketRowProps) {
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "title", e.target.value);
+  }
+  function handleTypeChange(v: string) {
+    onUpdate(index, "type", v);
+  }
+  function handlePriorityChange(v: string) {
+    onUpdate(index, "priority", v as TicketDraft["priority"]);
+  }
+  function handleRemove() {
+    onRemove(index);
+  }
+  function handlePhaseChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "phase", e.target.value);
+  }
+  function handleEstimatedHoursChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onUpdate(index, "estimatedHours", e.target.value);
+  }
+
+  return (
+    <div className="border rounded-md p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+        <Input
+          className="flex-1"
+          placeholder="Task title *"
+          value={ticket.title}
+          onChange={handleTitleChange}
+        />
+        <Select value={ticket.type} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-24 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TICKET_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={ticket.priority} onValueChange={handlePriorityChange}>
+          <SelectTrigger className="w-24 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PRIORITIES.map((p) => (
+              <SelectItem key={p} value={p}>{p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-destructive shrink-0"
+          disabled={isOnlyTicket}
+          onClick={handleRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex gap-2">
+        <Input
+          className="text-xs"
+          placeholder="Phase (e.g. Setup, Development)"
+          value={ticket.phase}
+          onChange={handlePhaseChange}
+        />
+        <Input
+          type="number"
+          min={0}
+          className="w-24 text-xs"
+          placeholder="Est. hrs"
+          value={ticket.estimatedHours}
+          onChange={handleEstimatedHoursChange}
+        />
+      </div>
+    </div>
+  );
+}
+
 function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -265,69 +355,14 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
               </Button>
             </div>
             {tickets.map((ticket, idx) => (
-              <div key={idx} className="border rounded-md p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Input
-                    className="flex-1"
-                    placeholder="Task title *"
-                    value={ticket.title}
-                    onChange={(e) => updateTicket(idx, "title", e.target.value)}
-                  />
-                  <Select
-                    value={ticket.type}
-                    onValueChange={(v) => updateTicket(idx, "type", v)}
-                  >
-                    <SelectTrigger className="w-24 shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TICKET_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={ticket.priority}
-                    onValueChange={(v) => updateTicket(idx, "priority", v as TicketDraft["priority"])}
-                  >
-                    <SelectTrigger className="w-24 shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRIORITIES.map((p) => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive shrink-0"
-                    disabled={tickets.length <= 1}
-                    onClick={() => removeTicket(idx)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    className="text-xs"
-                    placeholder="Phase (e.g. Setup, Development)"
-                    value={ticket.phase}
-                    onChange={(e) => updateTicket(idx, "phase", e.target.value)}
-                  />
-                  <Input
-                    type="number"
-                    min={0}
-                    className="w-24 text-xs"
-                    placeholder="Est. hrs"
-                    value={ticket.estimatedHours}
-                    onChange={(e) => updateTicket(idx, "estimatedHours", e.target.value)}
-                  />
-                </div>
-              </div>
+              <TicketRow
+                key={idx}
+                ticket={ticket}
+                index={idx}
+                isOnlyTicket={tickets.length <= 1}
+                onUpdate={updateTicket}
+                onRemove={removeTicket}
+              />
             ))}
           </div>
         </div>
@@ -422,6 +457,10 @@ export default function ProjectTemplatesPage() {
   const handleApplyTarget = useCallback((t: ProjectTemplate) => setApplyTarget(t), []);
   const handleDeleteTarget = useCallback((t: ProjectTemplate) => setDeleteTarget(t), []);
 
+  function handleCloseCreate() { setCreateOpen(false); }
+  function handleCloseApply() { setApplyTarget(null); }
+  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
+
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteTemplate.mutate(deleteTarget.id, {
@@ -448,7 +487,7 @@ export default function ProjectTemplatesPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-52 rounded-lg bg-muted animate-pulse" />
+            <Skeleton key={i} className="h-52 rounded-lg" />
           ))}
         </div>
       ) : templates && templates.length > 0 ? (
@@ -472,12 +511,12 @@ export default function ProjectTemplatesPage() {
         </div>
       )}
 
-      {createOpen && <CreateTemplateDialog onClose={() => setCreateOpen(false)} />}
+      {createOpen && <CreateTemplateDialog onClose={handleCloseCreate} />}
       {applyTarget && (
-        <ApplyDialog template={applyTarget} onClose={() => setApplyTarget(null)} />
+        <ApplyDialog template={applyTarget} onClose={handleCloseApply} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>

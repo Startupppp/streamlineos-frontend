@@ -49,6 +49,60 @@ import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
 
+interface MemberItemProps {
+  emp: { id: string; name?: string | null; email?: string | null };
+  isSelected: boolean;
+  isOriginalMember: boolean;
+  currentIds: string[];
+  onChange: (ids: string[]) => void;
+  onMemberRemoved: (id: string, name: string, apply: () => void) => void;
+}
+
+function MemberItem({
+  emp,
+  isSelected,
+  isOriginalMember,
+  currentIds,
+  onChange,
+  onMemberRemoved,
+}: MemberItemProps) {
+  function handleClick() {
+    if (isSelected) {
+      const applyRemoval = () => onChange(currentIds.filter((id) => id !== emp.id));
+      if (isOriginalMember) {
+        onMemberRemoved(emp.id, emp.name ?? emp.email ?? emp.id, applyRemoval);
+      } else {
+        applyRemoval();
+      }
+    } else {
+      onChange([...currentIds, emp.id]);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-accent text-left"
+      onClick={handleClick}
+    >
+      <Checkbox
+        checked={isSelected}
+        tabIndex={-1}
+        className="pointer-events-none"
+        aria-hidden
+      />
+      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
+        {emp.name?.charAt(0) || <User className="h-3 w-3" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{emp.name}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{emp.email}</p>
+      </div>
+      {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
+    </button>
+  );
+}
+
 interface MembersSelectorProps {
   form: UseFormReturn<FormValues>;
   originalMemberIds: string[];
@@ -117,61 +171,17 @@ export function MembersSelector({
                   aria-label="Search team members"
                 />
                 <div className="max-h-[200px] overflow-y-auto space-y-0.5">
-                  {filteredEmployees?.map((emp) => {
-                    const selected = field.value?.includes(emp.id);
-                    const handleToggle = () => {
-                      const current = field.value || [];
-                      if (selected) {
-                        const applyRemoval = () =>
-                          field.onChange(
-                            current.filter((id: string) => id !== emp.id)
-                          );
-                        if (originalMemberIds.includes(emp.id)) {
-                          onMemberRemoved(
-                            emp.id,
-                            emp.name ?? emp.email ?? emp.id,
-                            applyRemoval
-                          );
-                        } else {
-                          applyRemoval();
-                        }
-                      } else {
-                        field.onChange([...current, emp.id]);
-                      }
-                    };
-
-                    return (
-                      <button
-                        key={emp.id}
-                        type="button"
-                        className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-accent text-left"
-                        onClick={handleToggle}
-                      >
-                        <Checkbox
-                          checked={selected}
-                          tabIndex={-1}
-                          className="pointer-events-none"
-                          aria-hidden
-                        />
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
-                          {emp.name?.charAt(0) || (
-                            <User className="h-3 w-3" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {emp.name}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {emp.email}
-                          </p>
-                        </div>
-                        {selected && (
-                          <Check className="h-4 w-4 text-primary shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
+                  {filteredEmployees?.map((emp) => (
+                    <MemberItem
+                      key={emp.id}
+                      emp={emp}
+                      isSelected={field.value?.includes(emp.id) ?? false}
+                      isOriginalMember={originalMemberIds.includes(emp.id)}
+                      currentIds={field.value || []}
+                      onChange={field.onChange}
+                      onMemberRemoved={onMemberRemoved}
+                    />
+                  ))}
                   {!filteredEmployees?.length && (
                     <p className="text-sm text-center py-4 text-muted-foreground">
                       No employees found
