@@ -172,6 +172,7 @@ export const useUpdateOrgSettings = () => {
       timeFormat?: "12h" | "24h";
       numberFormat?: string;
       weekStartDay?: "monday" | "sunday" | "saturday";
+      businessHours?: Record<string, { open: string; close: string; enabled: boolean }>;
     }
   >({
     mutationFn: (data) =>
