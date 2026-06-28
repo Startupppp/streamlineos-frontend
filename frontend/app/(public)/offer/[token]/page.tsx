@@ -11,6 +11,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { apiClient, getApiError } from "@/lib/api-client";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -43,15 +44,10 @@ export default function OfferAcceptancePage({ params }: Props) {
 
   const fetchOffer = useCallback(async () => {
     try {
-      const res = await fetch(`/api/public/offer/${token}`);
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Offer not found");
-        return;
-      }
-      setOffer(await res.json());
-    } catch {
-      setError("Failed to load offer details. Please try again.");
+      const data = await apiClient.get<Offer>(`/public/offer/${token}`);
+      setOffer(data);
+    } catch (e) {
+      setError(getApiError(e) || "Offer not found");
     } finally {
       setLoading(false);
     }
@@ -62,21 +58,15 @@ export default function OfferAcceptancePage({ params }: Props) {
   const handleRespond = useCallback(async (action: "accept" | "decline", reason?: string) => {
     setResponding(true);
     try {
-      const res = await fetch(`/api/public/offer/${token}/respond`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, declineReason: reason }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        toast.error(body.error ?? "Failed to respond to offer");
-        return;
-      }
+      const body = await apiClient.patch<{ success: boolean; status: string }>(
+        `/public/offer/${token}/respond`,
+        { action, declineReason: reason },
+      );
       setFinalStatus(body.status);
       setResponded(true);
       setDeclineOpen(false);
-    } catch {
-      toast.error("An unexpected error occurred.");
+    } catch (e) {
+      toast.error(getApiError(e) || "Failed to respond to offer");
     } finally {
       setResponding(false);
     }

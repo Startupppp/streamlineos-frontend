@@ -35,6 +35,7 @@ import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
 import type { Employee } from "@/types/hr";
+
 const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },

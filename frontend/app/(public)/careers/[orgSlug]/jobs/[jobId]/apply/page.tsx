@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { apiClient, getApiError } from "@/lib/api-client";
 
 type Props = { params: Promise<{ orgSlug: string; jobId: string }> };
 
@@ -32,27 +33,21 @@ export default function ApplyPage({ params }: Props) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/public/careers/${orgSlug}/jobs/${jobId}/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await apiClient.post<{ trackingToken: string }>(
+        `/public/careers/${orgSlug}/jobs/${jobId}/apply`,
+        {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           phone: phone.trim() || undefined,
           linkedinUrl: linkedinUrl.trim() || undefined,
           coverLetter: coverLetter.trim() || undefined,
           resumeUrl: resumeUrl.trim() || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error ?? "Failed to submit application");
-        return;
-      }
+        },
+      );
       setTrackingToken(data.trackingToken);
       setSubmitted(true);
-    } catch {
-      toast.error("An unexpected error occurred. Please try again.");
+    } catch (e) {
+      toast.error(getApiError(e) || "Failed to submit application");
     } finally {
       setSubmitting(false);
     }

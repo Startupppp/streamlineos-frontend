@@ -131,6 +131,8 @@ const MIGRATED_PREFIXES = [
   "/webhooks",
   "/feature-flags",
   "/org-hierarchy",
+  "/support",
+  "/public",
 ] as const;
 
 function isMigrated(path: string): boolean {

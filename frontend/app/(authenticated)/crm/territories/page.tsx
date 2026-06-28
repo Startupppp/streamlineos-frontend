@@ -98,6 +98,12 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
     if (inputValue.trim()) addTag(inputValue);
   }, [inputValue, addTag]);
 
+  const handleRemoveClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const idx = Number(e.currentTarget.dataset.idx);
+    removeTag(idx);
+  }, [removeTag]);
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -114,7 +120,8 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
             {tag}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); removeTag(idx); }}
+              data-idx={idx}
+              onClick={handleRemoveClick}
               className="ml-0.5 rounded-full hover:bg-muted p-0.5"
               aria-label={`Remove ${tag}`}
             >
@@ -172,6 +179,9 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
   const MAX_CITIES = 5;
   const visibleCities = (t.cities ?? []).slice(0, MAX_CITIES);
   const extraCities = (t.cities ?? []).length - MAX_CITIES;
+
+  const handleEdit = useCallback(() => onEdit(t), [onEdit, t]);
+  const handleDelete = useCallback(() => onDelete(t.id), [onDelete, t.id]);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -235,7 +245,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
             variant="outline"
             size="sm"
             className="flex-1 h-7 text-xs"
-            onClick={() => onEdit(t)}
+            onClick={handleEdit}
             aria-label={`Edit ${t.name}`}
           >
             <Pencil className="h-3 w-3 mr-1" />
@@ -265,7 +275,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => onDelete(t.id)}
+                  onClick={handleDelete}
                 >
                   Delete
                 </AlertDialogAction>
@@ -360,6 +370,8 @@ export default function TerritoriesPage() {
   const handleCitiesChange = useCallback((cities: string[]) => {
     setForm((f) => ({ ...f, cities }));
   }, []);
+
+  const handleSheetClose = useCallback(() => setSheetOpen(false), []);
 
   const totalTerritories = territories.length;
   const activeTerritories = territories.filter((t) => t.isActive).length;
@@ -519,7 +531,7 @@ export default function TerritoriesPage() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleSheetClose}
             >
               Cancel
             </Button>
