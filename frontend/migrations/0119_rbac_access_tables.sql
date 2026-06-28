@@ -19,8 +19,13 @@ CREATE TABLE IF NOT EXISTS user_roles (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
   assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  expires_at TIMESTAMP,
+  reason TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+-- Add columns that may be missing on existing deployments (idempotent)
+ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;
+ALTER TABLE user_roles ADD COLUMN IF NOT EXISTS reason TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_roles_org_user_role ON user_roles(org_id, user_id, role_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_org_user ON user_roles(org_id, user_id);
 
