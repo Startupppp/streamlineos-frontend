@@ -74,9 +74,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                     </a>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={() => onDeleteMeeting(m.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <DeleteMeetingButton meetingId={m.id} onDelete={onDeleteMeeting} />
               </div>
             ))}
           </div>
