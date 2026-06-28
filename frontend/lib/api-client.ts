@@ -152,6 +152,10 @@ function isMigrated(path: string): boolean {
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
+export function clearBackendTokenCache(): void {
+  cachedToken = null;
+}
+
 async function getBackendToken(): Promise<string | null> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt - 30_000 > now) return cachedToken.value;

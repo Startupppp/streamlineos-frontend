@@ -51,6 +51,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgDepartment } from "@/types/org-hierarchy";
 
 const formSchema = z.object({
@@ -62,6 +63,7 @@ const formSchema = z.object({
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
   branchId: z.string().optional(),
+  headUserId: z.string().optional(),
   description: z.string().trim().max(500).optional(),
 });
 
@@ -80,7 +82,7 @@ function DeptForm({
 }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? { name: "", code: "", branchId: "", description: "" },
+    defaultValues: defaultValues ?? { name: "", code: "", branchId: "", headUserId: "", description: "" },
   });
 
   return (
@@ -146,6 +148,19 @@ function DeptForm({
         </div>
         <FormField
           control={form.control}
+          name="headUserId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Department Head</FormLabel>
+              <FormControl>
+                <UserCombobox value={field.value ?? ""} onChange={field.onChange} placeholder="Select head…" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -179,9 +194,9 @@ export default function OrgDepartmentsPage() {
   const [deleting, setDeleting] = useState<OrgDepartment | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const branches = (branchesData ?? []).map((b) => ({ id: b.id, name: b.name }));
+  const branches = (branchesData?.data ?? []).map((b) => ({ id: b.id, name: b.name }));
   const branchMap = Object.fromEntries(branches.map((b) => [b.id, b.name]));
-  const allDepts = depts ?? [];
+  const allDepts = depts?.data ?? [];
   const active = allDepts.filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
   const archived = allDepts.filter((d) => d.status === "ARCHIVED" && !d.deletedAt);
   const displayed = showArchived ? archived : active;
@@ -193,6 +208,7 @@ export default function OrgDepartmentsPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           branchId: values.branchId || undefined,
+          headUserId: values.headUserId || undefined,
           description: values.description || undefined,
         },
         {
@@ -216,6 +232,7 @@ export default function OrgDepartmentsPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           branchId: values.branchId || undefined,
+          headUserId: values.headUserId || undefined,
           description: values.description || undefined,
         },
         {
@@ -402,6 +419,7 @@ export default function OrgDepartmentsPage() {
                 name: editing.name,
                 code: editing.code,
                 branchId: editing.branchId ?? "",
+                headUserId: editing.headUserId ?? "",
                 description: editing.description ?? "",
               }}
               branches={branches}

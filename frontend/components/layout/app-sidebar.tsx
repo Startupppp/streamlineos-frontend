@@ -3,11 +3,12 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Search, Bell } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsUpDown, Check, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
+import { useGetOrganizations, useSwitchOrg } from "@/lib/hooks/auth-hooks";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -34,6 +35,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
+  const switchOrg = useSwitchOrg();
   const role = session?.user?.role;
 
   const lastKnownRoleRef = useRef<string | undefined>(role);
@@ -109,7 +111,14 @@ export function AppSidebar({
     document.title = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
   }, [unreadChatCount, unreadNotifCount]);
 
-  const orgName = organizations?.[0]?.name;
+  const activeOrgId = session?.orgId as string | null | undefined;
+  const activeOrg = organizations?.find((o) => o.id === activeOrgId) ?? organizations?.[0];
+  const orgName = activeOrg?.name;
+  const otherOrgs = organizations?.filter((o) => o.id !== activeOrg?.id) ?? [];
+
+  const handleSwitchOrg = useCallback((orgId: string) => {
+    switchOrg.mutate(orgId);
+  }, [switchOrg]);
 
   const handleSearchClick = useCallback(() => {
     document.dispatchEvent(
@@ -164,34 +173,68 @@ export function AppSidebar({
           )}
         >
           {!isCollapsed && (
-            <Link
-              href="/dashboard"
-              onClick={onNavigate}
-              className="flex items-center gap-3 min-w-0 group"
-            >
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden shrink-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Link
+                href="/dashboard"
+                onClick={onNavigate}
+                className="relative h-10 w-10 rounded-xl overflow-hidden shrink-0"
+              >
                 <Image
                   src="/logo.svg"
                   alt="StreamlineOS"
                   fill
                   className="object-contain p-1.5"
                 />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
-                  StreamlineOS
-                </span>
-                {orgName ? (
+              </Link>
+              {otherOrgs.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 min-w-0 group outline-none"
+                      disabled={switchOrg.isPending}
+                    >
+                      <div className="min-w-0 text-left">
+                        <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
+                          StreamlineOS
+                        </span>
+                        <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[100px]">
+                          {orgName ?? "Select org"}
+                        </span>
+                      </div>
+                      <ChevronsUpDown className="h-3.5 w-3.5 text-sidebar-foreground/30 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuItem className="gap-2" disabled>
+                      <Check className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="font-medium truncate">{orgName}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {otherOrgs.map((org) => (
+                      <DropdownMenuItem
+                        key={org.id}
+                        className="gap-2 cursor-pointer"
+                        onClick={() => handleSwitchOrg(org.id)}
+                        disabled={switchOrg.isPending}
+                      >
+                        <span className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{org.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/dashboard" onClick={onNavigate} className="min-w-0 group">
+                  <span className="text-[17px] font-bold tracking-tight leading-none block text-sidebar-foreground group-hover:opacity-90 transition-opacity">
+                    StreamlineOS
+                  </span>
                   <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[120px]">
-                    {orgName}
+                    {orgName ?? ""}
                   </span>
-                ) : (
-                  <span className="text-[11px] text-sidebar-foreground/30 block mt-0.5 leading-none">
-                    Capital CRM
-                  </span>
-                )}
-              </div>
-            </Link>
+                </Link>
+              )}
+            </div>
           )}
 
           {isCollapsed && (

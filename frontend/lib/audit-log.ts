@@ -75,7 +75,22 @@ export type AuditAction =
   | "expense.exported"
   | "expense.deleted"
   | "hr.document_deleted"
-  | "org.setup.completed";
+  | "org.setup.completed"
+  | "org.switched"
+  | "org.holiday.created"
+  | "org.holiday.deleted"
+  | "org.domain.added"
+  | "org.domain.verified"
+  | "org.domain.removed"
+  | "org.archived"
+  | "org.restored"
+  | "org.ownership_transferred"
+  | "oauth.login.google"
+  | "oauth.login.microsoft"
+  | "service_account.created"
+  | "service_account.updated"
+  | "service_account.deleted"
+  | "service_account.key_rotated";
 
 interface AuditLogEntry {
   action: AuditAction;

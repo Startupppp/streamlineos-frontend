@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { PASSWORD_REGEX, getPasswordStrength } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { Loader2, Eye, EyeOff, ArrowRight, Shield, Rocket, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signOut } from "next-auth/react";
+
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,8 @@ function SetupPasswordContent() {
         password: values.password,
       });
       toast.success("Password set successfully! You can now sign in.");
+      await apiClient.post("/auth/logout", undefined).catch(() => {});
+      clearBackendTokenCache();
       await signOut({ redirect: false });
       router.push("/signin");
     } catch (error) {

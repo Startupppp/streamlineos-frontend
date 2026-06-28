@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import type { OrgBranch } from "@/types/org-hierarchy";
 
 const formSchema = z.object({
@@ -61,6 +62,7 @@ const formSchema = z.object({
     .max(20)
     .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
   businessUnitId: z.string().optional(),
+  managerUserId: z.string().optional(),
   city: z.string().trim().max(100).optional(),
   state: z.string().trim().max(100).optional(),
   country: z.string().trim().max(100).optional(),
@@ -70,7 +72,7 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-const EMPTY: FormValues = { name: "", code: "", businessUnitId: "", city: "", state: "", country: "", address: "", phone: "", email: "" };
+const EMPTY: FormValues = { name: "", code: "", businessUnitId: "", managerUserId: "", city: "", state: "", country: "", address: "", phone: "", email: "" };
 
 function BranchForm({
   defaultValues,
@@ -144,6 +146,23 @@ function BranchForm({
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="managerUserId"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Manager</FormLabel>
+                <FormControl>
+                  <UserCombobox
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Select manager…"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -249,8 +268,8 @@ export default function OrgBranchesPage() {
   const [deleting, setDeleting] = useState<OrgBranch | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const businessUnits = (busData ?? []).map((b) => ({ id: b.id, name: b.name }));
-  const allBranches = branches ?? [];
+  const businessUnits = (busData?.data ?? []).map((b) => ({ id: b.id, name: b.name }));
+  const allBranches = branches?.data ?? [];
   const active = allBranches.filter((b) => b.status !== "ARCHIVED" && !b.deletedAt);
   const archived = allBranches.filter((b) => b.status === "ARCHIVED" && !b.deletedAt);
   const displayed = showArchived ? archived : active;
@@ -262,13 +281,13 @@ export default function OrgBranchesPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           businessUnitId: values.businessUnitId || undefined,
+          managerUserId: values.managerUserId || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
           country: values.country || undefined,
           address: values.address || undefined,
           phone: values.phone || undefined,
           email: values.email || undefined,
-          managerUserId: undefined,
           postalCode: undefined,
         },
         {
@@ -292,6 +311,7 @@ export default function OrgBranchesPage() {
           name: values.name,
           code: values.code.toUpperCase(),
           businessUnitId: values.businessUnitId || undefined,
+          managerUserId: values.managerUserId || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
           country: values.country || undefined,
@@ -483,6 +503,7 @@ export default function OrgBranchesPage() {
                 name: editing.name,
                 code: editing.code,
                 businessUnitId: editing.businessUnitId ?? "",
+                managerUserId: editing.managerUserId ?? "",
                 city: editing.city ?? "",
                 state: editing.state ?? "",
                 country: editing.country ?? "",

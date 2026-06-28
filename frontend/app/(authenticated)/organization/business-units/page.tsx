@@ -163,7 +163,7 @@ export default function BusinessUnitsPage() {
   const [deleting, setDeleting] = useState<OrgBusinessUnit | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const allUnits = units ?? [];
+  const allUnits = units?.data ?? [];
   const active = allUnits.filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
   const archived = allUnits.filter((u) => u.status === "ARCHIVED" && !u.deletedAt);
   const displayed = showArchived ? archived : active;

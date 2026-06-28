@@ -16,7 +16,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { useSignOut } from "@/lib/hooks/auth-hooks";
 import { cn } from "@/lib/utils";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 
@@ -51,6 +51,7 @@ export function OwnerSidebar({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
 
   useEffect(() => {
     try {
@@ -187,7 +188,8 @@ export function OwnerSidebar({
           )}
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: "/signin" })}
+          onClick={() => handleSignOut()}
+          disabled={isSigningOut}
           title={collapsed ? "Sign out" : undefined}
           className={cn(
             "w-full flex items-center rounded-md text-[11.5px] font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors",

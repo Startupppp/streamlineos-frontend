@@ -45,6 +45,20 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Organization",
+    requiredPermission: ["settings:manage", "settings:view"],
+    routes: [
+      { label: "Overview", icon: Building2, href: "/organization", requiredPermission: "settings:view" },
+      { label: "Business Units", icon: Network, href: "/organization/business-units", requiredPermission: "settings:view" },
+      { label: "Branches", icon: GitBranch, href: "/organization/branches", requiredPermission: "settings:view" },
+      { label: "Departments", icon: Briefcase, href: "/organization/departments", requiredPermission: "settings:view" },
+      { label: "Teams", icon: Users, href: "/organization/teams", requiredPermission: "settings:view" },
+      { label: "Locations", icon: Map, href: "/organization/locations", requiredPermission: "settings:view" },
+      { label: "Cost Centers", icon: Coins, href: "/organization/cost-centers", requiredPermission: "settings:view" },
+      { label: "Org Tree", icon: Network, href: "/organization/tree", requiredPermission: "settings:view" },
+    ],
+  },
+  {
     label: "HR – People",
     requiredPermission: ["hr:employees:view", "hr:attendance:view", "hr:leaves:view", "hr:documents:view"],
     routes: [
@@ -360,7 +374,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Git Integration", icon: GitBranch, href: "/settings/integrations/git", requiredPermission: "settings:manage" },
         ],
       },
-      { label: "Branches", icon: GitBranch, href: "/settings/branches", requiredPermission: ["settings:manage", "branch:read"] },
+      { label: "Branches", icon: GitBranch, href: "/organization/branches", requiredPermission: ["settings:manage", "branch:read"] },
       {
         label: "Roles & Permissions", icon: Shield, href: "/settings/roles", requiredPermission: "settings:rbac:manage",
         children: [

@@ -73,6 +73,7 @@ export interface OrgLocation {
   status: NodeStatus;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface OrgCostCenter {
@@ -84,6 +85,27 @@ export interface OrgCostCenter {
   status: NodeStatus;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface OrgTreeTeam extends OrgTeam {
+  type: "team";
+  children: never[];
+}
+
+export interface OrgTreeDepartment extends OrgDepartment {
+  type: "department";
+  children: OrgTreeTeam[];
+}
+
+export interface OrgTreeBranch extends OrgBranch {
+  type: "branch";
+  children: OrgTreeDepartment[];
+}
+
+export interface OrgTreeNode extends OrgBusinessUnit {
+  type: "business_unit";
+  children: OrgTreeBranch[];
 }
 
 export interface OrgHierarchyOverview {

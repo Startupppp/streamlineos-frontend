@@ -201,3 +201,23 @@ export function useRolePermissionsMatrix(
     ...options,
   });
 }
+
+interface RolesAnalytics {
+  totalRoles: number;
+  customRoles: number;
+  systemRoles: number;
+  totalPermissions: number;
+  usersAssigned: number;
+  recentChanges: number;
+}
+
+export function useRolesAnalytics(
+  options?: Omit<UseQueryOptions<RolesAnalytics, Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<RolesAnalytics, Error>({
+    queryKey: queryKeys.roles.analytics(),
+    queryFn: () => apiClient.get<RolesAnalytics>("/roles/analytics"),
+    staleTime: 2 * 60_000,
+    ...options,
+  });
+}

@@ -11,6 +11,8 @@ export const userRoles = pgTable("user_roles", {
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   roleId: integer("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
   assignedBy: text("assigned_by").references(() => users.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at"),
+  reason: text("reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("uniq_user_roles_org_user_role").on(table.orgId, table.userId, table.roleId),

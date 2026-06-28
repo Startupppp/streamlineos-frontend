@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useSignOut } from "@/lib/hooks/auth-hooks";
 import Link from "next/link";
 import { Settings, LogOut, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +23,7 @@ interface SidebarUserMenuProps {
 
 export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
   const { data: session } = useSession();
+  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
 
   const name = session?.user?.name || "User";
   const email = session?.user?.email || "";
@@ -86,7 +88,8 @@ export function SidebarUserMenu({ isCollapsed }: SidebarUserMenuProps) {
       <DropdownMenuSeparator />
       <DropdownMenuItem
         className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-        onClick={() => signOut({ callbackUrl: "/signin" })}
+        onClick={() => handleSignOut()}
+        disabled={isSigningOut}
       >
         <LogOut className="h-3.5 w-3.5" />
         Sign out

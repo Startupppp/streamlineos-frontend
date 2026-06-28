@@ -2,7 +2,10 @@ export interface OrgSettings {
   id: string;
   name: string;
   slug: string;
+  status: "ACTIVE" | "INACTIVE" | "ARCHIVED";
   logo: string | null;
+  website: string | null;
+  industry: string | null;
   timezone: string | null;
   currency: string | null;
   fiscalYearStart: number | null;
@@ -15,6 +18,15 @@ export interface OrgSettings {
   loginBgUrl?: string | null;
   ipAllowlist?: string[];
   directoryPublic?: boolean;
+  legalName?: string | null;
+  orgCode?: string | null;
+  registrationNumber?: string | null;
+  taxNumber?: string | null;
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  favicon?: string | null;
+  secondaryColor?: string | null;
+  businessHours?: Record<string, { open: string; close: string; enabled: boolean }> | null;
   createdAt: Date;
   updatedAt: Date;
 }

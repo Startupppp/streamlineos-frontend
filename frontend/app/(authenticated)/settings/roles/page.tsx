@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRoles, useDeleteRole } from "@/lib/api/hooks/roles";
+import { useRoles, useDeleteRole, useRolesAnalytics } from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { Plus, Loader2, Trash2, Shield, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { PermissionMatrix } from "@/components/rbac/permission-matrix";
 import { CreateRoleDialog } from "@/components/rbac/create-role-dialog";
 import { RoleAssignmentsSheet } from "@/components/rbac/role-assignments-sheet";
 import { RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RolesPage() {
   return (
@@ -37,6 +38,7 @@ export default function RolesPage() {
 
 function RolesContent() {
   const { data: roles, isLoading } = useRoles();
+  const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
   const deleteRole = useDeleteRole();
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -65,6 +67,14 @@ function RolesContent() {
     });
   }, [deleteRole, deleteTarget, selectedRoleId]);
 
+  const metricsLoading = isLoading || analyticsLoading;
+  const metrics = [
+    { label: "Total Roles", value: analytics?.totalRoles ?? 0 },
+    { label: "Custom Roles", value: analytics?.customRoles ?? 0 },
+    { label: "Users Assigned", value: analytics?.usersAssigned ?? 0 },
+    { label: "Total Permissions", value: analytics?.totalPermissions ?? 0 },
+  ];
+
   return (
     <PageWrapper
       title="Roles & Permissions"
@@ -84,6 +94,21 @@ function RolesContent() {
         </div>
       }
     >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {metricsLoading ? (
+          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
+        ) : (
+          <>
+            {metrics.map(({ label, value }) => (
+              <Card key={label} className="p-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-xl font-bold tabular-nums">{value}</p>
+              </Card>
+            ))}
+          </>
+        )}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:h-full lg:min-h-0">
         <Card className="flex flex-col lg:min-h-0">
           <CardHeader className="pb-3">
