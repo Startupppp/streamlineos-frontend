@@ -6,10 +6,12 @@ export type RolePrincipalType = "user" | "department";
 
 export interface AccessResponse {
   permissions: string[];
-  scopes: Record<string, DataScope>;
-  modules: Record<string, boolean>;
   isOrgOwner: boolean;
-  version: number;
+  isPlatformAdmin: boolean;
+  modules: Record<string, boolean>;
+  enabledModules?: string[];
+  dataScopes?: Record<string, string>;
+  version?: number;
   tier?: Tier;
 }
 

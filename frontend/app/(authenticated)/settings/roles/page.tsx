@@ -37,7 +37,7 @@ export default function RolesPage() {
 }
 
 function RolesContent() {
-  const { data: roles, isLoading } = useRoles();
+  const { data: roles, isLoading, isError: rolesError, refetch: refetchRoles } = useRoles();
   const { data: analytics, isLoading: analyticsLoading } = useRolesAnalytics();
   const deleteRole = useDeleteRole();
 
@@ -54,6 +54,7 @@ function RolesContent() {
   const handleOpenAssignments = useCallback(() => setAssignmentsOpen(true), []);
   const handleSelectRole = useCallback((roleId: number) => setSelectedRoleId(roleId), []);
   const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+  const handleRetryRoles = useCallback(() => { void refetchRoles(); }, [refetchRoles]);
 
   const handleDeleteRole = useCallback(() => {
     if (!deleteTarget) return;
@@ -133,6 +134,17 @@ function RolesContent() {
                     <Skeleton className="h-4 w-12 rounded-full" />
                   </div>
                 ))}
+              </div>
+            ) : rolesError ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
+                <Shield className="h-10 w-10 text-destructive/50" />
+                <div>
+                  <p className="text-sm font-medium">Failed to load roles</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Something went wrong</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleRetryRoles} className="gap-1.5">
+                  Retry
+                </Button>
               </div>
             ) : (roles ?? []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">

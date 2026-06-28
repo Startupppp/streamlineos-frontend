@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuditLogs } from "@/lib/api/hooks/audit-log";
-import type { AuditLogRow } from "@/lib/api/hooks/audit-log";
+import type { AuditLogRow as AuditLogEntry } from "@/lib/api/hooks/audit-log";
 import { getInitials } from "@/lib/format-utils";
 
 const RBAC_ACTIONS = [
@@ -139,7 +139,7 @@ function AuditContent() {
 }
 
 interface AuditLogRowProps {
-  log: AuditLogRow;
+  log: AuditLogEntry;
 }
 
 function AuditLogRow({ log }: AuditLogRowProps) {
@@ -195,7 +195,7 @@ function AuditLogRow({ log }: AuditLogRowProps) {
   );
 }
 
-function resolveTargetLabel(log: AuditLogRow): string | null {
+function resolveTargetLabel(log: AuditLogEntry): string | null {
   const meta = log.metadata;
   if (!meta) return log.targetId;
   if (typeof meta.roleName === "string") return meta.roleName;
@@ -204,12 +204,12 @@ function resolveTargetLabel(log: AuditLogRow): string | null {
   return log.targetId;
 }
 
-function resolveAffectedUser(log: AuditLogRow): string | null {
+function resolveAffectedUser(log: AuditLogEntry): string | null {
   const meta = log.metadata;
   if (!meta) return null;
   if (typeof meta.targetUserName === "string") return meta.targetUserName;
   if (typeof meta.targetUserEmail === "string") return meta.targetUserEmail;
-  if (typeof meta.userId === "string" && meta.userId !== log.userId) return meta.userId as string;
+  if (typeof meta.userId === "string" && meta.userId !== log.userId) return meta.userId;
   return null;
 }
 

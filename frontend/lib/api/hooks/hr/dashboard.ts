@@ -166,37 +166,3 @@ export function useHrSalaryBands() {
   });
 }
 
-export interface HrCompliance {
-  total: number;
-  overallCompliant: number;
-  overallPct: number;
-  checks: { label: string; compliant: number; missing: number; pct: number }[];
-}
-
-export function useHrCompliance() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardCompliance(),
-    queryFn: () => apiClient.get<HrCompliance>("/hr/dashboard/compliance"),
-    staleTime: 120_000,
-  });
-}
-
-export interface HrDashboardAttendanceAnalytics {
-  month: string;
-  workingDaysSoFar: number;
-  totalEmployees: number;
-  attendancePct: number;
-  absenteeismPct: number;
-  lateArrivals: number;
-  wfhApproved: number;
-  overtimeInstances: number;
-  byDepartment: { name: string; presentCount: number; expectedCount: number }[];
-}
-
-export function useHrDashboardAttendanceAnalytics() {
-  return useQuery({
-    queryKey: queryKeys.hr.dashboardAttendanceAnalytics(),
-    queryFn: () => apiClient.get<HrDashboardAttendanceAnalytics>("/hr/dashboard/attendance-analytics"),
-    staleTime: 60_000,
-  });
-}

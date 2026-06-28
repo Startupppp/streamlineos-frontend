@@ -14,16 +14,6 @@ import type {
   Holiday,
 } from "@/types/hr";
 
-export interface LeaveBlackoutDate {
-  id: number;
-  orgId: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  appliesTo: string;
-  createdBy: string | null;
-  createdAt: string;
-}
 
 export interface HrLeaveAnalytics {
   year: number;
@@ -282,46 +272,6 @@ export function useUpdateHoliday() {
   });
 }
 
-export function useLeaveBlackoutDates(from?: string, to?: string) {
-  const params: Record<string, string> = {};
-  if (from) params.from = from;
-  if (to) params.to = to;
-
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "leaveBlackout", from, to] as const,
-    queryFn: () =>
-      apiClient.get<LeaveBlackoutDate[]>("/hr/leaves/blackout", params),
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateLeaveBlackout() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: {
-      startDate: string;
-      endDate: string;
-      reason: string;
-      appliesTo?: string;
-    }) => apiClient.post<LeaveBlackoutDate>("/hr/leaves/blackout", data),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "leaveBlackout"],
-      }),
-  });
-}
-
-export function useDeleteLeaveBlackout() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) =>
-      apiClient.delete<{ success: boolean }>(`/hr/leaves/blackout/${id}`),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "leaveBlackout"],
-      }),
-  });
-}
 
 export function useHrLeaveAnalytics(year?: number) {
   const y = year ?? new Date().getFullYear();
@@ -335,15 +285,3 @@ export function useHrLeaveAnalytics(year?: number) {
   });
 }
 
-export function useCreditCompOff() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { userId: string; days: number; reason?: string }) =>
-      apiClient.post<{
-        success: boolean;
-        credited: number;
-        leaveTypeId: number;
-      }>("/hr/leaves/comp-off", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
-  });
-}

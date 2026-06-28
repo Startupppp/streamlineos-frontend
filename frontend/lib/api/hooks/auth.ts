@@ -4,13 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface AuthAnalytics {
-  loginsToday: number;
-  failedLoginsLast7Days: number;
-  activeSessions: number;
-  passwordResetsLast7Days: number;
-}
-
 export interface SessionData {
   id: string;
   userId: string;
@@ -51,14 +44,6 @@ export interface LoginHistoryPage {
   total: number;
   page: number;
   limit: number;
-}
-
-export function useAuthAnalytics() {
-  return useQuery({
-    queryKey: queryKeys.auth.auditAnalytics(),
-    queryFn: () => apiClient.get<AuthAnalytics>("/me/auth-analytics"),
-    staleTime: 60_000,
-  });
 }
 
 export function useSessions() {

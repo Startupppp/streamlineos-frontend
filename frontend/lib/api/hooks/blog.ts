@@ -64,15 +64,6 @@ export function useAdminPosts() {
   });
 }
 
-export function useAdminPost(id: string | undefined) {
-  return useQuery({
-    queryKey: blogKeys.post(id ?? ""),
-    queryFn: () => apiClient.get<BlogPostWithRelations>(`/blog/posts/${id}`),
-    staleTime: 2 * 60_000,
-    enabled: !!id,
-  });
-}
-
 export function useCreatePost() {
   const qc = useQueryClient();
   return useMutation({

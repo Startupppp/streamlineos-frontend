@@ -7,7 +7,7 @@ import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
   NextActionResult, ChurnRiskResult, ConversationSummaryResult, LeadEnrichmentResult,
   CandidateScoreResult, ReviewDraftResult, HelpdeskReplyResult, AttritionRiskResult,
-} from "@/lib/ai/prompts";
+} from "@/lib/ai/schemas";
 
 export function useAIScoreLead() {
   const qc = useQueryClient();

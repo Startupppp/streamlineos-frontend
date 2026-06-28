@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useGenerateEmail } from "@/lib/api/hooks/ai";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
-import type { EmailTone } from "@/lib/ai/prompts";
+import type { EmailTone } from "@/lib/ai/schemas";
 
 interface AIEmailDialogProps {
   leadName: string;

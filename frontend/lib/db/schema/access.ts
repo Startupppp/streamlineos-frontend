@@ -3,7 +3,7 @@ import { relations } from "drizzle-orm";
 import { organizations, users, roles, permissions } from "./auth";
 
 export const dataScopeEnum = pgEnum("data_scope", ["all", "team", "own", "none"]);
-export const principalGroupTypeEnum = pgEnum("principal_group_type", ["department"]);
+export const principalGroupTypeEnum = pgEnum("principal_group_type", ["department", "team", "custom"]);
 
 export const userRoles = pgTable("user_roles", {
   id: serial("id").primaryKey(),
@@ -27,7 +27,7 @@ export const rolePermissionGrants = pgTable("role_permission_grants", {
   scope: dataScopeEnum("scope").default("all").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  uniqueIndex("uniq_role_permission_grants_role_key").on(table.roleId, table.permissionKey),
+  uniqueIndex("uniq_role_permission_grants_role_key").on(table.orgId, table.roleId, table.permissionKey),
   index("idx_role_permission_grants_org_role").on(table.orgId, table.roleId),
 ]);
 

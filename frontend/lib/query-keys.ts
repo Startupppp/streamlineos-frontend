@@ -78,8 +78,6 @@ export const queryKeys = {
     dashboardTimeToFill: () => [...base, "hr", "dashboard", "timeToFill"] as const,
     dashboardPayrollSummary: () => [...base, "hr", "dashboard", "payrollSummary"] as const,
     dashboardSalaryBands: () => [...base, "hr", "dashboard", "salaryBands"] as const,
-    dashboardCompliance: () => [...base, "hr", "dashboard", "compliance"] as const,
-    dashboardAttendanceAnalytics: () => [...base, "hr", "dashboard", "attendanceAnalytics"] as const,
     directory: () => [...base, "hr", "directory"] as const,
     onboardingAll: [...base, "hr", "onboarding"] as const,
     onboardingStatus: () => [...base, "hr", "onboarding", "status"] as const,
@@ -586,7 +584,6 @@ export const queryKeys = {
     sessions: () => [...base, "auth", "sessions"] as const,
     devices: () => [...base, "auth", "devices"] as const,
     loginHistory: (params?: Record<string, unknown>) => [...base, "auth", "loginHistory", params] as const,
-    auditAnalytics: () => [...base, "auth", "auditAnalytics"] as const,
   },
 
   featureFlags: {

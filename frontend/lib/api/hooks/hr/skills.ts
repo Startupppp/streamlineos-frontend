@@ -47,22 +47,3 @@ export function useSkillsMatrix() {
     staleTime: 60_000,
   });
 }
-
-
-export interface AnniversaryFeedItem {
-  userId: string;
-  name: string | null;
-  image: string | null;
-  type: "BIRTHDAY" | "WORK_ANNIVERSARY";
-  daysAway: number;
-  dateStr: string;
-  yearsCount?: number;
-}
-
-export function useAnniversaryFeed() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "anniversary-feed"] as const,
-    queryFn: () => apiClient.get<AnniversaryFeedItem[]>("/hr/employees/anniversary-feed"),
-    staleTime: 60 * 60_000,
-  });
-}

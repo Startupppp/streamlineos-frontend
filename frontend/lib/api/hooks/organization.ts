@@ -61,16 +61,6 @@ export const useInvitations = (
   });
 };
 
-export const useUserProfile = (
-  options?: Omit<UseQueryOptions<Record<string, unknown>, Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<Record<string, unknown>, Error>({
-    queryKey: [...queryKeys.organization.all, "profile"],
-    queryFn: () => apiClient.get<Record<string, unknown>>("/organization/profile"),
-    ...options,
-  });
-};
-
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -117,21 +107,6 @@ export const useUpdateMemberRole = () => {
       apiClient.patch<{ success: boolean }>(
         `/organization/members/${userId}`,
         { role }
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.members(),
-      });
-    },
-  });
-};
-
-export const useRemoveMember = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, string>({
-    mutationFn: (userId) =>
-      apiClient.delete<{ success: boolean }>(
-        `/organization/members/${userId}`
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({

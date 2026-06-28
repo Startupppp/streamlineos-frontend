@@ -54,21 +54,6 @@ export const useCreateRole = () => {
   });
 };
 
-export const useUpdateRole = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    { success: boolean },
-    Error,
-    { id: number; name?: string; permissions?: string[] }
-  >({
-    mutationFn: ({ id, ...data }) =>
-      apiClient.patch<{ success: boolean }>(`/roles/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
-    },
-  });
-};
-
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
