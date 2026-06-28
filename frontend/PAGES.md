@@ -47,54 +47,54 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/billing` — Billing overview
 - [x] `/billing/invoices` — Invoices list with status filters
 - [x] `/billing/invoices/new` — New invoice creation
-- [ ] `/billing/invoices/[invoiceId]` — Invoice detail
-- [ ] `/accounting` — Accounting overview
-- [ ] `/accounting/coa` — Chart of accounts
-- [ ] `/accounting/coa/[accountId]` — Account detail
-- [ ] `/accounting/journal` — Journal entries
-- [ ] `/accounting/journal/new` — New journal entry
-- [ ] `/accounting/journal/[entryId]` — Journal entry detail
-- [ ] `/accounting/trial-balance` — Trial balance
-- [ ] `/accounting/profit-loss` — Profit & loss
-- [ ] `/accounting/balance-sheet` — Balance sheet
-- [ ] `/accounting/customers` — Customer ledger list
-- [ ] `/accounting/customers/[clientId]` — Customer ledger
-- [ ] `/accounting/vendors` — Vendor ledger list
-- [ ] `/accounting/vendors/[vendorId]` — Vendor ledger
-- [ ] `/accounting/purchase-bills` — Purchase bills list
-- [ ] `/accounting/purchase-bills/new` — New purchase bill
-- [ ] `/accounting/purchase-bills/[billId]` — Bill detail
-- [ ] `/accounting/aged-receivables` — Aged receivables
-- [ ] `/accounting/aged-payables` — Aged payables
-- [ ] `/accounting/gstr-1` — GSTR-1
-- [ ] `/accounting/gstr-3b` — GSTR-3B
+- [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
+- [x] `/accounting` — Accounting overview
+- [x] `/accounting/coa` — Chart of accounts
+- [x] `/accounting/coa/[accountId]` — Account detail: type badge, edit dialog (name/description/isActive), recent journal entries
+- [x] `/accounting/journal` — Journal entries
+- [x] `/accounting/journal/new` — New journal entry
+- [x] `/accounting/journal/[entryId]` — Journal entry detail: lines table with balanced indicator, Post/Reverse AlertDialog actions
+- [x] `/accounting/trial-balance` — Trial balance
+- [x] `/accounting/profit-loss` — Profit & loss
+- [x] `/accounting/balance-sheet` — Balance sheet
+- [x] `/accounting/customers` — Customer ledger list
+- [x] `/accounting/customers/[clientId]` — Customer ledger: date-range filter, summary stats, ledger table with running balance
+- [x] `/accounting/vendors` — Vendor ledger list
+- [x] `/accounting/vendors/[vendorId]` — Vendor ledger: date-range filter, summary stats, ledger table with running balance
+- [x] `/accounting/purchase-bills` — Purchase bills list
+- [x] `/accounting/purchase-bills/new` — New purchase bill
+- [x] `/accounting/purchase-bills/[billId]` — Bill detail: line items, totals, Post AlertDialog, record-payment dialog
+- [x] `/accounting/aged-receivables` — Aged receivables
+- [x] `/accounting/aged-payables` — Aged payables
+- [x] `/accounting/gstr-1` — GSTR-1
+- [x] `/accounting/gstr-3b` — GSTR-3B
 
 ---
 
 ## HR — Core
-- [ ] `/hr` — HR overview
-- [ ] `/hr/employees` — Employees list
-- [ ] `/hr/employees/[employeeId]` — Employee profile
-- [ ] `/hr/attendance` — Attendance
-- [ ] `/hr/leaves` — Leave management
-- [ ] `/hr/payroll` — Payroll
-- [ ] `/hr/my-payslips` — My payslips
-- [ ] `/hr/expenses` — Expenses
-- [ ] `/hr/reimbursements` — Reimbursements
-- [ ] `/hr/assets` — Assets
-- [ ] `/hr/devices` — Devices
-- [ ] `/hr/work-logs` — Work logs
-- [ ] `/timesheets` — Timesheets (personal)
-- [ ] `/timesheets/team` — Team timesheets
+- [x] `/hr` — HR overview
+- [x] `/hr/employees` — Employees list
+- [x] `/hr/employees/[employeeId]` — Employee profile: tabs (overview/attendance/edit), avatar, stats, direct reports, skills, social links, full edit form
+- [x] `/hr/attendance` — Attendance
+- [x] `/hr/leaves` — Leave management
+- [x] `/hr/payroll` — Payroll
+- [x] `/hr/my-payslips` — My payslips
+- [x] `/hr/expenses` — Expenses
+- [x] `/hr/reimbursements` — Reimbursements
+- [x] `/hr/assets` — Assets
+- [x] `/hr/devices` — Devices (redirects to /hr/assets — intentional)
+- [x] `/hr/work-logs` — Work logs
+- [x] `/timesheets` — Timesheets (personal)
+- [x] `/timesheets/team` — Team timesheets
 
 ---
 
 ## HR — People Ops
-- [ ] `/hr/onboarding` — Onboarding overview
-- [ ] `/hr/onboarding/[userId]` — Employee onboarding
-- [ ] `/hr/onboarding/my-tasks` — My onboarding tasks
-- [ ] `/hr/org-chart` — Org chart
-- [ ] `/hr/teams/[teamId]` — Team detail
+- [x] `/hr/onboarding` — Onboarding overview
+- [x] `/hr/onboarding/[userId]` — Employee onboarding: progress bar, grouped tasks (pending/completed), overdue highlighting, toggle-complete actions
+- [x] `/hr/onboarding/my-tasks` — My onboarding tasks
+- [x] `/hr/org-chart` — Org chart
+- [x] `/hr/teams/[teamId]` — Team detail: info card, lead employee resolution, edit Sheet, delete AlertDialog
 - [ ] `/hr/helpdesk` — HR helpdesk
 - [ ] `/hr/handbook` — Employee handbook
 - [ ] `/hr/recognition` — Recognition
@@ -230,7 +230,7 @@ Ordered money-path first. Check off each page after fixing.
 - [ ] `/settings/members` — Members
 - [ ] `/settings/roles` — Roles
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
-- [ ] `/settings/permissions` — Permissions
+- [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [ ] `/settings/branches` — Branches
 - [ ] `/settings/notifications` — Notifications
 - [ ] `/settings/audit-log` — Audit log
