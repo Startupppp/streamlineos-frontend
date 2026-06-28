@@ -133,6 +133,7 @@ export default function CommissionsPage() {
   const handleRuleRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRuleRate(e.target.value), []);
   const handleRuleDialogChange = useCallback((open: boolean) => setRuleDialogOpen(open), []);
   const handleRuleTypeChange = useCallback((v: string) => setRuleType(v), []);
+  const handleCommissionAction = useCallback((action: PendingAction) => setPendingAction(action), []);
 
   const items: CommissionItem[] = data?.items ?? [];
 
@@ -246,7 +247,7 @@ export default function CommissionsPage() {
                               commissionId={c.id}
                               userName={c.userName}
                               status={c.status}
-                              onAction={setPendingAction}
+                              onAction={handleCommissionAction}
                             />
                           </TableCell>
                         )}
