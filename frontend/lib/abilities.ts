@@ -1,4 +1,4 @@
-export interface AbilityContext {
+interface AbilityContext {
   isPlatformAdmin: boolean;
   isOrgOwner: boolean;
   permissions: string[];
