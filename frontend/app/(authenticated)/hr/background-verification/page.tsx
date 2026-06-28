@@ -53,12 +53,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
 
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
-
-type BgvStatus = "PASSED" | "FAILED" | "IN_PROGRESS" | "PENDING";
 
 function getStatusConfig(s: string | null) {
   if (s === "PASSED") {
