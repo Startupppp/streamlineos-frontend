@@ -250,6 +250,20 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                     </>
                   )}
 
+                  {user.emergencyContact && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
+                        <div className="space-y-1 text-xs">
+                          <p className="font-medium">{user.emergencyContact.name} <span className="font-normal text-muted-foreground">({user.emergencyContact.relation})</span></p>
+                          <p className="text-muted-foreground">{user.emergencyContact.phone}</p>
+                          {user.emergencyContact.email && <p className="text-muted-foreground">{user.emergencyContact.email}</p>}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <Separator />
                   <UserMembershipSection userId={user.id} />
                 </TabsContent>

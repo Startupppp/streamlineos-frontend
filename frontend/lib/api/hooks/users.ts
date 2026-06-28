@@ -66,6 +66,13 @@ interface UserPreferences {
   updatedAt: string;
 }
 
+interface EmergencyContact {
+  name: string;
+  relation: string;
+  phone: string;
+  email?: string;
+}
+
 interface User {
   id: string;
   name: string | null;
@@ -87,6 +94,7 @@ interface User {
   twitterUrl: string | null;
   githubUrl: string | null;
   websiteUrl: string | null;
+  emergencyContact: EmergencyContact | null;
   joinedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -582,6 +590,7 @@ export const useExportUsers = () => {
 
 export type {
   User,
+  EmergencyContact,
   UserSession,
   UserDevice,
   UserActivityItem,

@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { useUpdateUser } from "@/lib/api/hooks/users";
 import type { User } from "@/lib/api/hooks/users";
 import { getApiError } from "@/lib/api-client";
@@ -33,6 +34,10 @@ const editSchema = z.object({
   phone: z.string().optional(),
   role: z.string().min(1, "Role is required"),
   bio: z.string().optional(),
+  emergencyName: z.string().optional(),
+  emergencyRelation: z.string().optional(),
+  emergencyPhone: z.string().optional(),
+  emergencyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
 });
 
 type EditFormValues = z.infer<typeof editSchema>;
@@ -51,6 +56,8 @@ const ROLES = [
   { value: "OWNER", label: "Owner" },
 ];
 
+const RELATIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"];
+
 export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
   const { mutate: updateUser, isPending } = useUpdateUser();
 
@@ -63,12 +70,37 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
       phone: user.phone ?? "",
       role: user.role,
       bio: user.bio ?? "",
+      emergencyName: user.emergencyContact?.name ?? "",
+      emergencyRelation: user.emergencyContact?.relation ?? "",
+      emergencyPhone: user.emergencyContact?.phone ?? "",
+      emergencyEmail: user.emergencyContact?.email ?? "",
     },
   });
 
   function onSubmit(values: EditFormValues) {
+    const emergencyContact =
+      values.emergencyName && values.emergencyRelation && values.emergencyPhone
+        ? {
+            name: values.emergencyName,
+            relation: values.emergencyRelation,
+            phone: values.emergencyPhone,
+            email: values.emergencyEmail || undefined,
+          }
+        : undefined;
+
     updateUser(
-      { userId: user.id, data: values },
+      {
+        userId: user.id,
+        data: {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          designation: values.designation,
+          phone: values.phone,
+          role: values.role,
+          bio: values.bio,
+          emergencyContact,
+        },
+      },
       {
         onSuccess: () => {
           toast.success("User updated");
@@ -181,6 +213,77 @@ export function UserEditForm({ user, onSuccess, onCancel }: UserEditFormProps) {
             </FormItem>
           )}
         />
+
+        <Separator />
+
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Emergency Contact</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="emergencyName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Full Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Contact name" className="h-8 text-xs" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="emergencyRelation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Relationship</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {RELATIONS.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="emergencyPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Phone</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="+1 (555) 000-0000" type="tel" className="h-8 text-xs" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="emergencyEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Email (optional)</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="email@example.com" type="email" className="h-8 text-xs" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="flex gap-2 justify-end pt-1">
           <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>

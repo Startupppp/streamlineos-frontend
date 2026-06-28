@@ -49,6 +49,7 @@ import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
 import { UserStatsCards } from "./user-stats-cards";
+import { UserImportDialog } from "./user-import-dialog";
 import { toast } from "sonner";
 import {
   Search,
@@ -64,6 +65,9 @@ import {
   RefreshCw,
   Download,
   KeyRound,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -219,6 +223,7 @@ export function UsersPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -336,6 +341,16 @@ export function UsersPage() {
   const someSelected = selectedIds.size > 0;
   const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
+  function handleSort(column: "name" | "joinedAt" | "status") {
+    if (sortBy === column) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  }
+
   return (
     <>
       <PageWrapper
@@ -353,6 +368,14 @@ export function UsersPage() {
             >
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setImportOpen(true)}
+            >
+              Import CSV
             </Button>
             <Button
               variant="outline"
@@ -530,11 +553,47 @@ export function UsersPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead className="text-xs">User</TableHead>
+                    <TableHead
+                      className="text-xs cursor-pointer select-none hover:text-foreground"
+                      onClick={() => handleSort("name")}
+                    >
+                      <span className="flex items-center gap-1">
+                        User
+                        {sortBy === "name" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        )}
+                      </span>
+                    </TableHead>
                     <TableHead className="text-xs">Email</TableHead>
                     <TableHead className="text-xs">Role</TableHead>
-                    <TableHead className="text-xs">Status</TableHead>
-                    <TableHead className="text-xs">Joined</TableHead>
+                    <TableHead
+                      className="text-xs cursor-pointer select-none hover:text-foreground"
+                      onClick={() => handleSort("status")}
+                    >
+                      <span className="flex items-center gap-1">
+                        Status
+                        {sortBy === "status" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        )}
+                      </span>
+                    </TableHead>
+                    <TableHead
+                      className="text-xs cursor-pointer select-none hover:text-foreground"
+                      onClick={() => handleSort("joinedAt")}
+                    >
+                      <span className="flex items-center gap-1">
+                        Joined
+                        {sortBy === "joinedAt" ? (
+                          sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        )}
+                      </span>
+                    </TableHead>
                     <TableHead className="text-xs w-10" />
                   </TableRow>
                 </TableHeader>
@@ -652,6 +711,7 @@ export function UsersPage() {
 
       <UserInviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
       <UserBulkInviteDialog open={bulkInviteOpen} onOpenChange={setBulkInviteOpen} />
+      <UserImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
 }
