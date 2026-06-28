@@ -229,6 +229,7 @@ Ordered money-path first. Check off each page after fixing.
 - [ ] `/settings/organization` — Organization
 - [ ] `/settings/members` — Members
 - [ ] `/settings/roles` — Roles
+- [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
 - [ ] `/settings/permissions` — Permissions
 - [ ] `/settings/branches` — Branches
 - [ ] `/settings/notifications` — Notifications
