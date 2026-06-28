@@ -196,7 +196,7 @@ export default function GoalsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as GoalStatus | "all")}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="h-8 w-[140px] text-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -240,7 +240,7 @@ export default function GoalsPage() {
         <ErrorState
           title="Failed to load goals"
           description="We couldn't load your goals. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : !hasGoals ? (
         <div className="flex flex-1 items-center justify-center min-h-[50vh]">
@@ -248,7 +248,7 @@ export default function GoalsPage() {
             illustration={<EmptyTargetIllustration />}
             title="No goals yet"
             description="Create your first objective with measurable key results to start tracking progress."
-            action={{ label: "New Goal", onClick: () => setCreateOpen(true) }}
+            action={{ label: "New Goal", onClick: handleOpenCreate }}
           />
         </div>
       ) : (

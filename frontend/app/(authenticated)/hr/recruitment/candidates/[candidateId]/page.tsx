@@ -174,7 +174,7 @@ export default function CandidateDetailPage() {
     (candidate?.aiScore != null && candidate.aiScoreBreakdown
       ? {
           overall: candidate.aiScore,
-          breakdown: candidate.aiScoreBreakdown as AiScoreResult["breakdown"],
+          breakdown: candidate.aiScoreBreakdown as unknown as AiScoreResult["breakdown"],
           summary: "",
         }
       : null);

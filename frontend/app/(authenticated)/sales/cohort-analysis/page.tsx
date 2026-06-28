@@ -36,6 +36,8 @@ export default function CohortAnalysisPage() {
     setMonths(Number(v));
   }, []);
 
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
   const chartData = cohort?.map((row) => ({
     month: row.cohortMonth,
     Created: row.created,
@@ -80,7 +82,7 @@ export default function CohortAnalysisPage() {
         <ErrorState
           title="Couldn't load cohort data"
           description="An error occurred while loading cohort analysis. Please try again."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       ) : (
         <>

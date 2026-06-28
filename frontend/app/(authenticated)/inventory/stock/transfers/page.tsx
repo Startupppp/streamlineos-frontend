@@ -255,7 +255,7 @@ export default function TransfersPage() {
             title="No transfers found"
             description={
               statusFilter !== "all"
-                ? `No transfers with status "${STATUS_LABELS[statusFilter as TransferStatus]}".`
+                ? `No transfers with status "${STATUS_LABELS[statusFilter]}".`
                 : "Create a transfer to move stock between locations."
             }
             action={{ label: "New Transfer", onClick: handleOpenSheet }}

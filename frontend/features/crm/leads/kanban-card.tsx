@@ -94,7 +94,7 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
             {score}
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-56 p-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent side="top" className="max-w-56 p-2 space-y-1.5" onClick={handleStopPropagation}>
           <p className="text-xs font-semibold">Score: {score}/100</p>
           {data ? (
             data.firedRules.length === 0 ? (
@@ -120,6 +120,8 @@ function ScoreExplainerBadge({ leadId, score }: { leadId: number; score: number 
     </TooltipProvider>
   );
 }
+
+const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
 export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: KanbanCardProps) {
   const selfAssign = useSelfAssignLead();
@@ -227,7 +229,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       </span>
                     )}
                     {lead.slaDeadline && (
-                      <span onClick={(e) => e.stopPropagation()}>
+                      <span onClick={stopPropagation}>
                         <SlaCountdown deadline={lead.slaDeadline} />
                       </span>
                     )}
@@ -241,7 +243,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       {lead.score != null && lead.score > 0 ? (
                         <ScoreExplainerBadge leadId={lead.id} score={lead.score} />
                       ) : (
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div onClick={stopPropagation}>
                           <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
                         </div>
                       )}

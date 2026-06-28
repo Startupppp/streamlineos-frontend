@@ -60,6 +60,28 @@ function formatTaskDue(dueDate: string | null): string {
   return `${formatted} · ${time}`;
 }
 
+interface CompleteTaskButtonProps {
+  taskId: number;
+  onComplete: (taskId: number) => void;
+  isPending: boolean;
+}
+
+function CompleteTaskButton({ taskId, onComplete, isPending }: CompleteTaskButtonProps) {
+  const handleClick = useCallback(() => onComplete(taskId), [taskId, onComplete]);
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-emerald-400"
+      onClick={handleClick}
+      disabled={isPending}
+      title="Mark as done"
+    >
+      <CheckCircle2 className="h-4 w-4" />
+    </Button>
+  );
+}
+
 interface LeadFollowupTabProps {
   leadId: number;
 }
@@ -118,7 +140,10 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
     [completeTask],
   );
 
-  const handleFuTypeChange = (v: string) => setFuType(v as TaskType);
+  const handleFuTypeChange = useCallback((v: string) => setFuType(v as TaskType), []);
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value), []);
+  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTime(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setFuNotes(e.target.value), []);
 
   return (
     <div className="space-y-5">
@@ -134,7 +159,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
             <Input
               placeholder="e.g. Call to discuss SIP plan"
               value={fuTitle}
-              onChange={(e) => setFuTitle(e.target.value)}
+              onChange={handleTitleChange}
               className="h-8 text-xs"
             />
           </div>
@@ -160,7 +185,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
             <Input
               type="time"
               value={fuTime}
-              onChange={(e) => setFuTime(e.target.value)}
+              onChange={handleTimeChange}
               className="h-8 text-xs"
             />
           </div>
@@ -183,7 +208,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
             <Textarea
               placeholder="Any context for this follow-up..."
               value={fuNotes}
-              onChange={(e) => setFuNotes(e.target.value)}
+              onChange={handleNotesChange}
               rows={2}
               className="text-xs resize-none"
             />
@@ -259,16 +284,11 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                       </p>
                     )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-emerald-400"
-                    onClick={() => handleCompleteTask(task.id)}
-                    disabled={completeTask.isPending}
-                    title="Mark as done"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                  </Button>
+                  <CompleteTaskButton
+                    taskId={task.id}
+                    onComplete={handleCompleteTask}
+                    isPending={completeTask.isPending}
+                  />
                 </div>
               );
             })}

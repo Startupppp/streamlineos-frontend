@@ -236,7 +236,7 @@ export default function LeadDetailPage({
       >
         <motion.div variants={fadeUp}>
           <LeadDetailHeader
-            lead={lead}
+            lead={leadData}
             isEditing={isEditing}
             onToggleEdit={handleToggleEdit}
             onStatusChange={handleStatusChange}
@@ -247,7 +247,7 @@ export default function LeadDetailPage({
         <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
-              lead={lead}
+              lead={leadData}
               isEditing={isEditing}
               editForm={editForm}
               isUpdatePending={updateLeadMutation.isPending}
@@ -279,7 +279,7 @@ export default function LeadDetailPage({
 
           <div className="lg:col-span-2">
             <LeadSidebar
-              lead={lead}
+              lead={leadData}
               timeline={timeline}
               timelineLoading={timelineLoading}
             />

@@ -33,8 +33,12 @@ export function CompleteSprintSheet({
     ? (sprint.tickets || []).filter((t) => t.status !== "DONE").length
     : 0;
 
+  function handleOpenChange(open: boolean) {
+    if (!open) onCancel();
+  }
+
   return (
-    <Sheet open={!!sprint} onOpenChange={(open) => !open && onCancel()}>
+    <Sheet open={!!sprint} onOpenChange={handleOpenChange}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">

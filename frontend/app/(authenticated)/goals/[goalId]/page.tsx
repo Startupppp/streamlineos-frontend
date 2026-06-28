@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,14 @@ function CheckInDialog({
   const [note, setNote] = useState("");
   const checkIn = useCheckIn(goalId);
 
+  function handleNewValueChange(e: ChangeEvent<HTMLInputElement>) {
+    setNewValue(e.target.value);
+  }
+
+  function handleNoteChange(e: ChangeEvent<HTMLTextAreaElement>) {
+    setNote(e.target.value);
+  }
+
   function handleSubmit() {
     const parsed = Number(newValue);
     if (Number.isNaN(parsed)) {
@@ -119,7 +127,7 @@ function CheckInDialog({
               id="check-in-value"
               type="number"
               value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
+              onChange={handleNewValueChange}
             />
             <p className="text-xs text-muted-foreground">
               Target: {formatMetricValue(keyResult.targetValue, keyResult.metricType, keyResult.unit)}
@@ -132,7 +140,7 @@ function CheckInDialog({
               rows={2}
               className="resize-none"
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={handleNoteChange}
             />
           </div>
         </div>
@@ -156,6 +164,11 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
   const numericProjectId = projectId ? Number(projectId) : 0;
   const { data: ticketsData } = useTickets(numericProjectId);
   const addLink = useAddGoalLink(goalId);
+
+  function handleProjectChange(v: string) {
+    setProjectId(v);
+    setTicketId("");
+  }
 
   function handleSubmit() {
     if (!projectId) {
@@ -185,10 +198,7 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
             <Label>Project</Label>
             <Select
               value={projectId}
-              onValueChange={(v) => {
-                setProjectId(v);
-                setTicketId("");
-              }}
+              onValueChange={handleProjectChange}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a project" />
@@ -236,14 +246,19 @@ function KeyResultRow({
   onCheckIn,
 }: {
   keyResult: KeyResult;
-  onCheckIn: () => void;
+  onCheckIn: (keyResult: KeyResult) => void;
 }) {
   const percent = keyResultPercent(keyResult);
+
+  function handleCheckIn() {
+    onCheckIn(keyResult);
+  }
+
   return (
     <div className="rounded-lg border border-border/60 p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug">{keyResult.title}</p>
-        <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={onCheckIn}>
+        <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={handleCheckIn}>
           Check in
         </Button>
       </div>
@@ -262,6 +277,46 @@ function KeyResultRow({
   );
 }
 
+function LinkRow({
+  link,
+  onRemove,
+}: {
+  link: GoalDetail["links"][number];
+  onRemove: (id: number) => void;
+}) {
+  function handleRemove() {
+    onRemove(link.id);
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
+      <div className="flex items-center gap-2 min-w-0">
+        {link.ticketId ? (
+          <TicketIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        ) : (
+          <FolderKanban className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        )}
+        <span className="text-sm truncate">
+          {link.ticketId ? link.ticketTitle ?? `Ticket #${link.ticketId}` : link.projectName ?? `Project #${link.projectId}`}
+        </span>
+        {link.ticketId && link.projectKey && (
+          <Badge variant="outline" className="text-[9px] shrink-0">
+            {link.projectKey}
+          </Badge>
+        )}
+      </div>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
+        onClick={handleRemove}
+      >
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
 export default function GoalDetailPage({ params }: { params: Promise<{ goalId: string }> }) {
   const { goalId: goalIdStr } = use(params);
   const goalId = Number(goalIdStr);
@@ -275,6 +330,38 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [checkInTarget, setCheckInTarget] = useState<KeyResult | null>(null);
   const [addLinkOpen, setAddLinkOpen] = useState(false);
+
+  function handleNavigateBack() {
+    router.push("/goals");
+  }
+
+  function handleOpenEdit() {
+    setEditOpen(true);
+  }
+
+  function handleOpenDelete() {
+    setDeleteOpen(true);
+  }
+
+  function handleOpenAddLink() {
+    setAddLinkOpen(true);
+  }
+
+  function handleCloseAddLink() {
+    setAddLinkOpen(false);
+  }
+
+  function handleCloseCheckIn() {
+    setCheckInTarget(null);
+  }
+
+  function handleCheckIn(kr: KeyResult) {
+    setCheckInTarget(kr);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleDelete() {
     deleteGoal.mutate(goalId, {
@@ -307,7 +394,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
         <ErrorState
           title="Failed to load goal"
           description="This goal may have been removed or is unavailable."
-          onRetry={() => refetch()}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );
@@ -323,11 +410,11 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
       eyebrow={LEVEL_LABEL[detail.level]}
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/goals")}>
+          <Button variant="outline" size="sm" onClick={handleNavigateBack}>
             <ArrowLeft className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Back</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="sm" onClick={handleOpenEdit}>
             <Pencil className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Edit</span>
           </Button>
@@ -335,7 +422,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
             variant="outline"
             size="sm"
             className="text-destructive hover:text-destructive"
-            onClick={() => setDeleteOpen(true)}
+            onClick={handleOpenDelete}
           >
             <Trash2 className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Delete</span>
@@ -404,7 +491,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           ) : (
             <div className="space-y-2">
               {detail.keyResults.map((kr) => (
-                <KeyResultRow key={kr.id} keyResult={kr} onCheckIn={() => setCheckInTarget(kr)} />
+                <KeyResultRow key={kr.id} keyResult={kr} onCheckIn={handleCheckIn} />
               ))}
             </div>
           )}
@@ -419,7 +506,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
                 {detail.links.length}
               </Badge>
             </div>
-            <Button size="sm" variant="outline" className="h-7" onClick={() => setAddLinkOpen(true)}>
+            <Button size="sm" variant="outline" className="h-7" onClick={handleOpenAddLink}>
               <Plus className="h-3.5 w-3.5 mr-1" /> Link
             </Button>
           </div>
@@ -433,34 +520,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
           ) : (
             <div className="space-y-2">
               {detail.links.map((link) => (
-                <div
-                  key={link.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {link.ticketId ? (
-                      <TicketIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    ) : (
-                      <FolderKanban className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="text-sm truncate">
-                      {link.ticketId ? link.ticketTitle ?? `Ticket #${link.ticketId}` : link.projectName ?? `Project #${link.projectId}`}
-                    </span>
-                    {link.ticketId && link.projectKey && (
-                      <Badge variant="outline" className="text-[9px] shrink-0">
-                        {link.projectKey}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
-                    onClick={() => handleRemoveLink(link.id)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <LinkRow key={link.id} link={link} onRemove={handleRemoveLink} />
               ))}
             </div>
           )}
@@ -519,10 +579,10 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
         <CheckInDialog
           goalId={goalId}
           keyResult={checkInTarget}
-          onClose={() => setCheckInTarget(null)}
+          onClose={handleCloseCheckIn}
         />
       )}
-      {addLinkOpen && <AddLinkDialog goalId={goalId} onClose={() => setAddLinkOpen(false)} />}
+      {addLinkOpen && <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} />}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

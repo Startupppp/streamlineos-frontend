@@ -20,6 +20,10 @@ import { AnimatePresence, motion } from "framer-motion";
 
 type UpdateOrderContext = { previous: KanbanTicket[] };
 
+function isUpdateOrderContext(v: unknown): v is UpdateOrderContext {
+  return typeof v === 'object' && v !== null && 'previous' in v;
+}
+
 const DEFAULT_COLUMNS: KanbanColumn[] = [
   { id: "TODO", name: "To Do", color: "#94a3b8", order: 0 },
   { id: "IN_PROGRESS", name: "In Progress", color: "#3b82f6", order: 1 },
@@ -78,8 +82,8 @@ export function KanbanBoard({
       });
       return { previous: optimisticTickets };
     },
-    onError: (_, __, context: UpdateOrderContext | undefined) => {
-      if (context?.previous) setOptimisticTickets(context.previous);
+    onError: (_, __, context) => {
+      if (isUpdateOrderContext(context)) setOptimisticTickets(context.previous);
       toast.error("Failed to update order");
     },
     onSettled: () => {

@@ -69,6 +69,14 @@ export default function SalesQuotasPage() {
   const totalActual = items.reduce((s, q) => s + Number(q.actualRevenue), 0);
   const overallAttainment = totalTarget > 0 ? Math.round((totalActual / totalTarget) * 100) : 0;
 
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleUserIdChange = useCallback((v: string) => setUserId(v), []);
+  const handlePeriodChange = useCallback((v: string) => setPeriod(v), []);
+  const handleStartDateChange = useCallback((v: string) => setStartDate(v), []);
+  const handleEndDateChange = useCallback((v: string) => setEndDate(v), []);
+  const handleTargetRevenueChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTargetRevenue(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+
   const resetForm = useCallback(() => {
     setUserId(""); setPeriod("monthly"); setStartDate(""); setEndDate("");
     setTargetRevenue(""); setNotes("");
@@ -102,7 +110,7 @@ export default function SalesQuotasPage() {
       title="Sales Quotas"
       subtitle="Manage revenue targets per rep"
       actions={
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           Set Quota
         </Button>
