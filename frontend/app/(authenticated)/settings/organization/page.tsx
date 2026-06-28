@@ -17,6 +17,8 @@ import { OrgHolidayCalendarSection } from "@/features/settings/organization/org-
 import { OrgCustomDomainsSection } from "@/features/settings/organization/org-custom-domains-section";
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
+import { OrgIntegrationsSection } from "@/features/settings/organization/org-integrations-section";
+import { OrgDataPrivacySection } from "@/features/settings/organization/org-data-privacy-section";
 
 function isValidOctet(part: string): boolean {
   if (!/^\d{1,3}$/.test(part)) return false;
@@ -306,6 +308,10 @@ export default function OrganizationSettingsPage() {
         <OrgHolidayCalendarSection canEdit={canEdit} />
 
         <OrgCustomDomainsSection canEdit={canEdit} />
+
+        <OrgIntegrationsSection canEdit={canEdit} />
+
+        <OrgDataPrivacySection canEdit={canEdit} />
 
         {canEdit && (
           <OrgConfigSection
