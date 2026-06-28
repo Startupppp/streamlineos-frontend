@@ -250,6 +250,12 @@ export default function JobPostingsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <p className="text-sm font-semibold text-foreground">Failed to load job postings</p>
+            <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
+            <Button size="sm" variant="outline" onClick={() => void refetch()}>Try again</Button>
+          </div>
         ) : !jobs?.length ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <EmptyPersonIllustration className="h-28 w-28 opacity-90" />

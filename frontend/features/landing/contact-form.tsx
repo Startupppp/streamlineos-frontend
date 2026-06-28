@@ -7,11 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  submitContactForm,
-  type ContactInput,
-  type ContactResult,
-} from "@/server/actions/contact-submission";
+import { apiClient } from "@/lib/api-client";
+
+type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
+
+interface ContactInput {
+  name: string;
+  email: string;
+  company?: string;
+  phone?: string;
+  topic: ContactTopic;
+  message: string;
+  cfTurnstileToken?: string;
+}
 import { TurnstileWidget, isTurnstileEnabled } from "@/features/security/turnstile-widget";
 
 const TOPICS: { value: ContactInput["topic"]; label: string }[] = [

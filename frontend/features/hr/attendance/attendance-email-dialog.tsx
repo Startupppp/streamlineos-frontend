@@ -31,7 +31,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
-import { emailAttendanceReport } from "@/server/actions/attendance-export";
+import { apiClient } from "@/lib/api-client";
 
 interface UserOption {
   id: string;

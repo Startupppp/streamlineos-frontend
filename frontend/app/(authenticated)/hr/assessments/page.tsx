@@ -56,6 +56,7 @@ export default function AssessmentsPage() {
 
   const { data: items, isLoading, isError, refetch } = useAssessments();
   const create = useCreateAssessment();
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [title, setTitle] = useState("");

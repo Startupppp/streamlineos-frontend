@@ -67,6 +67,7 @@ interface PreviousNarrativeCardProps {
 function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
   const [expanded, setExpanded] = useState(false);
   const preview = entry.narrative.slice(0, 180);
+  const handleToggleExpand = useCallback(() => setExpanded((v) => !v), []);
   const generatedAt = new Date(entry.generatedAt).toLocaleString("en-IN", {
     dateStyle: "short",
     timeStyle: "short",
@@ -91,7 +92,7 @@ function PreviousNarrativeCard({ entry }: PreviousNarrativeCardProps) {
         <button
           type="button"
           className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
-          onClick={() => setExpanded((v) => !v)}
+          onClick={handleToggleExpand}
         >
           {expanded ? "Show less" : "Show more"}
         </button>

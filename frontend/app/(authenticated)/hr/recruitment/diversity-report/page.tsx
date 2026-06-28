@@ -202,7 +202,7 @@ export default function DiversityReportPage() {
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
           <AlertCircle className="h-10 w-10 text-destructive/50" />
           <p className="text-sm text-muted-foreground">Failed to load diversity report.</p>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
             Try again
           </Button>
         </div>

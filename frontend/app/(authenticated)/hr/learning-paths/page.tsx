@@ -72,6 +72,8 @@ export default function LearningPathsPage() {
     queryFn: () => apiClient.get<LearningPath[]>("/hr/learning-paths"),
   });
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const create = useMutation({
     mutationFn: (data: {
       title: string;
@@ -155,7 +157,7 @@ export default function LearningPathsPage() {
             <p className="text-sm font-medium text-foreground">Failed to load learning paths</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

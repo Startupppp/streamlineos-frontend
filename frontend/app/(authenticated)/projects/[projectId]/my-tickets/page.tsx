@@ -221,41 +221,11 @@ export default function MyTicketsPage({ params }: PageProps) {
                 </TableRow>
               ) : (
                 filteredTickets.map((ticket) => (
-                  <TableRow
+                  <TicketRow
                     key={ticket.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleTicketSelect(ticket.id)}
-                  >
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <TicketTypeIcon type={ticket.type} />
-                        #{ticket.ticketNumber}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-md">
-                      <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={ticket.status} />
-                    </TableCell>
-                    <TableCell>
-                      <PriorityBadge priority={ticket.priority} showLabel />
-                    </TableCell>
-                    <TableCell>
-                      {ticket.points != null && ticket.points > 0 ? (
-                        <Badge variant="secondary" className="text-xs">
-                          {ticket.points}
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {ticket.dueDate
-                        ? format(new Date(ticket.dueDate), "MMM d")
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
+                    ticket={ticket}
+                    onSelect={handleTicketSelect}
+                  />
                 ))
               )}
             </TableBody>

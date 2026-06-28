@@ -29,6 +29,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -255,113 +263,129 @@ function TicketDetailSheet({
   if (!ticket) return null;
 
   return (
-    <HrSheet
-      open={!!ticket}
-      onOpenChange={handleSheetOpenChange}
-      title={ticket.title}
-      description={`Ticket #${ticket.id} · Created ${ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : "—"}`}
-      showSubmit={false}
-      onCancel={onClose}
-      cancelLabel="Close"
-    >
-      <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Status
-            </p>
-            <span
-              className={cn(
-                "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                getStatusBadgeClass(ticket.status ?? "TODO"),
+    <Sheet open={!!ticket} onOpenChange={handleSheetOpenChange}>
+      <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
+          <SheetTitle className="text-base font-semibold leading-snug pr-6">
+            {ticket.title}
+          </SheetTitle>
+          <SheetDescription className="text-xs">
+            Ticket #{ticket.id} · Created{" "}
+            {ticket.createdAt
+              ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
+              : "—"}
+          </SheetDescription>
+        </SheetHeader>
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="px-5 py-5 space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    getStatusBadgeClass(ticket.status ?? "TODO"),
+                  )}
+                >
+                  {getStatusLabel(ticket.status ?? "TODO")}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Priority
+                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    getPriorityBadgeClass(ticket.priority ?? "MEDIUM"),
+                  )}
+                >
+                  {getPriorityLabel(ticket.priority ?? "MEDIUM")}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Category
+                </p>
+                <p className="text-sm text-foreground">{ticket.category ?? "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Assigned To
+                </p>
+                <p className="text-sm text-foreground">
+                  {ticket.assigneeId ? `ID: ${ticket.assigneeId}` : "Unassigned"}
+                </p>
+              </div>
+              {ticket.createdAt && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {format(new Date(ticket.createdAt), "MMM d, yyyy 'at' HH:mm")}
+                  </p>
+                </div>
               )}
-            >
-              {getStatusLabel(ticket.status ?? "TODO")}
-            </span>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Priority
-            </p>
-            <span
-              className={cn(
-                "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                getPriorityBadgeClass(ticket.priority ?? "MEDIUM"),
+              {ticket.resolvedAt && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Resolved
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' HH:mm")}
+                  </p>
+                </div>
               )}
-            >
-              {getPriorityLabel(ticket.priority ?? "MEDIUM")}
-            </span>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Category
-            </p>
-            <p className="text-sm text-foreground">{ticket.category ?? "—"}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Assigned To
-            </p>
-            <p className="text-sm text-foreground">
-              {ticket.assigneeId ? `ID: ${ticket.assigneeId}` : "Unassigned"}
-            </p>
-          </div>
-          {ticket.createdAt && (
-            <div className="space-y-1">
+            </div>
+
+            {ticket.description && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Description
+                </p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-muted/50 p-3 border border-border">
+                  {ticket.description}
+                </p>
+              </div>
+            )}
+
+            {ticket.resolution && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Resolution
+                </p>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3">
+                  {ticket.resolution}
+                </p>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Created
+                Ticket Routing
               </p>
-              <p className="text-sm text-foreground">
-                {format(new Date(ticket.createdAt), "MMM d, yyyy 'at' HH:mm")}
+              <p className="text-xs text-muted-foreground">
+                {ticket.assigneeId
+                  ? "This ticket has been assigned to a support agent."
+                  : "This ticket is in the queue and will be assigned to a support agent based on category and availability."}
               </p>
             </div>
-          )}
-          {ticket.resolvedAt && (
-            <div className="space-y-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Resolved
-              </p>
-              <p className="text-sm text-foreground">
-                {format(new Date(ticket.resolvedAt), "MMM d, yyyy 'at' HH:mm")}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {ticket.description && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Description
-            </p>
-            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-muted/50 p-3 border border-border">
-              {ticket.description}
-            </p>
           </div>
-        )}
-
-        {ticket.resolution && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Resolution
-            </p>
-            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3">
-              {ticket.resolution}
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Ticket Routing
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {ticket.assigneeId
-              ? "This ticket has been assigned to a support agent."
-              : "This ticket is in the queue and will be assigned to a support agent based on category and availability."}
-          </p>
-        </div>
-      </div>
-    </HrSheet>
+        </ScrollArea>
+        <SheetFooter className="shrink-0 px-5 py-4 border-t">
+          <Button
+            variant="outline"
+            className="w-full h-9 transition-colors duration-200"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 

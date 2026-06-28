@@ -16,6 +16,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -65,7 +66,7 @@ export default function ProjectsPage() {
     [updateParams],
   );
 
-  const { data, isLoading } = useProjects({
+  const { data, isLoading, isError, refetch } = useProjects({
     page,
     limit: 12,
     search: debouncedSearch || undefined,

@@ -168,6 +168,7 @@ export default function SlaConfigPage() {
   }, []);
 
   const handleDialogClose = useCallback(() => setDialogOpen(false), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleSave = useCallback(() => {
     const maxHours = Number(form.maxHours);
