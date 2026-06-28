@@ -429,7 +429,6 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...base, "goals", "list", params] as const,
     detail: (id: number) => [...base, "goals", "detail", id] as const,
     stats: () => [...base, "goals", "stats"] as const,
-    keyResults: (goalId: number) => [...base, "goals", "keyResults", goalId] as const,
   },
 
   projectReports: {

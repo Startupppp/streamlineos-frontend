@@ -6,7 +6,6 @@ export * from "./projects";
 export * from "./chat";
 export * from "./dashboard";
 export * from "./notifications";
-export * from "./reports";
 export * from "./organization";
 export * from "./roles";
 export * from "./access";
