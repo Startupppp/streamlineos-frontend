@@ -390,7 +390,7 @@ function BonusContent() {
 
 export default function BonusesPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate permission="hr:payroll:generate">
       <BonusContent />
     </DashboardGate>
   );

@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { LandingNav } from "@/features/landing/components/landing-nav";
 import { LandingFooter } from "@/features/landing/landing-footer";
-import { VisitTracker } from "@/features/analytics/visit-tracker";
 import { PublicMain } from "@/features/landing/components/public-main";
 
 type Props = {

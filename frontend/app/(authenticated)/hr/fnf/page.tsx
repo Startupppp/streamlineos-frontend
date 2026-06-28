@@ -423,7 +423,7 @@ function FnfContent() {
 
 export default function FnfPage() {
   return (
-    <DashboardGate allowedRoles={["HR", "CEO"]}>
+    <DashboardGate permission="hr:payroll:approve">
       <FnfContent />
     </DashboardGate>
   );

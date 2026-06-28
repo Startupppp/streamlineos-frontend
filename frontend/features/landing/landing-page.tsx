@@ -1,4 +1,3 @@
-import { VisitTracker } from "@/features/analytics/visit-tracker";
 import { LandingNav } from "./components/landing-nav";
 import { LandingHero } from "./components/landing-hero";
 import { LandingApps } from "./components/landing-apps";
@@ -15,7 +14,6 @@ import { LandingPageMotion } from "./landing-page-motion";
 export function LandingPage() {
   return (
     <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950 overflow-x-clip">
-      <VisitTracker />
       <LandingNav />
       <LandingPageMotion>
         <main className="flex-1">
