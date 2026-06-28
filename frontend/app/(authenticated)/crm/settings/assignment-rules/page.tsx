@@ -6,7 +6,7 @@ import { useForm, useFieldArray, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, Power, PowerOff, ChevronUp, ChevronDown, Settings,
+  Plus, Trash2, ChevronUp, ChevronDown, Settings,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

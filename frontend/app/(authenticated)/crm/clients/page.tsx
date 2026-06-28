@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -152,6 +152,7 @@ function KanbanColumn({
 
 export default function ClientAccountsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
@@ -171,10 +172,10 @@ export default function ClientAccountsPage() {
         else params.set(key, value);
       }
       startTransition(() => {
-        window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       });
     },
-    [searchParams, pathname],
+    [searchParams, router, pathname],
   );
 
   const setSearch = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);

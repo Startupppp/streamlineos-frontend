@@ -42,8 +42,10 @@ export default function CrmReportsPage() {
     };
   }, [appliedFrom, appliedTo]);
 
-  const { data: stats, isLoading } = useLeadStats(statsInput);
+  const { data: stats, isLoading, isError, refetch } = useLeadStats(statsInput);
   const { data: slaData } = useLeadSlaAlerts();
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleApplyFilter = useCallback(() => {
     setAppliedFrom(dateFrom);
@@ -146,16 +148,52 @@ export default function CrmReportsPage() {
     return Math.max(1, ...Object.values(stats.byStatus));
   }, [stats]);
 
+  const handleClearFilter = useCallback(() => {
+    setDateFrom("");
+    setDateTo("");
+    setAppliedFrom("");
+    setAppliedTo("");
+  }, []);
+
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-16 w-full" />
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}
+      <PageWrapper title="CRM Reports" subtitle="Analytics, pipeline insights, and exportable reports">
+        <div className="space-y-6">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="shadow-sm">
+                <CardContent className="p-3.5 space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-6 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2"><Skeleton className="h-4 w-40" /></CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2"><Skeleton className="h-4 w-36" /></CardHeader>
+            <CardContent><Skeleton className="h-64 w-full" /></CardContent>
+          </Card>
         </div>
-        <Skeleton className="h-80" />
-      </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="CRM Reports" subtitle="Analytics, pipeline insights, and exportable reports">
+        <div className="flex flex-1 h-full flex-col items-center justify-center gap-3 text-center py-16">
+          <AlertTriangle className="h-10 w-10 text-destructive/60" />
+          <p className="text-sm font-medium">Failed to load report data</p>
+          <p className="text-xs text-muted-foreground">Check your connection and try again.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+        </div>
+      </PageWrapper>
     );
   }
 
@@ -183,7 +221,7 @@ export default function CrmReportsPage() {
             Apply
           </Button>
           {(appliedFrom || appliedTo) && (
-            <Button variant="ghost" size="sm" onClick={() => { setDateFrom(""); setDateTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
+            <Button variant="ghost" size="sm" onClick={handleClearFilter}>
               <X className="h-4 w-4 mr-1" />
               Clear
             </Button>
@@ -243,6 +281,16 @@ export default function CrmReportsPage() {
                 </div>
               </CardContent>
             </Card>
+          </motion.div>
+        )}
+
+        {!stats && (
+          <motion.div variants={fadeUp}>
+            <div className="flex flex-1 h-full flex-col items-center justify-center gap-3 text-center py-20">
+              <BarChart3 className="h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-muted-foreground">No report data available</p>
+              <p className="text-xs text-muted-foreground">Apply a date filter or wait for data to load.</p>
+            </div>
           </motion.div>
         )}
 

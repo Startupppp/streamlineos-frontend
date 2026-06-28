@@ -9,7 +9,7 @@ import {
 } from "@/components/illustrations";
 import {
   Trophy, Target, TrendingUp, Medal,
-  Zap, Phone, UserCheck, BarChart3, Calendar, History,
+  Zap, Phone, UserCheck, BarChart3, Calendar, History, AlertCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
+import type { Employee } from "@/types/hr";
 const METRIC_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },

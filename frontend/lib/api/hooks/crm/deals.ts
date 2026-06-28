@@ -11,66 +11,23 @@ import type {
   UpdateDealInput,
   UpdateDealStageInput,
   LogDealActivityInput,
+  DealStats,
+  DealForecast,
+  DealMeeting,
+  CreateDealMeetingInput,
+  WinLossAnalysis,
+  SalesQuota,
 } from "@/types/crm";
 
-export type { DealActivity };
-
-export interface DealStats {
-  active: number;
-  pipelineValue: number;
-  wonValue: number;
-}
-
-export interface DealForecast {
-  totalWeighted: number;
-  totalBestCase: number;
-  totalDeals: number;
-  byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
-  byStage: Array<{ stage: string; count: number; totalValue: number; weightedValue: number; avgProbability: number }>;
-}
-
-export interface DealMeeting {
-  id: number;
-  orgId: string;
-  dealId: number;
-  title: string;
-  scheduledAt: string;
-  durationMinutes: number;
-  attendees: string[] | null;
-  agenda: string | null;
-  notes: string | null;
-  actionItems: string | null;
-  recordingLink: string | null;
-  status: "scheduled" | "completed" | "cancelled";
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  creator?: { id: string; name: string | null } | null;
-}
-
-export interface CreateDealMeetingInput {
-  title: string;
-  scheduledAt: string;
-  durationMinutes?: number;
-  attendees?: string[];
-  agenda?: string;
-  notes?: string;
-  actionItems?: string;
-  recordingLink?: string;
-  status?: "scheduled" | "completed" | "cancelled";
-}
-
-export interface WinLossAnalysis {
-  summary: {
-    won: number;
-    wonValue: number;
-    lost: number;
-    lostValue: number;
-    total: number;
-    winRate: number;
-  };
-  lostByReason: Array<{ reason: string; count: number; totalValue: number }>;
-}
+export type {
+  DealActivity,
+  DealStats,
+  DealForecast,
+  DealMeeting,
+  CreateDealMeetingInput,
+  WinLossAnalysis,
+  SalesQuota,
+};
 
 export interface DealApproval {
   id: number;
@@ -360,20 +317,6 @@ export function useUpdateDealCustomData() {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
     },
   });
-}
-
-export interface SalesQuota {
-  id: number;
-  userId: string;
-  userName: string | null;
-  period: string;
-  startDate: string;
-  endDate: string;
-  targetRevenue: string;
-  actualRevenue: string;
-  attainmentPct: number;
-  notes: string | null;
-  createdAt: string | null;
 }
 
 export function useSalesQuotas(params?: { userId?: string; period?: string }) {

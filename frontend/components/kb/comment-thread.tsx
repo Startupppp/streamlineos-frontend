@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle2, MessageSquare, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,12 @@ interface CommentItemProps {
   allComments: KbComment[];
 }
 
-function CommentItem({ comment, articleId, replies, allComments }: CommentItemProps) {
+function CommentItem({
+  comment,
+  articleId,
+  replies,
+  allComments,
+}: CommentItemProps) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyContent, setReplyContent] = useState("");
 
@@ -71,6 +76,19 @@ function CommentItem({ comment, articleId, replies, allComments }: CommentItemPr
     );
   }
 
+  function handleToggleReply() {
+    setReplyOpen((prev) => !prev);
+  }
+
+  function handleReplyContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setReplyContent(event.target.value);
+  }
+
+  function handleCancelReply() {
+    setReplyOpen(false);
+    setReplyContent("");
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div
@@ -90,7 +108,10 @@ function CommentItem({ comment, articleId, replies, allComments }: CommentItemPr
           </p>
           <div className="flex shrink-0 items-center gap-1">
             {isResolved && (
-              <Badge variant="outline" className="gap-1 border-green-500 text-green-600 text-xs">
+              <Badge
+                variant="outline"
+                className="gap-1 border-green-500 text-green-600 text-xs"
+              >
                 <CheckCircle2 className="h-3 w-3" />
                 Resolved
               </Badge>
@@ -99,13 +120,15 @@ function CommentItem({ comment, articleId, replies, allComments }: CommentItemPr
         </div>
         <div className="mt-2 flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+            {formatDistanceToNow(new Date(comment.createdAt), {
+              addSuffix: true,
+            })}
           </span>
           <Button
             variant="ghost"
             size="sm"
             className="h-6 gap-1 px-2 text-xs"
-            onClick={() => setReplyOpen((prev) => !prev)}
+            onClick={handleToggleReply}
           >
             <MessageSquare className="h-3 w-3" />
             Reply
@@ -215,7 +238,9 @@ export function CommentThread({ articleId }: CommentThreadProps) {
           ))}
         </div>
       ) : topLevel.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment.</p>
+        <p className="text-sm text-muted-foreground">
+          No comments yet. Be the first to comment.
+        </p>
       ) : (
         <div className="flex flex-col gap-3">
           {topLevel.map((comment) => (

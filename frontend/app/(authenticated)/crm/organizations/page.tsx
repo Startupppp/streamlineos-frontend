@@ -18,6 +18,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useCrmOrganizations } from "@/lib/api/hooks/crm";
+import { ErrorState } from "@/components/shared/error-state";
 import { CreateOrgDialog } from "@/features/crm/organizations/create-org-dialog";
 
 const PAGE_SIZE = 20;

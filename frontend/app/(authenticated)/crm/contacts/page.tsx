@@ -130,6 +130,19 @@ export default function ContactsPage() {
     });
   }, [deleteId, deleteContact]);
 
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
+
+  const handlePrevPage = useCallback(
+    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
+    [page, updateParams],
+  );
+  const handleNextPage = useCallback(
+    () => updateParams({ page: String(page + 1) }),
+    [page, updateParams],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="People directory">
@@ -327,12 +340,10 @@ export default function ContactsPage() {
                   <div className="shrink-0 flex items-center justify-between p-4 border-t">
                     <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" disabled={page <= 1}
-                        onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                      <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" disabled={page >= totalPages}
-                        onClick={() => updateParams({ page: String(page + 1) })}>
+                      <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -471,13 +482,11 @@ export default function ContactsPage() {
 
               {totalPages > 1 && (
                 <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
-                  <Button variant="outline" size="sm" disabled={page <= 1}
-                    onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages}
-                    onClick={() => updateParams({ page: String(page + 1) })}>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </motion.div>
@@ -487,7 +496,7 @@ export default function ContactsPage() {
         </motion.div>
       </PageWrapper>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete contact?</AlertDialogTitle>
