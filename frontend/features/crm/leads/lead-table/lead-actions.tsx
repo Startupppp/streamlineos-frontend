@@ -182,8 +182,11 @@ export function LostModal({ leadName, open, onClose, onSubmit }: LostModalProps)
     onClose();
   }, [onClose]);
 
+  const handleLostOpenChange = useCallback((o: boolean) => { if (!o) handleClose(); }, [handleClose]);
+  const handleLostNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setLostNotes(e.target.value), []);
+
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={handleLostOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Mark as Lost: {leadName}</DialogTitle>
@@ -206,7 +209,7 @@ export function LostModal({ leadName, open, onClose, onSubmit }: LostModalProps)
               id="lost-notes"
               placeholder="Optional additional details..."
               value={lostNotes}
-              onChange={(e) => setLostNotes(e.target.value)}
+              onChange={handleLostNotesChange}
               rows={3}
             />
           </div>
@@ -275,6 +278,21 @@ export function BulkActionsBar({
     }
   }, [leads, selectedIds]);
 
+  const handleBulkStatus = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { status: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
+  const handleBulkPriority = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { priority: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
+  const handleBulkAssign = useCallback((v: string) => {
+    onBulkUpdate(selectedArray, { assignedToId: v });
+    onClearSelection();
+  }, [onBulkUpdate, selectedArray, onClearSelection]);
+
   const handleOpenDeleteDialog = useCallback(() => setDeleteDialogOpen(true), []);
 
   const handleConfirmDelete = useCallback(() => {
@@ -291,12 +309,7 @@ export function BulkActionsBar({
         <span className="text-sm font-medium">{selectedIds.size} selected</span>
         <div className="h-4 w-px bg-border" />
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { status: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkStatus}>
           <SelectTrigger className="h-7 w-[120px] text-xs">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -307,12 +320,7 @@ export function BulkActionsBar({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { priority: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkPriority}>
           <SelectTrigger className="h-7 w-[100px] text-xs">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
@@ -323,12 +331,7 @@ export function BulkActionsBar({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={(v) => {
-            onBulkUpdate(selectedArray, { assignedToId: v });
-            onClearSelection();
-          }}
-        >
+        <Select onValueChange={handleBulkAssign}>
           <SelectTrigger className="h-7 w-[130px] text-xs">
             <SelectValue placeholder="Assign" />
           </SelectTrigger>

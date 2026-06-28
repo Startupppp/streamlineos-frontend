@@ -17,7 +17,6 @@ import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { Button } from "@/components/ui/button";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -78,6 +77,10 @@ export default function ProjectsPage() {
     search: debouncedSearch || undefined,
     status,
   });
+
+  function handleRetry() {
+    refetch();
+  }
 
   const projects = data?.data ?? [];
   const pagination = data
@@ -150,6 +153,8 @@ export default function ProjectsPage() {
             ))}
           </div>
         )
+      ) : isError ? (
+        <ErrorState onRetry={handleRetry} />
       ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
@@ -159,7 +164,7 @@ export default function ProjectsPage() {
           description="Try adjusting the search or status filter."
           action={{
             label: "Clear all filters",
-            onClick: () => updateParams({ q: null, status: null, page: null }),
+            onClick: handleClearFilters,
           }}
         />
       ) : viewMode === "grid" ? (

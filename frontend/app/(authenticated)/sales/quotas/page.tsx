@@ -183,7 +183,7 @@ export default function SalesQuotasPage() {
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Set Sales Quota" description="Assign a revenue target to a team member." onSubmit={handleCreate} submitLabel="Create Quota" isPending={createQuota.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Employee</label>
-          <Select value={userId} onValueChange={setUserId}>
+          <Select value={userId} onValueChange={handleUserIdChange}>
             <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
             <SelectContent>
               {employeeList.map((emp) => (
@@ -194,7 +194,7 @@ export default function SalesQuotasPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Period</label>
-          <Select value={period} onValueChange={setPeriod}>
+          <Select value={period} onValueChange={handlePeriodChange}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="monthly">Monthly</SelectItem>
@@ -206,20 +206,20 @@ export default function SalesQuotasPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <DatePicker value={startDate} onChange={setStartDate} placeholder="Start date" />
+            <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Start date" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
-            <DatePicker value={endDate} onChange={setEndDate} placeholder="End date" />
+            <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="End date" />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Target Revenue (₹) <span className="text-destructive">*</span></label>
-          <Input type="number" min="0" step="1" value={targetRevenue} onChange={(e) => setTargetRevenue(e.target.value)} placeholder="e.g. 500000" />
+          <Input type="number" min="0" step="1" value={targetRevenue} onChange={handleTargetRevenueChange} placeholder="e.g. 500000" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Notes</label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
+          <Textarea value={notes} onChange={handleNotesChange} placeholder="Optional notes..." rows={2} />
         </div>
       </HrSheet>
     </PageWrapper>
