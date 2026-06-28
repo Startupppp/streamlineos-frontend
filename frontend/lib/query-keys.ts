@@ -570,6 +570,20 @@ export const queryKeys = {
     status: () => [...base, "mfa", "status"] as const,
   },
 
+  auth: {
+    all: [...base, "auth"] as const,
+    sessions: () => [...base, "auth", "sessions"] as const,
+    devices: () => [...base, "auth", "devices"] as const,
+    loginHistory: (params?: Record<string, unknown>) => [...base, "auth", "loginHistory", params] as const,
+    auditAnalytics: () => [...base, "auth", "auditAnalytics"] as const,
+  },
+
+  featureFlags: {
+    all: [...base, "featureFlags"] as const,
+    list: () => [...base, "featureFlags", "list"] as const,
+    detail: (key: string) => [...base, "featureFlags", key] as const,
+  },
+
   calendar: {
     all: [...base, "calendar"] as const,
     events: (start: string, end: string) => [...base, "calendar", "events", start, end] as const,
@@ -599,6 +613,16 @@ export const queryKeys = {
     cohort: (months: number) => [...base, "salesAnalytics", "cohort", months] as const,
     repComparison: (rep1Id?: number, rep2Id?: number) => [...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const,
     sourceReport: () => [...base, "salesAnalytics", "sourceReport"] as const,
+  },
+
+  hierarchy: {
+    all: [...base, "hierarchy"] as const,
+    businessUnits: (params?: Record<string, unknown>) => [...base, "hierarchy", "businessUnits", params] as const,
+    orgBranches: (params?: Record<string, unknown>) => [...base, "hierarchy", "orgBranches", params] as const,
+    departments: (params?: Record<string, unknown>) => [...base, "hierarchy", "departments", params] as const,
+    teams: (params?: Record<string, unknown>) => [...base, "hierarchy", "teams", params] as const,
+    locations: (params?: Record<string, unknown>) => [...base, "hierarchy", "locations", params] as const,
+    costCenters: (params?: Record<string, unknown>) => [...base, "hierarchy", "costCenters", params] as const,
   },
 
   inventory: {

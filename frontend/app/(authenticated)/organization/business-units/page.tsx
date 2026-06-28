@@ -1,0 +1,315 @@
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Building2, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  useBusinessUnits,
+  useCreateBusinessUnit,
+  useUpdateBusinessUnit,
+  useDeleteBusinessUnit,
+} from "@/lib/api/hooks/org-hierarchy";
+import { getApiError } from "@/lib/api-client";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { OrgBusinessUnit } from "@/types/org-hierarchy";
+
+const formSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  code: z
+    .string()
+    .trim()
+    .min(2, "Code must be 2–20 characters")
+    .max(20)
+    .regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters"),
+  description: z.string().trim().max(500).optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+function TableSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full rounded-md" />
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+      <Building2 className="h-10 w-10 opacity-30" />
+      <p className="text-sm">No business units yet</p>
+      <Button size="sm" onClick={onAdd}>
+        <Plus className="h-4 w-4 mr-1.5" />
+        Add Business Unit
+      </Button>
+    </div>
+  );
+}
+
+function BuForm({
+  defaultValues,
+  onSubmit,
+  isPending,
+}: {
+  defaultValues?: FormValues;
+  onSubmit: (v: FormValues) => void;
+  isPending: boolean;
+}) {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultValues ?? { name: "", code: "", description: "" },
+  });
+
+  return (
+    <Form {...form}>
+      <form id="bu-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Technology" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="code"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Code</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="e.g. TECH"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Optional description..." rows={3} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <SheetFooter>
+          <Button type="submit" form="bu-form" disabled={isPending}>
+            {isPending ? "Saving…" : "Save"}
+          </Button>
+        </SheetFooter>
+      </form>
+    </Form>
+  );
+}
+
+export default function BusinessUnitsPage() {
+  const { data: units, isLoading } = useBusinessUnits();
+  const create = useCreateBusinessUnit();
+  const update = useUpdateBusinessUnit();
+  const remove = useDeleteBusinessUnit();
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<OrgBusinessUnit | null>(null);
+  const [deleting, setDeleting] = useState<OrgBusinessUnit | null>(null);
+
+  function handleCreate(values: FormValues) {
+    create.mutate(
+      { ...values, code: values.code.toUpperCase() },
+      {
+        onSuccess: () => {
+          toast.success("Business unit created");
+          setShowCreate(false);
+        },
+        onError: (err) => toast.error(getApiError(err)),
+      },
+    );
+  }
+
+  function handleUpdate(values: FormValues) {
+    if (!editing) return;
+    update.mutate(
+      { id: editing.id, ...values, code: values.code.toUpperCase() },
+      {
+        onSuccess: () => {
+          toast.success("Business unit updated");
+          setEditing(null);
+        },
+        onError: (err) => toast.error(getApiError(err)),
+      },
+    );
+  }
+
+  function handleDelete() {
+    if (!deleting) return;
+    remove.mutate(deleting.id, {
+      onSuccess: () => {
+        toast.success("Business unit deleted");
+        setDeleting(null);
+      },
+      onError: (err) => toast.error(getApiError(err)),
+    });
+  }
+
+  const active = (units ?? []).filter((u) => u.status !== "ARCHIVED" && !u.deletedAt);
+
+  return (
+    <PageWrapper
+      title="Business Units"
+      subtitle="Top-level organizational divisions within your company."
+      actions={
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1.5" />
+          Add Business Unit
+        </Button>
+      }
+    >
+      {isLoading ? (
+        <TableSkeleton />
+      ) : active.length === 0 ? (
+        <EmptyState onAdd={() => setShowCreate(true)} />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-24" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {active.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell>
+                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{u.code}</code>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={u.status === "ACTIVE" ? "outline" : "secondary"}
+                    className={
+                      u.status === "ACTIVE"
+                        ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
+                        : ""
+                    }
+                  >
+                    {u.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                  {u.description ?? "—"}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditing(u)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleting(u)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Sheet open={showCreate} onOpenChange={setShowCreate}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>New Business Unit</SheetTitle>
+          </SheetHeader>
+          <BuForm onSubmit={handleCreate} isPending={create.isPending} />
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Business Unit</SheetTitle>
+          </SheetHeader>
+          {editing && (
+            <BuForm
+              defaultValues={{
+                name: editing.name,
+                code: editing.code,
+                description: editing.description ?? "",
+              }}
+              onSubmit={handleUpdate}
+              isPending={update.isPending}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Delete Business Unit"
+        description={`Are you sure you want to delete "${deleting?.name}"? This action cannot be undone.`}
+        onConfirm={handleDelete}
+        isPending={remove.isPending}
+        destructive
+      />
+    </PageWrapper>
+  );
+}
