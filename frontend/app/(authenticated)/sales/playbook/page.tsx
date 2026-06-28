@@ -37,7 +37,7 @@ import {
   useDeletePlaybookEntry,
   type PlaybookEntry,
 } from "@/lib/api/hooks/sales-playbook";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
@@ -266,8 +266,7 @@ export default function SalesPlaybookPage() {
   const [editTarget, setEditTarget] = useState<PlaybookEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlaybookEntry | null>(null);
 
-  const ability = useAbility();
-  const canManage = ability.can("manage", "sales");
+  const canManage = useCan("crm:targets:manage");
 
   const { data, isLoading, isError, refetch } = usePlaybookEntries();
   const updateEntry = useUpdatePlaybookEntry();

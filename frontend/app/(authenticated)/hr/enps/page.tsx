@@ -14,7 +14,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ThumbsUp, MessageSquare, EyeOff, User, TrendingUp, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
@@ -41,8 +41,7 @@ function getEnpsColor(score: number | null): string {
 }
 
 export default function EnpsPage() {
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:performance");
+  const isAdmin = useCan("hr:performance:manage");
 
   const { data: scores, isLoading, isError, refetch } = useEnpsScores(isAdmin);
   const submit = useSubmitEnpsScore();

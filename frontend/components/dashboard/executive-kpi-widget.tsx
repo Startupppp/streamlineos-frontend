@@ -3,7 +3,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import {
   IndianRupee,
   TrendingUp,
@@ -13,8 +13,7 @@ import {
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();
-  const ability = useAbility();
-  const hasCrmAccess = ability.can("view", "crm:leads");
+  const hasCrmAccess = useCan("crm:leads:view");
 
   if (error) {
     return <p className="text-sm text-destructive">Failed to load KPIs.</p>;

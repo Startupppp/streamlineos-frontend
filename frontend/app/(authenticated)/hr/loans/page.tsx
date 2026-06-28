@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { cn } from "@/lib/utils";
 
@@ -190,8 +190,7 @@ export default function LoansPage() {
   const { data: loans, isLoading, isError, refetch } = useSalaryLoans();
   const create = useCreateSalaryLoan();
   const process = useProcessSalaryLoan();
-  const ability = useAbility();
-  const isAdmin = ability.can("approve", "hr:expenses");
+  const isAdmin = useCan("hr:expenses:approve");
   const { data: employeesRaw } = useHrEmployees({ limit: 500 });
 
   const employeeOptions = useMemo<ComboboxOption[]>(() => {

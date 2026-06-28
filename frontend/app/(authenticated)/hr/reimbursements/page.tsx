@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Receipt, CheckCircle2, XCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["Travel", "Meals", "Office Supplies", "Software", "Medical", "Other"];
@@ -106,8 +106,7 @@ export default function ReimbursementsPage() {
   const { data: items, isLoading, isError, refetch } = useReimbursements();
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
-  const ability = useAbility();
-  const isAdmin = ability.can("approve", "hr:expenses");
+  const isAdmin = useCan("hr:expenses:approve");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);

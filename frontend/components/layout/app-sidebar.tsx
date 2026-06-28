@@ -19,7 +19,7 @@ import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
 import { NotificationBell } from "./notification-bell";
 import { usePermissions } from "@/lib/rbac/hooks";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -47,12 +47,11 @@ export function AppSidebar({
   const pathname = usePathname();
 
   const { permissions } = usePermissions();
-  const ability = useAbility();
+  const isAdmin = useCan("settings:manage");
   const navGroups = useMemo(
     () => getNavGroupsForUser(effectiveRole, permissions),
     [effectiveRole, permissions]
   );
-  const isAdmin = ability.can("manage", "settings");
 
   const activeGroupLabel = useMemo(() => {
     for (const group of navGroups) {

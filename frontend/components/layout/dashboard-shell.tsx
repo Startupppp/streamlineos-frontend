@@ -7,7 +7,6 @@ import { Menu } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
 import { CommandPalette } from "./command-palette";
 import { NotActivatedPage } from "../auth/not-activated-page";
-import { AbilityContextProvider } from "@/lib/abilities-context";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
@@ -57,7 +56,6 @@ export function DashboardShell({
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 
   return (
-    <AbilityContextProvider>
     <div className="h-screen flex bg-background overflow-hidden">
       {hasDashboardAccess && <ChatUnreadNotifications currentUserId={userId} />}
       <Link
@@ -122,6 +120,5 @@ export function DashboardShell({
         )}
       </main>
     </div>
-    </AbilityContextProvider>
   );
 }

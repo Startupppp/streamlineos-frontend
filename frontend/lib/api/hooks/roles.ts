@@ -80,11 +80,6 @@ export const useDeleteRole = () => {
   });
 };
 
-export function useRolesList(
-  options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
-) {
-  return useRoles(options);
-}
 
 
 export interface RoleTemplate {
@@ -135,6 +130,9 @@ export const useSetRolePermissions = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.roles.permissions(variables.roleId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.detail(variables.roleId),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });

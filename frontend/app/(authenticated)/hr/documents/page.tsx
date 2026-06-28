@@ -41,7 +41,7 @@ import { DocumentTable, type FolderItem } from "@/features/hr/documents/document
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 import { EditDocumentSheet } from "@/features/hr/documents/edit-document-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 const DOCUMENT_CATEGORIES = [
   "Personal Documents",
@@ -76,8 +76,7 @@ export default function DocumentsPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
 

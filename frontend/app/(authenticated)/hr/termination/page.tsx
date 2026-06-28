@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
@@ -36,11 +36,11 @@ type StatusFilter = "ALL" | TerminationStatus;
 
 export default function TerminationPage() {
   const { data: session } = useSession();
-  const ability = useAbility();
+  const canManageAll = useCan("hr:employees:manage");
 
   const role = session?.user?.role;
   const isHR = role === "HR";
-  const isCEO = role === "CEO" || ability.can("manage", "all");
+  const isCEO = role === "CEO" || canManageAll;
 
   const { data: terminations, isLoading, isError, refetch } = useTerminations();
   const { data: employeesData } = useHrEmployees({ limit: 500 });

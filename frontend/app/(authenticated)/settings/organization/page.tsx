@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
@@ -73,8 +73,7 @@ export default function OrganizationSettingsPage() {
   const domainInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileMutation = useUploadFile();
-  const ability = useAbility();
-  const canEdit = ability.can("manage", "settings");
+  const canEdit = useCan("settings:manage");
 
   const { mutate: updateOrg, isPending: isUpdatingOrg } = useUpdateOrgSettings();
   const { mutate: updateSecurity, isPending: isUpdatingSecurity } = useUpdateOrgSecuritySettings();

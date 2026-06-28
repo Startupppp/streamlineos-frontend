@@ -1,38 +1,12 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
-import bcrypt from "bcryptjs";
-import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { proxyToBackend } from "@/lib/api/backend-proxy";
+import { makeBackendToken } from "@/lib/api/make-backend-token";
 
-const schema = z.object({
-  password: PASSWORD_ZOD_SCHEMA,
-});
-
-/**
- * POST /api/auth/setup-password
- * Sets the password for a user on first login (forceChangePassword flow).
- * Does NOT require the current password — the user was invited without one.
- */
 export async function POST(req: NextRequest) {
-  return withAuth(async (session) => {
-    const body = await req.json() as unknown;
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "Invalid input", 400);
-
-    const hashed = await bcrypt.hash(parsed.data.password, 12);
-
-    await db
-      .update(users)
-      .set({
-        password: hashed,
-        isPasswordChangeRequired: false,
-        passwordChangedAt: new Date(),
-      })
-      .where(eq(users.id, session.user.id));
-
-    return ok({ success: true });
-  });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = await makeBackendToken(session);
+  if (!token) return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  return proxyToBackend(req, "/me/setup-password", { method: "PATCH", auth: token });
 }

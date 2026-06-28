@@ -18,7 +18,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 const DONUT_COLORS = ["#06b6d4", "#3b82f6", "#ef4444", "#10b981", "#8b5cf6"];
 
@@ -213,8 +213,7 @@ interface LeavesTabContentProps {
 
 export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThisWeek = [] }: LeavesTabContentProps) {
   const { data: session } = useSession();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const currentYear = new Date().getFullYear();
 

@@ -40,7 +40,7 @@ import {
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
@@ -64,10 +64,9 @@ export default function ExitManagementPage() {
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
-  const ability = useAbility();
-  const isAdmin = ability.can("approve", "hr:leaves");
+  const isAdmin = useCan("hr:leaves:approve");
   const isHR = role === "HR";
-  const isCEO = ability.can("manage", "all");
+  const isCEO = useCan("hr:employees:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");

@@ -23,7 +23,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, GraduationCap, Clock, Target, BookOpen, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { cn } from "@/lib/utils";
 
 interface LearningPath {
@@ -64,8 +64,7 @@ const LEVEL_PROGRESS: Record<string, number> = {
 
 export default function LearningPathsPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:performance");
+  const isAdmin = useCan("hr:performance:manage");
 
   const { data: paths, isLoading, isError, refetch } = useQuery({
     queryKey: lpKeys.list(),

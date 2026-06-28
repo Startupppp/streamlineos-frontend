@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ClipboardList, Calendar, Play, Archive, BarChart3, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 type SurveyStatusFilter = "all" | "DRAFT" | "ACTIVE" | "CLOSED";
 
@@ -164,8 +164,7 @@ export default function SurveysPage() {
   const { data: surveys, isLoading, isError, refetch } = usePulseSurveys();
   const create = useCreateSurvey();
   const update = useUpdateSurvey();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:performance");
+  const isAdmin = useCan("hr:performance:manage");
   const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const [statusFilter, setStatusFilter] = useState<SurveyStatusFilter>("all");

@@ -18,7 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CheckSquare, Square, Plus, Trash2, CalendarDays, User, ClipboardList } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import {
   useClientAccounts,
   useClientOnboardingItems,
@@ -367,8 +367,7 @@ function TemplatesTab() {
 
 
 export default function ClientOnboardingPage() {
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "settings");
+  const isAdmin = useCan("settings:manage");
 
   return (
     <PageWrapper

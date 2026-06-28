@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 import { OnboardingList } from "@/features/hr/onboarding/onboarding-list";
 import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 function HrDocumentsTab() {
   return (
@@ -63,8 +63,7 @@ function HrDocumentsTab() {
 }
 
 export default function OnboardingPage() {
-  const ability = useAbility();
-  const isHROrCEO = ability.can("manage", "hr:employees");
+  const isHROrCEO = useCan("hr:employees:manage");
 
   return (
     <PageWrapper

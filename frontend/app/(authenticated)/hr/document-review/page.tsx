@@ -15,7 +15,7 @@ import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 function useDocReviewSummary() {
   return useQuery<EmployeeDocSummary[]>({
@@ -25,8 +25,7 @@ function useDocReviewSummary() {
 }
 
 export default function DocumentReviewPage() {
-  const ability = useAbility();
-  const canReview = ability.can("manage", "hr:onboarding");
+  const canReview = useCan("hr:employees:manage");
   const { data: summary, isLoading, isError, refetch } = useDocReviewSummary();
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);

@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { useHrEmployees, useHrAssets } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
@@ -87,8 +87,7 @@ function AssetReturnActionButton({ id, onMark }: { id: number; onMark: (id: numb
 
 export default function AssetReturnsPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {

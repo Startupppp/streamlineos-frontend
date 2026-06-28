@@ -17,7 +17,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowRight, ChevronsUpDown, Check, Building2, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { useHrDepartments } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 
@@ -45,8 +45,7 @@ const clKeys = {
 
 export default function CareerLaddersPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:career-ladders");
+  const isAdmin = useCan("hr:employees:manage");
   const { data: departments } = useHrDepartments();
 
   const { data: ladders, isLoading, isError, refetch } = useQuery({

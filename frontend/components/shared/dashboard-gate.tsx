@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { AccessDenied } from "./access-denied";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAbility } from "@/lib/abilities-context";
+import { useAccess } from "@/lib/api/hooks/access";
 
 interface DashboardGateProps {
   allowedRoles?: string[];
@@ -11,15 +11,9 @@ interface DashboardGateProps {
   children: React.ReactNode;
 }
 
-function permissionGrants(ability: ReturnType<typeof useAbility>, permission: string): boolean {
-  const [domain, resource, action] = permission.split(":");
-  if (!domain || !resource || !action) return false;
-  return ability.can(action, `${domain}:${resource}`);
-}
-
 export function DashboardGate({ allowedRoles, permission, children }: DashboardGateProps) {
   const { data: session, status } = useSession();
-  const ability = useAbility();
+  const { data: access } = useAccess();
 
   if (status === "loading") {
     return (
@@ -37,7 +31,7 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
 
   const userRole = session?.user?.role;
   const isPlatformAdmin = session?.user?.isPlatformAdmin ?? false;
-  const isOrgOwner = session?.user?.isOrgOwner ?? false;
+  const isOrgOwner = access?.isOrgOwner ?? session?.user?.isOrgOwner ?? false;
 
   if (!userRole && !isPlatformAdmin) {
     return (
@@ -54,7 +48,8 @@ export function DashboardGate({ allowedRoles, permission, children }: DashboardG
 
   if (permission) {
     const perms = Array.isArray(permission) ? permission : [permission];
-    if (perms.some((p) => permissionGrants(ability, p))) return <>{children}</>;
+    const granted = perms.some((p) => access?.permissions.includes(p) ?? false);
+    if (granted) return <>{children}</>;
     return (
       <AccessDenied
         currentRole={userRole}

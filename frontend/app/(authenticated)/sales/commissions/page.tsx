@@ -54,7 +54,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/lib/api/hooks/crm";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -117,8 +117,7 @@ export default function CommissionsPage() {
   const [ruleRate, setRuleRate] = useState("");
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
-  const ability = useAbility();
-  const canManage = ability.can("manage", "sales");
+  const canManage = useCan("crm:targets:manage");
 
   const { data, isLoading } = useCommissions({ status: statusFilter });
   const { data: rules } = useCommissionRules();

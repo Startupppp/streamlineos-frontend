@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, PartyPopper, MapPin, Users, UserPlus, CheckCircle2, Calendar, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
@@ -136,9 +136,8 @@ function EventCard({ event: ev, currentUserId, onRsvp, isRsvping }: EventCardPro
 
 export default function TeamEventsPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
   const { data: session } = useSession();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: events, isLoading, isError, refetch } = useQuery({
     queryKey: eventKeys.list(),

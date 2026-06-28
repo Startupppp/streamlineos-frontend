@@ -16,7 +16,7 @@ import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-ty
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 interface DocumentType {
   id: number;
@@ -111,8 +111,7 @@ function blankForm(): FormState {
 }
 
 export default function DocumentTypesPage() {
-  const ability = useAbility();
-  const isHROrCEO = ability.can("manage", "hr:employees");
+  const isHROrCEO = useCan("hr:employees:manage");
 
   const { data, isLoading, isError, refetch } = useDocumentTypes();
   const createMutation = useCreateDocumentType();

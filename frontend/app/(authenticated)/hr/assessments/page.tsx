@@ -15,7 +15,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Plus, ClipboardCheck, Clock, Users, CheckCircle2, Minus, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { cn } from "@/lib/utils";
 
 function deriveStatus(attempts: AssessmentAttempt[]): AssessStatus {
@@ -51,8 +51,7 @@ function getStatusConfig(status: AssessStatus) {
 }
 
 export default function AssessmentsPage() {
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:performance");
+  const isAdmin = useCan("hr:performance:manage");
 
   const { data: items, isLoading, isError, refetch } = useAssessments();
   const create = useCreateAssessment();

@@ -42,7 +42,7 @@ import {
 } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 
 export default function ExpensesPage() {
   const { data: session } = useSession();
@@ -55,8 +55,7 @@ export default function ExpensesPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { filters, setFilter, setDatePreset, datePreset, activeFilterCount } =
     useExpenseFilters({

@@ -2,13 +2,12 @@
 
 import { WidgetCard } from "@/components/ui/widget-card";
 import { useExecutiveDashboard } from "@/lib/api/hooks/dashboard";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { FolderKanban } from "lucide-react";
 
 export function BusinessPulseWidget() {
   const { data, isLoading, error } = useExecutiveDashboard();
-  const ability = useAbility();
-  const hasCrmAccess = ability.can("view", "crm:leads");
+  const hasCrmAccess = useCan("crm:leads:view");
 
   if (!hasCrmAccess) return null;
 

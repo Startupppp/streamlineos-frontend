@@ -17,7 +17,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Briefcase, Calendar, Mail, Users, ExternalLink, AlertCircle } from "lucide-react";
-import { useAbility } from "@/lib/abilities-context";
+import { useCan } from "@/lib/api/hooks/access";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
@@ -46,8 +46,7 @@ function getInitials(name: string | null): string {
 
 export default function AlumniPage() {
   const qc = useQueryClient();
-  const ability = useAbility();
-  const isAdmin = ability.can("manage", "hr:employees");
+  const isAdmin = useCan("hr:employees:manage");
 
   const { data: alumni, isLoading, isError, refetch } = useQuery({
     queryKey: alumniKeys.list(),
