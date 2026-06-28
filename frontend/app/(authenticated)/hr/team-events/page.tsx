@@ -43,13 +43,104 @@ const eventKeys = {
   list: () => [...eventKeys.all, "list"] as const,
 };
 
+interface EventCardProps {
+  event: TeamEvent;
+  currentUserId: string | undefined;
+  onRsvp: (id: number) => void;
+  isRsvping: boolean;
+}
+
+function EventCard({ event: ev, currentUserId, onRsvp, isRsvping }: EventCardProps) {
+  const handleRsvpClick = useCallback(() => onRsvp(ev.id), [onRsvp, ev.id]);
+  const rsvpCount = ev.participants?.length ?? 0;
+  const isRsvped = ev.participants?.some((p) => p.userId === currentUserId) ?? false;
+  const eventDate = ev.date ? new Date(ev.date) : null;
+
+  return (
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div className="flex">
+        {eventDate && (
+          <div className="w-16 shrink-0 bg-blue-50 dark:bg-blue-950/30 border-r border-border flex flex-col items-center justify-center py-4">
+            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+              {format(eventDate, "MMM")}
+            </p>
+            <p className="text-2xl font-bold tabular-nums text-blue-700 dark:text-blue-300 leading-none">
+              {format(eventDate, "d")}
+            </p>
+            {ev.time && (
+              <p className="text-[9px] text-blue-500 dark:text-blue-400 mt-1">{ev.time}</p>
+            )}
+          </div>
+        )}
+        <CardContent className="p-3 flex-1 min-w-0 space-y-2">
+          <div className="flex items-start justify-between gap-1.5">
+            <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
+              {ev.title}
+            </h3>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800 shrink-0">
+              <PartyPopper className="h-2.5 w-2.5" />
+              Event
+            </span>
+          </div>
+
+          {ev.description && (
+            <p className="text-[11px] text-muted-foreground line-clamp-2">{ev.description}</p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {ev.location && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                <MapPin className="h-2.5 w-2.5" />
+                <span className="truncate max-w-[100px]">{ev.location}</span>
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Users className="h-2.5 w-2.5" />
+              {rsvpCount} going
+              {ev.maxParticipants ? ` / ${ev.maxParticipants}` : ""}
+            </span>
+          </div>
+
+          {!eventDate && ev.createdAt && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Calendar className="h-2.5 w-2.5" />
+              Added {format(new Date(ev.createdAt), "MMM d")}
+            </span>
+          )}
+
+          {isRsvped ? (
+            <span className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+            )}>
+              <CheckCircle2 className="h-2.5 w-2.5" />
+              Going
+            </span>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1.5 text-xs w-full"
+              onClick={handleRsvpClick}
+              disabled={isRsvping}
+            >
+              <UserPlus className="h-3 w-3" />
+              RSVP
+            </Button>
+          )}
+        </CardContent>
+      </div>
+    </Card>
+  );
+}
+
 export default function TeamEventsPage() {
   const qc = useQueryClient();
   const ability = useAbility();
   const { data: session } = useSession();
   const isAdmin = ability.can("manage", "hr:employees");
 
-  const { data: events, isLoading } = useQuery({
+  const { data: events, isLoading, isError, refetch } = useQuery({
     queryKey: eventKeys.list(),
     queryFn: () => apiClient.get<TeamEvent[]>("/hr/team-events"),
   });
@@ -90,6 +181,8 @@ export default function TeamEventsPage() {
     if (!open) resetForm();
     setSheetOpen(open);
   }, [resetForm]);
+
+  const handleOpenCreateSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
@@ -151,6 +244,19 @@ export default function TeamEventsPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Team Events" subtitle="Company events, outings, and celebrations">
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+          <p className="text-sm text-muted-foreground">Failed to load team events.</p>
+          <Button variant="outline" size="sm" onClick={refetch}>
+            Retry
+          </Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Team Events"
@@ -158,7 +264,7 @@ export default function TeamEventsPage() {
       badge={`${events?.length ?? 0} events`}
       actions={
         isAdmin ? (
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={handleOpenCreateSheet}>
             <Plus className="h-3.5 w-3.5" />
             Create Event
           </Button>
@@ -175,91 +281,15 @@ export default function TeamEventsPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((ev: TeamEvent) => {
-            const rsvpCount = ev.participants?.length ?? 0;
-            const isRsvped = ev.participants?.some((p) => p.userId === session?.user?.id) ?? false;
-            const eventDate = ev.date ? new Date(ev.date) : null;
-
-            return (
-              <Card
-                key={ev.id}
-                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="flex">
-                  {eventDate && (
-                    <div className="w-16 shrink-0 bg-blue-50 dark:bg-blue-950/30 border-r border-border flex flex-col items-center justify-center py-4">
-                      <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                        {format(eventDate, "MMM")}
-                      </p>
-                      <p className="text-2xl font-bold tabular-nums text-blue-700 dark:text-blue-300 leading-none">
-                        {format(eventDate, "d")}
-                      </p>
-                      {ev.time && (
-                        <p className="text-[9px] text-blue-500 dark:text-blue-400 mt-1">{ev.time}</p>
-                      )}
-                    </div>
-                  )}
-                  <CardContent className="p-3 flex-1 min-w-0 space-y-2">
-                    <div className="flex items-start justify-between gap-1.5">
-                      <h3 className="text-sm font-semibold text-foreground leading-tight truncate">
-                        {ev.title}
-                      </h3>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800 shrink-0">
-                        <PartyPopper className="h-2.5 w-2.5" />
-                        Event
-                      </span>
-                    </div>
-
-                    {ev.description && (
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">{ev.description}</p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {ev.location && (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <MapPin className="h-2.5 w-2.5" />
-                          <span className="truncate max-w-[100px]">{ev.location}</span>
-                        </span>
-                      )}
-                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Users className="h-2.5 w-2.5" />
-                        {rsvpCount} going
-                        {ev.maxParticipants ? ` / ${ev.maxParticipants}` : ""}
-                      </span>
-                    </div>
-
-                    {!eventDate && ev.createdAt && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Calendar className="h-2.5 w-2.5" />
-                        Added {format(new Date(ev.createdAt), "MMM d")}
-                      </span>
-                    )}
-
-                    {isRsvped ? (
-                      <span className={cn(
-                        "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-                      )}>
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        Going
-                      </span>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 gap-1.5 text-xs w-full"
-                        onClick={() => handleRsvp(ev.id)}
-                        disabled={rsvp.isPending}
-                      >
-                        <UserPlus className="h-3 w-3" />
-                        RSVP
-                      </Button>
-                    )}
-                  </CardContent>
-                </div>
-              </Card>
-            );
-          })}
+          {events.map((ev) => (
+            <EventCard
+              key={ev.id}
+              event={ev}
+              currentUserId={session?.user?.id}
+              onRsvp={handleRsvp}
+              isRsvping={rsvp.isPending}
+            />
+          ))}
         </div>
       )}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -24,14 +25,27 @@ import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-c
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
 
 export default function CustomerExecutiveDashboardPage() {
   const { data: session } = useSession();
   const isCSRep = session?.user?.role === "CUSTOMER_SUPPORT";
-  const { data, isLoading } = useCustomerExecutiveDashboard();
+  const { data, isLoading, isError, refetch } = useCustomerExecutiveDashboard();
   const { data: slugMap } = useCrmPeopleSlugs();
 
-  const getPersonSlug = (name: string) => slugMap?.[name] ?? null;
+  const getPersonSlug = useCallback((name: string) => slugMap?.[name] ?? null, [slugMap]);
+
+  if (isError) {
+    return (
+      <PageWrapper title="Dashboard" subtitle="Customer executive overview">
+        <ErrorState
+          title="Failed to load dashboard"
+          description="An error occurred while loading your dashboard. Please try again."
+          onRetry={refetch}
+        />
+      </PageWrapper>
+    );
+  }
 
   if (isLoading || !data) {
     return (

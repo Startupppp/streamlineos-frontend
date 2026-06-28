@@ -56,7 +56,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function FeatureFlagsPage() {
   return (
-    <DashboardGate allowedRoles={["OWNER", "PLATFORM_ADMIN"]}>
+    <DashboardGate permission="settings:manage">
       <FeatureFlagsContent />
     </DashboardGate>
   );

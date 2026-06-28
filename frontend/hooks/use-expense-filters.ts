@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { ExpenseFilters } from "@/server/actions/expense-query";
+import type { ExpenseFilters } from "@/types/hr/expenses";
 
 export type DatePreset =
   | "today"

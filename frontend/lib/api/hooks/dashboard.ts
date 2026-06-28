@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { getPublicDocuments } from "@/server/actions/document-actions";
 import type {
   DashboardStats,
   RecentProject,
@@ -14,7 +13,31 @@ import type {
   MyIssue,
 } from "@/types/dashboard";
 
-export type PublicDoc = Awaited<ReturnType<typeof getPublicDocuments>>[number];
+export interface PublicDoc {
+  id: number;
+  orgId: string;
+  userId: string | null;
+  departmentId: number | null;
+  name: string;
+  description: string | null;
+  type: string;
+  category: string | null;
+  fileUrl: string;
+  fileName: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  version: number;
+  parentDocumentId: number | null;
+  isPublic: boolean;
+  isActive: boolean;
+  expiryDate: string | null;
+  expiryReminderSent: boolean;
+  tags: string[];
+  metadata: Record<string, unknown> | null;
+  uploadedBy: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
 
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
@@ -393,6 +416,6 @@ export const useManagerDashboard = (
 export const usePublicDocuments = (limit = 6) =>
   useQuery<PublicDoc[]>({
     queryKey: queryKeys.dashboard.publicDocuments(limit),
-    queryFn: () => getPublicDocuments(limit),
+    queryFn: () => apiClient.get<PublicDoc[]>("/hr/documents", { isPublic: true, limit }),
     staleTime: 5 * 60_000,
   });

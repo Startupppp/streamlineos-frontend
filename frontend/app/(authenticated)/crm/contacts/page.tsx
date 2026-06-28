@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   Search, Mail, Phone, Building2,
   ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
-  TableIcon, LayoutGrid, Link2, Download, Sparkles, Twitter, Globe, Plus,
+  TableIcon, LayoutGrid, Link2, Sparkles, Twitter, Globe, Plus,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -20,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -29,7 +28,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -131,13 +130,23 @@ export default function ContactsPage() {
     });
   }, [deleteId, deleteContact]);
 
+  const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
+
+  const handlePrevPage = useCallback(
+    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
+    [page, updateParams],
+  );
+  const handleNextPage = useCallback(
+    () => updateParams({ page: String(page + 1) }),
+    [page, updateParams],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="People directory">
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full max-w-sm" />
-          <Skeleton className="h-96" />
-        </div>
+        <SkeletonTable rows={8} columns={9} className="h-[calc(100dvh-16rem)]" />
       </PageWrapper>
     );
   }
@@ -241,9 +250,9 @@ export default function ContactsPage() {
                             <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company ||"—"}</TableCell>
                             <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title ||"—"}</TableCell>
                             <TableCell className="px-2 py-1">
-                              {contact.tags && (contact.tags as string[]).length > 0 && (
+                              {contact.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-0.5">
-                                  {(contact.tags as string[]).slice(0, 2).map(tag => (
+                                  {contact.tags.slice(0, 2).map(tag => (
                                     <Badge key={tag} variant="secondary" className="text-[8px] px-1 py-0 h-4">{tag}</Badge>
                                   ))}
                                 </div>
@@ -300,11 +309,6 @@ export default function ContactsPage() {
                                   <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                                     <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <a href={`/api/contacts/${contact.id}/vcard`} download>
-                                      <Download className="h-3.5 w-3.5 mr-2" />Download vCard
-                                    </a>
-                                  </DropdownMenuItem>
                                   <DropdownMenuItem
                                     disabled={enrichContact.isPending}
                                     onClick={() => handleEnrich(contact)}
@@ -331,12 +335,10 @@ export default function ContactsPage() {
                   <div className="shrink-0 flex items-center justify-between p-4 border-t">
                     <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" disabled={page <= 1}
-                        onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                      <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" disabled={page >= totalPages}
-                        onClick={() => updateParams({ page: String(page + 1) })}>
+                      <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -369,11 +371,6 @@ export default function ContactsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                               <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <a href={`/api/contacts/${contact.id}/vcard`} download>
-                                <Download className="h-3.5 w-3.5 mr-2" />Download vCard
-                              </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               disabled={enrichContact.isPending}
@@ -433,9 +430,9 @@ export default function ContactsPage() {
                           )}
                         </div>
                       )}
-                      {(contact.tags as string[]).length > 0 && (
+                      {contact.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {(contact.tags as string[]).slice(0, 3).map(tag => (
+                          {contact.tags.slice(0, 3).map(tag => (
                             <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{tag}</Badge>
                           ))}
                         </div>
@@ -475,13 +472,11 @@ export default function ContactsPage() {
 
               {totalPages > 1 && (
                 <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
-                  <Button variant="outline" size="sm" disabled={page <= 1}
-                    onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={handlePrevPage}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={page >= totalPages}
-                    onClick={() => updateParams({ page: String(page + 1) })}>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={handleNextPage}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </motion.div>
@@ -491,7 +486,7 @@ export default function ContactsPage() {
         </motion.div>
       </PageWrapper>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete contact?</AlertDialogTitle>

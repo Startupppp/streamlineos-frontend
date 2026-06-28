@@ -514,7 +514,7 @@ function HandbookContent() {
 
 export default function HandbookPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate permission="hr:documents:manage">
       <HandbookContent />
     </DashboardGate>
   );

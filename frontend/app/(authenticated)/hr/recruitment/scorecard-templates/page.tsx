@@ -218,6 +218,73 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
 }
 
 
+interface TemplateCardProps {
+  template: ScorecardTemplate;
+  onEdit: (template: ScorecardTemplate) => void;
+  onDelete: (id: number) => void;
+}
+
+function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) {
+  const handleEdit = useCallback(() => onEdit(template), [onEdit, template]);
+  const handleDelete = useCallback(() => onDelete(template.id), [onDelete, template.id]);
+
+  return (
+    <Card>
+      <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
+        <div>
+          <CardTitle className="text-sm">{template.name}</CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {template.criteria.length} {template.criteria.length === 1 ? "criterion" : "criteria"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          {template.isActive ? (
+            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Active</Badge>
+          ) : (
+            <Badge variant="outline" className="text-[10px]">Inactive</Badge>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleEdit}
+            aria-label="Edit template"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            onClick={handleDelete}
+            aria-label="Delete template"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+            </svg>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <div className="flex flex-wrap gap-1">
+          {template.criteria.map((c) => (
+            <Badge key={c.name} variant="secondary" className="text-[10px]">
+              {c.name}
+              {c.weight > 1 && (
+                <span className="ml-1 text-muted-foreground">×{c.weight}</span>
+              )}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ScorecardTemplatesPage() {
   const { data: templates, isLoading } = useScorecardTemplates();
   const deleteTemplate = useDeleteScorecardTemplate();
@@ -249,6 +316,10 @@ export default function ScorecardTemplatesPage() {
     });
   }, [deleteId, deleteTemplate]);
 
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
+
   return (
     <>
       <PageWrapper
@@ -277,59 +348,12 @@ export default function ScorecardTemplatesPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {templates.map((template) => (
-              <Card key={template.id}>
-                <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
-                  <div>
-                    <CardTitle className="text-sm">{template.name}</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {template.criteria.length} {template.criteria.length === 1 ? "criterion" : "criteria"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {template.isActive ? (
-                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Active</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px]">Inactive</Badge>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => handleOpenEdit(template)}
-                      aria-label="Edit template"
-                    >
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteId(template.id)}
-                      aria-label="Delete template"
-                    >
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                      </svg>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <div className="flex flex-wrap gap-1">
-                    {template.criteria.map((c) => (
-                      <Badge key={c.name} variant="secondary" className="text-[10px]">
-                        {c.name}
-                        {c.weight > 1 && (
-                          <span className="ml-1 text-muted-foreground">×{c.weight}</span>
-                        )}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onEdit={handleOpenEdit}
+                onDelete={setDeleteId}
+              />
             ))}
           </div>
         )}
@@ -341,7 +365,7 @@ export default function ScorecardTemplatesPage() {
         editTemplate={editTemplate}
       />
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(v) => { if (!v) setDeleteId(null); }}>
+      <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>

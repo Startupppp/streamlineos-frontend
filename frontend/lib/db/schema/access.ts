@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, index, uniqueIndex, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, index, uniqueIndex, pgEnum, uuid, varchar, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { organizations, users, roles, permissions } from "./auth";
 
@@ -46,6 +46,22 @@ export const accessVersions = pgTable("access_versions", {
   permissionsVersion: integer("permissions_version").default(1).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
+
+export const orgModules = pgTable(
+  "org_modules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: varchar("org_id", { length: 36 }).notNull(),
+    moduleKey: varchar("module_key", { length: 64 }).notNull(),
+    enabled: boolean("enabled").default(true).notNull(),
+    enabledAt: timestamp("enabled_at").defaultNow().notNull(),
+    enabledBy: varchar("enabled_by", { length: 36 }),
+  },
+  (t) => [
+    uniqueIndex("org_modules_unique_idx").on(t.orgId, t.moduleKey),
+    index("org_modules_org_idx").on(t.orgId),
+  ],
+);
 
 export const userRolesRelations = relations(userRoles, ({ one }) => ({
   organization: one(organizations, {
@@ -99,7 +115,38 @@ export const accessVersionsRelations = relations(accessVersions, ({ one }) => ({
   }),
 }));
 
+export const resourceGrants = pgTable(
+  "resource_grants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: varchar("org_id", { length: 36 }).notNull(),
+    resourceType: varchar("resource_type", { length: 64 }).notNull(),
+    resourceId: varchar("resource_id", { length: 36 }).notNull(),
+    principalType: varchar("principal_type", { length: 16 }).notNull().default("user"),
+    principalId: varchar("principal_id", { length: 36 }).notNull(),
+    permissionKey: varchar("permission_key", { length: 128 }).notNull(),
+    grantedBy: varchar("granted_by", { length: 36 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("resource_grants_unique_idx").on(
+      t.orgId, t.resourceType, t.resourceId, t.principalType, t.principalId, t.permissionKey,
+    ),
+    index("resource_grants_org_resource_idx").on(t.orgId, t.resourceType, t.resourceId),
+    index("resource_grants_principal_idx").on(t.orgId, t.principalType, t.principalId),
+  ],
+);
+
+export const resourceGrantsRelations = relations(resourceGrants, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [resourceGrants.orgId],
+    references: [organizations.id],
+  }),
+}));
+
 export type UserRole = typeof userRoles.$inferSelect;
 export type RolePermissionGrant = typeof rolePermissionGrants.$inferSelect;
 export type GroupRole = typeof groupRoles.$inferSelect;
 export type AccessVersion = typeof accessVersions.$inferSelect;
+export type ResourceGrant = typeof resourceGrants.$inferSelect;
+export type OrgModule = typeof orgModules.$inferSelect;

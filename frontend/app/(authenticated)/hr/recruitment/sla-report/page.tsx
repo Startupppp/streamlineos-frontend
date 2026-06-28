@@ -8,11 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+
+const STAGE_COLORS = [
+  "#06b6d4",
+  "#3b82f6",
+  "#ef4444",
+  "#10b981",
+  "#8b5cf6",
+  "#f59e0b",
+];
 
 function breachColor(pct: number) {
   if (pct >= 50) return "text-destructive";
@@ -27,18 +36,7 @@ function breachBg(pct: number) {
 }
 
 export default function SlaReportPage() {
-  const { data, isLoading } = useHrSlaReport();
-
-  if (isLoading) {
-    return (
-      <PageWrapper title="SLA Breach Report" subtitle="Loading...">
-        <div className="space-y-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </PageWrapper>
-    );
-  }
+  const { data, isLoading, isError, refetch } = useHrSlaReport();
 
   return (
     <PageWrapper
@@ -46,20 +44,42 @@ export default function SlaReportPage() {
       subtitle="Monthly % of candidates who breached SLA per recruitment stage"
       actions={
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr/recruitment/sla"><ArrowLeft className="mr-1 h-3.5 w-3.5" />SLA Config</Link>
+          <Link href="/hr/recruitment/sla">
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+            SLA Config
+          </Link>
         </Button>
       }
     >
-      {!data || data.stages.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <CheckCircle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No SLA tracking data yet.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              SLA data is recorded as candidates move through recruitment stages.
-            </p>
-          </CardContent>
-        </Card>
+      {isLoading ? (
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-72 w-full rounded-lg" />
+          <Skeleton className="h-48 w-full rounded-lg" />
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+          <AlertCircle className="h-10 w-10 text-destructive/50" />
+          <p className="text-sm text-muted-foreground">Failed to load SLA breach report.</p>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : !data || data.stages.length === 0 ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+          <CheckCircle className="h-10 w-10 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">No SLA tracking data yet.</p>
+          <p className="text-xs text-muted-foreground">
+            SLA data is recorded as candidates move through recruitment stages.
+          </p>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/sla">Configure SLAs</Link>
+          </Button>
+        </div>
       ) : (
         <div className="space-y-6">
           <div>
@@ -187,13 +207,3 @@ export default function SlaReportPage() {
     </PageWrapper>
   );
 }
-
-const STAGE_COLORS = [
-  "#06b6d4",
-  "#3b82f6",
-  "#ef4444",
-  "#10b981",
-  "#8b5cf6",
-  "#f59e0b",
-  "#06b6d4",
-];

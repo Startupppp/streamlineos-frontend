@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useInterviewerPerformance } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
+import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle, Users } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,9 @@ const PERIOD_OPTIONS = [
 
 export default function InterviewerPerformancePage() {
   const [days, setDays] = useState(90);
-  const { data, isLoading } = useInterviewerPerformance(days);
+  const { data, isLoading, isError, refetch } = useInterviewerPerformance(days);
+
+  const handlePeriodChange = useCallback((v: string) => setDays(Number(v)), []);
 
   const stats = data?.stats ?? [];
 
@@ -77,7 +79,7 @@ export default function InterviewerPerformancePage() {
               Back to Interviews
             </Link>
           </Button>
-          <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+          <Select value={String(days)} onValueChange={handlePeriodChange}>
             <SelectTrigger className="h-8 w-40 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -148,10 +150,28 @@ export default function InterviewerPerformancePage() {
                     <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                   </TableRow>
                 ))
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <div className="flex flex-col items-center justify-center gap-3 py-12">
+                      <AlertCircle className="h-8 w-8 text-destructive/60" />
+                      <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
+                      <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                        Try again
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : stats.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                    No scorecard data found for the selected period.
+                  <TableCell colSpan={6}>
+                    <div className="flex flex-col items-center justify-center gap-3 py-12">
+                      <Users className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">No scorecard data for the selected period.</p>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/hr/recruitment/interviews">View Interviews</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

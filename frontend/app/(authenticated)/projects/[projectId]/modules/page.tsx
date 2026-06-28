@@ -27,7 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Layers, Calendar, User, ArrowRight } from "lucide-react";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "complet
 const createModuleSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  status: z.enum(MODULE_STATUSES).default("backlog"),
+  status: z.enum(MODULE_STATUSES).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   leadId: z.string().optional(),
@@ -102,7 +103,7 @@ export default function ModulesPage({
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
-    resolver: zodResolver(createModuleSchema) as unknown as Resolver<CreateModuleForm>,
+    resolver: zodResolver(createModuleSchema),
     defaultValues: { status: "backlog" },
   });
 
@@ -125,7 +126,7 @@ export default function ModulesPage({
           form.reset();
           toast.success("Module created");
         },
-        onError: (err) => toast.error((err as Error).message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   };
@@ -250,7 +251,7 @@ export default function ModulesPage({
     >
       <div>
         {!modules?.length ? (
-          <div className="text-center py-16">
+          <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[300px] text-center py-16">
             <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No modules yet</h3>
             <p className="text-sm text-muted-foreground mb-4">

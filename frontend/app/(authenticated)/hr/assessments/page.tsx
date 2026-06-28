@@ -2,9 +2,10 @@
 
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import {
+  useAssessments, useCreateAssessment,
+  type Assessment, type AssessmentAttempt, type AssessStatus,
+} from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,28 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, ClipboardCheck, Clock, Users, CheckCircle2, Minus } from "lucide-react";
+import { Plus, ClipboardCheck, Clock, Users, CheckCircle2, Minus, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
-
-interface AssessmentAttempt {
-  id: number;
-  score: number | null;
-  passed: boolean;
-}
-
-interface Assessment {
-  id: number;
-  title: string;
-  skillName: string;
-  questions: { id: string; question: string; options: string[]; correctIndex: number }[] | null;
-  passingScore: number;
-  timeLimit: number | null;
-  createdAt: string;
-  attempts: AssessmentAttempt[];
-}
-
-type AssessStatus = "COMPLETED" | "IN_PROGRESS" | "NOT_STARTED";
 
 function deriveStatus(attempts: AssessmentAttempt[]): AssessStatus {
   if (!attempts || attempts.length === 0) return "NOT_STARTED";
@@ -68,26 +50,12 @@ function getStatusConfig(status: AssessStatus) {
   };
 }
 
-const assessKeys = {
-  all: [...queryKeys.hr.all, "assessments"] as const,
-  list: () => [...assessKeys.all, "list"] as const,
-};
-
 export default function AssessmentsPage() {
-  const qc = useQueryClient();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:performance");
 
-  const { data: items, isLoading } = useQuery({
-    queryKey: assessKeys.list(),
-    queryFn: () => apiClient.get<Assessment[]>("/hr/assessments"),
-  });
-
-  const create = useMutation({
-    mutationFn: (data: { title: string; skillName?: string; durationMinutes?: number }) =>
-      apiClient.post<Assessment>("/hr/assessments", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: assessKeys.list() }),
-  });
+  const { data: items, isLoading, isError, refetch } = useAssessments();
+  const create = useCreateAssessment();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -99,6 +67,8 @@ export default function AssessmentsPage() {
     setSkillName("");
     setDuration("30");
   }, []);
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) resetForm();
@@ -148,6 +118,21 @@ export default function AssessmentsPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Skills Assessments" subtitle="Skills assessments and quizzes">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load assessments</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Skills Assessments"
@@ -155,7 +140,7 @@ export default function AssessmentsPage() {
       badge={`${items?.length ?? 0} assessments`}
       actions={
         isAdmin ? (
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
             <Plus className="h-3.5 w-3.5" />
             Create Assessment
           </Button>
@@ -163,13 +148,12 @@ export default function AssessmentsPage() {
       }
     >
       {!items?.length ? (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <EmptyState
-            illustration={<ClipboardCheck className="h-8 w-8 text-muted-foreground" />}
-            title="No assessments available"
-            description="Create skill assessments to evaluate employee competencies."
-          />
-        </div>
+        <EmptyState
+          illustration={<ClipboardCheck className="h-8 w-8 text-muted-foreground" />}
+          title="No assessments available"
+          description="Create skill assessments to evaluate employee competencies."
+          action={isAdmin ? { label: "Create Assessment", onClick: handleOpenSheet } : undefined}
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((a: Assessment) => {

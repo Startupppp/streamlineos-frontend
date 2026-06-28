@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
+import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   useProject,
   useUpdateTicket,
@@ -14,15 +15,14 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Layers,
   ChevronDown,
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  Loader2,
   BookOpen,
-  Bug,
   Wrench,
   Pencil,
   Trash2,
@@ -39,13 +39,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -63,22 +56,12 @@ export default function EpicsPage({ params }: PageProps) {
   const deleteTicket = useDeleteTicket(projectId);
   const createTicket = useCreateTicket();
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Epics">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
   const tickets = project?.tickets || [];
   const epics = tickets.filter(t => t.type === "EPIC");
   const stories = tickets.filter(t => t.type === "STORY");
   const tasks = tickets.filter(t => t.type === "TASK");
 
-  function handleDeleteEpic(epicId: number) {
+  const handleDeleteEpic = useCallback((epicId: number) => {
     const children = stories.filter(s => s.epicId === epicId);
     const unlinkPromises = children.map(s =>
       updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
@@ -96,6 +79,39 @@ export default function EpicsPage({ params }: PageProps) {
       .catch(() => {
         toast.error("Failed to unlink stories from epic");
       });
+  }, [stories, updateTicket, deleteTicket]);
+
+  const handleLinkStory = useCallback((storyId: number, epicId: number) => {
+    updateTicket.mutate({ ticketId: storyId, epicId });
+  }, [updateTicket]);
+
+  const handleCreateStory = useCallback((title: string, epicId: number) => {
+    createTicket.mutate(
+      { projectId, title, type: "STORY", epicId },
+      {
+        onSuccess: () => toast.success("Story created"),
+        onError: (error) => toast.error(getErrorMessage(error)),
+      }
+    );
+  }, [createTicket, projectId]);
+
+  if (isLoading) {
+    return (
+      <PageWrapper title="Epics">
+        <div className="space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </PageWrapper>
+    );
   }
 
   return (
@@ -106,80 +122,71 @@ export default function EpicsPage({ params }: PageProps) {
     >
       <div className="space-y-8" aria-live="polite" aria-atomic="true">
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
-        <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
-        <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
-        <StatCard label="Completed" value={tickets.filter(t => t.status === "DONE").length} icon={CheckCircle2} color="green" index={3} />
-      </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Epics" value={epics.length} icon={Layers} color="violet" index={0} />
+          <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
+          <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
+          <StatCard label="Completed" value={tickets.filter(t => t.status === "DONE").length} icon={CheckCircle2} color="green" index={3} />
+        </div>
 
-      <div className="space-y-4">
-        {epics.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <EmptyTasksIllustration className="mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No epics yet</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Create your first epic to organize related stories and tasks
-              </p>
-              <CreateEpicDialog projectId={projectId} />
-            </CardContent>
-          </Card>
-        ) : (
-          epics.map((epic) => (
-            <EpicCard
-              key={epic.id}
-              epic={epic}
-              stories={stories.filter(s => s.epicId === epic.id)}
-              allTickets={tickets}
-              projectId={projectId}
-              unlinkedStories={stories.filter(s => !s.epicId)}
-              onDeleteEpic={() => handleDeleteEpic(epic.id)}
-              onLinkStory={(storyId) => updateTicket.mutate({ ticketId: storyId, epicId: epic.id })}
-              onCreateStory={(title) =>
-                createTicket.mutate(
-                  { projectId, title, type: "STORY", epicId: epic.id },
-                  {
-                    onSuccess: () => toast.success("Story created"),
-                    onError: (error) => toast.error(getErrorMessage(error)),
-                  }
-                )
-              }
-              isDeleting={deleteTicket.isPending}
-            />
-          ))
-        )}
-      </div>
+        <div className="space-y-4">
+          {epics.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <EmptyTasksIllustration className="mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No epics yet</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  Create your first epic to organize related stories and tasks
+                </p>
+                <CreateEpicDialog projectId={projectId} />
+              </CardContent>
+            </Card>
+          ) : (
+            epics.map((epic) => (
+              <EpicCard
+                key={epic.id}
+                epic={epic}
+                stories={stories.filter(s => s.epicId === epic.id)}
+                projectId={projectId}
+                unlinkedStories={stories.filter(s => !s.epicId)}
+                onDeleteEpic={handleDeleteEpic}
+                onLinkStory={handleLinkStory}
+                onCreateStory={handleCreateStory}
+                isDeleting={deleteTicket.isPending}
+              />
+            ))
+          )}
+        </div>
 
-      {stories.filter(s => !s.epicId).length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
-            Stories without Epic
-          </h2>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                {stories.filter(s => !s.epicId).map((story) => (
-                  <div
-                    key={story.id}
-                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <BookOpen className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{story.title}</span>
-                      <Badge variant="outline" className="text-xs">{story.status}</Badge>
+        {stories.filter(s => !s.epicId).length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              Stories without Epic
+            </h2>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  {stories.filter(s => !s.epicId).map((story) => (
+                    <div
+                      key={story.id}
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">{story.title}</span>
+                        <Badge variant="outline" className="text-xs">{story.status}</Badge>
+                      </div>
+                      <Link href={`/projects/${projectId}?ticket=${story.id}`}>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </Link>
                     </div>
-                    <Link href={`/projects/${projectId}?ticket=${story.id}`}>
-                      <Button variant="ghost" size="sm">View</Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
       </div>
     </PageWrapper>
   );
@@ -201,20 +208,29 @@ interface EpicCardProps {
     points?: number | null;
     epicId?: number | null;
   }>;
-  allTickets: Array<{
-    id: number;
-    title: string;
-    status: string | null;
-    type: string | null;
-    epicId?: number | null;
-    points?: number | null;
-  }>;
   projectId: number;
   unlinkedStories: Array<{ id: number; title: string }>;
-  onDeleteEpic: () => void;
-  onLinkStory: (storyId: number) => void;
-  onCreateStory: (title: string) => void;
+  onDeleteEpic: (epicId: number) => void;
+  onLinkStory: (storyId: number, epicId: number) => void;
+  onCreateStory: (title: string, epicId: number) => void;
   isDeleting?: boolean;
+}
+
+interface LinkStoryItemProps {
+  story: { id: number; title: string };
+  onSelect: (id: number) => void;
+}
+
+function LinkStoryItem({ story, onSelect }: LinkStoryItemProps) {
+  const handleClick = useCallback(() => onSelect(story.id), [onSelect, story.id]);
+  return (
+    <button
+      onClick={handleClick}
+      className="w-full text-left p-2 text-sm rounded hover:bg-muted transition-colors truncate"
+    >
+      {story.title}
+    </button>
+  );
 }
 
 function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
@@ -233,16 +249,64 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
 
   const epicCardId = `epic-stories-${epic.id}`;
 
+  const handleToggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
+
+  const handleStopPropagation = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleCancelDelete = useCallback(() => setDeleteConfirm(false), []);
+
+  const handleDelete = useCallback(() => onDeleteEpic(epic.id), [onDeleteEpic, epic.id]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsExpanded(prev => !prev);
+    }
+  }, []);
+
+  const handleEpicLinkStory = useCallback((storyId: number) => {
+    onLinkStory(storyId, epic.id);
+  }, [onLinkStory, epic.id]);
+
+  const handleEpicCreateStory = useCallback((title: string) => {
+    onCreateStory(title, epic.id);
+  }, [onCreateStory, epic.id]);
+
+  const handleSelectLink = useCallback((storyId: number) => {
+    handleEpicLinkStory(storyId);
+    setLinkOpen(false);
+  }, [handleEpicLinkStory]);
+
+  const handleTitleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setNewStoryTitle(e.target.value);
+  }, []);
+
+  const handleTitleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && newStoryTitle.trim()) {
+      handleEpicCreateStory(newStoryTitle.trim());
+      setNewStoryTitle("");
+    }
+  }, [newStoryTitle, handleEpicCreateStory]);
+
+  const handleAddStory = useCallback(() => {
+    if (newStoryTitle.trim()) {
+      handleEpicCreateStory(newStoryTitle.trim());
+      setNewStoryTitle("");
+    }
+  }, [newStoryTitle, handleEpicCreateStory]);
+
   return (
     <Card className="overflow-hidden">
       <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggleExpand}
         role="button"
         aria-expanded={isExpanded}
         aria-controls={epicCardId}
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsExpanded(!isExpanded); } }}
+        onKeyDown={handleKeyDown}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
@@ -259,7 +323,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2" onClick={handleStopPropagation}>
             <Badge variant="outline" className={getColorSafe(priorityColors, epic.priority || "MEDIUM")}>
               {epic.priority || "MEDIUM"}
             </Badge>
@@ -277,8 +341,8 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               <PopoverContent className="w-64" align="end">
                 <p className="text-sm mb-3">Delete this epic? Child stories will be unlinked.</p>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
-                  <Button variant="destructive" size="sm" onClick={onDeleteEpic} disabled={isDeleting}>
+                  <Button variant="outline" size="sm" onClick={handleCancelDelete}>Cancel</Button>
+                  <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
                     {isDeleting ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
@@ -371,26 +435,16 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             <div className="flex gap-2 pt-2">
               <Input
                 value={newStoryTitle}
-                onChange={(e) => setNewStoryTitle(e.target.value)}
+                onChange={handleTitleChange}
                 placeholder="New story title..."
                 aria-label={`Add new story to ${epic.title}`}
                 className="h-8 text-sm flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && newStoryTitle.trim()) {
-                    onCreateStory(newStoryTitle.trim());
-                    setNewStoryTitle("");
-                  }
-                }}
+                onKeyDown={handleTitleKeyDown}
               />
               <Button
                 size="sm"
                 className="h-8"
-                onClick={() => {
-                  if (newStoryTitle.trim()) {
-                    onCreateStory(newStoryTitle.trim());
-                    setNewStoryTitle("");
-                  }
-                }}
+                onClick={handleAddStory}
                 disabled={!newStoryTitle.trim()}
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
@@ -407,16 +461,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
                   <PopoverContent className="w-72 p-2" align="end">
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                       {unlinkedStories.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => {
-                            onLinkStory(s.id);
-                            setLinkOpen(false);
-                          }}
-                          className="w-full text-left p-2 text-sm rounded hover:bg-muted transition-colors truncate"
-                        >
-                          {s.title}
-                        </button>
+                        <LinkStoryItem key={s.id} story={s} onSelect={handleSelectLink} />
                       ))}
                     </div>
                   </PopoverContent>

@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, IndianRupee } from "lucide-react";
+import { Trophy, TrendingDown, TrendingUp, Target, BarChart3, IndianRupee, AlertCircle, BarChart2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useWinLossAnalysis } from "@/lib/api/hooks/crm";
@@ -31,12 +33,14 @@ function formatCurrency(val: number) {
 }
 
 export default function WinLossAnalysisPage() {
-  const { data, isLoading } = useWinLossAnalysis();
+  const { data, isLoading, isError, refetch } = useWinLossAnalysis();
 
   const maxReasonCount = useMemo(
     () => Math.max(1, ...(data?.lostByReason.map((r) => r.count) ?? [])),
     [data]
   );
+
+  const handleRetry = useCallback(() => { refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -54,7 +58,32 @@ export default function WinLossAnalysisPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Win/Loss Analysis" subtitle="Deal outcome breakdown and lost reason attribution">
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-sm text-muted-foreground">Failed to load win/loss data.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   const s = data?.summary ?? { won: 0, wonValue: 0, lost: 0, lostValue: 0, total: 0, winRate: 0 };
+
+  if (s.total === 0) {
+    return (
+      <PageWrapper title="Win/Loss Analysis" subtitle="Deal outcome breakdown and lost reason attribution">
+        <EmptyState
+          illustration={<BarChart2 className="h-16 w-16 text-muted-foreground/40" />}
+          title="No closed deals yet"
+          description="Win/loss data will appear once deals are marked as won or lost."
+        />
+      </PageWrapper>
+    );
+  }
+
   const wonPct = s.total > 0 ? (s.won / s.total) * 100 : 0;
   const lostPct = s.total > 0 ? (s.lost / s.total) * 100 : 0;
 

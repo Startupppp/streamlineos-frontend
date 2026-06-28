@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { Plus, GraduationCap, Clock, Target, BookOpen } from "lucide-react";
+import { Plus, GraduationCap, Clock, Target, BookOpen, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +67,7 @@ export default function LearningPathsPage() {
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:performance");
 
-  const { data: paths, isLoading } = useQuery({
+  const { data: paths, isLoading, isError, refetch } = useQuery({
     queryKey: lpKeys.list(),
     queryFn: () => apiClient.get<LearningPath[]>("/hr/learning-paths"),
   });
@@ -87,6 +87,8 @@ export default function LearningPathsPage() {
   const [description, setDescription] = useState("");
   const [level, setLevel] = useState("");
   const [hours, setHours] = useState("");
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -144,6 +146,21 @@ export default function LearningPathsPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Learning Paths" subtitle="Structured learning programs">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load learning paths</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Learning Paths"
@@ -151,7 +168,7 @@ export default function LearningPathsPage() {
       badge={`${paths?.length ?? 0} paths`}
       actions={
         isAdmin ? (
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
             <Plus className="h-3.5 w-3.5" />
             Create Path
           </Button>

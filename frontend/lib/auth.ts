@@ -28,7 +28,6 @@ import { Adapter } from "next-auth/adapters";
 import { logger } from "./logger";
 import { redis } from "./redis";
 import { randomUUID } from "crypto";
-import { sendNewDeviceLoginEmail } from "./email";
 import { createAuditLog } from "./audit-log";
 import { getUserPermissions } from "@/server/queries/rbac";
 

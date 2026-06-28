@@ -21,19 +21,19 @@ export default async function DashboardPage() {
   await Promise.all([
     qc.prefetchQuery({
       queryKey: queryKeys.dashboard.stats(),
-      queryFn: () => getDashboardStats(auth.orgId, auth.userId),
+      queryFn: getDashboardStats,
     }),
     qc.prefetchQuery({
       queryKey: queryKeys.dashboard.recentProjects(),
-      queryFn: () => getRecentProjects(auth.orgId, auth.userId, auth.member.role),
+      queryFn: getRecentProjects,
     }),
     qc.prefetchQuery({
       queryKey: queryKeys.dashboard.activeSprintSummary(),
-      queryFn: () => getActiveSprintSummary(auth.orgId, auth.userId, auth.member.role),
+      queryFn: getActiveSprintSummary,
     }),
     qc.prefetchQuery({
       queryKey: [...queryKeys.dashboard.all, "roleStats"] as const,
-      queryFn: () => getRoleStats(auth.orgId),
+      queryFn: getRoleStats,
     }),
   ]);
 

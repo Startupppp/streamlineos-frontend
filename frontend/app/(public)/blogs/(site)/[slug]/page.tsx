@@ -70,7 +70,7 @@ export default async function BlogPostPage({
   const { html, toc } = extractToc(post.content);
   const [related, adjacent] = await Promise.all([
     getRelatedPosts({ postId: post.id, categoryId: post.categoryId, limit: 3 }),
-    getAdjacentPosts(post.publishedAt),
+    getAdjacentPosts(post.slug),
   ]);
 
   const cover = resolveImageUrl(post.coverImage);

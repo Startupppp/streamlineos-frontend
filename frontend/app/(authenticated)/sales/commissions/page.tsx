@@ -52,7 +52,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus } from "@/lib/api/hooks/crm";
+import { useCommissions, useCommissionRules, useCreateCommissionRule, useUpdateCommissionStatus, type CommissionItem, type CommissionRule } from "@/lib/api/hooks/crm";
 import { useAbility } from "@/lib/abilities-context";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -90,11 +90,7 @@ export default function CommissionsPage() {
   const createRule = useCreateCommissionRule();
   const updateStatus = useUpdateCommissionStatus();
 
-  const items = (data?.items ?? []) as Array<{
-    id: number; userName: string | null; dealName: string | null;
-    dealValue: string; commissionRate: string; commissionAmount: string;
-    status: string; createdAt: string | null;
-  }>;
+  const items: CommissionItem[] = data?.items ?? [];
 
   const handleConfirmAction = useCallback(() => {
     if (!pendingAction) return;

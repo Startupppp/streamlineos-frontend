@@ -39,7 +39,8 @@ import {
   ArrowRight,
   Trash2,
 } from "lucide-react";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -49,7 +50,7 @@ const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
 
 const createViewSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  layoutType: z.enum(LAYOUT_TYPES).default("board"),
+  layoutType: z.enum(LAYOUT_TYPES).optional(),
 });
 type CreateViewForm = z.infer<typeof createViewSchema>;
 
@@ -159,23 +160,26 @@ export default function ViewsPage({
   const deleteMutation = useDeleteView();
 
   const form = useForm<CreateViewForm>({
-    resolver: zodResolver(createViewSchema) as unknown as Resolver<CreateViewForm>,
+    resolver: zodResolver(createViewSchema),
     defaultValues: { layoutType: "board" },
   });
 
-  const onSubmit = (data: CreateViewForm) => {
-    createMutation.mutate(
-      { ...data, projectId },
-      {
-        onSuccess: () => {
-          setCreateOpen(false);
-          form.reset();
-          toast.success("View created");
-        },
-        onError: (err) => toast.error((err as Error).message),
-      }
-    );
-  };
+  const onSubmit = useCallback(
+    (data: CreateViewForm) => {
+      createMutation.mutate(
+        { ...data, projectId },
+        {
+          onSuccess: () => {
+            setCreateOpen(false);
+            form.reset();
+            toast.success("View created");
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        }
+      );
+    },
+    [createMutation, projectId, form]
+  );
 
   const handleNavigateToView = useCallback(
     (view: { id: number; layoutType: string }) => {

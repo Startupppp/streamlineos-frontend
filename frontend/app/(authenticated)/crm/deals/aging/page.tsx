@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useCallback } from "react";
 import Link from "next/link";
-import { Clock, AlertTriangle, TrendingDown, IndianRupee, ArrowLeft, ExternalLink } from "lucide-react";
+import { Clock, AlertTriangle, TrendingDown, IndianRupee, ArrowLeft, ExternalLink, AlertCircle } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,37 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { useDealAging } from "@/lib/api/hooks/crm";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
-
-
-interface AgingDeal {
-  id: number;
-  name: string;
-  value: string | null;
-  stage: string;
-  daysInStage: number;
-  createdAt: string;
-  updatedAt: string;
-  assigneeName: string | null;
-}
-
-interface AgingResponse {
-  summary: { total: number; stale: number; critical: number };
-  deals: AgingDeal[];
-}
-
-
-function useDealAging() {
-  return useQuery<AgingResponse>({
-    queryKey: queryKeys.deals.aging(),
-    queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
-    refetchInterval: 300_000,
-  });
-}
-
 
 const STAGE_BADGE: Record<string, { label: string; className: string }> = {
   LEAD:        { label: "Lead",        className: "bg-muted text-muted-foreground border-border" },
@@ -93,9 +64,8 @@ function getSeverityChip(days: number) {
   );
 }
 
-
 export default function DealAgingPage() {
-  const { data, isLoading } = useDealAging();
+  const { data, isLoading, isError, refetch } = useDealAging();
 
   const sortedDeals = useMemo(() => {
     if (!data?.deals) return [];
@@ -113,6 +83,8 @@ export default function DealAgingPage() {
     const oldestDays = deals.length > 0 ? Math.max(...deals.map((d) => d.daysInStage)) : 0;
     return { totalStale: stale.length, avgDays, oldestDays, totalValue };
   }, [data]);
+
+  const handleRetry = useCallback(() => { refetch(); }, [refetch]);
 
   const backAction = (
     <Button variant="outline" size="sm" asChild>
@@ -137,6 +109,22 @@ export default function DealAgingPage() {
             ))}
           </div>
           <Skeleton className="h-96 rounded-xl" />
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Deal Aging Report"
+        subtitle="Deals stuck in pipeline stages"
+        actions={backAction}
+      >
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-sm text-muted-foreground">Failed to load aging data.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       </PageWrapper>
     );

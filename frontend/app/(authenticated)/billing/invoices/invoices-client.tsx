@@ -23,11 +23,14 @@ import {
   MoreHorizontal,
   Trash2,
   IndianRupee,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -56,6 +59,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
@@ -91,7 +95,7 @@ export function InvoicesClient() {
     });
   }, [searchParams, router, pathname]);
 
-  const { data: invoicesData, isLoading } = useInvoices(
+  const { data: invoicesData, isLoading, isError, refetch } = useInvoices(
     statusFilter !== "all" ? { status: statusFilter as InvoiceStatus } : undefined
   );
   const { data: stats } = useInvoiceStats();
@@ -115,6 +119,7 @@ export function InvoicesClient() {
   }, [deleteInvoice]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRetryLoad = useCallback(() => { void refetch(); }, [refetch]);
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -189,7 +194,7 @@ export function InvoicesClient() {
 
       <div className="border border-border rounded-lg overflow-auto h-[calc(100dvh-20rem)] min-h-[320px]">
         <div className="min-w-[700px]">
-          <table className="w-full caption-bottom text-sm">
+          <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
                 <TableHead>Invoice #</TableHead>
@@ -203,9 +208,27 @@ export function InvoicesClient() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-14" /></TableCell>
+                    <TableCell><Skeleton className="h-7 w-7 rounded ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                  <TableCell colSpan={7} className="py-10">
+                    <div className="flex flex-col items-center justify-center text-center gap-3">
+                      <AlertCircle className="h-8 w-8 text-destructive" />
+                      <p className="text-sm font-medium">Failed to load invoices</p>
+                      <Button variant="outline" size="sm" onClick={handleRetryLoad}>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Retry
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : invoices.length === 0 ? (
@@ -232,7 +255,7 @@ export function InvoicesClient() {
                 ))
               )}
             </TableBody>
-          </table>
+          </Table>
         </div>
       </div>
 
@@ -316,7 +339,7 @@ interface LineItem {
 interface LineItemRowProps {
   item: LineItem;
   idx: number;
-  onUpdate: (idx: number, field: string, value: string | number) => void;
+  onUpdate: (idx: number, field: keyof LineItem, value: string | number) => void;
   onRemove: (idx: number) => void;
   disabled: boolean;
 }
@@ -348,7 +371,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
 
-  const updateLineItem = useCallback((idx: number, field: string, value: string | number) => {
+  const updateLineItem = useCallback((idx: number, field: keyof LineItem, value: string | number) => {
     setLineItems((prev) =>
       prev.map((item, i) => {
         if (i !== idx) return item;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, memo } from "react";
+import { useState, useCallback, useTransition, memo, useId } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,32 +18,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuotes, useCreateQuote } from "@/lib/api/hooks/quotes";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
-import { Plus, Search, Download, Trash2 } from "lucide-react";
+import { Plus, Search, Download, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "bg-muted text-muted-foreground border-transparent",
+  DRAFT: "bg-slate-500/10 text-slate-600 border-slate-500/20",
   SENT: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   ACCEPTED: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   REJECTED: "bg-red-500/10 text-red-600 border-red-500/20",
   EXPIRED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
+const TABLE_COLS = 7;
 
 interface LineItem {
+  key: string;
   description: string;
   quantity: number;
   unitPrice: number;
   taxRate: number;
 }
 
+type LineItemField = "description" | "quantity" | "unitPrice" | "taxRate";
+
 interface LineItemRowProps {
   item: LineItem;
   idx: number;
   isFirst: boolean;
   canRemove: boolean;
-  onUpdate: (idx: number, field: string, value: string | number) => void;
+  onUpdate: (idx: number, field: LineItemField, value: string | number) => void;
   onRemove: (idx: number) => void;
 }
 
@@ -61,18 +65,18 @@ const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, o
         <Input value={item.description} onChange={handleDescription} placeholder="Item description" />
       </div>
       <div className="col-span-4 sm:col-span-2">
-        <span className="text-xs text-muted-foreground sm:hidden">Qty</span>
-        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Qty</span>}
+        {isFirst && <span className="text-xs text-muted-foreground">Qty</span>}
+        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Qty</span>}
         <Input type="number" min={0} value={item.quantity} onChange={handleQuantity} />
       </div>
       <div className="col-span-4 sm:col-span-2">
-        <span className="text-xs text-muted-foreground sm:hidden">Price</span>
-        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Price</span>}
+        {isFirst && <span className="text-xs text-muted-foreground">Price</span>}
+        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Price</span>}
         <Input type="number" min={0} value={item.unitPrice} onChange={handleUnitPrice} />
       </div>
       <div className="col-span-3 sm:col-span-2">
-        <span className="text-xs text-muted-foreground sm:hidden">Tax %</span>
-        {isFirst && <span className="text-xs text-muted-foreground hidden sm:inline">Tax %</span>}
+        {isFirst && <span className="text-xs text-muted-foreground">Tax %</span>}
+        {!isFirst && <span className="text-xs text-muted-foreground sm:hidden">Tax %</span>}
         <Input type="number" min={0} value={item.taxRate} onChange={handleTaxRate} />
       </div>
       <div className="col-span-1">
@@ -84,19 +88,20 @@ const LineItemRow = memo(function LineItemRow({ item, idx, isFirst, canRemove, o
   );
 });
 
+function makeLineItem(): LineItem {
+  return { key: crypto.randomUUID(), description: "", quantity: 1, unitPrice: 0, taxRate: 0 };
+}
 
 function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
   const createQuote = useCreateQuote();
   const [subject, setSubject] = useState("");
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { description: "", quantity: 1, unitPrice: 0, taxRate: 0 },
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([makeLineItem()]);
 
-  const addLine = useCallback(() => setLineItems((prev) => [...prev, { description: "", quantity: 1, unitPrice: 0, taxRate: 0 }]), []);
+  const addLine = useCallback(() => setLineItems((prev) => [...prev, makeLineItem()]), []);
 
-  const updateLine = useCallback((idx: number, field: string, value: string | number) => {
+  const updateLine = useCallback((idx: number, field: LineItemField, value: string | number) => {
     setLineItems((prev) =>
       prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
     );
@@ -112,7 +117,7 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
 
   const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!subject.trim() || !validUntil) {
       toast.error("Please fill all required fields");
@@ -122,7 +127,12 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
       toast.error("Every line item needs a description");
       return;
     }
-    const cleanedItems = lineItems.map((li) => ({ ...li, description: li.description.trim() }));
+    const cleanedItems = lineItems.map(({ description, quantity, unitPrice, taxRate }) => ({
+      description: description.trim(),
+      quantity,
+      unitPrice,
+      taxRate,
+    }));
     createQuote.mutate(
       { subject: subject.trim(), validUntil, notes: notes || undefined, lineItems: cleanedItems },
       {
@@ -130,10 +140,10 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
           toast.success("Quote created successfully");
           onSuccess();
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
-  };
+  }, [subject, validUntil, notes, lineItems, createQuote, onSuccess]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,7 +163,7 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="space-y-2">
           {lineItems.map((item, idx) => (
             <LineItemRow
-              key={idx}
+              key={item.key}
               item={item}
               idx={idx}
               isFirst={idx === 0}
@@ -183,12 +193,43 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
+function QuotesTableSkeleton() {
+  return (
+    <div className="border rounded-lg overflow-x-auto">
+      <Table className="min-w-[680px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Quote #</TableHead>
+            <TableHead>Subject</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Deal</TableHead>
+            <TableHead className="text-right">Net Amount</TableHead>
+            <TableHead>Valid Until</TableHead>
+            <TableHead>Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TableRow key={i}>
+              {Array.from({ length: TABLE_COLS }).map((__, j) => (
+                <TableCell key={j}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
 
 export default function QuotesPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const instanceId = useId();
 
   const search = searchParams.get("q") || "";
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -208,7 +249,7 @@ export default function QuotesPage() {
     [searchParams, router, pathname],
   );
 
-  const { data, isLoading } = useQuotes({
+  const { data, isLoading, isError, refetch } = useQuotes({
     status: statusFilter !== "all" ? statusFilter : undefined,
     search: debouncedSearch || undefined,
   });
@@ -227,6 +268,10 @@ export default function QuotesPage() {
 
   const handleCreateOpenChange = useCallback((open: boolean) => setCreateOpen(open), []);
   const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
+
+  const isFiltered = Boolean(debouncedSearch || statusFilter !== "all");
 
   return (
     <PageWrapper
@@ -247,10 +292,13 @@ export default function QuotesPage() {
                 New Quote
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl" aria-describedby={`${instanceId}-dialog-desc`}>
               <DialogHeader>
                 <DialogTitle>Create Quote</DialogTitle>
               </DialogHeader>
+              <p id={`${instanceId}-dialog-desc`} className="sr-only">
+                Fill in the details to create a new quote.
+              </p>
               <CreateQuoteForm onSuccess={handleCreateSuccess} />
             </DialogContent>
           </Dialog>
@@ -283,17 +331,22 @@ export default function QuotesPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))}
+        <QuotesTableSkeleton />
+      ) : isError ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-sm text-muted-foreground">Failed to load quotes. Please try again.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
         </div>
       ) : !data?.quotes?.length ? (
         <EmptyState
           illustration={<EmptyDocumentsIllustration />}
-          title="No quotes found"
-          description="Create your first quote to start closing deals."
-          action={{ label: "New Quote", onClick: () => setCreateOpen(true) }}
+          title={isFiltered ? "No quotes match your filters" : "No quotes yet"}
+          description={isFiltered ? "Try adjusting your search or status filter." : "Create your first quote to start closing deals."}
+          action={isFiltered ? undefined : { label: "New Quote", onClick: handleOpenCreate }}
           className="flex-1"
         />
       ) : (
@@ -329,7 +382,7 @@ export default function QuotesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {q.deal?.name || "—"}
+                    {q.deal?.name ?? "—"}
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {q.currency} {Number(q.netAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}

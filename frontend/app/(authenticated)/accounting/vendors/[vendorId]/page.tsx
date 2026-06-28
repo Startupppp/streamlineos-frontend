@@ -1,147 +1,227 @@
 "use client";
 
-import { use, useState, type ChangeEvent } from "react";
+import { use, useState, useCallback, type ChangeEvent } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { Receipt, Wallet, AlertCircle, ArrowLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LoadingState } from "@/components/shared/loading-state";
-import { ErrorState } from "@/components/shared/error-state";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { LoadingState, ErrorState } from "@/components/shared";
+import { DS } from "@/lib/design-system";
 import { useVendorLedger } from "@/lib/api/hooks/accounting";
 
-interface VendorLedgerPageProps {
-  params: Promise<{ vendorId: string }>;
-}
-
-function fmt(value: string): string {
-  return Number(value).toFixed(2);
+function formatCurrency(value: string): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return value;
+  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 }
 
 function formatDate(value: string): string {
+  if (!value) return "";
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
-export default function VendorLedgerPage({ params }: VendorLedgerPageProps) {
-  const { vendorId } = use(params);
-  const id = Number(vendorId);
+function formatSource(sourceType: string, sourceEvent: string | null): string {
+  if (sourceEvent) return `${sourceType} · ${sourceEvent}`;
+  return sourceType;
+}
+
+function parseVendorId(value: string): number {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : 0;
+}
+
+interface PageProps {
+  params: Promise<{ vendorId: string }>;
+}
+
+export default function VendorLedgerDetailPage({ params }: PageProps) {
+  const { vendorId: vendorIdParam } = use(params);
+  const vendorId = parseVendorId(vendorIdParam);
+
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
-  const query = useVendorLedger(id, { from: from || undefined, to: to || undefined });
 
-  function handleFromChange(event: ChangeEvent<HTMLInputElement>): void {
-    setFrom(event.target.value);
-  }
-
-  function handleToChange(event: ChangeEvent<HTMLInputElement>): void {
-    setTo(event.target.value);
-  }
-
-  if (query.isLoading) return <LoadingState variant="form" />;
-  if (query.error) return <ErrorState description={query.error.message} />;
-  if (!query.data) return <ErrorState title="Not found" description={`Vendor #${vendorId}`} />;
-
-  const { summary, lines } = query.data;
-  const outstanding = Number(summary.outstanding);
-  const dateFilteredLines = lines.filter((l) => {
-    if (from && l.date < from) return false;
-    if (to && l.date > to) return false;
-    return true;
+  const query = useVendorLedger(vendorId, {
+    from: from || undefined,
+    to: to || undefined,
   });
+
+  const handleFromChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    setFrom(event.target.value);
+  }, []);
+
+  const handleToChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+    setTo(event.target.value);
+  }, []);
+
+  const handleRetry = useCallback((): void => {
+    void query.refetch();
+  }, [query]);
+
+  const summary = query.data?.summary;
+  const lines = query.data?.lines ?? [];
+
+  const subtitleParts: string[] = [];
+  if (summary?.state) subtitleParts.push(summary.state);
+  if (summary?.gstin) subtitleParts.push(`GSTIN ${summary.gstin}`);
+  const subtitle = subtitleParts.length > 0 ? subtitleParts.join(" · ") : "Vendor ledger";
 
   return (
     <PageWrapper
-      eyebrow="Accounting · Vendor"
-      title={summary.vendorName}
-      subtitle={`${summary.state ?? "—"} · ${summary.gstin ?? "No GSTIN"}`}
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/accounting/vendors">
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
-      }
+      eyebrow="Accounting · Vendors"
+      title={summary?.vendorName ?? (vendorId > 0 ? "Vendor ledger" : "Invalid vendor")}
+      subtitle={subtitle}
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Total billed</div>
-            <div className="text-xl font-mono tabular-nums">{fmt(summary.totalBilled)}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Total paid</div>
-            <div className="text-xl font-mono tabular-nums">{fmt(summary.totalPaid)}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Outstanding</div>
-            <div className={`text-xl font-mono tabular-nums ${outstanding > 0 ? "text-rose-600 font-medium" : ""}`}>
-              {fmt(summary.outstanding)}
-            </div>
-          </Card>
+      <div className="space-y-6">
+        <div>
+          <Button variant="ghost" size="sm" asChild className="-ml-2 text-muted-foreground hover:text-foreground">
+            <Link href="/accounting/vendors">
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Back to vendors
+            </Link>
+          </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">From</label>
-            <Input type="date" value={from} onChange={handleFromChange} />
+        <div className={DS.gridResponsive3}>
+          <StatCard
+            label="Total Billed"
+            value={summary ? formatCurrency(summary.totalBilled) : "—"}
+            icon={Receipt}
+            color="blue"
+            index={0}
+          />
+          <StatCard
+            label="Total Paid"
+            value={summary ? formatCurrency(summary.totalPaid) : "—"}
+            icon={Wallet}
+            color="green"
+            index={1}
+          />
+          <StatCard
+            label="Outstanding Payable"
+            value={summary ? formatCurrency(summary.outstanding) : "—"}
+            icon={AlertCircle}
+            color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
+            index={2}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:flex-wrap">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="vendor-ledger-from"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              From
+            </label>
+            <Input
+              id="vendor-ledger-from"
+              type="date"
+              value={from}
+              onChange={handleFromChange}
+              className="w-full sm:w-[160px]"
+            />
           </div>
-          <div>
-            <label className="text-sm text-muted-foreground block mb-1">To</label>
-            <Input type="date" value={to} onChange={handleToChange} />
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="vendor-ledger-to"
+              className="text-[11px] font-medium text-muted-foreground leading-none"
+            >
+              To
+            </label>
+            <Input
+              id="vendor-ledger-to"
+              type="date"
+              value={to}
+              onChange={handleToChange}
+              className="w-full sm:w-[160px]"
+            />
           </div>
         </div>
 
-        {dateFilteredLines.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-muted-foreground">
-            No AP journal lines for this vendor in the selected range.
+        {query.isLoading ? (
+          <LoadingState variant="table" rows={8} />
+        ) : query.error ? (
+          <ErrorState
+            title="Failed to load ledger"
+            description={query.error.message}
+            onRetry={handleRetry}
+          />
+        ) : lines.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+            <h3 className="text-sm font-semibold text-foreground">No ledger entries</h3>
+            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+              No accounts-payable journal lines for this vendor in the selected range.
+            </p>
           </div>
         ) : (
-          <Card className="overflow-hidden">
+          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Entry #</TableHead>
-                  <TableHead>Bill #</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead className="text-right">Debit</TableHead>
-                  <TableHead className="text-right">Credit</TableHead>
-                  <TableHead className="text-right">Running balance</TableHead>
+                  <TableHead className="w-[120px]">Date</TableHead>
+                  <TableHead className="w-[160px]">Entry #</TableHead>
+                  <TableHead className="w-[180px]">Source</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="w-[120px] text-right">Debit</TableHead>
+                  <TableHead className="w-[120px] text-right">Credit</TableHead>
+                  <TableHead className="w-[140px] text-right">Running Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dateFilteredLines.map((line, idx) => (
+                {lines.map((line, idx) => (
                   <TableRow key={`${line.entryId}-${idx}`}>
-                    <TableCell>{formatDate(line.date)}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground tabular-nums">
+                      {formatDate(line.date)}
+                    </TableCell>
                     <TableCell className="font-mono text-xs">
-                      <Link href={`/accounting/journal/${line.entryId}`} className="text-blue-600 hover:underline">
+                      <Link
+                        href={`/accounting/journal/${line.entryId}`}
+                        className="text-foreground hover:text-blue-600 hover:underline"
+                      >
                         {line.entryNumber}
                       </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatSource(line.sourceType, line.sourceEvent)}
+                    </TableCell>
+                    <TableCell className="text-sm text-foreground">
                       {line.billNumber ? (
-                        <Link href={`/accounting/purchase-bills/${line.billId}`} className="text-blue-600 hover:underline font-mono text-xs">
+                        <Link
+                          href={`/accounting/purchase-bills/${line.billId}`}
+                          className="font-mono text-xs text-muted-foreground mr-2 hover:text-blue-600 hover:underline"
+                        >
                           {line.billNumber}
                         </Link>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
+                      ) : null}
+                      {line.description ?? ""}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {line.sourceType}{line.sourceEvent ? ` · ${line.sourceEvent}` : ""}
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {Number(line.debit) > 0 ? formatCurrency(line.debit) : "—"}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{Number(line.debit) > 0 ? fmt(line.debit) : ""}</TableCell>
-                    <TableCell className="text-right tabular-nums">{Number(line.credit) > 0 ? fmt(line.credit) : ""}</TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">{fmt(line.runningBalance)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {Number(line.credit) > 0 ? formatCurrency(line.credit) : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-medium tabular-nums">
+                      {formatCurrency(line.runningBalance)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </Card>
+          </div>
         )}
       </div>
     </PageWrapper>

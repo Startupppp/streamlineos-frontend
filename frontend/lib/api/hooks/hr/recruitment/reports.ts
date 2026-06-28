@@ -132,3 +132,30 @@ export const ENTITY_FIELDS: Record<ReportEntity, { value: string; label: string 
     { value: "createdAt", label: "Created At" },
   ],
 };
+
+export interface DiversityReport {
+  total: number;
+  genderBreakdown: { gender: string; count: number }[];
+  locationBreakdown: { location: string; count: number }[];
+  sourceBreakdown: { source: string; count: number }[];
+  stageBreakdown: { stage: string; count: number }[];
+}
+
+export interface DiversityFilters {
+  from: string;
+  to: string;
+  departmentIds: number[];
+}
+
+export function useDiversityReport(filters: DiversityFilters) {
+  const params: Record<string, string> = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+  if (filters.departmentIds.length > 0) params.departmentIds = filters.departmentIds.join(",");
+
+  return useQuery<DiversityReport>({
+    queryKey: [...queryKeys.hr.diversityReport(), params],
+    queryFn: () => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params),
+    staleTime: 5 * 60_000,
+  });
+}

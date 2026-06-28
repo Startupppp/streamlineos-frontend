@@ -282,3 +282,59 @@ export interface KbAiSummarizeInput {
 export interface KbAiContent {
   content: string;
 }
+
+export interface KbArticleVersion {
+  id: number;
+  articleId: number;
+  versionNumber: number;
+  title: string;
+  content: string;
+  excerpt: string | null;
+  changeSummary: string | null;
+  authorId: string | null;
+  createdAt: string;
+}
+
+export interface KbTag {
+  id: number;
+  orgId: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+}
+
+export type KbTranslationStatus = "draft" | "in_progress" | "translated" | "published" | "outdated";
+
+export interface KbTranslation {
+  id: number;
+  articleId: number;
+  locale: string;
+  title: string;
+  content: string;
+  contentText: string;
+  excerpt: string | null;
+  status: KbTranslationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertTranslationInput {
+  articleId: number;
+  locale: string;
+  title: string;
+  content?: string;
+  contentText?: string;
+  excerpt?: string | null;
+  status?: KbTranslationStatus;
+}
+
+export interface KbComment {
+  id: number;
+  articleId: number;
+  authorId: string | null;
+  parentId: number | null;
+  content: string;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

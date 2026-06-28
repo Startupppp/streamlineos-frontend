@@ -11,6 +11,10 @@ import {
   X,
   FileText,
   Image as ImageIcon,
+  ChevronDown,
+  BookOpen,
+  ExternalLink,
+  FilePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +36,8 @@ import { apiClient } from "@/lib/api-client";
 import { getInitials } from "@/lib/format-utils";
 import { SupportActivityLog } from "@/components/support/support-activity-log";
 import type { SupportTicketStatus } from "@/types/support";
+import { useKbSearch, useKbSpaces } from "@/lib/api/hooks/kb";
+import { useCreateKbArticleFromTicket } from "@/lib/api/hooks/kb/from-ticket";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-700",
@@ -61,6 +67,129 @@ function toSentenceCase(str: string) {
 function fileMimeIcon(mimeType: string) {
   if (mimeType.startsWith("image/")) return ImageIcon;
   return FileText;
+}
+
+interface KbDeflectionPanelProps {
+  ticketId: number;
+  ticketTitle: string;
+}
+
+function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelProps) {
+  const [open, setOpen] = useState(false);
+  const [selectedSpaceId, setSelectedSpaceId] = useState("");
+
+  const { data: searchData, isLoading: searchLoading } = useKbSearch(
+    { q: ticketTitle, pageSize: 4 },
+    { enabled: open },
+  );
+  const { data: spaces } = useKbSpaces();
+  const { mutate: createMutate, isPending: createPending } = useCreateKbArticleFromTicket();
+
+  const handleToggle = useCallback(() => setOpen((v) => !v), []);
+  const handleSpaceChange = useCallback((v: string) => setSelectedSpaceId(v), []);
+
+  const handleCreate = useCallback(() => {
+    if (!selectedSpaceId) return;
+    createMutate(
+      { ticketId, spaceId: Number(selectedSpaceId) },
+      {
+        onSuccess: (article) => {
+          toast.success("Draft article created");
+          window.open(
+            `/knowledge-base/spaces/${article.spaceId}/articles/${article.id}`,
+            "_blank",
+            "noopener,noreferrer",
+          );
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to create article");
+        },
+      },
+    );
+  }, [selectedSpaceId, ticketId, createMutate]);
+
+  const articles = searchData?.items ?? [];
+
+  return (
+    <div className="px-4 py-2 border-t border-border/40 shrink-0">
+      <button
+        type="button"
+        onClick={handleToggle}
+        className="flex items-center gap-1.5 w-full text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <BookOpen className="h-3.5 w-3.5 shrink-0" />
+        KB Deflection
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 ml-auto transition-transform", open && "rotate-180")}
+        />
+      </button>
+
+      {open && (
+        <div className="mt-2 space-y-3 pb-1">
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Related articles</p>
+            {searchLoading ? (
+              <div className="space-y-1.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                ))}
+              </div>
+            ) : articles.length > 0 ? (
+              <ul className="space-y-1">
+                {articles.map((article) => (
+                  <li key={article.id}>
+                    <a
+                      href={`/knowledge-base/spaces/${article.spaceId}/articles/${article.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 min-w-0 text-[12px] text-blue-600 hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{article.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedSpaceId}
+              onValueChange={handleSpaceChange}
+              disabled={!spaces?.length}
+            >
+              <SelectTrigger className="h-7 text-xs flex-1 min-w-0">
+                <SelectValue placeholder="Select space" />
+              </SelectTrigger>
+              <SelectContent>
+                {(spaces ?? []).map((space) => (
+                  <SelectItem key={space.id} value={String(space.id)}>
+                    {space.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs shrink-0 whitespace-nowrap"
+              disabled={!selectedSpaceId || createPending || !spaces?.length}
+              onClick={handleCreate}
+            >
+              {createPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+              ) : (
+                <FilePlus className="h-3.5 w-3.5 mr-1" />
+              )}
+              Create KB article
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface TicketDetailSheetProps {
@@ -98,7 +227,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
           const fd = new FormData();
           fd.append("file", file);
           fd.append("folder", "support-attachments");
-          const json = await apiClient.upload<{ url: string }>("/api/storage/upload", fd);
+          const json = await apiClient.upload<{ url: string }>("/storage/upload", fd);
           uploaded.push({
             fileName: file.name,
             fileUrl: json.url,
@@ -407,6 +536,8 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
           aria-label="Attach files"
         />
       </div>
+
+      <KbDeflectionPanel ticketId={ticket.id} ticketTitle={ticket.title} />
     </div>
   );
 }

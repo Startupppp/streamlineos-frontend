@@ -236,17 +236,7 @@ export default function PagesPage({
   );
 
   const handleSelectPage = useCallback((pageId: number) => {
-    setActivePage((prev) => {
-      if (prev !== null) {
-        const target = (pages ?? []).find((p) => p.id === prev);
-        const prevContent = typeof target?.content === "string"
-          ? target.content
-          : JSON.stringify(target?.content ?? "");
-        // We capture editContent via closure but need a functional approach.
-        // Use the setter only; auto-save on unmount is handled separately.
-      }
-      return pageId;
-    });
+    setActivePage(pageId);
     const target = (pages ?? []).find((p) => p.id === pageId);
     setEditContent(typeof target?.content === "string" ? target.content : JSON.stringify(target?.content ?? ""));
   }, [pages]);

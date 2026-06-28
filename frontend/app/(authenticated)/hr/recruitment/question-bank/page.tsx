@@ -55,6 +55,8 @@ export default function QuestionBankPage() {
 
   const deleteQuestion = useDeleteInterviewQuestion(deleteTargetId ?? 0);
 
+  const handleOpenCreateSheet = useCallback(() => setSheetOpen(true), []);
+
   const handleCloseSheet = useCallback(() => {
     setSheetOpen(false);
     setForm(EMPTY_FORM);
@@ -105,7 +107,7 @@ export default function QuestionBankPage() {
             onClose={handleCloseSheet}
             roleOptions={roleOptions}
           >
-            <Button size="sm" onClick={() => setSheetOpen(true)}>
+            <Button size="sm" onClick={handleOpenCreateSheet}>
               <Plus className="mr-2 h-4 w-4" />
               Add Question
             </Button>

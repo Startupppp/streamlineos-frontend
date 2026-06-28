@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { Plus, CheckCircle2, BookOpen, Users } from "lucide-react";
+import { Plus, CheckCircle2, BookOpen, Users, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LEVELS = [
@@ -80,8 +80,10 @@ function getCardAccent(maxLevel: number | null): string {
 }
 
 export default function SkillsPage() {
-  const { data: skills, isLoading } = useEmployeeSkills();
+  const { data: skills, isLoading, isError, refetch } = useEmployeeSkills();
   const addSkill = useAddSkill();
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [skillName, setSkillName] = useState("");
@@ -133,6 +135,21 @@ export default function SkillsPage() {
       <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
+        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Failed to load skills</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
         </div>
       </PageWrapper>
     );

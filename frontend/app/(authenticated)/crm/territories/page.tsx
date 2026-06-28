@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 import {
-  Map, Plus, Pencil, Trash2, MapPin, Users, Building2, CheckCircle2,
+  Map, Plus, Pencil, Trash2, MapPin, Users, Building2, CheckCircle2, AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,12 +86,30 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
     [tags, onChange]
   );
 
+  const handleContainerClick = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    if (inputValue.trim()) addTag(inputValue);
+  }, [inputValue, addTag]);
+
+  const handleRemoveClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const idx = Number(e.currentTarget.dataset.idx);
+    removeTag(idx);
+  }, [removeTag]);
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
       <div
         className="flex flex-wrap gap-1.5 min-h-[38px] px-3 py-2 rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring cursor-text"
-        onClick={() => inputRef.current?.focus()}
+        onClick={handleContainerClick}
       >
         {tags.map((tag, idx) => (
           <Badge
@@ -101,7 +120,8 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
             {tag}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); removeTag(idx); }}
+              data-idx={idx}
+              onClick={handleRemoveClick}
               className="ml-0.5 rounded-full hover:bg-muted p-0.5"
               aria-label={`Remove ${tag}`}
             >
@@ -112,9 +132,9 @@ function TagInput({ label, tags, onChange, placeholder }: TagInputProps) {
         <input
           ref={inputRef}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onBlur={() => { if (inputValue.trim()) addTag(inputValue); }}
+          onBlur={handleBlur}
           placeholder={tags.length === 0 ? placeholder : ""}
           className="flex-1 min-w-[80px] text-sm bg-transparent outline-none placeholder:text-muted-foreground"
         />
@@ -159,6 +179,9 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
   const MAX_CITIES = 5;
   const visibleCities = (t.cities ?? []).slice(0, MAX_CITIES);
   const extraCities = (t.cities ?? []).length - MAX_CITIES;
+
+  const handleEdit = useCallback(() => onEdit(t), [onEdit, t]);
+  const handleDelete = useCallback(() => onDelete(t.id), [onDelete, t.id]);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -222,7 +245,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
             variant="outline"
             size="sm"
             className="flex-1 h-7 text-xs"
-            onClick={() => onEdit(t)}
+            onClick={handleEdit}
             aria-label={`Edit ${t.name}`}
           >
             <Pencil className="h-3 w-3 mr-1" />
@@ -252,7 +275,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => onDelete(t.id)}
+                  onClick={handleDelete}
                 >
                   Delete
                 </AlertDialogAction>
@@ -267,7 +290,7 @@ function TerritoryCard({ territory: t, onEdit, onDelete, isDeleting }: Territory
 
 
 export default function TerritoriesPage() {
-  const { data: territories = [], isLoading } = useTerritories();
+  const { data: territories = [], isLoading, isError, refetch } = useTerritories();
   const { mutate: createTerritory, isPending: isCreating } = useCreateTerritory();
   const { mutate: updateTerritory, isPending: isUpdating } = useUpdateTerritory();
   const { mutate: deleteTerritory, variables: deletingVars } = useDeleteTerritory();
@@ -300,12 +323,55 @@ export default function TerritoriesPage() {
     if (editTarget) {
       updateTerritory(
         { id: editTarget.id, ...payload },
-        { onSuccess: () => setSheetOpen(false) }
+        {
+          onSuccess: () => {
+            setSheetOpen(false);
+            toast.success("Territory updated");
+          },
+          onError: () => toast.error("Failed to update territory"),
+        }
       );
     } else {
-      createTerritory(payload, { onSuccess: () => setSheetOpen(false) });
+      createTerritory(payload, {
+        onSuccess: () => {
+          setSheetOpen(false);
+          toast.success("Territory created");
+        },
+        onError: () => toast.error("Failed to create territory"),
+      });
     }
   }, [form, editTarget, createTerritory, updateTerritory]);
+
+  const handleDelete = useCallback((id: number) => {
+    deleteTerritory(id, {
+      onSuccess: () => toast.success("Territory deleted"),
+      onError: () => toast.error("Failed to delete territory"),
+    });
+  }, [deleteTerritory]);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, name: e.target.value }));
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setForm((f) => ({ ...f, description: e.target.value }));
+  }, []);
+
+  const handleActiveChange = useCallback((v: boolean) => {
+    setForm((f) => ({ ...f, isActive: v }));
+  }, []);
+
+  const handleStatesChange = useCallback((states: string[]) => {
+    setForm((f) => ({ ...f, states }));
+  }, []);
+
+  const handleCitiesChange = useCallback((cities: string[]) => {
+    setForm((f) => ({ ...f, cities }));
+  }, []);
+
+  const handleSheetClose = useCallback(() => setSheetOpen(false), []);
 
   const totalTerritories = territories.length;
   const activeTerritories = territories.filter((t) => t.isActive).length;
@@ -324,6 +390,24 @@ export default function TerritoriesPage() {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-52" />)}
           </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Territory Management"
+        subtitle="Define geographic territories and assign sales reps"
+      >
+        <div className="flex flex-1 flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive/60" />
+          <div>
+            <p className="font-medium text-foreground">Failed to load territories</p>
+            <p className="text-sm text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" onClick={handleRetry}>Retry</Button>
         </div>
       </PageWrapper>
     );
@@ -363,13 +447,15 @@ export default function TerritoriesPage() {
         </div>
 
         {territories.length === 0 ? (
-          <div className="py-16 text-center space-y-3">
-            <Map className="h-12 w-12 mx-auto text-muted-foreground/40" />
-            <p className="font-medium text-muted-foreground">No territories yet</p>
-            <p className="text-sm text-muted-foreground">
-              Create your first territory to start assigning sales reps to geographic regions.
-            </p>
-            <Button onClick={openCreate} className="mt-2" aria-label="Create first territory">
+          <div className="flex flex-1 flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+            <Map className="h-12 w-12 text-muted-foreground/40" />
+            <div>
+              <p className="font-medium text-foreground">No territories yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Create your first territory to start assigning sales reps to geographic regions.
+              </p>
+            </div>
+            <Button onClick={openCreate} aria-label="Create first territory">
               <Plus className="h-4 w-4 mr-2" />
               Add Territory
             </Button>
@@ -381,7 +467,7 @@ export default function TerritoriesPage() {
                 key={t.id}
                 territory={t}
                 onEdit={openEdit}
-                onDelete={(id) => deleteTerritory(id)}
+                onDelete={handleDelete}
                 isDeleting={deletingVars === t.id}
               />
             ))}
@@ -401,7 +487,7 @@ export default function TerritoriesPage() {
               <Input
                 id="territory-name"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={handleNameChange}
                 placeholder="e.g. Mumbai North"
               />
             </div>
@@ -409,14 +495,14 @@ export default function TerritoriesPage() {
             <TagInput
               label="States"
               tags={form.states}
-              onChange={(states) => setForm((f) => ({ ...f, states }))}
+              onChange={handleStatesChange}
               placeholder="Type a state and press Enter…"
             />
 
             <TagInput
               label="Cities"
               tags={form.cities}
-              onChange={(cities) => setForm((f) => ({ ...f, cities }))}
+              onChange={handleCitiesChange}
               placeholder="Type a city and press Enter…"
             />
 
@@ -425,7 +511,7 @@ export default function TerritoriesPage() {
               <Textarea
                 id="territory-description"
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={handleDescriptionChange}
                 placeholder="Optional notes about this territory…"
                 rows={3}
               />
@@ -436,7 +522,7 @@ export default function TerritoriesPage() {
               <Switch
                 id="territory-active"
                 checked={form.isActive}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
+                onCheckedChange={handleActiveChange}
               />
             </div>
           </div>
@@ -445,7 +531,7 @@ export default function TerritoriesPage() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => setSheetOpen(false)}
+              onClick={handleSheetClose}
             >
               Cancel
             </Button>

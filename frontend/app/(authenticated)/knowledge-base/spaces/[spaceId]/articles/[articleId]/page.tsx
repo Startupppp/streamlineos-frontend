@@ -9,8 +9,11 @@ import {
   CalendarClock,
   CheckCircle2,
   ChevronRight,
+  Globe,
+  History,
   ListTree,
   Loader2,
+  MessageSquare,
   Pencil,
   ShieldCheck,
   User,
@@ -31,6 +34,7 @@ import {
   useVerifyKbArticle,
 } from "@/lib/api/hooks/kb";
 import { useOrgMembers } from "@/lib/api/hooks/organization";
+import { CommentThread } from "@/components/kb/comment-thread";
 import {
   ArticleContent,
   prepareArticle,
@@ -315,7 +319,17 @@ export default function KbArticleReaderPage() {
             <h1 className="min-w-0 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {article.title}
             </h1>
-            <div className="flex items-center gap-2 sm:shrink-0">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/knowledge-base/spaces/${spaceId}/articles/${article.id}/versions`}>
+                  <History className="mr-1 h-4 w-4" /> History
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/knowledge-base/spaces/${spaceId}/articles/${article.id}/translations`}>
+                  <Globe className="mr-1 h-4 w-4" /> Translations
+                </Link>
+              </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/knowledge-base/spaces/${spaceId}/articles/${article.id}/edit`}>
                   <Pencil className="mr-1 h-4 w-4" /> Edit
@@ -374,6 +388,13 @@ export default function KbArticleReaderPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div className="mt-10 border-t border-border pt-6">
+                <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <MessageSquare className="h-4 w-4" /> Comments
+                </h2>
+                <CommentThread articleId={article.id} />
               </div>
             </div>
 

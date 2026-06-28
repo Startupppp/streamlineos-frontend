@@ -561,7 +561,7 @@ function BGVContent() {
 
 export default function BackgroundVerificationPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate permission="hr:employees:update">
       <BGVContent />
     </DashboardGate>
   );

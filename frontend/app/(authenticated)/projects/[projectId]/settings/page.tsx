@@ -14,7 +14,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ProjectInfoSection } from "@/features/projects/settings/project-info-section";

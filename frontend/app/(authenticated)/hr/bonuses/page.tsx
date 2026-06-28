@@ -34,8 +34,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Plus, IndianRupee, CheckCircle2, Check, ChevronsUpDown } from "lucide-react";
-import { formatINR } from "@/lib/format-utils";
-import type { Employee } from "@/types/hr";
+import { formatINR, getInitials } from "@/lib/format-utils";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 
 interface Bonus {
   id: number;
@@ -80,20 +80,107 @@ const STATUS_META: Record<string, { label: string; badge: string; accent: string
   },
 };
 
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+function extractEmployeeList(raw: Employee[] | PaginatedEmployees | undefined): Employee[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  return raw.data;
+}
+
+interface EmployeeCommandItemProps {
+  employee: Employee;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}
+
+function EmployeeCommandItem({ employee, selected, onSelect }: EmployeeCommandItemProps) {
+  const handleSelect = useCallback(() => onSelect(employee.id), [onSelect, employee.id]);
+  return (
+    <CommandItem
+      value={employee.name ?? employee.email ?? employee.id}
+      onSelect={handleSelect}
+    >
+      <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+      {employee.name ?? employee.email}
+    </CommandItem>
+  );
+}
+
+interface BonusTableRowProps {
+  bonus: Bonus;
+  onMarkPaid: (id: number) => void;
+}
+
+function BonusTableRow({ bonus: b, onMarkPaid }: BonusTableRowProps) {
+  const handleMarkPaidClick = useCallback(() => onMarkPaid(b.id), [onMarkPaid, b.id]);
+  const status = b.status ?? "PENDING";
+  const statusMeta = STATUS_META[status] ?? STATUS_META.PENDING;
+  const typeLabel = BONUS_TYPES.find((t) => t.value === b.type)?.label ?? b.type ?? "Bonus";
+
+  return (
+    <TableRow className={cn("border-l-4 transition-colors duration-200", statusMeta.accent)}>
+      <TableCell>
+        <div className="flex items-center gap-2.5">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+              {getInitials(b.employeeName)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{b.employeeName ?? "Employee"}</p>
+            {b.reason && (
+              <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">{b.reason}</p>
+            )}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+          {formatINR(b.amount)}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 border-violet-200 text-violet-700 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-300">
+          {typeLabel}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className={cn(
+          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+          statusMeta.badge,
+        )}>
+          {statusMeta.label}
+        </span>
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {b.paidAt
+          ? format(new Date(b.paidAt), "MMM d, yyyy")
+          : b.createdAt
+            ? format(new Date(b.createdAt), "MMM d, yyyy")
+            : "—"}
+      </TableCell>
+      <TableCell className="text-right">
+        {b.status !== "PAID" && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5"
+            onClick={handleMarkPaidClick}
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            Mark Paid
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
 }
 
 function BonusContent() {
   const qc = useQueryClient();
   const { data: employeesRaw } = useHrEmployees();
-  const employees = useMemo(
-    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
-    [employeesRaw],
-  );
+  const employees = useMemo(() => extractEmployeeList(employeesRaw), [employeesRaw]);
 
-  const { data: bonuses, isLoading } = useQuery({
+  const { data: bonuses, isLoading, isError, refetch } = useQuery({
     queryKey: bonusKeys.list(),
     queryFn: () => apiClient.get<Bonus[]>("/hr/bonuses"),
   });
@@ -133,6 +220,8 @@ function BonusContent() {
     if (val === "" || /^\d{0,10}(\.\d{0,2})?$/.test(val)) setAmount(val);
   }, []);
 
+  const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
+
   const handleCreate = useCallback(() => {
     if (!userId) { toast.error("Please select an employee"); return; }
     if (!amount) { toast.error("Amount is required"); return; }
@@ -167,6 +256,13 @@ function BonusContent() {
 
   const handlePayDialogChange = useCallback((open: boolean) => { if (!open) setPayId(null); }, []);
 
+  const handleSelectEmployee = useCallback((id: string) => {
+    setUserId(id);
+    setEmployeePickerOpen(false);
+  }, []);
+
+  const handleOpenMarkPaid = useCallback((id: number) => setPayId(id), []);
+
   if (isLoading) {
     return (
       <PageWrapper title="Bonus Processing" subtitle="Employee bonus processing">
@@ -183,6 +279,17 @@ function BonusContent() {
               <Skeleton className="h-7 w-24 rounded-md" />
             </div>
           ))}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Bonus Processing" subtitle="Manage and disburse employee bonuses">
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+          <p className="text-sm text-muted-foreground">Failed to load bonuses.</p>
+          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
         </div>
       </PageWrapper>
     );
@@ -223,72 +330,9 @@ function BonusContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bonuses.map((b: Bonus) => {
-                    const status = b.status ?? "PENDING";
-                    const statusMeta = STATUS_META[status] ?? STATUS_META.PENDING;
-                    const typeLabel = BONUS_TYPES.find((t) => t.value === b.type)?.label ?? b.type ?? "Bonus";
-
-                    return (
-                      <TableRow key={b.id} className={cn(
-                        "border-l-4 transition-colors duration-200",
-                        statusMeta.accent,
-                      )}>
-                        <TableCell>
-                          <div className="flex items-center gap-2.5">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                                {getInitials(b.employeeName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground">{b.employeeName ?? "Employee"}</p>
-                              {b.reason && (
-                                <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">{b.reason}</p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
-                            {formatINR(b.amount)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 border-violet-200 text-violet-700 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-300">
-                            {typeLabel}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                            statusMeta.badge,
-                          )}>
-                            {statusMeta.label}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {b.paidAt
-                            ? format(new Date(b.paidAt), "MMM d, yyyy")
-                            : b.createdAt
-                              ? format(new Date(b.createdAt), "MMM d, yyyy")
-                              : "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {b.status !== "PAID" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs gap-1.5"
-                              onClick={() => setPayId(b.id)}
-                            >
-                              <CheckCircle2 className="h-3 w-3" />
-                              Mark Paid
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {bonuses.map((b) => (
+                    <BonusTableRow key={b.id} bonus={b} onMarkPaid={handleOpenMarkPaid} />
+                  ))}
                 </TableBody>
               </Table>
             </div>
@@ -327,14 +371,12 @@ function BonusContent() {
                   <CommandEmpty>No employees found.</CommandEmpty>
                   <CommandGroup>
                     {employees.filter((e) => !!e.id).map((e) => (
-                      <CommandItem
+                      <EmployeeCommandItem
                         key={e.id}
-                        value={e.name ?? e.email ?? e.id}
-                        onSelect={() => { setUserId(e.id); setEmployeePickerOpen(false); }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", userId === e.id ? "opacity-100" : "opacity-0")} />
-                        {e.name ?? e.email}
-                      </CommandItem>
+                        employee={e}
+                        selected={userId === e.id}
+                        onSelect={handleSelectEmployee}
+                      />
                     ))}
                   </CommandGroup>
                 </CommandList>
@@ -367,7 +409,7 @@ function BonusContent() {
           <Textarea
             placeholder="Why is this bonus being awarded?"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={handleReasonChange}
             rows={3}
             maxLength={500}
           />
@@ -390,7 +432,7 @@ function BonusContent() {
 
 export default function BonusesPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate permission="hr:payroll:generate">
       <BonusContent />
     </DashboardGate>
   );

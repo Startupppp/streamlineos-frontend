@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useSlaCompliance } from "@/lib/api/hooks/crm";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
 
 
 const PRIORITY_BADGE: Record<string, string> = {
@@ -47,9 +48,21 @@ function SlaLoadingSkeleton() {
 
 
 export default function SlaCompliancePage() {
-  const { data, isLoading } = useSlaCompliance();
+  const { data, isLoading, isError, refetch } = useSlaCompliance();
 
   if (isLoading) return <SlaLoadingSkeleton />;
+
+  if (isError) {
+    return (
+      <PageWrapper title="SLA Compliance" subtitle="Track first-response and resolution time vs SLA targets">
+        <ErrorState
+          title="Failed to load SLA data"
+          description="An error occurred while loading SLA compliance data. Please try again."
+          onRetry={refetch}
+        />
+      </PageWrapper>
+    );
+  }
 
   const s = data?.stats ?? {
     totalTickets: 0,

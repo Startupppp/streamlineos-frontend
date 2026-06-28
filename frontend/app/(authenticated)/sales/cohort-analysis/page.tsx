@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,10 +26,15 @@ import {
 } from "recharts";
 import { useSalesCohort } from "@/lib/api/hooks/crm";
 import { Users } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 
 export default function CohortAnalysisPage() {
   const [months, setMonths] = useState(6);
-  const { data: cohort, isLoading } = useSalesCohort(months);
+  const { data: cohort, isLoading, isError, refetch } = useSalesCohort(months);
+
+  const handleMonthsChange = useCallback((v: string) => {
+    setMonths(Number(v));
+  }, []);
 
   const chartData = cohort?.map((row) => ({
     month: row.cohortMonth,

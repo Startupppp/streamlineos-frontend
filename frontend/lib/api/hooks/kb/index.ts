@@ -7,3 +7,7 @@ export * from "./ask";
 export * from "./analytics";
 export * from "./views";
 export * from "./authoring";
+export * from "./versions";
+export * from "./tags";
+export * from "./translations";
+export * from "./comments";

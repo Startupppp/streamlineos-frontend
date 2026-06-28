@@ -5,6 +5,7 @@ import { Globe, Plus, Copy, Check, Trash2, Pencil, FormInput, FileText, BarChart
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   useWebLeadForms, useCreateWebLeadForm, useUpdateWebLeadForm, useDeleteWebLeadForm,
   type WebLeadForm, type WebLeadFormField,
@@ -353,48 +356,98 @@ function WebFormCard({ form }: { form: WebLeadForm }) {
 }
 
 
+function WebFormsLoadingSkeleton() {
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Skeleton className="h-20 rounded-xl" />
+        <Skeleton className="h-20 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="flex flex-col">
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-48 mt-1" />
+            </CardHeader>
+            <CardContent className="flex-1 space-y-3">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Skeleton className="h-7 w-32" />
+                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-7 w-16" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function WebFormsPage() {
   const [createOpen, setCreateOpen] = useState(false);
-  const { data: forms = [], isLoading } = useWebLeadForms();
+  const { data: forms = [], isLoading, isError, refetch } = useWebLeadForms();
 
   const totalSubmissions = forms.reduce((sum, f) => sum + (f.totalSubmissions ?? 0), 0);
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   return (
     <PageWrapper
       title="Web-to-Lead Forms"
       subtitle="Create embeddable forms to capture leads from your website"
       actions={
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" /> New Form
         </Button>
       }
     >
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
-        <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="amber" />
-      </div>
-
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="h-48 animate-pulse bg-muted/40" />
-          ))}
-        </div>
-      ) : forms.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-16 text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-1">No forms yet</h3>
-          <p className="text-muted-foreground text-sm mb-4">Create your first web form to start capturing leads.</p>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Create Form
-          </Button>
-        </Card>
+        <WebFormsLoadingSkeleton />
+      ) : isError ? (
+        <>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <StatCard label="Total Forms" value={0} icon={FormInput} color="blue" />
+            <StatCard label="Total Submissions" value={0} icon={BarChart3} color="amber" />
+          </div>
+          <ErrorState
+            title="Failed to load forms"
+            description="An error occurred while loading your web forms. Please try again."
+            onRetry={handleRetry}
+            className="flex-1"
+          />
+        </>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {forms.map((form) => (
-            <WebFormCard key={form.id} form={form} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <StatCard label="Total Forms" value={forms.length} icon={FormInput} color="blue" />
+            <StatCard label="Total Submissions" value={totalSubmissions} icon={BarChart3} color="amber" />
+          </div>
+
+          {forms.length === 0 ? (
+            <EmptyState
+              illustration={<FileText className="h-12 w-12 text-muted-foreground" />}
+              title="No forms yet"
+              description="Create your first web form to start capturing leads from your website."
+              action={{ label: "Create Form", onClick: handleOpenCreate }}
+              className="flex-1 min-h-[50vh]"
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {forms.map((form) => (
+                <WebFormCard key={form.id} form={form} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <FormBuilderSheet open={createOpen} onClose={() => setCreateOpen(false)} />

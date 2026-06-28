@@ -35,6 +35,7 @@ import {
   Download,
   CheckCircle2,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { FileUpload } from "@/components/storage/file-upload";
 import { EmptyPersonIllustration } from "@/components/illustrations";
@@ -54,7 +55,7 @@ interface RejectDialogState {
 
 export default function ExitManagementPage() {
   const { data: session } = useSession();
-  const { data: resignations, isLoading } = useResignations();
+  const { data: resignations, isLoading, isError, refetch } = useResignations();
   const createResignation = useCreateResignation();
   const hrReview = useHrReviewResignation();
   const ceoReview = useCeoReviewResignation();
@@ -341,6 +342,19 @@ export default function ExitManagementPage() {
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load resignations"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: refetch }}
+        />
       </PageWrapper>
     );
   }

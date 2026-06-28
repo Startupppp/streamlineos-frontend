@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Download, Send, Check, Ban, Plus, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Download, Send, Check, Ban, Plus, Loader2, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -14,22 +16,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { useInvoice, useUpdateInvoice } from "@/lib/api/hooks/invoice";
+import { useInvoice, useUpdateInvoice, useDeleteInvoice } from "@/lib/api/hooks/invoice";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { InvoiceStatus } from "@/types/invoice";
 import { InvoiceLineItems } from "./invoice-line-items";
 import { RecordPaymentDialog } from "./record-payment-dialog";
 
 const STATUS_BADGE: Record<
   InvoiceStatus,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  { label: string; className: string }
 > = {
-  DRAFT: { label: "Draft", variant: "secondary" },
-  SENT: { label: "Sent", variant: "default" },
-  PAID: { label: "Paid", variant: "outline" },
-  OVERDUE: { label: "Overdue", variant: "destructive" },
-  CANCELLED: { label: "Cancelled", variant: "secondary" },
+  DRAFT: { label: "Draft", className: "bg-slate-100 text-slate-700 border-slate-200" },
+  SENT: { label: "Sent", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  PAID: { label: "Paid", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  OVERDUE: { label: "Overdue", className: "bg-red-50 text-red-700 border-red-200" },
+  CANCELLED: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border" },
 };
 
 function fmt(amount: string | number) {
@@ -39,53 +53,127 @@ function fmt(amount: string | number) {
   })}`;
 }
 
+function InvoiceDetailSkeleton() {
+  return (
+    <PageWrapper
+      title="Invoice"
+      badge={<Skeleton className="h-4 w-14" />}
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-8 w-28 rounded-md" />
+        </div>
+      }
+    >
+      <div className="space-y-6 max-w-3xl">
+        <div className="rounded-lg border border-border bg-card p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-1.5">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+          <div className="col-span-2 space-y-1.5">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="px-4 pt-3 pb-1 grid grid-cols-12 gap-3">
+            <Skeleton className="col-span-6 h-3" />
+            <Skeleton className="col-span-2 h-3" />
+            <Skeleton className="col-span-2 h-3" />
+            <Skeleton className="col-span-2 h-3" />
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="px-4 py-3 grid grid-cols-12 gap-3 items-center">
+                <Skeleton className="col-span-6 h-4" />
+                <Skeleton className="col-span-2 h-4" />
+                <Skeleton className="col-span-2 h-4" />
+                <Skeleton className="col-span-2 h-4" />
+              </div>
+            ))}
+          </div>
+          <div className="px-4 py-3 border-t border-border space-y-2">
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="flex justify-between">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card px-4 py-3 space-y-2">
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    </PageWrapper>
+  );
+}
+
 interface InvoiceDetailProps {
   invoiceId: number;
 }
 
 export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
-  const { data: invoice, isLoading } = useInvoice(invoiceId);
+  const router = useRouter();
+  const { data: invoice, isLoading, error } = useInvoice(invoiceId);
   const updateInvoice = useUpdateInvoice();
+  const deleteInvoice = useDeleteInvoice();
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Invoice">
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (!invoice) {
-    return (
-      <PageWrapper title="Invoice">
-        <p className="text-muted-foreground py-8 text-center">Invoice not found.</p>
-      </PageWrapper>
-    );
-  }
-
-  const badge = STATUS_BADGE[invoice.status];
-  const totalPaid = (invoice.payments ?? []).reduce(
-    (sum, p) => sum + Number(p.amount),
-    0,
+  const handleStatusUpdate = useCallback(
+    (status: InvoiceStatus) => {
+      updateInvoice.mutate(
+        { id: invoiceId, status },
+        {
+          onSuccess: () => toast.success(`Invoice marked as ${status.toLowerCase()}`),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [invoiceId, updateInvoice],
   );
-  const outstanding = Number(invoice.total) - totalPaid;
 
-  function handleStatusUpdate(status: InvoiceStatus) {
-    updateInvoice.mutate(
-      { id: invoiceId, status },
-      {
-        onSuccess: () => toast.success(`Invoice marked as ${status.toLowerCase()}`),
-        onError: () => toast.error("Failed to update status"),
+  const handleMarkSent = useCallback(() => handleStatusUpdate("SENT"), [handleStatusUpdate]);
+  const handleMarkPaid = useCallback(() => handleStatusUpdate("PAID"), [handleStatusUpdate]);
+  const handleCancel = useCallback(() => handleStatusUpdate("CANCELLED"), [handleStatusUpdate]);
+
+  const handleOpenPayment = useCallback(() => setPaymentOpen(true), []);
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+
+  const handleDelete = useCallback(() => {
+    deleteInvoice.mutate(invoiceId, {
+      onSuccess: () => {
+        toast.success("Invoice deleted");
+        router.push("/billing/invoices");
       },
-    );
-  }
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [invoiceId, deleteInvoice, router]);
 
-  async function handleDownloadPdf() {
+  const handleDownloadPdf = useCallback(async () => {
+    if (!invoice) return;
     try {
       const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF();
@@ -94,17 +182,17 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text("StreamlineOS — Capital Advisors LLP", 20, 33);
-      doc.text(`Invoice #: ${invoice!.invoiceNumber}`, 20, 40);
-      doc.text(`Date: ${format(new Date(invoice!.createdAt), "dd MMM yyyy")}`, 20, 47);
-      if (invoice!.dueDate) {
-        doc.text(`Due: ${format(new Date(invoice!.dueDate), "dd MMM yyyy")}`, 20, 54);
+      doc.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 40);
+      doc.text(`Date: ${format(new Date(invoice.createdAt), "dd MMM yyyy")}`, 20, 47);
+      if (invoice.dueDate) {
+        doc.text(`Due: ${format(new Date(invoice.dueDate), "dd MMM yyyy")}`, 20, 54);
       }
       doc.setDrawColor(189, 136, 44);
       doc.line(20, 60, 190, 60);
-      if (invoice!.client) {
+      if (invoice.client) {
         doc.setTextColor(0);
         doc.setFontSize(12);
-        doc.text(`Bill To: ${invoice!.client.name}`, 20, 70);
+        doc.text(`Bill To: ${invoice.client.name}`, 20, 70);
       }
       doc.setFontSize(10);
       doc.setTextColor(100);
@@ -116,7 +204,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       doc.line(20, y + 3, 190, y + 3);
       y += 10;
       doc.setTextColor(0);
-      for (const item of invoice!.lineItems) {
+      for (const item of invoice.lineItems) {
         doc.text(item.description, 20, y);
         doc.text(String(item.quantity), 110, y);
         doc.text(fmt(item.rate), 135, y);
@@ -125,36 +213,78 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       }
       doc.line(20, y + 2, 190, y + 2);
       y += 10;
-      doc.text(`Subtotal: ${fmt(invoice!.subtotal)}`, 130, y);
+      doc.text(`Subtotal: ${fmt(invoice.subtotal)}`, 130, y);
       y += 7;
-      if (Number(invoice!.taxRate)) {
-        doc.text(`Tax (${invoice!.taxRate}%): ${fmt(invoice!.taxAmount ?? 0)}`, 130, y);
+      if (Number(invoice.taxRate)) {
+        doc.text(`Tax (${invoice.taxRate}%): ${fmt(invoice.taxAmount ?? 0)}`, 130, y);
         y += 7;
       }
       doc.setFontSize(13);
-      doc.text(`Total: ${fmt(invoice!.total)}`, 130, y);
-      if (invoice!.notes) {
+      doc.text(`Total: ${fmt(invoice.total)}`, 130, y);
+      if (invoice.notes) {
         y += 15;
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Notes: ${invoice!.notes}`, 20, y);
+        doc.text(`Notes: ${invoice.notes}`, 20, y);
       }
-      doc.save(`${invoice!.invoiceNumber}.pdf`);
+      doc.save(`${invoice.invoiceNumber}.pdf`);
       toast.success("Invoice PDF downloaded");
     } catch {
       toast.error("Failed to generate PDF");
     }
+  }, [invoice]);
+
+  if (isLoading) {
+    return <InvoiceDetailSkeleton />;
   }
+
+  if (error || !invoice) {
+    return (
+      <PageWrapper title="Invoice">
+        <div className="flex flex-col items-center justify-center flex-1 h-full min-h-[400px] gap-4 text-center">
+          <div className="rounded-full bg-destructive/10 p-4">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">
+              {error ? "Failed to load invoice" : "Invoice not found"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {error ? getErrorMessage(error) : "The invoice you are looking for does not exist."}
+            </p>
+          </div>
+          <Link href="/billing/invoices">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Invoices
+            </Button>
+          </Link>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  const badge = STATUS_BADGE[invoice.status];
+  const totalPaid = (invoice.payments ?? []).reduce(
+    (sum, p) => sum + Number(p.amount),
+    0,
+  );
+  const outstanding = Number(invoice.total) - totalPaid;
 
   return (
     <PageWrapper
       title={invoice.invoiceNumber}
       subtitle={invoice.client?.name ?? "No client"}
-      badge={<Badge variant={badge.variant}>{badge.label}</Badge>}
+      badge={
+        <span
+          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      }
       actions={
         <div className="flex items-center gap-2 flex-wrap">
           {invoice.status === "DRAFT" && (
-            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Button size="sm" variant="outline" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
             </Button>
           )}
@@ -162,22 +292,32 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleStatusUpdate("SENT")}
+              onClick={handleMarkSent}
               disabled={updateInvoice.isPending}
             >
               <Send className="h-3.5 w-3.5 mr-1.5" /> Mark Sent
             </Button>
           )}
           {(invoice.status === "SENT" || invoice.status === "OVERDUE") && (
-            <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)}>
+            <Button size="sm" variant="outline" onClick={handleOpenPayment}>
               <Plus className="h-3.5 w-3.5 mr-1.5" /> Record Payment
+            </Button>
+          )}
+          {invoice.status === "SENT" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleMarkPaid}
+              disabled={updateInvoice.isPending}
+            >
+              <Check className="h-3.5 w-3.5 mr-1.5" /> Mark Paid
             </Button>
           )}
           {invoice.status !== "CANCELLED" && invoice.status !== "PAID" && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleStatusUpdate("CANCELLED")}
+              onClick={handleCancel}
               disabled={updateInvoice.isPending}
             >
               <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
@@ -191,6 +331,44 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           <Button size="sm" variant="outline" onClick={handleDownloadPdf}>
             <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
           </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
+                disabled={deleteInvoice.isPending}
+              >
+                {deleteInvoice.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete invoice?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete invoice{" "}
+                  <span className="font-mono font-medium">{invoice.invoiceNumber}</span>. This
+                  action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete Invoice
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Link href="/billing/invoices">
             <Button size="sm" variant="ghost">
               <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back
@@ -206,7 +384,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             <p className="font-mono font-medium">{invoice.invoiceNumber}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Created</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Issued</p>
             <p>{format(new Date(invoice.createdAt), "dd MMM yyyy")}</p>
           </div>
           <div>
@@ -233,6 +411,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
               <p>{invoice.project.name}</p>
             </div>
           )}
+          {invoice.creator && (
+            <div className="col-span-2">
+              <p className="text-xs text-muted-foreground mb-0.5">Created by</p>
+              <p>{invoice.creator.name ?? invoice.creator.id}</p>
+            </div>
+          )}
         </div>
 
         <InvoiceLineItems
@@ -252,19 +436,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
           onEditOpenChange={setEditOpen}
         />
 
-        {invoice.notes && (
-          <div className="rounded-lg border border-border bg-card px-4 py-3">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
-            <p className="text-sm text-muted-foreground">{invoice.notes}</p>
-          </div>
-        )}
-
         {(invoice.payments ?? []).length > 0 && (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <p className="text-sm font-semibold">Payment History</p>
               {(invoice.status === "SENT" || invoice.status === "OVERDUE") && (
-                <Button size="sm" variant="outline" onClick={() => setPaymentOpen(true)}>
+                <Button size="sm" variant="outline" onClick={handleOpenPayment}>
                   <Plus className="h-3.5 w-3.5 mr-1" /> Add Payment
                 </Button>
               )}
@@ -275,6 +452,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                   <TableHead>Date</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead>Reference</TableHead>
+                  <TableHead>Recorded by</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -290,6 +468,9 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                     <TableCell className="text-sm text-muted-foreground font-mono">
                       {p.referenceNumber ?? "—"}
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {p.creator?.name ?? "—"}
+                    </TableCell>
                     <TableCell className="text-right text-sm font-medium text-emerald-600">
                       {fmt(p.amount)}
                     </TableCell>
@@ -297,6 +478,20 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+
+        {invoice.notes && (
+          <div className="rounded-lg border border-border bg-card px-4 py-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
+            <p className="text-sm text-muted-foreground">{invoice.notes}</p>
+          </div>
+        )}
+
+        {invoice.terms && (
+          <div className="rounded-lg border border-border bg-card px-4 py-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">Terms</p>
+            <p className="text-sm text-muted-foreground">{invoice.terms}</p>
           </div>
         )}
       </div>

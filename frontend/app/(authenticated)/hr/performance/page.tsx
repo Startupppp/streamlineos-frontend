@@ -14,7 +14,7 @@ import { PIPTab } from "@/features/hr/performance/pip-tab";
 
 export default function PerformancePage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="hr:performance:manage">
       <PerformanceContent />
     </DashboardGate>
   );

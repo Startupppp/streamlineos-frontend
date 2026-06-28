@@ -11,65 +11,51 @@ import type {
   UpdateDealInput,
   UpdateDealStageInput,
   LogDealActivityInput,
+  DealStats,
+  DealForecast,
+  DealMeeting,
+  CreateDealMeetingInput,
+  WinLossAnalysis,
+  SalesQuota,
 } from "@/types/crm";
 
-export type { DealActivity };
+export type {
+  DealActivity,
+  DealStats,
+  DealForecast,
+  DealMeeting,
+  CreateDealMeetingInput,
+  WinLossAnalysis,
+  SalesQuota,
+};
 
-export interface DealStats {
-  active: number;
-  pipelineValue: number;
-  wonValue: number;
-}
-
-export interface DealForecast {
-  totalWeighted: number;
-  totalBestCase: number;
-  totalDeals: number;
-  byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
-  byStage: Array<{ stage: string; count: number; totalValue: number; weightedValue: number; avgProbability: number }>;
-}
-
-export interface DealMeeting {
+export interface DealApproval {
   id: number;
-  orgId: string;
   dealId: number;
-  title: string;
-  scheduledAt: string;
-  durationMinutes: number;
-  attendees: string[] | null;
-  agenda: string | null;
-  notes: string | null;
-  actionItems: string | null;
-  recordingLink: string | null;
-  status: "scheduled" | "completed" | "cancelled";
-  createdBy: string;
+  dealName: string | null;
+  dealValue: string | null;
+  requesterName: string | null;
+  requestedStage: string;
+  status: string;
+  rejectionReason: string | null;
+  createdAt: string | null;
+  resolvedAt: string | null;
+}
+
+export interface AgingDeal {
+  id: number;
+  name: string;
+  value: string | null;
+  stage: string;
+  daysInStage: number;
   createdAt: string;
   updatedAt: string;
-  creator?: { id: string; name: string | null } | null;
+  assigneeName: string | null;
 }
 
-export interface CreateDealMeetingInput {
-  title: string;
-  scheduledAt: string;
-  durationMinutes?: number;
-  attendees?: string[];
-  agenda?: string;
-  notes?: string;
-  actionItems?: string;
-  recordingLink?: string;
-  status?: "scheduled" | "completed" | "cancelled";
-}
-
-export interface WinLossAnalysis {
-  summary: {
-    won: number;
-    wonValue: number;
-    lost: number;
-    lostValue: number;
-    total: number;
-    winRate: number;
-  };
-  lostByReason: Array<{ reason: string; count: number; totalValue: number }>;
+export interface AgingResponse {
+  summary: { total: number; stale: number; critical: number };
+  deals: AgingDeal[];
 }
 
 export function useDeals(filters?: DealFilters) {
@@ -267,8 +253,17 @@ export function useWinLossAnalysis() {
 export function useDealApprovals(params?: { status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "approvals", params] as const,
-    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/deals/approvals", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
+  });
+}
+
+export function useDealAging() {
+  return useQuery<AgingResponse>({
+    queryKey: queryKeys.deals.aging(),
+    queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
+    staleTime: 5 * 60_000,
+    refetchInterval: 300_000,
   });
 }
 
@@ -324,20 +319,6 @@ export function useUpdateDealCustomData() {
   });
 }
 
-export interface SalesQuota {
-  id: number;
-  userId: string;
-  userName: string | null;
-  period: string;
-  startDate: string;
-  endDate: string;
-  targetRevenue: string;
-  actualRevenue: string;
-  attainmentPct: number;
-  notes: string | null;
-  createdAt: string | null;
-}
-
 export function useSalesQuotas(params?: { userId?: string; period?: string }) {
   return useQuery({
     queryKey: queryKeys.salesQuotas.list(params as Record<string, unknown>),
@@ -357,10 +338,28 @@ export function useCreateSalesQuota() {
   });
 }
 
+export interface CommissionItem {
+  id: number;
+  userName: string | null;
+  dealName: string | null;
+  dealValue: string;
+  commissionRate: string;
+  commissionAmount: string;
+  status: string;
+  createdAt: string | null;
+}
+
+export interface CommissionRule {
+  id: number;
+  name: string;
+  type: string;
+  flatRate: string | null;
+}
+
 export function useCommissions(params?: { userId?: string; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissions", params] as const,
-    queryFn: () => apiClient.get<{ items: Array<Record<string, unknown>>; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<{ items: CommissionItem[]; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
     staleTime: 2 * 60_000,
   });
 }
@@ -377,7 +376,7 @@ export function useUpdateCommissionStatus() {
 export function useCommissionRules() {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissionRules"] as const,
-    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/sales/commission-rules"),
+    queryFn: () => apiClient.get<CommissionRule[]>("/sales/commission-rules"),
     staleTime: 2 * 60_000,
   });
 }

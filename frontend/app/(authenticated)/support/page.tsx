@@ -22,11 +22,12 @@ import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ErrorState } from "@/components/shared/error-state";
 
 const formatTicketValue = (v: number) => v.toLocaleString();
 
 export default function SupportDashboardPage() {
-  const { data, isLoading } = useSupportDashboard();
+  const { data, isLoading, isError, refetch } = useSupportDashboard();
 
   const ticketStatusBreakdown = data?.ticketStatusBreakdown ?? [];
   const ticketVolumeTimeline = data?.ticketVolumeTimeline ?? [];

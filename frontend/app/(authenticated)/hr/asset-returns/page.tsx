@@ -7,7 +7,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -75,6 +74,16 @@ const CONDITION_META: Record<string, { badge: string }> = {
     badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
+
+function AssetReturnActionButton({ id, onMark }: { id: number; onMark: (id: number) => void }) {
+  const handleClick = useCallback(() => onMark(id), [id, onMark]);
+  return (
+    <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleClick}>
+      <CheckCircle2 className="h-3 w-3" />
+      Received
+    </Button>
+  );
+}
 
 export default function AssetReturnsPage() {
   const qc = useQueryClient();
@@ -194,6 +203,9 @@ export default function AssetReturnsPage() {
     });
   }, [returnId, markReturned]);
 
+  const handleAssetNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAssetName(e.target.value), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
+  const handleSetReturnId = useCallback((id: number) => setReturnId(id), []);
   const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
 
   if (isLoading) {
@@ -311,15 +323,7 @@ export default function AssetReturnsPage() {
                         {isAdmin && (
                           <TableCell className="text-right">
                             {ar.status !== "RETURNED" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs gap-1.5"
-                                onClick={() => setReturnId(ar.id)}
-                              >
-                                <CheckCircle2 className="h-3 w-3" />
-                                Received
-                              </Button>
+                              <AssetReturnActionButton id={ar.id} onMark={handleSetReturnId} />
                             )}
                           </TableCell>
                         )}
@@ -382,7 +386,7 @@ export default function AssetReturnsPage() {
             <Input
               placeholder="e.g., MacBook Pro 16"
               value={assetName}
-              onChange={(e) => setAssetName(e.target.value)}
+              onChange={handleAssetNameChange}
             />
           </div>
         )}
@@ -404,7 +408,7 @@ export default function AssetReturnsPage() {
           <Textarea
             placeholder="Any notes about condition or return circumstances…"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={handleNotesChange}
             rows={2}
             className="resize-none w-full"
           />

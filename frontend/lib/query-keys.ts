@@ -267,6 +267,9 @@ export const queryKeys = {
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
+    simulate: (userId: string) => [...base, "access", "simulate", userId] as const,
+    resourceGrants: (resourceType: string, resourceId: string) => [...base, "access", "resource-grants", resourceType, resourceId] as const,
+    orgModules: () => [...base, "access", "org-modules"] as const,
   },
 
   roles: {
@@ -274,6 +277,7 @@ export const queryKeys = {
     list: () => [...base, "roles", "list"] as const,
     detail: (id: number) => [...base, "roles", "detail", id] as const,
     permissions: (roleId: number) => [...base, "roles", "permissions", roleId] as const,
+    permissionsMatrix: () => [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
   },
 
@@ -506,6 +510,12 @@ export const queryKeys = {
         ? ([...base, "kb", "noResults"] as const)
         : ([...base, "kb", "noResults", range] as const),
     verificationQueue: () => [...base, "kb", "verificationQueue"] as const,
+    versions: (articleId: number) => [...base, "kb", "versions", articleId] as const,
+    tags: () => [...base, "kb", "tags"] as const,
+    articleTags: (articleId: number) => [...base, "kb", "articleTags", articleId] as const,
+    translations: (articleId: number) => [...base, "kb", "translations", articleId] as const,
+    translation: (articleId: number, locale: string) => [...base, "kb", "translation", articleId, locale] as const,
+    comments: (articleId: number) => [...base, "kb", "comments", articleId] as const,
   },
 
   roadmap: {

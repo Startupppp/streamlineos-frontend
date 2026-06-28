@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
 import { StatCard } from "@/components/ui/stat-card";
-import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
+import { Search, Users, ArrowRight, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import { useLeads } from "@/lib/api/hooks/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -60,7 +60,7 @@ export default function LeadDistributionPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDistribute, setShowDistribute] = useState(false);
 
-  const { data, isLoading } = useLeads({
+  const { data, isLoading, isError, error } = useLeads({
     status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
     search: searchQuery || undefined,
     sortBy: "createdAt",
@@ -76,21 +76,21 @@ export default function LeadDistributionPage() {
 
   const allSelected = filteredLeads.length > 0 && filteredLeads.every((l) => selectedIds.has(l.id));
 
-  const toggleAll = () => {
+  const handleToggleAll = useCallback(() => {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(filteredLeads.map((l) => l.id)));
     }
-  };
+  }, [allSelected, filteredLeads]);
 
-  const toggleSelect = (id: number) => {
+  const handleToggleSelect = useCallback((id: number) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const unassignedCount = useMemo(() =>
     filteredLeads.filter((l) => !l.assignedTo?.id).length,
@@ -100,6 +100,10 @@ export default function LeadDistributionPage() {
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
   const handleShowDistribute = useCallback(() => setShowDistribute(true), []);
   const handleRefetch = useCallback(() => refetch(), [refetch]);
+  const handleDistributeSuccess = useCallback(() => {
+    setSelectedIds(new Set());
+    refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -148,67 +152,89 @@ export default function LeadDistributionPage() {
     >
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Leads" value={data?.totalCount ?? 0} icon={FileSpreadsheet} color="blue" index={0} />
-        <StatCard label="Unassigned" value={unassignedCount} icon={Users} color="amber" index={1} />
-        <StatCard label="Selected" value={selectedIds.size} icon={ArrowRight} color="cyan" index={2} />
+        {isLoading ? (
+          <>
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+          </>
+        ) : (
+          <>
+            <StatCard label="Total Leads" value={data?.totalCount ?? 0} icon={FileSpreadsheet} color="blue" index={0} />
+            <StatCard label="Unassigned" value={unassignedCount} icon={Users} color="amber" index={1} />
+            <StatCard label="Selected" value={selectedIds.size} icon={ArrowRight} color="cyan" index={2} />
+          </>
+        )}
       </div>
 
       <Card>
-        <ScrollArea className="w-full max-h-[60vh]" type="auto">
-          <div className="min-w-max">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10 px-3">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
-                </TableHead>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
-                <TableHead className="text-xs">Phone</TableHead>
-                <TableHead className="text-xs">Source</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Assigned To</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7} className="h-12">
-                      <Skeleton className="h-4 w-full" />
+        {isError ? (
+          <div className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center">
+            <AlertTriangle className="h-10 w-10 text-destructive" />
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : "Failed to load leads. Please try again."}
+            </p>
+            <Button variant="outline" size="sm" onClick={handleRefetch}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
+            <div className="min-w-max">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10 px-3">
+                    <Checkbox checked={allSelected} onCheckedChange={handleToggleAll} />
+                  </TableHead>
+                  <TableHead className="text-xs">Name</TableHead>
+                  <TableHead className="text-xs">Email</TableHead>
+                  <TableHead className="text-xs">Phone</TableHead>
+                  <TableHead className="text-xs">Source</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Assigned To</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={7} className="h-12">
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : filteredLeads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
+                        <p>No leads found. Upload leads or adjust filters.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : filteredLeads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
-                      <p>No leads found. Upload leads or adjust filters.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <DistributeLeadRow
-                    key={lead.id}
-                    lead={lead}
-                    isSelected={selectedIds.has(lead.id)}
-                    onToggle={toggleSelect}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-          </div>
-        </ScrollArea>
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <DistributeLeadRow
+                      key={lead.id}
+                      lead={lead}
+                      isSelected={selectedIds.has(lead.id)}
+                      onToggle={handleToggleSelect}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            </div>
+          </ScrollArea>
+        )}
       </Card>
 
       <LeadDistributionDialog
         open={showDistribute}
         onOpenChange={setShowDistribute}
         leadIds={[...selectedIds]}
-        onSuccess={() => { setSelectedIds(new Set()); refetch(); }}
+        onSuccess={handleDistributeSuccess}
       />
     </PageWrapper>
   );

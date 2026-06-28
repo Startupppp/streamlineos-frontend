@@ -7,26 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Info, CheckCircle2, XCircle, Lock } from "lucide-react";
-import { PERMISSIONS, ROLE_DEFAULT_PERMISSIONS, SYSTEM_ROLES } from "@/lib/rbac/permissions";
-import type { SystemRole } from "@/lib/rbac/permissions";
+import { Info, CheckCircle2, XCircle, Lock, AlertTriangle, ShieldOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PERMISSIONS } from "@/lib/rbac/permissions";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { useRolePermissionsMatrix } from "@/lib/api/hooks/roles";
+import type { RolePermissionsMatrixEntry } from "@/lib/api/hooks/roles";
 import { cn } from "@/lib/utils";
-
-const ROLE_LABELS: Record<SystemRole, string> = {
-  OWNER: "Owner",
-  CEO: "CEO",
-  HR: "HR",
-  SALES: "Sales",
-  CUSTOMER_SUPPORT: "Support",
-  ENGINEERING: "Engineering",
-  DESIGN: "Design",
-  VIDEO_EDITOR: "Video Editor",
-  DIGITAL_MARKETING: "DM",
-  BLOG_EDITOR: "Blog Editor",
-  BRANCH_MANAGER: "Branch Mgr",
-  BRANCH_HR: "Branch HR",
-};
 
 function groupByResource(permissions: typeof PERMISSIONS) {
   const groups: Record<string, typeof PERMISSIONS> = {};
@@ -51,7 +39,7 @@ function formatAction(action: string) {
 
 export default function PermissionsPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="settings:rbac:manage">
       <PermissionsContent />
     </DashboardGate>
   );
@@ -59,47 +47,106 @@ export default function PermissionsPage() {
 
 function PermissionsContent() {
   const { data: session } = useSession();
-  const role = session?.user?.role as SystemRole | undefined;
+  const matrixQuery = useRolePermissionsMatrix();
 
   const permissionGroups = useMemo(() => groupByResource(PERMISSIONS), []);
 
-  const rolePermSets = useMemo(() => {
-    const result: Record<string, Set<string>> = {};
-    for (const r of SYSTEM_ROLES) {
-      result[r] = new Set(ROLE_DEFAULT_PERMISSIONS[r] ?? []);
+  const rolePermSets = useMemo<Map<number, Set<string>>>(() => {
+    const result = new Map<number, Set<string>>();
+    for (const entry of matrixQuery.data ?? []) {
+      result.set(entry.roleId, new Set(entry.permissions));
     }
     return result;
-  }, []);
+  }, [matrixQuery.data]);
+
+  const roles = matrixQuery.data ?? [];
+  const currentUserRoleId = (session?.user as { roleId?: number } | undefined)?.roleId;
+
+  if (matrixQuery.isLoading) {
+    return (
+      <PageWrapper
+        title="Permission Matrix"
+        subtitle="Read-only overview of built-in permissions per system role"
+      >
+        <MatrixSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (matrixQuery.isError) {
+    return (
+      <PageWrapper
+        title="Permission Matrix"
+        subtitle="Read-only overview of built-in permissions per system role"
+      >
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+          <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">Failed to load permissions</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {matrixQuery.error.message}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => matrixQuery.refetch()}>
+            Try again
+          </Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (roles.length === 0) {
+    return (
+      <PageWrapper
+        title="Permission Matrix"
+        subtitle="Read-only overview of built-in permissions per system role"
+      >
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
+          <ShieldOff className="h-8 w-8 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">No roles found</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Create roles in{" "}
+              <Link href="/settings/roles" className="underline underline-offset-2">
+                Roles &amp; Permissions
+              </Link>{" "}
+              to see them here.
+            </p>
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper
       title="Permission Matrix"
-      subtitle="Read-only overview of built-in permissions per system role"
+      subtitle="Read-only overview of permissions per role"
     >
       <div className="space-y-4">
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            Permissions are defined by system role. To assign custom permissions to a specific
-            user, create a custom role in{" "}
+            This is a read-only view of all role permissions. To edit permissions or assign custom
+            roles, go to{" "}
             <Link href="/settings/roles" className="underline underline-offset-2 font-medium">
               Roles &amp; Permissions
             </Link>
-            . Contact your system administrator to change role assignments.
+            .
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {SYSTEM_ROLES.map((r) => (
+          {roles.map((role) => (
             <Badge
-              key={r}
-              variant={r === role ? "default" : "outline"}
+              key={role.roleId}
+              variant={role.roleId === currentUserRoleId ? "default" : "outline"}
               className={cn(
                 "text-[11px]",
-                r === role && "bg-primary text-primary-foreground"
+                role.roleId === currentUserRoleId && "bg-primary text-primary-foreground"
               )}
             >
-              {ROLE_LABELS[r]}
+              {role.roleName}
             </Badge>
           ))}
         </div>
@@ -108,27 +155,28 @@ function PermissionsContent() {
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Lock className="h-4 w-4 text-blue-600" />
-              System Role Permissions ({PERMISSIONS.length} total)
+              Permission Matrix ({PERMISSIONS.length} permissions · {roles.length} roles)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[900px]">
-                <div className="grid bg-muted/50 border-b border-border/40 sticky top-0 z-10"
-                  style={{ gridTemplateColumns: `260px repeat(${SYSTEM_ROLES.length}, minmax(72px, 1fr))` }}
+                <div
+                  className="grid bg-muted/50 border-b border-border/40 sticky top-0 z-10"
+                  style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
                 >
                   <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">
                     Permission
                   </div>
-                  {SYSTEM_ROLES.map((r) => (
+                  {roles.map((role) => (
                     <div
-                      key={r}
+                      key={role.roleId}
                       className={cn(
                         "px-2 py-2.5 text-center text-[11px] font-semibold leading-tight text-muted-foreground",
-                        r === role && "text-primary"
+                        role.roleId === currentUserRoleId && "text-primary"
                       )}
                     >
-                      {ROLE_LABELS[r]}
+                      {role.roleName}
                     </div>
                   ))}
                 </div>
@@ -137,7 +185,7 @@ function PermissionsContent() {
                   <div key={resource}>
                     <div
                       className="grid bg-muted/20 border-b border-border/30"
-                      style={{ gridTemplateColumns: `260px repeat(${SYSTEM_ROLES.length}, minmax(72px, 1fr))` }}
+                      style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
                     >
                       <div className="px-4 py-1.5 col-span-full text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                         {formatResource(resource)}
@@ -147,10 +195,12 @@ function PermissionsContent() {
                     {perms.map((perm) => (
                       <PermissionRow
                         key={perm.name}
-                        perm={perm}
-                        roleCount={SYSTEM_ROLES.length}
+                        permName={perm.name}
+                        permDescription={perm.description}
+                        permAction={perm.action}
+                        roles={roles}
                         rolePermSets={rolePermSets}
-                        currentRole={role}
+                        currentUserRoleId={currentUserRoleId}
                       />
                     ))}
                   </div>
@@ -165,33 +215,42 @@ function PermissionsContent() {
 }
 
 interface PermissionRowProps {
-  perm: (typeof PERMISSIONS)[number];
-  roleCount: number;
-  rolePermSets: Record<string, Set<string>>;
-  currentRole: SystemRole | undefined;
+  permName: string;
+  permDescription: string;
+  permAction: string;
+  roles: RolePermissionsMatrixEntry[];
+  rolePermSets: Map<number, Set<string>>;
+  currentUserRoleId: number | undefined;
 }
 
-function PermissionRow({ perm, roleCount, rolePermSets, currentRole }: PermissionRowProps) {
+function PermissionRow({
+  permName,
+  permDescription,
+  permAction,
+  roles,
+  rolePermSets,
+  currentUserRoleId,
+}: PermissionRowProps) {
   return (
     <div
       className="grid border-b border-border/20 hover:bg-muted/10 transition-colors"
-      style={{ gridTemplateColumns: `260px repeat(${roleCount}, minmax(72px, 1fr))` }}
+      style={{ gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))` }}
     >
       <div className="px-4 py-2 flex flex-col justify-center">
-        <p className="text-[12px] font-medium leading-snug">{perm.description}</p>
+        <p className="text-[12px] font-medium leading-snug">{permDescription}</p>
         <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-          {formatAction(perm.action)}
+          {formatAction(permAction)}
         </p>
       </div>
 
-      {SYSTEM_ROLES.map((r) => {
-        const hasPermission = r === "CEO" || (rolePermSets[r]?.has(perm.name) ?? false);
+      {roles.map((role) => {
+        const hasPermission = rolePermSets.get(role.roleId)?.has(permName) ?? false;
         return (
           <div
-            key={r}
+            key={role.roleId}
             className={cn(
               "flex items-center justify-center py-2",
-              r === currentRole && "bg-primary/5"
+              role.roleId === currentUserRoleId && "bg-primary/5"
             )}
           >
             {hasPermission ? (
@@ -202,6 +261,36 @@ function PermissionRow({ perm, roleCount, rolePermSets, currentRole }: Permissio
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function MatrixSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-14 w-full rounded-lg" />
+      <div className="flex gap-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-6 w-20 rounded-full" />
+        ))}
+      </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-5 w-64" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border/20">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-2.5">
+                <Skeleton className="h-4 w-48" />
+                {Array.from({ length: 6 }).map((_, j) => (
+                  <Skeleton key={j} className="h-4 w-4 rounded-full" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

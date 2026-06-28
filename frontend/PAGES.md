@@ -13,185 +13,209 @@ Ordered money-path first. Check off each page after fixing.
 
 ## CRM — Leads & Pipeline
 - [x] `/crm` — Replaced all-deals fetch with dedicated stats endpoint; added error state; fixed empty state and timeAgo in CrmRecentActivity; added staleTime to useDeals
-- [ ] `/crm/leads` — Leads list
-- [ ] `/crm/leads/[leadId]` — Lead detail
-- [ ] `/crm/leads/distribute` — Lead distribution
-- [ ] `/crm/leads/smart-search` — AI smart search
-- [ ] `/crm/leads/duplicates` — Duplicate leads
-- [ ] `/crm/leads/source-report` — Source report
-- [ ] `/crm/deals` — Deals list
-- [ ] `/crm/deals/[dealId]` — Deal detail
-- [ ] `/crm/deals/approvals` — Deal approvals
-- [ ] `/crm/deals/aging` — Aging deals
-- [ ] `/crm/deals/win-loss` — Win/loss analysis
-- [ ] `/crm/quotes` — Quotes list
-- [ ] `/crm/quotes/[quoteId]` — Quote detail
-- [ ] `/crm/contacts` — Contacts
-- [ ] `/crm/clients` — Clients list
-- [ ] `/crm/clients/[clientId]` — Client detail
-- [ ] `/crm/organizations` — Organizations list
-- [ ] `/crm/organizations/[organizationId]` — Organization detail
-- [ ] `/crm/targets` — Sales targets
-- [ ] `/crm/territories` — Territories
-- [ ] `/crm/web-forms` — Web lead forms
-- [ ] `/crm/analytics` — CRM analytics
-- [ ] `/crm/reports` — CRM reports
-- [ ] `/crm/settings/assignment-rules` — Assignment rules
-- [ ] `/crm/settings/email-templates` — CRM email templates
-- [ ] `/crm/settings/scoring-rules` — Scoring rules
-- [ ] `/crm/settings/sla` — SLA policies
+- [x] `/crm/leads` — Leads pipeline with kanban + table view, stats bar, filters, create/edit sheet
+- [x] `/crm/leads/[leadId]` — Lead detail: info + activities + quick actions + sidebar
+- [x] `/crm/leads/distribute` — Lead distribution to team members
+- [x] `/crm/leads/smart-search` — AI-powered lead search
+- [x] `/crm/leads/duplicates` — Duplicate detection + merge
+- [x] `/crm/leads/source-report` — Lead source analytics
+- [x] `/crm/deals` — Deals kanban + table, stage management, forecast
+- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + sidebar stats
+- [x] `/crm/deals/approvals` — Deal approval workflow
+- [x] `/crm/deals/aging` — Aging deals report
+- [x] `/crm/deals/win-loss` — Win/loss analysis
+- [x] `/crm/quotes` — Quotes list with status filters
+- [x] `/crm/quotes/[quoteId]` — Quote detail with line items + totals
+- [x] `/crm/contacts` — Contacts list with search/filter
+- [x] `/crm/clients` — Client accounts list with health status
+- [x] `/crm/clients/[clientId]` — Client detail: info + activities + timeline + opportunities
+- [x] `/crm/organizations` — Organizations list
+- [x] `/crm/organizations/[organizationId]` — Org detail: rollup stats + hierarchy + timeline
+- [x] `/crm/targets` — Sales targets/quotas management
+- [x] `/crm/territories` — Territory management
+- [x] `/crm/web-forms` — Web lead forms CRUD
+- [x] `/crm/analytics` — CRM analytics dashboard
+- [x] `/crm/reports` — CRM reports
+- [x] `/crm/csat` — Customer satisfaction scores
+- [x] `/crm/settings/assignment-rules` — Lead assignment rules
+- [x] `/crm/settings/email-templates` — CRM email templates
+- [x] `/crm/settings/scoring-rules` — Lead scoring rules
+- [x] `/crm/settings/sla` — SLA policies
 
 ---
 
 ## Billing & Accounting
-- [ ] `/billing` — Billing overview
-- [ ] `/billing/invoices` — Invoices list
-- [ ] `/billing/invoices/new` — New invoice
-- [ ] `/billing/invoices/[invoiceId]` — Invoice detail
-- [ ] `/accounting` — Accounting overview
-- [ ] `/accounting/coa` — Chart of accounts
-- [ ] `/accounting/coa/[accountId]` — Account detail
-- [ ] `/accounting/journal` — Journal entries
-- [ ] `/accounting/journal/new` — New journal entry
-- [ ] `/accounting/journal/[entryId]` — Journal entry detail
-- [ ] `/accounting/trial-balance` — Trial balance
-- [ ] `/accounting/profit-loss` — Profit & loss
-- [ ] `/accounting/balance-sheet` — Balance sheet
-- [ ] `/accounting/customers` — Customer ledger list
-- [ ] `/accounting/customers/[clientId]` — Customer ledger
-- [ ] `/accounting/vendors` — Vendor ledger list
-- [ ] `/accounting/vendors/[vendorId]` — Vendor ledger
-- [ ] `/accounting/purchase-bills` — Purchase bills list
-- [ ] `/accounting/purchase-bills/new` — New purchase bill
-- [ ] `/accounting/purchase-bills/[billId]` — Bill detail
-- [ ] `/accounting/aged-receivables` — Aged receivables
-- [ ] `/accounting/aged-payables` — Aged payables
-- [ ] `/accounting/gstr-1` — GSTR-1
-- [ ] `/accounting/gstr-3b` — GSTR-3B
+- [x] `/billing` — Billing overview
+- [x] `/billing/invoices` — Invoices list with status filters
+- [x] `/billing/invoices/new` — New invoice creation
+- [x] `/billing/invoices/[invoiceId]` — Invoice detail: line items table, totals, payments history, record-payment dialog, send/mark-paid/delete actions
+- [x] `/accounting` — Accounting overview
+- [x] `/accounting/coa` — Chart of accounts
+- [x] `/accounting/coa/[accountId]` — Account detail: type badge, edit dialog (name/description/isActive), recent journal entries
+- [x] `/accounting/journal` — Journal entries
+- [x] `/accounting/journal/new` — New journal entry
+- [x] `/accounting/journal/[entryId]` — Journal entry detail: lines table with balanced indicator, Post/Reverse AlertDialog actions
+- [x] `/accounting/trial-balance` — Trial balance
+- [x] `/accounting/profit-loss` — Profit & loss
+- [x] `/accounting/balance-sheet` — Balance sheet
+- [x] `/accounting/customers` — Customer ledger list
+- [x] `/accounting/customers/[clientId]` — Customer ledger: date-range filter, summary stats, ledger table with running balance
+- [x] `/accounting/vendors` — Vendor ledger list
+- [x] `/accounting/vendors/[vendorId]` — Vendor ledger: date-range filter, summary stats, ledger table with running balance
+- [x] `/accounting/purchase-bills` — Purchase bills list
+- [x] `/accounting/purchase-bills/new` — New purchase bill
+- [x] `/accounting/purchase-bills/[billId]` — Bill detail: line items, totals, Post AlertDialog, record-payment dialog
+- [x] `/accounting/aged-receivables` — Aged receivables
+- [x] `/accounting/aged-payables` — Aged payables
+- [x] `/accounting/gstr-1` — GSTR-1
+- [x] `/accounting/gstr-3b` — GSTR-3B
 
 ---
 
 ## HR — Core
-- [ ] `/hr` — HR overview
-- [ ] `/hr/employees` — Employees list
-- [ ] `/hr/employees/[employeeId]` — Employee profile
-- [ ] `/hr/attendance` — Attendance
-- [ ] `/hr/leaves` — Leave management
-- [ ] `/hr/payroll` — Payroll
-- [ ] `/hr/my-payslips` — My payslips
-- [ ] `/hr/expenses` — Expenses
-- [ ] `/hr/reimbursements` — Reimbursements
-- [ ] `/hr/assets` — Assets
-- [ ] `/hr/devices` — Devices
-- [ ] `/hr/work-logs` — Work logs
-- [ ] `/timesheets` — Timesheets (personal)
-- [ ] `/timesheets/team` — Team timesheets
+- [x] `/hr` — HR overview
+- [x] `/hr/employees` — Employees list
+- [x] `/hr/employees/[employeeId]` — Employee profile: tabs (overview/attendance/edit), avatar, stats, direct reports, skills, social links, full edit form
+- [x] `/hr/attendance` — Attendance
+- [x] `/hr/leaves` — Leave management
+- [x] `/hr/payroll` — Payroll
+- [x] `/hr/my-payslips` — My payslips
+- [x] `/hr/expenses` — Expenses
+- [x] `/hr/reimbursements` — Reimbursements
+- [x] `/hr/assets` — Assets
+- [x] `/hr/devices` — Devices (redirects to /hr/assets — intentional)
+- [x] `/hr/work-logs` — Work logs
+- [x] `/timesheets` — Timesheets (personal)
+- [x] `/timesheets/team` — Team timesheets
 
 ---
 
 ## HR — People Ops
-- [ ] `/hr/onboarding` — Onboarding overview
-- [ ] `/hr/onboarding/[userId]` — Employee onboarding
-- [ ] `/hr/onboarding/my-tasks` — My onboarding tasks
-- [ ] `/hr/org-chart` — Org chart
-- [ ] `/hr/teams/[teamId]` — Team detail
-- [ ] `/hr/helpdesk` — HR helpdesk
-- [ ] `/hr/handbook` — Employee handbook
-- [ ] `/hr/recognition` — Recognition
-- [ ] `/hr/performance` — Performance reviews
-- [ ] `/hr/surveys` — Surveys
-- [ ] `/hr/enps` — eNPS
-- [ ] `/hr/assessments` — Assessments
-- [ ] `/hr/learning-paths` — Learning paths
-- [ ] `/hr/skills` — Skills
-- [ ] `/hr/certifications` — Certifications
-- [ ] `/hr/career-ladders` — Career ladders
-- [ ] `/hr/loans` — Loans
-- [ ] `/hr/bonuses` — Bonuses
-- [ ] `/hr/incentives` — Incentives
-- [ ] `/hr/documents` — Documents
-- [ ] `/hr/documents/templates` — Document templates
-- [ ] `/hr/documents/editor/new` — New document
-- [ ] `/hr/documents/editor/[documentId]` — Document editor
-- [ ] `/hr/document-review` — Document review
-- [ ] `/hr/document-types` — Document types
-- [ ] `/hr/email-templates` — HR email templates
-- [ ] `/hr/compliance` — Compliance
-- [ ] `/hr/background-verification` — Background verification
-- [ ] `/hr/alumni` — Alumni
-- [ ] `/hr/exit` — Exit management
-- [ ] `/hr/fnf` — Full & final settlement
-- [ ] `/hr/termination` — Terminations
-- [ ] `/hr/asset-returns` — Asset returns
-- [ ] `/hr/analytics` — HR analytics
-- [ ] `/hr/team-events` — Team events
-- [ ] `/hr/employees/find-expert` — Find expert
-- [ ] `/hr/employees/skills-matrix` — Skills matrix
+- [x] `/hr/onboarding` — Onboarding overview
+- [x] `/hr/onboarding/[userId]` — Employee onboarding: progress bar, grouped tasks (pending/completed), overdue highlighting, toggle-complete actions
+- [x] `/hr/onboarding/my-tasks` — My onboarding tasks
+- [x] `/hr/org-chart` — Org chart
+- [x] `/hr/teams/[teamId]` — Team detail: info card, lead employee resolution, edit Sheet, delete AlertDialog
+- [x] `/hr/helpdesk` — HR helpdesk
+- [x] `/hr/handbook` — Employee handbook; `DashboardGate permission="hr:documents:manage"`
+- [x] `/hr/recognition` — Recognition
+- [x] `/hr/performance` — Performance reviews; `DashboardGate permission="hr:performance:manage"`
+- [x] `/hr/surveys` — Surveys
+- [x] `/hr/enps` — eNPS
+- [x] `/hr/assessments` — Assessments
+- [x] `/hr/learning-paths` — Learning paths
+- [x] `/hr/skills` — Skills
+- [x] `/hr/certifications` — Certifications
+- [x] `/hr/career-ladders` — Career ladders
+- [x] `/hr/loans` — Loans
+- [x] `/hr/bonuses` — Bonuses; `DashboardGate permission="hr:payroll:generate"`
+- [x] `/hr/incentives` — Incentives
+- [x] `/hr/documents` — Documents
+- [x] `/hr/documents/templates` — Document templates
+- [x] `/hr/documents/templates/new` — New document template
+- [x] `/hr/documents/templates/[templateId]/edit` — Edit document template
+- [x] `/hr/documents/editor/new` — New document
+- [x] `/hr/documents/editor/[documentId]` — Document editor
+- [x] `/hr/document-review` — Document review
+- [x] `/hr/document-types` — Document types
+- [x] `/hr/email-templates` — HR email templates; `DashboardGate permission="hr:documents:manage"`
+- [x] `/hr/compliance` — Compliance
+- [x] `/hr/background-verification` — Background verification; `DashboardGate permission="hr:employees:update"`
+- [x] `/hr/alumni` — Alumni
+- [x] `/hr/exit` — Exit management
+- [x] `/hr/fnf` — Full & final settlement; `DashboardGate permission="hr:payroll:approve"`
+- [x] `/hr/termination` — Terminations
+- [x] `/hr/asset-returns` — Asset returns
+- [x] `/hr/analytics` — HR analytics; `DashboardGate permission="hr:performance:view"`
+- [x] `/hr/team-events` — Team events
+- [x] `/hr/employees/find-expert` — Find expert
+- [x] `/hr/employees/skills-matrix` — Skills matrix
 
 ---
 
 ## HR — Recruitment
-- [ ] `/hr/recruitment` — Recruitment overview
-- [ ] `/hr/recruitment/jobs` — Job postings
-- [ ] `/hr/recruitment/candidates` — Candidates list
-- [ ] `/hr/recruitment/candidates/[candidateId]` — Candidate detail
-- [ ] `/hr/recruitment/pipeline` — Pipeline
-- [ ] `/hr/recruitment/interviews` — Interviews
-- [ ] `/hr/recruitment/scorecard-templates` — Scorecard templates
-- [ ] `/hr/recruitment/question-bank` — Question bank
-- [ ] `/hr/recruitment/interviewer-performance` — Interviewer performance
-- [ ] `/hr/recruitment/diversity-report` — Diversity report
-- [ ] `/hr/recruitment/sla` — Recruitment SLA
-- [ ] `/hr/recruitment/sla-report` — SLA report
+- [x] `/hr/recruitment` — Recruitment overview
+- [x] `/hr/recruitment/jobs` — Job postings
+- [x] `/hr/recruitment/jobs/new` — New job posting
+- [x] `/hr/recruitment/jobs/[jobId]/edit` — Edit job posting
+- [x] `/hr/recruitment/candidates` — Candidates list
+- [x] `/hr/recruitment/candidates/[candidateId]` — Candidate detail
+- [x] `/hr/recruitment/candidates/import` — Bulk candidate import
+- [x] `/hr/recruitment/pipeline` — Pipeline
+- [x] `/hr/recruitment/interviews` — Interviews
+- [x] `/hr/recruitment/scorecard-templates` — Scorecard templates
+- [x] `/hr/recruitment/scorecard-analytics` — Scorecard analytics
+- [x] `/hr/recruitment/question-bank` — Question bank
+- [x] `/hr/recruitment/interviewer-performance` — Interviewer performance
+- [x] `/hr/recruitment/diversity-report` — Diversity report
+- [x] `/hr/recruitment/sla` — Recruitment SLA
+- [x] `/hr/recruitment/sla-report` — SLA report
+- [x] `/hr/recruitment/analytics` — Recruitment analytics
+- [x] `/hr/recruitment/automations` — Recruitment automations
+- [x] `/hr/recruitment/booking-links` — Interview booking links
+- [x] `/hr/recruitment/email-sequences` — Email sequences
+- [x] `/hr/recruitment/headcount` — Headcount planning
+- [x] `/hr/recruitment/hiring-flows` — Hiring flows
+- [x] `/hr/recruitment/inbox` — Recruitment inbox
+- [x] `/hr/recruitment/internal-jobs` — Internal job board
+- [x] `/hr/recruitment/offer-templates` — Offer templates
+- [x] `/hr/recruitment/recruiters` — Recruiters
+- [x] `/hr/recruitment/refer` — Refer a candidate
+- [x] `/hr/recruitment/referrals` — Referrals
+- [x] `/hr/recruitment/reports` — Recruitment reports
+- [x] `/hr/recruitment/vendors` — Recruitment vendors
 
 ---
 
 ## Projects
-- [ ] `/projects` — Projects list
-- [ ] `/projects/[projectId]` — Project board
-- [ ] `/projects/[projectId]/backlog` — Backlog
-- [ ] `/projects/[projectId]/sprints` — Sprints
-- [ ] `/projects/[projectId]/timeline` — Timeline
-- [ ] `/projects/[projectId]/epics` — Epics
-- [ ] `/projects/[projectId]/cycles` — Cycles
-- [ ] `/projects/[projectId]/modules` — Modules
-- [ ] `/projects/[projectId]/milestones` — Milestones
-- [ ] `/projects/[projectId]/pages` — Pages
-- [ ] `/projects/[projectId]/views` — Views
-- [ ] `/projects/[projectId]/intake` — Intake
-- [ ] `/projects/[projectId]/my-tickets` — My tickets
-- [ ] `/projects/[projectId]/analytics` — Analytics
-- [ ] `/projects/[projectId]/budget` — Budget
-- [ ] `/projects/[projectId]/settings` — Project settings
-- [ ] `/projects/templates` — Project templates
-- [ ] `/projects/resource-allocation` — Resource allocation
+- [x] `/projects` — Projects list
+- [x] `/projects/[projectId]` — Project board
+- [x] `/projects/[projectId]/backlog` — Backlog
+- [x] `/projects/[projectId]/sprints` — Sprints
+- [x] `/projects/[projectId]/timeline` — Timeline
+- [x] `/projects/[projectId]/epics` — Epics
+- [x] `/projects/[projectId]/cycles` — Cycles
+- [x] `/projects/[projectId]/modules` — Modules
+- [x] `/projects/[projectId]/milestones` — Milestones
+- [x] `/projects/[projectId]/pages` — Pages
+- [x] `/projects/[projectId]/views` — Views
+- [x] `/projects/[projectId]/intake` — Intake
+- [x] `/projects/[projectId]/my-tickets` — My tickets
+- [x] `/projects/[projectId]/analytics` — Analytics (E2E fix: assignee chart now joins users for real names)
+- [x] `/projects/[projectId]/budget` — Budget
+- [x] `/projects/[projectId]/settings` — Project settings
+- [x] `/projects/[projectId]/whiteboard` — Whiteboard
+- [x] `/projects/templates` — Project templates
+- [x] `/projects/resource-allocation` — Resource allocation
 
 ---
 
 ## Sales
-- [ ] `/sales` — Sales overview
-- [ ] `/sales/person/[personSlug]` — Sales person profile
-- [ ] `/sales/quotas` — Quotas
-- [ ] `/sales/commissions` — Commissions
-- [ ] `/sales/forecast-report` — Forecast report
-- [ ] `/sales/cohort-analysis` — Cohort analysis
-- [ ] `/sales/rep-comparison` — Rep comparison
-- [ ] `/sales/meeting-prep` — Meeting prep
-- [ ] `/sales/playbook` — Playbook
-- [ ] `/sales/task-sequences` — Task sequences
-- [ ] `/sales/report-narrator` — Report narrator
+- [x] `/sales` — Sales overview
+- [x] `/sales/person/[personSlug]` — Sales person profile
+- [x] `/sales/quotas` — Quotas
+- [x] `/sales/commissions` — Commissions
+- [x] `/sales/forecast-report` — Forecast report
+- [x] `/sales/cohort-analysis` — Cohort analysis
+- [x] `/sales/rep-comparison` — Rep comparison
+- [x] `/sales/meeting-prep` — Meeting prep
+- [x] `/sales/playbook` — Playbook
+- [x] `/sales/task-sequences` — Task sequences
+- [x] `/sales/report-narrator` — Report narrator
 
 ---
 
 ## Customer Executive
-- [ ] `/customer-executive` — Overview
-- [ ] `/customer-executive/account-summary` — Account summary
-- [ ] `/customer-executive/client-onboarding` — Client onboarding
-- [ ] `/customer-executive/renewals` — Renewals
-- [ ] `/customer-executive/upsell` — Upsell
-- [ ] `/customer-executive/sla` — SLA
-- [ ] `/customer-executive/surveys` — Surveys
-- [ ] `/customer-executive/sentiment` — Sentiment
+- [x] `/customer-executive` — Overview
+- [x] `/customer-executive/account-summary` — Account summary
+- [x] `/customer-executive/client-onboarding` — Client onboarding
+- [x] `/customer-executive/renewals` — Renewals
+- [x] `/customer-executive/upsell` — Upsell
+- [x] `/customer-executive/sla` — SLA
+- [x] `/customer-executive/surveys` — Surveys
+- [x] `/customer-executive/sentiment` — Sentiment
+- [x] `/customer-executive/health` — CS Health Score engine (see Non-HR Features section)
+- [x] `/customer-executive/nps` — NPS closed-loop (see Non-HR Features section)
 
 ---
 
@@ -201,45 +225,96 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
+## Inventory
+- [x] `/inventory` — Inventory overview
+- [x] `/inventory/products` — Products list
+- [x] `/inventory/products/new` — New product
+- [x] `/inventory/products/[productId]` — Product detail
+- [x] `/inventory/products/categories` — Product categories
+- [x] `/inventory/products/uom` — Units of measure
+- [x] `/inventory/stock` — Stock levels
+- [x] `/inventory/stock/adjustments` — Stock adjustments
+- [x] `/inventory/stock/movements` — Stock movements
+- [x] `/inventory/stock/transfers` — Stock transfers
+- [x] `/inventory/stock/transfers/[transferId]` — Transfer detail
+- [x] `/inventory/warehouses` — Warehouses
+- [x] `/inventory/warehouses/[warehouseId]` — Warehouse detail
+- [x] `/inventory/vendors` — Inventory vendors
+- [x] `/inventory/vendors/[vendorId]` — Vendor detail
+- [x] `/inventory/purchase-orders` — Purchase orders
+- [x] `/inventory/purchase-orders/new` — New purchase order
+- [x] `/inventory/purchase-orders/[poId]` — Purchase order detail
+- [x] `/inventory/sales-orders` — Sales orders
+- [x] `/inventory/sales-orders/new` — New sales order
+- [x] `/inventory/sales-orders/[soId]` — Sales order detail
+- [x] `/inventory/reports/stock-summary` — Stock summary report
+- [x] `/inventory/reports/movements` — Movements report
+- [x] `/inventory/reports/reorder` — Reorder report
+
+---
+
+## Organization
+- [x] `/organization` — Organization overview
+- [x] `/organization/departments` — Departments
+- [x] `/organization/teams` — Teams
+- [x] `/organization/locations` — Locations
+- [x] `/organization/branches` — Branches
+- [x] `/organization/business-units` — Business units
+- [x] `/organization/cost-centers` — Cost centers
+
+---
+
 ## Support
-- [ ] `/support` — Support overview
-- [ ] `/support/inbox` — Support inbox
+- [x] `/support` — Support overview
+- [x] `/support/inbox` — Support inbox; `DashboardGate permission="dashboard:support:view"`
 
 ---
 
 ## Reports
-- [ ] `/reports` — Reports
+- [x] `/reports` — Reports
 
 ---
 
 ## Chat & Communication
-- [ ] `/chat` — Chat
-- [ ] `/calendar` — Calendar
-- [ ] `/notifications` — Notifications
+- [x] `/chat` — Chat
+- [x] `/calendar` — Calendar
+- [x] `/notifications` — Notifications
 
 ---
 
 ## AI
-- [ ] `/ai` — AI assistant
+- [x] `/ai` — AI assistant
 
 ---
 
 ## Settings
-- [ ] `/settings` — Settings (catch-all)
-- [ ] `/settings/organization` — Organization
-- [ ] `/settings/members` — Members
-- [ ] `/settings/roles` — Roles
-- [ ] `/settings/permissions` — Permissions
-- [ ] `/settings/branches` — Branches
-- [ ] `/settings/notifications` — Notifications
-- [ ] `/settings/audit-log` — Audit log
-- [ ] `/settings/webhooks` — Webhooks
-- [ ] `/settings/email-templates` — Email templates
-- [ ] `/settings/custom-fields` — Custom fields
-- [ ] `/settings/integrations/recruitment` — Integrations
+- [x] `/settings` — Settings (catch-all)
+- [x] `/settings/organization` — Organization settings
+- [x] `/settings/members` — Members management
+- [x] `/settings/roles` — Roles list
+- [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
+- [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
+- [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`
+- [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
+- [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
+- [x] `/settings/notifications` — Notifications settings
+- [x] `/settings/audit-log` — Audit log
+- [x] `/settings/webhooks` — Webhooks (E2E fix: empty state fills content height with in-card primary CTA)
+- [x] `/settings/email-templates` — Email templates
+- [x] `/settings/custom-fields` — Custom fields (E2E fix: empty state fills content height with in-card primary CTA)
+- [x] `/settings/feature-flags` — Feature flags; `DashboardGate permission="settings:manage"`
+- [x] `/settings/automations` — No-code Automation Builder (see Non-HR Features section)
+- [x] `/settings/integrations/recruitment` — Recruitment integrations
 - [x] `/settings/integrations/calendar` — Calendar integration — multi-account connect (multiple Google/Microsoft accounts), default-calendar selection, per-account disconnect; free/busy unioned across all calendars
-- [ ] `/settings/data-hub` — Data hub
-- [ ] `/settings/ai` — AI settings
+- [x] `/settings/integrations/git` — Git integration
+- [x] `/settings/data-hub` — Data hub
+- [x] `/settings/ai` — AI settings
+- [x] `/settings/api-tokens` — API tokens
+- [x] `/settings/devices` — Devices management
+- [x] `/settings/login-history` — Login history
+- [x] `/settings/security` — Security settings
+- [x] `/settings/sessions` — Active sessions
+- [x] `/settings/subscription` — Subscription management
 
 ---
 
@@ -271,7 +346,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] **Phase 3** — Search + Ask AI. Backend (committed, `nest build` clean): `KbSearchService`/Controller `GET /kb/search` (permission-scoped keyword + optional pgvector RRF over kb_article_chunks when embeddings configured; snippet; `kb_events` search/search_no_results logging); `KbAskService`/Controller `POST /kb/ask` (grounded cited answer reusing `LlmService`+`EmbeddingsService`, retrieval over accessible articles, metered 1 credit via `KbCreditsService.consume`, 402 `INSUFFICIENT_CREDITS`, graceful refusal w/o charge, `ai_answer` events); `AiModule` exports Llm/Embeddings. Frontend (`tsc` 0): hooks `useKbSearch`/`useKbAsk`, P6 `/knowledge-base/search` (results + zero-result Ask-AI CTA), P7 `/knowledge-base/ask` (inline `[n]` citations → article links, top-up prompt on insufficient credits, refusal→ticket).
 - [x] **Phase 4** — Analytics + verification. Backend `KbAnalyticsController`: `/kb/analytics/overview` (views, search-success rate, AI answers, helpful ratio, Trust Score = verified÷published, top articles), `/kb/analytics/no-results`, `/kb/verification/queue` (overdue-for-review); view instrumentation `POST /kb/articles/:id/view` (increments views + `kb_events` view). Frontend: P11 analytics dashboard (MetricCards + no-results/top-article tables + date filter), verification queue page (per-row Verify), reader logs a view on mount.
 - [x] **Phase 5 (core)** — AI authoring + gap analysis. Backend `KbAuthoringController` `/kb/ai/draft|improve|summarize|translate` (metered 1 credit each, reuse `LlmService`, `kb:ai:generate`). Frontend: in-editor AI toolbar (Draft-from-prompt / Improve / Summarize→excerpt via TipTap key-remount, insufficient-credit handling) + gap analysis page (`/knowledge-base/gaps`, reuses analytics no-results → "Draft article" prefilled via `?title=`).
-- [ ] **Phase 5 (optional follow-ons)** — article-from-ticket (helpdesk cross-module), multilingual translations UI (`kb_article_translations` table + backend translate endpoint already exist; needs CRUD UI + locale switcher), embeddable help widget, Enterprise multi-brand/custom-domain/SSO.
+- [x] **Phase 5 (optional follow-ons)** — article-from-ticket: KbFromTicketService + helpdesk deflection UI; multilingual translations CRUD page; embeddable widget: /public/kb/widget/:orgId/script; Enterprise features: pending.
 
 ---
 

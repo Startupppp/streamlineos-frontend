@@ -187,3 +187,21 @@ export const useUnassignRoleMember = () => {
     },
   });
 };
+
+export interface RolePermissionsMatrixEntry {
+  roleId: number;
+  roleName: string;
+  roleSlug: string;
+  permissions: string[];
+}
+
+export function useRolePermissionsMatrix(
+  options?: Omit<UseQueryOptions<RolePermissionsMatrixEntry[], Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<RolePermissionsMatrixEntry[], Error>({
+    queryKey: queryKeys.roles.permissionsMatrix(),
+    queryFn: () => apiClient.get<RolePermissionsMatrixEntry[]>("/roles/permissions/matrix"),
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useInterviews } from "@/lib/api/hooks/hr";
 import type { Interview } from "@/types/hr";
@@ -67,7 +67,7 @@ export default function InterviewsPage() {
 
   function handleCalEventSelect(e: BigCalEvent) {
     const iv = interviews?.find((i) => i.id === e.id);
-    if (iv) setFeedbackInterview(iv as Interview);
+    if (iv) setFeedbackInterview(iv);
   }
 
   function handleFeedbackClose(open: boolean) {
@@ -81,6 +81,8 @@ export default function InterviewsPage() {
   function handlePageViewCalendar() {
     setPageView("calendar");
   }
+
+  const handleOpenSchedule = useCallback(() => setSheetOpen(true), []);
 
   if (isLoading) {
     return (
@@ -124,7 +126,7 @@ export default function InterviewsPage() {
               SLA Config
             </Link>
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="gap-1.5" onClick={handleOpenSchedule}>
             <Plus className="h-4 w-4" /> Schedule
           </Button>
           <InterviewFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
@@ -193,11 +195,12 @@ export default function InterviewsPage() {
 
       {pageView === "calendar" ? (
         <Card>
-          <CardContent className="p-4" style={{ height: 520 }}>
+          <CardContent className="p-4 h-[520px]">
             <BigCalendarWrapper
               events={calEvents}
               date={calDate}
               view={calView}
+              calHeight={520}
               onView={setCalView}
               onNavigate={setCalDate}
               onSelectEvent={handleCalEventSelect}

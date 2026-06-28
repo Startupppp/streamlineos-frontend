@@ -166,7 +166,6 @@ const BOT_BLOCKED_PREFIXES = [
   "/api/trpc/organization.",
   "/api/chat",
   "/api/ai/",
-  "/api/storage/",
   "/api/expenses/",
 ];
 
@@ -279,8 +278,7 @@ export default async function middleware(req: NextRequest) {
     isAuthenticated &&
     token?.forceChangePassword &&
     !pathname.startsWith("/reset-password") &&
-    !pathname.startsWith("/api/auth/signout") &&
-    !pathname.startsWith("/api/storage/upload")
+    !pathname.startsWith("/api/auth/signout")
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/reset-password";

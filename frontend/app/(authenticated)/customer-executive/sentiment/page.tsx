@@ -282,6 +282,14 @@ export default function SentimentAnalysisPage() {
     setActiveResult(entry.result);
   }, []);
 
+  const handleClientNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientName(e.target.value);
+  }, []);
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  }, []);
+
   return (
     <PageWrapper
       title="Client Sentiment Analysis"
@@ -313,7 +321,7 @@ export default function SentimentAnalysisPage() {
                     <Input
                       id="clientName"
                       value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
+                      onChange={handleClientNameChange}
                       placeholder="e.g. Rajesh Sharma / Tata Consultancy"
                       className="text-sm"
                     />
@@ -327,7 +335,7 @@ export default function SentimentAnalysisPage() {
                     <Textarea
                       id="commText"
                       value={text}
-                      onChange={(e) => setText(e.target.value)}
+                      onChange={handleTextChange}
                       placeholder="Paste emails, support tickets, meeting notes, or chat messages from the client..."
                       required
                       rows={8}

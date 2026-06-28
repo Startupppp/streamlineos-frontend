@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { apiClient, getApiError } from "@/lib/api-client";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -36,15 +37,10 @@ export default function ApplicationStatusPage({ params }: Props) {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch(`/api/public/application-status/${token}`);
-      if (!res.ok) {
-        const body = await res.json();
-        setError(body.error ?? "Application not found");
-        return;
-      }
-      setData(await res.json());
-    } catch {
-      setError("Failed to load application status. Please try again.");
+      const data = await apiClient.get<ApplicationStatus>(`/public/application-status/${token}`);
+      setData(data);
+    } catch (e) {
+      setError(getApiError(e) || "Application not found");
     } finally {
       setLoading(false);
     }

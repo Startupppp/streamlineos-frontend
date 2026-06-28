@@ -8,6 +8,11 @@ import type {
   CreateExpenseInput,
   UpdateExpenseStatusInput,
 } from "@/types/hr";
+import type {
+  ExpenseWithRelations,
+  ExpenseCategoryRecord,
+  ExpenseStats,
+} from "@/types/hr/expenses";
 
 export interface ExpensePageFilters {
   page?: number;
@@ -99,29 +104,10 @@ export function useExpensePageData(filters: ExpensePageFilters = {}) {
     queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
     queryFn: () =>
       apiClient.get<{
-        expenses: unknown[];
-        pendingExpenses: unknown[];
-        stats: {
-          totalAmount: number;
-          pendingAmount: number;
-          approvedAmount: number;
-          rejectedAmount: number;
-          paidAmount: number;
-          totalCount: number;
-          pendingCount: number;
-          approvedCount: number;
-          rejectedCount: number;
-          paidCount: number;
-          avgExpenseAmount: number;
-        } | null;
-        categories: Array<{
-          id: number;
-          name: string;
-          description: string | null;
-          budgetLimit: string | null;
-          budgetPeriod: string | null;
-          isActive: boolean | null;
-        }>;
+        expenses: ExpenseWithRelations[];
+        pendingExpenses: ExpenseWithRelations[];
+        stats: ExpenseStats | null;
+        categories: ExpenseCategoryRecord[];
         pagination: {
           page: number;
           pageSize: number;

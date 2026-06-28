@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { EntityFormSheet } from "@/components/shared";
 import {
   FormControl,
@@ -21,7 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useUpdateKbArticle, useKbCategories } from "@/lib/api/hooks/kb";
+import {
+  useKbTags,
+  useCreateKbTag,
+  useKbArticleTags,
+  useSetKbArticleTags,
+} from "@/lib/api/hooks/kb/tags";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { KbArticle } from "@/types/kb";
 
@@ -29,7 +37,6 @@ const CATEGORY_NONE = "none";
 
 const settingsSchema = z.object({
   categoryId: z.string(),
-  tags: z.string().max(500, "Tags must be at most 500 characters"),
   excerpt: z.string().max(500, "Excerpt must be at most 500 characters"),
   visibility: z.enum(["public", "internal"]),
   seoTitle: z.string().max(120, "SEO title must be at most 120 characters"),
@@ -63,10 +70,81 @@ export function ArticleSettingsSheet({
   const categoriesQuery = useKbCategories(spaceId);
   const categories = categoriesQuery.data ?? [];
 
+  const allTagsQuery = useKbTags();
+  const allTags = allTagsQuery.data ?? [];
+  const articleTagsQuery = useKbArticleTags(article.id);
+  const createTag = useCreateKbTag();
+  const setArticleTags = useSetKbArticleTags();
+
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (articleTagsQuery.data && !initializedRef.current) {
+      setSelectedTagIds(articleTagsQuery.data.map((t) => t.id));
+      initializedRef.current = true;
+    }
+  }, [articleTagsQuery.data]);
+
+  useEffect(() => {
+    if (!open) {
+      initializedRef.current = false;
+    }
+  }, [open]);
+
+  const selectedTags = useMemo(
+    () => allTags.filter((t) => selectedTagIds.includes(t.id)),
+    [allTags, selectedTagIds],
+  );
+
+  const suggestedTags = useMemo(
+    () =>
+      allTags.filter(
+        (t) =>
+          !selectedTagIds.includes(t.id) &&
+          (tagInput === "" || t.name.toLowerCase().includes(tagInput.toLowerCase())),
+      ),
+    [allTags, selectedTagIds, tagInput],
+  );
+
+  const handleAddTag = useCallback(
+    (tagId: number) => {
+      setSelectedTagIds((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
+      setTagInput("");
+    },
+    [],
+  );
+
+  const handleRemoveTag = useCallback((tagId: number) => {
+    setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+  }, []);
+
+  const handleTagInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
+        e.preventDefault();
+        const name = tagInput.trim().replace(/,$/, "");
+        if (!name) return;
+        const existing = allTags.find(
+          (t) => t.name.toLowerCase() === name.toLowerCase(),
+        );
+        if (existing) {
+          handleAddTag(existing.id);
+          return;
+        }
+        createTag.mutate(name, {
+          onSuccess: (tag) => handleAddTag(tag.id),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        });
+      }
+    },
+    [tagInput, allTags, createTag, handleAddTag],
+  );
+
   const defaultValues = useMemo<SettingsForm>(
     () => ({
       categoryId: article.categoryId ? String(article.categoryId) : CATEGORY_NONE,
-      tags: (article.tags ?? []).join(", "),
       excerpt: article.excerpt ?? "",
       visibility: article.visibility,
       seoTitle: article.seoTitle ?? "",
@@ -79,15 +157,16 @@ export function ArticleSettingsSheet({
 
   const handleSubmit = useCallback(
     (data: SettingsForm) => {
-      const tags = data.tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean);
+      setArticleTags.mutate(
+        { articleId: article.id, tagIds: selectedTagIds },
+        {
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
       updateArticle.mutate(
         {
           articleId: article.id,
           categoryId: data.categoryId === CATEGORY_NONE ? null : Number(data.categoryId),
-          tags: tags.length > 0 ? tags : null,
           excerpt: data.excerpt.trim() || null,
           visibility: data.visibility,
           seoTitle: data.seoTitle.trim() || null,
@@ -105,7 +184,7 @@ export function ArticleSettingsSheet({
         },
       );
     },
-    [updateArticle, article.id, onOpenChange],
+    [updateArticle, setArticleTags, article.id, selectedTagIds, onOpenChange],
   );
 
   return (
@@ -117,8 +196,8 @@ export function ArticleSettingsSheet({
       resolver={zodResolver(settingsSchema)}
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
-      isSubmitting={updateArticle.isPending}
-      submitLabel={updateArticle.isPending ? "Saving…" : "Save settings"}
+      isSubmitting={updateArticle.isPending || setArticleTags.isPending}
+      submitLabel={updateArticle.isPending || setArticleTags.isPending ? "Saving…" : "Save settings"}
       resetOnOpen
     >
       {(form) => (
@@ -171,19 +250,47 @@ export function ArticleSettingsSheet({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Comma separated, e.g. billing, setup" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium leading-none">Tags</span>
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedTags.map((tag) => (
+                  <Badge key={tag.id} variant="secondary" className="gap-1 pr-1">
+                    {tag.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag.id)}
+                      className="ml-0.5 rounded-sm opacity-60 hover:opacity-100 focus:outline-none"
+                      aria-label={`Remove tag ${tag.name}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             )}
-          />
+            <Input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagInputKeyDown}
+              placeholder="Type a tag name and press Enter to add"
+              disabled={createTag.isPending}
+            />
+            {suggestedTags.length > 0 && tagInput.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {suggestedTags.slice(0, 8).map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => handleAddTag(tag.id)}
+                    className="rounded-full border px-2 py-0.5 text-xs hover:bg-accent transition-colors"
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <FormField
             control={form.control}

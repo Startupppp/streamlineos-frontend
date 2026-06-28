@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useCallback, memo } from "react";
+import { use, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Clock, AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -12,10 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-import { useUserOnboarding, useCompleteOnboardingTask } from "@/lib/api/hooks/hr/onboarding";
+import {
+  useUserOnboarding,
+  useCompleteOnboardingTask,
+  useOnboardingStatus,
+  type OnboardingTask,
+} from "@/lib/api/hooks/hr/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
-
 
 function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {
   switch (role) {
@@ -28,8 +33,8 @@ function ownerRoleVariant(role: string): "default" | "secondary" | "outline" {
   }
 }
 
-function isOverdue(dueDate: string | null): boolean {
-  if (!dueDate) return false;
+function isOverdue(dueDate: string | null, status: string): boolean {
+  if (!dueDate || status === "COMPLETED") return false;
   return new Date(dueDate).getTime() < Date.now();
 }
 
@@ -42,62 +47,124 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-
-function ProgressRing({
-  percent,
-  completed,
-  total,
-}: {
-  percent: number;
-  completed: number;
-  total: number;
-}) {
-  const r = 40;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference - (percent / 100) * circumference;
-
+function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg width="100" height="100" viewBox="0 0 100 100" aria-label={`${percent}% complete`}>
-        <circle
-          cx="50"
-          cy="50"
-          r={r}
-          fill="none"
-          stroke="hsl(var(--muted))"
-          strokeWidth="10"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r={r}
-          fill="none"
-          stroke={percent === 100 ? "hsl(142 71% 45%)" : "hsl(var(--primary))"}
-          strokeWidth="10"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform="rotate(-90 50 50)"
-          style={{ transition: "stroke-dashoffset 0.5s ease" }}
-        />
-        <text
-          x="50"
-          y="55"
-          textAnchor="middle"
-          fontSize="18"
-          fontWeight="bold"
-          fill="currentColor"
-        >
-          {percent}%
-        </text>
-      </svg>
-      <p className="text-sm text-muted-foreground">
-        {completed} of {total} tasks done
-      </p>
+    <div className="flex flex-col gap-1 rounded-lg border bg-card px-4 py-3 text-card-foreground">
+      <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+        {icon}
+        {label}
+      </div>
+      <p className="text-2xl font-semibold">{value}</p>
     </div>
   );
 }
 
+function TaskCard({
+  task,
+  isPending,
+  onToggle,
+}: {
+  task: OnboardingTask;
+  isPending: boolean;
+  onToggle: (taskId: number, currentStatus: string) => void;
+}) {
+  const done = task.status === "COMPLETED";
+  const overdue = isOverdue(task.dueDate, task.status);
+
+  const handleClick = useCallback(() => {
+    onToggle(task.id, task.status);
+  }, [task.id, task.status, onToggle]);
+
+  return (
+    <Card className={done ? "opacity-70" : undefined}>
+      <CardContent className="p-3">
+        <div className="flex items-start gap-3">
+          <button
+            onClick={handleClick}
+            disabled={isPending}
+            aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
+            className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
+          >
+            {done ? (
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            ) : (
+              <Circle className="h-5 w-5 text-muted-foreground" />
+            )}
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+              <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
+                {task.title}
+              </p>
+              <Badge variant={ownerRoleVariant(task.ownerRole)} className="text-[9px] py-0 h-4 shrink-0">
+                {task.ownerRole.replace("_", " ")}
+              </Badge>
+              {overdue && (
+                <Badge variant="destructive" className="text-[9px] py-0 h-4 shrink-0">
+                  Overdue
+                </Badge>
+              )}
+            </div>
+
+            {task.description && (
+              <p className="text-[12px] text-muted-foreground">{task.description}</p>
+            )}
+
+            <div className="flex items-center gap-3 mt-1">
+              {task.dueDate && (
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  {overdue ? (
+                    <AlertCircle className="h-3 w-3 text-destructive" />
+                  ) : (
+                    <Clock className="h-3 w-3" />
+                  )}
+                  Due {formatDate(task.dueDate)}
+                </span>
+              )}
+              {done && task.completedAt && (
+                <span className="text-[11px] text-green-600 dark:text-green-400">
+                  Completed {formatDate(task.completedAt)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            variant={done ? "outline" : "default"}
+            className="shrink-0 h-7 text-xs"
+            disabled={isPending}
+            onClick={handleClick}
+          >
+            {done ? "Mark Pending" : "Mark Complete"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-3 w-full" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-20" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function UserOnboardingPage({
   params,
@@ -105,7 +172,21 @@ export default function UserOnboardingPage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = use(params);
-  const { data: tasks, isLoading } = useUserOnboarding(userId);
+
+  const {
+    data: tasks,
+    isLoading: tasksLoading,
+    isError: tasksError,
+    refetch: refetchTasks,
+  } = useUserOnboarding(userId);
+
+  const {
+    data: statuses,
+    isLoading: statusLoading,
+    isError: statusError,
+    refetch: refetchStatus,
+  } = useOnboardingStatus();
+
   const completeTask = useCompleteOnboardingTask();
 
   const handleToggle = useCallback(
@@ -114,6 +195,8 @@ export default function UserOnboardingPage({
       completeTask.mutate(
         { taskId, status: newStatus },
         {
+          onSuccess: () =>
+            toast.success(newStatus === "COMPLETED" ? "Task marked complete" : "Task marked pending"),
           onError: (e) => toast.error(getErrorMessage(e)),
         }
       );
@@ -121,16 +204,37 @@ export default function UserOnboardingPage({
     [completeTask]
   );
 
+  const handleRetry = useCallback(() => {
+    void refetchTasks();
+    void refetchStatus();
+  }, [refetchTasks, refetchStatus]);
+
+  const isLoading = tasksLoading || statusLoading;
+  const isError = tasksError || statusError;
+
+  const employeeStatus = statuses?.find((s) => s.userId === userId);
+  const employeeName = employeeStatus?.userName ?? "Employee";
+
   const taskList = tasks ?? [];
-  const completed = taskList.filter((t) => t.status === "COMPLETED").length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const completedTasks = taskList.filter((t) => t.status === "COMPLETED");
+  const pendingTasks = taskList.filter((t) => t.status !== "COMPLETED");
+  const overdueTasks = pendingTasks.filter(
+    (t) => t.dueDate && new Date(t.dueDate).getTime() < today.getTime()
+  );
+
   const total = taskList.length;
-  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const allDone = total > 0 && completed === total;
+  const completedCount = completedTasks.length;
+  const pendingCount = pendingTasks.length;
+  const overdueCount = overdueTasks.length;
+  const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
   return (
     <PageWrapper
-      title="Onboarding Checklist"
-      subtitle="Complete each task to finish your onboarding."
+      title={`${employeeName} — Onboarding`}
+      subtitle="Track and manage onboarding tasks for this employee."
       actions={
         <Button variant="ghost" size="sm" asChild>
           <Link href="/hr/onboarding">
@@ -141,13 +245,15 @@ export default function UserOnboardingPage({
       }
     >
       {isLoading ? (
-        <div className="space-y-3">
-          <div className="flex justify-center py-4">
-            <Skeleton className="h-28 w-28 rounded-full" />
-          </div>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20" />
-          ))}
+        <LoadingSkeleton />
+      ) : isError ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            Failed to load onboarding data. Please try again.
+          </p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            Retry
+          </Button>
         </div>
       ) : taskList.length === 0 ? (
         <EmptyState
@@ -158,92 +264,74 @@ export default function UserOnboardingPage({
         />
       ) : (
         <div className="space-y-5">
-          <div className="flex justify-center py-2">
-            <ProgressRing percent={percent} completed={completed} total={total} />
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">{percent}% complete</span>
+              <span className="text-muted-foreground">
+                {completedCount} of {total} tasks
+              </span>
+            </div>
+            <Progress value={percent} className="h-2" />
           </div>
 
-          {allDone && (
-            <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800 px-4 py-3 text-center">
-              <p className="text-lg font-semibold text-green-700 dark:text-green-300">
-                All done!
-              </p>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-0.5">
-                Onboarding complete. Welcome to the team!
-              </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard
+              label="Total"
+              value={total}
+              icon={<ListTodo className="h-3.5 w-3.5" />}
+            />
+            <StatCard
+              label="Completed"
+              value={completedCount}
+              icon={<CheckCheck className="h-3.5 w-3.5 text-green-600" />}
+            />
+            <StatCard
+              label="Pending"
+              value={pendingCount}
+              icon={<Timer className="h-3.5 w-3.5 text-amber-500" />}
+            />
+            <StatCard
+              label="Overdue"
+              value={overdueCount}
+              icon={<AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+            />
+          </div>
+
+          {pendingTasks.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Pending ({pendingCount})
+              </h3>
+              <div className="space-y-2">
+                {pendingTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    isPending={completeTask.isPending}
+                    onToggle={handleToggle}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
-          <div className="space-y-2">
-            {taskList.map((task) => {
-              const done = task.status === "COMPLETED";
-              const overdue = !done && isOverdue(task.dueDate);
-
-              return (
-                <Card
-                  key={task.id}
-                  className={done ? "opacity-70" : undefined}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-3">
-                      <button
-                        onClick={() => handleToggle(task.id, task.status)}
-                        disabled={completeTask.isPending}
-                        aria-label={done ? `Mark "${task.title}" as pending` : `Mark "${task.title}" as complete`}
-                        className="mt-0.5 shrink-0 transition-opacity hover:opacity-75 disabled:opacity-50"
-                      >
-                        {done ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                          <p className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
-                            {task.title}
-                          </p>
-                          <Badge
-                            variant={ownerRoleVariant(task.ownerRole)}
-                            className="text-[9px] py-0 h-4 shrink-0"
-                          >
-                            {task.ownerRole.replace("_", " ")}
-                          </Badge>
-                          {overdue && (
-                            <Badge variant="destructive" className="text-[9px] py-0 h-4 shrink-0">
-                              Overdue
-                            </Badge>
-                          )}
-                        </div>
-
-                        {task.description && (
-                          <p className="text-[12px] text-muted-foreground">{task.description}</p>
-                        )}
-
-                        <div className="flex items-center gap-3 mt-1">
-                          {task.dueDate && (
-                            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                              {overdue ? (
-                                <AlertCircle className="h-3 w-3 text-destructive" />
-                              ) : (
-                                <Clock className="h-3 w-3" />
-                              )}
-                              Due {formatDate(task.dueDate)}
-                            </span>
-                          )}
-                          {done && task.completedAt && (
-                            <span className="text-[11px] text-green-600 dark:text-green-400">
-                              Completed {formatDate(task.completedAt)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {completedTasks.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Completed ({completedCount})
+              </h3>
+              <div className="space-y-2">
+                {completedTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    isPending={completeTask.isPending}
+                    onToggle={handleToggle}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </PageWrapper>
