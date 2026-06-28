@@ -10,6 +10,8 @@ import { useUploadFile } from "@/lib/api/hooks/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { OrgProfileSection } from "@/features/settings/organization/org-profile-section";
+import { OrgBrandingSection } from "@/features/settings/organization/org-branding-section";
+import { OrgLocalizationSection } from "@/features/settings/organization/org-localization-section";
 import { OrgConfigSection } from "@/features/settings/organization/org-config-section";
 import { OrgSecuritySection } from "@/features/settings/organization/org-security-section";
 
@@ -36,10 +38,6 @@ function isValidDomain(value: string): boolean {
 
 export default function OrganizationSettingsPage() {
   const { data: org, isLoading } = useOrgSettings();
-
-  const [editName, setEditName] = useState("");
-  const [editSlug, setEditSlug] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
 
   const [configInitialized, setConfigInitialized] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>("");
@@ -101,36 +99,6 @@ export default function OrganizationSettingsPage() {
 
   if (!securityInitialized && org) initSecurity();
   if ((!configInitialized || !ipAllowlistInitialized) && org) initConfig();
-
-  const handleStartEdit = useCallback(() => {
-    if (!org) return;
-    setEditName(org.name);
-    setEditSlug(org.slug);
-    setIsEditing(true);
-  }, [org]);
-
-  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
-  const handleEditSlugChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")),
-    [],
-  );
-  const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-
-  const handleSave = useCallback(() => {
-    if (!editName.trim()) return;
-    updateOrg(
-      { name: editName.trim(), slug: editSlug.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Organization updated successfully");
-          setIsEditing(false);
-        },
-        onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to update organization");
-        },
-      },
-    );
-  }, [editName, editSlug, updateOrg]);
 
   const handleStartEditConfig = useCallback(() => {
     if (!org) return;
@@ -221,7 +189,6 @@ export default function OrganizationSettingsPage() {
   }, [uploadFileMutation]);
 
   const handleLogoUploadClick = useCallback(() => logoInputRef.current?.click(), []);
-
   const handleLogoUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLogoUrl(e.target.value), []);
   const handleTimezoneChange = useCallback((value: string) => setTimezone(value), []);
   const handleCurrencyChange = useCallback((value: string) => setCurrency(value), []);
@@ -325,19 +292,11 @@ export default function OrganizationSettingsPage() {
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
       <div className="space-y-6">
-        <OrgProfileSection
-          org={org}
-          isEditing={isEditing}
-          editName={editName}
-          editSlug={editSlug}
-          isUpdating={isUpdatingOrg}
-          canEdit={canEdit}
-          onStartEdit={handleStartEdit}
-          onEditNameChange={handleEditNameChange}
-          onEditSlugChange={handleEditSlugChange}
-          onSave={handleSave}
-          onCancel={handleCancelEdit}
-        />
+        <OrgProfileSection org={org} canEdit={canEdit} />
+
+        <OrgBrandingSection org={org} canEdit={canEdit} />
+
+        <OrgLocalizationSection org={org} canEdit={canEdit} />
 
         {canEdit && (
           <OrgConfigSection

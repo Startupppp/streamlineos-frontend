@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { invitations, organizations } from "@/lib/db/schema";
+import { invitations, organizations, users } from "@/lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
@@ -22,9 +22,15 @@ export async function GET(req: NextRequest) {
     where: eq(organizations.id, invitation.orgId),
   });
 
+  const existingUser = await db.query.users.findFirst({
+    where: eq(users.email, invitation.email),
+    columns: { id: true },
+  });
+
   return ok({
     email: invitation.email,
     organizationName: org?.name ?? "Unknown",
     role: invitation.role,
+    userExists: !!existingUser,
   });
 }

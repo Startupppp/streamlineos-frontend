@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { ShieldOff, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
+import { useSignOut } from "@/lib/hooks/auth-hooks";
 
 export function NotActivatedPage() {
+  const { mutate: handleSignOut, isPending: isSigningOut } = useSignOut();
   return (
     <div className="flex items-center justify-center h-full w-full bg-background">
       <motion.div
@@ -75,7 +76,8 @@ export function NotActivatedPage() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => signOut({ callbackUrl: "/signin" })}
+            onClick={handleSignOut}
+            disabled={isSigningOut}
           >
             <LogOut className="h-4 w-4" />
             Sign Out

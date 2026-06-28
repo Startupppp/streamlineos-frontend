@@ -157,6 +157,21 @@ export const useUpdateOrgSettings = () => {
       primaryColor?: string | null;
       loginBgUrl?: string | null;
       ipAllowlist?: string[];
+      industry?: string | null;
+      website?: string | null;
+      legalName?: string | null;
+      orgCode?: string | null;
+      registrationNumber?: string | null;
+      taxNumber?: string | null;
+      supportEmail?: string | null;
+      supportPhone?: string | null;
+      favicon?: string | null;
+      secondaryColor?: string | null;
+      language?: string;
+      dateFormat?: string;
+      timeFormat?: "12h" | "24h";
+      numberFormat?: string;
+      weekStartDay?: "monday" | "sunday" | "saturday";
     }
   >({
     mutationFn: (data) =>

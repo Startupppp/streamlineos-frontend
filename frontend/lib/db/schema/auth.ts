@@ -27,6 +27,14 @@ export const organizations = pgTable("organizations", {
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
   companySize: text("company_size"),
   country: text("country"),
+  legalName: text("legal_name"),
+  orgCode: text("org_code"),
+  registrationNumber: text("registration_number"),
+  taxNumber: text("tax_number"),
+  supportEmail: text("support_email"),
+  supportPhone: text("support_phone"),
+  favicon: text("favicon"),
+  secondaryColor: text("secondary_color"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
 });
@@ -211,6 +219,32 @@ export const passwordHistory = pgTable("password_history", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_password_history_user").on(table.userId, table.createdAt),
+]);
+
+export const serviceAccounts = pgTable("service_accounts", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  permissions: jsonb("permissions").$type<string[]>().default([]).notNull(),
+  createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date()),
+}, (table) => [
+  index("idx_service_accounts_org").on(table.orgId),
+]);
+
+export const magicLinkTokens = pgTable("magic_link_tokens", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_magic_link_tokens_user").on(table.userId),
+  uniqueIndex("idx_magic_link_tokens_hash").on(table.tokenHash),
 ]);
 
 export const roles = pgTable("roles", {

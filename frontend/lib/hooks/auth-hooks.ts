@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { signIn, signOut } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useVerifyEmail() {
@@ -31,11 +31,11 @@ export function useAcceptInvitation() {
   return useMutation({
     mutationFn: (variables: {
       token: string;
-      password: string;
+      password?: string;
       firstName?: string;
       lastName?: string;
     }) =>
-      apiClient.post<{ success: boolean }>("/auth/accept-invitation", variables),
+      apiClient.post<{ success: boolean; existingUser?: boolean }>("/auth/accept-invitation", variables),
   });
 }
 
@@ -67,7 +67,32 @@ export function useSignIn() {
 export function useSignOut() {
   const router = useRouter();
   return useMutation({
-    mutationFn: () => signOut({ redirect: false }),
+    mutationFn: async () => {
+      try {
+        await apiClient.post("/auth/logout", undefined);
+      } catch {
+      }
+      clearBackendTokenCache();
+      return signOut({ redirect: false });
+    },
+    onSuccess: () => {
+      router.push("/signin");
+      router.refresh();
+    },
+  });
+}
+
+export function useSignOutAll() {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: async () => {
+      try {
+        await apiClient.post("/auth/logout-all", undefined);
+      } catch {
+      }
+      clearBackendTokenCache();
+      return signOut({ redirect: false });
+    },
     onSuccess: () => {
       router.push("/signin");
       router.refresh();
@@ -88,6 +113,21 @@ export function useGetOrganizations() {
     queryKey: queryKeys.organization.all,
     queryFn: () => apiClient.get<OrgSummary[]>("/organization"),
     staleTime: 60_000,
+  });
+}
+
+export function useSwitchOrg() {
+  const { update } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orgId: string) =>
+      apiClient.post<{ orgId: string; name: string; slug: string; role: string }>("/organization/switch", { orgId }),
+    onSuccess: async (data) => {
+      clearBackendTokenCache();
+      await update({ orgId: data.orgId });
+      queryClient.clear();
+      window.location.href = "/dashboard";
+    },
   });
 }
 

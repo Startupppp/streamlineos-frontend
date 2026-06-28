@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import {
   ArrowRight,
   Check,
   Sparkles,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -25,20 +25,27 @@ import { PRICING_TIERS } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
-const signupSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email"),
-  password: z
-    .string()
-    .min(8, "Minimum 8 characters")
-    .regex(/[A-Z]/, "Must include an uppercase letter")
-    .regex(/[a-z]/, "Must include a lowercase letter")
-    .regex(/[0-9]/, "Must include a number")
-    .regex(/[^A-Za-z0-9]/, "Must include a special character"),
-  companyName: z.string().min(1, "Company name is required"),
-  phone: z.string().optional(),
-});
+const signupSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Please enter a valid email"),
+    password: z
+      .string()
+      .min(12, "Minimum 12 characters")
+      .regex(/[A-Z]/, "Must include an uppercase letter")
+      .regex(/[a-z]/, "Must include a lowercase letter")
+      .regex(/[0-9]/, "Must include a number")
+      .regex(/[^A-Za-z0-9]/, "Must include a special character"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    companyName: z.string().min(1, "Company name is required"),
+    phone: z.string().optional(),
+    terms: z.boolean().refine((v) => v === true, { message: "You must accept the terms" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -56,7 +63,10 @@ export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedTier, setSelectedTier] = useState<TierId>("startup");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(signupSchema),
@@ -65,37 +75,74 @@ export default function SignupPage() {
       lastName: "",
       email: "",
       password: "",
+      confirmPassword: "",
       companyName: "",
       phone: "",
+      terms: false,
     },
   });
 
-  const handleSubmit = async (data: FormValues) => {
+  const handleSubmit = useCallback(async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post("/auth/signup", { ...data, plan: TIER_TO_API_PLAN[selectedTier] });
-      toast.success("Account created! Signing you in…");
-
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (result?.ok) {
-        window.location.href = "/org-setup";
-      } else {
-        toast.error(
-          "Account created but auto-login failed. Please sign in manually.",
-        );
-        window.location.href = "/signin";
-      }
+      const { confirmPassword: _c, terms: _t, ...payload } = data;
+      await apiClient.post("/auth/signup", { ...payload, plan: TIER_TO_API_PLAN[selectedTier] });
+      toast.success("Account created! Check your email to verify.");
+      setRegisteredEmail(data.email);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [selectedTier]);
+
+  const handleResendVerification = useCallback(async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    try {
+      await apiClient.post("/auth/resend-verification", { email: registeredEmail });
+      toast.success("Verification email resent.");
+    } catch {
+      toast.error("Failed to resend. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  }, [registeredEmail]);
+
+  if (registeredEmail) {
+    return (
+      <div className="w-full max-w-md text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+          <Mail className="h-7 w-7 text-blue-600" />
+        </div>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">
+          Verify your email
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          We sent a verification link to{" "}
+          <span className="font-semibold text-slate-900">{registeredEmail}</span>.
+          Click it to activate your account and sign in.
+        </p>
+        <div className="mt-6 space-y-3">
+          <Button
+            onClick={handleResendVerification}
+            disabled={isResending}
+            variant="outline"
+            className="w-full h-10"
+          >
+            {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Resend verification email
+          </Button>
+          <p className="text-sm text-slate-500">
+            Already verified?{" "}
+            <Link href="/signin" className="font-semibold text-blue-600 hover:text-blue-700">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md text-left scrollbar-hide">
@@ -289,21 +336,64 @@ export default function SignupPage() {
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {form.formState.errors.password && (
-              <p className="text-[11px] text-red-600">
-                {form.formState.errors.password.message}
-              </p>
+              <p className="text-[11px] text-red-600">{form.formState.errors.password.message}</p>
             )}
             <p className="text-[10px] text-slate-400 mt-0.5">
-              8+ chars · upper · lower · number · symbol
+              12+ chars · upper · lower · number · symbol
             </p>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-[12px] font-medium text-slate-700">
+              Confirm password
+            </Label>
+            <div className="relative">
+              <Input
+                {...form.register("confirmPassword")}
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Repeat your password"
+                className="h-10 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                tabIndex={-1}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {form.formState.errors.confirmPassword && (
+              <p className="text-[11px] text-red-600">{form.formState.errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1 pt-0.5">
+            <label className="flex items-start gap-2.5 cursor-pointer group">
+              <input
+                type="checkbox"
+                {...form.register("terms")}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 accent-blue-600 cursor-pointer"
+              />
+              <span className="text-[12px] text-slate-500 leading-relaxed">
+                I agree to the{" "}
+                <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+            {form.formState.errors.terms && (
+              <p className="text-[11px] text-red-600">{form.formState.errors.terms.message}</p>
+            )}
           </div>
 
           <div className="flex gap-2 pt-1">

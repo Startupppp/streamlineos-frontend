@@ -12,9 +12,10 @@ const schema = z.object({
   token: z.string(),
   password: z
     .string()
-    .min(8)
+    .min(12)
     .max(128)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/)
+    .optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
 });
@@ -41,7 +42,32 @@ export async function POST(req: NextRequest) {
     where: eq(users.email, invitation.email),
   });
 
-  if (existingUser) return err("Invalid or expired invitation", 400);
+  if (existingUser) {
+    const alreadyMember = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, existingUser.id),
+        eq(organizationMembers.orgId, invitation.orgId),
+      ),
+    });
+    if (alreadyMember) return err("You are already a member of this organization", 409);
+
+    await db.transaction(async (tx) => {
+      await tx.insert(organizationMembers).values({
+        userId: existingUser.id,
+        orgId: invitation.orgId,
+        role: invitation.role,
+      });
+      await tx
+        .update(invitations)
+        .set({ acceptedAt: new Date() })
+        .where(eq(invitations.id, invitation.id));
+    });
+
+    logger.info("Auth: existing user accepted invitation", { email: invitation.email, orgId: invitation.orgId });
+    return ok({ success: true, existingUser: true });
+  }
+
+  if (!input.password) return err("Password is required for new accounts", 400);
 
   const hashedPassword = await bcrypt.hash(input.password, 12);
   const userId = nanoid();

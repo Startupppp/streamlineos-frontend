@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -18,14 +19,14 @@ import { PasswordStrengthIndicator } from "@/components/auth/password-strength-i
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight, X, Shield } from "lucide-react";
+import { Users, Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, X, Shield } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const invitationSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   password: z.string()
-    .min(8, "Password must be at least 8 characters")
+    .min(12, "Password must be at least 12 characters")
     .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,6 +41,7 @@ export default function InvitationPage() {
   const params = useParams();
   const token = typeof params.token === "string" ? params.token : "";
   const [showPassword, setShowPassword] = useState(false);
+  const { data: session } = useSession();
 
   const form = useForm<InvitationFormValues>({
     resolver: zodResolver(invitationSchema),
@@ -52,7 +54,7 @@ export default function InvitationPage() {
 
   const { data: invitation, error: invitationError } = useQuery({
     queryKey: ["invitation", token],
-    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string }>("/auth/invitation", { token }),
+    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string; userExists: boolean }>("/auth/invitation", { token }),
     enabled: !!token,
     retry: false,
   });
@@ -67,7 +69,7 @@ export default function InvitationPage() {
 
   const acceptInvitation = useAcceptInvitation();
 
-  const onSubmit = (values: InvitationFormValues) => {
+  const onSubmit = useCallback((values: InvitationFormValues) => {
     if (!token || !invitation) {
       toast.error("Invalid invitation");
       return;
@@ -89,7 +91,27 @@ export default function InvitationPage() {
         },
       }
     );
-  };
+  }, [token, invitation, acceptInvitation, router]);
+
+  const handleExistingUserAccept = useCallback(() => {
+    if (!token) return;
+    if (!session) {
+      router.push(`/signin?callbackUrl=/invitation/${token}`);
+      return;
+    }
+    acceptInvitation.mutate(
+      { token },
+      {
+        onSuccess: () => {
+          toast.success(`Joined ${invitation?.organizationName ?? "organization"}!`);
+          router.push("/dashboard");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      }
+    );
+  }, [token, session, router, acceptInvitation, invitation]);
 
   if (!invitation) {
     return (
@@ -97,6 +119,70 @@ export default function InvitationPage() {
         <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
         <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
       </div>
+    );
+  }
+
+  if (invitation.userExists) {
+    return (
+      <motion.div className="w-full max-w-lg" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-2xl border-border overflow-hidden">
+            <div className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand">
+              <div className="relative flex items-end gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
+                <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
+                <div className="w-16 h-16 rounded-full bg-white/25 border-2 border-white/45 flex items-center justify-center">
+                  <Users className="w-7 h-7 text-white/80" />
+                </div>
+                <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
+                <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
+              </div>
+            </div>
+            <CardContent className="px-6 md:px-8 pt-6 pb-8">
+              <div className="text-center mb-6">
+                <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                </div>
+                <h1 className="text-2xl font-bold text-foreground">Join Organization</h1>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  You already have a StreamlineOS account.
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Sign in to join{" "}
+                  <span className="font-semibold text-foreground">{invitation.organizationName}</span>{" "}
+                  as <span className="font-semibold text-foreground">{invitation.role}</span>.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <Button
+                  className="w-full gap-2 text-white font-medium h-11 bg-slate-900 hover:bg-slate-800"
+                  onClick={handleExistingUserAccept}
+                  disabled={acceptInvitation.isPending}
+                >
+                  {acceptInvitation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      {session ? "Accept & Join" : "Sign in & Join"}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 h-10"
+                  onClick={() => router.push("/signin")}
+                  disabled={acceptInvitation.isPending}
+                >
+                  <X className="h-4 w-4" />
+                  Decline
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
     );
   }
 

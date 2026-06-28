@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions, subscriptions } from "./db/schema";
 import type { Plan } from "@/lib/billing/feature-gates";
@@ -70,8 +71,40 @@ const credentialsProvider = Credentials({
   credentials: {
     email: { label: "Email", type: "email" },
     password: { label: "Password", type: "password" },
+    rememberMe: { label: "Remember me", type: "text" },
+    magicToken: { label: "Magic token", type: "text" },
   },
   async authorize(credentials) {
+    if (credentials?.magicToken) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/magic-link/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: credentials.magicToken }),
+        });
+        if (!res.ok) return null;
+        const data = await res.json() as { userId: string; orgId: string; forceChangePassword: boolean };
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, data.userId),
+          columns: { id: true, email: true, name: true, image: true, role: true, isActive: true, hasDashboardAccess: true, firstName: true, lastName: true, isPasswordChangeRequired: true },
+        });
+        if (!user) return null;
+        const fullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name ?? user.email;
+        return {
+          id: user.id,
+          email: user.email,
+          name: fullName,
+          image: user.image,
+          role: user.role,
+          forceChangePassword: data.forceChangePassword,
+          isActive: user.isActive,
+          hasDashboardAccess: user.hasDashboardAccess ?? true,
+        };
+      } catch {
+        return null;
+      }
+    }
+
     if (!credentials?.email || !credentials?.password) return null;
 
     try {
@@ -110,6 +143,7 @@ const credentialsProvider = Credentials({
         isActive: user.isActive,
         hasDashboardAccess: user.hasDashboardAccess ?? true,
         daysUntilExpiry: data.daysUntilExpiry,
+        rememberMe: credentials?.rememberMe === "true",
       };
     } catch (err) {
       if (err instanceof Error && (err.message.startsWith("ACCOUNT_LOCKED:") || err.message === "SUBSCRIPTION_INACTIVE")) throw err;
@@ -127,6 +161,21 @@ const googleProvider =
       })
     : null;
 
+const microsoftProvider =
+  process.env.MICROSOFT_CLIENT_ID &&
+  process.env.MICROSOFT_CLIENT_SECRET &&
+  process.env.MICROSOFT_TENANT_ID
+    ? MicrosoftEntraID({
+        clientId: process.env.MICROSOFT_CLIENT_ID,
+        clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+        issuer: `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/v2.0`,
+      })
+    : null;
+
+const oauthProviders = [googleProvider, microsoftProvider].filter(
+  (p): p is NonNullable<typeof p> => p !== null,
+);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: users,
@@ -136,12 +185,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   }) as Adapter,
   trustHost: true,
   basePath: "/api/auth",
-  providers: googleProvider
-    ? [credentialsProvider, googleProvider]
+  providers: oauthProviders.length > 0
+    ? [credentialsProvider, ...oauthProviders]
     : [credentialsProvider],
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: "/signin",
@@ -149,13 +198,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
+      if (account?.provider === "google" || account?.provider === "microsoft-entra-id") {
         const existingUser = await db.query.users.findFirst({
           where: sql`lower(${users.email}) = ${(user.email ?? "").toLowerCase()}`,
         });
         if (!existingUser) {
           return false;
         }
+        createAuditLog({
+          action: account.provider === "microsoft-entra-id" ? "oauth.login.microsoft" : "oauth.login.google",
+          userId: existingUser.id,
+          metadata: { email: user.email },
+        }).catch(() => {});
       }
       return true;
     },
@@ -170,6 +224,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = null;
         token.sessionId = randomUUID();
+        token.rememberMe = user.rememberMe ?? false;
         if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
 
         const deviceId = token.sessionId as string;
@@ -315,8 +370,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      if (trigger === "update" && session?.forceChangePassword !== undefined) {
-        token.forceChangePassword = session.forceChangePassword;
+      if (trigger === "update") {
+        if (session?.forceChangePassword !== undefined) {
+          token.forceChangePassword = session.forceChangePassword;
+        }
+        if (session?.orgId !== undefined) {
+          token.orgId = session.orgId;
+          if (redis) {
+            await redis.del(userSessionKey(token.id as string)).catch(() => {});
+          }
+        }
       }
 
       return token;
