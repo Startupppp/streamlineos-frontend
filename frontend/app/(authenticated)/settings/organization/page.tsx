@@ -260,10 +260,14 @@ export default function OrganizationSettingsPage() {
   }, [handleAddIp]);
 
   const handleSaveSecurity = useCallback(() => {
-    const expiryDaysNum = passwordExpiryDays ? parseInt(passwordExpiryDays, 10) : null;
-    if (passwordExpiryDays && (isNaN(expiryDaysNum!) || expiryDaysNum! < 30 || expiryDaysNum! > 365)) {
-      toast.error("Password expiry must be between 30 and 365 days");
-      return;
+    let expiryDaysNum: number | null = null;
+    if (passwordExpiryDays) {
+      const parsed = parseInt(passwordExpiryDays, 10);
+      if (isNaN(parsed) || parsed < 30 || parsed > 365) {
+        toast.error("Password expiry must be between 30 and 365 days");
+        return;
+      }
+      expiryDaysNum = parsed;
     }
     updateSecurity(
       { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains },

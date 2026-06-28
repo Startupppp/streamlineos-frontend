@@ -202,7 +202,7 @@ export default function AuditLogPage() {
     [searchParams, router, pathname],
   );
 
-  const { data, isLoading } = useAuditLogs({
+  const { data, isLoading, isError, refetch } = useAuditLogs({
     page,
     pageSize,
     action: actionFilter !== "all" ? actionFilter : undefined,
@@ -321,6 +321,11 @@ export default function AuditLogPage() {
                 {Array.from({ length: pageSize }).map((_, i) => (
                   <Skeleton key={i} className="h-11 w-full" />
                 ))}
+              </div>
+            ) : isError ? (
+              <div className="py-14 flex flex-col items-center gap-3 text-center">
+                <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
+                <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
               </div>
             ) : logs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-2 text-muted-foreground">

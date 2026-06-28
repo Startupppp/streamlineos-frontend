@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useCallback } from "react";
+import { use, useMemo, useCallback, memo } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/lib/api/hooks";
@@ -22,6 +22,58 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+
+interface MyTicketRowProps {
+  ticket: {
+    id: number;
+    type: string;
+    ticketNumber: string | number;
+    title: string | null;
+    status: string;
+    priority: string | null;
+    points?: number | null;
+    dueDate?: string | Date | null;
+  };
+  onSelect: (id: number) => void;
+}
+
+const TicketRow = memo(function TicketRow({ ticket, onSelect }: MyTicketRowProps) {
+  const handleClick = useCallback(() => onSelect(ticket.id), [onSelect, ticket.id]);
+
+  return (
+    <TableRow className="cursor-pointer hover:bg-muted/50" onClick={handleClick}>
+      <TableCell className="font-mono text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <TicketTypeIcon type={ticket.type} />
+          #{ticket.ticketNumber}
+        </span>
+      </TableCell>
+      <TableCell className="max-w-md">
+        <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
+      </TableCell>
+      <TableCell>
+        <StatusBadge status={ticket.status} />
+      </TableCell>
+      <TableCell>
+        <PriorityBadge priority={ticket.priority} showLabel />
+      </TableCell>
+      <TableCell>
+        {ticket.points != null && ticket.points > 0 ? (
+          <Badge variant="secondary" className="text-xs">
+            {ticket.points}
+          </Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell className="text-xs text-muted-foreground">
+        {ticket.dueDate
+          ? format(new Date(ticket.dueDate), "MMM d")
+          : "—"}
+      </TableCell>
+    </TableRow>
+  );
+});
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

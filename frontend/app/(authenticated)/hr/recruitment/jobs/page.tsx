@@ -137,7 +137,7 @@ export default function JobPostingsPage() {
   const statusFilter = searchParams.get("status") as JobPostingStatus | null;
   const visibilityFilter = searchParams.get("visibility");
 
-  const { data: allJobs, isLoading } = useJobPostings(
+  const { data: allJobs, isLoading, isError, refetch } = useJobPostings(
     statusFilter ? { status: statusFilter } : undefined
   );
 
@@ -153,6 +153,7 @@ export default function JobPostingsPage() {
   const { data: departments } = useHrDepartments();
 
   const [shareJobId, setShareJobId] = useState<number | null>(null);
+  const [deleteJobId, setDeleteJobId] = useState<number | null>(null);
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -174,15 +175,16 @@ export default function JobPostingsPage() {
     [updateJob]
   );
 
-  const handleDelete = useCallback(
-    (id: number) => {
-      deleteJob.mutate(id, {
-        onSuccess: () => toast.success("Job posting deleted"),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [deleteJob]
-  );
+  const handleDelete = useCallback(() => {
+    if (!deleteJobId) return;
+    deleteJob.mutate(deleteJobId, {
+      onSuccess: () => {
+        toast.success("Job posting deleted");
+        setDeleteJobId(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteJobId, deleteJob]);
 
   const handlePublish = useCallback(
     (id: number) => {
@@ -266,7 +268,7 @@ export default function JobPostingsPage() {
             {jobs.map((job) => {
               const statusStyle = (job.status && STATUS_STYLES[job.status]) || STATUS_STYLES.DRAFT;
               const deptName = departments?.find((d) => d.id === job.departmentId)?.name;
-              const externalPlatforms = job.externalPostingIds ? Object.keys(job.externalPostingIds as Record<string, string>) : [];
+              const externalPlatforms = job.externalPostingIds ? Object.keys(job.externalPostingIds) : [];
 
               return (
                 <div
@@ -328,7 +330,7 @@ export default function JobPostingsPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => handleDelete(job.id)}
+                            onClick={() => setDeleteJobId(job.id)}
                           >
                             <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                           </DropdownMenuItem>

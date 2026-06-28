@@ -226,6 +226,7 @@ export default function LoansPage() {
   }, [resetForm]);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
   const handleTotalEmisChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTotalEmis(e.target.value), []);
@@ -305,7 +306,7 @@ export default function LoansPage() {
       <PageWrapper title="Salary Loans" subtitle="Request salary advances and track repayments">
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to load salary loans.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       </PageWrapper>
     );

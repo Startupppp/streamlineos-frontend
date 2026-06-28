@@ -192,7 +192,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
     );
   }
 
-  function handleCreate() {
+  const handleCreate = useCallback(() => {
     if (!name.trim() || steps.some((s) => !s.title.trim())) return;
     create.mutate(
       {
@@ -214,7 +214,7 @@ function CreateSequenceDialog({ onClose }: { onClose: () => void }) {
         onError: () => toast.error("Failed to create sequence"),
       },
     );
-  }
+  }, [name, steps, description, create, onClose]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -328,8 +328,8 @@ function SequenceCard({
   onDelete,
 }: {
   sequence: TaskSequence;
-  onApply: () => void;
-  onDelete: () => void;
+  onApply: (seq: TaskSequence) => void;
+  onDelete: (seq: TaskSequence) => void;
 }) {
   return (
     <Card>
@@ -363,14 +363,14 @@ function SequenceCard({
         </div>
 
         <div className="flex gap-2 pt-1">
-          <Button size="sm" className="flex-1" onClick={onApply}>
+          <Button size="sm" className="flex-1" onClick={() => onApply(sequence)}>
             <PlayCircle className="h-4 w-4 mr-1" /> Apply
           </Button>
           <Button
             size="sm"
             variant="outline"
             className="text-destructive hover:text-destructive"
-            onClick={onDelete}
+            onClick={() => onDelete(sequence)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -388,7 +388,7 @@ export default function TaskSequencesPage() {
   const [applyTarget, setApplyTarget] = useState<TaskSequence | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TaskSequence | null>(null);
 
-  function handleDelete() {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteSeq.mutate(deleteTarget.id, {
       onSuccess: () => {
@@ -397,7 +397,15 @@ export default function TaskSequencesPage() {
       },
       onError: () => toast.error("Failed to delete sequence"),
     });
-  }
+  }, [deleteTarget, deleteSeq]);
+
+  const handleApplySequence = useCallback((seq: TaskSequence) => {
+    setApplyTarget(seq);
+  }, []);
+
+  const handleDeleteSequence = useCallback((seq: TaskSequence) => {
+    setDeleteTarget(seq);
+  }, []);
 
   return (
     <PageWrapper title="Task Sequences" subtitle="Pre-built task chains for repeatable workflows">
@@ -423,13 +431,13 @@ export default function TaskSequencesPage() {
             <SequenceCard
               key={seq.id}
               sequence={seq}
-              onApply={() => setApplyTarget(seq)}
-              onDelete={() => setDeleteTarget(seq)}
+              onApply={handleApplySequence}
+              onDelete={handleDeleteSequence}
             />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-3">
           <ListChecks className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No sequences yet.</p>
           <Button variant="outline" onClick={() => setCreateOpen(true)}>

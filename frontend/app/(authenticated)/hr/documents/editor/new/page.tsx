@@ -3,7 +3,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type React from "react";
 import { useCreateRichDocument } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,32 @@ const TEMPLATES = [
   { value: "nda", label: "NDA", description: "Non-disclosure agreement", icon: FileClock },
   { value: "handbook", label: "Employee Handbook", description: "Company handbook section", icon: FileText },
 ];
+
+interface TemplateButtonProps {
+  templateDef: typeof TEMPLATES[number];
+  isSelected: boolean;
+  onSelect: (value: string) => void;
+}
+
+function TemplateButton({ templateDef, isSelected, onSelect }: TemplateButtonProps) {
+  const Icon = templateDef.icon;
+  const handleClick = useCallback(() => onSelect(templateDef.value), [onSelect, templateDef.value]);
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`text-left p-4 rounded-lg border transition-all ${
+        isSelected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+          : "border-border hover:border-primary/30 bg-card"
+      }`}
+    >
+      <Icon className={`h-7 w-7 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+      <p className="font-medium text-sm">{templateDef.label}</p>
+      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{templateDef.description}</p>
+    </button>
+  );
+}
 
 const DEFAULT_CONTENT: Record<string, unknown> = {
   blank: { type: "doc", content: [{ type: "paragraph" }] },
@@ -88,6 +113,10 @@ export default function NewDocumentPage() {
   const [title, setTitle] = useState("");
   const [template, setTemplate] = useState("blank");
 
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
+
   const handleCreate = useCallback(() => {
     const trimmedTitle = title.trim();
     if (trimmedTitle && trimmedTitle !== title) { toast.error("Title cannot have leading or trailing spaces"); return; }
@@ -136,26 +165,14 @@ export default function NewDocumentPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {TEMPLATES.map((t) => {
-                  const Icon = t.icon;
-                  const isSelected = template === t.value;
-                  return (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => setTemplate(t.value)}
-                      className={`text-left p-4 rounded-lg border transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                          : "border-border hover:border-primary/30 bg-card"
-                      }`}
-                    >
-                      <Icon className={`h-7 w-7 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                      <p className="font-medium text-sm">{t.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t.description}</p>
-                    </button>
-                  );
-                })}
+                {TEMPLATES.map((t) => (
+                  <TemplateButton
+                    key={t.value}
+                    templateDef={t}
+                    isSelected={template === t.value}
+                    onSelect={setTemplate}
+                  />
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -171,7 +188,7 @@ export default function NewDocumentPage() {
                 <Input
                   placeholder="e.g. Employee Handbook 2026"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={handleTitleChange}
                   autoFocus
                 />
               </div>

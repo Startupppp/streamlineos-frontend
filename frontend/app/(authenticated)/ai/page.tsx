@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,6 +14,16 @@ import { AiFeatureCard } from "@/features/ai/ai-feature-card";
 import { AiFeatureForm } from "@/features/ai/ai-feature-form";
 import type { AiFeature } from "@/features/ai/types";
 
+interface FeatureCardWrapperProps {
+  feature: AiFeature;
+  onSelect: (feature: AiFeature) => void;
+}
+
+function FeatureCardWrapper({ feature, onSelect }: FeatureCardWrapperProps) {
+  const handleClick = useCallback(() => onSelect(feature), [feature, onSelect]);
+  return <AiFeatureCard feature={feature} onClick={handleClick} />;
+}
+
 export default function AIHubPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [activeFeature, setActiveFeature] = useState<AiFeature | null>(null);
@@ -25,6 +35,12 @@ export default function AIHubPage() {
         : AI_FEATURES.filter((f) => f.category === selectedCategory),
     [selectedCategory],
   );
+
+  const handleSelectFeature = useCallback((f: AiFeature) => setActiveFeature(f), []);
+  const handleCloseFeature = useCallback(() => setActiveFeature(null), []);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) setActiveFeature(null);
+  }, []);
 
   return (
     <PageWrapper
@@ -47,22 +63,17 @@ export default function AIHubPage() {
         <TabsContent value={selectedCategory} className="mt-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((feature) => (
-              <AiFeatureCard
+              <FeatureCardWrapper
                 key={feature.id}
                 feature={feature}
-                onClick={() => setActiveFeature(feature)}
+                onSelect={handleSelectFeature}
               />
             ))}
           </div>
         </TabsContent>
       </Tabs>
 
-      <Sheet
-        open={!!activeFeature}
-        onOpenChange={(open) => {
-          if (!open) setActiveFeature(null);
-        }}
-      >
+      <Sheet open={!!activeFeature} onOpenChange={handleSheetOpenChange}>
         <SheetContent
           side="right"
           className="w-full sm:max-w-[480px] flex flex-col gap-0 p-0"
@@ -78,7 +89,7 @@ export default function AIHubPage() {
               <div className="flex-1 overflow-y-auto px-6 py-4">
                 <AiFeatureForm
                   featureId={activeFeature.id}
-                  onClose={() => setActiveFeature(null)}
+                  onClose={handleCloseFeature}
                 />
               </div>
             </>

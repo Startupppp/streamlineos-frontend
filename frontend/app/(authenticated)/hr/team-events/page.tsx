@@ -183,6 +183,7 @@ export default function TeamEventsPage() {
   }, [resetForm]);
 
   const handleOpenCreateSheet = useCallback(() => setSheetOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
@@ -249,7 +250,7 @@ export default function TeamEventsPage() {
       <PageWrapper title="Team Events" subtitle="Company events, outings, and celebrations">
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to load team events.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
             Retry
           </Button>
         </div>

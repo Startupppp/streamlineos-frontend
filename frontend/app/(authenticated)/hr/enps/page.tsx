@@ -46,6 +46,7 @@ export default function EnpsPage() {
 
   const { data: scores, isLoading, isError, refetch } = useEnpsScores(isAdmin);
   const submit = useSubmitEnpsScore();
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [npsScore, setNpsScore] = useState("8");

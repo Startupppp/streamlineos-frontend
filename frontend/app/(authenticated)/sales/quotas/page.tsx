@@ -38,6 +38,7 @@ import { useHrEmployees } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { SalesQuota } from "@/lib/api/hooks/crm";
+import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 
 function fmt(amount: string | number) {
@@ -58,8 +59,11 @@ export default function SalesQuotasPage() {
   const createQuota = useCreateSalesQuota();
 
   const items: SalesQuota[] = Array.isArray(quotas) ? quotas : [];
-  const employees = (employeesData as { data?: Array<{ id: string; name: string }>; items?: Array<{ id: string; name: string }> } | Array<{ id: string; name: string }> | undefined);
-  const employeeList: Array<{ id: string; name: string }> = Array.isArray(employees) ? employees : (employees?.data ?? employees?.items ?? []);
+  const employeeList = useMemo(() => {
+    if (!employeesData) return [];
+    const list: Employee[] = Array.isArray(employeesData) ? employeesData : (employeesData as PaginatedEmployees).data;
+    return list.flatMap((e) => (e.name ? [{ id: e.id, name: e.name }] : []));
+  }, [employeesData]);
 
   const totalTarget = items.reduce((s, q) => s + Number(q.targetRevenue), 0);
   const totalActual = items.reduce((s, q) => s + Number(q.actualRevenue), 0);
@@ -127,7 +131,16 @@ export default function SalesQuotasPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                      </TableRow>
+                    ))
                   ) : items.length === 0 ? (
                     <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
                       <EmptyTargetIllustration className="h-36 w-36 opacity-95" />

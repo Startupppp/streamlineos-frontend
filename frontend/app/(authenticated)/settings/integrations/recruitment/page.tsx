@@ -172,10 +172,26 @@ function PortalCard({
 
 
 export default function RecruitmentIntegrationsPage() {
-  const { data: portals, isLoading } = useSourcePortals();
+  const { data: portals, isLoading, isError, refetch } = useSourcePortals();
 
-  const portalByPlatform = (platform: string) =>
-    portals?.find((p) => p.platform === platform);
+  const portalByPlatform = useCallback(
+    (platform: string) => portals?.find((p) => p.platform === platform),
+    [portals],
+  );
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Recruitment Integrations"
+        subtitle="Connect job boards to automatically ingest applications into the ATS."
+      >
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
+          <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
+          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper
@@ -191,7 +207,7 @@ export default function RecruitmentIntegrationsPage() {
       }
     >
       <div className="space-y-6 max-w-3xl">
-        <div className="rounded-lg border bg-blue/5 border-blue/20 p-4 text-sm text-blue">
+        <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
           <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
           whenever a candidate applies. The CRM automatically creates a candidate record and
           deduplicates by email/phone.

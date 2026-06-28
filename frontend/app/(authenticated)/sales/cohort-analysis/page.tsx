@@ -58,7 +58,7 @@ export default function CohortAnalysisPage() {
           <Users className="h-4 w-4 shrink-0" />
           <span className="truncate">Avg conversion rate: <strong>{avgConvRate}%</strong></span>
         </div>
-        <Select value={String(months)} onValueChange={(v) => setMonths(Number(v))}>
+        <Select value={String(months)} onValueChange={handleMonthsChange}>
           <SelectTrigger className="w-36 shrink-0">
             <SelectValue />
           </SelectTrigger>
@@ -76,6 +76,12 @@ export default function CohortAnalysisPage() {
           <Skeleton className="h-72" />
           <Skeleton className="h-52" />
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load cohort data"
+          description="An error occurred while loading cohort analysis. Please try again."
+          onRetry={() => refetch()}
+        />
       ) : (
         <>
           <Card className="mb-4">

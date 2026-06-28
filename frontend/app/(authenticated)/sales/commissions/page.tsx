@@ -228,9 +228,9 @@ export default function CommissionsPage() {
               <p className="text-sm font-semibold">Commission Rules</p>
             </div>
             <div className="p-4 space-y-2">
-              {rules.map((r: Record<string, unknown>) => (
-                <div key={String(r.id)} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
-                  <span className="font-medium truncate min-w-0">{String(r.name)}</span>
+              {rules.map((r) => (
+                <div key={r.id} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
+                  <span className="font-medium truncate min-w-0">{r.name}</span>
                   <span className="text-muted-foreground tabular-nums shrink-0">{r.type === "flat_percent" ? `${Number(r.flatRate).toFixed(2)}%` : "Tiered"}</span>
                 </div>
               ))}

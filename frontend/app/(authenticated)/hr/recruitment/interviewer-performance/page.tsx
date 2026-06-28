@@ -53,6 +53,7 @@ export default function InterviewerPerformancePage() {
   const { data, isLoading, isError, refetch } = useInterviewerPerformance(days);
 
   const handlePeriodChange = useCallback((v: string) => setDays(Number(v)), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const stats = data?.stats ?? [];
 
@@ -156,7 +157,7 @@ export default function InterviewerPerformancePage() {
                     <div className="flex flex-col items-center justify-center gap-3 py-12">
                       <AlertCircle className="h-8 w-8 text-destructive/60" />
                       <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
-                      <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                      <Button variant="outline" size="sm" onClick={handleRetry}>
                         Try again
                       </Button>
                     </div>

@@ -35,7 +35,7 @@ type CreateIntakeForm = z.infer<typeof createIntakeSchema>;
 
 const acceptSchema = z.object({
   state: z.string().min(1, "State is required"),
-  assigneeId: z.number().optional(),
+  assigneeId: z.string().optional(),
   cycleId: z.number().optional(),
   moduleId: z.number().optional(),
 });
@@ -293,8 +293,8 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 name="assigneeId"
                 render={({ field }) => (
                   <Select
-                    value={field.value?.toString() ?? ""}
-                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
+                    value={field.value ?? ""}
+                    onValueChange={(v) => field.onChange(v || undefined)}
                   >
                     <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
                     <SelectContent>

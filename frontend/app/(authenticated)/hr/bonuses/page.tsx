@@ -209,6 +209,7 @@ function BonusContent() {
   }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleSheetOpenChange = useCallback((open: boolean) => {
     if (!open) resetForm();
@@ -289,7 +290,7 @@ function BonusContent() {
       <PageWrapper title="Bonus Processing" subtitle="Manage and disburse employee bonuses">
         <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
           <p className="text-sm text-muted-foreground">Failed to load bonuses.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       </PageWrapper>
     );

@@ -166,6 +166,7 @@ export default function SurveysPage() {
   const update = useUpdateSurvey();
   const ability = useAbility();
   const isAdmin = ability.can("manage", "hr:performance");
+  const handleRefetch = useCallback(() => { void refetch(); }, [refetch]);
 
   const [statusFilter, setStatusFilter] = useState<SurveyStatusFilter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -258,7 +259,7 @@ export default function SurveysPage() {
             <p className="text-sm font-medium text-foreground">Failed to load surveys</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRefetch}>Try again</Button>
         </div>
       </PageWrapper>
     );

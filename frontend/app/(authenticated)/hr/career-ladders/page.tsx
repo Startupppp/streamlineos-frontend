@@ -54,6 +54,8 @@ export default function CareerLaddersPage() {
     queryFn: () => apiClient.get<CareerLadder[]>("/hr/career-ladders"),
   });
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const create = useMutation({
     mutationFn: (data: { title: string; department?: string; description?: string }) =>
       apiClient.post<CareerLadder>("/hr/career-ladders", data),
@@ -142,7 +144,7 @@ export default function CareerLaddersPage() {
             <p className="text-sm font-medium text-foreground">Failed to load career ladders</p>
             <p className="text-xs text-muted-foreground mt-0.5">Something went wrong. Please try again.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={refetch}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetry}>Try again</Button>
         </div>
       </PageWrapper>
     );

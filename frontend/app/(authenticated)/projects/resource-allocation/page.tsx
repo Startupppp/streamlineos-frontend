@@ -1,7 +1,7 @@
 "use client";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -41,8 +41,8 @@ export default function ResourceAllocationPage() {
           ))}
         </div>
       ) : !entries || entries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-          <UsersIcon className="h-10 w-10 text-muted-foreground/50" />
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] text-center space-y-3">
+          <Users className="h-10 w-10 text-muted-foreground/50" />
           <p className="text-muted-foreground">No open tickets assigned yet.</p>
         </div>
       ) : (

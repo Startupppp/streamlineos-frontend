@@ -19,10 +19,10 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Plus, FileSpreadsheet, IndianRupee, CheckCircle2, AlertCircle } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
+import type { Employee } from "@/types/hr";
 
 interface FnfSettlement {
   id: number;
@@ -65,9 +65,115 @@ function fnfBorderClass(status: string | null): string {
   return "border-l-slate-300 dark:border-l-slate-600";
 }
 
+interface FnfCardProps {
+  item: FnfSettlement;
+  onMarkPaid: (id: number) => void;
+  isPending: boolean;
+}
+
+function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
+  const handleMarkPaid = useCallback(() => onMarkPaid(item.id), [item.id, onMarkPaid]);
+
+  return (
+    <Card
+      className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
+        fnfBorderClass(item.status)
+      )}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+              item.status === "PAID"
+                ? "bg-emerald-100 dark:bg-emerald-950/40"
+                : item.status === "APPROVED"
+                  ? "bg-blue-100 dark:bg-blue-950/40"
+                  : item.status === "PENDING_APPROVAL"
+                    ? "bg-amber-100 dark:bg-amber-950/40"
+                    : "bg-slate-100 dark:bg-slate-800/40"
+            )}
+          >
+            <FileSpreadsheet
+              className={cn(
+                "h-3.5 w-3.5",
+                item.status === "PAID"
+                  ? "text-emerald-700 dark:text-emerald-400"
+                  : item.status === "APPROVED"
+                    ? "text-blue-700 dark:text-blue-400"
+                    : item.status === "PENDING_APPROVAL"
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-slate-600 dark:text-slate-400"
+              )}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              {item.user?.name && (
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {item.user.name}
+                </p>
+              )}
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
+                  fnfStatusBadgeClass(item.status)
+                )}
+              >
+                {fnfStatusLabel(item.status)}
+              </span>
+            </div>
+
+            <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap">
+              {item.netPayable && (
+                <span className="flex items-center gap-0.5 font-semibold text-foreground">
+                  <IndianRupee className="h-3 w-3" />
+                  {Number(item.netPayable).toLocaleString("en-IN")} net payable
+                </span>
+              )}
+              {item.deductions && Number(item.deductions) > 0 && (
+                <span className="text-rose-600 dark:text-rose-400">
+                  −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
+                </span>
+              )}
+              {item.loanRecovery && Number(item.loanRecovery) > 0 && (
+                <span>
+                  Loan: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}
+                </span>
+              )}
+              {item.createdAt && (
+                <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>
+              )}
+            </div>
+
+            {item.notes && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>
+            )}
+          </div>
+
+          {item.status !== "PAID" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs shrink-0 gap-1.5 duration-200"
+              onClick={handleMarkPaid}
+              disabled={isPending}
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              Mark Paid
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function FnfContent() {
   const qc = useQueryClient();
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: fnfKeys.list(),
     queryFn: () => apiClient.get<FnfSettlement[]>("/hr/fnf"),
   });
@@ -93,7 +199,8 @@ function FnfContent() {
   const { data: employeesRaw } = useHrEmployees();
   const employees = useMemo<Employee[]>(() => {
     if (Array.isArray(employeesRaw)) return employeesRaw;
-    return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
+    if (employeesRaw && "data" in employeesRaw) return employeesRaw.data;
+    return [];
   }, [employeesRaw]);
 
   const employeeOptions = useMemo<ComboboxOption[]>(() =>
@@ -191,6 +298,19 @@ function FnfContent() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Full & Final Settlement" subtitle="Employee separation settlements">
+        <EmptyState
+          illustration={<AlertCircle className="h-8 w-8 text-destructive" />}
+          title="Failed to load settlements"
+          description="Something went wrong. Please try again."
+          action={{ label: "Retry", onClick: refetch }}
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Full & Final Settlement"
@@ -213,100 +333,7 @@ function FnfContent() {
       ) : (
         <div className="space-y-2">
           {items.map((item: FnfSettlement) => (
-            <Card
-              key={item.id}
-              className={cn(
-                "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 transition-colors duration-200",
-                fnfBorderClass(item.status)
-              )}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-                      item.status === "PAID"
-                        ? "bg-emerald-100 dark:bg-emerald-950/40"
-                        : item.status === "APPROVED"
-                          ? "bg-blue-100 dark:bg-blue-950/40"
-                          : item.status === "PENDING_APPROVAL"
-                            ? "bg-amber-100 dark:bg-amber-950/40"
-                            : "bg-slate-100 dark:bg-slate-800/40"
-                    )}
-                  >
-                    <FileSpreadsheet
-                      className={cn(
-                        "h-3.5 w-3.5",
-                        item.status === "PAID"
-                          ? "text-emerald-700 dark:text-emerald-400"
-                          : item.status === "APPROVED"
-                            ? "text-blue-700 dark:text-blue-400"
-                            : item.status === "PENDING_APPROVAL"
-                              ? "text-amber-700 dark:text-amber-400"
-                              : "text-slate-600 dark:text-slate-400"
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {item.user?.name && (
-                        <p className="text-sm font-semibold text-foreground truncate">
-                          {item.user.name}
-                        </p>
-                      )}
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0",
-                          fnfStatusBadgeClass(item.status)
-                        )}
-                      >
-                        {fnfStatusLabel(item.status)}
-                      </span>
-                    </div>
-
-                    <div className="flex gap-3 text-[10px] text-muted-foreground mt-1 flex-wrap">
-                      {item.netPayable && (
-                        <span className="flex items-center gap-0.5 font-semibold text-foreground">
-                          <IndianRupee className="h-3 w-3" />
-                          {Number(item.netPayable).toLocaleString("en-IN")} net payable
-                        </span>
-                      )}
-                      {item.deductions && Number(item.deductions) > 0 && (
-                        <span className="text-rose-600 dark:text-rose-400">
-                          −₹{Number(item.deductions).toLocaleString("en-IN")} deductions
-                        </span>
-                      )}
-                      {item.loanRecovery && Number(item.loanRecovery) > 0 && (
-                        <span>
-                          Loan: ₹{Number(item.loanRecovery).toLocaleString("en-IN")}
-                        </span>
-                      )}
-                      {item.createdAt && (
-                        <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>
-                      )}
-                    </div>
-
-                    {item.notes && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.notes}</p>
-                    )}
-                  </div>
-
-                  {item.status !== "PAID" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs shrink-0 gap-1.5 duration-200"
-                      onClick={() => setCompleteId(item.id)}
-                      disabled={complete.isPending}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      Mark Paid
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <FnfCard key={item.id} item={item} onMarkPaid={setCompleteId} isPending={complete.isPending} />
           ))}
         </div>
       )}

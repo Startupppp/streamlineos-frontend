@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Bell, Mail, Smartphone, Monitor, Moon, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ export default function NotificationPreferencesPage() {
   const { data: prefs, isLoading } = useNotificationPreferences();
   const updatePrefs = useUpdateNotificationPreferences();
 
+  const [initialized, setInitialized] = useState(false);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [inAppEnabled, setInAppEnabled] = useState(true);
@@ -40,30 +41,37 @@ export default function NotificationPreferencesPage() {
   const [categories, setCategories] = useState<Record<string, boolean>>({});
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
-    if (prefs) {
-      setEmailEnabled(prefs.emailEnabled ?? true);
-      setPushEnabled(prefs.pushEnabled ?? true);
-      setInAppEnabled(prefs.inAppEnabled ?? true);
-      setSmsEnabled(prefs.smsEnabled ?? false);
-      setQuietStart(prefs.quietHoursStart ?? "");
-      setQuietEnd(prefs.quietHoursEnd ?? "");
-      const cats: Record<string, boolean> = {};
-      CATEGORIES.forEach(c => {
-        cats[c.key] = prefs.categories?.[c.key] ?? true;
-      });
-      setCategories(cats);
-    }
-  }, [prefs]);
+  if (!initialized && prefs) {
+    setEmailEnabled(prefs.emailEnabled ?? true);
+    setPushEnabled(prefs.pushEnabled ?? true);
+    setInAppEnabled(prefs.inAppEnabled ?? true);
+    setSmsEnabled(prefs.smsEnabled ?? false);
+    setQuietStart(prefs.quietHoursStart ?? "");
+    setQuietEnd(prefs.quietHoursEnd ?? "");
+    const cats: Record<string, boolean> = {};
+    CATEGORIES.forEach(c => {
+      cats[c.key] = prefs.categories?.[c.key] ?? true;
+    });
+    setCategories(cats);
+    setInitialized(true);
+  }
 
-  const markDirty = useCallback(() => setDirty(true), []);
+  const handleInAppToggle = useCallback((val: boolean) => { setInAppEnabled(val); setDirty(true); }, []);
+  const handleEmailToggle = useCallback((val: boolean) => { setEmailEnabled(val); setDirty(true); }, []);
+  const handlePushToggle = useCallback((val: boolean) => { setPushEnabled(val); setDirty(true); }, []);
+  const handleSmsToggle = useCallback((val: boolean) => { setSmsEnabled(val); setDirty(true); }, []);
 
-  const handleChannelToggle = useCallback((setter: (v: boolean) => void) => (val: boolean) => {
-    setter(val);
+  const handleQuietStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuietStart(e.target.value);
     setDirty(true);
   }, []);
 
-  const handleCategoryToggle = useCallback((key: string) => (val: boolean) => {
+  const handleQuietEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuietEnd(e.target.value);
+    setDirty(true);
+  }, []);
+
+  const handleCategoryToggle = useCallback((key: string, val: boolean) => {
     setCategories(prev => ({ ...prev, [key]: val }));
     setDirty(true);
   }, []);
@@ -126,26 +134,49 @@ export default function NotificationPreferencesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[
-                { icon: Monitor, label: "In-App Notifications", desc: "Notification bell in the sidebar", value: inAppEnabled, setter: handleChannelToggle(setInAppEnabled) },
-                { icon: Mail, label: "Email Notifications", desc: "Receive notifications to your email address", value: emailEnabled, setter: handleChannelToggle(setEmailEnabled) },
-                { icon: Smartphone, label: "Push Notifications", desc: "Browser and mobile push notifications", value: pushEnabled, setter: handleChannelToggle(setPushEnabled) },
-                { icon: Smartphone, label: "SMS Notifications", desc: "Text message alerts for urgent events", value: smsEnabled, setter: handleChannelToggle(setSmsEnabled) },
-              ].map((ch, i) => (
-                <div key={i}>
-                  {i > 0 && <Separator className="mb-4" />}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <ch.icon className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{ch.label}</p>
-                        <p className="text-xs text-muted-foreground">{ch.desc}</p>
-                      </div>
-                    </div>
-                    <Switch checked={ch.value} onCheckedChange={ch.setter} aria-label={ch.label} className="shrink-0" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Monitor className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">In-App Notifications</p>
+                    <p className="text-xs text-muted-foreground">Notification bell in the sidebar</p>
                   </div>
                 </div>
-              ))}
+                <Switch checked={inAppEnabled} onCheckedChange={handleInAppToggle} aria-label="In-App Notifications" className="shrink-0" />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Mail className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Email Notifications</p>
+                    <p className="text-xs text-muted-foreground">Receive notifications to your email address</p>
+                  </div>
+                </div>
+                <Switch checked={emailEnabled} onCheckedChange={handleEmailToggle} aria-label="Email Notifications" className="shrink-0" />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Smartphone className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Push Notifications</p>
+                    <p className="text-xs text-muted-foreground">Browser and mobile push notifications</p>
+                  </div>
+                </div>
+                <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} aria-label="Push Notifications" className="shrink-0" />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Smartphone className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">SMS Notifications</p>
+                    <p className="text-xs text-muted-foreground">Text message alerts for urgent events</p>
+                  </div>
+                </div>
+                <Switch checked={smsEnabled} onCheckedChange={handleSmsToggle} aria-label="SMS Notifications" className="shrink-0" />
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -169,7 +200,7 @@ export default function NotificationPreferencesPage() {
                     id="quiet-start"
                     type="time"
                     value={quietStart}
-                    onChange={e => { setQuietStart(e.target.value); markDirty(); }}
+                    onChange={handleQuietStartChange}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -178,7 +209,7 @@ export default function NotificationPreferencesPage() {
                     id="quiet-end"
                     type="time"
                     value={quietEnd}
-                    onChange={e => { setQuietEnd(e.target.value); markDirty(); }}
+                    onChange={handleQuietEndChange}
                   />
                 </div>
               </div>
@@ -201,26 +232,45 @@ export default function NotificationPreferencesPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {CATEGORIES.map((cat, i) => (
-                <div key={cat.key}>
-                  {i > 0 && <Separator className="mb-4" />}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{cat.label}</p>
-                      <p className="text-xs text-muted-foreground">{cat.description}</p>
-                    </div>
-                    <Switch
-                      checked={categories[cat.key] ?? true}
-                      onCheckedChange={handleCategoryToggle(cat.key)}
-                      aria-label={cat.label}
-                      className="shrink-0"
-                    />
-                  </div>
-                </div>
+                <CategoryRow
+                  key={cat.key}
+                  catKey={cat.key}
+                  label={cat.label}
+                  description={cat.description}
+                  checked={categories[cat.key] ?? true}
+                  index={i}
+                  onToggle={handleCategoryToggle}
+                />
               ))}
             </CardContent>
           </Card>
         </motion.div>
       </motion.div>
     </PageWrapper>
+  );
+}
+
+interface CategoryRowProps {
+  catKey: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  index: number;
+  onToggle: (key: string, val: boolean) => void;
+}
+
+function CategoryRow({ catKey, label, description, checked, index, onToggle }: CategoryRowProps) {
+  const handleChange = useCallback((val: boolean) => onToggle(catKey, val), [catKey, onToggle]);
+  return (
+    <div>
+      {index > 0 && <Separator className="mb-4" />}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+        <Switch checked={checked} onCheckedChange={handleChange} aria-label={label} className="shrink-0" />
+      </div>
+    </div>
   );
 }

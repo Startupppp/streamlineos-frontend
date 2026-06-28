@@ -65,7 +65,7 @@ export default function MembersSettingsPage() {
     [searchParams, router, pathname],
   );
 
-  const { data: membersData, isLoading: membersLoading } = useOrgMembers(
+  const { data: membersData, isLoading: membersLoading, isError: membersError, refetch: refetchMembers } = useOrgMembers(
     page,
     20,
     debouncedSearch || undefined,
@@ -285,6 +285,13 @@ export default function MembersSettingsPage() {
                             </TableCell>
                           </TableRow>
                         ))
+                      ) : membersError ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="py-10 text-center">
+                            <p className="text-sm text-muted-foreground mb-2">Failed to load members.</p>
+                            <Button variant="outline" size="sm" onClick={refetchMembers}>Retry</Button>
+                          </TableCell>
+                        </TableRow>
                       ) : !membersData?.data.length ? (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground">
@@ -400,9 +407,12 @@ export default function MembersSettingsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3 py-6">
-                  <EmptyMailIllustration />
-                  <p className="text-sm text-muted-foreground">No pending invitations</p>
+                <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                  <EmptyMailIllustration className="h-24 w-24 opacity-80" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">No pending invitations</p>
+                    <p className="text-xs text-muted-foreground mt-1">Invite team members using the form above</p>
+                  </div>
                 </div>
               )}
             </CardContent>

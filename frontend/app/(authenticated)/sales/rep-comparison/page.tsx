@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { useRepComparison, useSalesDashboardLeaderboard } from "@/lib/api/hooks/crm";
 import { GitCompare } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 
 function fmt(n: number) {
   return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -66,7 +67,7 @@ export default function RepComparisonPage() {
   const [rep2, setRep2] = useState<string>("");
 
   const { data: leaderboard } = useSalesDashboardLeaderboard();
-  const { data: comparison, isLoading: cmpLoading } = useRepComparison(
+  const { data: comparison, isLoading: cmpLoading, isError: cmpError, refetch: refetchCmp } = useRepComparison(
     rep1 && rep1 !== rep2 ? Number(rep1) : null,
     rep2 && rep1 !== rep2 ? Number(rep2) : null,
   );
@@ -116,14 +117,14 @@ export default function RepComparisonPage() {
       </div>
 
       {(!rep1 || !rep2) && (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-2 text-muted-foreground">
           <GitCompare className="h-10 w-10 opacity-30" />
           <p>Select two reps to compare their performance</p>
         </div>
       )}
 
       {rep1 && rep2 && rep1 === rep2 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-2 text-muted-foreground">
           <GitCompare className="h-10 w-10 opacity-30" />
           <p>Please select two different reps to compare</p>
         </div>
@@ -134,6 +135,14 @@ export default function RepComparisonPage() {
           <Skeleton className="h-48" />
           <Skeleton className="h-72" />
         </div>
+      )}
+
+      {rep1 && rep2 && rep1 !== rep2 && !cmpLoading && cmpError && (
+        <ErrorState
+          title="Couldn't load comparison"
+          description="An error occurred while comparing reps. Please try again."
+          onRetry={() => refetchCmp()}
+        />
       )}
 
       {comparison && rep1 !== rep2 && (

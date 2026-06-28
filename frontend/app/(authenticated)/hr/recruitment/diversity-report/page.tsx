@@ -109,6 +109,8 @@ export default function DiversityReportPage() {
     setPendingFilters((p) => ({ ...p, to: e.target.value }));
   }, []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   const toggleDept = useCallback((id: number) => {
     setPendingFilters((prev) => ({
       ...prev,

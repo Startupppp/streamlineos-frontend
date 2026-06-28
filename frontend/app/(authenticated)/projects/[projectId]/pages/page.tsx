@@ -334,7 +334,7 @@ export default function PagesPage({
       contentClassName="p-0"
     >
       {!pages?.length ? (
-        <div className="flex items-center justify-center py-16">
+        <div className="flex items-center justify-center flex-1 min-h-[300px]">
           <div className="text-center">
             <EmptyDocumentsIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No pages yet</h3>

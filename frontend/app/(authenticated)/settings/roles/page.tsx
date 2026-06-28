@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getApiError } from "@/lib/api-client";
@@ -92,8 +93,16 @@ function RolesContent() {
           </CardHeader>
           <CardContent className="p-0 lg:flex-1 lg:min-h-0">
             {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <div className="divide-y divide-border/30">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center justify-between">
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-12 rounded-full" />
+                  </div>
+                ))}
               </div>
             ) : (
               <ScrollArea className="max-h-[45vh] lg:max-h-none lg:h-full" type="auto">

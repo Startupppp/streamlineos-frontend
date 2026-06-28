@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -70,9 +71,12 @@ export default function AiSettingsPage() {
   const { data: usage, isLoading: usageLoading } = useAiUsage();
   const updateFlag = useUpdateFeatureFlag();
 
-  const handleToggle = (flag: keyof OrgFeatureFlags, enabled: boolean) => {
-    updateFlag.mutate({ flag, enabled });
-  };
+  const handleToggle = useCallback(
+    (flag: keyof OrgFeatureFlags, enabled: boolean) => {
+      updateFlag.mutate({ flag, enabled });
+    },
+    [updateFlag],
+  );
 
   return (
     <PageWrapper
@@ -102,24 +106,17 @@ export default function AiSettingsPage() {
                 </div>
               ))
             ) : (
-              FLAG_META.map(({ key, label, description, icon: Icon }) => (
-                <div
+              FLAG_META.map(({ key, label, description, icon }) => (
+                <FlagRow
                   key={key}
-                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-                    <div>
-                      <Label className="text-sm font-medium">{label}</Label>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={flags?.[key] ?? true}
-                    onCheckedChange={(enabled) => handleToggle(key, enabled)}
-                    disabled={updateFlag.isPending}
-                  />
-                </div>
+                  flagKey={key}
+                  label={label}
+                  description={description}
+                  icon={icon}
+                  checked={flags?.[key] ?? true}
+                  disabled={updateFlag.isPending}
+                  onToggle={handleToggle}
+                />
               ))
             )}
           </CardContent>
@@ -181,7 +178,7 @@ export default function AiSettingsPage() {
                 )}
 
                 {(usage?.byFeature.length ?? 0) === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-6">
+                  <p className="py-6 text-center text-sm text-muted-foreground">
                     No AI usage recorded yet.
                   </p>
                 )}
@@ -191,6 +188,36 @@ export default function AiSettingsPage() {
         </Card>
       </div>
     </PageWrapper>
+  );
+}
+
+interface FlagRowProps {
+  flagKey: keyof OrgFeatureFlags;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: (flag: keyof OrgFeatureFlags, enabled: boolean) => void;
+}
+
+function FlagRow({ flagKey, label, description, icon: Icon, checked, disabled, onToggle }: FlagRowProps) {
+  const handleChange = useCallback(
+    (enabled: boolean) => onToggle(flagKey, enabled),
+    [flagKey, onToggle],
+  );
+
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+        <div>
+          <Label className="text-sm font-medium">{label}</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch checked={checked} onCheckedChange={handleChange} disabled={disabled} />
+    </div>
   );
 }
 

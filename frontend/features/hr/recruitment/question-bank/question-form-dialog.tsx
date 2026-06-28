@@ -214,6 +214,8 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
     setOpen(true);
   }, []);
 
+  const handleCancelEdit = useCallback(() => setOpen(false), []);
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild onClick={handleOpenTrigger}>
@@ -234,7 +236,7 @@ function EditDialog({ question, roleOptions, children }: EditDialogProps) {
           onRolePickerOpenChange={setRolePickerOpen}
         />
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
+          <Button variant="outline" className="flex-1" onClick={handleCancelEdit}>
             Cancel
           </Button>
           <Button className="flex-1" onClick={handleSave} disabled={update.isPending}>
