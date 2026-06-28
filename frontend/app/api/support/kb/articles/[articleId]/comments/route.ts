@@ -6,7 +6,7 @@ import { and, eq, desc } from "drizzle-orm";
 import { z } from "zod";
 
 const createSchema = z.object({
-  body: z.string().trim().min(1, "Comment cannot be empty").max(5000),
+  content: z.string().trim().min(1, "Comment cannot be empty").max(5000),
 });
 
 type RouteContext = { params: Promise<{ articleId: string }> };
@@ -27,15 +27,15 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
       .select({
         id: kbArticleComments.id,
         articleId: kbArticleComments.articleId,
-        body: kbArticleComments.body,
-        userId: kbArticleComments.userId,
+        content: kbArticleComments.content,
+        authorId: kbArticleComments.authorId,
         userName: users.name,
         userImage: users.image,
         createdAt: kbArticleComments.createdAt,
         updatedAt: kbArticleComments.updatedAt,
       })
       .from(kbArticleComments)
-      .leftJoin(users, eq(kbArticleComments.userId, users.id))
+      .leftJoin(users, eq(kbArticleComments.authorId, users.id))
       .where(
         and(
           eq(kbArticleComments.articleId, articleId),
@@ -67,8 +67,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       .values({
         orgId: session.orgId,
         articleId,
-        userId: session.user.id,
-        body: input.body,
+        authorId: session.user.id,
+        content: input.content,
       })
       .returning();
 
@@ -76,8 +76,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       {
         id: inserted.id,
         articleId: inserted.articleId,
-        body: inserted.body,
-        userId: inserted.userId,
+        content: inserted.content,
+        authorId: inserted.authorId,
         userName: session.user.name ?? null,
         userImage: session.user.image ?? null,
         createdAt: inserted.createdAt,
