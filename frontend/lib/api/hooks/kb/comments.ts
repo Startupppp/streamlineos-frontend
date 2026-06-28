@@ -1,21 +1,13 @@
 "use client";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-
-export interface KbComment {
-  id: number;
-  articleId: number;
-  authorId: string | null;
-  parentId: number | null;
-  content: string;
-  resolvedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { queryKeys } from "@/lib/query-keys";
+import type { KbComment } from "@/types/kb";
 
 export function useKbArticleComments(articleId: number) {
   return useQuery({
-    queryKey: ["streamlineos", "kb", "comments", articleId],
+    queryKey: queryKeys.kb.comments(articleId),
     queryFn: () => apiClient.get<KbComment[]>(`/kb/articles/${articleId}/comments`),
     enabled: articleId > 0,
     staleTime: 30_000,
@@ -25,17 +17,10 @@ export function useKbArticleComments(articleId: number) {
 export function useCreateKbComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      articleId,
-      content,
-      parentId,
-    }: {
-      articleId: number;
-      content: string;
-      parentId?: number | null;
-    }) => apiClient.post<KbComment>(`/kb/articles/${articleId}/comments`, { content, parentId }),
+    mutationFn: ({ articleId, content, parentId }: { articleId: number; content: string; parentId?: number | null }) =>
+      apiClient.post<KbComment>(`/kb/articles/${articleId}/comments`, { content, parentId }),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["streamlineos", "kb", "comments", variables.articleId] });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.comments(variables.articleId) });
     },
   });
 }
@@ -46,7 +31,7 @@ export function useDeleteKbComment() {
     mutationFn: ({ commentId }: { commentId: number; articleId: number }) =>
       apiClient.delete<void>(`/kb/comments/${commentId}`),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["streamlineos", "kb", "comments", variables.articleId] });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.comments(variables.articleId) });
     },
   });
 }
@@ -57,7 +42,7 @@ export function useResolveKbComment() {
     mutationFn: ({ commentId }: { commentId: number; articleId: number }) =>
       apiClient.post<KbComment>(`/kb/comments/${commentId}/resolve`),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ["streamlineos", "kb", "comments", variables.articleId] });
+      qc.invalidateQueries({ queryKey: queryKeys.kb.comments(variables.articleId) });
     },
   });
 }

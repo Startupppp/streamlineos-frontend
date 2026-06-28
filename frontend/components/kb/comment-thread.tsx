@@ -12,8 +12,8 @@ import {
   useDeleteKbComment,
   useKbArticleComments,
   useResolveKbComment,
-  type KbComment,
 } from "@/lib/api/hooks/kb/comments";
+import type { KbComment } from "@/types/kb";
 
 interface CommentThreadProps {
   articleId: number;

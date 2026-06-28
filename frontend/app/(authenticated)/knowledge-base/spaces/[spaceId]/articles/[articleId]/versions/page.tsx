@@ -15,8 +15,8 @@ import { getApiError } from "@/lib/api-client";
 import {
   useKbArticleVersions,
   useRestoreKbArticleVersion,
-  type KbArticleVersion,
 } from "@/lib/api/hooks/kb/versions";
+import type { KbArticleVersion } from "@/types/kb";
 
 function VersionSkeleton() {
   return (
