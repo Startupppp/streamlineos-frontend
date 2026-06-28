@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, type EmailTemplateConfig } from "./template-registry";
 
-export type { EmailTemplateConfig };
-export { CATEGORIES };
 
 interface TemplateListProps {
   activeCategory: string;

@@ -169,12 +169,3 @@ export function OrgBusinessHoursSection({ org, canEdit }: OrgBusinessHoursSectio
   );
 }
 
-export function isWithinBusinessHours(businessHours: OrgSettings["businessHours"], datetime: Date): boolean {
-  if (!businessHours) return true;
-  const dayNames: DayKey[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const dayKey = dayNames[datetime.getDay()];
-  const dayConfig = businessHours[dayKey];
-  if (!dayConfig?.enabled) return false;
-  const hhmm = `${String(datetime.getHours()).padStart(2, "0")}:${String(datetime.getMinutes()).padStart(2, "0")}`;
-  return hhmm >= dayConfig.open && hhmm <= dayConfig.close;
-}

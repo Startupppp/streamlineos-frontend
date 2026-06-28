@@ -1,6 +1,6 @@
 import type { useChatChannels } from "@/lib/api/hooks";
 
-export type ChannelRaw = NonNullable<ReturnType<typeof useChatChannels>["data"]>[number];
+type ChannelRaw = NonNullable<ReturnType<typeof useChatChannels>["data"]>[number];
 export type Channel = Omit<ChannelRaw, "lastMessage"> & {
   lastMessage?: { content?: string | null; senderName?: string | null; createdAt?: Date | string | null } | null;
 };

@@ -16,22 +16,3 @@ function createRedisClient(): Redis | null {
 }
 
 export const redis = createRedisClient();
-
-export function isRedisEnabled(): boolean {
-  return redis !== null;
-}
-
-export async function redisHealth(): Promise<{ status: "healthy" | "unhealthy"; latencyMs?: number }> {
-  if (!redis) {
-    return { status: "unhealthy" };
-  }
-
-  try {
-    const start = Date.now();
-    await redis.ping();
-    const latencyMs = Date.now() - start;
-    return { status: "healthy", latencyMs };
-  } catch {
-    return { status: "unhealthy" };
-  }
-}

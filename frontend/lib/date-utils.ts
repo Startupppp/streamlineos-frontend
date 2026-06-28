@@ -14,56 +14,8 @@ export function formatDateOnly(date: Date | string | null | undefined): string {
 
   return `${year}-${month}-${day}`;
 }
-
-export function formatDateOnlyUTC(date: Date | string | null | undefined): string {
-  if (!date) return "";
-
-  if (typeof date === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return date;
-    }
-    date = new Date(date);
-  }
-
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-export const toISODateString = formatDateOnly;
-
-export function fromISODateString(str: string): Date {
-  const [year, month, day] = str.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-export function parseDateString(dateString: string): Date {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-export function parseDate(value: unknown): Date | null {
-  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  if (typeof value === "string" || typeof value === "number") {
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : d;
-  }
-  return null;
-}
-
 export function getTodayString(): string {
   return formatDateOnly(new Date());
-}
-
-export function compareDates(date1: Date | string, date2: Date | string): number {
-  const d1 = formatDateOnly(date1);
-  const d2 = formatDateOnly(date2);
-
-  if (d1 < d2) return -1;
-  if (d1 > d2) return 1;
-  return 0;
 }
 
 export function formatDisplayDate(
@@ -116,17 +68,6 @@ export function isPast(date: Date | string): boolean {
   return toDate(date).getTime() < Date.now();
 }
 
-export function daysBetween(date1: Date | string, date2: Date | string): number {
-  const d1 = toDate(date1);
-  const d2 = toDate(date2);
-  const diffMs = Math.abs(d2.getTime() - d1.getTime());
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-}
-
-export function daysSince(date: Date | string): number {
-  return daysBetween(date, new Date());
-}
-
 export function addDays(date: Date | string, days: number): Date {
   const d = new Date(toDate(date));
   d.setDate(d.getDate() + days);
@@ -159,17 +100,6 @@ export function endOfMonth(date: Date | string): Date {
   return d;
 }
 
-export function workingDaysBetween(start: Date, end: Date): number {
-  let count = 0;
-  const current = new Date(start);
-  while (current <= end) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) count++;
-    current.setDate(current.getDate() + 1);
-  }
-  return count;
-}
-
 export function subDays(date: Date | string, days: number): Date {
   return addDays(date, -days);
 }
@@ -191,13 +121,3 @@ export function endOfWeek(date: Date | string): Date {
   return end;
 }
 
-export function getAgeInYears(dob: Date | string): number {
-  const birth = toDate(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-}

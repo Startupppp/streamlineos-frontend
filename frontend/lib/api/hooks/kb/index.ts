@@ -11,3 +11,4 @@ export * from "./versions";
 export * from "./tags";
 export * from "./translations";
 export * from "./comments";
+export * from "./from-ticket";

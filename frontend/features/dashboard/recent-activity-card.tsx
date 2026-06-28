@@ -15,7 +15,7 @@ import { getInitials } from "@/lib/format-utils";
 import { formatDistanceToNow } from "date-fns";
 import { isTicketType, typeIcons, DEFAULT_TICKET_ICON } from "./ticket-types";
 
-export interface ActivityItem {
+interface ActivityItem {
   id: string | number;
   type?: string | null;
   status?: string | null;

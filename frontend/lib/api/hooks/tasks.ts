@@ -40,15 +40,6 @@ export interface TasksListResponse {
   limit: number;
 }
 
-export interface TaskOverdueResponse {
-  tasks: Task[];
-  count: number;
-}
-
-export interface TaskOverdueCountResponse {
-  count: number;
-}
-
 export interface CreateTaskInput {
   title: string;
   notes?: string;
@@ -58,17 +49,6 @@ export interface CreateTaskInput {
   assigneeId?: string;
   dueDate?: string;
   remindAt?: string;
-  timezone?: string;
-}
-
-export interface UpdateTaskInput {
-  title?: string;
-  notes?: string;
-  type?: TaskType;
-  status?: TaskStatus;
-  assigneeId?: string;
-  dueDate?: string | null;
-  remindAt?: string | null;
   timezone?: string;
 }
 
@@ -92,46 +72,10 @@ export function useTasks(filters?: TasksFilters) {
   });
 }
 
-export function useMyTaskQueue() {
-  return useQuery({
-    queryKey: queryKeys.tasks.myQueue(),
-    queryFn: () => apiClient.get<TaskWithBucket[]>("/tasks/my-queue"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useOverdueTasks() {
-  return useQuery({
-    queryKey: queryKeys.tasks.overdue(),
-    queryFn: () => apiClient.get<TaskOverdueResponse>("/tasks/overdue"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useOverdueTaskCount() {
-  return useQuery({
-    queryKey: queryKeys.tasks.overdueCount(),
-    queryFn: () => apiClient.get<TaskOverdueCountResponse>("/tasks/overdue", { countOnly: "true" }),
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 4 * 60 * 1000,
-  });
-}
-
 export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-    },
-  });
-}
-
-export function useUpdateTask() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ taskId, data }: { taskId: number; data: UpdateTaskInput }) =>
-      apiClient.patch<Task>(`/tasks/${taskId}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
@@ -157,16 +101,6 @@ export function useCompleteTask() {
       }
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-    },
-  });
-}
-
-export function useDeleteTask() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (taskId: number) => apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`),
-    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
   });
@@ -283,20 +217,3 @@ export function useApplyTaskSequence() {
 }
 
 
-export interface TaskPriorityItem {
-  taskId: number;
-  rank: number;
-  urgencyScore: number;
-  reasoning: string;
-}
-
-export interface TaskPriorityResult {
-  items: TaskPriorityItem[];
-  summary: string;
-}
-
-export function useAIPrioritizeTasks() {
-  return useMutation({
-    mutationFn: () => apiClient.get<TaskPriorityResult>("/ai/prioritize-tasks"),
-  });
-}

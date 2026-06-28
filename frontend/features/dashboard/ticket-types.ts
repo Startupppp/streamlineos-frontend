@@ -5,7 +5,7 @@ import {
   Activity,
 } from "lucide-react";
 
-export type TicketType = "BUG" | "STORY" | "TASK" | "EPIC";
+type TicketType = "BUG" | "STORY" | "TASK" | "EPIC";
 
 const VALID_TICKET_TYPES = new Set<string>(["BUG", "STORY", "TASK", "EPIC"]);
 

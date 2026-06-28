@@ -3,7 +3,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "./redis";
 
-export interface RateLimitTier {
+interface RateLimitTier {
   maxRequests: number;
   windowMs: number;
   progressive?: boolean;
@@ -16,7 +16,7 @@ interface BucketEntry {
   currentBlockMs: number;
 }
 
-export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
+const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
   login: {
     maxRequests: 10,
     windowMs: 60_000,
@@ -195,7 +195,7 @@ function checkRateLimitInMemory(tierName: string, ip: string): RateLimitResult {
   return { allowed: true, retryAfterSecs: 0 };
 }
 
-export interface RateLimitResult {
+interface RateLimitResult {
   allowed: boolean;
   retryAfterSecs: number;
 }

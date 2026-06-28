@@ -1,4 +1,4 @@
-export type BlogPost = {
+type BlogPost = {
   slug: string;
   title: string;
   excerpt: string;
@@ -9,7 +9,7 @@ export type BlogPost = {
   content: string;
 };
 
-export const posts: BlogPost[] = [
+const posts: BlogPost[] = [
   {
     slug: "why-we-built-streamlineos",
     title: "Why we built StreamlineOS",
@@ -88,10 +88,6 @@ If you're building a team operating system or running one, I'd love to compare n
 — Aditya`,
   },
 ];
-
-export function getPostBySlug(slug: string): BlogPost | undefined {
-  return posts.find((p) => p.slug === slug);
-}
 
 export function getAllPosts(): BlogPost[] {
   return [...posts].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));

@@ -17,9 +17,9 @@ const contactSchema = z.object({
   cfTurnstileToken: z.string().optional(),
 });
 
-export type ContactInput = z.infer<typeof contactSchema>;
+type ContactInput = z.infer<typeof contactSchema>;
 
-export type ContactResult =
+type ContactResult =
   | { ok: true }
   | {
       ok: false;

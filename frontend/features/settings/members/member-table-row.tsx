@@ -27,7 +27,7 @@ import { Shield, ShieldOff } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { ALL_ROLES, ROLE_COLORS } from "./role-constants";
 
-export interface MemberTableRowProps {
+interface MemberTableRowProps {
   member: {
     userId: string;
     name: string | null;

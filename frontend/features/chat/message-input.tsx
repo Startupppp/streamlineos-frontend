@@ -110,7 +110,7 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
   );
 }
 
-export interface MessageInputProps {
+interface MessageInputProps {
 
   channelId: number;
   displayName: string;

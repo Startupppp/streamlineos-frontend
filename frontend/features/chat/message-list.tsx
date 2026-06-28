@@ -67,7 +67,7 @@ function MessageItem({
   );
 }
 
-export interface MessageListProps {
+interface MessageListProps {
   groupedMessages: GroupedMessages[];
   messages: Message[];
   isLoading: boolean;

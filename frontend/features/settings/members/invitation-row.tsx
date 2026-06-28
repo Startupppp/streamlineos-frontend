@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { ROLE_COLORS } from "./role-constants";
 
-export interface InvitationRowProps {
+interface InvitationRowProps {
   inv: { id: string; email: string; role: string };
   onCancel: (id: string) => void;
   onResend: (id: string) => void;

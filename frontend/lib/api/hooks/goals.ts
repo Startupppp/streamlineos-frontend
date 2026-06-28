@@ -130,16 +130,6 @@ export interface UpdateGoalInput {
   projectId?: number | null;
 }
 
-export interface UpdateKeyResultInput {
-  title?: string;
-  metricType?: KeyResultMetric;
-  startValue?: number;
-  targetValue?: number;
-  currentValue?: number;
-  unit?: string | null;
-  status?: GoalStatus;
-}
-
 export interface CheckInInput {
   keyResultId: number;
   newValue: number;
@@ -218,47 +208,6 @@ export function useDeleteGoal() {
   });
 }
 
-export function useCreateKeyResult(goalId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: KeyResultInput & { status?: GoalStatus }) =>
-      apiClient.post<KeyResult>(`/goals/${goalId}/key-results`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
-    },
-  });
-}
-
-export function useUpdateKeyResult(goalId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...input }: UpdateKeyResultInput & { id: number }) =>
-      apiClient.patch<KeyResult>(`/goals/key-results/${id}`, input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
-    },
-  });
-}
-
-export function useDeleteKeyResult(goalId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/key-results/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.keyResults(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
-    },
-  });
-}
-
 export function useCheckIn(goalId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -269,15 +218,6 @@ export function useCheckIn(goalId: number) {
       qc.invalidateQueries({ queryKey: queryKeys.goals.all });
       qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
     },
-  });
-}
-
-export function useGoalLinks(goalId: number) {
-  return useQuery({
-    queryKey: goalLinksKey(goalId),
-    queryFn: () => apiClient.get<GoalLink[]>(`/goals/${goalId}/links`),
-    enabled: goalId > 0,
-    staleTime: 30_000,
   });
 }
 
