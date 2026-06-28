@@ -73,6 +73,11 @@ export default function OrganizationsPage() {
     [updateParams, page],
   );
 
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => updateParams({ q: e.target.value || null, page: null }),
+    [updateParams],
+  );
+
   return (
     <PageWrapper
       title="Organizations"

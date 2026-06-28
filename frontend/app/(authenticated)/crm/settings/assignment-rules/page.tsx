@@ -263,6 +263,10 @@ export default function AssignmentRulesPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">

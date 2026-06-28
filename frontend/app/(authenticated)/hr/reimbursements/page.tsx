@@ -65,7 +65,7 @@ function getStatusConfig(s: string | null) {
 
 export default function ReimbursementsPage() {
   const { data: session } = useSession();
-  const { data: items, isLoading } = useReimbursements();
+  const { data: items, isLoading, isError, refetch } = useReimbursements();
   const create = useCreateReimbursement();
   const process = useProcessReimbursement();
   const ability = useAbility();
@@ -92,6 +92,7 @@ export default function ReimbursementsPage() {
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
   const handleReceiptUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setReceiptUrl(e.target.value), []);
   const handleRejectDialogOpenChange = useCallback((open: boolean) => { if (!open) setRejectId(null); }, []);
+  const handleOpenNewRequest = useCallback(() => setSheetOpen(true), []);
 
   const handleCreate = useCallback(() => {
     const numAmount = Number(amount);
@@ -154,6 +155,8 @@ export default function ReimbursementsPage() {
     );
   }, [rejectId, process]);
 
+  function handleRetry() { void refetch(); }
+
   if (isLoading) {
     return (
       <PageWrapper title="Reimbursements" subtitle="Expense reimbursement requests">
@@ -166,13 +169,27 @@ export default function ReimbursementsPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-foreground">Failed to load reimbursements</p>
+            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="Reimbursements"
       subtitle="Submit and track expense reimbursements"
       badge={`${items?.length ?? 0} requests`}
       actions={
-        <Button size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" className="gap-1.5" onClick={handleOpenNewRequest}>
           <Plus className="h-3.5 w-3.5" />
           New Request
         </Button>

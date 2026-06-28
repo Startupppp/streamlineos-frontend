@@ -77,6 +77,7 @@ export default function ExpensesPage() {
   const {
     data: pageData,
     isLoading,
+    isError,
     refetch,
   } = useExpensePageData({
     page: filters.page,
@@ -188,7 +189,65 @@ export default function ExpensesPage() {
     );
   }, []);
 
+  function handleRetryLoad() {
+    void refetch();
+  }
+
+  const handleOpenImport = useCallback(() => setIsImportOpen(true), []);
+  const handleOpenAdminCreate = useCallback(() => setIsCreateOpen(true), []);
+  const handleUserFilterChange = useCallback(
+    (userId: string) => setFilter("userId", userId || undefined),
+    [setFilter],
+  );
+  const handleRejectStart = useCallback((id: number) => {
+    setRejectingId(id);
+    setRejectionReason("");
+  }, []);
+  const handleRejectCancel = useCallback(() => {
+    setRejectingId(null);
+    setRejectionReason("");
+  }, []);
+  const handlePageChange = useCallback(
+    (page: number) => setFilter("page", page),
+    [setFilter],
+  );
+  const handleShowAll = useCallback(
+    () => setStatusFilter("ALL"),
+    [setStatusFilter],
+  );
+  const handleCreateDialogOpenChange = useCallback((open: boolean) => {
+    setIsCreateOpen(open);
+    if (!open) setEditingExpense(null);
+  }, []);
+  const handleCreateSuccess = useCallback(() => {
+    void refetch();
+    setIsCreateOpen(false);
+    setEditingExpense(null);
+  }, [refetch]);
+  const handleImportSuccess = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const handleOpenMemberCreate = useCallback(() => setIsCreateOpen(true), []);
+  const handleMemberCreateSuccess = useCallback(() => {
+    void refetch();
+    setIsCreateOpen(false);
+  }, [refetch]);
+
   if (isLoading && !pageData) return <ExpensesLoading />;
+
+  if (isError && !pageData) {
+    return (
+      <PageWrapper title="Expenses" subtitle="Manage your expense claims">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-foreground">Failed to load expenses</p>
+            <p className="text-xs text-muted-foreground mt-1">Something went wrong. Please try again.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetryLoad}>Try Again</Button>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   const {
     expenses = [],
@@ -210,15 +269,12 @@ export default function ExpensesPage() {
           isActive: true,
         }));
 
-  const typedExpenses = expenses;
-  const typedPending = pendingExpenses;
-
   const filteredExpenses =
     statusFilter === "ALL"
-      ? typedExpenses
-      : typedExpenses.filter((e) => (e.status || "PENDING") === statusFilter);
+      ? expenses
+      : expenses.filter((e) => (e.status || "PENDING") === statusFilter);
 
-  const pendingCount = stats?.pendingCount || typedPending.length || 0;
+  const pendingCount = stats?.pendingCount || pendingExpenses.length || 0;
   const totalPages = pagination.totalPages || 1;
   const startItem =
     pagination.total === 0

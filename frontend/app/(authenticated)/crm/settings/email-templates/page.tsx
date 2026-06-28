@@ -243,6 +243,10 @@ export default function EmailTemplatesPage() {
   const handleClosePreview = useCallback(() => setPreviewId(null), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   const previewTemplate = useMemo(() => {
     if (previewId === null || !templates) return null;
     return templates.find(t => t.id === previewId) ?? null;

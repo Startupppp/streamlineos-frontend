@@ -16,7 +16,7 @@ const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructiv
 interface IntakeItem {
   id: number;
   title: string;
-  description?: string | null | unknown;
+  description?: unknown;
   status: string;
   createdAt?: string | Date | null;
   submitterEmail?: string | null;

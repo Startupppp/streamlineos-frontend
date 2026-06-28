@@ -90,6 +90,7 @@ export default function DealsPage() {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const handleConfettiDone = useCallback(() => setShowConfetti(false), []);
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCreateOpenChange = useCallback(
     (open: boolean) => setCreateOpen(open),
     [],

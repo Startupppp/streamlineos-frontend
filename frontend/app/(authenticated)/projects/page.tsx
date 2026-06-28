@@ -16,6 +16,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";

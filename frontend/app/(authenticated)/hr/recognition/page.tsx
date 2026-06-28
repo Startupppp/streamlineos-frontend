@@ -44,6 +44,54 @@ function getCategoryMeta(category: string | null) {
   return CATEGORIES.find((c) => c.value === category) ?? CATEGORIES[0];
 }
 
+interface CategoryButtonProps {
+  category: typeof CATEGORIES[number];
+  isActive: boolean;
+  onToggle: (value: string) => void;
+}
+
+function CategoryButton({ category, isActive, onToggle }: CategoryButtonProps) {
+  const handleClick = useCallback(() => onToggle(category.value), [onToggle, category.value]);
+  const Icon = category.icon;
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "text-xs px-3 py-1 rounded-full border transition-colors duration-200 flex items-center gap-1",
+        isActive
+          ? "bg-primary text-primary-foreground border-primary"
+          : "border-border hover:bg-muted text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {category.label}
+    </button>
+  );
+}
+
+interface EmployeeCommandItemProps {
+  employee: Employee;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+}
+
+function EmployeeCommandItem({ employee, isSelected, onSelect, onClose }: EmployeeCommandItemProps) {
+  const handleSelect = useCallback(() => {
+    onSelect(employee.id);
+    onClose();
+  }, [onSelect, onClose, employee.id]);
+  return (
+    <CommandItem
+      value={employee.name ?? employee.email ?? employee.id}
+      onSelect={handleSelect}
+    >
+      <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+      {employee.name ?? employee.email}
+    </CommandItem>
+  );
+}
+
 export default function RecognitionPage() {
   const { data: session } = useSession();
   const { data: recognitions, isLoading } = useRecognitions();
@@ -139,6 +187,10 @@ export default function RecognitionPage() {
   }, []);
 
   const handleClearCategory = useCallback(() => setActiveCategory(null), []);
+
+  const handleSelectEmployee = useCallback((id: string) => setToUserId(id), []);
+  const handleCloseEmployeePicker = useCallback(() => setEmployeePickerOpen(false), []);
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value), []);
 
   if (isLoading) {
     return (

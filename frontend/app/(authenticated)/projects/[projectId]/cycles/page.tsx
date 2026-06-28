@@ -51,6 +51,8 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleSetStartDate = useCallback((v: string) => form.setValue("startDate", v), [form]);
+  const handleSetEndDate = useCallback((v: string) => form.setValue("endDate", v), [form]);
 
   const form = useForm<CreateCycleForm>({
     resolver: zodResolver(createCycleSchema),

@@ -14,6 +14,7 @@ import {
   FileKey,
   Smile,
   MoreHorizontal,
+  AlertCircle,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";

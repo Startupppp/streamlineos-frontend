@@ -179,6 +179,8 @@ export default function RecruitmentIntegrationsPage() {
     [portals],
   );
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
   if (isError) {
     return (
       <PageWrapper
@@ -187,7 +189,7 @@ export default function RecruitmentIntegrationsPage() {
       >
         <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
           <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
-          <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       </PageWrapper>
     );

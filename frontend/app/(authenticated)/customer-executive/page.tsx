@@ -34,6 +34,7 @@ export default function CustomerExecutiveDashboardPage() {
   const { data: slugMap } = useCrmPeopleSlugs();
 
   const getPersonSlug = useCallback((name: string) => slugMap?.[name] ?? null, [slugMap]);
+  const handleRetry = useCallback(() => refetch(), [refetch]);
 
   if (isError) {
     return (
@@ -41,7 +42,7 @@ export default function CustomerExecutiveDashboardPage() {
         <ErrorState
           title="Failed to load dashboard"
           description="An error occurred while loading your dashboard. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

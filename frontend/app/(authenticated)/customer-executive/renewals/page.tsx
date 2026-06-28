@@ -80,6 +80,11 @@ interface AccountCardProps {
 function AccountCard({ account, onStageChange, isPending }: AccountCardProps) {
   const stageCfg = STAGES.find((s) => s.id === account.renewalStage) ?? STAGES[0];
 
+  const handleStageChange = useCallback(
+    (v: string) => onStageChange(account.id, v as RenewalStage),
+    [account.id, onStageChange]
+  );
+
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardContent className="p-4 space-y-3">

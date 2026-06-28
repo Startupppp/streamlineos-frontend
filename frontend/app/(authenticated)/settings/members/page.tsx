@@ -167,6 +167,8 @@ export default function MembersSettingsPage() {
     [page, updateParams],
   );
 
+  const handleRetryMembers = useCallback(() => { void refetchMembers(); }, [refetchMembers]);
+
   return (
     <PageWrapper
       title="Members"

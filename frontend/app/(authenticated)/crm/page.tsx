@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -40,6 +41,8 @@ export default function CrmHubPage() {
 
   const isLoading = statsLoading || dealsLoading || activityLoading || contactsLoading || orgsLoading;
   const error = statsError ?? dealsError;
+
+  const handleRetry = useCallback(() => { void refetchStats(); }, [refetchStats]);
 
   if (isLoading) {
     return (
@@ -109,7 +112,7 @@ export default function CrmHubPage() {
               <p className="text-sm text-foreground">
                 {error instanceof Error ? error.message : "Failed to load CRM data"}
               </p>
-              <Button onClick={() => void refetchStats()} size="sm">
+              <Button onClick={handleRetry} size="sm">
                 <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Retry
               </Button>

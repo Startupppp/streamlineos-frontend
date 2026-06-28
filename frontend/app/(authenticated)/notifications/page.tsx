@@ -61,6 +61,8 @@ export default function NotificationsPage() {
     [],
   );
 
+  function handleRetry() { void refetch(); }
+
   return (
     <PageWrapper
       title="Notifications"

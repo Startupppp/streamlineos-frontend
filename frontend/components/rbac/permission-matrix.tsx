@@ -235,7 +235,7 @@ function PermissionRow({
           </Select>
         )
       ) : (
-        <span className="w-[116px] shrink-0" aria-hidden />
+        <span className="w-[116px] shrink-0" aria-hidden="true" />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRecruitmentStats, useJobPostings, useInterviews } from "@/lib/api/hooks/hr";
 import { useRecruitmentAnalytics } from "@/lib/api/hooks/hr/recruitment";
 import { Badge } from "@/components/ui/badge";
@@ -135,6 +136,7 @@ export default function RecruitmentDashboardPage() {
   const { data: analytics } = useRecruitmentAnalytics();
 
   const isLoading = statsLoading || jobsLoading || interviewsLoading;
+  const handleRetryStats = useCallback(() => { void refetchStats(); }, [refetchStats]);
 
   const funnelMax = stats?.funnel
     ? Math.max(...Object.values(stats.funnel), 1)
@@ -173,7 +175,7 @@ export default function RecruitmentDashboardPage() {
         <div className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border border-border bg-card text-center">
           <p className="text-sm font-semibold text-foreground">Failed to load recruitment data</p>
           <p className="text-xs text-muted-foreground">An error occurred while fetching data.</p>
-          <Button size="sm" variant="outline" onClick={refetchStats}>Try again</Button>
+          <Button size="sm" variant="outline" onClick={handleRetryStats}>Try again</Button>
         </div>
       ) : (
       <>

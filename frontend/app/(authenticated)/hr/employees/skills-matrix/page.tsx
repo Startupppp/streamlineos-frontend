@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useSkillsMatrix } from "@/lib/api/hooks/hr";
 import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import { LayoutGrid, Table2 } from "lucide-react";
+import { LayoutGrid, Table2, AlertCircle } from "lucide-react";
 
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",

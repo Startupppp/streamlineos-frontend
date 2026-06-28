@@ -1,28 +1,54 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import {
-  Package, CheckCircle2, Laptop, Wrench, Plus, Pencil, Trash2,
-  UserPlus, UserMinus, Download,
+  Package,
+  CheckCircle2,
+  Laptop,
+  Wrench,
+  Plus,
+  Pencil,
+  Trash2,
+  UserPlus,
+  UserMinus,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -36,7 +62,11 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  useHrAssets, useCreateAsset, useUpdateAsset, useAssignAsset, useHrEmployees,
+  useHrAssets,
+  useCreateAsset,
+  useUpdateAsset,
+  useAssignAsset,
+  useHrEmployees,
 } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -51,29 +81,41 @@ function fmtCost(amount: string | number | null) {
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   AVAILABLE: {
     label: "Available",
-    badge: "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
+    badge:
+      "bg-emerald-100 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300",
   },
   ASSIGNED: {
     label: "Assigned",
-    badge: "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300",
+    badge:
+      "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300",
   },
   MAINTENANCE: {
     label: "Maintenance",
-    badge: "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
+    badge:
+      "bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300",
   },
   RETIRED: {
     label: "Retired",
-    badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
+    badge:
+      "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
 
 const ASSET_TYPES = [
-  "Laptop", "Desktop", "Monitor", "Phone", "Tablet",
-  "Headset", "Keyboard", "Mouse", "Other",
+  "Laptop",
+  "Desktop",
+  "Monitor",
+  "Phone",
+  "Tablet",
+  "Headset",
+  "Keyboard",
+  "Mouse",
+  "Other",
 ];
 
 const assetFormSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .min(2, "Asset name must be at least 2 characters")
     .max(100, "Asset name is too long")
     .refine((v) => v === v.trim(), "No leading or trailing spaces")
@@ -85,17 +127,26 @@ const assetFormSchema = z.object({
       "Cannot contain multiple consecutive special characters",
     ),
   type: z.string().min(1, "Type is required"),
-  brand: z.string()
+  brand: z
+    .string()
     .min(1, "Brand is required")
     .max(100, "Brand is too long")
-    .refine((v) => /[a-zA-Z]/.test(v.trim()), "Brand must contain at least one letter"),
+    .refine(
+      (v) => /[a-zA-Z]/.test(v.trim()),
+      "Brand must contain at least one letter",
+    ),
   model: z.string().min(1, "Model is required").max(100, "Model is too long"),
-  serialNumber: z.string()
+  serialNumber: z
+    .string()
     .min(3, "Serial number must be at least 3 characters")
     .max(100, "Serial number is too long")
-    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Must contain alphanumeric characters"),
+    .refine(
+      (v) => /[a-zA-Z0-9]/.test(v.trim()),
+      "Must contain alphanumeric characters",
+    ),
   purchaseDate: z.string().optional(),
-  purchaseCost: z.number()
+  purchaseCost: z
+    .number()
     .min(0, "Cost cannot be negative")
     .max(9_999_999, "Cost exceeds maximum")
     .multipleOf(0.01, "Maximum 2 decimal places")
@@ -121,7 +172,12 @@ function buildEmployeeOptions(employees: Employee[]): ComboboxOption[] {
 }
 
 function AssetForm({
-  form, assets: existingAssets, currentAssetId, isPending, submitLabel, onSubmit,
+  form,
+  assets: existingAssets,
+  currentAssetId,
+  isPending,
+  submitLabel,
+  onSubmit,
 }: {
   form: ReturnType<typeof useForm<AssetFormValues>>;
   assets: Asset[];
@@ -134,10 +190,14 @@ function AssetForm({
     (values: AssetFormValues) => {
       const normalizedSerial = values.serialNumber.trim().toLowerCase();
       const duplicate = existingAssets.find(
-        (a) => a.serialNumber?.trim().toLowerCase() === normalizedSerial && a.id !== currentAssetId,
+        (a) =>
+          a.serialNumber?.trim().toLowerCase() === normalizedSerial &&
+          a.id !== currentAssetId,
       );
       if (duplicate) {
-        form.setError("serialNumber", { message: "An asset with this serial number already exists." });
+        form.setError("serialNumber", {
+          message: "An asset with this serial number already exists.",
+        });
         return;
       }
       onSubmit(values);
@@ -147,14 +207,21 @@ function AssetForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Asset Name <span className="text-destructive">*</span></FormLabel>
-              <FormControl><Input placeholder="e.g. MacBook Pro 16-inch" {...field} /></FormControl>
+              <FormLabel>
+                Asset Name <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. MacBook Pro 16-inch" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -165,13 +232,21 @@ function AssetForm({
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>
+                  Type <span className="text-destructive">*</span>
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                   </FormControl>
                   <SelectContent className="w-[var(--radix-select-trigger-width)]">
-                    {ASSET_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    {ASSET_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -183,8 +258,12 @@ function AssetForm({
             name="serialNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Serial Number <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Input placeholder="SN123456789" {...field} /></FormControl>
+                <FormLabel>
+                  Serial Number <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="SN123456789" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -196,8 +275,12 @@ function AssetForm({
             name="brand"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Brand <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Input placeholder="Apple" {...field} /></FormControl>
+                <FormLabel>
+                  Brand <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="Apple" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -207,8 +290,12 @@ function AssetForm({
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Input placeholder="M3 Pro" {...field} /></FormControl>
+                <FormLabel>
+                  Model <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="M3 Pro" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -221,7 +308,11 @@ function AssetForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Purchase Date</FormLabel>
-                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick date" />
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Pick date"
+                />
                 <FormMessage />
               </FormItem>
             )}
@@ -239,7 +330,13 @@ function AssetForm({
                     min={0}
                     step={0.01}
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value),
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -253,7 +350,9 @@ function AssetForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <FormControl><Input placeholder="e.g. Bangalore Office" {...field} /></FormControl>
+              <FormControl>
+                <Input placeholder="e.g. Bangalore Office" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -265,7 +364,12 @@ function AssetForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional notes..." rows={2} className="resize-none w-full" {...field} />
+                <Textarea
+                  placeholder="Optional notes..."
+                  rows={2}
+                  className="resize-none w-full"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -285,21 +389,28 @@ export default function HrAssetsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [deleteAssetId, setDeleteAssetId] = useState<number | null>(null);
-  const [assignDialog, setAssignDialog] = useState<AssignDialogState | null>(null);
+  const [assignDialog, setAssignDialog] = useState<AssignDialogState | null>(
+    null,
+  );
   const [assignEmpId, setAssignEmpId] = useState("");
   const [assignPending, setAssignPending] = useState(false);
-
-  const { data, isLoading } = useHrAssets();
-  const { data: employeesRaw } = useHrEmployees(undefined);
-  const employees = (employeesRaw ?? []) as Employee[];
-  const employeeOptions = buildEmployeeOptions(employees);
 
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
   const assignAsset = useAssignAsset();
+  const { data, isLoading, isError, refetch } = useHrAssets();
+  const { data: employeesRaw } = useHrEmployees(undefined);
+
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : []) as Employee[],
+    [employeesRaw],
+  );
+  const employeeOptions = buildEmployeeOptions(employees);
 
   const items: Asset[] = Array.isArray(data) ? data : [];
-  const filteredItems = statusFilter ? items.filter((a) => a.status === statusFilter) : items;
+  const filteredItems = statusFilter
+    ? items.filter((a) => a.status === statusFilter)
+    : items;
 
   const counts = items.reduce(
     (acc, a) => {
@@ -315,8 +426,15 @@ export default function HrAssetsPage() {
   const addForm = useForm<AssetFormValues>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: {
-      name: "", type: "Laptop", brand: "", model: "", serialNumber: "",
-      purchaseDate: "", purchaseCost: undefined, location: "", notes: "",
+      name: "",
+      type: "Laptop",
+      brand: "",
+      model: "",
+      serialNumber: "",
+      purchaseDate: "",
+      purchaseCost: undefined,
+      location: "",
+      notes: "",
     },
     mode: "onBlur",
   });
@@ -326,23 +444,41 @@ export default function HrAssetsPage() {
     mode: "onBlur",
   });
 
-  const handleOpenAdd = useCallback(() => { addForm.reset(); setAddOpen(true); }, [addForm]);
-
-  const handleCloseAdd = useCallback((open: boolean) => {
-    if (!open) { setAddOpen(false); addForm.reset(); }
+  const handleOpenAdd = useCallback(() => {
+    addForm.reset();
+    setAddOpen(true);
   }, [addForm]);
+
+  const handleCloseAdd = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setAddOpen(false);
+        addForm.reset();
+      }
+    },
+    [addForm],
+  );
 
   const handleCreateSubmit = useCallback(
     (values: AssetFormValues) => {
       createAsset.mutate(
         {
-          name: values.name, type: values.type, brand: values.brand, model: values.model,
-          serialNumber: values.serialNumber, purchaseDate: values.purchaseDate || undefined,
-          purchaseCost: values.purchaseCost, location: values.location || undefined,
+          name: values.name,
+          type: values.type,
+          brand: values.brand,
+          model: values.model,
+          serialNumber: values.serialNumber,
+          purchaseDate: values.purchaseDate || undefined,
+          purchaseCost: values.purchaseCost,
+          location: values.location || undefined,
           notes: values.notes || undefined,
         },
         {
-          onSuccess: () => { toast.success("Asset registered successfully"); setAddOpen(false); addForm.reset(); },
+          onSuccess: () => {
+            toast.success("Asset registered successfully");
+            setAddOpen(false);
+            addForm.reset();
+          },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -350,30 +486,50 @@ export default function HrAssetsPage() {
     [createAsset, addForm],
   );
 
-  const handleOpenEdit = useCallback((asset: Asset) => {
-    setEditAsset(asset);
-    editForm.reset({
-      name: asset.name, type: asset.type, brand: asset.brand ?? "", model: asset.model ?? "",
-      serialNumber: asset.serialNumber ?? "", purchaseDate: asset.purchaseDate ?? "",
-      purchaseCost: asset.purchaseCost != null ? Number(asset.purchaseCost) : undefined,
-      location: asset.location ?? "", notes: asset.notes ?? "",
-    });
-  }, [editForm]);
+  const handleOpenEdit = useCallback(
+    (asset: Asset) => {
+      setEditAsset(asset);
+      editForm.reset({
+        name: asset.name,
+        type: asset.type,
+        brand: asset.brand ?? "",
+        model: asset.model ?? "",
+        serialNumber: asset.serialNumber ?? "",
+        purchaseDate: asset.purchaseDate ?? "",
+        purchaseCost:
+          asset.purchaseCost != null ? Number(asset.purchaseCost) : undefined,
+        location: asset.location ?? "",
+        notes: asset.notes ?? "",
+      });
+    },
+    [editForm],
+  );
 
-  const handleCloseEdit = useCallback((open: boolean) => { if (!open) setEditAsset(null); }, []);
+  const handleCloseEdit = useCallback((open: boolean) => {
+    if (!open) setEditAsset(null);
+  }, []);
 
   const handleEditSubmit = useCallback(
     (values: AssetFormValues) => {
       if (!editAsset) return;
       updateAsset.mutate(
         {
-          assetId: editAsset.id, name: values.name, type: values.type, brand: values.brand,
-          model: values.model, serialNumber: values.serialNumber,
-          purchaseDate: values.purchaseDate || undefined, purchaseCost: values.purchaseCost,
-          location: values.location || undefined, notes: values.notes || undefined,
+          assetId: editAsset.id,
+          name: values.name,
+          type: values.type,
+          brand: values.brand,
+          model: values.model,
+          serialNumber: values.serialNumber,
+          purchaseDate: values.purchaseDate || undefined,
+          purchaseCost: values.purchaseCost,
+          location: values.location || undefined,
+          notes: values.notes || undefined,
         },
         {
-          onSuccess: () => { toast.success("Asset updated"); setEditAsset(null); },
+          onSuccess: () => {
+            toast.success("Asset updated");
+            setEditAsset(null);
+          },
           onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
@@ -382,12 +538,19 @@ export default function HrAssetsPage() {
   );
 
   const handleOpenAssign = useCallback((asset: Asset) => {
-    setAssignDialog({ assetId: asset.id, assetName: asset.name, currentAssignedTo: asset.assignedTo });
+    setAssignDialog({
+      assetId: asset.id,
+      assetName: asset.name,
+      currentAssignedTo: asset.assignedTo,
+    });
     setAssignEmpId(asset.assignedTo ?? "");
   }, []);
 
   const handleCloseAssign = useCallback((open: boolean) => {
-    if (!open) { setAssignDialog(null); setAssignEmpId(""); }
+    if (!open) {
+      setAssignDialog(null);
+      setAssignEmpId("");
+    }
   }, []);
 
   const handleConfirmAssign = useCallback(() => {
@@ -397,8 +560,11 @@ export default function HrAssetsPage() {
       { assetId: assignDialog.assetId, assignedTo: assignEmpId || null },
       {
         onSuccess: () => {
-          toast.success(assignEmpId ? "Asset assigned to employee" : "Asset unassigned");
-          setAssignDialog(null); setAssignEmpId("");
+          toast.success(
+            assignEmpId ? "Asset assigned to employee" : "Asset unassigned",
+          );
+          setAssignDialog(null);
+          setAssignEmpId("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
         onSettled: () => setAssignPending(false),
@@ -416,45 +582,64 @@ export default function HrAssetsPage() {
     updateAsset.mutate(
       { assetId: deleteAssetId, status: "RETIRED" },
       {
-        onSuccess: () => { toast.success("Asset retired"); setDeleteAssetId(null); },
+        onSuccess: () => {
+          toast.success("Asset retired");
+          setDeleteAssetId(null);
+        },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [deleteAssetId, updateAsset]);
 
-  const handleCloseDelete = useCallback((open: boolean) => { if (!open) setDeleteAssetId(null); }, []);
+  const handleCloseDelete = useCallback((open: boolean) => {
+    if (!open) setDeleteAssetId(null);
+  }, []);
 
-  const handleSetDeleteId = useCallback((id: number) => setDeleteAssetId(id), []);
+  const handleSetDeleteId = useCallback(
+    (id: number) => setDeleteAssetId(id),
+    [],
+  );
 
   const handleExport = useCallback(async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      await downloadXlsx("assets-export.xlsx", [{
-        name: "Assets",
-        columns: [
-          { header: "Asset Name", key: "name", width: 24 },
-          { header: "Type", key: "type", width: 12 },
-          { header: "Brand", key: "brand", width: 14 },
-          { header: "Model", key: "model", width: 14 },
-          { header: "Serial Number", key: "serialNumber", width: 20 },
-          { header: "Status", key: "status", width: 12 },
-          { header: "Assigned To", key: "assignedTo", width: 22 },
-          { header: "Purchase Cost", key: "purchaseCost", width: 14 },
-          { header: "Purchase Date", key: "purchaseDate", width: 14 },
-          { header: "Location", key: "location", width: 18 },
-        ],
-        rows: items.map((a) => {
-          const emp = employees.find((e) => e.id === a.assignedTo);
-          return {
-            name: a.name, type: a.type, brand: a.brand ?? "", model: a.model ?? "",
-            serialNumber: a.serialNumber ?? "", status: a.status ?? "AVAILABLE",
-            assignedTo: emp ? `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email : "",
-            purchaseCost: a.purchaseCost ?? "",
-            purchaseDate: a.purchaseDate ? format(new Date(a.purchaseDate), "yyyy-MM-dd") : "",
-            location: a.location ?? "",
-          };
-        }),
-      }]);
+      await downloadXlsx("assets-export.xlsx", [
+        {
+          name: "Assets",
+          columns: [
+            { header: "Asset Name", key: "name", width: 24 },
+            { header: "Type", key: "type", width: 12 },
+            { header: "Brand", key: "brand", width: 14 },
+            { header: "Model", key: "model", width: 14 },
+            { header: "Serial Number", key: "serialNumber", width: 20 },
+            { header: "Status", key: "status", width: 12 },
+            { header: "Assigned To", key: "assignedTo", width: 22 },
+            { header: "Purchase Cost", key: "purchaseCost", width: 14 },
+            { header: "Purchase Date", key: "purchaseDate", width: 14 },
+            { header: "Location", key: "location", width: 18 },
+          ],
+          rows: items.map((a) => {
+            const emp = employees.find((e) => e.id === a.assignedTo);
+            return {
+              name: a.name,
+              type: a.type,
+              brand: a.brand ?? "",
+              model: a.model ?? "",
+              serialNumber: a.serialNumber ?? "",
+              status: a.status ?? "AVAILABLE",
+              assignedTo: emp
+                ? `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() ||
+                  emp.email
+                : "",
+              purchaseCost: a.purchaseCost ?? "",
+              purchaseDate: a.purchaseDate
+                ? format(new Date(a.purchaseDate), "yyyy-MM-dd")
+                : "",
+              location: a.location ?? "",
+            };
+          }),
+        },
+      ]);
       toast.success("Assets exported");
     } catch {
       toast.error("Export failed");
@@ -468,7 +653,13 @@ export default function HrAssetsPage() {
       badge={`${items.length} assets`}
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport} disabled={!items.length}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={handleExport}
+            disabled={!items.length}
+          >
             <Download className="h-3.5 w-3.5" />
             Export
           </Button>
@@ -479,23 +670,56 @@ export default function HrAssetsPage() {
         </div>
       }
       filters={
-        <Tabs value={statusFilter ?? "all"} onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}>
+        <Tabs
+          value={statusFilter ?? "all"}
+          onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}
+        >
           <TabsList className="h-8">
-            <TabsTrigger value="all" className="text-xs px-3 h-7">All</TabsTrigger>
-            <TabsTrigger value="AVAILABLE" className="text-xs px-3 h-7">Available</TabsTrigger>
-            <TabsTrigger value="ASSIGNED" className="text-xs px-3 h-7">Assigned</TabsTrigger>
-            <TabsTrigger value="MAINTENANCE" className="text-xs px-3 h-7">Maintenance</TabsTrigger>
-            <TabsTrigger value="RETIRED" className="text-xs px-3 h-7">Retired</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs px-3 h-7">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="AVAILABLE" className="text-xs px-3 h-7">
+              Available
+            </TabsTrigger>
+            <TabsTrigger value="ASSIGNED" className="text-xs px-3 h-7">
+              Assigned
+            </TabsTrigger>
+            <TabsTrigger value="MAINTENANCE" className="text-xs px-3 h-7">
+              Maintenance
+            </TabsTrigger>
+            <TabsTrigger value="RETIRED" className="text-xs px-3 h-7">
+              Retired
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       }
     >
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total Assets" value={counts.total} icon={Package} color="blue" />
-          <StatCard label="Available" value={counts.available} icon={CheckCircle2} color="green" />
-          <StatCard label="Assigned" value={counts.assigned} icon={Laptop} color="amber" />
-          <StatCard label="Maintenance" value={counts.maintenance} icon={Wrench} color="red" />
+          <StatCard
+            label="Total Assets"
+            value={counts.total}
+            icon={Package}
+            color="blue"
+          />
+          <StatCard
+            label="Available"
+            value={counts.available}
+            icon={CheckCircle2}
+            color="green"
+          />
+          <StatCard
+            label="Assigned"
+            value={counts.assigned}
+            icon={Laptop}
+            color="amber"
+          />
+          <StatCard
+            label="Maintenance"
+            value={counts.maintenance}
+            icon={Wrench}
+            color="red"
+          />
         </div>
 
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
@@ -504,14 +728,30 @@ export default function HrAssetsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="font-semibold text-foreground/80">Asset</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Type</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Serial #</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Status</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Assigned To</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-right">Cost</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Purchased</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-right">Actions</TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Asset
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Type
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Serial #
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Assigned To
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-right">
+                      Cost
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80">
+                      Purchased
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground/80 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -519,7 +759,9 @@ export default function HrAssetsPage() {
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
                         {Array.from({ length: 8 }).map((__, j) => (
-                          <TableCell key={j}><div className="h-4 rounded bg-muted animate-pulse" /></TableCell>
+                          <TableCell key={j}>
+                            <div className="h-4 rounded bg-muted animate-pulse" />
+                          </TableCell>
                         ))}
                       </TableRow>
                     ))
@@ -527,31 +769,57 @@ export default function HrAssetsPage() {
                     <TableRow>
                       <TableCell colSpan={8}>
                         <EmptyState
-                          illustration={<Package className="h-8 w-8 text-muted-foreground" />}
+                          illustration={
+                            <Package className="h-8 w-8 text-muted-foreground" />
+                          }
                           title="No assets found"
-                          description={statusFilter ? `No ${statusFilter.toLowerCase()} assets.` : "Register your first company asset."}
-                          action={!statusFilter ? { label: "Register Asset", onClick: handleOpenAdd } : undefined}
+                          description={
+                            statusFilter
+                              ? `No ${statusFilter.toLowerCase()} assets.`
+                              : "Register your first company asset."
+                          }
+                          action={
+                            !statusFilter
+                              ? {
+                                  label: "Register Asset",
+                                  onClick: handleOpenAdd,
+                                }
+                              : undefined
+                          }
                           compact
                         />
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredItems.map((asset) => {
-                      const meta = STATUS_META[asset.status ?? "AVAILABLE"] ?? STATUS_META.AVAILABLE;
-                      const assignedEmployee = employees.find((e) => e.id === asset.assignedTo);
+                      const meta =
+                        STATUS_META[asset.status ?? "AVAILABLE"] ??
+                        STATUS_META.AVAILABLE;
+                      const assignedEmployee = employees.find(
+                        (e) => e.id === asset.assignedTo,
+                      );
                       const assignedName = assignedEmployee
-                        ? `${assignedEmployee.firstName ?? ""} ${assignedEmployee.lastName ?? ""}`.trim() || assignedEmployee.email
+                        ? `${assignedEmployee.firstName ?? ""} ${assignedEmployee.lastName ?? ""}`.trim() ||
+                          assignedEmployee.email
                         : null;
-                      const assignedInitial = assignedName?.[0]?.toUpperCase() ?? "?";
+                      const assignedInitial =
+                        assignedName?.[0]?.toUpperCase() ?? "?";
 
                       return (
-                        <TableRow key={asset.id} className="transition-colors duration-200">
+                        <TableRow
+                          key={asset.id}
+                          className="transition-colors duration-200"
+                        >
                           <TableCell>
                             <div>
-                              <p className="font-semibold text-sm text-foreground">{asset.name}</p>
+                              <p className="font-semibold text-sm text-foreground">
+                                {asset.name}
+                              </p>
                               {(asset.brand || asset.model) && (
                                 <p className="text-xs text-muted-foreground">
-                                  {[asset.brand, asset.model].filter(Boolean).join(" · ")}
+                                  {[asset.brand, asset.model]
+                                    .filter(Boolean)
+                                    .join(" · ")}
                                 </p>
                               )}
                             </div>
@@ -565,10 +833,12 @@ export default function HrAssetsPage() {
                             {asset.serialNumber ?? "—"}
                           </TableCell>
                           <TableCell>
-                            <span className={cn(
-                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                              meta.badge,
-                            )}>
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                                meta.badge,
+                              )}
+                            >
                               {meta.label}
                             </span>
                           </TableCell>
@@ -580,17 +850,26 @@ export default function HrAssetsPage() {
                                     {assignedInitial}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="text-sm text-foreground truncate max-w-[120px]">{assignedName}</span>
+                                <span className="text-sm text-foreground truncate max-w-[120px]">
+                                  {assignedName}
+                                </span>
                               </div>
                             ) : (
-                              <span className="text-muted-foreground text-xs">Unassigned</span>
+                              <span className="text-muted-foreground text-xs">
+                                Unassigned
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="text-right text-sm font-medium">
                             {fmtCost(asset.purchaseCost)}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {asset.purchaseDate ? format(new Date(asset.purchaseDate), "dd MMM yyyy") : "—"}
+                            {asset.purchaseDate
+                              ? format(
+                                  new Date(asset.purchaseDate),
+                                  "dd MMM yyyy",
+                                )
+                              : "—"}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">
@@ -598,10 +877,18 @@ export default function HrAssetsPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7"
-                                title={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
+                                title={
+                                  asset.assignedTo
+                                    ? "Reassign / Unassign"
+                                    : "Assign Employee"
+                                }
                                 onClick={() => handleOpenAssign(asset)}
                               >
-                                {asset.assignedTo ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+                                {asset.assignedTo ? (
+                                  <UserMinus className="h-3.5 w-3.5" />
+                                ) : (
+                                  <UserPlus className="h-3.5 w-3.5" />
+                                )}
                               </Button>
                               <Button
                                 variant="ghost"
@@ -670,15 +957,24 @@ export default function HrAssetsPage() {
       <Dialog open={assignDialog !== null} onOpenChange={handleCloseAssign}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>{assignDialog?.currentAssignedTo ? "Reassign Asset" : "Assign Asset"}</DialogTitle>
+            <DialogTitle>
+              {assignDialog?.currentAssignedTo
+                ? "Reassign Asset"
+                : "Assign Asset"}
+            </DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Asset: <span className="font-medium text-foreground">{assignDialog?.assetName}</span>
+              Asset:{" "}
+              <span className="font-medium text-foreground">
+                {assignDialog?.assetName}
+              </span>
             </p>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">
-                {assignDialog?.currentAssignedTo ? "Reassign to Employee" : "Assign to Employee"}
+                {assignDialog?.currentAssignedTo
+                  ? "Reassign to Employee"
+                  : "Assign to Employee"}
               </label>
               <Combobox
                 key={assignDialog?.assetId ?? "closed"}
@@ -691,22 +987,34 @@ export default function HrAssetsPage() {
             </div>
             {assignDialog?.currentAssignedTo && (
               <p className="text-xs text-muted-foreground">
-                Leave selection empty and confirm to unassign the current employee.
+                Leave selection empty and confirm to unassign the current
+                employee.
               </p>
             )}
           </div>
           <DialogFooter className="gap-2">
             {assignDialog?.currentAssignedTo && (
-              <Button variant="outline" onClick={handleUnassign} disabled={assignPending}>
+              <Button
+                variant="outline"
+                onClick={handleUnassign}
+                disabled={assignPending}
+              >
                 Unassign
               </Button>
             )}
             <Button
               onClick={handleConfirmAssign}
-              disabled={assignPending || (!assignEmpId && !assignDialog?.currentAssignedTo)}
+              disabled={
+                assignPending ||
+                (!assignEmpId && !assignDialog?.currentAssignedTo)
+              }
             >
-              {assignPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {assignDialog?.currentAssignedTo && assignEmpId ? "Reassign" : "Assign"}
+              {assignPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {assignDialog?.currentAssignedTo && assignEmpId
+                ? "Reassign"
+                : "Assign"}
             </Button>
           </DialogFooter>
         </DialogContent>

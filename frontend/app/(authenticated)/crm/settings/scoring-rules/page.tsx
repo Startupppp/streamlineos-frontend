@@ -148,6 +148,10 @@ export default function ScoringRulesPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   const sampleScore = useMemo(() => {
     if (!rules) return 0;
     let score = 0;

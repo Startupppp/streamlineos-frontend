@@ -22,7 +22,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays } from "lucide-react";
+import { Plus, CheckCircle2, XCircle, Banknote, User, CalendarDays, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { cn } from "@/lib/utils";

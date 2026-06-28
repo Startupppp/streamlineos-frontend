@@ -110,6 +110,7 @@ export default function CompliancePage() {
   const { data: session } = useSession();
   const { data: acks, isLoading, isError, refetch } = usePolicyAcknowledgments();
   const acknowledgePolicy = useAcknowledgePolicy();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handleAcknowledge = useCallback(
     (id: number, status: AckStatus) => {

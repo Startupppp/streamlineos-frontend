@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useAbility } from "@/lib/abilities-context";
 import { isToday, isFuture, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";

@@ -33,8 +33,7 @@ import {
 import { useOrgMembers } from "@/lib/api/hooks/organization";
 import { useHrDepartments } from "@/lib/api/hooks/hr/employees";
 import { getInitials } from "@/lib/format-utils";
-import type { Role } from "@/types/organization";
-import type { OrgMember } from "@/types/organization";
+import type { Role, OrgMember } from "@/types/organization";
 import type { Department } from "@/types/hr";
 
 interface RoleAssignmentsSheetProps {

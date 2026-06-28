@@ -127,7 +127,7 @@ function InboxContent() {
             <ErrorState
               title="Failed to load tickets"
               description="We couldn't load your support tickets. Please try again."
-              onRetry={refetch}
+              onRetry={handleRetry}
               compact
             />
           </div>

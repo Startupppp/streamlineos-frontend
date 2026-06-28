@@ -33,7 +33,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Plus, IndianRupee, CheckCircle2, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, IndianRupee, CheckCircle2, Check, ChevronsUpDown, AlertCircle } from "lucide-react";
 import { formatINR, getInitials } from "@/lib/format-utils";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 

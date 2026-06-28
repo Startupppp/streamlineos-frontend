@@ -150,6 +150,10 @@ export default function SlaPage() {
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+
   if (isLoading || reportLoading) {
     return (
       <div className="space-y-6 p-6">

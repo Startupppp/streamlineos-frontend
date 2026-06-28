@@ -231,6 +231,7 @@ export default function AuditLogPage() {
   const handleFirstPage = useCallback(() => updateParams({ page: null }), [updateParams]);
   const handleLastPage = useCallback(() => updateParams({ page: String(totalPages) }), [updateParams, totalPages]);
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const handlePageSizeChange = useCallback((v: string) => {
     updateParams({ size: v === "10" ? null : v, page: null });
@@ -325,7 +326,7 @@ export default function AuditLogPage() {
             ) : isError ? (
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <p className="text-sm text-muted-foreground">Failed to load audit events.</p>
-                <Button variant="outline" size="sm" onClick={refetch}>Retry</Button>
+                <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
               </div>
             ) : logs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-2 text-muted-foreground">

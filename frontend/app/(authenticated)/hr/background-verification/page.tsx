@@ -260,6 +260,7 @@ function BgvRow({ bgv, onUpdateStatus, onOpenEdit, isPending }: BgvRowProps) {
 
 function BGVContent() {
   const { data: items, isLoading, isError, refetch } = useBackgroundVerifications();
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const { data: employeesRaw } = useHrEmployees();
   const create = useCreateBackgroundVerification();
   const update = useUpdateBackgroundVerification();

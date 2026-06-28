@@ -19,7 +19,7 @@ import {
 } from "@/lib/api/hooks";
 import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { safeMax, calcPercent } from "@/lib/format-utils";
+import { safeMax } from "@/lib/format-utils";
 import { SalesKpiCards } from "@/features/sales/sales-kpi-cards";
 import { SalesPipelineCharts } from "@/features/sales/sales-pipeline-charts";
 import { SalesLeaderboard } from "@/features/sales/sales-leaderboard";

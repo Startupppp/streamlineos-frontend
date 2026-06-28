@@ -67,6 +67,10 @@ export default function SupportDashboardPage() {
     );
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   if (isError) {
     return (
       <PageWrapper
@@ -76,7 +80,7 @@ export default function SupportDashboardPage() {
         <ErrorState
           title="Failed to load support analytics"
           description="We couldn't load the dashboard data. Please try again."
-          onRetry={refetch}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

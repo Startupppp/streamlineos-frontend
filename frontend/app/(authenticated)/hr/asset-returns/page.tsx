@@ -20,7 +20,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, CheckCircle2, Laptop } from "lucide-react";
+import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { useHrEmployees, useHrAssets } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
