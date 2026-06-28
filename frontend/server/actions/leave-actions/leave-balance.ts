@@ -6,14 +6,11 @@ import {
   leaveTypes,
   leaveBalances,
   organizationMembers,
-  users,
 } from "@/lib/db/schema";
 import { eq, and, sql, gte, lte, inArray } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
-  ALLOWED_LEAVE_TYPE_NAMES,
   resolveInitialBalance,
 } from "@/lib/leave-policy";
 
@@ -54,88 +51,6 @@ export async function ensureLeaveTypes(orgId: string) {
   return types;
 }
 
-export async function ensureUserBalances(
-  orgId: string,
-  userId: string,
-  types: { id: number; name: string; daysPerYear: number }[],
-) {
-  const year = new Date().getFullYear();
-
-  const existing = await db.query.leaveBalances.findMany({
-    where: and(
-      eq(leaveBalances.userId, userId),
-      eq(leaveBalances.orgId, orgId),
-      eq(leaveBalances.year, year),
-    ),
-  });
-
-  const existingTypeIds = new Set(existing.map((b) => b.leaveTypeId));
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: { joiningDate: true },
-  });
-  const joiningDate = user?.joiningDate ? new Date(user.joiningDate) : new Date();
-
-  for (const t of types) {
-    if (existingTypeIds.has(t.id)) continue;
-
-    const balance = resolveInitialBalance(t.name, t.daysPerYear, joiningDate, year);
-
-    await db.insert(leaveBalances).values({
-      orgId,
-      userId,
-      leaveTypeId: t.id,
-      year,
-      balance: balance.toString(),
-    });
-  }
-}
-
-export async function initializeLeaveBalances(
-  orgId: string,
-  userId: string,
-  joiningDate: Date | string,
-) {
-  const types = await ensureLeaveTypes(orgId);
-  const joinDate = typeof joiningDate === "string" ? new Date(joiningDate) : joiningDate;
-  const currentYear = new Date().getFullYear();
-  const targetYear = Math.max(joinDate.getFullYear(), currentYear);
-
-  const existingBalances = await db.query.leaveBalances.findMany({
-    where: and(
-      eq(leaveBalances.userId, userId),
-      eq(leaveBalances.orgId, orgId),
-      eq(leaveBalances.year, targetYear),
-    ),
-  });
-  const existingTypeIds = new Set(existingBalances.map((b) => b.leaveTypeId));
-
-  const toInsert = types
-    .filter((type) => !existingTypeIds.has(type.id))
-    .map((type) => ({
-      orgId,
-      userId,
-      leaveTypeId: type.id,
-      year: targetYear,
-      balance: resolveInitialBalance(type.name, type.daysPerYear, joinDate, targetYear).toString(),
-    }));
-
-  if (toInsert.length > 0) {
-    try {
-      await db.insert(leaveBalances).values(toInsert);
-    } catch (err) {
-
-      for (const row of toInsert) {
-        try {
-          await db.insert(leaveBalances).values(row);
-        } catch {
-
-        }
-      }
-    }
-  }
-}
-
 export async function expireUnusedMonthlyCasualLeaves() {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -146,10 +61,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
 
   const monthStartStr = monthStart.toISOString().split("T")[0];
   const monthEndStr = monthEnd.toISOString().split("T")[0];
-  const orgs = await db
-    .selectDistinct({ orgId: leaveBalances.orgId })
-    .from(leaveBalances)
-    .where(eq(leaveBalances.year, prevMonthYear));
 
   let expiredCount = 0;
 
@@ -265,55 +176,3 @@ export async function resetYearlyLeaveBalances() {
   return { resetCount };
 }
 
-export async function getLeaveContext() {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-  if (!member) return { error: "No organization found" };
-
-  const types = await ensureLeaveTypes(member.orgId);
-  const allowedTypes = types.filter((t) => ALLOWED_LEAVE_TYPE_NAMES.has(t.name));
-  const seenTypeNames = new Set<string>();
-  const filteredTypes = allowedTypes.filter((t) => {
-    if (seenTypeNames.has(t.name)) return false;
-    seenTypeNames.add(t.name);
-    return true;
-  });
-  await ensureUserBalances(member.orgId, session.user.id, filteredTypes);
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: { joiningDate: true },
-  });
-  const joiningDate = user?.joiningDate ? new Date(user.joiningDate).toISOString() : null;
-
-  const rawBalances = await db
-    .select({
-      id: leaveBalances.id,
-      leaveTypeId: leaveBalances.leaveTypeId,
-      balance: leaveBalances.balance,
-      typeName: leaveTypes.name,
-      daysPerYear: leaveTypes.daysPerYear,
-    })
-    .from(leaveBalances)
-    .leftJoin(leaveTypes, eq(leaveBalances.leaveTypeId, leaveTypes.id))
-    .where(
-      and(
-        eq(leaveBalances.userId, session.user.id),
-        eq(leaveBalances.year, new Date().getFullYear()),
-      ),
-    );
-
-  const allowedBalances = rawBalances.filter((b) => b.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(b.typeName));
-  const seenNames = new Set<string>();
-  const balances = allowedBalances.filter((b) => {
-    if (!b.typeName || seenNames.has(b.typeName)) return false;
-    seenNames.add(b.typeName);
-    return true;
-  });
-
-  return { success: true, balances, types: filteredTypes, joiningDate };
-}

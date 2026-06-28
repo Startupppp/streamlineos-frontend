@@ -1,9 +1,6 @@
 "server-only";
 
-import { blogDb } from "@/lib/blog-db";
-import { blogPosts, blogCategories } from "@/lib/db/schema";
-import { and, asc, desc, eq, gt, lt, ne } from "drizzle-orm";
-import { serverPublicFetch } from "@/lib/api/server-client";
+import { serverApiClient, serverPublicFetch } from "@/lib/api/server-client";
 import type { BlogPostWithRelations, CategoryWithCount } from "@/types/blog";
 
 export interface PostListOptions {
@@ -52,6 +49,11 @@ interface BackendPost {
     linkedin: string | null;
     createdAt: string;
   } | null;
+}
+
+interface AdjacentPostStub {
+  slug: string;
+  title: string;
 }
 
 function transformPost(post: BackendPost): BlogPostWithRelations {
@@ -123,20 +125,22 @@ export async function getPublishedPosts(opts: PostListOptions = {}) {
 export type PostWithRelations = BlogPostWithRelations;
 
 export async function getFeaturedPosts(limit = 1) {
-  return blogDb.query.blogPosts.findMany({
-    where: and(eq(blogPosts.status, "published"), eq(blogPosts.isFeatured, true)),
-    with: { category: true, author: true },
-    orderBy: [desc(blogPosts.publishedAt)],
-    limit,
-  });
+  const response = await serverPublicFetch.get<{
+    posts: BackendPost[];
+    nextCursor: string | null;
+    hasMore: boolean;
+  }>("/blog/feed", { featured: "true", limit });
+
+  return response.posts.map(transformPost);
 }
 
 export async function getPostBySlug(slug: string) {
-  const post = await blogDb.query.blogPosts.findFirst({
-    where: and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")),
-    with: { category: true, author: true },
-  });
-  return post ?? null;
+  try {
+    const post = await serverPublicFetch.get<BackendPost>(`/blog/by-slug/${slug}`);
+    return transformPost(post);
+  } catch {
+    return null;
+  }
 }
 
 export async function getCategories() {
@@ -156,80 +160,68 @@ export async function getRelatedPosts(opts: {
   const limit = opts.limit ?? 3;
 
   if (!opts.categoryId) {
-    return blogDb.query.blogPosts.findMany({
-      where: and(eq(blogPosts.status, "published"), ne(blogPosts.id, opts.postId)),
-      with: { category: true, author: true },
-      orderBy: [desc(blogPosts.publishedAt)],
-      limit,
-    });
+    const response = await serverPublicFetch.get<{
+      posts: BackendPost[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/blog/feed", { limit: limit + 1 });
+
+    return response.posts
+      .map(transformPost)
+      .filter((post) => post.id !== opts.postId)
+      .slice(0, limit);
   }
 
-  const category = await blogDb.query.blogCategories.findFirst({
-    where: eq(blogCategories.id, opts.categoryId),
-  });
-
-  if (!category) {
-    return blogDb.query.blogPosts.findMany({
-      where: and(eq(blogPosts.status, "published"), ne(blogPosts.id, opts.postId)),
-      with: { category: true, author: true },
-      orderBy: [desc(blogPosts.publishedAt)],
-      limit,
-    });
-  }
+  const categories = await getCategories();
+  const category = categories.find((c) => c.id === opts.categoryId);
 
   const response = await serverPublicFetch.get<{
     posts: BackendPost[];
     nextCursor: string | null;
     hasMore: boolean;
   }>("/blog/feed", {
-    category: category.slug,
-    limit,
+    category: category?.slug,
+    limit: limit + 1,
   });
 
-  return response.posts
+  const filtered = response.posts
+    .map(transformPost)
+    .filter((post) => post.id !== opts.postId)
+    .slice(0, limit);
+
+  if (filtered.length >= limit) return filtered;
+
+  const fallback = await serverPublicFetch.get<{
+    posts: BackendPost[];
+    nextCursor: string | null;
+    hasMore: boolean;
+  }>("/blog/feed", { limit: limit + 1 });
+
+  return fallback.posts
     .map(transformPost)
     .filter((post) => post.id !== opts.postId)
     .slice(0, limit);
 }
 
-export async function getAdjacentPosts(publishedAt: Date | null) {
-  if (!publishedAt) return { prev: null, next: null };
+export async function getAdjacentPosts(slug: string | null) {
+  if (!slug) return { prev: null, next: null };
 
-  const [prev] = await blogDb.query.blogPosts.findMany({
-    where: and(
-      eq(blogPosts.status, "published"),
-      lt(blogPosts.publishedAt, publishedAt),
-    ),
-    orderBy: [desc(blogPosts.publishedAt)],
-    limit: 1,
-    columns: { slug: true, title: true },
-  });
-
-  const [next] = await blogDb.query.blogPosts.findMany({
-    where: and(
-      eq(blogPosts.status, "published"),
-      gt(blogPosts.publishedAt, publishedAt),
-    ),
-    orderBy: [asc(blogPosts.publishedAt)],
-    limit: 1,
-    columns: { slug: true, title: true },
-  });
-
-  return { prev: prev ?? null, next: next ?? null };
+  return serverPublicFetch.get<{
+    prev: AdjacentPostStub | null;
+    next: AdjacentPostStub | null;
+  }>(`/blog/by-slug/${slug}/adjacent`);
 }
 
 export async function getAdminPosts() {
-  return blogDb.query.blogPosts.findMany({
-    with: { category: true, author: true },
-    orderBy: [desc(blogPosts.updatedAt)],
-  });
+  const posts = await serverApiClient.get<BackendPost[]>("/blog/posts");
+  return posts.map(transformPost);
 }
 
 export async function getAdminPostById(id: string) {
-  return (
-    (await blogDb.query.blogPosts.findFirst({
-      where: eq(blogPosts.id, id),
-      with: { category: true, author: true },
-    })) ?? null
-  );
+  try {
+    const post = await serverApiClient.get<BackendPost>(`/blog/posts/${id}`);
+    return transformPost(post);
+  } catch {
+    return null;
+  }
 }

@@ -267,6 +267,7 @@ export const queryKeys = {
   access: {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
+    simulate: (userId: string) => [...base, "access", "simulate", userId] as const,
   },
 
   roles: {
@@ -274,6 +275,7 @@ export const queryKeys = {
     list: () => [...base, "roles", "list"] as const,
     detail: (id: number) => [...base, "roles", "detail", id] as const,
     permissions: (roleId: number) => [...base, "roles", "permissions", roleId] as const,
+    permissionsMatrix: () => [...base, "roles", "permissions", "matrix"] as const,
     members: (roleId: number) => [...base, "roles", "members", roleId] as const,
   },
 

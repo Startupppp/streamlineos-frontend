@@ -240,8 +240,17 @@ export interface PurchaseBillSummary {
   updatedAt: Date;
 }
 
+export interface PurchaseBillPayment {
+  id: number;
+  amount: string;
+  paymentDate: string;
+  paymentMethod: string;
+  referenceNumber: string | null;
+}
+
 export interface PurchaseBill extends PurchaseBillSummary {
   items: PurchaseBillItem[];
+  payments?: PurchaseBillPayment[];
 }
 
 export interface Gstr3BTaxBlock {

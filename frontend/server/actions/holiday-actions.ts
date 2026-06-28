@@ -2,94 +2,10 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { holidays, organizationMembers, users,  } from "@/lib/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
-import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { holidays, organizationMembers, users } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { sendBulkHolidayAnnouncement } from "@/lib/email";
-import { getSessionAbility } from "@/lib/abilities-server";
 
-function capitalizeWords(str: string): string {
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-export async function addHoliday(data: {
-  name: string;
-  date: Date;
-  message?: string;
-}) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  const ability = await getSessionAbility();
-  if (!member || !ability.can("manage", "hr:attendance")) {
-    return { error: "Permission denied" };
-  }
-
-  try {
-    await db.insert(holidays).values({
-      orgId: member.orgId,
-      name: capitalizeWords(data.name),
-      date: data.date.toISOString().split('T')[0],
-      message: data.message,
-      notificationSent: false,
-    });
-
-    revalidatePath("/settings");
-    return { success: true };
-  } catch (e) {
-    return { error: "Failed to add holiday" };
-  }
-}
-
-export async function getHolidays() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return [];
-
-  const currentYear = new Date().getFullYear();
-  const startDate = `${currentYear}-01-01`;
-  const endDate = `${currentYear}-12-31`;
-
-  return await db.query.holidays.findMany({
-    where: and(
-      eq(holidays.orgId, member.orgId),
-      gte(holidays.date, startDate),
-      lte(holidays.date, endDate)
-    ),
-    orderBy: (holidays, { asc }) => [asc(holidays.date)],
-  });
-}
-
-export async function deleteHoliday(holidayId: number) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  const ability = await getSessionAbility();
-  if (!member || !ability.can("manage", "hr:attendance")) {
-    return { error: "Permission denied" };
-  }
-
-  try {
-    await db.delete(holidays).where(and(eq(holidays.id, holidayId), eq(holidays.orgId, member.orgId)));
-    revalidatePath("/settings");
-    return { success: true };
-  } catch (e) {
-    return { error: "Failed to delete holiday" };
-  }
-}
 export async function sendHolidayNotifications() {
   try {
     const tomorrow = new Date();
@@ -142,14 +58,6 @@ export async function sendHolidayNotifications() {
         );
       }
 
-      const dateLabel = tomorrow.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-      const message = `${holiday.name} is tomorrow (${dateLabel}).${holiday.message ? ` ${holiday.message}` : ""}`;
-
       await db
         .update(holidays)
         .set({ notificationSent: true })
@@ -162,39 +70,3 @@ export async function sendHolidayNotifications() {
     return { error: "Failed to send notifications" };
   }
 }
-export async function bulkAddHolidays(holidayList: Array<{
-  name: string;
-  date: string;
-  message?: string;
-}>) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  const ability = await getSessionAbility();
-  if (!member || !ability.can("manage", "hr:attendance")) {
-    return { error: "Permission denied" };
-  }
-
-  try {
-    const holidayRecords = holidayList.map(h => ({
-      orgId: member.orgId,
-      name: capitalizeWords(h.name),
-      date: h.date,
-      message: h.message,
-      notificationSent: false,
-    }));
-
-    await db.insert(holidays).values(holidayRecords);
-
-    revalidatePath("/settings");
-    return { success: true, count: holidayList.length };
-  } catch (error) {
-    logger.error("Failed to import holidays", error);
-    return { error: "Failed to import holidays" };
-  }
-}
-

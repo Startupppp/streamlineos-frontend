@@ -1,4 +1,4 @@
-"server-only";
+import "server-only";
 
 import { sql, eq, and, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
