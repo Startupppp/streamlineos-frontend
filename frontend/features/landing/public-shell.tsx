@@ -11,7 +11,6 @@ type Props = {
 export function PublicShell({ children, className }: Props) {
   return (
     <div className="relative flex min-h-screen flex-col surface-soft text-slate-900 selection:bg-blue-500/20 selection:text-blue-950 overflow-x-clip">
-      <VisitTracker />
       <LandingNav />
       <PublicMain className={className}>{children}</PublicMain>
       <LandingFooter />

@@ -38,7 +38,7 @@ import {
   emailExpenseReport,
   type ExportFilters,
 } from "@/server/actions/expense-export";
-import type { ExpenseFilters } from "@/server/actions/expense-query";
+import type { ExpenseFilters } from "@/types/hr/expenses";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { usePdfRenderer } from "./pdf-renderer";

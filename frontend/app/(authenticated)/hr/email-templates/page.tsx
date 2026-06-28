@@ -223,7 +223,7 @@ function EmailTemplatesContent() {
 
 export default function EmailTemplatesPage() {
   return (
-    <DashboardGate allowedRoles={["HR"]}>
+    <DashboardGate permission="hr:documents:manage">
       <EmailTemplatesContent />
     </DashboardGate>
   );

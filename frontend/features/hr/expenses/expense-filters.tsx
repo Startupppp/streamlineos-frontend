@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
-import type { ExpenseFilters, ExpenseCategory } from "@/server/actions/expense-query";
+import type { ExpenseFilters, ExpenseCategoryRecord as ExpenseCategory } from "@/types/hr/expenses";
 import type { DatePreset } from "@/hooks/use-expense-filters";
 
 interface EmployeeOption {

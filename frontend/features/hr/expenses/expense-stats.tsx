@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatINRCompact } from "@/lib/format-utils";
-import type { ExpensePageData } from "@/server/actions/expense-query";
+import type { ExpensePageData } from "@/types/hr/expenses";
 
 interface StatItemProps {
   label: string;

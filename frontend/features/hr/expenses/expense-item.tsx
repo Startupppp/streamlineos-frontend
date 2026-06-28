@@ -20,7 +20,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
 import { toast } from "sonner";
-import type { ExpenseWithRelations } from "@/server/actions/expense-query";
+import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import {
   getCategoryConfig,

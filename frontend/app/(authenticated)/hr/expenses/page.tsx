@@ -41,7 +41,7 @@ import {
   MemberExpenseList,
 } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
-import type { ExpenseWithRelations } from "@/server/actions/expense-query";
+import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import { useAbility } from "@/lib/abilities-context";
 
 export default function ExpensesPage() {
@@ -199,24 +199,8 @@ export default function ExpensesPage() {
   } = pageData ?? {};
 
   const expenseCategories =
-    (
-      rawCategories as {
-        id: number;
-        name: string;
-        description: string | null;
-        budgetLimit: string | null;
-        budgetPeriod: string | null;
-        isActive: boolean | null;
-      }[]
-    ).length > 0
-      ? (rawCategories as {
-          id: number;
-          name: string;
-          description: string | null;
-          budgetLimit: string | null;
-          budgetPeriod: string | null;
-          isActive: boolean | null;
-        }[])
+    rawCategories.length > 0
+      ? rawCategories
       : EXPENSE_CATEGORIES.map((name, i) => ({
           id: i + 1,
           name,
@@ -226,8 +210,8 @@ export default function ExpensesPage() {
           isActive: true,
         }));
 
-  const typedExpenses = expenses as ExpenseWithRelations[];
-  const typedPending = pendingExpenses as ExpenseWithRelations[];
+  const typedExpenses = expenses;
+  const typedPending = pendingExpenses;
 
   const filteredExpenses =
     statusFilter === "ALL"

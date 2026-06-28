@@ -25,7 +25,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
 
   if ("error" in auth) {
     return (
-      <DashboardGate allowedRoles={["CEO", "HR"]}>
+      <DashboardGate permission="accounting:view">
         <InvoicesClient />
       </DashboardGate>
     );
@@ -50,7 +50,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="accounting:view">
       <HydrationBoundary state={dehydrate(qc)}>
         <InvoicesClient />
       </HydrationBoundary>

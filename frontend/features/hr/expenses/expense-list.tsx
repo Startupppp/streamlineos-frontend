@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";
-import type { ExpenseWithRelations } from "@/server/actions/expense-query";
+import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/app/(authenticated)/hr/expenses/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
 
