@@ -327,7 +327,7 @@ function SurveyRow({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7 text-emerald-600 hover:text-emerald-600"
-                  onClick={() => onToggleStatus(survey, "active")}
+                  onClick={handleActivate}
                   disabled={isUpdating}
                   aria-label="Activate survey"
                   title="Activate"
@@ -339,7 +339,7 @@ function SurveyRow({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  onClick={() => onToggleStatus(survey, "closed")}
+                  onClick={handleCloseSurvey}
                   disabled={isUpdating}
                   aria-label="Close survey"
                   title="Close"
@@ -351,7 +351,7 @@ function SurveyRow({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => onDelete(survey)}
+                onClick={handleDeleteSurvey}
                 aria-label="Delete survey"
                 title="Delete"
               >
@@ -424,12 +424,19 @@ export default function NpsPage() {
     });
   }, [deleteTarget, deleteSurvey]);
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+  const handleViewDetail = useCallback((s: NpsSurvey) => setDetailTarget(s), []);
+  const handleDeleteTarget = useCallback((s: NpsSurvey) => setDeleteTarget(s), []);
+  const handleCloseDetail = useCallback(() => setDetailTarget(null), []);
+  const handleDeleteAlertChange = useCallback((o: boolean) => { if (!o) setDeleteTarget(null); }, []);
+
   return (
     <PageWrapper
       title="NPS Surveys"
       subtitle="Measure customer loyalty and close the loop on detractor feedback"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+        <Button size="sm" onClick={handleOpenCreate} className="gap-1.5">
           <Plus className="size-4" />
           New Survey
         </Button>
@@ -506,8 +513,8 @@ export default function NpsPage() {
                   copied={copiedId === survey.id}
                   onCopyLink={handleCopyLink}
                   onToggleStatus={handleToggleStatus}
-                  onView={setDetailTarget}
-                  onDelete={setDeleteTarget}
+                  onView={handleViewDetail}
+                  onDelete={handleDeleteTarget}
                   isUpdating={updateSurvey.isPending}
                 />
               ))}
@@ -518,20 +525,20 @@ export default function NpsPage() {
                 illustration={<EmptyLeaderboardIllustration />}
                 title="No NPS surveys yet"
                 description="Create a survey, activate it, and share the public link to start measuring loyalty."
-                action={{ label: "New Survey", onClick: () => setCreateOpen(true) }}
+                action={{ label: "New Survey", onClick: handleOpenCreate }}
               />
             </div>
           )}
         </div>
       )}
 
-      <CreateSurveyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateSurveyDialog open={createOpen} onClose={handleCloseCreate} />
 
       {detailTarget && (
-        <SurveyDetailSheet surveyId={detailTarget.id} onClose={() => setDetailTarget(null)} />
+        <SurveyDetailSheet surveyId={detailTarget.id} onClose={handleCloseDetail} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteAlertChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete survey?</AlertDialogTitle>

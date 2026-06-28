@@ -384,6 +384,12 @@ function RoundFormSheet({
   const isPending = createRound.isPending || updateRound.isPending;
 
   function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
+  function handleRoundTypeChange(v: string) {
+    setValue("roundType", v as RoundFormValues["roundType"], { shouldValidate: true });
+  }
+  function handleModeChange(v: string) {
+    setValue("mode", v as RoundFormValues["mode"], { shouldValidate: true });
+  }
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
@@ -399,7 +405,7 @@ function RoundFormSheet({
           </div>
           <div>
             <Label className="text-xs font-medium">Round Type <span className="text-destructive">*</span></Label>
-            <Select value={roundType} onValueChange={(v) => setValue("roundType", v as RoundFormValues["roundType"], { shouldValidate: true })}>
+            <Select value={roundType} onValueChange={handleRoundTypeChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_TYPES.map(({ value, label }) => (
@@ -410,7 +416,7 @@ function RoundFormSheet({
           </div>
           <div>
             <Label className="text-xs font-medium">Mode <span className="text-destructive">*</span></Label>
-            <Select value={mode} onValueChange={(v) => setValue("mode", v as RoundFormValues["mode"], { shouldValidate: true })}>
+            <Select value={mode} onValueChange={handleModeChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
                 {ROUND_MODES.map(({ value, label }) => (

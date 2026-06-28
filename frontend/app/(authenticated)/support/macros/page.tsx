@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +58,18 @@ function MacroDialog({
   const update = useUpdateMacro();
   const isPending = create.isPending || update.isPending;
 
+  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
+    setTitle(event.target.value);
+  }
+
+  function handleCategoryChange(event: ChangeEvent<HTMLInputElement>) {
+    setCategory(event.target.value);
+  }
+
+  function handleBodyChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setBody(event.target.value);
+  }
+
   function handleSave() {
     const trimmedTitle = title.trim();
     const trimmedBody = body.trim();
@@ -104,7 +116,7 @@ function MacroDialog({
               id="macro-title"
               placeholder="e.g. Refund acknowledgement"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
             />
           </div>
           <div className="space-y-1">
@@ -114,7 +126,7 @@ function MacroDialog({
               list="macro-category-options"
               placeholder="e.g. Billing"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={handleCategoryChange}
             />
             {categoryOptions.length > 0 && (
               <datalist id="macro-category-options">

@@ -13,7 +13,7 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import type { CandidateStatus } from "@/types/hr";
 
 export default function PipelinePage() {
-  const { data: pipeline, isLoading } = useAtsKanban();
+  const { data: pipeline, isLoading, isError, refetch } = useAtsKanban();
   const updateStage = useUpdateCandidateStage();
 
   const handleStageChange = useCallback(
@@ -32,6 +32,14 @@ export default function PipelinePage() {
     },
     [updateStage]
   );
+
+  if (isError) {
+    return (
+      <PageWrapper title="Recruitment Pipeline" subtitle="Drag candidates between stages to update their status">
+        <ErrorState message="Failed to load pipeline" onRetry={refetch} />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

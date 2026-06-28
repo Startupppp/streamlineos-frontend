@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ChangeEvent } from "react";
+import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";

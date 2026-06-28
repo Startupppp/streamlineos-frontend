@@ -37,7 +37,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useUpdateCsatSurvey,
-  useDeleteCsatSurvey,
   useCsatSurveyResponses,
   type CsatSurvey,
 } from "@/lib/api/hooks/crm";

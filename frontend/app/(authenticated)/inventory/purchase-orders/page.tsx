@@ -136,6 +136,7 @@ export default function PurchaseOrdersListPage() {
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
+          className="min-h-[50vh]"
           illustration={<EmptyExpensesIllustration />}
           title="No purchase orders"
           description="Create a PO to start ordering from your suppliers."

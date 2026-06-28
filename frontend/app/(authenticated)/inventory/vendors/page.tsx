@@ -305,6 +305,7 @@ export default function VendorsListPage() {
 
       {!query.isLoading && !query.error && items.length === 0 && (
         <EmptyState
+          className="min-h-[50vh]"
           illustration={<EmptyTeamIllustration />}
           title="No vendors yet"
           description="Add a supplier to start creating purchase orders."

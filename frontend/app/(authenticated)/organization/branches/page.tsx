@@ -350,6 +350,13 @@ export default function OrgBranchesPage() {
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
+  function makeRestoreHandler(branch: OrgBranch) { return () => handleRestore(branch); }
+  function makeArchiveHandler(branch: OrgBranch) { return () => handleArchive(branch); }
+  function makeSetEditingHandler(branch: OrgBranch) { return () => setEditing(branch); }
+  function makeSetDeletingHandler(branch: OrgBranch) { return () => setDeleting(branch); }
+  function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
+  function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleting(null); }
+
   return (
     <PageWrapper
       title="Branches"

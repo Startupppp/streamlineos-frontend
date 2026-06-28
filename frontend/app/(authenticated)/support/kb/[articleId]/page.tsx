@@ -918,7 +918,7 @@ function ArticleEditor({
                 <Label>Visibility</Label>
                 <Select
                   value={visibility}
-                  onValueChange={(v) => setVisibility(v as KbArticleVisibility)}
+                  onValueChange={handleVisibilityChange}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -966,6 +966,10 @@ export default function KbArticleEditorPage({
   const categoriesQuery = useKbCategories();
   const categories = categoriesQuery.data ?? [];
 
+  function handleRetry() {
+    void articleQuery.refetch();
+  }
+
   if (articleQuery.isLoading) {
     return (
       <PageWrapper eyebrow="Support · Knowledge Base" title="Edit Article">
@@ -984,7 +988,7 @@ export default function KbArticleEditorPage({
               ? getApiError(articleQuery.error)
               : "This article does not exist."
           }
-          onRetry={() => articleQuery.refetch()}
+          onRetry={handleRetry}
         />
       </PageWrapper>
     );

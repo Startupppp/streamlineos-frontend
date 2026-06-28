@@ -69,7 +69,7 @@ export default function DocumentReviewPage() {
   if (isError) {
     return (
       <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
-        <ErrorState message="Failed to load document review data" onRetry={refetch} />
+        <ErrorState title="Failed to load document review data" onRetry={handleRetry} />
       </PageWrapper>
     );
   }
