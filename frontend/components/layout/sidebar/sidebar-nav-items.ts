@@ -45,6 +45,13 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "People",
+    requiredPermission: ["settings:manage", "settings:view"],
+    routes: [
+      { label: "Users", icon: UserCog, href: "/users", requiredPermission: "settings:view" },
+    ],
+  },
+  {
     label: "Organization",
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [

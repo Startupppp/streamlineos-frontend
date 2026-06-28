@@ -676,4 +676,15 @@ export const queryKeys = {
     list: () => [...base, "userApiTokens", "list"] as const,
   },
 
+  users: {
+    all: [...base, "users"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "users", "list", params] as const,
+    detail: (id: string) => [...base, "users", "detail", id] as const,
+    sessions: (userId: string) => [...base, "users", "sessions", userId] as const,
+    devices: (userId: string) => [...base, "users", "devices", userId] as const,
+    activity: (userId: string) => [...base, "users", "activity", userId] as const,
+    preferences: (userId: string) => [...base, "users", "preferences", userId] as const,
+    stats: () => [...base, "users", "stats"] as const,
+  },
+
 } as const;
