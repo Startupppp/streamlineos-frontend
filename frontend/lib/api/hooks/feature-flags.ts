@@ -27,7 +27,7 @@ export interface CreateFlagInput {
   rolloutPercentage?: number;
 }
 
-export interface UpdateFlagInput {
+interface UpdateFlagInput {
   name?: string;
   description?: string;
   enabled?: boolean;
@@ -38,15 +38,6 @@ export function useFeatureFlags() {
   return useQuery({
     queryKey: queryKeys.featureFlags.list(),
     queryFn: () => apiClient.get<FeatureFlag[]>("/feature-flags"),
-    staleTime: 60_000,
-  });
-}
-
-export function useFeatureFlag(key: string) {
-  return useQuery({
-    queryKey: queryKeys.featureFlags.detail(key),
-    queryFn: () => apiClient.get<FeatureFlag>(`/feature-flags/${key}`),
-    enabled: !!key,
     staleTime: 60_000,
   });
 }
@@ -83,26 +74,3 @@ export function useArchiveFlag() {
   });
 }
 
-export function useSetOrgOverride() {
-  const qc = useQueryClient();
-  return useMutation<void, Error, { key: string; orgId: string; enabled: boolean }>({
-    mutationFn: ({ key, orgId, enabled }) =>
-      apiClient.post<void>(`/feature-flags/${key}/override`, { orgId, enabled }),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.featureFlags.detail(vars.key) });
-      qc.invalidateQueries({ queryKey: queryKeys.featureFlags.list() });
-    },
-  });
-}
-
-export function useRemoveOrgOverride() {
-  const qc = useQueryClient();
-  return useMutation<void, Error, { key: string; orgId: string }>({
-    mutationFn: ({ key, orgId }) =>
-      apiClient.delete<void>(`/feature-flags/${key}/override/${orgId}`),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.featureFlags.detail(vars.key) });
-      qc.invalidateQueries({ queryKey: queryKeys.featureFlags.list() });
-    },
-  });
-}

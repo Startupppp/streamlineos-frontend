@@ -20,7 +20,7 @@ interface InvoiceFilters {
   limit?: number;
 }
 
-export interface CreateInvoiceItemInput {
+interface CreateInvoiceItemInput {
   description: string;
   hsnSacCode?: string;
   quantity: number;
@@ -187,14 +187,6 @@ interface RecordPaymentInput {
   referenceNumber?: string;
   notes?: string;
 }
-
-export const useInvoicePayments = (invoiceId: number) => {
-  return useQuery<Payment[], Error>({
-    queryKey: [...queryKeys.invoice.detail(invoiceId), "payments"] as const,
-    queryFn: () => apiClient.get<Payment[]>(`/invoices/${invoiceId}/payments`),
-    enabled: invoiceId > 0,
-  });
-};
 
 export const useRecordPayment = () => {
   const queryClient = useQueryClient();

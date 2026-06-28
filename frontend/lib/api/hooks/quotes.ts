@@ -3,9 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Quote, QuoteLineItem, QuoteFilters, CreateQuoteInput, UpdateQuoteInput } from "@/types/crm";
-
-export type { Quote, QuoteLineItem, QuoteFilters, CreateQuoteInput, UpdateQuoteInput };
+import type { Quote, QuoteFilters, CreateQuoteInput } from "@/types/crm";
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
@@ -30,18 +28,6 @@ export function useCreateQuote() {
     mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.quotes.all });
-    },
-  });
-}
-
-export function useUpdateQuote() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...data }: UpdateQuoteInput) =>
-      apiClient.patch<Quote>(`/quotes/${id}`, data),
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotes.all });
-      qc.invalidateQueries({ queryKey: queryKeys.quotes.detail(vars.id) });
     },
   });
 }
