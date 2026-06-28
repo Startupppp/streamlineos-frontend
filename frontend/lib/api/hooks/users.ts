@@ -12,6 +12,9 @@ interface UserListParams {
   status?: "active" | "suspended" | "archived";
   role?: string;
   departmentId?: number;
+  branchId?: number;
+  sortBy?: "name" | "joinedAt" | "status";
+  sortOrder?: "asc" | "desc";
 }
 
 interface UserSession {
@@ -74,11 +77,11 @@ interface User {
   designation: string | null;
   phone: string | null;
   departmentId: number | null;
+  branchId: number | null;
   isActive: boolean;
   hasDashboardAccess: boolean;
   reportingTo: string | null;
   team: string | null;
-  branchId: number | null;
   bio: string | null;
   linkedinUrl: string | null;
   twitterUrl: string | null;
@@ -121,6 +124,9 @@ export const useUsers = (
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.role ? { role: params.role } : {}),
         ...(params?.departmentId ? { departmentId: String(params.departmentId) } : {}),
+        ...(params?.branchId ? { branchId: String(params.branchId) } : {}),
+        ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+        ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
       }),
     staleTime: 30_000,
     ...options,
@@ -497,6 +503,83 @@ export const useBulkRestore = () => {
   });
 };
 
+interface BulkUpdatePayload {
+  userIds: string[];
+  role?: string;
+  departmentId?: number | null;
+  branchId?: number | null;
+  teamId?: string | null;
+  managerUserId?: string | null;
+}
+
+export const useBulkUpdateUsers = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>({
+    mutationFn: (data) => apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    },
+  });
+};
+
+export const useResetUserPassword = () => {
+  return useMutation<{ success: boolean; email: string }, Error, string>({
+    mutationFn: (userId) => apiClient.post<{ success: boolean; email: string }>(`/users/${userId}/reset-password`, {}),
+  });
+};
+
+interface AuditEntry {
+  id: string;
+  orgId: string;
+  userId: string;
+  actorUserId: string | null;
+  action: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  metadata: Record<string, unknown>;
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+interface AuditResponse {
+  data: AuditEntry[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export const useUserAuditLog = (
+  userId: string,
+  params?: { page?: number; limit?: number; from?: string; to?: string },
+  options?: Omit<UseQueryOptions<AuditResponse, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<AuditResponse, Error>({
+    queryKey: [...queryKeys.users.detail(userId), "audit", params] as readonly unknown[],
+    queryFn: () =>
+      apiClient.get<AuditResponse>(`/users/${userId}/audit`, {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+        ...(params?.from ? { from: params.from } : {}),
+        ...(params?.to ? { to: params.to } : {}),
+      }),
+    enabled: !!userId,
+    ...options,
+  });
+};
+
+export const useExportUsers = () => {
+  return useMutation<void, Error, void>({
+    mutationFn: async () => {
+      const csv = await apiClient.get<string>("/users/export");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "users.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+  });
+};
+
 export type {
   User,
   UserSession,
@@ -510,4 +593,7 @@ export type {
   LoginHistoryResponse,
   UserMembership,
   BulkActionResult,
+  BulkUpdatePayload,
+  AuditEntry,
+  AuditResponse,
 };

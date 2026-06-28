@@ -22,6 +22,7 @@ import { UserActivityTab } from "./user-activity-tab";
 import { UserPreferencesTab } from "./user-preferences-tab";
 import { UserLoginHistoryTab } from "./user-login-history-tab";
 import { UserMembershipSection } from "./user-membership-section";
+import { UserAuditTab } from "./user-audit-tab";
 import {
   Mail,
   Phone,
@@ -130,6 +131,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                     { value: "devices", label: "Devices" },
                     { value: "activity", label: "Activity" },
                     { value: "login-history", label: "Logins" },
+                    { value: "audit", label: "Audit" },
                     { value: "preferences", label: "Prefs" },
                   ].map(({ value, label }) => (
                     <TabsTrigger
@@ -266,6 +268,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
                 <TabsContent value="login-history" className="mt-4 flex-1">
                   <UserLoginHistoryTab userId={user.id} />
+                </TabsContent>
+
+                <TabsContent value="audit" className="mt-4 flex-1">
+                  <UserAuditTab userId={user.id} />
                 </TabsContent>
 
                 <TabsContent value="preferences" className="mt-4 flex-1">

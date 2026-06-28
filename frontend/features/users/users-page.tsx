@@ -38,8 +38,11 @@ import {
   useBulkSuspend,
   useBulkArchive,
   useBulkRestore,
+  useResetUserPassword,
+  useExportUsers,
 } from "@/lib/api/hooks/users";
 import type { User } from "@/lib/api/hooks/users";
+import { useOrgBranches, useOrgDepartments } from "@/lib/api/hooks/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";
@@ -59,6 +62,8 @@ import {
   ShieldCheck,
   Trash2,
   RefreshCw,
+  Download,
+  KeyRound,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -101,6 +106,7 @@ interface UserActionsMenuProps {
 function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateUserStatus();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
+  const { mutate: resetPassword, isPending: isResettingPassword } = useResetUserPassword();
 
   function handleActivate() {
     updateStatus(
@@ -139,7 +145,14 @@ function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
     });
   }
 
-  const isLoading = isUpdatingStatus || isDeleting;
+  function handleResetPassword() {
+    resetPassword(user.id, {
+      onSuccess: (r) => toast.success(`Password reset email sent to ${r.email}`),
+      onError: (e) => toast.error(getApiError(e)),
+    });
+  }
+
+  const isLoading = isUpdatingStatus || isDeleting || isResettingPassword;
 
   return (
     <DropdownMenu>
@@ -175,6 +188,10 @@ function UserActionsMenu({ user, onView }: UserActionsMenuProps) {
           <UserX className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
           Archive
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleResetPassword}>
+          <KeyRound className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+          Reset password
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleDelete}
@@ -193,6 +210,10 @@ export function UsersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [role, setRole] = useState<string>("all");
+  const [departmentId, setDepartmentId] = useState<string>("all");
+  const [branchId, setBranchId] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"name" | "joinedAt" | "status">("joinedAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -218,13 +239,31 @@ export function UsersPage() {
     setPage(1);
   }, []);
 
+  const handleDeptChange = useCallback((value: string) => {
+    setDepartmentId(value);
+    setPage(1);
+  }, []);
+
+  const handleBranchChange = useCallback((value: string) => {
+    setBranchId(value);
+    setPage(1);
+  }, []);
+
   const { data, isLoading } = useUsers({
     page,
     limit: 20,
     search: debouncedSearch || undefined,
     status: status !== "all" ? (status as "active" | "suspended" | "archived") : undefined,
     role: role !== "all" ? role : undefined,
+    departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
+    branchId: branchId !== "all" ? Number(branchId) : undefined,
+    sortBy,
+    sortOrder,
   });
+
+  const { data: branchesData } = useOrgBranches();
+  const { data: departmentsData } = useOrgDepartments();
+  const { mutate: exportUsers, isPending: isExporting } = useExportUsers();
 
   const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
   const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
@@ -309,6 +348,16 @@ export function UsersPage() {
               variant="outline"
               size="sm"
               className="h-8 text-xs"
+              onClick={() => exportUsers()}
+              disabled={isExporting}
+            >
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
               onClick={() => setBulkInviteOpen(true)}
             >
               Bulk Invite
@@ -358,6 +407,28 @@ export function UsersPage() {
                   <SelectItem value="MANAGER">Manager</SelectItem>
                   <SelectItem value="MEMBER">Member</SelectItem>
                   <SelectItem value="HR">HR</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={departmentId} onValueChange={handleDeptChange}>
+                <SelectTrigger className="h-8 w-36 text-xs">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All departments</SelectItem>
+                  {(departmentsData?.data ?? []).map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={branchId} onValueChange={handleBranchChange}>
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue placeholder="Branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All branches</SelectItem>
+                  {(branchesData?.data ?? []).map((b) => (
+                    <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
