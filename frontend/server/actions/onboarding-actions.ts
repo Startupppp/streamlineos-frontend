@@ -6,7 +6,7 @@ import { users, documents, onboardingSteps, organizationMembers, leaveTypes, lea
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
-import { encrypt, encryptBankDetails } from "@/lib/encryption";
+import { serverApiClient } from "@/lib/api/server-client";
 import { auth, invalidateUserSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
@@ -79,24 +79,18 @@ export async function updatePersonalDetails(formData: FormData) {
 export async function updateBankDetails(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  const userId = session.user.id;
 
-  const bankDetails = {
-    accountNumber: formData.get("accountNumber") as string,
-    bankName: formData.get("bankName") as string,
-    branch: formData.get("branch") as string,
-    ifsc: formData.get("ifsc") as string,
-    accountHolder: formData.get("accountHolder") as string,
+  const body = {
+    accountHolder: String(formData.get("accountHolder") ?? ""),
+    bankName: String(formData.get("bankName") ?? ""),
+    accountNumber: String(formData.get("accountNumber") ?? ""),
+    ifsc: String(formData.get("ifsc") ?? ""),
+    branch: String(formData.get("branch") ?? ""),
+    taxId: String(formData.get("taxId") ?? ""),
   };
-  const taxId = formData.get("taxId") as string;
 
   try {
-    await db.update(users).set({
-      bankDetails: bankDetails.accountNumber ? encryptBankDetails(bankDetails) : undefined,
-      taxId: taxId ? encrypt(taxId) : undefined,
-    }).where(eq(users.id, userId));
-
-    await updateOnboardingStep(userId, "Bank Details", "COMPLETED");
+    await serverApiClient.patch("/onboarding/bank-details", body);
     return { success: true };
   } catch {
     return { error: "Failed to update bank details" };

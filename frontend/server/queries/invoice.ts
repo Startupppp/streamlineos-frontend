@@ -2,8 +2,10 @@
 
 import { db } from "@/lib/db";
 import { invoices, payments } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/lib/accounting/persist-entry";
+import { serverApiClient } from "@/lib/api/server-client";
+import type { Invoice, InvoiceStats, Payment } from "@/types/invoice";
 
 export interface InvoiceFilters {
   status?: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
@@ -12,62 +14,34 @@ export interface InvoiceFilters {
   limit?: number;
 }
 
-export async function getInvoices(orgId: string, filters?: InvoiceFilters) {
-  const limit = filters?.limit ?? 50;
-  const offset = ((filters?.page ?? 1) - 1) * limit;
-
-  const conditions = [eq(invoices.orgId, orgId)];
-  if (filters?.status) conditions.push(eq(invoices.status, filters.status));
-  if (filters?.clientId)
-    conditions.push(eq(invoices.clientId, filters.clientId));
-
-  const [items, [countResult]] = await Promise.all([
-    db.query.invoices.findMany({
-      where: and(...conditions),
-      orderBy: [desc(invoices.createdAt)],
-      limit,
-      offset,
-      with: {
-        client: { columns: { id: true, name: true } },
-        project: { columns: { id: true, name: true } },
-        creator: { columns: { id: true, name: true } },
-      },
-    }),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(invoices)
-      .where(and(...conditions)),
-  ]);
-
-  return {
-    items,
-    total: countResult?.count ?? 0,
-    page: filters?.page ?? 1,
-    totalPages: Math.ceil((countResult?.count ?? 0) / limit),
-  };
+interface InvoicesListResponse {
+  items: Invoice[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
-export async function getInvoice(orgId: string, id: number) {
-  return db.query.invoices.findFirst({
-    where: and(eq(invoices.id, id), eq(invoices.orgId, orgId)),
-    with: {
-      client: true,
-      project: { columns: { id: true, name: true } },
-      creator: { columns: { id: true, name: true } },
-      payments: {
-        orderBy: [desc(payments.paymentDate)],
-        with: { creator: { columns: { id: true, name: true } } },
-      },
-    },
+export async function getInvoices(
+  orgId: string,
+  filters?: InvoiceFilters,
+): Promise<InvoicesListResponse> {
+  return serverApiClient.get<InvoicesListResponse>("/invoices", {
+    status: filters?.status,
+    clientId: filters?.clientId,
+    page: filters?.page,
+    limit: filters?.limit,
   });
 }
 
-export async function getInvoicePayments(orgId: string, invoiceId: number) {
-  return db.query.payments.findMany({
-    where: and(eq(payments.invoiceId, invoiceId), eq(payments.orgId, orgId)),
-    orderBy: [desc(payments.paymentDate)],
-    with: { creator: { columns: { id: true, name: true } } },
-  });
+export async function getInvoice(orgId: string, id: number): Promise<Invoice> {
+  return serverApiClient.get<Invoice>(`/invoices/${id}`);
+}
+
+export async function getInvoicePayments(
+  orgId: string,
+  invoiceId: number,
+): Promise<Payment[]> {
+  return serverApiClient.get<Payment[]>(`/invoices/${invoiceId}/payments`);
 }
 
 export async function createPayment(
@@ -119,32 +93,6 @@ export async function createPayment(
   return db.transaction(async (tx) => run(tx));
 }
 
-export async function getInvoiceStats(orgId: string) {
-  const results = await db
-    .select({
-      status: invoices.status,
-      count: sql<number>`count(*)::int`,
-      total: sql<number>`COALESCE(sum(${invoices.total}::numeric), 0)::float`,
-    })
-    .from(invoices)
-    .where(eq(invoices.orgId, orgId))
-    .groupBy(invoices.status);
-
-  const stats = {
-    draft: 0,
-    sent: 0,
-    paid: 0,
-    overdue: 0,
-    cancelled: 0,
-    totalOutstanding: 0,
-    totalPaid: 0,
-  };
-  for (const r of results) {
-    const s = r.status.toLowerCase() as keyof typeof stats;
-    if (s in stats) (stats as Record<string, number>)[s] = r.count;
-    if (r.status === "SENT" || r.status === "OVERDUE")
-      stats.totalOutstanding += r.total;
-    if (r.status === "PAID") stats.totalPaid += r.total;
-  }
-  return stats;
+export async function getInvoiceStats(orgId: string): Promise<InvoiceStats> {
+  return serverApiClient.get<InvoiceStats>("/invoices/stats");
 }

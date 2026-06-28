@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/db";
 import {
-  organizations,
   organizationMembers,
   users,
   attendance,
@@ -15,52 +14,15 @@ import {
   timesheets,
   tickets,
   expenses,
-  projects,
 } from "@/lib/db/schema";
-import { eq, and, desc, or, count, sql, gte, lt, isNull, gt, sum } from "drizzle-orm";
+import { eq, and, desc, or, count, gte, lt, isNull, gt, sum } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
+import { serverApiClient } from "@/lib/api/server-client";
+import type { DashboardStats } from "@/types/dashboard";
 
-export async function getDashboardStats(orgId: string, _userId: string) {
-  return cached(
-    CACHE_KEYS.dashboardStats(orgId),
-    async () => {
-      const today = getTodayString();
-
-      const [org, memberCountResult, projectCountResult, attendanceCountResult] =
-        await Promise.all([
-          db.query.organizations.findFirst({
-            where: eq(organizations.id, orgId),
-          }),
-          db
-            .select({ count: count() })
-            .from(organizationMembers)
-            .innerJoin(users, eq(organizationMembers.userId, users.id))
-            .where(
-              and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true))
-            ),
-          db
-            .select({ count: count() })
-            .from(projects)
-            .where(eq(projects.orgId, orgId)),
-          db
-            .select({ count: count() })
-            .from(attendance)
-            .where(
-              and(eq(attendance.orgId, orgId), eq(attendance.date, today))
-            ),
-        ]);
-
-      return {
-        orgName: org?.name || "Organization",
-        totalEmployees: Number(memberCountResult[0]?.count || 0),
-        activeProjects: Number(projectCountResult[0]?.count || 0),
-        presentToday: Number(attendanceCountResult[0]?.count || 0),
-        orgSlug: org?.slug || orgId.slice(0, 8),
-      };
-    },
-    { ttlSeconds: CACHE_TTL.SHORT },
-  );
+export async function getDashboardStats(orgId: string, _userId: string): Promise<DashboardStats> {
+  return serverApiClient.get<DashboardStats>("/dashboard/stats");
 }
 
 export async function getTeamAvailability(orgId: string) {
@@ -94,13 +56,7 @@ export async function getTeamAvailability(orgId: string) {
 }
 
 export async function getRoleStats(orgId: string): Promise<Record<string, number>> {
-  const rows = await db
-    .select({ role: users.role, cnt: sql<number>`count(*)::int` })
-    .from(organizationMembers)
-    .innerJoin(users, eq(organizationMembers.userId, users.id))
-    .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)))
-    .groupBy(users.role);
-  return Object.fromEntries(rows.map((r) => [r.role, r.cnt]));
+  return serverApiClient.get<Record<string, number>>("/dashboard/role-stats");
 }
 
 export async function getActiveAnnouncements(orgId: string) {

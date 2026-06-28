@@ -11,6 +11,13 @@ import { eq, and, desc, or, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getSessionAbility } from "@/lib/abilities-server";
+import { serverApiClient } from "@/lib/api/server-client";
+
+interface ProjectDetail {
+    id: number;
+    name: string;
+    key: string;
+}
 
 export async function getProjects() {
     const session = await auth();
@@ -131,35 +138,9 @@ export async function createProject(data: {
 export async function getProjectById(projectId: number) {
     const session = await auth();
     if (!session?.user?.id) return null;
-    const member = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id)
-    });
-    if (!member) return null;
-
-    const project = await db.query.projects.findFirst({
-        where: and(
-            eq(projects.id, projectId),
-            eq(projects.orgId, member.orgId)
-        ),
-        with: {
-            manager: true
-        }
-    });
-
-    if (!project) return null;
-    const ability = await getSessionAbility();
-
-    const isOwnerOrAdmin = ability.can("manage", "projects");
-    if (isOwnerOrAdmin) return project;
-    const isManager = project.managerId === session.user.id;
-    if (isManager) return project;
-
-    const isMember = await db.query.projectMembers.findFirst({
-        where: and(
-            eq(projectMembers.projectId, projectId),
-            eq(projectMembers.userId, session.user.id)
-        )
-    });
-
-    return isMember ? project : null;
+    try {
+        return await serverApiClient.get<ProjectDetail>(`/projects/${projectId}`);
+    } catch {
+        return null;
+    }
 }
