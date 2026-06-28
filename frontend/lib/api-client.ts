@@ -65,7 +65,7 @@ const MIGRATED_PREFIXES = [
   "/hr/loans",
   "/hr/my-goals",
   "/hr/notification-preferences",
-  "/hr/onboarding-docs/summary",
+  "/hr/onboarding-docs",
   "/hr/org-chart",
   "/hr/payroll-reports",
   "/hr/payrolls",

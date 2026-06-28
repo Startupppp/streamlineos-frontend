@@ -1,11 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { users, documents, onboardingSteps, organizationMembers, leaveTypes, leaveBalances } from "@/lib/db/schema";
-
-import { eq, and } from "drizzle-orm";
 import { z } from "zod";
-import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import { serverApiClient } from "@/lib/api/server-client";
 import { auth, invalidateUserSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -40,7 +35,6 @@ const documentUploadSchema = z.object({
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  const userId = session.user.id;
 
   const parsed = personalDetailsSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -48,28 +42,20 @@ export async function updatePersonalDetails(formData: FormData) {
   }
   const data = parsed.data;
 
-  const address = {
-    ...(data.addressLine1 ? { line1: data.addressLine1 } : {}),
-    ...(data.addressCity ? { city: data.addressCity } : {}),
-    ...(data.addressState ? { state: data.addressState } : {}),
-    ...(data.addressPostalCode ? { postalCode: data.addressPostalCode } : {}),
-    ...(data.addressCountry ? { country: data.addressCountry } : {}),
-  };
-
   try {
-    await db.update(users).set({
+    await serverApiClient.patch("/onboarding/personal-details", {
       phone: data.phone,
       gender: data.gender,
       dateOfBirth: data.dateOfBirth,
-      ...(Object.keys(address).length > 0 ? { address } : {}),
-      emergencyContact: {
-        name: data.emergencyName,
-        relation: data.emergencyRelation,
-        phone: data.emergencyPhone,
-      },
-    }).where(eq(users.id, userId));
-
-    await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
+      emergencyName: data.emergencyName,
+      emergencyRelation: data.emergencyRelation,
+      emergencyPhone: data.emergencyPhone,
+      addressLine1: data.addressLine1,
+      addressCity: data.addressCity,
+      addressState: data.addressState,
+      addressPostalCode: data.addressPostalCode,
+      addressCountry: data.addressCountry,
+    });
     return { success: true };
   } catch {
     return { error: "Failed to update profile" };
@@ -111,117 +97,27 @@ export async function uploadOnboardingDocument(formData: FormData) {
   const { file, type: docType } = parsed.data;
 
   try {
-    if (!isStorageConfigured()) {
-      return { error: "Cloud storage (R2) is not configured. Contact your administrator." };
-    }
-
-    const result = await uploadFile(file, "onboarding");
-    const fileUrl = result.url;
-    const userOrg = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id),
-    });
-
-    if (!userOrg) return { error: "No organization found" };
-
-    await db.insert(documents).values({
-      orgId: userOrg.orgId,
-      userId: session.user.id,
-      name: file.name,
-      type: docType,
-      fileUrl: fileUrl,
-      fileSize: file.size,
-      mimeType: file.type,
-      uploadedBy: session.user.id,
-    });
-    await updateOnboardingStep(session.user.id, `Upload ${docType}`, "COMPLETED", userOrg.orgId);
-
-    return { success: true, url: fileUrl };
-  } catch {
-    return { error: "Failed to upload document" };
+    const payload = new FormData();
+    payload.append("file", file, file.name);
+    payload.append("type", docType);
+    const result = await serverApiClient.upload<{ url: string }>("/onboarding/documents", payload);
+    return { success: true, url: result.url };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to upload document";
+    return { error: message };
   }
 }
+
 export async function submitOnboarding() {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    const userOrg = await db.query.organizationMembers.findFirst({
-      where: eq(organizationMembers.userId, session.user.id),
-    });
-
-    if (!userOrg) return { error: "No organization found" };
-
-    await updateOnboardingStep(session.user.id, "Final Review", "COMPLETED", userOrg.orgId);
-    await allocateDefaultLeaves(session.user.id, userOrg.orgId);
-    await db.update(users)
-      .set({ onboardingCompletedAt: new Date() })
-      .where(eq(users.id, session.user.id));
+    await serverApiClient.post("/onboarding/submit");
     await invalidateUserSession(session.user.id);
-
     revalidatePath("/dashboard");
     return { success: true };
   } catch {
     return { error: "Failed to submit onboarding" };
   }
-}
-
-async function updateOnboardingStep(userId: string, stepName: string, status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED", orgId?: string) {
-    let targetOrgId = orgId;
-    if (!targetOrgId) {
-         const userOrg = await db.query.organizationMembers.findFirst({
-            where: eq(organizationMembers.userId, userId),
-        });
-        targetOrgId = userOrg?.orgId;
-    }
-
-    if (!targetOrgId) return;
-    const existing = await db.query.onboardingSteps.findFirst({
-        where: and(
-            eq(onboardingSteps.userId, userId),
-            eq(onboardingSteps.stepName, stepName)
-        )
-    });
-
-    if (existing) {
-        await db.update(onboardingSteps)
-            .set({ status, completedAt: status === 'COMPLETED' ? new Date() : null })
-            .where(eq(onboardingSteps.id, existing.id));
-    } else {
-        await db.insert(onboardingSteps).values({
-            userId,
-            orgId: targetOrgId,
-            stepName,
-            status,
-            completedAt: status === 'COMPLETED' ? new Date() : null
-        });
-    }
-}
-
-async function allocateDefaultLeaves(userId: string, orgId: string) {
-  const currentYear = new Date().getFullYear();
-
-  const existingBalances = await db.query.leaveBalances.findFirst({
-    where: and(
-      eq(leaveBalances.userId, userId),
-      eq(leaveBalances.year, currentYear)
-    ),
-  });
-
-  if (existingBalances) return;
-
-  const orgLeaveTypes = await db.query.leaveTypes.findMany({
-    where: eq(leaveTypes.orgId, orgId),
-  });
-
-  if (orgLeaveTypes.length === 0) return;
-
-  await db.insert(leaveBalances).values(
-    orgLeaveTypes.map((lt) => ({
-      orgId,
-      userId,
-      leaveTypeId: lt.id,
-      balance: String(lt.daysPerYear),
-      year: currentYear,
-    }))
-  );
 }
