@@ -15,7 +15,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, PartyPopper, MapPin, Users, UserPlus, CheckCircle2, Calendar } from "lucide-react";
+import { Plus, PartyPopper, MapPin, Users, UserPlus, CheckCircle2, Calendar, AlertCircle } from "lucide-react";
 import { useAbility } from "@/lib/abilities-context";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
