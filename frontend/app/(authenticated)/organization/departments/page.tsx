@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Users, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgDepartments,
@@ -176,50 +176,86 @@ export default function OrgDepartmentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgDepartment | null>(null);
   const [deleting, setDeleting] = useState<OrgDepartment | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const branches = (branchesData ?? []).map((b) => ({ id: b.id, name: b.name }));
   const branchMap = Object.fromEntries(branches.map((b) => [b.id, b.name]));
-  const active = (depts ?? []).filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
+  const allDepts = depts ?? [];
+  const active = allDepts.filter((d) => d.status !== "ARCHIVED" && !d.deletedAt);
+  const archived = allDepts.filter((d) => d.status === "ARCHIVED" && !d.deletedAt);
+  const displayed = showArchived ? archived : active;
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      {
-        name: values.name,
-        code: values.code.toUpperCase(),
-        branchId: values.branchId || undefined,
-        description: values.description || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Department created");
-          setShowCreate(false);
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        {
+          name: values.name,
+          code: values.code.toUpperCase(),
+          branchId: values.branchId || undefined,
+          description: values.description || undefined,
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
-
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      {
-        id: editing.id,
-        name: values.name,
-        code: values.code.toUpperCase(),
-        branchId: values.branchId || undefined,
-        description: values.description || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Department updated");
-          setEditing(null);
+        {
+          onSuccess: () => {
+            toast.success("Department created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleDelete() {
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        {
+          id: editing.id,
+          name: values.name,
+          code: values.code.toUpperCase(),
+          branchId: values.branchId || undefined,
+          description: values.description || undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Department updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [editing, update],
+  );
+
+  const handleArchive = useCallback(
+    (d: OrgDepartment) => {
+      update.mutate(
+        { id: d.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Department archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (d: OrgDepartment) => {
+      update.mutate(
+        { id: d.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Department restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -228,17 +264,28 @@ export default function OrgDepartmentsPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
+
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Departments"
-      subtitle="Functional departments within your organization's branches."
+      subtitle="Departments organized within branches across your organization."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Department
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Department
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
@@ -247,15 +294,22 @@ export default function OrgDepartmentsPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : active.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <Users className="h-10 w-10 opacity-30" />
-          <p className="text-sm">No departments yet</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Department
-          </Button>
-        </div>
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived departments</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Users className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No departments yet</p>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Department
+            </Button>
+          </div>
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -264,12 +318,12 @@ export default function OrgDepartmentsPage() {
               <TableHead>Code</TableHead>
               <TableHead>Branch</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((d) => (
-              <TableRow key={d.id}>
+            {displayed.map((d) => (
+              <TableRow key={d.id} className={d.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{d.name}</TableCell>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{d.code}</code>
@@ -283,7 +337,9 @@ export default function OrgDepartmentsPage() {
                     className={
                       d.status === "ACTIVE"
                         ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : ""
+                        : d.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
                     }
                   >
                     {d.status}
@@ -291,12 +347,25 @@ export default function OrgDepartmentsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(d)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(d)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {d.status === "ARCHIVED" ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleRestore(d)} title="Restore">
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleting(d)} title="Delete permanently">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(d)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleArchive(d)} title="Archive">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -339,7 +408,7 @@ export default function OrgDepartmentsPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Department"
-        description={`Are you sure you want to delete "${deleting?.name}"?`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive

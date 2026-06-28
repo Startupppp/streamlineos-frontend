@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgLocations,
@@ -50,7 +50,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
-
 
 const LOCATION_TYPE_ENUM = ["OFFICE", "WAREHOUSE", "STORE", "FACTORY", "REMOTE"] as const;
 
@@ -163,37 +162,73 @@ export default function OrgLocationsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgLocation | null>(null);
   const [deleting, setDeleting] = useState<OrgLocation | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const active = (locations ?? []).filter((l) => l.status !== "ARCHIVED");
+  const allLocations = locations ?? [];
+  const active = allLocations.filter((l) => l.status !== "ARCHIVED");
+  const archived = allLocations.filter((l) => l.status === "ARCHIVED");
+  const displayed = showArchived ? archived : active;
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      { name: values.name, type: values.type, address: values.address || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Location created");
-          setShowCreate(false);
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        { name: values.name, type: values.type, address: values.address || undefined },
+        {
+          onSuccess: () => {
+            toast.success("Location created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      { id: editing.id, name: values.name, type: values.type, address: values.address || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Location updated");
-          setEditing(null);
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        { id: editing.id, name: values.name, type: values.type, address: values.address || undefined },
+        {
+          onSuccess: () => {
+            toast.success("Location updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [editing, update],
+  );
 
-  function handleDelete() {
+  const handleArchive = useCallback(
+    (l: OrgLocation) => {
+      update.mutate(
+        { id: l.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Location archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (l: OrgLocation) => {
+      update.mutate(
+        { id: l.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Location restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -202,17 +237,28 @@ export default function OrgLocationsPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
+
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Locations"
       subtitle="Physical work locations and offices used by your organization."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Location
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Location
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
@@ -221,15 +267,22 @@ export default function OrgLocationsPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : active.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <MapPin className="h-10 w-10 opacity-30" />
-          <p className="text-sm">No locations yet</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Location
-          </Button>
-        </div>
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived locations</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <MapPin className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No locations yet</p>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Location
+            </Button>
+          </div>
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -237,12 +290,13 @@ export default function OrgLocationsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Address</TableHead>
-              <TableHead className="w-24" />
+              <TableHead>Status</TableHead>
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((l) => (
-              <TableRow key={l.id}>
+            {displayed.map((l) => (
+              <TableRow key={l.id} className={l.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{l.name}</TableCell>
                 <TableCell>
                   <TypeBadge type={l.type} />
@@ -251,13 +305,40 @@ export default function OrgLocationsPage() {
                   {l.address ?? "—"}
                 </TableCell>
                 <TableCell>
+                  <Badge
+                    variant={l.status === "ACTIVE" ? "outline" : "secondary"}
+                    className={
+                      l.status === "ACTIVE"
+                        ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
+                        : l.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
+                    }
+                  >
+                    {l.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(l)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(l)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {l.status === "ARCHIVED" ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleRestore(l)} title="Restore">
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleting(l)} title="Delete permanently">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(l)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleArchive(l)} title="Archive">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -298,7 +379,7 @@ export default function OrgLocationsPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Location"
-        description={`Are you sure you want to delete "${deleting?.name}"?`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive

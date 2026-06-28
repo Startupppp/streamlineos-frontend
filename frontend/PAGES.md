@@ -289,3 +289,19 @@ Live Playwright E2E across all non-HR modules (105 routes × 3 viewports, authen
 - [x] `/billing/invoices/new` — line-item grid (`grid-cols-12`) was unusable at 375px; now stacks to labeled cards on mobile, tabular at md+.
 - [x] `/crm/organizations` & `/crm/contacts` — create flow existed but had no trigger button (users couldn't create the first record); added header "New …" buttons + empty-state CTAs wired to the existing create dialogs.
 - [x] `/settings/branches`, `/settings/custom-fields`, `/settings/webhooks` — empty states now fill content height with a solid in-card primary CTA (match Automations).
+
+---
+
+## Organization & Authorization Completion Pass (2026-06-28)
+Completed all identified missing features across Organization and Authorization domains (build ✓):
+- [x] `/organization/business-units` — Added archive/restore UI (toggle "Archived (N)" button, amber badge, Restore/Delete for archived rows, Edit/Archive for active rows).
+- [x] `/organization/branches` — Same archive/restore pattern as business-units.
+- [x] `/organization/departments` — Same archive/restore pattern; added Branch selector in form.
+- [x] `/organization/teams` — Same archive/restore pattern; Capacity column added.
+- [x] `/organization/locations` — Same archive/restore pattern; no `deletedAt` so filter by `status === "ARCHIVED"` only.
+- [x] `/organization/cost-centers` — Same archive/restore pattern; converted anonymous handlers to `useCallback`.
+- [x] `/settings/api-tokens` — Full implementation: list/create/revoke/delete tokens; token-created dialog with one-time copy; scope selector; expiry date.
+- [x] `/settings/organization` — Added `maxConcurrentSessions` field to Security Policies section; wired to backend.
+- Backend: Created `api-tokens` NestJS module (controller/service/dto) with list/create/revoke/delete endpoints; registered in `app.module.ts`.
+- Backend: Added `maxConcurrentSessions` to `organizations` schema (frontend + backend), org security DTO, and session enforcement in `auth.service.ts` (oldest sessions revoked on login when limit exceeded).
+- DB: Migration `0124_max_concurrent_sessions.sql` adds `max_concurrent_sessions` column.

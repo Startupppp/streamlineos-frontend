@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UsersRound, Plus, Pencil, Trash2 } from "lucide-react";
+import { UsersRound, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgTeams,
@@ -190,52 +190,88 @@ export default function OrgTeamsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgTeam | null>(null);
   const [deleting, setDeleting] = useState<OrgTeam | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const departments = (deptsData ?? []).map((d) => ({ id: d.id, name: d.name }));
   const deptMap = Object.fromEntries(departments.map((d) => [d.id, d.name]));
-  const active = (teams ?? []).filter((t) => t.status !== "ARCHIVED" && !t.deletedAt);
+  const allTeams = teams ?? [];
+  const active = allTeams.filter((t) => t.status !== "ARCHIVED" && !t.deletedAt);
+  const archived = allTeams.filter((t) => t.status === "ARCHIVED" && !t.deletedAt);
+  const displayed = showArchived ? archived : active;
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      {
-        name: values.name,
-        code: values.code.toUpperCase(),
-        departmentId: values.departmentId || undefined,
-        description: values.description || undefined,
-        capacity: values.capacity ? Number(values.capacity) : undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Team created");
-          setShowCreate(false);
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        {
+          name: values.name,
+          code: values.code.toUpperCase(),
+          departmentId: values.departmentId || undefined,
+          description: values.description || undefined,
+          capacity: values.capacity ? Number(values.capacity) : undefined,
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
-
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      {
-        id: editing.id,
-        name: values.name,
-        code: values.code.toUpperCase(),
-        departmentId: values.departmentId || undefined,
-        description: values.description || undefined,
-        capacity: values.capacity ? Number(values.capacity) : undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Team updated");
-          setEditing(null);
+        {
+          onSuccess: () => {
+            toast.success("Team created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleDelete() {
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        {
+          id: editing.id,
+          name: values.name,
+          code: values.code.toUpperCase(),
+          departmentId: values.departmentId || undefined,
+          description: values.description || undefined,
+          capacity: values.capacity ? Number(values.capacity) : undefined,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Team updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [editing, update],
+  );
+
+  const handleArchive = useCallback(
+    (t: OrgTeam) => {
+      update.mutate(
+        { id: t.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Team archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (t: OrgTeam) => {
+      update.mutate(
+        { id: t.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Team restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -244,17 +280,28 @@ export default function OrgTeamsPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
+
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Teams"
       subtitle="Teams within departments across your organization."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Team
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Team
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
@@ -263,15 +310,22 @@ export default function OrgTeamsPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : active.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <UsersRound className="h-10 w-10 opacity-30" />
-          <p className="text-sm">No teams yet</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Team
-          </Button>
-        </div>
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived teams</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <UsersRound className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No teams yet</p>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Team
+            </Button>
+          </div>
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -281,12 +335,12 @@ export default function OrgTeamsPage() {
               <TableHead>Department</TableHead>
               <TableHead>Capacity</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((t) => (
-              <TableRow key={t.id}>
+            {displayed.map((t) => (
+              <TableRow key={t.id} className={t.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell className="font-medium">{t.name}</TableCell>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.code}</code>
@@ -303,7 +357,9 @@ export default function OrgTeamsPage() {
                     className={
                       t.status === "ACTIVE"
                         ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : ""
+                        : t.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
                     }
                   >
                     {t.status}
@@ -311,12 +367,25 @@ export default function OrgTeamsPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(t)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(t)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {t.status === "ARCHIVED" ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleRestore(t)} title="Restore">
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleting(t)} title="Delete permanently">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(t)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleArchive(t)} title="Archive">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -360,7 +429,7 @@ export default function OrgTeamsPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Team"
-        description={`Are you sure you want to delete "${deleting?.name}"?`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive

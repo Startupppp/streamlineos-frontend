@@ -9,6 +9,7 @@ export interface OrgSettings {
   mfaEnforced?: boolean;
   passwordExpiryDays?: number | null;
   allowedEmailDomains?: string[] | null;
+  maxConcurrentSessions?: number | null;
   settings?: Record<string, unknown> | null;
   primaryColor?: string | null;
   loginBgUrl?: string | null;

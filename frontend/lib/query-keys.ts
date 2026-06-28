@@ -654,4 +654,9 @@ export const queryKeys = {
     movementsReport: (params?: Record<string, unknown>) => [...base, "inventory", "movementsReport", params] as const,
   },
 
+  apiTokens: {
+    all: [...base, "apiTokens"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "apiTokens", "list", params] as const,
+  },
+
 } as const;

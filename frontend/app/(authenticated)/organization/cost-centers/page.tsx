@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DollarSign, Plus, Pencil, Trash2 } from "lucide-react";
+import { DollarSign, Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgCostCenters,
@@ -139,37 +139,73 @@ export default function OrgCostCentersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<OrgCostCenter | null>(null);
   const [deleting, setDeleting] = useState<OrgCostCenter | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const active = (costCenters ?? []).filter((c) => c.status !== "ARCHIVED");
+  const allCostCenters = costCenters ?? [];
+  const active = allCostCenters.filter((c) => c.status !== "ARCHIVED");
+  const archived = allCostCenters.filter((c) => c.status === "ARCHIVED");
+  const displayed = showArchived ? archived : active;
 
-  function handleCreate(values: FormValues) {
-    create.mutate(
-      { code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Cost center created");
-          setShowCreate(false);
+  const handleCreate = useCallback(
+    (values: FormValues) => {
+      create.mutate(
+        { code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
+        {
+          onSuccess: () => {
+            toast.success("Cost center created");
+            setShowCreate(false);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [create],
+  );
 
-  function handleUpdate(values: FormValues) {
-    if (!editing) return;
-    update.mutate(
-      { id: editing.id, code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Cost center updated");
-          setEditing(null);
+  const handleUpdate = useCallback(
+    (values: FormValues) => {
+      if (!editing) return;
+      update.mutate(
+        { id: editing.id, code: values.code.toUpperCase(), name: values.name, description: values.description || undefined },
+        {
+          onSuccess: () => {
+            toast.success("Cost center updated");
+            setEditing(null);
+          },
+          onError: (err) => toast.error(getApiError(err)),
         },
-        onError: (err) => toast.error(getApiError(err)),
-      },
-    );
-  }
+      );
+    },
+    [editing, update],
+  );
 
-  function handleDelete() {
+  const handleArchive = useCallback(
+    (c: OrgCostCenter) => {
+      update.mutate(
+        { id: c.id, status: "ARCHIVED" },
+        {
+          onSuccess: () => toast.success("Cost center archived"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleRestore = useCallback(
+    (c: OrgCostCenter) => {
+      update.mutate(
+        { id: c.id, status: "ACTIVE" },
+        {
+          onSuccess: () => toast.success("Cost center restored"),
+          onError: (err) => toast.error(getApiError(err)),
+        },
+      );
+    },
+    [update],
+  );
+
+  const handleDelete = useCallback(() => {
     if (!deleting) return;
     remove.mutate(deleting.id, {
       onSuccess: () => {
@@ -178,17 +214,28 @@ export default function OrgCostCentersPage() {
       },
       onError: (err) => toast.error(getApiError(err)),
     });
-  }
+  }, [deleting, remove]);
+
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
 
   return (
     <PageWrapper
       title="Cost Centers"
       subtitle="Financial cost centers for expense tracking and reporting."
       actions={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add Cost Center
-        </Button>
+        <div className="flex items-center gap-2">
+          {archived.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleToggleArchived}>
+              <Archive className="h-4 w-4 mr-1.5" />
+              {showArchived ? "Show Active" : `Archived (${archived.length})`}
+            </Button>
+          )}
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Cost Center
+          </Button>
+        </div>
       }
     >
       {isLoading ? (
@@ -197,15 +244,22 @@ export default function OrgCostCentersPage() {
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>
-      ) : active.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
-          <DollarSign className="h-10 w-10 opacity-30" />
-          <p className="text-sm">No cost centers yet</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Cost Center
-          </Button>
-        </div>
+      ) : displayed.length === 0 ? (
+        showArchived ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <Archive className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No archived cost centers</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-60 gap-3 text-muted-foreground">
+            <DollarSign className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No cost centers yet</p>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Cost Center
+            </Button>
+          </div>
+        )
       ) : (
         <Table>
           <TableHeader>
@@ -214,12 +268,12 @@ export default function OrgCostCentersPage() {
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {active.map((c) => (
-              <TableRow key={c.id}>
+            {displayed.map((c) => (
+              <TableRow key={c.id} className={c.status === "ARCHIVED" ? "opacity-60" : ""}>
                 <TableCell>
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{c.code}</code>
                 </TableCell>
@@ -230,7 +284,9 @@ export default function OrgCostCentersPage() {
                     className={
                       c.status === "ACTIVE"
                         ? "text-green-700 border-green-200 bg-green-50 dark:bg-green-900/20 dark:text-green-400"
-                        : ""
+                        : c.status === "ARCHIVED"
+                          ? "text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400"
+                          : ""
                     }
                   >
                     {c.status}
@@ -241,12 +297,25 @@ export default function OrgCostCentersPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(c)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleting(c)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {c.status === "ARCHIVED" ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleRestore(c)} title="Restore">
+                          <RotateCcw className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleting(c)} title="Delete permanently">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(c)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleArchive(c)} title="Archive">
+                          <Archive className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -287,7 +356,7 @@ export default function OrgCostCentersPage() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete Cost Center"
-        description={`Are you sure you want to delete "${deleting?.name}"?`}
+        description={`Permanently delete "${deleting?.name}"? This cannot be undone.`}
         onConfirm={handleDelete}
         isPending={remove.isPending}
         destructive

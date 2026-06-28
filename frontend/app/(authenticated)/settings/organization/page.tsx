@@ -59,6 +59,7 @@ export default function OrganizationSettingsPage() {
 
   const [mfaEnforced, setMfaEnforced] = useState(false);
   const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>("");
+  const [maxConcurrentSessions, setMaxConcurrentSessions] = useState<string>("");
   const [allowedEmailDomains, setAllowedEmailDomains] = useState<string[]>([]);
   const [domainInput, setDomainInput] = useState("");
   const [securityInitialized, setSecurityInitialized] = useState(false);
@@ -75,6 +76,7 @@ export default function OrganizationSettingsPage() {
     if (!securityInitialized && org) {
       setMfaEnforced(org.mfaEnforced ?? false);
       setPasswordExpiryDays(String(org.passwordExpiryDays ?? ""));
+      setMaxConcurrentSessions(String(org.maxConcurrentSessions ?? ""));
       setAllowedEmailDomains(org.allowedEmailDomains ?? []);
       setSecurityInitialized(true);
     }
@@ -228,6 +230,7 @@ export default function OrganizationSettingsPage() {
   const handlePrimaryColorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value), []);
   const handleLoginBgUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setLoginBgUrl(e.target.value), []);
   const handlePasswordExpiryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPasswordExpiryDays(e.target.value), []);
+  const handleMaxConcurrentSessionsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setMaxConcurrentSessions(e.target.value), []);
 
   const handleAddDomain = useCallback(() => {
     const domain = domainInput.trim().toLowerCase().replace(/^@/, "");
@@ -265,14 +268,19 @@ export default function OrganizationSettingsPage() {
       toast.error("Password expiry must be between 30 and 365 days");
       return;
     }
+    const maxSessionsNum = maxConcurrentSessions ? parseInt(maxConcurrentSessions, 10) : null;
+    if (maxConcurrentSessions && (isNaN(maxSessionsNum!) || maxSessionsNum! < 1 || maxSessionsNum! > 100)) {
+      toast.error("Max concurrent sessions must be between 1 and 100");
+      return;
+    }
     updateSecurity(
-      { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains },
+      { mfaEnforced, passwordExpiryDays: expiryDaysNum, allowedEmailDomains, maxConcurrentSessions: maxSessionsNum },
       {
         onSuccess: () => toast.success("Security settings saved"),
         onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to save security settings"),
       },
     );
-  }, [mfaEnforced, passwordExpiryDays, allowedEmailDomains, updateSecurity]);
+  }, [mfaEnforced, passwordExpiryDays, maxConcurrentSessions, allowedEmailDomains, updateSecurity]);
 
   if (isLoading) {
     return (
@@ -364,6 +372,7 @@ export default function OrganizationSettingsPage() {
           <OrgSecuritySection
             mfaEnforced={mfaEnforced}
             passwordExpiryDays={passwordExpiryDays}
+            maxConcurrentSessions={maxConcurrentSessions}
             allowedEmailDomains={allowedEmailDomains}
             domainInput={domainInput}
             domainInputRef={domainInputRef}
@@ -373,6 +382,7 @@ export default function OrganizationSettingsPage() {
             isUpdatingOrg={isUpdatingOrg}
             onMfaChange={setMfaEnforced}
             onPasswordExpiryChange={handlePasswordExpiryChange}
+            onMaxConcurrentSessionsChange={handleMaxConcurrentSessionsChange}
             onDomainInputChange={handleDomainInputChange}
             onDomainInputKeyDown={handleDomainInputKeyDown}
             onAddDomain={handleAddDomain}
