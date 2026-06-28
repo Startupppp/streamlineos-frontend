@@ -49,6 +49,7 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["settings:manage", "settings:view"],
     routes: [
       { label: "Users", icon: UserCog, href: "/users", requiredPermission: "settings:view" },
+      { label: "Invitations", icon: MailOpen, href: "/users/invitations", requiredPermission: "settings:view" },
     ],
   },
   {

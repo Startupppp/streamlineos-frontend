@@ -326,4 +326,188 @@ export const useBulkInviteUsers = () => {
   });
 };
 
-export type { User, UserSession, UserDevice, UserActivityItem, UserPreferences, UserStats };
+interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  invitedBy: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+}
+
+interface InvitationsResponse {
+  data: Invitation[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface LoginHistoryItem {
+  id: string;
+  userId: string;
+  orgId: string | null;
+  event: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  country: string | null;
+  city: string | null;
+  success: boolean;
+  failureReason: string | null;
+  deviceId: string | null;
+  createdAt: string;
+}
+
+interface LoginHistoryResponse {
+  data: LoginHistoryItem[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+interface UserMembership {
+  userId: string;
+  orgId: string;
+  businessUnitId: string | null;
+  branchId: number | null;
+  departmentId: number | null;
+  teamId: string | null;
+  managerUserId: string | null;
+  isPrimary: boolean;
+}
+
+interface BulkActionResult {
+  results: Array<{ userId: string; success: boolean; error?: string }>;
+  succeeded: number;
+  failed: number;
+}
+
+export const useInvitations = (
+  params?: { page?: number; limit?: number; includeAccepted?: boolean },
+  options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<InvitationsResponse, Error>({
+    queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
+    queryFn: () =>
+      apiClient.get<InvitationsResponse>("/users/invitations", {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+        ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
+      }),
+    staleTime: 30_000,
+    ...options,
+  });
+};
+
+export const useResendInvite = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: (invitationId) =>
+      apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+    },
+  });
+};
+
+export const useCancelInvitation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: (invitationId) =>
+      apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+    },
+  });
+};
+
+export const useUserLoginHistory = (
+  userId: string,
+  params?: { page?: number; limit?: number; success?: boolean },
+  options?: Omit<UseQueryOptions<LoginHistoryResponse, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<LoginHistoryResponse, Error>({
+    queryKey: queryKeys.users.loginHistory(userId, params as Record<string, unknown> | undefined),
+    queryFn: () =>
+      apiClient.get<LoginHistoryResponse>(`/users/${userId}/login-history`, {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+        ...(params?.success !== undefined ? { success: String(params.success) } : {}),
+      }),
+    enabled: !!userId,
+    ...options,
+  });
+};
+
+export const useUserMembership = (
+  userId: string,
+  options?: Omit<UseQueryOptions<UserMembership, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<UserMembership, Error>({
+    queryKey: queryKeys.users.membership(userId),
+    queryFn: () => apiClient.get<UserMembership>(`/users/${userId}/membership`),
+    enabled: !!userId,
+    ...options,
+  });
+};
+
+export const useUpdateUserMembership = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: boolean },
+    Error,
+    { userId: string; data: Partial<UserMembership> }
+  >({
+    mutationFn: ({ userId, data }) =>
+      apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),
+    onSuccess: (_, { userId }) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.membership(userId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
+    },
+  });
+};
+
+export const useBulkSuspend = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-suspend", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+    },
+  });
+};
+
+export const useBulkArchive = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-archive", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+    },
+  });
+};
+
+export const useBulkRestore = () => {
+  const queryClient = useQueryClient();
+  return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+    mutationFn: (data) => apiClient.post<BulkActionResult>("/users/bulk-restore", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+    },
+  });
+};
+
+export type {
+  User,
+  UserSession,
+  UserDevice,
+  UserActivityItem,
+  UserPreferences,
+  UserStats,
+  Invitation,
+  InvitationsResponse,
+  LoginHistoryItem,
+  LoginHistoryResponse,
+  UserMembership,
+  BulkActionResult,
+};

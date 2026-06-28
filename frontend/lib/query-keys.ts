@@ -685,6 +685,9 @@ export const queryKeys = {
     activity: (userId: string) => [...base, "users", "activity", userId] as const,
     preferences: (userId: string) => [...base, "users", "preferences", userId] as const,
     stats: () => [...base, "users", "stats"] as const,
+    invitations: (params?: Record<string, unknown>) => [...base, "users", "invitations", params] as const,
+    loginHistory: (userId: string, params?: Record<string, unknown>) => [...base, "users", "loginHistory", userId, params] as const,
+    membership: (userId: string) => [...base, "users", "membership", userId] as const,
   },
 
 } as const;

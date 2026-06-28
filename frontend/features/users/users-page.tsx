@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -30,13 +31,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useUsers, useUpdateUserStatus, useDeleteUser } from "@/lib/api/hooks/users";
+import {
+  useUsers,
+  useUpdateUserStatus,
+  useDeleteUser,
+  useBulkSuspend,
+  useBulkArchive,
+  useBulkRestore,
+} from "@/lib/api/hooks/users";
 import type { User } from "@/lib/api/hooks/users";
 import { getApiError } from "@/lib/api-client";
 import { UserStatusBadge } from "./user-status-badge";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { UserInviteDialog } from "./user-invite-dialog";
 import { UserBulkInviteDialog } from "./user-bulk-invite-dialog";
+import { UserStatsCards } from "./user-stats-cards";
 import { toast } from "sonner";
 import {
   Search,
@@ -49,6 +58,7 @@ import {
   ShieldOff,
   ShieldCheck,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -64,6 +74,7 @@ function getInitials(name: string | null, email: string): string {
 function RowSkeleton() {
   return (
     <TableRow>
+      <TableCell className="w-10"><Skeleton className="h-4 w-4 rounded" /></TableCell>
       <TableCell>
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-8 w-8 rounded-full" />
@@ -187,6 +198,7 @@ export function UsersPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -214,13 +226,76 @@ export function UsersPage() {
     role: role !== "all" ? role : undefined,
   });
 
+  const { mutate: bulkSuspend, isPending: isSuspending } = useBulkSuspend();
+  const { mutate: bulkArchive, isPending: isArchiving } = useBulkArchive();
+  const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
+
   function handleRowClick(userId: string) {
     setSelectedUserId(userId);
     setSheetOpen(true);
   }
 
+  function handleSelectAll(checked: boolean) {
+    if (checked) {
+      setSelectedIds(new Set(users.map((u) => u.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function handleSelectRow(userId: string, checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+  }
+
+  function handleBulkSuspend() {
+    bulkSuspend(
+      { userIds: Array.from(selectedIds) },
+      {
+        onSuccess: (r) => {
+          toast.success(`${r.succeeded} user(s) suspended`);
+          setSelectedIds(new Set());
+        },
+        onError: (e) => toast.error(getApiError(e)),
+      }
+    );
+  }
+
+  function handleBulkArchive() {
+    bulkArchive(
+      { userIds: Array.from(selectedIds) },
+      {
+        onSuccess: (r) => {
+          toast.success(`${r.succeeded} user(s) archived`);
+          setSelectedIds(new Set());
+        },
+        onError: (e) => toast.error(getApiError(e)),
+      }
+    );
+  }
+
+  function handleBulkRestore() {
+    bulkRestore(
+      { userIds: Array.from(selectedIds) },
+      {
+        onSuccess: (r) => {
+          toast.success(`${r.succeeded} user(s) restored`);
+          setSelectedIds(new Set());
+        },
+        onError: (e) => toast.error(getApiError(e)),
+      }
+    );
+  }
+
   const users = data?.data ?? [];
   const pagination = data?.pagination;
+  const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
+  const someSelected = selectedIds.size > 0;
+  const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
   return (
     <>
@@ -249,53 +324,103 @@ export function UsersPage() {
           </div>
         }
         filters={
-          <div className="flex flex-wrap items-center gap-2 w-full">
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-8 text-xs"
-              />
+          <div className="flex flex-col gap-3 w-full">
+            <UserStatsCards />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[180px] max-w-sm">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search users..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+              <Select value={status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={role} onValueChange={handleRoleChange}>
+                <SelectTrigger className="h-8 w-32 text-xs">
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="OWNER">Owner</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="MANAGER">Manager</SelectItem>
+                  <SelectItem value="MEMBER">Member</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 w-32 text-xs">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={role} onValueChange={handleRoleChange}>
-              <SelectTrigger className="h-8 w-32 text-xs">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                <SelectItem value="OWNER">Owner</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="MANAGER">Manager</SelectItem>
-                <SelectItem value="MEMBER">Member</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         }
       >
+        {someSelected && (
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-md bg-muted/60 border text-xs">
+            <span className="font-medium text-muted-foreground">{selectedIds.size} selected</span>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleBulkSuspend}
+                disabled={bulkIsPending}
+              >
+                <ShieldOff className="h-3 w-3 mr-1" />
+                Suspend
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleBulkArchive}
+                disabled={bulkIsPending}
+              >
+                <UserX className="h-3 w-3 mr-1" />
+                Archive
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleBulkRestore}
+                disabled={bulkIsPending}
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Restore
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
+                  <TableHead className="w-10" />
                   <TableHead className="text-xs">User</TableHead>
                   <TableHead className="text-xs">Email</TableHead>
                   <TableHead className="text-xs">Role</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs">Last Active</TableHead>
+                  <TableHead className="text-xs">Joined</TableHead>
                   <TableHead className="text-xs w-10" />
                 </TableRow>
               </TableHeader>
@@ -327,6 +452,13 @@ export function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
+                    <TableHead className="w-10 pl-4">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(c) => handleSelectAll(!!c)}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
                     <TableHead className="text-xs">User</TableHead>
                     <TableHead className="text-xs">Email</TableHead>
                     <TableHead className="text-xs">Role</TableHead>
@@ -341,7 +473,18 @@ export function UsersPage() {
                       key={user.id}
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
                       onClick={() => handleRowClick(user.id)}
+                      data-state={selectedIds.has(user.id) ? "selected" : undefined}
                     >
+                      <TableCell
+                        className="pl-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={selectedIds.has(user.id)}
+                          onCheckedChange={(c) => handleSelectRow(user.id, !!c)}
+                          aria-label={`Select ${user.name ?? user.email}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-8 w-8 shrink-0">

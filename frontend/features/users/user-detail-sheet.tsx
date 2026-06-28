@@ -20,6 +20,8 @@ import { UserSessionsTab } from "./user-sessions-tab";
 import { UserDevicesTab } from "./user-devices-tab";
 import { UserActivityTab } from "./user-activity-tab";
 import { UserPreferencesTab } from "./user-preferences-tab";
+import { UserLoginHistoryTab } from "./user-login-history-tab";
+import { UserMembershipSection } from "./user-membership-section";
 import {
   Mail,
   Phone,
@@ -121,14 +123,21 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
               </div>
             ) : (
               <Tabs defaultValue="profile" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="shrink-0 w-full justify-start h-8 bg-muted/50 rounded-md p-0.5 gap-0.5">
-                  {["profile", "sessions", "devices", "activity", "preferences"].map((tab) => (
+                <TabsList className="shrink-0 w-full justify-start h-8 bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
+                  {[
+                    { value: "profile", label: "Profile" },
+                    { value: "sessions", label: "Sessions" },
+                    { value: "devices", label: "Devices" },
+                    { value: "activity", label: "Activity" },
+                    { value: "login-history", label: "Logins" },
+                    { value: "preferences", label: "Prefs" },
+                  ].map(({ value, label }) => (
                     <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      className="text-xs capitalize h-7 px-2.5"
+                      key={value}
+                      value={value}
+                      className="text-xs h-7 px-2.5"
                     >
-                      {tab}
+                      {label}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -238,6 +247,9 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                       </div>
                     </>
                   )}
+
+                  <Separator />
+                  <UserMembershipSection userId={user.id} />
                 </TabsContent>
 
                 <TabsContent value="sessions" className="mt-4 flex-1">
@@ -250,6 +262,10 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
 
                 <TabsContent value="activity" className="mt-4 flex-1">
                   <UserActivityTab userId={user.id} />
+                </TabsContent>
+
+                <TabsContent value="login-history" className="mt-4 flex-1">
+                  <UserLoginHistoryTab userId={user.id} />
                 </TabsContent>
 
                 <TabsContent value="preferences" className="mt-4 flex-1">
