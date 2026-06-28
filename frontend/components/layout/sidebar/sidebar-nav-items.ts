@@ -13,6 +13,7 @@ import {
   FormInput, FileSearch, LayoutTemplate, Grid3X3, Calculator,
   Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck,
   Library,
+  LayoutGrid,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -366,6 +367,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { label: "Permission Matrix", icon: ShieldAlert, href: "/settings/permissions", requiredPermission: "settings:rbac:manage" },
         ],
       },
+      { label: "Modules", icon: LayoutGrid, href: "/settings/modules", requiredPermission: "settings:manage" },
       { label: "Audit Log", icon: ShieldCheck, href: "/settings/audit-log", requiredPermission: "settings:manage" },
       { label: "Webhooks", icon: Zap, href: "/settings/webhooks", requiredPermission: "settings:manage" },
       { label: "Automations", icon: Zap, href: "/settings/automations", requiredPermission: "settings:automations:view" },

@@ -229,7 +229,9 @@ Ordered money-path first. Check off each page after fixing.
 - [ ] `/settings/organization` — Organization
 - [ ] `/settings/members` — Members
 - [ ] `/settings/roles` — Roles
+- [ ] `/settings/roles/[roleId]` — Role editor (per-role permission matrix)
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
+- [ ] `/settings/modules` — Org module management (enable/disable feature modules)
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [ ] `/settings/branches` — Branches
 - [ ] `/settings/notifications` — Notifications

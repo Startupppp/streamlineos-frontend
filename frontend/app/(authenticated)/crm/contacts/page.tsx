@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   Search, Mail, Phone, Building2,
   ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
-  TableIcon, LayoutGrid, Link2, Download, Sparkles, Twitter, Globe, Plus,
+  TableIcon, LayoutGrid, Link2, Sparkles, Twitter, Globe, Plus,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -309,11 +309,6 @@ export default function ContactsPage() {
                                   <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                                     <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <a href={`/api/contacts/${contact.id}/vcard`} download>
-                                      <Download className="h-3.5 w-3.5 mr-2" />Download vCard
-                                    </a>
-                                  </DropdownMenuItem>
                                   <DropdownMenuItem
                                     disabled={enrichContact.isPending}
                                     onClick={() => handleEnrich(contact)}
@@ -376,11 +371,6 @@ export default function ContactsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                               <Pencil className="h-3.5 w-3.5 mr-2" />View / Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <a href={`/api/contacts/${contact.id}/vcard`} download>
-                                <Download className="h-3.5 w-3.5 mr-2" />Download vCard
-                              </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               disabled={enrichContact.isPending}

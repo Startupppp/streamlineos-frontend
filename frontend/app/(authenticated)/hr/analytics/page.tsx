@@ -304,7 +304,7 @@ function AnalyticsContent() {
 
 export default function HrAnalyticsPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR"]}>
+    <DashboardGate permission="hr:performance:view">
       <AnalyticsContent />
     </DashboardGate>
   );

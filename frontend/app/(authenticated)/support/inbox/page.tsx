@@ -23,7 +23,7 @@ import { CreateTicketDialog } from "@/features/support/inbox/create-ticket-dialo
 
 export default function SupportInboxPage() {
   return (
-    <DashboardGate allowedRoles={["CEO", "HR", "CUSTOMER_SUPPORT"]}>
+    <DashboardGate permission="dashboard:support:view">
       <InboxContent />
     </DashboardGate>
   );

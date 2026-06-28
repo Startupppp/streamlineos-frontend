@@ -2,55 +2,65 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { db } from "@/lib/db";
-import { organizations, jobPostings } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
 import { format } from "date-fns";
+import { serverPublicFetch } from "@/lib/api/server-client";
 
 type Props = { params: Promise<{ orgSlug: string }> };
 
+interface OrgPublicInfo {
+  id: number;
+  name: string;
+  logo: string | null;
+  industry: string | null;
+}
+
+interface JobPublicItem {
+  id: number;
+  title: string;
+  location: string | null;
+  type: string | null;
+  experience: string | null;
+  salaryMin: string | null;
+  salaryMax: string | null;
+  openings: number;
+  applicationDeadline: string | null;
+  createdAt: string;
+}
+
+interface CareersPageData {
+  org: OrgPublicInfo;
+  jobs: JobPublicItem[];
+}
+
+const typeLabels: Record<string, string> = {
+  FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
+  CONTRACT: "Contract",
+  INTERNSHIP: "Internship",
+  FREELANCE: "Freelance",
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orgSlug } = await params;
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.slug, orgSlug),
-    columns: { name: true },
-  });
-  return { title: org ? `${org.name} — Open Positions` : "Careers" };
+  try {
+    const data = await serverPublicFetch.get<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+    return { title: `${data.org.name} — Open Positions` };
+  } catch {
+    return { title: "Careers" };
+  }
 }
 
 export default async function CareersPage({ params }: Props) {
   const { orgSlug } = await params;
 
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.slug, orgSlug),
-    columns: { id: true, name: true, logo: true, industry: true, website: true },
-  });
-  if (!org) notFound();
+  let data: CareersPageData;
+  try {
+    data = await serverPublicFetch.get<CareersPageData>(`/public/careers/${orgSlug}/jobs`);
+  } catch {
+    notFound();
+  }
 
-  const jobs = await db
-    .select({
-      id: jobPostings.id,
-      title: jobPostings.title,
-      location: jobPostings.location,
-      type: jobPostings.type,
-      experience: jobPostings.experience,
-      salaryMin: jobPostings.salaryMin,
-      salaryMax: jobPostings.salaryMax,
-      openings: jobPostings.openings,
-      applicationDeadline: jobPostings.applicationDeadline,
-      createdAt: jobPostings.createdAt,
-    })
-    .from(jobPostings)
-    .where(and(eq(jobPostings.orgId, org.id), eq(jobPostings.status, "OPEN")))
-    .orderBy(desc(jobPostings.createdAt));
-
-  const typeLabels: Record<string, string> = {
-    FULL_TIME: "Full-time",
-    PART_TIME: "Part-time",
-    CONTRACT: "Contract",
-    INTERNSHIP: "Internship",
-    FREELANCE: "Freelance",
-  };
+  const { org, jobs } = data;
 
   return (
     <main className="min-h-screen bg-background">

@@ -268,6 +268,8 @@ export const queryKeys = {
     all: [...base, "access"] as const,
     me: () => [...base, "access", "me"] as const,
     simulate: (userId: string) => [...base, "access", "simulate", userId] as const,
+    resourceGrants: (resourceType: string, resourceId: string) => [...base, "access", "resource-grants", resourceType, resourceId] as const,
+    orgModules: () => [...base, "access", "org-modules"] as const,
   },
 
   roles: {
