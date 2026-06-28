@@ -100,3 +100,235 @@ You are an experienced full-stack engineer specializing in Next.js (App Router),
 - During the fix step: only the modified/added/deleted file paths with changes. No long explanations unless clarifying a decision.
 
 Decompose into independent tasks, use the Task tool to dispatch each one to a separate subagent in parallel, and commit between tasks
+
+## RBAC implementation guide (read this before adding any new feature)
+
+StreamlineOS uses a server-resolved RBAC engine (NOT JWT-embedded permissions). The backend resolves permissions from DB on every request via `AccessService`. CASL is fully removed from the backend; the frontend keeps `lib/abilities.ts` only for server-side SSR helpers.
+
+### Permission key format
+Always `"module:resource:action"` — e.g. `"hr:employees:view"`, `"crm:leads:create"`, `"inventory:stock:read"`. Three colon-separated segments, all lowercase.
+
+### Key files
+- **Permission catalog** (source of truth): `backend/src/modules/rbac/permissions.constants.ts` — `PERMISSIONS` array + `ROLE_DEFAULT_PERMISSIONS` map
+- **DB schema**: `frontend/lib/db/schema/access.ts` (synced to backend via `pnpm sync:schema`)
+- **AccessService**: `backend/src/modules/access/access.service.ts` — resolves snapshots, caches per (userId, orgId), degrades gracefully pre-migration
+- **PermissionGuard**: `backend/src/modules/access/permission.guard.ts` — NestJS guard that reads `@RequirePermission` metadata and calls `authorize()`
+- **Scope helpers**: each module has `*-scope.ts` (e.g. `leads-scope.ts`, `projects-scope.ts`) following the `applyScope(query, scope, userId)` pattern
+- **Frontend hooks**: `frontend/lib/api/hooks/access.ts` — `useCan(key)`, `useAccess()` 
+- **Frontend components**: `frontend/components/auth/can.tsx` — `<Can permission="...">`, `<RequireModule module="...">`, `useModuleEnabled(module)`
+
+### Adding a new backend endpoint with RBAC (required for every new protected endpoint)
+
+1. **Add the permission key to the catalog** (`permissions.constants.ts`):
+   ```ts
+   // In PERMISSIONS array:
+   { name: "mymodule:resource:action", description: "...", scopable: false }
+   // If this should be granted by default to a role, add to ROLE_DEFAULT_PERMISSIONS:
+   MANAGER: ["mymodule:resource:action", ...]
+   ```
+
+2. **Decorate the controller method**:
+   ```ts
+   import { PermissionGuard } from "../access/permission.guard";
+   import { RequirePermission } from "../access/require-permission.decorator";
+   
+   @UseGuards(JwtAuthGuard)
+   @Controller("mymodule")
+   export class MyController {
+     @Get()
+     @UseGuards(PermissionGuard)
+     @RequirePermission("mymodule:resource:view")
+     listItems(@CurrentUser() u: CurrentUserContext) { ... }
+   }
+   ```
+   Note: `@UseGuards(JwtAuthGuard)` on the class + `@UseGuards(PermissionGuard)` + `@RequirePermission` on each method.
+
+3. **For list endpoints, apply DataScope filtering** — create `mymodule-scope.ts`:
+   ```ts
+   // backend/src/modules/mymodule/mymodule-scope.ts
+   import { applyScope } from "../access/apply-scope";
+   import type { DataScope } from "../access/access.types";
+   
+   export function applyMyModuleScope<T extends { assignedToId?: string }>(
+     query: T[], scope: DataScope, userId: string
+   ): T[] { return applyScope(query, scope, userId, "assignedToId"); }
+   ```
+   Then in the service, read scope from the request (set by PermissionGuard on `req.rbacScope`) and apply it.
+
+4. **Call `bumpPermissionsVersion` on every role/permission mutation** in the same DB transaction:
+   ```ts
+   await tx.insert(rolePermissionGrants).values(...);
+   await bumpPermissionsVersion(tx, orgId);
+   ```
+
+5. **Cache invalidation**: call `this.cache.del(CACHE_KEYS.access(userId, orgId))` in any service that modifies role assignments or grants.
+
+### Adding frontend permission gates
+
+1. **In client components** — use `useCan`:
+   ```tsx
+   import { useCan } from "@/lib/api/hooks/access";
+   
+   function MyComponent() {
+     const canCreate = useCan("mymodule:resource:create");
+     return canCreate ? <CreateButton /> : null;
+   }
+   ```
+
+2. **Declarative gate** — use `<Can>` from `components/auth/can.tsx`:
+   ```tsx
+   import { Can } from "@/components/auth/can";
+   <Can permission="mymodule:resource:delete">
+     <DeleteButton />
+   </Can>
+   ```
+
+3. **Module on/off gate** — use `<RequireModule>` or `useModuleEnabled`:
+   ```tsx
+   import { RequireModule, useModuleEnabled } from "@/components/auth/can";
+   <RequireModule module="mymodule"><PageContent /></RequireModule>
+   ```
+
+4. **Server-side pages** — use `requirePermission` in server components:
+   ```ts
+   import { requirePermission } from "@/lib/rbac/require-permission";
+   const { session } = await requirePermission("mymodule:resource:view");
+   ```
+
+5. **Add TanStack Query hooks** in `frontend/lib/api/hooks/mymodule.ts` — use `apiClient` from `lib/api-client.ts`.
+
+### Adding frontend roles admin support for new permission keys
+After adding new keys to `permissions.constants.ts`, they automatically appear in the roles admin permission matrix at `/settings/roles`. No frontend changes needed — the matrix reads from `GET /rbac/permissions`.
+
+### DB migration for schema changes
+1. Edit `frontend/lib/db/schema/access.ts` (source of truth)
+2. Run `pnpm sync:schema` to regenerate backend copy
+3. Run `pnpm check:schema` to verify no drift
+4. Apply migration via `pnpm db:push` (requires TTY + pre-existing enums `data_scope` and `principal_group_type`)
+5. Run backfill after first deploy: `pnpm -C backend backfill:rbac`
+
+### RBAC runtime notes
+- The RBAC tables (`user_roles`, `role_permission_grants`, `group_roles`, `access_versions`) must exist for the engine to work. Before migration, `AccessService` degrades gracefully to legacy CASL fallback.
+- Org owners always have all permissions — `isOrgOwner: true` bypasses all checks.
+- Platform/super admins (`isPlatformAdmin: true`) bypass all checks.
+- Permission resolution is cached per (userId, orgId) in Redis with TTL. Cache is busted by `bumpPermissionsVersion` (called in same tx as every role/permission mutation).
+- `DataScope` values: `"all"` (see everything), `"team"` (same dept), `"own"` (assignedToId === userId), `"none"` (blocked).
+- The `rbacScope` is set on `req` by `PermissionGuard` and must be read in the service to filter results.
+
+### NEVER do
+- Never add `@CheckAbility` or `AbilityGuard` — CASL is removed from backend
+- Never use `requireAuthorize(u, {...})` or `hasRoleOrPrivileged` — these are the old access helpers, deleted
+- Never skip `@RequirePermission` on a protected endpoint — ungated endpoints are a security hole
+- Never read `req.user.permissions` for access decisions — use `PermissionGuard` + `AccessService` instead (JWT permissions are stale; DB is authoritative)
+- Never add permissions without a corresponding catalog entry in `permissions.constants.ts`
+
+## RBAC Implementation Guide
+
+StreamlineOS uses a dynamic server-resolved RBAC system (NOT CASL). Permission keys use the format `module:resource:action` (e.g. `hr:employees:view`, `crm:leads:create`). Resolved server-side via `GET /me/access` — never in JWT claims.
+
+### Permission key naming convention
+`{module}:{resource}:{action}` where action is one of: view, create, update, delete, manage, assign, export, approve, reject, import
+
+### Adding RBAC to a new backend endpoint
+
+1. **Add the permission key to the catalog** in `backend/src/modules/rbac/permissions.constants.ts`:
+   ```typescript
+   "newmodule:resource:view",   // read list/detail
+   "newmodule:resource:create", // create
+   "newmodule:resource:update", // edit
+   "newmodule:resource:delete", // delete
+   ```
+
+2. **Add default role grants** in `backend/src/modules/rbac/role-templates.constants.ts` under `ROLE_DEFAULT_PERMISSIONS` for the appropriate system roles (BRANCH_HR, BRANCH_MANAGER, SALES, etc.).
+
+3. **Decorate the controller method**:
+   ```typescript
+   import { RequirePermission } from "@/modules/access/authorize.decorator";
+   import { PermissionGuard } from "@/modules/access/permission.guard";
+   import { UseGuards } from "@nestjs/common";
+
+   @UseGuards(JwtAuthGuard, PermissionGuard)
+   @RequirePermission("newmodule:resource:view")
+   @Get()
+   async list(@Req() req: RequestWithUser) { ... }
+   ```
+
+4. **Apply DataScope row filtering** (for resources owned by users):
+   - Create `backend/src/modules/newmodule/newmodule-scope.ts`:
+     ```typescript
+     import { DataScope } from "@/modules/access/access.types";
+     export function applyNewmoduleScope(query: Partial<NewmoduleWhere>, actor: { userId: number }, scope: DataScope) {
+       if (scope === "own") return { ...query, assignedToId: actor.userId };
+       if (scope === "none") return { ...query, assignedToId: -1 };
+       return query;
+     }
+     ```
+   - In the service list method, read `req.rbacScope` (set by PermissionGuard) and call the scope helper.
+
+5. **Role/permission mutations must call bumpPermissionsVersion** inside the same transaction:
+   ```typescript
+   await this.db.transaction(async (tx) => {
+     await tx.insert(rolePermissionGrants).values(...);
+     await this.accessService.bumpPermissionsVersion(orgId, tx);
+   });
+   ```
+
+### Adding RBAC to a new frontend component
+
+1. **Gate UI elements with useCan()**:
+   ```typescript
+   import { useCan } from "@/lib/api/hooks/access";
+
+   function MyComponent() {
+     const canCreate = useCan("newmodule:resource:create");
+     const canDelete = useCan("newmodule:resource:delete");
+
+     return (
+       <div>
+         {canCreate && <Button onClick={handleCreate}>Create</Button>}
+         {canDelete && <Button onClick={handleDelete}>Delete</Button>}
+       </div>
+     );
+   }
+   ```
+
+2. **Check module enabled**:
+   ```typescript
+   import { useModuleEnabled } from "@/lib/api/hooks/access";
+   const isEnabled = useModuleEnabled("newmodule");
+   ```
+
+3. **Server-side page protection** (server components):
+   ```typescript
+   import { requirePermission } from "@/lib/rbac/require-permission";
+   export default async function Page() {
+     await requirePermission("newmodule:resource:view");
+     // ... rest of page
+   }
+   ```
+
+### Key files — do not delete
+- `frontend/lib/api/hooks/access.ts` — useAccess, useCan, useModuleEnabled hooks
+- `frontend/lib/abilities.ts` — lightweight server-side AppAbility (NON-CASL; used by require-permission.ts)
+- `frontend/lib/rbac/require-permission.ts` — server-side permission check for page components
+- `backend/src/modules/access/access.service.ts` — resolvePermissions, bumpPermissionsVersion
+- `backend/src/modules/access/permission.guard.ts` — PermissionGuard (sets req.rbacScope)
+- `backend/src/modules/access/authorize.decorator.ts` — @RequirePermission decorator
+- `backend/src/modules/access/apply-scope.ts` — applyScope helper
+- `backend/src/modules/rbac/permissions.constants.ts` — full permission catalog
+- `backend/src/modules/rbac/role-templates.constants.ts` — default role→permission grants
+- `backend/src/scripts/backfill-rbac-access.ts` — seeds default grants (run once after migration)
+
+### DataScope values
+- `"all"` — user sees all records in the org
+- `"team"` — user sees records in their department
+- `"own"` — user sees only their own records
+- `"none"` — user sees nothing (deny)
+
+### NEVER
+- Never use @CheckAbility or AbilityGuard (deleted — was CASL)
+- Never use useAbility() (deleted — was CASL)
+- Never import from "@casl/ability" or "@casl/react"
+- Never import from "@/lib/abilities-context" (deleted)
+- Never put permission checks in JWT claims — always resolve server-side via /me/access
+- Never skip bumpPermissionsVersion when mutating role/permission tables
